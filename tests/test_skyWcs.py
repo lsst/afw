@@ -12,6 +12,7 @@ from numpy.testing import assert_allclose
 import lsst.utils.tests
 from lsst.daf.base import PropertyList
 import lsst.geom
+import lsst.afw.cameraGeom as cameraGeom
 from lsst.afw.geom import wcsAlmostEqualOverBBox, \
     TransformPoint2ToPoint2, TransformPoint2ToSpherePoint, makeRadialTransform, \
     SkyWcs, makeSkyWcs, makeCdMatrix, makeWcsPairTransform, \
@@ -481,6 +482,52 @@ class SimpleSkyWcsTestCase(SkyWcsBaseTestCase):
                                                 desiredPixelsToIwc.applyForward(pixPointList))
 
             self.checkNonFitsWcs(modifiedWcs)
+
+    def testMakeSkyWcsFromPixelsToFieldAngle(self):
+        """Test makeSkyWcs from a pixelsToFieldAngle transform
+        """
+        pixelSizeMm = 25e-3
+        # place the detector in several positions at several orientations
+        # use fewer CRVAL and orientations to speed up the test
+        for fpPosition, yaw, addOpticalDistortion, crval, pixelOrientation, \
+            flipX, projection in itertools.product(
+                (lsst.geom.Point2D(0, 0), lsst.geom.Point2D(-100, 500)),
+                (0*lsst.geom.degrees, 71*lsst.geom.degrees), (False, True),
+                self.crvalList[0:2], self.orientationList[0:2], (False, True), ("TAN", "STG")):
+            with self.subTest(fpPosition=fpPosition, yaw=yaw, addOpticalDistortion=addOpticalDistortion,
+                              crval=crval, orientation=pixelOrientation):
+                pixelsToFocalPlane = cameraGeom.Orientation(
+                    fpPosition=fpPosition,
+                    yaw=yaw,
+                ).makePixelFpTransform(lsst.geom.Extent2D(pixelSizeMm, pixelSizeMm))
+                # Compute crpix before adding optical distortion,
+                # since it is not affected by such distortion
+                crpix = pixelsToFocalPlane.applyInverse(lsst.geom.Point2D(0, 0))
+                radiansPerMm = self.scale.asRadians() / pixelSizeMm
+                focalPlaneToFieldAngle = lsst.afw.geom.makeTransform(
+                    lsst.geom.AffineTransform(lsst.geom.LinearTransform.makeScaling(radiansPerMm)))
+                pixelsToFieldAngle = pixelsToFocalPlane.then(focalPlaneToFieldAngle)
+
+                cdMatrix = makeCdMatrix(scale=self.scale, orientation=pixelOrientation, flipX=flipX)
+                wcs1 = makeSkyWcs(crpix=crpix, crval=crval, cdMatrix=cdMatrix, projection=projection)
+
+                if addOpticalDistortion:
+                    # Model optical distortion as a pixel transform,
+                    # so it can be added to the WCS created from crpix,
+                    # cdMatrix, etc. using makeModifiedWcs
+                    pixelTransform = makeRadialTransform([0.0, 1.0, 0.0, 0.0011])
+                    pixelsToFieldAngle = pixelTransform.then(pixelsToFieldAngle)
+                    wcs1 = makeModifiedWcs(pixelTransform=pixelTransform, wcs=wcs1, modifyActualPixels=False)
+
+                # orientation is with respect to detector x, y
+                # but this flavor of makeSkyWcs needs it with respect to focal plane x, y
+                focalPlaneOrientation = pixelOrientation + (yaw if flipX else -yaw)
+                wcs2 = makeSkyWcs(pixelsToFieldAngle=pixelsToFieldAngle,
+                                  orientation=focalPlaneOrientation,
+                                  flipX=flipX,
+                                  boresight=crval,
+                                  projection=projection)
+                self.assertWcsAlmostEqualOverBBox(wcs1, wcs2, self.bbox)
 
     @unittest.skipIf(sys.version_info[0] < 3, "astropy.wcs rejects the header on py2")
     def testAgainstAstropyWcs(self):
