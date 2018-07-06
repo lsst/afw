@@ -846,7 +846,7 @@ class MultibandExposure(MultibandTripleBase):
             exposures.append(butler.get(*args, filter=f, **kwargs))
         return cls(filters, exposures)
 
-    def getPsfImage(self, coords=None):
+    def computePsfKernelImage(self, coords=None):
         """Get a multiband PSF image
 
         The PSF Kernel Image is computed for each band
@@ -876,6 +876,41 @@ class MultibandExposure(MultibandTripleBase):
                 psfs.append(single.getPsf().computeKernelImage().array)
             else:
                 psfs.append(single.getPsf().computeKernelImage(coords).array)
+        psfs = np.array(psfs)
+        singleType = type(Image(dtype=psfs.dtype))
+        psfImage = MultibandImage(self.filters, array=psfs, singleType=singleType)
+        return psfImage
+
+    def computePsfImage(self, coords=None):
+        """Get a multiband PSF image
+
+        The PSF Kernel Image is computed for each band
+        and combined into a (filter, y, x) array and stored
+        as `self._psfImage`.
+        The result is not cached, so if the same PSF is expected
+        to be used multiple times it is a good idea to store the
+        result in another variable.
+
+        Parameters
+        ----------
+        coords: `Point2D` or `tuple`
+            Coordinates to evaluate the PSF. If `coords` is `None`
+            then `Psf.getAveragePosition()` is used.
+
+        Returns
+        -------
+        self._psfImage: array
+            The multiband PSF image.
+        """
+        psfs = []
+        # Make the coordinates into a Point2D (if necessary)
+        if not isinstance(coords, Point2D) and coords is not None:
+            coords = Point2D(coords[0], coords[1])
+        for single in self.singles:
+            if coords is None:
+                psfs.append(single.getPsf().computeImage().array)
+            else:
+                psfs.append(single.getPsf().computeImage(coords).array)
         psfs = np.array(psfs)
         singleType = type(Image(dtype=psfs.dtype))
         psfImage = MultibandImage(self.filters, array=psfs, singleType=singleType)
