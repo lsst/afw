@@ -48,7 +48,7 @@ namespace geom {
  * Make a WCS CD matrix
  *
  * @param[in] scale  Pixel scale as an angle on sky/pixels
- * @param[in] orientation  Position angle of focal plane +Y, measured from N through E.
+ * @param[in] orientation  Position angle of pixel +Y, measured from N through E.
  *                         At 0 degrees, +Y is along N and +X is along W/E if flipX false/true
  *                         At 90 degrees, +Y is along E and +X is along N/S if flipX false/true
  * @param[in] flipX  Fip x axis? See orientation for details.

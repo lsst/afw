@@ -237,7 +237,7 @@ class SimpleSkyWcsTestCase(SkyWcsBaseTestCase):
             Desired reference sky position.
             Must not be at either pole.
         orientation : `lsst.geom.Angle`
-            Position angle of focal plane +Y, measured from N through E.
+            Position angle of pixel +Y, measured from N through E.
             At 0 degrees, +Y is along N and +X is along E/W if flipX false/true
             At 90 degrees, +Y is along E and +X is along S/N if flipX false/true
         flipX : `bool`
