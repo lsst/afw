@@ -627,8 +627,14 @@ class MultibandTripleBase(MultibandBase):
         mask = self._mask._slice(filters, filterIndex, indices)
         variance = self._variance._slice(filters, filterIndex, indices)
 
+        #If only a single pixel is selected, return the tuple of MultibandPixels
+        if isinstance(image, MultibandPixel):
+            assert isinstance(mask, MultibandPixel)
+            assert isinstance(variance, MultibandPixel)
+            return (image, mask, variance)
+
         result = type(self)(filters=filters, image=image, mask=mask, variance=variance)
-        assert np.all([r.getBBox() == result._bbox for r in [result._mask, result._variance]])
+        assert all([r.getBBox() == result._bbox for r in [result._mask, result._variance]])
         return result
 
     def _verifyUpdate(self, image=None, mask=None, variance=None):
@@ -687,161 +693,6 @@ class MultibandTripleBase(MultibandBase):
         self._singles = self._buildSingles(variance=variance)
 
     variance = property(getVariance, setVariance)
-
-
-class MaskedPixel(object):
-    """A single pixel with an image, mask, and variance
-    """
-    def __init__(self, image, mask, variance, coords):
-        self._image = image
-        self._mask = mask
-        self._variance = variance
-        self._bbox = Box2I(coords, Extent2I(1, 1))
-
-    def clone(self, deep=True):
-        """Make a copy of the current instance
-
-        `image`, `mask`, and `variance` are all just
-        numbers, so only the bounding boxes changes
-        for deep copies.
-        """
-        return MaskedPixel(self.image, self.mask, self.variance, self.getBBox().getMin())
-
-    def getImage(self):
-        return self._image
-
-    def setImage(self, value):
-        assert np.isscalar(value)
-        self._image = value
-
-    image = property(getImage, setImage)
-
-    def getMask(self):
-        return self._mask
-
-    def setMask(self, value):
-        assert np.issubdtype(type(value), np.integer)
-        self._mask = value
-
-    mask = property(getMask, setMask)
-
-    def getVariance(self):
-        return self._variance
-
-    def setVariance(self, value):
-        assert np.isscalar(value)
-        self._variance = value
-
-    variance = property(getVariance, setVariance)
-
-    def getBBox(self):
-        return self._bbox
-
-
-class MultibandMaskedPixel(MultibandTripleBase):
-    """MultibandMaskedPixel class
-
-    This class acts as a container for multiple `MaskedPixel` objects.
-    All masked pixels must have the same bounding box (`Point2I`),
-    and the associated pixels in each band must all have the same
-    data types for the `image`, `mask`, and `variance` objects.
-
-    See `MultibandTripleBase` for parameter definitions.
-    """
-    def __init__(self, filters, singles=None, image=None, mask=None, variance=None, coords=None):
-        self._bbox = Box2I(coords, Extent2I(1, 1))
-        super().__init__(filters, singles, image, mask, variance, MaskedPixel)
-        # Make sure that the bounding box has been setup properly
-        if self.getBBox().getDimensions() != Extent2I(1,1):
-            err = ("Something went wrong, the bounding box for a `MultibandPixel` "
-                   "should always have dimensions (1,1), received {0}")
-            raise RuntimeError(err.format(self.getBBox().getDimensions()))
-
-    def _buildSingles(self, image=None, mask=None, variance=None):
-        """Make a new list of single band objects
-
-        Parameters
-        ----------
-        image: list
-            List of `Image` objects that represent the image in each band.
-        mask: list
-            List of `Mask` objects that represent the mask in each band.
-        variance: list
-            List of `Image` objects that represent the variance in each band.
-
-        Returns
-        -------
-        singles: list
-            List of `MaskedImage` objects for each band,
-            where the `image`, `mask`, and `variance` of each `single`
-            point to the multiband objects.
-        """
-        singles = []
-        if image is None:
-            image = self.image
-        if mask is None:
-            mask = self.mask
-        if variance is None:
-            variance = self.variance
-
-        for n in range(len(image)):
-            if isinstance(image, MultibandBase):
-                fidx = image.filters[n]
-            else:
-                fidx = n
-            single = self.singleType(image=image[fidx], mask=mask[fidx], variance=variance[fidx],
-                                     coords=self.getBBox().getMin())
-            singles.append(single)
-        return tuple(singles)
-
-    def _setMultiband(self, image, mask, variance, filters):
-        """Set image, mask, and variance to the multiband objects
-
-        See `MultibandTripleBase` for parameter descriptions.
-        """
-        coords = self.getBBox().getMin()
-        self._image = MultibandPixel(filters, image, coords=coords)
-        self._mask = MultibandPixel(filters, mask, coords=coords)
-        self._variance = MultibandPixel(filters, variance, coords=coords)
-
-    def clone(self, deep=True):
-        """Make a copy of the current instance
-
-        `MultibandPixel._singles` is an array,
-        so this just makes a copy of the array
-        (as opposed to a view of the parent array).
-        """
-        if deep:
-            singles = tuple([s.clone() for s in self.singles])
-            # For MultibandPixels, `bbox` is a `Point2I`
-            coords = self.getBBox().getMin()
-            coords = Point2I(coords.getX(), coords.getY())
-            return MultibandMaskedPixel(filters=self.filters, singles=singles, coords=coords)
-
-        filters = self.filters
-        singles = self.singles
-        coords = self.getBBox().getMin()
-        result = MultibandMaskedPixel(filters=filters, singles=singles, coords=coords)
-        result._bbox = self._bbox
-        return result
-
-    def __getitem__(self, indices):
-        """Get a slice of the underlying array
-
-        Since a `MultibandPixel` is a scalar in the
-        spatial dimensions, it can only be indexed with
-        a filter name, number, or slice.
-        """
-        image = self.image[indices]
-        mask = self.mask[indices]
-        variance = self.variance[indices]
-
-        if hasattr(image, "__len__"):
-            result = MultibandMaskedPixel(filters=self.filters, image=image, mask=mask,
-                                          variance=variance, coords=self.getBBox().getMin())
-        else:
-            result = MaskedPixel(image, mask, variance, self.getBBox().getMin())
-        return result
 
 
 class MultibandMaskedImage(MultibandTripleBase):

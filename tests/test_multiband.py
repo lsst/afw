@@ -34,7 +34,7 @@ from lsst.afw.geom import SpanSet, Stencil
 from lsst.afw.detection import GaussianPsf, Footprint, makeHeavyFootprint, MultibandFootprint, HeavyFootprintF
 from lsst.afw.image import ImageF, Mask, MaskPixel, MaskedImage, ExposureF, MaskedImageF
 from lsst.afw.image.multiband import MultibandPixel, MultibandImage, MultibandMask, MultibandMaskedImage
-from lsst.afw.image.multiband import MaskedPixel, MultibandMaskedPixel, MultibandExposure
+from lsst.afw.image.multiband import MultibandExposure
 
 
 def _testImageFilterSlicing(cls, mImage, singleType, bbox, value):
@@ -351,70 +351,6 @@ class MultibandMaskTestCase(lsst.utils.tests.TestCase):
         _testImageCopy(self, mMask, value1, value2)
 
 
-class MultibandMaskedPixelTestCase(lsst.utils.tests.TestCase):
-    """Test case for MultibandPixel
-    """
-    def setUp(self):
-        np.random.seed(1)
-        self.coords = Point2I(101, 502)
-        self.bbox = Box2I(self.coords, Extent2I(1, 1))
-        self.filters = ["G", "R", "I", "Z", "Y"]
-        self.image = np.ones((len(self.filters),), dtype=float) * 10
-        self.mask = np.ones((len(self.filters),))
-        self.variance = np.ones((len(self.filters),)) * 1e-2
-        self.pixel = MultibandMaskedPixel(filters=self.filters, image=self.image, mask=self.mask,
-                                          variance=self.variance, coords=self.coords)
-
-    def tearDown(self):
-        del self.coords
-        del self.bbox
-        del self.filters
-        del self.pixel
-
-    def testFilterSlicing(self):
-        pixel = self.pixel
-        self.assertEqual(pixel["R"].image, 10.)
-        self.assertEqual(pixel["I"].mask, 1)
-        self.assertEqual(pixel["G"].variance, 1e-2)
-        self.assertFloatsEqual(pixel.image, np.ones((len(self.filters),))*10)
-        self.assertFloatsEqual(pixel.mask, np.ones((len(self.filters),)))
-        self.assertFloatsEqual(pixel.variance, np.ones((len(self.filters),))*1e-2)
-
-        for single in pixel.singles:
-            assert isinstance(single, MaskedPixel)
-            self.assertEqual(single.image, 10)
-            self.assertEqual(single.mask, 1)
-            self.assertEqual(single.variance, 1e-2)
-
-        self.assertFloatsEqual(pixel[["G", "I"]].image.array, np.array([10, 10]))
-        self.assertFloatsEqual(pixel[["G", "R"]].mask.array, np.array([1, 1]))
-        self.assertFloatsEqual(pixel[["R", "I"]].variance.array, np.array([1e-2, 1e-2]))
-
-    def testPixelBBoxModification(self):
-        pixel = self.pixel.clone()
-        otherPixel = pixel.clone()
-        pixel.getBBox().shift(Extent2I(9, -2))
-        self.assertEqual(pixel.getBBox().getMin(), Point2I(110, 500))
-        self.assertEqual(otherPixel.getBBox().getMin(), Point2I(101, 502))
-
-        pixel = self.pixel.clone()
-        otherPixel = pixel.clone(False)
-        pixel.getBBox().shift(Extent2I(9, -2))
-        self.assertEqual(pixel.getBBox().getMin(), Point2I(110, 500))
-        self.assertEqual(otherPixel.getBBox().getMin(), Point2I(110, 500))
-
-    def testPixelModification(self):
-        ones = np.ones((len(self.filters),))
-        pixel = self.pixel
-        otherPixel = pixel.clone()
-        otherPixel.image = MultibandPixel(self.filters, ones*8, pixel.getBBox().getMin())
-        otherPixel.mask = MultibandPixel(self.filters, ones*2, pixel.getBBox().getMin())
-        otherPixel.variance = MultibandPixel(self.filters, ones*1e-3, pixel.getBBox().getMin())
-
-        self.assertFloatsEqual(pixel.image, ones * 10)
-        # Stopped development of this test here, since this class is likely to be removed
-
-
 def _testMaskedImageFilters(cls, maskedImage, singleType):
     assert isinstance(maskedImage["R"], singleType)
     assert isinstance(maskedImage.image["G"], ImageF)
@@ -436,6 +372,11 @@ def _testMaskedImageSlicing(cls, maskedImage):
     cls.assertEqual(maskedImage[:, subBox].image.getBBox(), subBox)
     cls.assertEqual(maskedImage[:, subBox].mask.getBBox(), subBox)
     cls.assertEqual(maskedImage[:, subBox].variance.getBBox(), subBox)
+
+    maskedPixel = maskedImage[:, 1100, 2025]
+    cls.assertFloatsEqual(maskedPixel[0].array, np.array([10., 10., 10.]))
+    cls.assertFloatsEqual(maskedPixel[1].array, np.array([1, 1, 1]))
+    cls.assertFloatsAlmostEqual(maskedPixel[2].array, np.array([.01, .01, .01]), 1e-6)
 
     newBox = Box2I(Point2I(100, 500), Extent2I(200, 100))
     maskedImage.shiftedTo(newBox.getMin())
