@@ -37,125 +37,125 @@ from lsst.afw.image.multiband import MultibandPixel, MultibandImage, MultibandMa
 from lsst.afw.image.multiband import MultibandExposure
 
 
-def _testImageFilterSlicing(cls, mImage, singleType, bbox, value):
+def _testImageFilterSlicing(testCase, mImage, singleType, bbox, value):
     """Test slicing by filters for image-like objects"""
-    cls.assertIsInstance(mImage["R"], singleType)
-    cls.assertIsInstance(mImage[:], type(mImage))
+    testCase.assertIsInstance(mImage["R"], singleType)
+    testCase.assertIsInstance(mImage[:], type(mImage))
 
-    cls.assertEqual(mImage["G", -1, -1], value)
-    cls.assertEqual(mImage["G"].array.shape, (100, 200))
-    cls.assertEqual(mImage[:"I"].array.shape, (2, 100, 200))
-    cls.assertEqual(mImage[:"I"].filters, ("G", "R"))
-    cls.assertEqual(mImage[:"I"].getBBox(), bbox)
-    cls.assertEqual(mImage[["G", "I"]].array.shape, (2, 100, 200))
-    cls.assertEqual(mImage[["G", "I"]].filters, ("G", "I"))
-    cls.assertEqual(mImage[["G", "I"]].getBBox(), bbox)
+    testCase.assertEqual(mImage["G", -1, -1], value)
+    testCase.assertEqual(mImage["G"].array.shape, (100, 200))
+    testCase.assertEqual(mImage[:"I"].array.shape, (2, 100, 200))
+    testCase.assertEqual(mImage[:"I"].filters, ("G", "R"))
+    testCase.assertEqual(mImage[:"I"].getBBox(), bbox)
+    testCase.assertEqual(mImage[["G", "I"]].array.shape, (2, 100, 200))
+    testCase.assertEqual(mImage[["G", "I"]].filters, ("G", "I"))
+    testCase.assertEqual(mImage[["G", "I"]].getBBox(), bbox)
 
-    cls.assertEqual(mImage["G":"R"].filters, ("G",))
+    testCase.assertEqual(mImage["G":"R"].filters, ("G",))
 
     if "Z" in mImage.filters:
         filterSlice = slice("R", "Z")
     else:
         filterSlice = slice("R", None)
-    cls.assertEqual(mImage[filterSlice].filters, ("R", "I"))
-    cls.assertEqual(mImage.filters, tuple(cls.filters))
+    testCase.assertEqual(mImage[filterSlice].filters, ("R", "I"))
+    testCase.assertEqual(mImage.filters, tuple(testCase.filters))
 
 
-def _testImageSlicing(cls, mImage, gVal, rVal, iVal):
+def _testImageSlicing(testCase, mImage, gVal, rVal, iVal):
     """Test slicing in the spatial dimensions for image-like objects"""
-    cls.assertIsInstance(mImage[:, -1, -1], MultibandPixel)
-    cls.assertEqual(mImage["G", -1, -1], gVal)
+    testCase.assertIsInstance(mImage[:, -1, -1], MultibandPixel)
+    testCase.assertEqual(mImage["G", -1, -1], gVal)
 
-    cls.assertEqual(mImage[:, 1100:, 2025:].getBBox(), Box2I(Point2I(1100, 2025), Extent2I(100, 75)))
-    cls.assertEqual(mImage[:, -20:-10, -10:-5].getBBox(),
-                    Box2I(Point2I(1179, 2089), Extent2I(10, 5)))
-    cls.assertEqual(mImage[:, :1100, :2050].getBBox(), Box2I(Point2I(1000, 2000), Extent2I(100, 50)))
+    testCase.assertEqual(mImage[:, 1100:, 2025:].getBBox(), Box2I(Point2I(1100, 2025), Extent2I(100, 75)))
+    testCase.assertEqual(mImage[:, -20:-10, -10:-5].getBBox(),
+                         Box2I(Point2I(1179, 2089), Extent2I(10, 5)))
+    testCase.assertEqual(mImage[:, :1100, :2050].getBBox(), Box2I(Point2I(1000, 2000), Extent2I(100, 50)))
     coord = Point2I(1075, 2015)
     bbox = Box2I(Point2I(1050, 2010), coord)
-    cls.assertEqual(mImage[:, bbox].getBBox(), bbox)
-    cls.assertEqual(mImage[:, 1010, 2010].getBBox().getMin(), Point2I(1010, 2010))
-    cls.assertEqual(mImage[:, Point2I(1075, 2015)].getBBox().getMin(), coord)
+    testCase.assertEqual(mImage[:, bbox].getBBox(), bbox)
+    testCase.assertEqual(mImage[:, 1010, 2010].getBBox().getMin(), Point2I(1010, 2010))
+    testCase.assertEqual(mImage[:, Point2I(1075, 2015)].getBBox().getMin(), coord)
 
-    cls.assertEqual(mImage["G", 1100:, 2025:].getBBox(), Box2I(Point2I(1100, 2025), Extent2I(100, 75)))
-    cls.assertEqual(mImage["R", -20:-10, -10:-5].getBBox(),
-                    Box2I(Point2I(1179, 2089), Extent2I(10, 5)))
-    cls.assertEqual(mImage["I", :1100, :2050].getBBox(), Box2I(Point2I(1000, 2000), Extent2I(100, 50)))
-    cls.assertEqual(mImage["R", bbox].getBBox(), bbox)
-    cls.assertEqual(mImage["I", 1010, 2010], iVal)
-    cls.assertEqual(mImage["R", Point2I(1075, 2015)], rVal)
+    testCase.assertEqual(mImage["G", 1100:, 2025:].getBBox(), Box2I(Point2I(1100, 2025), Extent2I(100, 75)))
+    testCase.assertEqual(mImage["R", -20:-10, -10:-5].getBBox(),
+                         Box2I(Point2I(1179, 2089), Extent2I(10, 5)))
+    testCase.assertEqual(mImage["I", :1100, :2050].getBBox(), Box2I(Point2I(1000, 2000), Extent2I(100, 50)))
+    testCase.assertEqual(mImage["R", bbox].getBBox(), bbox)
+    testCase.assertEqual(mImage["I", 1010, 2010], iVal)
+    testCase.assertEqual(mImage["R", Point2I(1075, 2015)], rVal)
 
-    with cls.assertRaises(IndexError):
+    with testCase.assertRaises(IndexError):
         mImage[:, 0]
-    with cls.assertRaises(IndexError):
+    with testCase.assertRaises(IndexError):
         mImage[:, 10:]
-    with cls.assertRaises(IndexError):
+    with testCase.assertRaises(IndexError):
         mImage[:, :10]
-    with cls.assertRaises(IndexError):
+    with testCase.assertRaises(IndexError):
         mImage[:, :, 0]
-    with cls.assertRaises(IndexError):
+    with testCase.assertRaises(IndexError):
         mImage[:, :, 10:]
-    with cls.assertRaises(IndexError):
+    with testCase.assertRaises(IndexError):
         mImage[:, :, :10]
 
 
-def _testImageModification(cls, mImage1, mImage2, bbox1, bbox2, value1, value2):
+def _testImageModification(testCase, mImage1, mImage2, bbox1, bbox2, value1, value2):
     """Test the image-like objects can be modified"""
     mImage1[:"R", bbox2].array = value2
-    cls.assertFloatsEqual(mImage1["G", bbox2].array, mImage2["G"].array)
-    cls.assertFloatsEqual(mImage1["R"].array, value1)
+    testCase.assertFloatsEqual(mImage1["G", bbox2].array, mImage2["G"].array)
+    testCase.assertFloatsEqual(mImage1["R"].array, value1)
     mImage1.shiftedTo(Point2I(500, 150))
-    cls.assertEqual(mImage1.getBBox(), Box2I(Point2I(500, 150), Extent2I(bbox1.getDimensions())))
+    testCase.assertEqual(mImage1.getBBox(), Box2I(Point2I(500, 150), Extent2I(bbox1.getDimensions())))
 
     mImage1["G"].array[:] = value2
-    cls.assertFloatsEqual(mImage1["G"].array, value2)
-    cls.assertFloatsEqual(mImage1.array[0], value2)
+    testCase.assertFloatsEqual(mImage1["G"].array, value2)
+    testCase.assertFloatsEqual(mImage1.array[0], value2)
 
     if "Z" in mImage1.filters:
         filterSlice = slice("R", "Z")
     else:
         filterSlice = slice("R", None)
     mImage1[filterSlice].array[:] = 7
-    cls.assertFloatsEqual(mImage1["I"].array, 7)
+    testCase.assertFloatsEqual(mImage1["I"].array, 7)
     newBBox = Box2I(Point2I(10000, 20000), mImage1.getBBox().getDimensions())
     mImage1.shiftedTo(newBBox.getMin())
-    cls.assertEqual(mImage1.getBBox(), newBBox)
+    testCase.assertEqual(mImage1.getBBox(), newBBox)
     for image in mImage1:
-        cls.assertEqual(image.getBBox(), newBBox)
+        testCase.assertEqual(image.getBBox(), newBBox)
     offset = Extent2I(-9000, -18000)
     mImage1.shiftedBy(offset)
     newBBox = Box2I(Point2I(1000, 2000), newBBox.getDimensions())
-    cls.assertEqual(mImage1.getBBox(), newBBox)
+    testCase.assertEqual(mImage1.getBBox(), newBBox)
     for image in mImage1:
-        cls.assertEqual(image.getBBox(), newBBox)
+        testCase.assertEqual(image.getBBox(), newBBox)
 
 
-def _testImageCopy(cls, mImage1, value1, value2):
+def _testImageCopy(testCase, mImage1, value1, value2):
     """Test copy and deep copy in image-like objects"""
     mImage2 = mImage1.clone()
     mImage2.shiftedTo(Point2I(11, 23))
-    cls.assertEqual(mImage2.getBBox(), Box2I(Point2I(11, 23), Extent2I(200, 100)))
-    cls.assertEqual(mImage1.getBBox(), Box2I(Point2I(1000, 2000), Extent2I(200, 100)))
-    cls.assertTrue(np.all([s.getBBox() == mImage1.getBBox() for s in mImage1.singles]))
-    cls.assertTrue(np.all([s.getBBox() == mImage2.getBBox() for s in mImage2.singles]))
+    testCase.assertEqual(mImage2.getBBox(), Box2I(Point2I(11, 23), Extent2I(200, 100)))
+    testCase.assertEqual(mImage1.getBBox(), Box2I(Point2I(1000, 2000), Extent2I(200, 100)))
+    testCase.assertTrue(np.all([s.getBBox() == mImage1.getBBox() for s in mImage1.singles]))
+    testCase.assertTrue(np.all([s.getBBox() == mImage2.getBBox() for s in mImage2.singles]))
 
     mImage2.array[:] = value2
-    cls.assertFloatsEqual(mImage1.array, value1)
-    cls.assertFloatsEqual(mImage2.array, value2)
-    cls.assertFloatsEqual(mImage1["G"].array, value1)
-    cls.assertFloatsEqual(mImage2["G"].array, value2)
+    testCase.assertFloatsEqual(mImage1.array, value1)
+    testCase.assertFloatsEqual(mImage2.array, value2)
+    testCase.assertFloatsEqual(mImage1["G"].array, value1)
+    testCase.assertFloatsEqual(mImage2["G"].array, value2)
 
     mImage2 = mImage1.clone(False)
     mImage2.shiftedTo(Point2I(11, 23))
-    cls.assertEqual(mImage2.getBBox(), Box2I(Point2I(11, 23), Extent2I(200, 100)))
-    cls.assertEqual(mImage1.getBBox(), Box2I(Point2I(1000, 2000), Extent2I(200, 100)))
-    cls.assertTrue(np.all([s.getBBox() == mImage2.getBBox() for s in mImage1.singles]))
-    cls.assertTrue(np.all([s.getBBox() == mImage2.getBBox() for s in mImage2.singles]))
+    testCase.assertEqual(mImage2.getBBox(), Box2I(Point2I(11, 23), Extent2I(200, 100)))
+    testCase.assertEqual(mImage1.getBBox(), Box2I(Point2I(1000, 2000), Extent2I(200, 100)))
+    testCase.assertTrue(np.all([s.getBBox() == mImage2.getBBox() for s in mImage1.singles]))
+    testCase.assertTrue(np.all([s.getBBox() == mImage2.getBBox() for s in mImage2.singles]))
 
     mImage2.array[:] = value2
-    cls.assertFloatsEqual(mImage1.array, value2)
-    cls.assertFloatsEqual(mImage2.array, value2)
-    cls.assertFloatsEqual(mImage1["G"].array, value2)
-    cls.assertFloatsEqual(mImage2["G"].array, value2)
+    testCase.assertFloatsEqual(mImage1.array, value2)
+    testCase.assertFloatsEqual(mImage2.array, value2)
+    testCase.assertFloatsEqual(mImage1["G"].array, value2)
+    testCase.assertFloatsEqual(mImage2["G"].array, value2)
 
 
 class MultibandPixelTestCase(lsst.utils.tests.TestCase):
@@ -355,110 +355,110 @@ class MultibandMaskTestCase(lsst.utils.tests.TestCase):
         _testImageCopy(self, mMask, value1, value2)
 
 
-def _testMaskedImageFilters(cls, maskedImage, singleType):
-    cls.assertIsInstance(maskedImage["R"], singleType)
-    cls.assertIsInstance(maskedImage.image["G"], ImageF)
-    cls.assertIsInstance(maskedImage.mask["R"], Mask)
-    cls.assertIsInstance(maskedImage.variance["I"], ImageF)
+def _testMaskedImageFilters(testCase, maskedImage, singleType):
+    testCase.assertIsInstance(maskedImage["R"], singleType)
+    testCase.assertIsInstance(maskedImage.image["G"], ImageF)
+    testCase.assertIsInstance(maskedImage.mask["R"], Mask)
+    testCase.assertIsInstance(maskedImage.variance["I"], ImageF)
 
-    cls.assertEqual(maskedImage["G"].image.array.shape, (100, 200))
-    cls.assertEqual(maskedImage[:"I"].mask.array.shape, (2, 100, 200))
-    cls.assertEqual(maskedImage[:"I"].filters, ("G", "R"))
-    cls.assertEqual(maskedImage[:"I"].getBBox(), cls.bbox)
-    cls.assertEqual(maskedImage[["G", "I"]].getBBox(), cls.bbox)
+    testCase.assertEqual(maskedImage["G"].image.array.shape, (100, 200))
+    testCase.assertEqual(maskedImage[:"I"].mask.array.shape, (2, 100, 200))
+    testCase.assertEqual(maskedImage[:"I"].filters, ("G", "R"))
+    testCase.assertEqual(maskedImage[:"I"].getBBox(), testCase.bbox)
+    testCase.assertEqual(maskedImage[["G", "I"]].getBBox(), testCase.bbox)
 
-    cls.assertEqual(maskedImage.filters, tuple(cls.filters))
+    testCase.assertEqual(maskedImage.filters, tuple(testCase.filters))
 
 
-def _testMaskedImageSlicing(cls, maskedImage):
+def _testMaskedImageSlicing(testCase, maskedImage):
     subBox = Box2I(Point2I(1100, 2025), Extent2I(30, 50))
-    cls.assertEqual(maskedImage[:, subBox].getBBox(), subBox)
-    cls.assertEqual(maskedImage[:, subBox].image.getBBox(), subBox)
-    cls.assertEqual(maskedImage[:, subBox].mask.getBBox(), subBox)
-    cls.assertEqual(maskedImage[:, subBox].variance.getBBox(), subBox)
+    testCase.assertEqual(maskedImage[:, subBox].getBBox(), subBox)
+    testCase.assertEqual(maskedImage[:, subBox].image.getBBox(), subBox)
+    testCase.assertEqual(maskedImage[:, subBox].mask.getBBox(), subBox)
+    testCase.assertEqual(maskedImage[:, subBox].variance.getBBox(), subBox)
 
     maskedPixel = maskedImage[:, 1100, 2025]
-    cls.assertFloatsEqual(maskedPixel[0].array, np.array([10., 10., 10.]))
-    cls.assertFloatsEqual(maskedPixel[1].array, np.array([1, 1, 1]))
-    cls.assertFloatsAlmostEqual(maskedPixel[2].array, np.array([.01, .01, .01]), 1e-6)
+    testCase.assertFloatsEqual(maskedPixel[0].array, np.array([10., 10., 10.]))
+    testCase.assertFloatsEqual(maskedPixel[1].array, np.array([1, 1, 1]))
+    testCase.assertFloatsAlmostEqual(maskedPixel[2].array, np.array([.01, .01, .01]), 1e-6)
 
     newBox = Box2I(Point2I(100, 500), Extent2I(200, 100))
     maskedImage.shiftedTo(newBox.getMin())
-    cls.assertEqual(maskedImage.getBBox(), newBox)
-    cls.assertEqual(maskedImage.image.getBBox(), newBox)
-    cls.assertEqual(maskedImage.mask.getBBox(), newBox)
-    cls.assertEqual(maskedImage.variance.getBBox(), newBox)
-    cls.assertEqual(maskedImage["G"].getBBox(), newBox)
-    cls.assertEqual(maskedImage["G"].image.getBBox(), newBox)
-    cls.assertEqual(maskedImage["R"].mask.getBBox(), newBox)
-    cls.assertEqual(maskedImage["I"].variance.getBBox(), newBox)
+    testCase.assertEqual(maskedImage.getBBox(), newBox)
+    testCase.assertEqual(maskedImage.image.getBBox(), newBox)
+    testCase.assertEqual(maskedImage.mask.getBBox(), newBox)
+    testCase.assertEqual(maskedImage.variance.getBBox(), newBox)
+    testCase.assertEqual(maskedImage["G"].getBBox(), newBox)
+    testCase.assertEqual(maskedImage["G"].image.getBBox(), newBox)
+    testCase.assertEqual(maskedImage["R"].mask.getBBox(), newBox)
+    testCase.assertEqual(maskedImage["I"].variance.getBBox(), newBox)
 
 
-def _testMaskedmageModification(cls, maskedImage):
-    images = [ImageF(cls.bbox, 10*cls.imgValue) for f in cls.filters]
-    mImage = MultibandImage(cls.filters, images)
+def _testMaskedmageModification(testCase, maskedImage):
+    images = [ImageF(testCase.bbox, 10*testCase.imgValue) for f in testCase.filters]
+    mImage = MultibandImage(testCase.filters, images)
     maskedImage.image = mImage
-    cls.assertFloatsEqual(maskedImage.image["G"].array, mImage.array[0])
-    cls.assertFloatsEqual(maskedImage["G"].image.array, mImage.array[0])
+    testCase.assertFloatsEqual(maskedImage.image["G"].array, mImage.array[0])
+    testCase.assertFloatsEqual(maskedImage["G"].image.array, mImage.array[0])
 
-    singles = [cls.Mask(cls.bbox) for f in range(len(cls.filters))]
+    singles = [testCase.Mask(testCase.bbox) for f in range(len(testCase.filters))]
     for n in range(len(singles)):
-        singles[n].set(cls.maskValue*2)
-    mMask = MultibandMask(cls.filters, singles)
+        singles[n].set(testCase.maskValue*2)
+    mMask = MultibandMask(testCase.filters, singles)
     maskedImage.mask = mMask
-    cls.assertFloatsEqual(maskedImage.mask["G"].array, mMask.array[0])
-    cls.assertFloatsEqual(maskedImage["G"].mask.array, mMask.array[0])
+    testCase.assertFloatsEqual(maskedImage.mask["G"].array, mMask.array[0])
+    testCase.assertFloatsEqual(maskedImage["G"].mask.array, mMask.array[0])
 
-    images = [ImageF(cls.bbox, .1 * cls.varValue) for f in cls.filters]
-    mVariance = MultibandImage(cls.filters, images)
+    images = [ImageF(testCase.bbox, .1 * testCase.varValue) for f in testCase.filters]
+    mVariance = MultibandImage(testCase.filters, images)
     maskedImage.variance = mVariance
-    cls.assertFloatsEqual(maskedImage.variance["G"].array, mVariance.array[0])
-    cls.assertFloatsEqual(maskedImage["G"].variance.array, mVariance.array[0])
+    testCase.assertFloatsEqual(maskedImage.variance["G"].array, mVariance.array[0])
+    testCase.assertFloatsEqual(maskedImage["G"].variance.array, mVariance.array[0])
 
     subBox = Box2I(Point2I(1100, 2025), Extent2I(30, 50))
     maskedImage.image[:, subBox].array = 12
-    cls.assertFloatsEqual(maskedImage.image["G", subBox].array, 12)
-    cls.assertFloatsEqual(maskedImage["G", subBox].image.array, 12)
+    testCase.assertFloatsEqual(maskedImage.image["G", subBox].array, 12)
+    testCase.assertFloatsEqual(maskedImage["G", subBox].image.array, 12)
     maskedImage["R", subBox].image[:] = 15
-    cls.assertFloatsEqual(maskedImage.image["R", subBox].array, 15)
-    cls.assertFloatsEqual(maskedImage["R", subBox].image.array, 15)
+    testCase.assertFloatsEqual(maskedImage.image["R", subBox].array, 15)
+    testCase.assertFloatsEqual(maskedImage["R", subBox].image.array, 15)
 
     maskedImage.mask[:, subBox].array = 64
-    cls.assertFloatsEqual(maskedImage.mask["G", subBox].array, 64)
-    cls.assertFloatsEqual(maskedImage["G", subBox].mask.array, 64)
+    testCase.assertFloatsEqual(maskedImage.mask["G", subBox].array, 64)
+    testCase.assertFloatsEqual(maskedImage["G", subBox].mask.array, 64)
     maskedImage["R", subBox].mask[:] = 128
-    cls.assertFloatsEqual(maskedImage.mask["R", subBox].array, 128)
-    cls.assertFloatsEqual(maskedImage["R", subBox].mask.array, 128)
+    testCase.assertFloatsEqual(maskedImage.mask["R", subBox].array, 128)
+    testCase.assertFloatsEqual(maskedImage["R", subBox].mask.array, 128)
 
     maskedImage.variance[:, subBox].array = 1e-6
-    cls.assertFloatsEqual(maskedImage.variance["G", subBox].array, 1e-6)
-    cls.assertFloatsEqual(maskedImage["G", subBox].variance.array, 1e-6)
+    testCase.assertFloatsEqual(maskedImage.variance["G", subBox].array, 1e-6)
+    testCase.assertFloatsEqual(maskedImage["G", subBox].variance.array, 1e-6)
     maskedImage["R", subBox].variance[:] = 1e-7
-    cls.assertFloatsEqual(maskedImage.variance["R", subBox].array, 1e-7)
-    cls.assertFloatsEqual(maskedImage["R", subBox].variance.array, 1e-7)
+    testCase.assertFloatsEqual(maskedImage.variance["R", subBox].array, 1e-7)
+    testCase.assertFloatsEqual(maskedImage["R", subBox].variance.array, 1e-7)
 
 
-def _testMaskedImageCopy(cls, maskedImage1):
+def _testMaskedImageCopy(testCase, maskedImage1):
     maskedImage2 = maskedImage1.clone()
 
     maskedImage2.shiftedTo(Point2I(11, 23))
-    cls.assertEqual(maskedImage2.getBBox(), Box2I(Point2I(11, 23), Extent2I(200, 100)))
-    cls.assertEqual(maskedImage1.getBBox(), Box2I(Point2I(1000, 2000), Extent2I(200, 100)))
-    cls.assertTrue(np.all([img.getBBox() == maskedImage1.getBBox() for img in maskedImage1.image]))
-    cls.assertTrue(np.all([img.getBBox() == maskedImage2.getBBox() for img in maskedImage2.image]))
+    testCase.assertEqual(maskedImage2.getBBox(), Box2I(Point2I(11, 23), Extent2I(200, 100)))
+    testCase.assertEqual(maskedImage1.getBBox(), Box2I(Point2I(1000, 2000), Extent2I(200, 100)))
+    testCase.assertTrue(np.all([img.getBBox() == maskedImage1.getBBox() for img in maskedImage1.image]))
+    testCase.assertTrue(np.all([img.getBBox() == maskedImage2.getBBox() for img in maskedImage2.image]))
 
     maskedImage2.image.array = 1
-    cls.assertFloatsEqual(maskedImage1.image.array, cls.imgValue)
-    cls.assertFloatsEqual(maskedImage2.image.array, 1)
-    cls.assertFloatsEqual(maskedImage1["G"].image.array, cls.imgValue)
-    cls.assertFloatsEqual(maskedImage2["G"].image.array, 1)
+    testCase.assertFloatsEqual(maskedImage1.image.array, testCase.imgValue)
+    testCase.assertFloatsEqual(maskedImage2.image.array, 1)
+    testCase.assertFloatsEqual(maskedImage1["G"].image.array, testCase.imgValue)
+    testCase.assertFloatsEqual(maskedImage2["G"].image.array, 1)
 
     maskedImage2 = maskedImage1.clone(False)
     maskedImage2.image.array = 1
-    cls.assertFloatsEqual(maskedImage1.image.array, 1)
-    cls.assertFloatsEqual(maskedImage2.image.array, 1)
-    cls.assertFloatsEqual(maskedImage1["G"].image.array, 1)
-    cls.assertFloatsEqual(maskedImage2["G"].image.array, 1)
+    testCase.assertFloatsEqual(maskedImage1.image.array, 1)
+    testCase.assertFloatsEqual(maskedImage2.image.array, 1)
+    testCase.assertFloatsEqual(maskedImage1["G"].image.array, 1)
+    testCase.assertFloatsEqual(maskedImage2["G"].image.array, 1)
 
 
 class MultibandMaskedImageTestCase(lsst.utils.tests.TestCase):
@@ -681,7 +681,7 @@ class MultibandFootprintTestCase(lsst.utils.tests.TestCase):
                 fpImage = np.array(images)[:, 1:-1, 1:-1]
             except IndexError:
                 fpImage = np.array([img.array for img in images])[:, 1:-1, 1:-1]
-            self.assertFloatsAlmostEqual(mFoot.getImage().array, fpImage)
+            self.assertFloatsAlmostEqual(mFoot.getImage(fill=0).array, fpImage)
             if peaks is not None:
                 self.verifyPeaks(mFoot.getPeaks(), peaks)
 
@@ -705,9 +705,9 @@ class MultibandFootprintTestCase(lsst.utils.tests.TestCase):
         fpImage = np.array(images)[:, 3:-3, 3:-3]
         mask = np.all(fpImage <= np.array(thresh)[:, None, None], axis=0)
         fpImage[:, mask] = 0
-        self.assertFloatsAlmostEqual(mFoot.getImage().array, fpImage)
+        self.assertFloatsAlmostEqual(mFoot.getImage(fill=0).array, fpImage)
         img = mFoot.getImage().array
-        img[img == 0] = 1.1
+        img[~np.isfinite(img)] = 1.1
         self.assertFloatsAlmostEqual(mFoot.getImage(fill=1.1).array, img)
 
     def testSlicing(self):

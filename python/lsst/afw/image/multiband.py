@@ -301,6 +301,25 @@ class MultibandImage(MultibandBase):
 
         return result
 
+    def __setitem__(self, args, value):
+        """Set a subset of the MultibandImage
+        """
+        if not isinstance(args, tuple):
+            indices = (args,)
+        else:
+            indices = args
+
+        # Return the single band object if the first
+        # index is not a list or slice.
+        filters, filterIndex = self._filterNamesToIndex(indices[0])
+        if len(indices) > 1:
+            sy, sx = self.imageIndicesToNumpy(indices[1:])
+        else:
+            sy = sx = slice(None)
+        if hasattr(value, "array"):
+            self._array[filterIndex, sy, sx] = value.array
+        else:
+            self._array[filterIndex, sy, sx] = value
 
 class MultibandMask(MultibandImage):
     """Multiband Mask class
@@ -468,26 +487,6 @@ class MultibandMask(MultibandImage):
         for s,o in zip(self.singles, _others):
             s ^= o
         return self
-
-    def __setitem__(self, args, value):
-        """Set a subset of the MultibandMask
-        """
-        if not isinstance(args, tuple):
-            indices = (args,)
-        else:
-            indices = args
-
-        # Return the single band object if the first
-        # index is not a list or slice.
-        filters, filterIndex = self._filterNamesToIndex(indices[0])
-        if len(indices) > 1:
-            sy, sx = self.imageIndicesToNumpy(indices[1:])
-        else:
-            sy = sx = slice(None)
-        if isinstance(value, Mask):
-            self._array[filterIndex, sy, sx] = value.array
-        else:
-            self._array[filterIndex, sy, sx] = value
 
 
 class MultibandTripleBase(MultibandBase):

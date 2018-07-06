@@ -53,6 +53,9 @@ class MultibandBase(ABC):
     bbox: Box2I
         By default `MultibandBase` uses `singles[0].getBBox()` to set
         the bounding box of the multiband
+    singleType: type
+        Type of the single band objects to create
+        (used by copy and sometimes slicing methods).
     """
     def __init__(self, filters, singles, bbox=None, singleType=None):
         self._filters = tuple([f for f in filters])

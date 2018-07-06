@@ -187,7 +187,7 @@ class MultibandFootprint(MultibandBase):
         result = MultibandFootprint(filters=filters, singles=singles)
         return result
 
-    def getImage(self, bbox=None, fill=0):
+    def getImage(self, bbox=None, fill=np.nan):
         """Convert a `MultibandFootprint` to a `MultibandImage`
 
         Parameters
