@@ -48,8 +48,10 @@ def handleNegativeIndex(index, size, origin, default):
     relative to the upper bounds of the array, as in regular negative indexing
     in Python.
 
-    When negative indices are used in PARENT coordinates, we interpret them as
-    actual negative pixel values.
+    Using negative indices in PARENT coordinates is not allowed unless passed
+    via a `Point2I` or `Box2I`; the potential for confusion between actual
+    negative indices (when ``xy0 < 0``) and offsets relative to the upper
+    bounds of the array is too great.
 
     Parameters
     ----------
@@ -74,8 +76,14 @@ def handleNegativeIndex(index, size, origin, default):
     if index is None:
         assert default is not None
         return default
-    if index < 0 and origin == LOCAL:
-        index = size + index
+    if index < 0:
+        if origin == LOCAL:
+            index = size + index
+        else:
+            raise IndexError("Negative indices are not permitted with the PARENT origin. "
+                             "Use LOCAL to use negative to index relative to the end, "
+                             "and Point2I or Box2I indexing to access negative pixels "
+                             "in PARENT coordinates.")
     return index
 
 

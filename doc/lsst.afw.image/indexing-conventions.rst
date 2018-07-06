@@ -205,7 +205,7 @@ Indexing with a slice for one dimension and a scalar for the other is not suppor
 
 .. note::
     Python slicing typically allows negative indices to be used to indicate positions relative to the end of the sequence.
-    This is supported when slicing LSST image objects when either the `LOCAL` coordinate system is used or ``xy0`` is nonnegative.
+    This is supported when slicing LSST image objects when the `LOCAL` coordinate system is used.
     When ``xy0`` is negative, negative indices in `PARENT` coordinates could be either positions relative to the end or true negative pixel indices, and to avoid confusion image classes will raise `IndexError` instead of assuming either.
     To obtain a subimage containing a region that includes negative-index pixels, use a `Box2I`.
 
