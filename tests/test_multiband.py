@@ -38,8 +38,9 @@ from lsst.afw.image.multiband import MultibandExposure
 
 
 def _testImageFilterSlicing(cls, mImage, singleType, bbox, value):
-    assert isinstance(mImage["R"], singleType)
-    assert isinstance(mImage[:], type(mImage))
+    """Test slicing by filters for image-like objects"""
+    cls.assertIsInstance(mImage["R"], singleType)
+    cls.assertIsInstance(mImage[:], type(mImage))
 
     cls.assertEqual(mImage["G", -1, -1], value)
     cls.assertEqual(mImage["G"].array.shape, (100, 200))
@@ -61,7 +62,8 @@ def _testImageFilterSlicing(cls, mImage, singleType, bbox, value):
 
 
 def _testImageSlicing(cls, mImage, gVal, rVal, iVal):
-    assert isinstance(mImage[:, -1, -1], MultibandPixel)
+    """Test slicing in the spatial dimensions for image-like objects"""
+    cls.assertIsInstance(mImage[:, -1, -1], MultibandPixel)
     cls.assertEqual(mImage["G", -1, -1], gVal)
 
     cls.assertEqual(mImage[:, 1100:, 2025:].getBBox(), Box2I(Point2I(1100, 2025), Extent2I(100, 75)))
@@ -97,6 +99,7 @@ def _testImageSlicing(cls, mImage, gVal, rVal, iVal):
 
 
 def _testImageModification(cls, mImage1, mImage2, bbox1, bbox2, value1, value2):
+    """Test the image-like objects can be modified"""
     mImage1[:"R", bbox2].array = value2
     cls.assertFloatsEqual(mImage1["G", bbox2].array, mImage2["G"].array)
     cls.assertFloatsEqual(mImage1["R"].array, value1)
@@ -127,6 +130,7 @@ def _testImageModification(cls, mImage1, mImage2, bbox1, bbox2, value1, value2):
 
 
 def _testImageCopy(cls, mImage1, value1, value2):
+    """Test copy and deep copy in image-like objects"""
     mImage2 = mImage1.clone()
     mImage2.shiftedTo(Point2I(11, 23))
     cls.assertEqual(mImage2.getBBox(), Box2I(Point2I(11, 23), Extent2I(200, 100)))
@@ -352,10 +356,10 @@ class MultibandMaskTestCase(lsst.utils.tests.TestCase):
 
 
 def _testMaskedImageFilters(cls, maskedImage, singleType):
-    assert isinstance(maskedImage["R"], singleType)
-    assert isinstance(maskedImage.image["G"], ImageF)
-    assert isinstance(maskedImage.mask["R"], Mask)
-    assert isinstance(maskedImage.variance["I"], ImageF)
+    cls.assertIsInstance(maskedImage["R"], singleType)
+    cls.assertIsInstance(maskedImage.image["G"], ImageF)
+    cls.assertIsInstance(maskedImage.mask["R"], Mask)
+    cls.assertIsInstance(maskedImage.variance["I"], ImageF)
 
     cls.assertEqual(maskedImage["G"].image.array.shape, (100, 200))
     cls.assertEqual(maskedImage[:"I"].mask.array.shape, (2, 100, 200))
@@ -707,8 +711,8 @@ class MultibandFootprintTestCase(lsst.utils.tests.TestCase):
         self.assertFloatsAlmostEqual(mFoot.getImage(fill=1.1).array, img)
 
     def testSlicing(self):
-        assert isinstance(self.mFoot["R"], HeavyFootprintF)
-        assert isinstance(self.mFoot[:], MultibandFootprint)
+        self.assertIsInstance(self.mFoot["R"], HeavyFootprintF)
+        self.assertIsInstance(self.mFoot[:], MultibandFootprint)
 
         self.assertEqual(self.mFoot["I"], self.mFoot["I"])
         self.assertEqual(self.mFoot[:"I"].filters, ("G", "R"))

@@ -115,7 +115,7 @@ def getProjectionIndices(imageBBox, targetBBox):
     Given an image and target bounding box,
     calculate the indices needed to appropriately
     slice the input image and target image to
-    projec the image to the target.
+    project the image to the target.
 
     Parameters
     ----------
@@ -126,9 +126,10 @@ def getProjectionIndices(imageBBox, targetBBox):
 
     Returns
     -------
-    targetSlices, imageIndices: tuple, tuple
-        Slices of the target and input images
-        in the form (by, bx), (iy, ix).
+    targetSlices: tuple
+        Slices of the target image in the form (by, bx), (iy, ix).
+    imageIndices: tuple
+        Slices of the input image in the form (by, bx), (iy, ix).
     """
     def getMin(dXmin):
         """Get minimum indices"""
@@ -172,8 +173,8 @@ def getProjectionIndices(imageBBox, targetBBox):
 def projectImage(image, bbox, fill=0):
     """Project an image into a bounding box
 
-    Project an image into a new image with a
-    (potentially) different bounding box.
+    Return a new image whose pixels are equal to those of
+    `image` within `bbox`, and equal to `fill` outside.
 
     Parameters
     ----------
@@ -189,7 +190,7 @@ def projectImage(image, bbox, fill=0):
     -------
     newImage: `afw.Image` or `afw.MaskedImage`
         The new image with the input image projected
-        into it's bounding box.
+        into its bounding box.
     """
     if image.getBBox() == bbox:
         return image
