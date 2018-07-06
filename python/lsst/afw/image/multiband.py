@@ -23,8 +23,8 @@ __all__ = ["MultibandPixel", "MultibandImage", "MultibandMask", "MultibandMasked
 
 import numpy as np
 
-from lsst.geom import Point2I, Box2I, Extent2I
-from . import ImageF, MaskedImageF, Mask, ExposureF
+from lsst.geom import Point2I, Box2I, Extent2I, Point2D
+from . import Image, ImageF, MaskedImageF, Mask, ExposureF
 from . import maskedImage as afwMaskedImage
 from ..multiband import MultibandBase
 
@@ -63,10 +63,7 @@ class MultibandPixel(MultibandBase):
         self._singles = singles
 
         # Make sure that the bounding box has been setup properly
-        if self.getBBox().getDimensions() != Extent2I(1,1):
-            err = ("Something went wrong, the bounding box for a `MultibandPixel` "
-                   "should always have dimensions (1,1), received {0}")
-            raise RuntimeError(err.format(self.getBBox().getDimensions()))
+        assert self.getBBox().getDimensions() == Extent2I(1,1)
 
     def _getArray(self):
         """Data cube array in multiple bands
@@ -239,8 +236,7 @@ class MultibandImage(MultibandBase):
         """
         self._singleType = singleType
         self._singles = self._arrayToSingles(self.array, singleType, self.getXY0())
-        if not len(self.filters) == len(self.singles):
-            raise RuntimeError("The length of `filters` and `array` should be the same")
+        assert len(self.filters) == len(self.singles)
 
     def _arrayToSingles(self, array, singleType, xy0):
         """Create a list of `Image<X>` objects from a 3D array
@@ -580,6 +576,7 @@ class MultibandTripleBase(MultibandBase):
             raise TypeError(err)
 
         self._singles = self._buildSingles(self._image, self._mask, self._variance)
+        self._bbox = self.singles[0].getBBox()
 
     def _setMultiband(self, image, mask, variance, filters):
         """Set image, mask, and variance to the multiband objects
@@ -701,13 +698,15 @@ class MultibandMaskedImage(MultibandTripleBase):
     This class acts as a container for multiple `afw.MaskedImage` objects.
     All masked images must have the same bounding box, and the associated
     images must all have the same data type.
+    The `image`, `mask`, and `variance` are all stored separately into
+    a `MultibandImage`, `MultibandMask`, and `MultibandImage` respectively,
+    which each have their own internal 3D arrays (filter, y, x).
 
     See `MultibandTripleBase` for parameter definitions.
     """
     def __init__(self, filters, singles=None, image=None, mask=None, variance=None,
                  filterKwargs=None, **kwargs):
         super().__init__(filters, singles, image, mask, variance, MaskedImageF, filterKwargs, **kwargs)
-        self._bbox = self.singles[0].getBBox()
         if not np.all([single.getBBox() == self.getBBox() for single in self.singles]):
             raise ValueError("Single band masked images did not all have the same bounding box")
 
@@ -725,8 +724,8 @@ class MultibandMaskedImage(MultibandTripleBase):
 
         Returns
         -------
-        singles: list
-            List of `MaskedImage` objects for each band,
+        singles: tuple
+            Tuple of `MaskedImage` objects for each band,
             where the `image`, `mask`, and `variance` of each `single`
             point to the multiband objects.
         """
@@ -761,11 +760,10 @@ class MultibandExposure(MultibandTripleBase):
                  psfs=None, filterKwargs=None, singleType=ExposureF, **kwargs):
         super().__init__(filters, singles, image, mask, variance, singleType, filterKwargs, **kwargs)
         if psfs is not None:
-            self.setAllPsfs(psfs)
-        self._bbox = self.singles[0].getBBox()
+            for psf, exposure in zip(psfs, self.singles):
+                exposure.setPsf(psf)
         if not np.all([single.getBBox() == self.getBBox() for single in self.singles]):
             raise ValueError("Single band masked images did not all have the same bounding box")
-        self._psfImage = None
 
     def _buildSingles(self, image=None, mask=None, variance=None):
         """Make a new list of single band objects
@@ -781,8 +779,8 @@ class MultibandExposure(MultibandTripleBase):
 
         Returns
         -------
-        singles: list
-            List of `MaskedImage` objects for each band,
+        singles: tuple
+            Tuple of `MaskedImage` objects for each band,
             where the `image`, `mask`, and `variance` of each `single`
             point to the multiband objects.
         """
@@ -822,16 +820,16 @@ class MultibandExposure(MultibandTripleBase):
         filters: list or str
             List of filter names for each band
         filterKwargs: dict
-            Keyword arguments to initialize a new instance of an
-            inherited class that are different for each filter.
+            Keyword arguments to pass to the Butler
+            that are different for each filter.
             The keys are the names of the arguments and the values
             should also be dictionaries, with filter names as keys
             and the value of the argument for the given filter as values.
         args: list
             Arguments to the Butler.
         kwargs: dict
-            Keyword arguments to pass to initialize a new instance of an
-            inherited class that are the same in all bands.
+            Keyword arguments to pass to the Butler
+            that are the same in all bands.
 
         Returns
         -------
@@ -848,61 +846,37 @@ class MultibandExposure(MultibandTripleBase):
             exposures.append(butler.get(*args, filter=f, **kwargs))
         return cls(filters, exposures)
 
-    def setPsf(self, psf, filter):
-        """Set the PSF for a single Exposure
-
-        Parameters
-        ----------
-        psf: `meas.algorithms.coaddPsf`
-            The PSF to assign to the given exposure
-        filter: string or int
-            Either the index of the filter or name of the
-            filter for the `Exposure` in `self.singles`
-            to assign `psf`.
-        """
-        if isinstance(filter, str):
-            filter = self.filters.index(filter)
-        self.singles[filter].setPsf(psf)
-        # Clear the stored PSF image to be recalculated on demand later
-        self._psfImage = None
-
-    def setAllPsfs(self, psfs):
-        """Set the PSF for each band
-
-        Parameters
-        ----------
-        psfs: list of `meas.algorithms.coaddPsf`
-            List of PSF's for each band
-        """
-        for psf in psfs:
-            for single in self.singles:
-                single.setPsf(psf)
-        # Clear the stored PSF image to be recalculated on demand later
-        self._psfImage = None
-
-    def getPsfImage(self, recalculate=False):
+    def getPsfImage(self, coords=None):
         """Get a multiband PSF image
 
-        If it has not been calculated already,
-        the PSF Kernel Image is computed for each band
+        The PSF Kernel Image is computed for each band
         and combined into a (filter, y, x) array and stored
         as `self._psfImage`.
+        The result is not cached, so if the same PSF is expected
+        to be used multiple times it is a good idea to store the
+        result in another variable.
 
         Parameters
         ----------
-        recalculate: bool
-            If the PSF kernel has already been calculated,
-            if `recalculate` is `True` the psf image will
-            be recalculated.
+        coords: `Point2D` or `tuple`
+            Coordinates to evaluate the PSF. If `coords` is `None`
+            then `Psf.getAveragePosition()` is used.
 
         Returns
         -------
         self._psfImage: array
             The multiband PSF image.
         """
-        if recalculate or self._psfImage is None:
-            psfs = []
-            for single in self.singles:
+        psfs = []
+        # Make the coordinates into a Point2D (if necessary)
+        if not isinstance(coords, Point2D) and coords is not None:
+            coords = Point2D(coords[0], coords[1])
+        for single in self.singles:
+            if coords is None:
                 psfs.append(single.getPsf().computeKernelImage().array)
-            self._psfImage = np.array(psfs)
-        return self._psfImage
+            else:
+                psfs.append(single.getPsf().computeKernelImage(coords).array)
+        psfs = np.array(psfs)
+        singleType = type(Image(dtype=psfs.dtype))
+        psfImage = MultibandImage(self.filters, array=psfs, singleType=singleType)
+        return psfImage
