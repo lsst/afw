@@ -137,6 +137,8 @@ def _testImageCopy(testCase, mImage1, value1, value2):
     testCase.assertEqual(mImage1.getBBox(), Box2I(Point2I(1000, 2000), Extent2I(200, 100)))
     testCase.assertTrue(np.all([s.getBBox() == mImage1.getBBox() for s in mImage1.singles]))
     testCase.assertTrue(np.all([s.getBBox() == mImage2.getBBox() for s in mImage2.singles]))
+    mImage2.array[:] = 17
+    testCase.assertNotEqual(mImage1.array[0, 0, 0], 17)
 
     mImage2.array[:] = value2
     testCase.assertFloatsEqual(mImage1.array, value1)
@@ -146,10 +148,8 @@ def _testImageCopy(testCase, mImage1, value1, value2):
 
     mImage2 = mImage1.clone(False)
     mImage2.shiftedTo(Point2I(11, 23))
-    testCase.assertEqual(mImage2.getBBox(), Box2I(Point2I(11, 23), Extent2I(200, 100)))
-    testCase.assertEqual(mImage1.getBBox(), Box2I(Point2I(1000, 2000), Extent2I(200, 100)))
-    testCase.assertTrue(np.all([s.getBBox() == mImage2.getBBox() for s in mImage1.singles]))
-    testCase.assertTrue(np.all([s.getBBox() == mImage2.getBBox() for s in mImage2.singles]))
+    mImage2.array[:] = 17
+    testCase.assertFloatsEqual(mImage2.array, mImage1.array)
 
     mImage2.array[:] = value2
     testCase.assertFloatsEqual(mImage1.array, value2)
@@ -210,10 +210,10 @@ class MultibandImageTestCase(lsst.utils.tests.TestCase):
         self.filters = ["G", "R", "I", "Z", "Y"]
         self.value1, self.value2 = 10, 100
         images = [ImageF(self.bbox1, self.value1) for f in self.filters]
-        self.mImage1 = MultibandImage(self.filters, images)
+        self.mImage1 = MultibandImage.fromImages(self.filters, images)
         self.bbox2 = Box2I(Point2I(1100, 2025), Extent2I(30, 50))
         images = [ImageF(self.bbox2, self.value2) for f in self.filters]
-        self.mImage2 = MultibandImage(self.filters, images)
+        self.mImage2 = MultibandImage.fromImages(self.filters, images)
 
     def tearDown(self):
         del self.bbox1
@@ -264,13 +264,13 @@ class MultibandMaskTestCase(lsst.utils.tests.TestCase):
         singles = [self.Mask(self.bbox) for f in range(len(self.filters))]
         for n in range(len(singles)):
             singles[n].set(self.values1[n])
-        self.mMask1 = MultibandMask(self.filters, singles)
+        self.mMask1 = MultibandMask.fromMasks(self.filters, singles)
 
         self.values2 = [self.EDGE, self.BAD, self.CR | self.EDGE]
         singles = [self.Mask(self.bbox) for f in range(len(self.filters))]
         for n in range(len(singles)):
             singles[n].set(self.values2[n])
-        self.mMask2 = MultibandMask(self.filters, singles)
+        self.mMask2 = MultibandMask.fromMasks(self.filters, singles)
 
     def tearDown(self):
         del self.mMask1
@@ -343,7 +343,7 @@ class MultibandMaskTestCase(lsst.utils.tests.TestCase):
         singles = [self.Mask(bbox2) for f in range(len(self.filters))]
         for n in range(len(singles)):
             singles[n].set(value2)
-        mMask2 = MultibandMask(self.filters, singles)
+        mMask2 = MultibandMask.fromMasks(self.filters, singles)
 
         _testImageModification(self, mMask1, mMask2, self.bbox, bbox2, value1, value2)
 
@@ -396,7 +396,7 @@ def _testMaskedImageSlicing(testCase, maskedImage):
 
 def _testMaskedmageModification(testCase, maskedImage):
     images = [ImageF(testCase.bbox, 10*testCase.imgValue) for f in testCase.filters]
-    mImage = MultibandImage(testCase.filters, images)
+    mImage = MultibandImage.fromImages(testCase.filters, images)
     maskedImage.image = mImage
     testCase.assertFloatsEqual(maskedImage.image["G"].array, mImage.array[0])
     testCase.assertFloatsEqual(maskedImage["G"].image.array, mImage.array[0])
@@ -404,13 +404,13 @@ def _testMaskedmageModification(testCase, maskedImage):
     singles = [testCase.Mask(testCase.bbox) for f in range(len(testCase.filters))]
     for n in range(len(singles)):
         singles[n].set(testCase.maskValue*2)
-    mMask = MultibandMask(testCase.filters, singles)
+    mMask = MultibandMask.fromMasks(testCase.filters, singles)
     maskedImage.mask = mMask
     testCase.assertFloatsEqual(maskedImage.mask["G"].array, mMask.array[0])
     testCase.assertFloatsEqual(maskedImage["G"].mask.array, mMask.array[0])
 
     images = [ImageF(testCase.bbox, .1 * testCase.varValue) for f in testCase.filters]
-    mVariance = MultibandImage(testCase.filters, images)
+    mVariance = MultibandImage.fromImages(testCase.filters, images)
     maskedImage.variance = mVariance
     testCase.assertFloatsEqual(maskedImage.variance["G"].array, mVariance.array[0])
     testCase.assertFloatsEqual(maskedImage["G"].variance.array, mVariance.array[0])
@@ -471,7 +471,7 @@ class MultibandMaskedImageTestCase(lsst.utils.tests.TestCase):
 
         self.imgValue = 10
         images = [ImageF(self.bbox, self.imgValue) for f in self.filters]
-        mImage = MultibandImage(self.filters, images)
+        mImage = MultibandImage.fromImages(self.filters, images)
 
         self.Mask = Mask[MaskPixel]
         # Store the default mask planes for later use
@@ -487,11 +487,11 @@ class MultibandMaskedImageTestCase(lsst.utils.tests.TestCase):
         singles = [self.Mask(self.bbox) for f in range(len(self.filters))]
         for n in range(len(singles)):
             singles[n].set(self.maskValue)
-        mMask = MultibandMask(self.filters, singles)
+        mMask = MultibandMask.fromMasks(self.filters, singles)
 
         self.varValue = 1e-2
         images = [ImageF(self.bbox, self.varValue) for f in self.filters]
-        mVariance = MultibandImage(self.filters, images)
+        mVariance = MultibandImage.fromImages(self.filters, images)
 
         self.maskedImage = MultibandMaskedImage(image=mImage, mask=mMask, variance=mVariance,
                                                 filters=self.filters)
@@ -533,7 +533,7 @@ class MultibandExposureTestCase(lsst.utils.tests.TestCase):
 
         self.imgValue = 10
         images = [ImageF(self.bbox, self.imgValue) for f in self.filters]
-        mImage = MultibandImage(self.filters, images)
+        mImage = MultibandImage.fromImages(self.filters, images)
 
         self.Mask = Mask[MaskPixel]
         # Store the default mask planes for later use
@@ -549,11 +549,11 @@ class MultibandExposureTestCase(lsst.utils.tests.TestCase):
         singles = [self.Mask(self.bbox) for f in range(len(self.filters))]
         for n in range(len(singles)):
             singles[n].set(self.maskValue)
-        mMask = MultibandMask(self.filters, singles)
+        mMask = MultibandMask.fromMasks(self.filters, singles)
 
         self.varValue = 1e-2
         images = [ImageF(self.bbox, self.varValue) for f in self.filters]
-        mVariance = MultibandImage(self.filters, images)
+        mVariance = MultibandImage.fromImages(self.filters, images)
 
         self.kernelSize = 51
         self.psfs = [GaussianPsf(self.kernelSize, self.kernelSize, 4.0) for f in self.filters]
@@ -664,7 +664,7 @@ class MultibandFootprintTestCase(lsst.utils.tests.TestCase):
 
         def multibandProjectSpans(bbox):
             images = np.array([projectSpans(n, n, bbox, True) for n in range(2, 5)])
-            return MultibandImage(array=images, bbox=bbox, filters=self.filters)
+            return MultibandImage(self.filters, array=images, bbox=bbox)
 
         def runTest(images=None, footprint=None, xy0=Point2I(5, 5),
                     peaks=self.peaks, thresh=0, footprintBBox=Box2I(Point2I(6, 6), Extent2I(9, 9))):

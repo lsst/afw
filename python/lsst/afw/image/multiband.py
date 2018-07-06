@@ -123,7 +123,7 @@ class MultibandPixel(MultibandBase):
         pass
 
 
-class MultibandImage(MultibandBase):
+class MultibandImageBase(MultibandBase):
     """Multiband Image class
 
     This class acts as a container for multiple `afw.Image` objects.
@@ -136,83 +136,35 @@ class MultibandImage(MultibandBase):
 
     Parameters
     ----------
-    singles: list
-        A list of single band objects.
-        If `array` is not `None`, then `singles` is ignored
     filters: list
-        List of filter names. If `singles` is an `OrderedDict`
-        then this argument is ignored, otherwise it is required.
+        List of filter names.
     array: 3D numpy array
         Array (filters, y, x) of multiband data.
         If this is used to initialize a `MultibandImage`,
         either `bbox` or `singles` is also required.
+    bbox: `Box2I`
+        Location of the array in a larger single band image.
+        This argument is ignored if `singles` is not `None`.
     singleType: class
         Class of the single band objects.
         This is ignored unless `singles` and `array`
         are both `None`, in which case it is required.
-    bbox: `Box2I`
-        Location of the array in a larger single band image.
-        This argument is ignored if `singles` is not `None`.
-    filterKwargs: dict
-        Keyword arguments to pass to `_fullInitialize` to
-        initialize a new instance of an inherited class
-        that are different for each filter.
-        The keys are the names of the arguments and the values
-        should also be dictionaries, with filter names as keys
-        and the value of the argument for a given filter as values.
-    kwargs: dict
-        Keyword arguments to pass to `_fullInitialize` to
-        initialize a new instance of an inherited class that are the
-        same in all bands.
     """
-    def __init__(self, filters, singles=None, array=None, bbox=None,
-                 singleType=ImageF, filterKwargs=None, **kwargs):
+    def __init__(self, filters, array, bbox=None, singleType=ImageF):
         # Create the single band objects from the array
-        if array is not None and filters is not None:
-            if len(array) != len(filters):
-                raise ValueError("`array` and `filters` must have the same length")
-            self._array = array
-            self._filters = filters
-            if singles is None:
-                if bbox is None:
-                    bbox = Box2I(Point2I(0, 0), Extent2I(array[0].shape[1], array[0].shape[0]))
-                self._bbox = bbox
-                self._updateSingles(singleType)
-            else:
-                if len(singles) != len(array):
-                    raise ValueError("`array` should have the same length as `singles`")
-                if not np.all([single.array.shape == array.shape[1:] for single in singles]):
-                    err = ("`array` and each item in `singles` must have the same spatial dimension, "
-                           "received dimensions {0} for array with dimension {1}")
-                    raise ValueError(err.format([single.array.shape for single in singles], array.shape))
-                self._singles = tuple(singles)
-                self._bbox = singles[0].getBBox()
+        if len(array) != len(filters):
+            raise ValueError("`array` and `filters` must have the same length")
+        self._array = array
+        self._filters = tuple(filters)
+        if bbox is None:
+            bbox = Box2I(Point2I(0, 0), Extent2I(array[0].shape[1], array[0].shape[0]))
         else:
-            # Extract the single band objects and filters
-            if singles is None and filters is not None:
-                # Attempt to load a set of images
-                self._singleType = singleType
-                singles = []
-                for f in filters:
-                    if filterKwargs is not None:
-                        for key, value in filterKwargs:
-                            kwargs[key] = value[f]
-                    singles.append(singleType(**kwargs))
-            if singles is not None:
-                super().__init__(filters, singles)
-            else:
-                err = ("Either a list of `singles` and `filters`; "
-                       "or an `array`, `filters`, `bbox`, and `singleType`; "
-                       "or a set of `kwargs` is required to initialize a `MultibandImage`.")
-                raise TypeError(err)
-
-            self._array = np.array([image.array for image in self.singles])
-            self._updateSingles(type(self.singles[0]))
+            print("in init:", id(bbox))
+        self._bbox = bbox
+        self._updateSingles(singleType)
 
         # Make sure that all of the parameters have been setup appropriately
         assert isinstance(self._bbox, Box2I)
-        if not np.all([single.getBBox() == self.getBBox() for single in self.singles]):
-            raise ValueError("Single band images did not all have the same bounding box")
 
     def _getArray(self):
         """Data cube array in multiple bands
@@ -254,9 +206,10 @@ class MultibandImage(MultibandBase):
         if deep:
             array = np.copy(self.array)
             bbox = Box2I(self.getBBox())
-            result = type(self)(self.filters, array=array, bbox=bbox, singleType=self.singleType)
         else:
-            result = type(self)(self.filters, self.singles, array=self.array)
+            array = self.array
+            bbox = self.getBBox()
+        result = type(self)(self.filters, array, bbox, self.singleType)
         return result
 
     def _slice(self, filters, filterIndex, indices):
@@ -286,10 +239,10 @@ class MultibandImage(MultibandBase):
                 return result
             # Set the bbox size based on the slices
             bbox = self._getBBoxFromIndices(allSlices[1:])
-            singles = self._arrayToSingles(array, self.singleType, bbox.getMin())
-            result = type(self)(filters, singles, array=array)
         else:
-            result = type(self)(filters=filters, array=self._array[filterIndex], bbox=self.getBBox())
+            array = self._array[filterIndex]
+            bbox = self.getBBox()
+        result = type(self)(filters, array, bbox, self.singleType)
 
         # Check that the image and array shapes agree
         imageShape = (
@@ -321,20 +274,155 @@ class MultibandImage(MultibandBase):
         else:
             self._array[filterIndex, sy, sx] = value
 
-class MultibandMask(MultibandImage):
+def fromSingles(cls, filters, singles):
+    """Construct a MultibandImage from a collection of single band images
+
+    Parameters
+    ----------
+    filters: list
+        List of filter names.
+    singles: list
+        A list of single band objects.
+        If `array` is not `None`, then `singles` is ignored
+    """
+    array = np.array([image.array for image in singles], dtype=singles[0].array.dtype)
+    singleType = type(singles[0])
+    if not np.all([image.getBBox() == singles[0].getBBox() for image in singles[1:]]):
+        raise ValueError("Single band images did not all have the same bounding box")
+    bbox = singles[0].getBBox()
+    return cls(filters, array, bbox, singleType)
+
+def imageFactory(cls, filters, filterKwargs, singleType=ImageF, **kwargs):
+        """Build a MultibandImage from a set of keyword arguments
+
+        Parameters
+        ----------
+        filters: list
+            List of filter names.
+        singleType: class
+            Class of the single band objects.
+            This is ignored unless `singles` and `array`
+            are both `None`, in which case it is required.
+        filterKwargs: dict
+            Keyword arguments to pass to `_fullInitialize` to
+            initialize a new instance of an inherited class
+            that are different for each filter.
+            The keys are the names of the arguments and the values
+            should also be dictionaries, with filter names as keys
+            and the value of the argument for a given filter as values.
+        kwargs: dict
+            Keyword arguments to pass to `_fullInitialize` to
+            initialize a new instance of an inherited class that are the
+            same in all bands.
+        """
+        # Attempt to load a set of images
+        singles = []
+        for f in filters:
+            if filterKwargs is not None:
+                for key, value in filterKwargs:
+                    kwargs[key] = value[f]
+            singles.append(singleType(**kwargs))
+        return cls.fromSingles(filters, singles)
+
+class MultibandImage(MultibandImageBase):
+    """Multiband Image class
+
+    See `MultibandImageBase` for a description of the parameters.
+    """
+    @staticmethod
+    def fromImages(filters, singles):
+        """Construct a MultibandImage from a collection of single band images
+
+        Parameters
+        ----------
+        filters: list
+            List of filter names.
+        singles: list
+            A list of single band objects.
+            If `array` is not `None`, then `singles` is ignored
+        """
+        return fromSingles(MultibandImage, filters, singles)
+
+    @staticmethod
+    def Factory(filters, filterKwargs, singleType=ImageF, **kwargs):
+        """Build a MultibandImage from a set of keyword arguments
+
+        Parameters
+        ----------
+        filters: list
+            List of filter names.
+        singleType: class
+            Class of the single band objects.
+            This is ignored unless `singles` and `array`
+            are both `None`, in which case it is required.
+        filterKwargs: dict
+            Keyword arguments to pass to `_fullInitialize` to
+            initialize a new instance of an inherited class
+            that are different for each filter.
+            The keys are the names of the arguments and the values
+            should also be dictionaries, with filter names as keys
+            and the value of the argument for a given filter as values.
+        kwargs: dict
+            Keyword arguments to pass to `_fullInitialize` to
+            initialize a new instance of an inherited class that are the
+            same in all bands.
+        """
+        return imageFactory(MultibandImage, filters, filterKwargs, singleType, **kwargs)
+
+
+class MultibandMask(MultibandImageBase):
     """Multiband Mask class
 
-    See `MultibandImage` for a description of the parameters..
+    See `MultibandImageBase` for a description of the parameters.
     """
-    def __init__(self, filters, singles=None, array=None, bbox=None,
-                 singleType=Mask, filterKwargs=None, **kwargs):
-        super().__init__(filters, singles, array, bbox, singleType, filterKwargs, **kwargs)
+    def __init__(self, filters, array, bbox=None, singleType=Mask):
+        super().__init__(filters, array, bbox, singleType)
         # Set Mask specific properties
         self._refMask = self._singles[0]
         refMask = self._refMask
         assert np.all([refMask.getMaskPlaneDict() == m.getMaskPlaneDict() for m in self.singles])
         assert np.all([refMask.getNumPlanesMax() == m.getNumPlanesMax() for m in self.singles])
         assert np.all([refMask.getNumPlanesUsed() == m.getNumPlanesUsed() for m in self.singles])
+
+    @staticmethod
+    def fromMasks(filters, singles):
+        """Construct a MultibandImage from a collection of single band images
+
+        Parameters
+        ----------
+        filters: list
+            List of filter names.
+        singles: list
+            A list of single band objects.
+            If `array` is not `None`, then `singles` is ignored
+        """
+        return fromSingles(MultibandMask, filters, singles)
+
+    @staticmethod
+    def Factory(filters, filterKwargs, singleType=ImageF, **kwargs):
+        """Build a MultibandImage from a set of keyword arguments
+
+        Parameters
+        ----------
+        filters: list
+            List of filter names.
+        singleType: class
+            Class of the single band objects.
+            This is ignored unless `singles` and `array`
+            are both `None`, in which case it is required.
+        filterKwargs: dict
+            Keyword arguments to pass to `_fullInitialize` to
+            initialize a new instance of an inherited class
+            that are different for each filter.
+            The keys are the names of the arguments and the values
+            should also be dictionaries, with filter names as keys
+            and the value of the argument for a given filter as values.
+        kwargs: dict
+            Keyword arguments to pass to `_fullInitialize` to
+            initialize a new instance of an inherited class that are the
+            same in all bands.
+        """
+        return imageFactory(MultibandMask, filters, filterKwargs, singleType, **kwargs)
 
     def getMaskPlane(self, key):
         """Get the bit number of a mask in the `MaskPlaneDict`
@@ -582,9 +670,9 @@ class MultibandTripleBase(MultibandBase):
 
         See `MultibandTripleBase` for parameter descriptions.
         """
-        self._image = MultibandImage(filters, image)
-        self._mask = MultibandMask(filters, mask)
-        self._variance = MultibandImage(filters, variance)
+        self._image = MultibandImage.fromImages(filters, image)
+        self._mask = MultibandMask.fromMasks(filters, mask)
+        self._variance = MultibandImage.fromImages(filters, variance)
 
     def shiftedTo(self, xy0):
         """Shift the bounding box but keep the same Extent

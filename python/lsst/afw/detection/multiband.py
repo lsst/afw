@@ -213,7 +213,7 @@ class MultibandFootprint(MultibandBase):
             _img.set(fill)
             heavy.insert(_img)
             images.append(_img)
-        image = MultibandImage(filters=self.filters, singles=images)
+        image = MultibandImage.fromImages(filters=self.filters, singles=images)
         return image
 
     def clone(self, deep=True):
