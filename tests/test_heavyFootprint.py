@@ -64,7 +64,7 @@ class HeavyFootprintTestCase(lsst.utils.tests.TestCase):
             spanList.append(afwGeom.Span(y, x0, x1))
 
             for x in range(x0, x1 + 1):
-                self.mi.set(x, y, self.objectPixelVal)
+                self.mi[x, y, afwImage.LOCAL] = self.objectPixelVal
         self.foot = afwDetect.Footprint(afwGeom.SpanSet(spanList))
 
     def tearDown(self):
@@ -96,7 +96,7 @@ class HeavyFootprintTestCase(lsst.utils.tests.TestCase):
         for s in self.foot.getSpans():
             y = s.getY()
             for x in range(s.getX0(), s.getX1() + 1):
-                self.assertEqual(imi.get(x, y), omi.get(x, y))
+                self.assertEqual(imi[x, y, afwImage.LOCAL], omi[x, y, afwImage.LOCAL])
 
         # Check that we can call getImageArray(), etc
         arr = hfoot.getImageArray()
@@ -182,7 +182,7 @@ class HeavyFootprintTestCase(lsst.utils.tests.TestCase):
                           (3, 11, 15)]:
             spanList.append(afwGeom.Span(y, x0, x1))
             for x in range(x0, x1 + 1):
-                mi.set(x, y, objectPixelVal)
+                mi[x, y, afwImage.LOCAL] = objectPixelVal
 
         foot = afwDetect.Footprint(afwGeom.SpanSet(spanList))
 
@@ -288,8 +288,8 @@ class HeavyFootprintTestCase(lsst.utils.tests.TestCase):
                                               x1 + xOffset))
                 for x in range(x0, x1 + 1):
                     value = (x + y, 0, 1.0)
-                    mi1.set(x, y, value)
-                    mi2.set(x + xOffset, y + yOffset, value)
+                    mi1[x, y, afwImage.LOCAL] = value
+                    mi2[x + xOffset, y + yOffset, afwImage.LOCAL] = value
 
             fp1 = afwDetect.Footprint(afwGeom.SpanSet(spanList1))
             fp2 = afwDetect.Footprint(afwGeom.SpanSet(spanList2))

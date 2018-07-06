@@ -35,6 +35,7 @@ import lsst.utils.tests
 import lsst.pex.exceptions as pexExcept
 import lsst.geom
 import lsst.afw.math as afwMath
+from lsst.afw.image import LOCAL
 
 
 def getFlux(x):
@@ -318,7 +319,7 @@ class TestImageCandidateCase(unittest.TestCase):
 
         im = cand.getMaskedImage().getImage()
         # This is how TestMaskedImageCandidate sets its pixels
-        self.assertEqual(im.get(0, 0), flux)
+        self.assertEqual(im[0, 0, LOCAL], flux)
         self.assertEqual(im.getWidth(), width)
         self.assertEqual(im.getHeight(), height)
 

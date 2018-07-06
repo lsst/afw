@@ -69,11 +69,11 @@ class StackTestCase(lsst.utils.tests.TestCase):
 
         imgStack = afwMath.statisticsStack(imgList, afwMath.MEAN)
         knownMean /= self.nImg
-        self.assertEqual(imgStack.get(self.nX//2, self.nY//2), knownMean)
+        self.assertEqual(imgStack[self.nX//2, self.nY//2, afwImage.LOCAL], knownMean)
 
         # Test in-place stacking
         afwMath.statisticsStack(imgStack, imgList, afwMath.MEAN)
-        self.assertEqual(imgStack.get(self.nX//2, self.nY//2), knownMean)
+        self.assertEqual(imgStack[self.nX//2, self.nY//2, afwImage.LOCAL], knownMean)
 
     def testStatistics(self):
         """ Test the statisticsStack() function """
@@ -85,11 +85,11 @@ class StackTestCase(lsst.utils.tests.TestCase):
 
         imgStack = afwMath.statisticsStack(imgList, afwMath.MEAN)
         mean = reduce(lambda x, y: x+y, self.values)/float(len(self.values))
-        self.assertAlmostEqual(imgStack.get(self.nX//2, self.nY//2), mean)
+        self.assertAlmostEqual(imgStack[self.nX//2, self.nY//2, afwImage.LOCAL], mean)
 
         imgStack = afwMath.statisticsStack(imgList, afwMath.MEDIAN)
         median = sorted(self.values)[len(self.values)//2]
-        self.assertEqual(imgStack.get(self.nX//2, self.nY//2), median)
+        self.assertEqual(imgStack[self.nX//2, self.nY//2, afwImage.LOCAL], median)
 
     def testWeightedStack(self):
         """ Test statisticsStack() function when weighting by a variance plane"""
@@ -106,13 +106,13 @@ class StackTestCase(lsst.utils.tests.TestCase):
         wvalues = [1.0/q for q in self.values]
         wmean = float(len(self.values)) / reduce(lambda x, y: x + y, wvalues)
         self.assertAlmostEqual(
-            mimgStack.getImage().get(self.nX//2, self.nY//2),
+            mimgStack.image[self.nX//2, self.nY//2, afwImage.LOCAL],
             wmean)
 
         # Test in-place stacking
         afwMath.statisticsStack(mimgStack, mimgList, afwMath.MEAN, sctrl)
         self.assertAlmostEqual(
-            mimgStack.getImage().get(self.nX//2, self.nY//2),
+            mimgStack.image[self.nX//2, self.nY//2, afwImage.LOCAL],
             wmean)
 
     def testConstantWeightedStack(self):
@@ -131,7 +131,7 @@ class StackTestCase(lsst.utils.tests.TestCase):
         wsum = reduce(lambda x, y: x + y, self.values)
         wvalues = [x*x for x in self.values]
         wmean = reduce(lambda x, y: x + y, wvalues)/float(wsum)
-        self.assertAlmostEqual(imgStack.get(self.nX//2, self.nY//2), wmean)
+        self.assertAlmostEqual(imgStack[self.nX//2, self.nY//2, afwImage.LOCAL], wmean)
 
     def testRequestMoreThanOneStat(self):
         """ Make sure we throw an exception if someone requests more than one type of statistics. """
@@ -172,7 +172,7 @@ class StackTestCase(lsst.utils.tests.TestCase):
             ds9.mtv(img, frame=1, title="input")
             ds9.mtv(imgStack, frame=2, title="stack")
 
-        self.assertEqual(img.get(0, 0)[0], imgStack.get(0, 0)[0])
+        self.assertEqual(img[0, 0, afwImage.LOCAL][0], imgStack[0, 0, afwImage.LOCAL][0])
 
     def testStackBadPixels(self):
         """Check that we properly ignore masked pixels, and set noGoodPixelsMask where there are
@@ -238,9 +238,8 @@ class StackTestCase(lsst.utils.tests.TestCase):
         #
         # We have to clear EDGE in the known bad corner to check the mask
         #
-        smask = mimgStack.getMask().Factory(mimgStack.getMask(), edgeBBox, afwImage.LOCAL)
-        self.assertEqual(
-            smask.get(edgeBBox.getMinX(), edgeBBox.getMinY()), EDGE)
+        smask = mimgStack.mask[edgeBBox, afwImage.LOCAL]
+        self.assertEqual(smask[edgeBBox.getMin(), afwImage.LOCAL], EDGE)
         smask &= ~EDGE
         del smask
 
@@ -253,9 +252,9 @@ class StackTestCase(lsst.utils.tests.TestCase):
         """Ticket 1412: ignored mask bits are propegated to output stack."""
 
         mimg1 = afwImage.MaskedImageF(lsst.geom.Extent2I(1, 1))
-        mimg1.set(0, 0, (1, 0x4, 1))  # set 0100
+        mimg1[0, 0, afwImage.LOCAL] = (1, 0x4, 1)  # set 0100
         mimg2 = afwImage.MaskedImageF(lsst.geom.Extent2I(1, 1))
-        mimg2.set(0, 0, (2, 0x3, 1))  # set 0010 and 0001
+        mimg2[0, 0, afwImage.LOCAL] = (2, 0x3, 1)  # set 0010 and 0001
 
         imgList = []
         imgList.append(mimg1)
@@ -267,12 +266,12 @@ class StackTestCase(lsst.utils.tests.TestCase):
         # try first with no sctrl (no andmask set), should see 0x0111 for all
         # output mask pixels
         imgStack = afwMath.statisticsStack(imgList, afwMath.MEAN)
-        self.assertEqual(imgStack.get(0, 0)[1], 0x7)
+        self.assertEqual(imgStack[0, 0, afwImage.LOCAL][1], 0x7)
 
         # now try with sctrl (andmask = 0x0001), should see 0x0100 for all
         # output mask pixels
         imgStack = afwMath.statisticsStack(imgList, afwMath.MEAN, sctrl)
-        self.assertEqual(imgStack.get(0, 0)[1], 0x4)
+        self.assertEqual(imgStack[0, 0, afwImage.LOCAL][1], 0x4)
 
     def test2145(self):
         """The how-to-repeat from #2145"""
@@ -336,10 +335,10 @@ class StackTestCase(lsst.utils.tests.TestCase):
         # threshold (0.3)
         stack1 = afwMath.statisticsStack(maskedImageList, afwMath.MEAN, statsCtrl, [
                                          1.0, 1.0, 1.0, 1.0, 1.0])
-        self.assertEqual(stack1.get(0, 0)[1], 0x0)
-        self.assertEqual(stack1.get(1, 0)[1], 0x0)
-        self.assertEqual(stack1.get(2, 0)[1], 1 << propagatedBit)
-        self.assertEqual(stack1.get(3, 0)[1], 0x0)
+        self.assertEqual(stack1[0, 0, afwImage.LOCAL][1], 0x0)
+        self.assertEqual(stack1[1, 0, afwImage.LOCAL][1], 0x0)
+        self.assertEqual(stack1[2, 0, afwImage.LOCAL][1], 1 << propagatedBit)
+        self.assertEqual(stack1[3, 0, afwImage.LOCAL][1], 0x0)
         self.assertFloatsAlmostEqual(stack1.getImage().getArray(),
                                      (partialSum + finalImage) / np.array([5.0, 4.0, 5.0, 4.0]), rtol=1E-7)
 
@@ -351,10 +350,10 @@ class StackTestCase(lsst.utils.tests.TestCase):
         # the same)
         stack2 = afwMath.statisticsStack(maskedImageList, afwMath.MEAN, statsCtrl, [
                                          1.0, 1.0, 1.0, 1.0, 2.0])
-        self.assertEqual(stack2.get(0, 0)[1], 0x0)
-        self.assertEqual(stack2.get(1, 0)[1], 0x0)
-        self.assertEqual(stack2.get(2, 0)[1], 1 << propagatedBit)
-        self.assertEqual(stack2.get(3, 0)[1], 1 << propagatedBit)
+        self.assertEqual(stack2[0, 0, afwImage.LOCAL][1], 0x0)
+        self.assertEqual(stack2[1, 0, afwImage.LOCAL][1], 0x0)
+        self.assertEqual(stack2[2, 0, afwImage.LOCAL][1], 1 << propagatedBit)
+        self.assertEqual(stack2[3, 0, afwImage.LOCAL][1], 1 << propagatedBit)
         self.assertFloatsAlmostEqual(stack2.getImage().getArray(),
                                      (partialSum + 2*finalImage) / np.array([6.0, 4.0, 6.0, 4.0]), rtol=1E-7)
 
@@ -379,32 +378,32 @@ class StackTestCase(lsst.utils.tests.TestCase):
         self.assertFloatsAlmostEqual(stack.getMask().getArray(), 0, atol=0.0)  # Not floats, but that's OK
 
         # Clip a pixel; the CLIPPED bit should be set
-        images[0].getImage().set(1, 1, value + 1.0)
+        images[0].getImage()[1, 1, afwImage.LOCAL] = value + 1.0
         stack = afwMath.statisticsStack(images, afwMath.MEANCLIP, clipped=clipped)
         self.assertFloatsAlmostEqual(stack.getImage().getArray(), 0.0, atol=0.0)
-        self.assertEqual(stack.getMask().get(1, 1), clipped)
+        self.assertEqual(stack.mask[1, 1, afwImage.LOCAL], clipped)
 
         # Mask a pixel; the CLIPPED bit should be set
-        images[0].getMask().set(1, 1, maskVal)
+        images[0].getMask()[1, 1, afwImage.LOCAL] = maskVal
         stack = afwMath.statisticsStack(images, afwMath.MEAN, statsCtrl, clipped=clipped)
         self.assertFloatsAlmostEqual(stack.getImage().getArray(), 0.0, atol=0.0)
-        self.assertEqual(stack.getMask().get(1, 1), clipped)
+        self.assertEqual(stack.mask[1, 1, afwImage.LOCAL], clipped)
 
         # Excuse that mask; the CLIPPED bit should not be set
         stack = afwMath.statisticsStack(images, afwMath.MEAN, statsCtrl, clipped=clipped, excuse=maskVal)
         self.assertFloatsAlmostEqual(stack.getImage().getArray(), 0.0, atol=0.0)
-        self.assertEqual(stack.getMask().get(1, 1), 0)
+        self.assertEqual(stack.mask[1, 1, afwImage.LOCAL], 0)
 
         # Map that mask value to a different one.
         rejected = 1 << afwImage.Mask().addMaskPlane("REJECTED")
         maskMap = [(maskVal, rejected)]
-        images[0].getMask().set(1, 1, 0)        # only want to clip, not mask, this one
-        images[1].getMask().set(1, 2, maskVal)  # only want to mask, not clip, this one
+        images[0].mask[1, 1, afwImage.LOCAL] = 0        # only want to clip, not mask, this one
+        images[1].mask[1, 2, afwImage.LOCAL] = maskVal  # only want to mask, not clip, this one
         stack = afwMath.statisticsStack(images, afwMath.MEANCLIP, statsCtrl, wvector=[], clipped=clipped,
                                         maskMap=maskMap)
         self.assertFloatsAlmostEqual(stack.getImage().getArray(), 0.0, atol=0.0)
-        self.assertEqual(stack.getMask().get(1, 1), clipped)
-        self.assertEqual(stack.getMask().get(1, 2), rejected)
+        self.assertEqual(stack.mask[1, 1, afwImage.LOCAL], clipped)
+        self.assertEqual(stack.mask[1, 2, afwImage.LOCAL], rejected)
 
 #################################################################
 # Test suite boiler plate

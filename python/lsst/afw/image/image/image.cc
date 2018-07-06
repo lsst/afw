@@ -27,6 +27,7 @@
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/ImageSlice.h"
 #include "lsst/afw/fits.h"
+#include "lsst/afw/image/python/indexing.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -101,6 +102,24 @@ static void declareImageBase(py::module &mod, std::string const &suffix) {
     cls.def("setXY0", (void (ImageBase<PixelT>::*)(int const, int const)) & ImageBase<PixelT>::setXY0, "x0"_a,
             "y0"_a);
     cls.def("getBBox", &ImageBase<PixelT>::getBBox, "origin"_a = PARENT);
+
+    cls.def("set", [](ImageBase<PixelT> &img, PixelT val) { img = val; });
+    cls.def(
+        "_set",
+        [](ImageBase<PixelT> &img, geom::Point2I const & index, PixelT val, ImageOrigin origin) {
+            python::checkBounds(index, img.getBBox(origin));
+            img.get(index, origin) = val;
+        },
+        "index"_a, "value"_a, "origin"_a
+    );
+    cls.def(
+        "_get",
+        [](ImageBase<PixelT> &img, geom::Point2I const & index, ImageOrigin origin) {
+            python::checkBounds(index, img.getBBox(origin));
+            return img.get(index, origin);
+        },
+        "index"_a, "origin"_a
+    );
 }
 
 template <typename PixelT>
@@ -150,6 +169,8 @@ static PyImage<PixelT> declareImage(py::module &mod, const std::string &suffix) 
     cls.def("scaledMultiplies", &Image<PixelT>::scaledMultiplies);
     cls.def("scaledDivides", &Image<PixelT>::scaledDivides);
 
+    cls.def("subset", &Image<PixelT>::subset, "bbox"_a, "origin"_a=PARENT);
+
     cls.def("writeFits",
             (void (Image<PixelT>::*)(std::string const &, std::shared_ptr<daf::base::PropertySet const>,
                                      std::string const &) const) &
@@ -192,20 +213,6 @@ static PyImage<PixelT> declareImage(py::module &mod, const std::string &suffix) 
                    "manager"_a, "hdu"_a = fits::DEFAULT_HDU);
     cls.def("sqrt", &Image<PixelT>::sqrt);
 
-    /* Add-ons for Python interface only */
-    cls.def("set", [](Image<PixelT> &img, double val) { img = val; });
-    cls.def("set", [](Image<PixelT> &img, int x, int y, double val) {
-        img(x, y, lsst::afw::image::CheckIndices(true)) = val;
-    });
-    cls.def("get",
-            [](Image<PixelT> &img, int x, int y) { return img(x, y, lsst::afw::image::CheckIndices(true)); });
-    cls.def("set0", [](Image<PixelT> &img, int x, int y, double val) {
-        img.set0(x, y, val, lsst::afw::image::CheckIndices(true));
-    });
-    cls.def("get0", [](Image<PixelT> &img, int x, int y) {
-        return img.get0(x, y, lsst::afw::image::CheckIndices(true));
-    });
-
     return cls;
 }
 
@@ -231,8 +238,8 @@ static void declareDecoratedImage(py::module &mod, std::string const &suffix) {
     cls.def("swap", &DecoratedImage<PixelT>::swap);
     cls.def("writeFits", &DecoratedImage<PixelT>::writeFits, "fileName"_a,
             "metadata"_a = std::shared_ptr<lsst::daf::base::PropertySet const>(), "mode"_a = "w");
-    cls.def("getImage", (typename std::shared_ptr<Image<PixelT>> (DecoratedImage<PixelT>::*)()) &
-                                DecoratedImage<PixelT>::getImage);
+    cls.def("getImage", py::overload_cast<>(&DecoratedImage<PixelT>::getImage));
+    cls.def_property_readonly("image", py::overload_cast<>(&DecoratedImage<PixelT>::getImage));
     cls.def("getGain", &DecoratedImage<PixelT>::getGain);
     cls.def("setGain", &DecoratedImage<PixelT>::setGain);
 }

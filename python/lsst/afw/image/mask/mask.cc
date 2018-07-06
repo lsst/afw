@@ -127,6 +127,9 @@ static void declareMask(py::module &mod, std::string const &suffix) {
     cls.def_static("readFits", (Mask<MaskPixelT>(*)(fits::MemFileManager &, int))Mask<MaskPixelT>::readFits,
                    "manager"_a, "hdu"_a = fits::DEFAULT_HDU);
     cls.def_static("interpret", Mask<MaskPixelT>::interpret);
+
+    cls.def("subset", &Mask<MaskPixelT>::subset, "bbox"_a, "origin"_a=PARENT);
+
     cls.def("getAsString", &Mask<MaskPixelT>::getAsString);
     cls.def("clearAllMaskPlanes", &Mask<MaskPixelT>::clearAllMaskPlanes);
     cls.def("clearMaskPlane", &Mask<MaskPixelT>::clearMaskPlane);
@@ -148,25 +151,6 @@ static void declareMask(py::module &mod, std::string const &suffix) {
     cls.def("conformMaskPlanes", &Mask<MaskPixelT>::conformMaskPlanes);
     cls.def_static("addMaskPlane", (int (*)(const std::string &))Mask<MaskPixelT>::addMaskPlane);
 
-    /**
-     * @internal Set an image to the value val
-     */
-    cls.def("set", [](Mask<MaskPixelT> &self, MaskPixelT val) { self = val; });
-
-    /**
-     * @internal Set pixel (x,y) to val
-     */
-    cls.def("set", [](Mask<MaskPixelT> &self, int x, int y, double val) {
-        self(x, y, image::CheckIndices(true)) = val;
-    });
-
-    cls.def("get", [](Mask<MaskPixelT> const &self, int x, int y) -> MaskPixelT {
-        return self(x, y, image::CheckIndices(true));
-    });
-
-    cls.def("get", [](Mask<MaskPixelT> const &self, int x, int y, int plane) -> bool {
-        return self(x, y, plane, image::CheckIndices(true));
-    });
 }
 
 PYBIND11_PLUGIN(mask) {

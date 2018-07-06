@@ -62,18 +62,18 @@ class OffsetImageTestCase(unittest.TestCase):
 
         for algorithm in ("lanczos5", "bilinear", "nearest"):
             outImage = afwMath.offsetImage(self.inImage, 0, 0, algorithm)
-            self.assertEqual(outImage.get(50, 50), self.background)
+            self.assertEqual(outImage[50, 50, afwImage.LOCAL], self.background)
 
             outImage = afwMath.offsetImage(self.inImage, 0.5, 0, algorithm)
-            self.assertAlmostEqual(outImage.get(50, 50), self.background, 4)
+            self.assertAlmostEqual(outImage[50, 50, afwImage.LOCAL], self.background, 4)
 
             outImage = afwMath.offsetImage(self.inImage, 0.5, 0.5, algorithm)
-            self.assertAlmostEqual(outImage.get(50, 50), self.background, 4)
+            self.assertAlmostEqual(outImage[50, 50, afwImage.LOCAL], self.background, 4)
 
     def testSetIntegerOffset(self):
         """Test that we can offset by positive and negative amounts"""
 
-        self.inImage.set(50, 50, 400)
+        self.inImage[50, 50, afwImage.LOCAL] = 400
 
         if False and display:
             frame = 0
@@ -104,7 +104,7 @@ class OffsetImageTestCase(unittest.TestCase):
             for iy in range(im.getHeight()):
                 r2 = math.pow(x - ix, 2) + math.pow(y - iy, 2)
                 val = math.exp(-r2/(2.0*pow(sigma1, 2)))
-                im.set(ix, iy, amp*val)
+                im[ix, iy, afwImage.LOCAL] = amp*val
 
     def testOffsetGaussian(self):
         """Insert a Gaussian, offset, and check the residuals"""
@@ -195,8 +195,8 @@ class TransformImageTestCase(unittest.TestCase):
 
     def setUp(self):
         self.inImage = afwImage.ImageF(20, 10)
-        self.inImage.set(0, 0, 100)
-        self.inImage.set(10, 0, 50)
+        self.inImage[0, 0, afwImage.LOCAL] = 100
+        self.inImage[10, 0, afwImage.LOCAL] = 50
 
     def tearDown(self):
         del self.inImage
@@ -211,7 +211,7 @@ class TransformImageTestCase(unittest.TestCase):
             outImage = afwMath.rotateImageBy90(self.inImage, nQuarter)
             if display:
                 ds9.mtv(outImage, frame=nQuarter, title="out %d" % nQuarter)
-            self.assertEqual(self.inImage.get(0, 0), outImage.get(x, y))
+            self.assertEqual(self.inImage[0, 0, afwImage.LOCAL], outImage[x, y, afwImage.LOCAL])
 
     def testFlip(self):
         """Test that we end up with the correct image after flipping it"""
@@ -226,7 +226,7 @@ class TransformImageTestCase(unittest.TestCase):
                 ds9.mtv(outImage, frame=frame, title="%s %s" %
                         (flipLR, flipTB))
                 frame += 1
-            self.assertEqual(self.inImage.get(0, 0), outImage.get(x, y))
+            self.assertEqual(self.inImage[0, 0, afwImage.LOCAL], outImage[x, y, afwImage.LOCAL])
 
     def testMask(self):
         """Test that we can flip a Mask"""

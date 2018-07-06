@@ -1,101 +1,206 @@
-import lsst.geom
+from lsst.geom import Point2I, Box2I
 from .image import LOCAL, PARENT, ImageOrigin
 
 __all__ = ["supportSlicing"]
 
 
-def _getBBoxFromSliceTuple(img, imageSlice):
-    """Given a slice specification return the proper Box2I and origin
-    This is the worker routine behind __getitem__ and __setitem__
+def splitSliceArgs(sliceArgs):
+    """Separate the actual slice from origin arguments to __getitem__ or
+    __setitem__, using PARENT for the origin if it is not provided.
 
-    The imageSlice may be:
-       lsst.geom.Box2I
-       slice, slice
-       :
-    Only the first one or two parts of the slice are recognised (no stride), a single int is
-    interpreted as n:n+1, and negative indices are interpreted relative to the end of the array,
-    so supported slices include:
-       2
-       -1
-       1:10
-       :-2
-       : (equivalent to ... (python's Ellipsis) which is also supported)
+    Parameter
+    ---------
+    sliceArgs : `tuple`, `Box2I`, or `Point2I`
+        The first argument passed to an image-like object's
+        ``__getitem__`` or ``__setitem__``.
 
-    E.g.
-     im[-1, :]
-     im[..., 18]
-     im[4,  10]
-     im[-3:, -2:]
-     im[-2, -2]
-     im[1:4, 6:10]
-     im[:]
+    Returns
+    -------
+    sliceArgs : `tuple`, `Box2I`, or `Point2I`
+        The original sliceArgs passed in, with any ImageOrigin argument
+        stripped off.
+    origin : `ImageOrigin`
+        Enum value that sets whether or not to consider xy0 in positions.
 
-    You may also add an extra argument, afwImage.PARENT or afwImage.LOCAL.  The default is LOCAL
-    as before, but if you specify PARENT the bounding box is interpreted in PARENT coordinates
-    (this includes slices; e.g.
-     im[-3:, -2:, afwImage.PARENT]
-    still means the last few rows and columns, and
-     im[1001:1004, 2006:2010, afwImage.PARENT]
-    with xy0 = (1000, 2000) refers to the same pixels as
-     im[1:4, 6:10, afwImage.LOCAL]
-    )
+    See interpretSliceArgs for more information.
+
+    Intended primarily for internal use by `supportSlicing()`.
     """
-    origin = LOCAL                      # this sets the default value
-
+    defaultOrigin = PARENT
     try:
-        _origin = imageSlice[-1]
-    except TypeError:
-        _origin = None
-
-    if isinstance(_origin, ImageOrigin):
-        origin = _origin
-        imageSlice = imageSlice[0] if len(imageSlice) <= 2 else imageSlice[:-1]
-
-    if isinstance(imageSlice, lsst.geom.Box2I):
-        return imageSlice, origin
-
-    if isinstance(imageSlice, slice) and imageSlice.start is None and imageSlice.stop is None:
-        imageSlice = (Ellipsis, Ellipsis,)
-
-    if not (isinstance(imageSlice, tuple) and len(imageSlice) == 2 and
-            sum([isinstance(_, (slice, type(Ellipsis), int)) for _ in imageSlice]) == 2):
-        raise IndexError(
-            "Images may only be indexed as a 2-D slice not %s" % imageSlice)
-
-    # Because we're going to use slice.indices(...) to construct our ranges, and
-    # python doesn't understand PARENT coordinate systems,  we need
-    # to convert slices specified in PARENT coords to LOCAL
-
-    imageSlice, _imageSlice = [], imageSlice
-    for s, wh, z0 in zip(_imageSlice, img.getDimensions(), img.getXY0()):
-        if origin == LOCAL:
-            z0 = 0                      # ignore image's xy0
-
-        if isinstance(s, slice):
-            if z0 != 0:
-                start = s.start if s.start is None or s.start < 0 else s.start - z0
-                stop = s.stop if s.stop is None or s.stop < 0 else s.stop - z0
-                s = slice(start, stop, s.step)
-        elif isinstance(s, int):
-            if s < 0:
-                s += z0 + wh
-            s = slice(s - z0, s - z0 + 1)
+        if isinstance(sliceArgs[-1], ImageOrigin):
+            # Args are already a tuple that includes the origin.
+            if len(sliceArgs) == 2:
+                return sliceArgs[0], sliceArgs[-1]
+            else:
+                return sliceArgs[:-1], sliceArgs[-1]
         else:
-            s = slice(0, wh)
+            # Args are a tuple that does not include the origin; add it to make origin explicit.
+            return sliceArgs, defaultOrigin
+    except TypeError:  # Arg is a scalar; return it along with the default origin.
+        return sliceArgs, defaultOrigin
 
-        imageSlice.append(s)
 
-    x, y = [_.indices(wh) for _, wh in zip(imageSlice, img.getDimensions())]
-    return lsst.geom.Box2I(lsst.geom.Point2I(x[0], y[0]), lsst.geom.Point2I(x[1] - 1, y[1] - 1)), LOCAL
+def handleNegativeIndex(index, size, origin, default):
+    """Handle negative indices passed to image accessors.
+
+    When negative indices are used in LOCAL coordinates, we interpret them as
+    relative to the upper bounds of the array, as in regular negative indexing
+    in Python.
+
+    Using negative indices in PARENT coordinates is not allowed unless passed
+    via a `Point2I` or `Box2I`; the potential for confusion between actual
+    negative indices (when ``xy0 < 0``) and offsets relative to the upper
+    bounds of the array is too great.
+
+    Parameters
+    ----------
+    index : `int` or `None`
+        1-d pixel index to interpret, as given by a caller to an image-like
+        object's ``__getitem__`` or ``__setitem__``.
+    size : `int`
+        Size of the image in the dimension corresponding to ``index``.
+    origin : `ImageOrigin`
+        Enum value that sets whether or not to consider xy0 in positions.
+    default : `int`
+        Index to return if `index` is None.
+
+    Returns
+    -------
+    index : `int`
+        If ``origin==PARENT``, either the given ``index`` or ``default``.
+        If ``origin==LOCAL``, an equivalent index guaranteed to be nonnegative.
+
+    Intended primarily for internal use by `supportSlicing()`.
+    """
+    if index is None:
+        assert default is not None
+        return default
+    if index < 0:
+        if origin == LOCAL:
+            index = size + index
+        else:
+            raise IndexError("Negative indices are not permitted with the PARENT origin. "
+                             "Use LOCAL to use negative to index relative to the end, "
+                             "and Point2I or Box2I indexing to access negative pixels "
+                             "in PARENT coordinates.")
+    return index
+
+
+def makePointFromIndices(x, y, origin, bbox):
+    """Create a Point2I from an x, y pair, correctly handling negative indices.
+
+    Parameters
+    ----------
+    x : `int`
+        Column index.
+    y : `int`
+        Row index.
+    origin : `ImageOrigin`
+        Enum value that sets whether or not to consider xy0 in positions.
+    bbox : `Box2I`
+        Bounding box of the image being indexed, obtained using
+        ``getBBox(origin)``.
+
+    Returns
+    -------
+    point : `Point2I`
+        A point corresponding to the given indices.
+
+    Intended primarily for internal use by `supportSlicing()`.
+    """
+    return Point2I(
+        handleNegativeIndex(x, bbox.getWidth(), origin, default=None),
+        handleNegativeIndex(y, bbox.getHeight(), origin, default=None)
+    )
+
+
+def makeBoxFromSlices(x, y, origin, bbox):
+    """Transform a tuple of slice objects into a Box2I, correctly handling negative indices.
+
+    Parameters
+    ----------
+    x : `slice`
+        Column index range.  Step must be None.
+    y : `slice`
+        Row index range.  Step must be None.
+    origin : `ImageOrigin`
+        Enum value that sets whether or not to consider xy0 in positions.
+    bbox : `Box2I`
+        Bounding box of the image being indexed, obtained using
+        ``getBBox(origin)``.
+
+    Returns
+    -------
+    bbox : `Box2I`
+        A point corresponding to the given indices.
+
+    Intended primarily for internal use by `supportSlicing()`.
+    """
+    if x.step is not None or y.step is not None:
+        raise ValueError("Slices with steps are not supported in image indexing.")
+    begin = Point2I(
+        handleNegativeIndex(x.start, bbox.getWidth(), origin, default=bbox.getBeginX()),
+        handleNegativeIndex(y.start, bbox.getHeight(), origin, default=bbox.getBeginY())
+    )
+    end = Point2I(
+        handleNegativeIndex(x.stop, bbox.getWidth(), origin, default=bbox.getEndX()),
+        handleNegativeIndex(y.stop, bbox.getHeight(), origin, default=bbox.getEndY())
+    )
+    return Box2I(begin, end - begin)
+
+
+def interpretSliceArgs(sliceArgs, bboxGetter):
+    """Transform arguments to __getitem__ or __setitem__ to a standard form.
+
+    Parameters
+    ----------
+    sliceArgs : `tuple`, `Box2I`, or `Point2I`
+        Slice arguments passed directly to `__getitem__` or `__setitem__`.
+    bboxGetter : callable
+        Callable that accepts an ImageOrigin enum value and returns the
+        appropriate image bounding box.  Usually the bound getBBox method
+        of an Image, Mask, or MaskedImage object.
+
+    Returns
+    -------
+    box : `Box2I` or `None`
+        A box to use to create a subimage, or None if the slice refers to a
+        scalar.
+    index: `tuple` or `None`
+        An ``(x, y)`` tuple of integers, or None if the slice refers to a
+        box.
+    origin : `ImageOrigin`
+        Enum indicating whether to account for xy0.
+
+    Intended primarily for internal use by `supportSlicing()`.
+    """
+    slices, origin = splitSliceArgs(sliceArgs)
+    if isinstance(slices, Point2I):
+        return None, slices, origin
+    elif isinstance(slices, Box2I):
+        return slices, None, origin
+    elif isinstance(slices, slice):
+        if slices.start is not None or slices.stop is not None or slices.step is not None:
+            raise TypeError("Single-dimension slices must not have bounds.")
+        x = slices
+        y = slices
+        origin = LOCAL  # doesn't matter, as the slices cover the full image
+    else:
+        x, y = slices
+    if isinstance(x, slice):
+        if isinstance(y, slice):
+            return makeBoxFromSlices(x, y, origin=origin, bbox=bboxGetter(origin)), None, origin
+        raise TypeError("Mixed indices of the form (slice, int) are not supported for images.")
+    else:
+        if isinstance(y, slice):
+            raise TypeError("Mixed indices of the form (int, slice) are not supported for images.")
+        return None, makePointFromIndices(x, y, origin=origin, bbox=bboxGetter(origin)), origin
 
 
 def supportSlicing(cls):
     """Support image slicing
     """
-
-    def _checkOrigin(origin):
-        if origin not in (LOCAL, PARENT):
-            raise RuntimeError("keyword origin must be afwImage.ORIGIN or afwImage.PARENT, not %s" % origin)
 
     def Factory(self, *args, **kwargs):
         """Return an object of this type
@@ -109,38 +214,18 @@ def supportSlicing(cls):
     cls.clone = clone
 
     def __getitem__(self, imageSlice):
-        bbox, origin = _getBBoxFromSliceTuple(self, imageSlice)
-
-        _checkOrigin(origin)
-        return self.Factory(self, bbox, origin)
+        box, index, origin = interpretSliceArgs(imageSlice, self.getBBox)
+        if box is not None:
+            return self.subset(box, origin=origin)
+        return self._get(index, origin=origin)
     cls.__getitem__ = __getitem__
 
     def __setitem__(self, imageSlice, rhs):
-        bbox, origin = _getBBoxFromSliceTuple(self, imageSlice)
-
-        _checkOrigin(origin)
-        if self.assign(rhs, bbox, origin) is NotImplemented:
-            lhs = self.Factory(self, bbox, origin=origin)
-            lhs.set(rhs)
+        box, index, origin = interpretSliceArgs(imageSlice, self.getBBox)
+        if box is not None:
+            if self.assign(rhs, box, origin) is NotImplemented:
+                lhs = self.subset(box, origin=origin)
+                lhs.set(rhs)
+        else:
+            self._set(index, origin=origin, value=rhs)
     cls.__setitem__ = __setitem__
-
-    def __float__(self):
-        """Convert a 1x1 image to a floating scalar"""
-        if self.getDimensions() != lsst.geom.Extent2I(1, 1):
-            raise TypeError(
-                "Only single-pixel images may be converted to python scalars")
-
-        try:
-            return float(self.get(0, 0))
-        except AttributeError:
-            raise TypeError(
-                "Unable to extract a single pixel from a {}".format(type(self).__name__))
-        except TypeError:
-            raise TypeError(
-                "Unable to convert a {} pixel to a scalar".format(type(self).__name__))
-    cls.__float__ = __float__
-
-    def __int__(self):
-        """Convert a 1x1 image to a integral scalar"""
-        return int(float(self))
-    cls.__int__ = __int__

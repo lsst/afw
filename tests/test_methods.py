@@ -179,7 +179,7 @@ class TestTestUtils(lsst.utils.tests.TestCase):
                     plane0 = getattr(mi0, getName)()
                     plane1 = getattr(mi1, getName)()
                     plane1[2, 2] += dval
-                    val1 = plane1.get(2, 2)
+                    val1 = plane1[2, 2, afwImage.LOCAL]
                     self.assertImagesAlmostEqual(
                         plane0, plane1, rtol=0, atol=dval + epsilon)
                     self.assertImagesAlmostEqual(
@@ -208,7 +208,7 @@ class TestTestUtils(lsst.utils.tests.TestCase):
                     plane0 = getattr(mi0, getName)()
                     plane1 = getattr(mi1, getName)()
                     plane1[2, 2] += dval
-                    val1 = plane1.get(2, 2)
+                    val1 = plane1[2, 2, afwImage.LOCAL]
                     # int value and test is <= so epsilon not required for atol
                     # but rtol is a fraction, so epsilon is still safest for
                     # the rtol test
@@ -355,9 +355,9 @@ def makeRampMaskedImage(width, height, imgClass=afwImage.MaskedImageF):
     val = 0
     for yInd in range(height):
         for xInd in range(width):
-            image.set(xInd, yInd, val)
-            variance.set(xInd, yInd, val + 100)
-            mask.set(xInd, yInd, val % 0x100)
+            image[xInd, yInd, afwImage.LOCAL] = val
+            variance[xInd, yInd, afwImage.LOCAL] = val + 100
+            mask[xInd, yInd, afwImage.LOCAL] = val % 0x100
             val += 1
     return mi
 

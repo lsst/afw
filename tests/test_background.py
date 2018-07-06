@@ -79,14 +79,14 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
             for x in range(W):
                 B = 89
                 if y < B:
-                    image.set(x, y, y)
+                    image[x, y, afwImage.LOCAL] = y
                 else:
-                    image.set(x, y, B + (y-B)*-1.)
+                    image[x, y, afwImage.LOCAL] = B + (y-B)*-1.
         bobj = afwMath.makeBackground(image, bgCtrl)
         back = bobj.getImageF()
 
-        for iy, by in zip([image.get(0, y) for y in range(H)],
-                          [back.get(0, y) for y in range(H)]):
+        for iy, by in zip([image[0, y, afwImage.LOCAL] for y in range(H)],
+                          [back[0, y, afwImage.LOCAL] for y in range(H)]):
             self.assertLess(abs(iy - by), 5)
 
     def testgetPixel(self):
@@ -143,7 +143,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
 
             # test getImage() by checking the center pixel
             bimg = backobj.getImageF()
-            testImgval = bimg.get(naxis1//2, naxis2//2)
+            testImgval = bimg[naxis1//2, naxis2//2, afwImage.LOCAL]
             self.assertLess(abs(testImgval - reqMean), 2*stdevInterp)
 
     def testRamp(self):
@@ -158,7 +158,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         dzdx, dzdy, z0 = 0.1, 0.2, 10000.0
         for x in range(nx):
             for y in range(ny):
-                rampimg.set(x, y, dzdx*x + dzdy*y + z0)
+                rampimg[x, y, afwImage.LOCAL] = dzdx*x + dzdy*y + z0
 
         # check corner, edge, and center pixels
         bctrl = afwMath.BackgroundControl(10, 10)
@@ -196,7 +196,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         for xpix in xpixels:
             for ypix in ypixels:
                 testval = backobj.getPixel(xpix, ypix)
-                self.assertAlmostEqual(testval/rampimg.get(xpix, ypix), 1, 6)
+                self.assertAlmostEqual(testval/rampimg[xpix, ypix, afwImage.LOCAL], 1, 6)
 
         # Test pickle
         new = pickle.loads(pickle.dumps(backobj))
@@ -218,10 +218,8 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         """
         parabimg = afwImage.ImageF(lsst.geom.Extent2I(nx, ny))
         d2zdx2, d2zdy2, dzdx, dzdy, z0 = pars  # no cross-terms
-        for x in range(nx):
-            for y in range(ny):
-                parabimg.set(x, y, d2zdx2*x*x + d2zdy2 *
-                             y*y + dzdx*x + dzdy*y + z0)
+        x, y = np.meshgrid(np.arange(nx, dtype=int), np.arange(ny, dtype=int))
+        parabimg.array[:, :] = d2zdx2*x**2 + d2zdy2*y**2 + dzdx*x + dzdy*y + z0
         return parabimg
 
     @unittest.skipIf(AfwdataDir is None, "afwdata not setup")
@@ -280,7 +278,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         for xpix in xpixels:
             for ypix in ypixels:
                 testval = backobj.getPixel(bctrl.getInterpStyle(), xpix, ypix)
-                realval = parabimg.get(xpix, ypix)
+                realval = parabimg[xpix, ypix, afwImage.LOCAL]
                 # quadratic terms skew the averages of the subimages and the clipped mean for
                 # a subimage != value of center pixel.  1/20 counts on a 10000 count sky
                 # is a fair (if arbitrary) test.
@@ -447,7 +445,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         mean = z0 + dzdx*(nx - 1)/2 + dzdy*(ny - 1)/2  # the analytic solution
         for x in range(nx):
             for y in range(ny):
-                img.set(x, y, dzdx*x + dzdy*y + z0)
+                img[x, y, afwImage.LOCAL] = dzdx*x + dzdy*y + z0
 
         # make a background control object
         bctrl = afwMath.BackgroundControl(10, 10)
@@ -510,7 +508,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
             ds9.mtv(image)
             ds9.mtv(bkgdImage, frame=1)
 
-        self.assertFalse(np.isnan(bkgdImage.get(0, 0)))
+        self.assertFalse(np.isnan(bkgdImage[0, 0, afwImage.LOCAL]))
 
         # Check that the non-string API works too
         bkgdImage = bkgd.getImageF(
@@ -523,12 +521,12 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
             for x in range(image.getWidth()):
                 # n.b. linear, which is what the interpolation will fall back
                 # to
-                image.set(x, y, 1 + 2*y)
+                image[x, y, afwImage.LOCAL] = 1 + 2*y
 
         # Set the right corner to NaN.  This will mean that we have too few
         # points for a spline interpolator
         binSize = 3
-        image[-binSize:, -binSize:] = np.nan
+        image[-binSize:, -binSize:, afwImage.LOCAL] = np.nan
 
         nx = image.getWidth()//binSize
         ny = image.getHeight()//binSize
@@ -561,14 +559,10 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         initialValue = 20
         mi = afwImage.MaskedImageF(500, 200)
         mi.set((initialValue, 0x0, 1.0))
-        im = mi.getImage()
-        im[0:200, :] = np.nan
-        del im
-        msk = mi.getMask()
-        badBits = msk.getPlaneBitMask(
+        mi.image[0:200, :] = np.nan
+        badBits = mi.mask.getPlaneBitMask(
             ['EDGE', 'DETECTED', 'DETECTED_NEGATIVE'])
-        msk[0:400, :] |= badBits
-        del msk
+        mi.mask[0:400, :] |= badBits
 
         if debugMode:
             ds9.mtv(mi, frame=0)
@@ -587,7 +581,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         bkgdImage = bkgd.getImageF(
             afwMath.Interpolate.NATURAL_SPLINE, afwMath.REDUCE_INTERP_ORDER)
         self.assertEqual(
-            np.mean(bkgdImage[0:100, 0:100].getArray()), initialValue)
+            np.mean(bkgdImage[0:100, 0:100].array), initialValue)
         if debugMode:
             ds9.mtv(bkgdImage, frame=2)
         # Check that we can fix the NaNs in the statsImage
@@ -597,7 +591,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
             afwMath.Interpolate.NATURAL_SPLINE, afwMath.REDUCE_INTERP_ORDER)
 
         self.assertAlmostEqual(
-            np.mean(bkgdImage[0:100, 0:100].getArray(), dtype=np.float64),
+            np.mean(bkgdImage[0:100, 0:100].array, dtype=np.float64),
             initialValue)
 
     def testBadRows(self):
@@ -605,14 +599,10 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         initialValue = 20
         mi = afwImage.MaskedImageF(500, 200)
         mi.set((initialValue, 0x0, 1.0))
-        im = mi.getImage()
-        im[:, 0:100] = np.nan
-        del im
-        msk = mi.getMask()
-        badBits = msk.getPlaneBitMask(
+        mi.image[:, 0:100] = np.nan
+        badBits = mi.mask.getPlaneBitMask(
             ['EDGE', 'DETECTED', 'DETECTED_NEGATIVE'])
-        msk[0:400, :] |= badBits
-        del msk
+        mi.mask[0:400, :] |= badBits
 
         if debugMode:
             ds9.mtv(mi, frame=0)
@@ -634,7 +624,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
             bkgdImage = bkgd.getImageF(
                 interpStyle, afwMath.REDUCE_INTERP_ORDER)
             self.assertEqual(
-                np.mean(bkgdImage[0:100, 0:100].getArray()), initialValue)
+                np.mean(bkgdImage[0:100, 0:100].array), initialValue)
             if debugMode:
                 ds9.mtv(bkgdImage, frame=frame)
 
@@ -645,8 +635,8 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         # Check that no good values don't crash (they return NaN), and that a single good value
         # is enough to redeem the entire image
         for pix00 in [np.nan, initialValue]:
-            mi.getImage()[:] = np.nan
-            mi.getImage()[0, 0] = pix00
+            mi.image[:] = np.nan
+            mi.image[0, 0] = pix00
 
             sctrl = afwMath.StatisticsControl()
             nx, ny = 17, 17
@@ -660,7 +650,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
                 # fixed
                 bkgdImage = bkgd.getImageF(
                     interpStyle, afwMath.REDUCE_INTERP_ORDER)
-                val = np.mean(bkgdImage[0:100, 0:100].getArray())
+                val = np.mean(bkgdImage[0:100, 0:100].array)
 
                 if np.isfinite(pix00):
                     self.assertEqual(val, pix00)
@@ -797,7 +787,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         approxWeighting = True
 
         im = self.image.Factory(
-            self.image, self.image.getBBox(afwImage.PARENT))
+            self.image, self.image.getBBox())
         arr = im.getArray()
         arr += np.random.normal(size=(im.getHeight(), im.getWidth()))
 

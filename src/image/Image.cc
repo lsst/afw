@@ -225,6 +225,31 @@ typename ImageBase<PixelT>::PixelConstReference ImageBase<PixelT>::operator()(
 }
 
 template <typename PixelT>
+typename ImageBase<PixelT>::PixelReference
+ImageBase<PixelT>::get(lsst::geom::Point2I const & index, ImageOrigin origin) {
+    int x = index.getX();
+    int y = index.getY();
+    if (origin == PARENT) {
+        x -= getX0();
+        y -= getY0();
+    }
+    return _gilView(x, y)[0];
+}
+
+template <typename PixelT>
+typename ImageBase<PixelT>::PixelConstReference
+ImageBase<PixelT>::get(lsst::geom::Point2I const & index, ImageOrigin origin) const {
+    int x = index.getX();
+    int y = index.getY();
+    if (origin == PARENT) {
+        x -= getX0();
+        y -= getY0();
+    }
+    return _gilView(x, y)[0];
+}
+
+
+template <typename PixelT>
 void ImageBase<PixelT>::swap(ImageBase& rhs) {
     using std::swap;  // See Meyers, Effective C++, Item 25
 

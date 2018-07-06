@@ -109,7 +109,7 @@ class RgbTestCase(unittest.TestCase):
                 elif i == R:
                     amp = A*math.pow(10, 0.4*r_i)
 
-                self.images[i].set(x, y, amp)
+                self.images[i][x, y, afwImage.LOCAL] = amp
 
         psf = afwMath.AnalyticKernel(
             15, 15, afwMath.GaussianFunction2D(2.5, 1.5, 0.5))

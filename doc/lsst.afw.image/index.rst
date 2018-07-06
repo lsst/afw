@@ -8,6 +8,13 @@ lsst.afw.image
 
 .. Add subsections with toctree to individual topic pages.
 
+.. toctree::
+   :maxdepth: 1
+
+   indexing-conventions.rst
+
+.. Add subsections with toctree to individual topic pages.
+
 Python API reference
 ====================
 

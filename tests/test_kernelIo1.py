@@ -70,7 +70,7 @@ class KernelIOTestCase(unittest.TestCase):
         inImage = afwImage.ImageD(lsst.geom.Extent2I(kWidth, kHeight))
         for row in range(inImage.getHeight()):
             for col in range(inImage.getWidth()):
-                inImage.set(col, row, inArr[col, row])
+                inImage[col, row, afwImage.LOCAL] = inArr[col, row]
 
         k = afwMath.FixedKernel(inImage)
 
