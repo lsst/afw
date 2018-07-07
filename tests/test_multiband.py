@@ -493,8 +493,7 @@ class MultibandMaskedImageTestCase(lsst.utils.tests.TestCase):
         images = [ImageF(self.bbox, self.varValue) for f in self.filters]
         mVariance = MultibandImage.fromImages(self.filters, images)
 
-        self.maskedImage = MultibandMaskedImage(image=mImage, mask=mMask, variance=mVariance,
-                                                filters=self.filters)
+        self.maskedImage = MultibandMaskedImage(self.filters, image=mImage, mask=mMask, variance=mVariance)
 
     def tearDown(self):
         del self.maskedImage
