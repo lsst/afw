@@ -42,7 +42,7 @@ class MultibandBase(ABC):
     methods for initializing, slicing, and extracting common parameters
     (such as the bounding box or XY0 position) to all of the single band classes,
     as long as derived classes either call the base class `__init__`
-    or set the `_filters`, `_singles`, `_bbox`, and `_singleType` properties.
+    or set the `_filters`, `_singles`, and `_bbox`.
 
     Parameters
     ----------
@@ -53,11 +53,8 @@ class MultibandBase(ABC):
     bbox: Box2I
         By default `MultibandBase` uses `singles[0].getBBox()` to set
         the bounding box of the multiband
-    singleType: type
-        Type of the single band objects to create
-        (used by copy and sometimes slicing methods).
     """
-    def __init__(self, filters, singles, bbox=None, singleType=None):
+    def __init__(self, filters, singles, bbox=None):
         self._filters = tuple([f for f in filters])
         self._singles = tuple(singles)        
 
@@ -69,15 +66,6 @@ class MultibandBase(ABC):
                 raise ValueError(err.format(bboxes))
         else:
             self._bbox = bbox
-
-        if singleType is None:
-            self._singleType = type(self._singles[0])
-            if not all([type(s) == self.singleType for s in self.singles]):
-                singleTypes = [type(s) == self.singleType for s in self.singles]
-                err = "`singles` are required to have the same type, received {0}"
-                raise ValueError(err.format(singleTypes))
-        else:
-            self._singleType = singleType
 
     @abstractmethod
     def clone(self, deep=True):
@@ -108,12 +96,6 @@ class MultibandBase(ABC):
         """List of single band objects
         """
         return self._singles
-
-    @property
-    def singleType(self):
-        """Type of single band objects
-        """
-        return self._singleType
 
     def getBBox(self):
         """Bounding box
