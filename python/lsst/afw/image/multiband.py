@@ -24,8 +24,7 @@ __all__ = ["MultibandPixel", "MultibandImage", "MultibandMask", "MultibandMasked
 import numpy as np
 
 from lsst.geom import Point2I, Box2I, Extent2I, Point2D
-from . import Image, MaskedImage, Mask, Exposure, ImageF, MaskedImageF, ExposureF
-from . import maskedImage as afwMaskedImage
+from . import Image, MaskedImage, Mask, Exposure, ImageF, MaskedImageF, ExposureF, MaskPixel
 from ..multiband import MultibandBase
 
 
@@ -63,7 +62,7 @@ class MultibandPixel(MultibandBase):
         self._singles = singles
 
         # Make sure that the bounding box has been setup properly
-        assert self.getBBox().getDimensions() == Extent2I(1,1)
+        assert self.getBBox().getDimensions() == Extent2I(1, 1)
 
     def _getArray(self):
         """Data cube array in multiple bands
@@ -258,6 +257,7 @@ class MultibandImageBase(MultibandBase):
         else:
             self._array[filterIndex, sy, sx] = value
 
+
 def imageFromSingles(cls, filters, singles):
     """Construct a MultibandImage from a collection of single band images
 
@@ -274,6 +274,7 @@ def imageFromSingles(cls, filters, singles):
         raise ValueError("Single band images did not all have the same bounding box")
     bbox = singles[0].getBBox()
     return cls(filters, array, bbox)
+
 
 def imageFactory(cls, filters, filterKwargs, singleType=ImageF, **kwargs):
         """Build a MultibandImage from a set of keyword arguments
@@ -306,6 +307,7 @@ def imageFactory(cls, filters, filterKwargs, singleType=ImageF, **kwargs):
                     kwargs[key] = value[f]
             singles.append(singleType(**kwargs))
         return cls.imageFromSingles(filters, singles)
+
 
 class MultibandImage(MultibandImageBase):
     """Multiband Image class
@@ -465,8 +467,7 @@ class MultibandMask(MultibandImageBase):
     def clearMaskPlaneDict():
         """Reset the mask plane dictionary
         """
-        Mask = afwImage.Mask[afwImage.MaskPixel]
-        Mask.clearMaskPlaneDict()
+        Mask[MaskPixel].clearMaskPlaneDict()
 
     @staticmethod
     def addMaskPlane(name):
@@ -482,8 +483,7 @@ class MultibandMask(MultibandImageBase):
         index: int
             Bit value of the mask in the mask plane.
         """
-        Mask = afwImage.Mask[afwImage.MaskPixel]
-        idx = Mask.addMaskPlane(name)
+        idx = Mask[MaskPixel].addMaskPlane(name)
         return idx
 
     @staticmethod
@@ -495,8 +495,7 @@ class MultibandMask(MultibandImageBase):
         name: str
             Name of the mask plane to remove
         """
-        Mask = afwImage.Mask[afwImage.MaskPixel]
-        Mask.removeMaskPlaneDict()
+        Mask[MaskPixel].removeMaskPlaneDict()
 
     def clearAllMaskPlanes(self):
         """Clear all the pixels
@@ -534,7 +533,7 @@ class MultibandMask(MultibandImageBase):
 
     def __ixor__(self, others):
         _others = self._getOtherMasks(others)
-        for s,o in zip(self.singles, _others):
+        for s, o in zip(self.singles, _others):
             s ^= o
         return self
 
@@ -664,7 +663,7 @@ class MultibandTripleBase(MultibandBase):
         mask = self._mask._slice(filters, filterIndex, indices)
         variance = self._variance._slice(filters, filterIndex, indices)
 
-        #If only a single pixel is selected, return the tuple of MultibandPixels
+        # If only a single pixel is selected, return the tuple of MultibandPixels
         if isinstance(image, MultibandPixel):
             assert isinstance(mask, MultibandPixel)
             assert isinstance(variance, MultibandPixel)

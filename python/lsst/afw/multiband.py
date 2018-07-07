@@ -56,7 +56,7 @@ class MultibandBase(ABC):
     """
     def __init__(self, filters, singles, bbox=None):
         self._filters = tuple([f for f in filters])
-        self._singles = tuple(singles)        
+        self._singles = tuple(singles)
 
         if bbox is None:
             self._bbox = self._singles[0].getBBox()
