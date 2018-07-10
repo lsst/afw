@@ -397,7 +397,7 @@ def _testMaskedImageSlicing(testCase, maskedImage):
 def _testMaskedmageModification(testCase, maskedImage):
     images = [ImageF(testCase.bbox, 10*testCase.imgValue) for f in testCase.filters]
     mImage = MultibandImage.fromImages(testCase.filters, images)
-    maskedImage.image = mImage
+    maskedImage.image.array = mImage.array
     testCase.assertFloatsEqual(maskedImage.image["G"].array, mImage.array[0])
     testCase.assertFloatsEqual(maskedImage["G"].image.array, mImage.array[0])
 
@@ -405,13 +405,13 @@ def _testMaskedmageModification(testCase, maskedImage):
     for n in range(len(singles)):
         singles[n].set(testCase.maskValue*2)
     mMask = MultibandMask.fromMasks(testCase.filters, singles)
-    maskedImage.mask = mMask
+    maskedImage.mask.array = mMask.array
     testCase.assertFloatsEqual(maskedImage.mask["G"].array, mMask.array[0])
     testCase.assertFloatsEqual(maskedImage["G"].mask.array, mMask.array[0])
 
     images = [ImageF(testCase.bbox, .1 * testCase.varValue) for f in testCase.filters]
     mVariance = MultibandImage.fromImages(testCase.filters, images)
-    maskedImage.variance = mVariance
+    maskedImage.variance.array = mVariance.array
     testCase.assertFloatsEqual(maskedImage.variance["G"].array, mVariance.array[0])
     testCase.assertFloatsEqual(maskedImage["G"].variance.array, mVariance.array[0])
 
@@ -628,7 +628,7 @@ class MultibandFootprintTestCase(lsst.utils.tests.TestCase):
             heavy = makeHeavyFootprint(self.footprint, maskedImage)
             singles.append(heavy)
         self.image = np.array(images)
-        self.mFoot = MultibandFootprint(self.filters, singles)
+        self.mFoot = MultibandFootprint.fromHeavyFootprints(self.filters, singles)
 
     def tearDown(self):
         del self.spans
@@ -661,53 +661,48 @@ class MultibandFootprintTestCase(lsst.utils.tests.TestCase):
             else:
                 return image
 
-        def multibandProjectSpans(bbox):
-            images = np.array([projectSpans(n, n, bbox, True) for n in range(2, 5)])
-            return MultibandImage(self.filters, array=images, bbox=bbox)
-
-        def runTest(images=None, footprint=None, xy0=Point2I(5, 5),
-                    peaks=self.peaks, thresh=0, footprintBBox=Box2I(Point2I(6, 6), Extent2I(9, 9))):
-            mFoot = MultibandFootprint(
-                self.filters,
-                images=images,
-                xy0=xy0,
-                footprint=footprint,
-                peaks=peaks,
-                thresh=thresh
-            )
+        def runTest(images, mFoot, peaks=self.peaks, footprintBBox=Box2I(Point2I(6, 6), Extent2I(9, 9))):
             self.assertEqual(mFoot.getBBox(), footprintBBox)
             try:
                 fpImage = np.array(images)[:, 1:-1, 1:-1]
             except IndexError:
                 fpImage = np.array([img.array for img in images])[:, 1:-1, 1:-1]
-            self.assertFloatsAlmostEqual(mFoot.getImage(fill=0).array, fpImage)
+            # result = mFoot.getImage(fill=0).image.array
+            self.assertFloatsAlmostEqual(mFoot.getImage(fill=0).image.array, fpImage)
             if peaks is not None:
                 self.verifyPeaks(mFoot.getPeaks(), peaks)
 
         bbox = Box2I(Point2I(5, 5), Extent2I(11, 11))
-        runTest(images=np.array([projectSpans(n, 5-n, bbox, True) for n in range(2, 5)]))
-        runTest(images=[projectSpans(n, 5-n, bbox, False) for n in range(2, 5)])
-        runTest(images=multibandProjectSpans(bbox))
-        runTest(images=np.array([projectSpans(n, 5-n, bbox, True) for n in range(2, 5)]),
-                xy0=None, footprintBBox=Box2I(Point2I(1, 1), Extent2I(9, 9)), peaks=None)
+        xy0 = Point2I(5, 5)
 
-        images = [projectSpans(n, 5-n, bbox, True) for n in range(2, 5)]
+        images = np.array([projectSpans(n, 5-n, bbox, True) for n in range(2, 5)])
+        mFoot = MultibandFootprint.fromArrays(self.filters, images, xy0=xy0, peaks=self.peaks)
+        runTest(images, mFoot)
+
+        mFoot = MultibandFootprint.fromArrays(self.filters, images)
+        runTest(images, mFoot, None, Box2I(Point2I(1, 1), Extent2I(9, 9)))
+
+        images = [projectSpans(n, 5-n, bbox, False) for n in range(2, 5)]
+        mFoot = MultibandFootprint.fromImages(self.filters, images, peaks=self.peaks)
+        runTest(images, mFoot)
+
+        images = np.array([projectSpans(n, n, bbox, True) for n in range(2, 5)])
+        mFoot = MultibandFootprint.fromArrays(self.filters, images, peaks=self.peaks, xy0=bbox.getMin())
+        runTest(images, mFoot)
+
+        images = np.array([projectSpans(n, 5-n, bbox, True) for n in range(2, 5)])
         thresh = [1, 2, 2.5]
-        mFoot = MultibandFootprint(
-            self.filters,
-            images=images,
-            xy0=bbox.getMin(),
-            thresh=thresh
-        )
+        mFoot = MultibandFootprint.fromArrays(self.filters, images, xy0=bbox.getMin(), thresh=thresh)
         footprintBBox = Box2I(Point2I(8, 8), Extent2I(5, 5))
         self.assertEqual(mFoot.getBBox(), footprintBBox)
+
         fpImage = np.array(images)[:, 3:-3, 3:-3]
         mask = np.all(fpImage <= np.array(thresh)[:, None, None], axis=0)
         fpImage[:, mask] = 0
-        self.assertFloatsAlmostEqual(mFoot.getImage(fill=0).array, fpImage)
-        img = mFoot.getImage().array
+        self.assertFloatsAlmostEqual(mFoot.getImage(fill=0).image.array, fpImage)
+        img = mFoot.getImage().image.array
         img[~np.isfinite(img)] = 1.1
-        self.assertFloatsAlmostEqual(mFoot.getImage(fill=1.1).array, img)
+        self.assertFloatsAlmostEqual(mFoot.getImage(fill=1.1).image.array, img)
 
     def testSlicing(self):
         self.assertIsInstance(self.mFoot["R"], HeavyFootprintF)
