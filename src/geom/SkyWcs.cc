@@ -106,6 +106,29 @@ std::string getSkyWcsPersistenceName() { return "SkyWcs"; }
 
 SkyWcsFactory registration(getSkyWcsPersistenceName());
 
+ast::FrameDict makeSkyWcsFrameDict(TransformPoint2ToPoint2 const& pixelsToFieldAngle,
+                                   lsst::geom::Angle const& orientation, bool flipX,
+                                   lsst::geom::SpherePoint const& crval,
+                                   std::string const& projection = "TAN") {
+    auto const orientationAndFlipXMatrix = makeCdMatrix(1 * lsst::geom::degrees, orientation, flipX);
+    auto const initialWcs = makeSkyWcs(lsst::geom::Point2D(0, 0), crval, orientationAndFlipXMatrix, projection);
+    auto const initialFrameDict = initialWcs->getFrameDict();
+    auto const iwcToSkyMap = initialFrameDict->getMapping("IWC", "SKY");
+    auto const pixelFrame = initialFrameDict->getFrame("PIXELS");
+    auto const iwcFrame = initialFrameDict->getFrame("IWC");
+    auto const skyFrame = initialFrameDict->getFrame("SKY");
+    // Field angle is in radians and is aligned to focal plane x and y;
+    // IWC is basically the same thing, but in degrees and with rotation and flipX applied
+    ndarray::Array<double, 2, 2> fieldAngleToIwcNdArray = ndarray::allocate(2, 2);
+    asEigenMatrix(fieldAngleToIwcNdArray) = orientationAndFlipXMatrix * 180.0 / lsst::geom::PI;
+    auto const pixelsToFieldAngleMap = pixelsToFieldAngle.getMapping();
+    auto const fieldAngleToIwcMap = ast::MatrixMap(fieldAngleToIwcNdArray);
+    auto const pixelsToIwcMap = pixelsToFieldAngleMap->then(fieldAngleToIwcMap);
+    auto finalFrameDict = ast::FrameDict(*pixelFrame, pixelsToIwcMap, *iwcFrame);
+    finalFrameDict.addFrame("IWC", *iwcToSkyMap, *skyFrame);
+    return finalFrameDict;
+}
+
 }  // namespace
 
 Eigen::Matrix2d makeCdMatrix(lsst::geom::Angle const& scale, lsst::geom::Angle const& orientation,
@@ -453,6 +476,13 @@ std::shared_ptr<SkyWcs> makeSkyWcs(lsst::geom::Point2D const& crpix, lsst::geom:
                                    Eigen::Matrix2d const& cdMatrix, std::string const& projection) {
     auto metadata = makeSimpleWcsMetadata(crpix, crval, cdMatrix, projection);
     return std::make_shared<SkyWcs>(*metadata);
+}
+
+std::shared_ptr<SkyWcs> makeSkyWcs(TransformPoint2ToPoint2 const& pixelsToFieldAngle,
+                                   lsst::geom::Angle const& orientation, bool flipX,
+                                   lsst::geom::SpherePoint const& boresight, std::string const& projection) {
+    auto frameDict = makeSkyWcsFrameDict(pixelsToFieldAngle, orientation, flipX, boresight, projection);
+    return std::make_shared<SkyWcs>(frameDict);
 }
 
 std::shared_ptr<SkyWcs> makeTanSipWcs(lsst::geom::Point2D const& crpix, lsst::geom::SpherePoint const& crval,

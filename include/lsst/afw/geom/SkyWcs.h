@@ -48,10 +48,10 @@ namespace geom {
  * Make a WCS CD matrix
  *
  * @param[in] scale  Pixel scale as an angle on sky/pixels
- * @param[in] orientation  Position angle of focal plane +Y, measured from N through E.
+ * @param[in] orientation  Position angle of pixel +Y, measured from N through E.
  *                         At 0 degrees, +Y is along N and +X is along W/E if flipX false/true
  *                         At 90 degrees, +Y is along E and +X is along N/S if flipX false/true
- * @param[in] flipX  Fip x axis? See orientation for details.
+ * @param[in] flipX  Flip x axis? See orientation for details.
  *
  * @return the CD matrix, where element (i-1, j-1) corresponds to FITS keyword CDi_j
  *                         and i, j have range [1, 2]
@@ -520,6 +520,27 @@ std::shared_ptr<SkyWcs> makeSkyWcs(daf::base::PropertySet &metadata, bool strip 
  */
 std::shared_ptr<SkyWcs> makeSkyWcs(lsst::geom::Point2D const &crpix, lsst::geom::SpherePoint const &crval,
                                    Eigen::Matrix2d const &cdMatrix, std::string const &projection = "TAN");
+
+/**
+ * Construct a FITS SkyWcs from camera geometry
+ *
+ * @param[in] pixelsToFieldAngle  Transformation from @ref afwCameraGeomPIXELS "pixels"
+ *              to @ref afwCameraGeomFIELD_ANGLE "field angle" (in radians).
+ * @param[in] orientation  Position angle of focal plane +Y, measured from N through E at crval.
+ *                         At 0 degrees, +Y is along N and +X is along W/E if flipX false/true.
+ *                         At 90 degrees, +Y is along E and +X is along N/S if flipX false/true.
+ * @param[in] flipX  Flip x axis? See orientation for details.
+ * @param[in] boresight    ICRS sky position at the boresight (field angle (0, 0)).
+ * @param[in] projection  The name of the FITS WCS projection, e.g. "TAN" or "STG".
+ * @return a SkyWcs whose sky origin is the boresight and pixel origin is focal plane (0, 0).
+ *
+ * @note Unlike makeCdMatrix, `orientation` is with respect to the focal plane axes, not the CCD axes.
+ *      This is because field angle is defined with respect to focal plane axes.
+ */
+std::shared_ptr<SkyWcs> makeSkyWcs(TransformPoint2ToPoint2 const &pixelsToFieldAngle,
+                                   lsst::geom::Angle const &orientation, bool flipX,
+                                   lsst::geom::SpherePoint const &boresight,
+                                   std::string const &projection = "TAN");
 
 /**
  * Construct a TAN-SIP SkyWcs with forward SIP distortion terms and an iterative inverse.

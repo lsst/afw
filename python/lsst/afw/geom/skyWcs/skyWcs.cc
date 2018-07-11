@@ -60,6 +60,10 @@ PYBIND11_PLUGIN(skyWcs) {
             "crpix"_a, "crval"_a, "cdMatrix"_a, "projection"_a = "TAN");
     mod.def("makeSkyWcs", (std::shared_ptr<SkyWcs>(*)(daf::base::PropertySet &, bool))makeSkyWcs,
             "metadata"_a, "strip"_a = false);
+    mod.def("makeSkyWcs",
+            (std::shared_ptr<SkyWcs>(*)(TransformPoint2ToPoint2 const &, lsst::geom::Angle const &, bool,
+                                        lsst::geom::SpherePoint const &, std::string const &))makeSkyWcs,
+            "pixelsToFieldAngle"_a, "orientation"_a, "flipX"_a, "boresight"_a, "projection"_a = "TAN");
     mod.def("makeTanSipWcs",
             (std::shared_ptr<SkyWcs>(*)(lsst::geom::Point2D const &, lsst::geom::SpherePoint const &,
                                         Eigen::Matrix2d const &, Eigen::MatrixXd const &,
