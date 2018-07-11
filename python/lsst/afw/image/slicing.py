@@ -87,67 +87,40 @@ def handleNegativeIndex(index, size, origin, default):
     return index
 
 
-def makePointFromIndices(x, y, origin, bbox):
-    """Create a Point2I from an x, y pair, correctly handling negative indices.
-
-    Parameters
-    ----------
-    x : `int`
-        Column index.
-    y : `int`
-        Row index.
-    origin : `ImageOrigin`
-        Enum value that sets whether or not to consider xy0 in positions.
-    bbox : `Box2I`
-        Bounding box of the image being indexed, obtained using
-        ``getBBox(origin)``.
-
-    Returns
-    -------
-    point : `Point2I`
-        A point corresponding to the given indices.
-
-    Intended primarily for internal use by `supportSlicing()`.
-    """
-    return Point2I(
-        handleNegativeIndex(x, bbox.getWidth(), origin, default=None),
-        handleNegativeIndex(y, bbox.getHeight(), origin, default=None)
-    )
-
-
-def makeBoxFromSlices(x, y, origin, bbox):
+def makeBoxFromSlices(sliceArgs, bboxGetter):
     """Transform a tuple of slice objects into a Box2I, correctly handling negative indices.
 
-    Parameters
-    ----------
-    x : `slice`
-        Column index range.  Step must be None.
-    y : `slice`
-        Row index range.  Step must be None.
-    origin : `ImageOrigin`
-        Enum value that sets whether or not to consider xy0 in positions.
-    bbox : `Box2I`
-        Bounding box of the image being indexed, obtained using
-        ``getBBox(origin)``.
+    see `interpretSliceArgs` for a description of parameters
 
     Returns
     -------
-    bbox : `Box2I`
-        A point corresponding to the given indices.
-
-    Intended primarily for internal use by `supportSlicing()`.
+    box : `Box2I` or `None`
+        A box to use to create a subimage, or None if the slice refers to a
+        scalar.
+    index: `tuple` or `None`
+        An ``(x, y)`` tuple of integers, or None if the slice refers to a
+        box.
+    origin : `ImageOrigin`
+        Enum indicating whether to account for xy0.
     """
-    if x.step is not None or y.step is not None:
-        raise ValueError("Slices with steps are not supported in image indexing.")
-    begin = Point2I(
-        handleNegativeIndex(x.start, bbox.getWidth(), origin, default=bbox.getBeginX()),
-        handleNegativeIndex(y.start, bbox.getHeight(), origin, default=bbox.getBeginY())
-    )
-    end = Point2I(
-        handleNegativeIndex(x.stop, bbox.getWidth(), origin, default=bbox.getEndX()),
-        handleNegativeIndex(y.stop, bbox.getHeight(), origin, default=bbox.getEndY())
-    )
-    return Box2I(begin, end - begin)
+    slices, origin = splitSliceArgs(sliceArgs)
+    if isinstance(slices, Point2I):
+        return None, slices, origin
+    elif isinstance(slices, Box2I):
+        return slices, None, origin
+
+    x, y, origin = interpretSliceArgs(sliceArgs, bboxGetter)
+
+    if isinstance(x, slice):
+        assert isinstance(y, slice)
+        if x.step is not None or y.step is not None:
+            raise ValueError("Slices with steps are not supported in image indexing.")
+        begin = Point2I(x.start, y.start)
+        end = Point2I(x.stop, y.stop)
+        return Box2I(begin, end - begin), None, origin
+
+    assert not isinstance(y, slice)
+    return None, Point2I(x, y), origin
 
 
 def interpretSliceArgs(sliceArgs, bboxGetter):
@@ -164,22 +137,21 @@ def interpretSliceArgs(sliceArgs, bboxGetter):
 
     Returns
     -------
-    box : `Box2I` or `None`
-        A box to use to create a subimage, or None if the slice refers to a
-        scalar.
-    index: `tuple` or `None`
-        An ``(x, y)`` tuple of integers, or None if the slice refers to a
-        box.
+    x : int or slice
+        Index or slice in the x dimension
+    y : int or slice
+        Index or slice in the y dimension
     origin : `ImageOrigin`
-        Enum indicating whether to account for xy0.
-
-    Intended primarily for internal use by `supportSlicing()`.
+        Either `PARENT` (coordinates respect XY0) or LOCAL
+        (coordinates do not respect XY0)
     """
     slices, origin = splitSliceArgs(sliceArgs)
     if isinstance(slices, Point2I):
-        return None, slices, origin
+        return slices.getX(), slices.getY(), origin
     elif isinstance(slices, Box2I):
-        return slices, None, origin
+        x0 = slices.getMinX()
+        y0 = slices.getMinY()
+        return slice(x0, x0 + slices.getWidth()), slice(y0, y0 + slices.getHeight()), origin
     elif isinstance(slices, slice):
         if slices.start is not None or slices.stop is not None or slices.step is not None:
             raise TypeError("Single-dimension slices must not have bounds.")
@@ -188,14 +160,22 @@ def interpretSliceArgs(sliceArgs, bboxGetter):
         origin = LOCAL  # doesn't matter, as the slices cover the full image
     else:
         x, y = slices
+
+    bbox = bboxGetter(origin)
     if isinstance(x, slice):
         if isinstance(y, slice):
-            return makeBoxFromSlices(x, y, origin=origin, bbox=bboxGetter(origin)), None, origin
+            xSlice = slice(handleNegativeIndex(x.start, bbox.getWidth(), origin, default=bbox.getBeginX()),
+                           handleNegativeIndex(x.stop, bbox.getWidth(), origin, default=bbox.getEndX()))
+            ySlice = slice(handleNegativeIndex(y.start, bbox.getHeight(), origin, default=bbox.getBeginY()),
+                           handleNegativeIndex(y.stop, bbox.getHeight(), origin, default=bbox.getEndY()))
+            return xSlice, ySlice, origin
         raise TypeError("Mixed indices of the form (slice, int) are not supported for images.")
-    else:
-        if isinstance(y, slice):
-            raise TypeError("Mixed indices of the form (int, slice) are not supported for images.")
-        return None, makePointFromIndices(x, y, origin=origin, bbox=bboxGetter(origin)), origin
+
+    if isinstance(y, slice):
+        raise TypeError("Mixed indices of the form (int, slice) are not supported for images.")
+    x = handleNegativeIndex(x, bbox.getWidth(), origin, default=None)
+    y = handleNegativeIndex(y, bbox.getHeight(), origin, default=None)
+    return x, y, origin
 
 
 def supportSlicing(cls):
@@ -214,14 +194,14 @@ def supportSlicing(cls):
     cls.clone = clone
 
     def __getitem__(self, imageSlice):
-        box, index, origin = interpretSliceArgs(imageSlice, self.getBBox)
+        box, index, origin = makeBoxFromSlices(imageSlice, self.getBBox)
         if box is not None:
             return self.subset(box, origin=origin)
         return self._get(index, origin=origin)
     cls.__getitem__ = __getitem__
 
     def __setitem__(self, imageSlice, rhs):
-        box, index, origin = interpretSliceArgs(imageSlice, self.getBBox)
+        box, index, origin = makeBoxFromSlices(imageSlice, self.getBBox)
         if box is not None:
             if self.assign(rhs, box, origin) is NotImplemented:
                 lhs = self.subset(box, origin=origin)

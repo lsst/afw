@@ -32,7 +32,7 @@ import lsst.utils.tests
 from lsst.geom import Point2I, Box2I, Extent2I
 from lsst.afw.geom import SpanSet, Stencil
 from lsst.afw.detection import GaussianPsf, Footprint, makeHeavyFootprint, MultibandFootprint, HeavyFootprintF
-from lsst.afw.image import ImageF, Mask, MaskPixel, MaskedImage, ExposureF, MaskedImageF
+from lsst.afw.image import ImageF, Mask, MaskPixel, MaskedImage, ExposureF, MaskedImageF, LOCAL
 from lsst.afw.image.multiband import MultibandPixel, MultibandImage, MultibandMask, MultibandMaskedImage
 from lsst.afw.image.multiband import MultibandExposure
 
@@ -42,7 +42,7 @@ def _testImageFilterSlicing(testCase, mImage, singleType, bbox, value):
     testCase.assertIsInstance(mImage["R"], singleType)
     testCase.assertIsInstance(mImage[:], type(mImage))
 
-    testCase.assertEqual(mImage["G", -1, -1], value)
+    testCase.assertEqual(mImage["G", -1, -1, LOCAL], value)
     testCase.assertEqual(mImage["G"].array.shape, (100, 200))
     testCase.assertEqual(mImage[:"I"].array.shape, (2, 100, 200))
     testCase.assertEqual(mImage[:"I"].filters, ("G", "R"))
@@ -63,12 +63,12 @@ def _testImageFilterSlicing(testCase, mImage, singleType, bbox, value):
 
 def _testImageSlicing(testCase, mImage, gVal, rVal, iVal):
     """Test slicing in the spatial dimensions for image-like objects"""
-    testCase.assertIsInstance(mImage[:, -1, -1], MultibandPixel)
-    testCase.assertEqual(mImage["G", -1, -1], gVal)
+    testCase.assertIsInstance(mImage[:, -1, -1, LOCAL], MultibandPixel)
+    testCase.assertEqual(mImage["G", -1, -1, LOCAL], gVal)
 
     testCase.assertEqual(mImage[:, 1100:, 2025:].getBBox(), Box2I(Point2I(1100, 2025), Extent2I(100, 75)))
-    testCase.assertEqual(mImage[:, -20:-10, -10:-5].getBBox(),
-                         Box2I(Point2I(1179, 2089), Extent2I(10, 5)))
+    testCase.assertEqual(mImage[:, -20:-10, -10:-5, LOCAL].getBBox(),
+                         Box2I(Point2I(1180, 2090), Extent2I(10, 5)))
     testCase.assertEqual(mImage[:, :1100, :2050].getBBox(), Box2I(Point2I(1000, 2000), Extent2I(100, 50)))
     coord = Point2I(1075, 2015)
     bbox = Box2I(Point2I(1050, 2010), coord)
@@ -77,25 +77,21 @@ def _testImageSlicing(testCase, mImage, gVal, rVal, iVal):
     testCase.assertEqual(mImage[:, Point2I(1075, 2015)].getBBox().getMin(), coord)
 
     testCase.assertEqual(mImage["G", 1100:, 2025:].getBBox(), Box2I(Point2I(1100, 2025), Extent2I(100, 75)))
-    testCase.assertEqual(mImage["R", -20:-10, -10:-5].getBBox(),
-                         Box2I(Point2I(1179, 2089), Extent2I(10, 5)))
+    testCase.assertEqual(mImage["R", -20:-10, -10:-5, LOCAL].getBBox(),
+                         Box2I(Point2I(1180, 2090), Extent2I(10, 5)))
     testCase.assertEqual(mImage["I", :1100, :2050].getBBox(), Box2I(Point2I(1000, 2000), Extent2I(100, 50)))
     testCase.assertEqual(mImage["R", bbox].getBBox(), bbox)
     testCase.assertEqual(mImage["I", 1010, 2010], iVal)
     testCase.assertEqual(mImage["R", Point2I(1075, 2015)], rVal)
 
-    with testCase.assertRaises(IndexError):
+    with testCase.assertRaises(TypeError):
         mImage[:, 0]
-    with testCase.assertRaises(IndexError):
+    with testCase.assertRaises(TypeError):
         mImage[:, 10:]
-    with testCase.assertRaises(IndexError):
+    with testCase.assertRaises(TypeError):
         mImage[:, :10]
-    with testCase.assertRaises(IndexError):
+    with testCase.assertRaises(TypeError):
         mImage[:, :, 0]
-    with testCase.assertRaises(IndexError):
-        mImage[:, :, 10:]
-    with testCase.assertRaises(IndexError):
-        mImage[:, :, :10]
 
 
 def _testImageModification(testCase, mImage1, mImage2, bbox1, bbox2, value1, value2):
@@ -714,9 +710,10 @@ class MultibandFootprintTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(self.mFoot[["G", "I"]].filters, ("G", "I"))
         self.assertEqual(self.mFoot[["G", "I"]].getBBox(), self.bbox)
 
-        with self.assertRaises(IndexError):
+        with self.assertRaises(TypeError):
             self.mFoot["I", 4, 5]
             self.mFoot["I", :, :]
+        with self.assertRaises(IndexError):
             self.mFoot[:, :, :]
 
     def testSpans(self):

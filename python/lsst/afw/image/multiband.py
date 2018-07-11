@@ -207,8 +207,10 @@ class MultibandImageBase(MultibandBase):
         See `MultibandBase._slice` for a list of the parameters.
         """
         if len(indices) > 0:
+            if len(indices) == 1:
+                indices = indices[0]
             allSlices = [filterIndex, slice(None), slice(None)]
-            sy, sx = self.imageIndicesToNumpy(indices)
+            sy, sx, bbox = self.imageIndicesToNumpy(indices)
             if sy is not None:
                 allSlices[-2] = sy
             if sx is not None:
@@ -217,7 +219,7 @@ class MultibandImageBase(MultibandBase):
 
             # Return a scalar or MultibandPixel
             # if the image indices are integers
-            if np.issubdtype(type(sy), np.integer) and np.issubdtype(type(sx), np.integer):
+            if bbox is None:
                 if not isinstance(filterIndex, slice) and len(filterIndex) == 1:
                     return array[0]
                 result = MultibandPixel(
@@ -226,8 +228,6 @@ class MultibandImageBase(MultibandBase):
                     coords=Point2I(sx + self.x0, sy + self.y0)
                 )
                 return result
-            # Set the bbox size based on the slices
-            bbox = self._getBBoxFromIndices(allSlices[1:])
         else:
             array = self._array[filterIndex]
             bbox = self.getBBox()
@@ -255,7 +255,7 @@ class MultibandImageBase(MultibandBase):
         # index is not a list or slice.
         filters, filterIndex = self._filterNamesToIndex(indices[0])
         if len(indices) > 1:
-            sy, sx = self.imageIndicesToNumpy(indices[1:])
+            sy, sx, bbox = self.imageIndicesToNumpy(indices[1:])
         else:
             sy = sx = slice(None)
         if hasattr(value, "array"):

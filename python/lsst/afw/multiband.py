@@ -23,10 +23,9 @@ __all__ = ["MultibandBase"]
 
 from abc import ABC, abstractmethod
 
-import numpy as np
-
-from lsst.geom import Point2I, Box2I
-from .image import PARENT
+from lsst.geom import Point2I, Box2I, Extent2I
+from .image import PARENT, LOCAL
+from .image.slicing import interpretSliceArgs
 
 
 class MultibandBase(ABC):
@@ -97,10 +96,14 @@ class MultibandBase(ABC):
         """
         return self._singles
 
-    def getBBox(self):
+    def getBBox(self, origin=PARENT):
         """Bounding box
         """
-        return self._bbox
+        if origin == PARENT:
+            return self._bbox
+        elif origin == LOCAL:
+            return Box2I(Point2I(0, 0), self._bbox.getDimensions())
+        raise ValueError("Unrecognized origin, expected either PARENT or LOCAL")
 
     def getXY0(self):
         """Minimum coordinate in the bounding box
@@ -163,30 +166,12 @@ class MultibandBase(ABC):
         # index is not a list or slice.
         filters, filterIndex = self._filterNamesToIndex(indices[0])
         if not isinstance(filterIndex, slice) and len(filterIndex) == 1:
-            single = self.singles[filterIndex[0]]
-            # This temporary code is needed until image-like objects
-            # take integer indices, numpy-like slices
-            # and Point2I objects
-            # Once the image-like API has been updated,
-            # this entire "if" block can be replaced with:
-            # return self.singles[filterIndex[0]][indices[1:]]
-            if len(indices) > 1:
-                indexY, indexX = self.imageIndicesToNumpy(indices[1:])
-                # Return a scalar if possible
-                if isinstance(indices[1], Point2I) or (
-                    np.issubdtype(type(indexY), np.integer) and
-                    np.issubdtype(type(indexX), np.integer)
-                ):
-                    return self._slice(filters=filters, filterIndex=filterIndex, indices=indices[1:])
-                elif not isinstance(indices[1], Box2I):
-                    # Convert indices into a bounding box
-                    bbox = self._getBBoxFromIndices((indexY, indexX))
-                else:
-                    bbox = indices[1]
-                result = single.Factory(single, bbox, PARENT)
+            if len(indices) > 2:
+                return self.singles[filterIndex[0]][indices[1:]]
+            elif len(indices) == 2:
+                return self.singles[filterIndex[0]][indices[1]]
             else:
-                result = single
-            return result
+                return self.singles[filterIndex[0]]
 
         return self._slice(filters=filters, filterIndex=filterIndex, indices=indices[1:])
 
@@ -242,14 +227,7 @@ class MultibandBase(ABC):
             filterIndices = [self.filters.index(f) for f in filterNames]
         return tuple(filterNames), filterIndices
 
-    def _indexError(self, indices):
-        """To make indexing faster we stringify the error on the fly, if needed
-        """
-        indexError = "Exected a tuple of 1 or 2 indices, a Point2I, or a Box2I, but received {0}"
-        indexError = indexError.format(indices)
-        return indexError
-
-    def imageIndicesToNumpy(self, indices):
+    def imageIndicesToNumpy(self, sliceArgs):
         """Convert slicing format to numpy
 
         LSST `afw` image-like objects use an `[x,y]` coordinate
@@ -262,105 +240,48 @@ class MultibandBase(ABC):
 
         Parameters
         ----------
-        indices: `sequence`, `Point2I` or `Box2I`
+        sliceArgs: `sequence`, `Point2I` or `Box2I`
             An `(xIndex, yIndex)` pair, or a single `(xIndex,)` tuple,
-            where `xIndex` and `yIndex` can be a `slice`, `int`,
+            where `xIndex` and `yIndex` can be a `slice` or `int`,
             or list of `int` objects, and if only a single `xIndex` is
             given, a `Point2I` or `Box2I`.
 
         Returns
         -------
-        sy, sx: tuple of indices or slices
-            Indices or slices in python (y,x) ordering, with `XY0` subtracted.
+        y: index or slice
+            Index or slice in the y dimension
+        x: index or slice
+            Index or slice in the x dimension
+        bbox: Box2I
+            Bounding box of the image.
+            If `bbox` is `None` then the result is a point and
+            not a subset of an image.
         """
-        bbox = self.getBBox()
-        x0 = bbox.getMinX()
-        y0 = bbox.getMinY()
-        sx = None
-        sy = None
+        # Use a common slicing algorithm as single band images
+        x, y, origin = interpretSliceArgs(sliceArgs, self.getBBox)
 
-        # The same IndexError is used in multiple places, so create it once
-        # Make sure that `indices` is list-like
-        if isinstance(indices, Point2I) or isinstance(indices, Box2I):
-            indices = [indices]
-
-        if isinstance(indices[0], Point2I) or isinstance(indices[0], Box2I):
-            if len(indices) != 1:
-                raise IndexError(self._indexError(indices))
-            if isinstance(indices[0], Point2I):
-                sx = indices[0].getX() - x0
-                sy = indices[0].getY() - y0
+        if origin == PARENT:
+            if isinstance(x, slice):
+                assert isinstance(y, slice)
+                bbox = Box2I(Point2I(x.start, y.start), Extent2I(x.stop-x.start, y.stop-y.start))
+                x = slice(x.start - self.x0, x.stop - self.x0)
+                y = slice(y.start - self.y0, y.stop - self.y0)
             else:
-                minSx = indices[0].getMinX() - x0
-                minSy = indices[0].getMinY() - y0
-                sx = slice(minSx, minSx+indices[0].getWidth())
-                sy = slice(minSy, minSy+indices[0].getHeight())
+                x = x - self.x0
+                y = y - self.y0
+                bbox = None
+            return y, x, bbox
+        elif origin != LOCAL:
+            raise ValueError("Unrecognized value for origin")
+
+        # Use a local bounding box
+        if isinstance(x, slice):
+            assert isinstance(y, slice)
+            bbox = Box2I(Point2I(x.start + self.x0, y.start + self.y0),
+                         Extent2I(x.stop-x.start, y.stop-y.start))
         else:
-            if len(indices) == 2:
-                sy = indices[1]
-                sx = indices[0]
-            elif len(indices) == 1:
-                sx = indices[0]
-            else:
-                raise IndexError(self._indexError(indices))
-
-            if sx is not None:
-                sx = self._removeOffset(sx, x0, bbox.getMaxX())
-            if sy is not None:
-                sy = self._removeOffset(sy, y0, bbox.getMaxY())
-        return (sy, sx)
-
-    def _removeOffset(self, index, x0, xf):
-        """Modify a coordinate or slice by subtracting an offset
-
-        Parameters
-        ----------
-        index: slice, int, or list of int
-            Index in the full image (including `XY0`).
-        x0: int
-            Minimum value of the x or y coordinate in
-            the new boudning box.
-        xf: int
-            Maximum value of the x or y coordinate in
-            the new bounding box.
-
-        Returns
-        -------
-        newIndex: slice, int, or list of int
-            Updated index using `x0`/`y0` and `xf`/`yf`.
-        """
-        def _applyBBox(index, x0, xf):
-            """Throw an error if an invalid index is used
-            """
-            if index > 0 and (index < x0 or index > xf):
-                err = "Indices must be <0 or between {0} and {1}, received {2}"
-                raise IndexError(err.format(x0, xf, index))
-            newIndex = index - x0
-            if index < 0:
-                newIndex += xf
-            return newIndex
-
-        if index is None:
-            return index
-
-        newIndex = None
-        if isinstance(index, slice):
-            if index.start is None:
-                start = None
-            else:
-                start = _applyBBox(index.start, x0, xf)
-            if index.stop is None:
-                stop = None
-            else:
-                stop = _applyBBox(index.stop, x0, xf)
-            if index.step is not None and index.step != 1:
-                raise IndexError("Image slicing must be contiguous")
-            newIndex = slice(start, stop)
-        elif hasattr(index, "__len__"):
-            newIndex = [_applyBBox(i, x0, xf) for i in index]
-        else:
-            newIndex = _applyBBox(index, x0, xf)
-        return newIndex
+            bbox = None
+        return y, x, bbox
 
     def shiftedTo(self, xy0):
         """Shift the bounding box but keep the same Extent
@@ -384,47 +305,6 @@ class MultibandBase(ABC):
         """
         xy0 = self._bbox.getMin() + offset
         self.shiftedTo(xy0)
-
-    def _getBBoxFromIndices(self, indices):
-        """Set the current bounding box from a set of slices
-
-        This method creates the bounding box for this
-        object based on the bounding box of it's parent,
-        and sets the `self_bbox` parameter, accessible
-        by `self.getBBox()`.
-
-        Parameters
-        ----------
-        indices: tuple of indices or slices
-            Slices in x and y from the parent array.
-
-        Returns
-        -------
-        bbox: `Box2I`
-            Bounding box for the image portion of the multiband object.
-        """
-        oldBBox = self.getBBox()
-        yx0 = [oldBBox.getMinY(), oldBBox.getMinX()]
-        yxF = [oldBBox.getMaxY(), oldBBox.getMaxX()]
-
-        for idx, index in enumerate(indices):
-            if isinstance(index, slice):
-                _start = yx0[idx]
-                if index.start is not None:
-                    yx0[idx] += index.start
-                if index.stop is not None:
-                    yxF[idx] = _start + index.stop - 1
-            else:
-                if hasattr(index, "__len__"):
-                    raise IndexError("MultibandBase objects must have contiguous slices")
-                else:
-                    if index is not None:
-                        yx0[idx] += index
-                        yxF[idx] = yxF[idx] + 1
-        xy0 = Point2I(yx0[1], yx0[0])
-        xyF = Point2I(yxF[1], yxF[0])
-        bbox = Box2I(xy0, xyF)
-        return bbox
 
     @abstractmethod
     def _slice(self, filters, filterIndex, indices):
