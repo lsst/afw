@@ -1,6 +1,6 @@
-#########
-Footprint
-#########
+###############################################################
+Using lsst.afw.detection.Footprint to represent detection areas
+###############################################################
 
 The fundamental unit of a detection in the LSST pipeline is an instance of the
 ``Footprint`` class. This class contains the x, y locations for pixels that are
