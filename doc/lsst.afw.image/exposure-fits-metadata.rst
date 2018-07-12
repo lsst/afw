@@ -12,54 +12,58 @@ HDU 0
 =====
 
 .. list-table::
-   :widths: 2 1 1 3 5
+   :widths: 2 1 1 5
    :header-rows: 1
 
    * - Keyword
      - Format
      - Units
-     - LSST object and accessor [1]_
-     - Description
+     - Accessor [1]_ and description
 
    * - ``DETNAME``
      - str
      -
      - `Detector.getAmpInfo`
-     - detector name
+
+       Detector name.
 
    * - ``DETSER``
      - str
      -
      - `Detector.getAmpInfo`
-     - detector serial number
+
+       Detector serial number.
 
    * - ``EXPID``
      - long int
      -
      - `VisitInfo.getExposureId`
-     - Exposure ID
+
+       Exposure ID.
 
    * - ``EXPTIME``
      - float
      - sec
      - `VisitInfo.getExposureTime`
-     - Exposure duration (shutter open time)
+
+       Exposure duration (shutter open time).
 
    * - ``DARKTIME``
      - float
      - sec
      - `VisitInfo.getDarkTime`
-     - Time from CCD flush to readout, including shutter open time (despite the name)
+
+       Time from CCD flush to readout, including shutter open time (despite the name)
 
    * - ``DATE-AVG``
      - ISO8601
      -
      - `VisitInfo.getDate`
-     - Date at middle of exposure, at boresight. No time zone character allowed.
+
+       Date at middle of exposure, at boresight. No time zone character allowed.
 
    * - ``TIMESYS``
      - str
-     -
      -
      - Must exist and must be set to ``"TAI"`` if ``DATE-AVG`` is present.
 
@@ -67,7 +71,8 @@ HDU 0
      - ISO8601
      -
      - `VisitInfo.getDate`
-     - Deprecated; read if ``DATE-AVG`` not found, for backwards compatibility.
+
+       Deprecated; read if ``DATE-AVG`` not found, for backwards compatibility.
        Date at middle of exposure. The time zone character must exist and must be ``"Z"``.
        Note: ``TIME-MID`` is always UTC (even if the comment claims it is TAI) and ``TIMESYS`` is ignored.
 
@@ -75,49 +80,57 @@ HDU 0
      - float
      - MJD
      - `VisitInfo.getUt1`
-     - UT1 date middle of exposure, at boresight
+
+       UT1 date middle of exposure, at boresight
 
    * - ``AVG-ERA``
      - float
      - deg
      - `VisitInfo.getEra`
-     - Earth rotation angle at middle of exposure, at boresight.
+
+       Earth rotation angle at middle of exposure, at boresight.
 
    * - ``BORE-RA``
      - float
      - deg
      - `VisitInfo.getBoreRaDec`
-     - Position of boresight, ICRS RA.
+
+       Position of boresight, ICRS RA.
 
    * - ``BORE-DEC``
      - float
      - deg
      - `VisitInfo.getBoreRaDec`
-     - Position of boresight, ICRS Dec.
+
+       Position of boresight, ICRS Dec.
 
    * - ``BORE-AZ``
      - float
      - deg
      - `VisitInfo.getBoreAzAlt`
-     - Position of boresight, refracted apparent topocentric Az.
+
+       Position of boresight, refracted apparent topocentric Az.
 
    * - ``BORE-ALT``
      - float
      - deg
      - `VisitInfo.getBoreAzAlt`
-     - Position of boresight, refracted apparent topocentric Alt.
+
+       Position of boresight, refracted apparent topocentric Alt.
 
    * - ``BORE-ROTANG``
      - float
      - deg
      - `VisitInfo.getBoreRotAngle`
-     - Orientation of rotator at boresight.
+
+       Orientation of rotator at boresight.
 
    * - ``ROTTYPE``
      - str
      -
      - `VisitInfo.getRotType`
-     - Type of rotation; one of:
+
+       Type of rotation; one of:
 
        - ``UNKNOWN``
        - ``SKY``: position angle of focal plane +Y measured from N through E.
@@ -128,89 +141,91 @@ HDU 0
      - float
      - deg
      - `VisitInfo.getObservatory`
-     - Longitude of telescope.
+       Longitude of telescope.
 
    * - ``OBS-LAT``
      - float
      - deg
      - `VisitInfo.getObservatory`
-     - Latitude of telescope (positive eastward).
+
+       Latitude of telescope (positive eastward).
 
    * - ``OBS-ELEV``
      - float
      - m
      - `VisitInfo.getObservatory`
-     - Geodetic elevation of telescope (meters above reference spheroid).
+
+       Geodetic elevation of telescope (meters above reference spheroid).
 
    * - ``AIRTEMP``
      - float
      - C
      - `VisitInfo.getWeather`
-     - Air temperature.
+
+       Air temperature.
 
    * - ``AIRPRESS``
      - float
      - Pascals
      - `VisitInfo.getWeather`
-     - Air pressure.
+
+       Air pressure.
 
    * - ``HUMIDITY``
      - float
      - %
      - `VisitInfo.getWeather`
-     - Relative humidity.
+
+       Relative humidity.
 
    * - ``FLUXMAG0``
      - float
      - ADU
      - `Calib.getFluxMag0`
-     - Flux of a zero-magnitude object.
+
+       Flux of a zero-magnitude object.
 
    * - ``FLUXMAG0ERR``
      - float
      - ADU
      - `Calib.getFluxMag0Err`
-     - Error in the flux of a zero-magnitude object.
+
+       Error in the flux of a zero-magnitude object.
 
    * - ``FILTER``
      - str
      -
      - `Filter.getName`
-     - Name of filter.
+
+       Name of filter.
 
    * - ``AR_HDU``
      - int
-     -
      -
      - HDU containing the archive used to store ancillary objects
 
    * - ``COADD_INPUTS_ID``
      - int
      -
-     -
      - Archive ID for coadd inputs catalogs
 
    * - ``AP_CORR_MAP_ID``
      - int
-     -
      -
      - Archive ID for aperture correction map
 
    * - ``PSF_ID``
      - int
      -
-     -
      - Archive ID for the Exposure's main Psf
 
    * - ``WCS_ID``
      - int
      -
-     -
      - Archive ID for the Exposure's main Wcs
 
    * - ``VALID_POLYGON_ID``
      - int
-     -
      -
      - Archive ID for the Exposure's valid polygon
 
@@ -218,26 +233,27 @@ HDUs 1 to 3
 ===========
 
 .. list-table::
-   :widths: 2 1 1 3 5
+   :widths: 2 1 1 5
    :header-rows: 1
 
    * - Keyword
      - Format
      - Units
-     - LSST object and accessor [1]_
-     - Description
+     - Accessor [1]_ and description
 
    * - ``LTV1``
      - int
      -
      - `Exposure.getXY0`
-     - Image origin, X axis = -_x0 [2]_.
+
+       Image origin, X axis = -_x0 [2]_.
 
    * - ``LTV2``
      - int
      -
      - `Exposure.getXY0`
-     - Image origin, Y axis = -_y0 [2]_.
+
+       Image origin, Y axis = -_y0 [2]_.
 
 .. [1] Unless otherwise noted, each object is contained in the ExposureInfo and has a getter.
    Thus to get ``VisitInfo`` use ``exposure.getExposureInfo().getVisitInfo()``.
