@@ -241,27 +241,50 @@ HDUs 1 to 3
      - Units
      - Accessor [1]_ and description
 
-   * - ``LTV1``
-     - int
+   * - ``CRPIX1A``
+     - double
+     - pixels
+     - X axis reference pixel, always ``1.0``.
+
+   * - ``CRPIX2A``
+     - double
+     - pixels
+     - Y axis reference pixel, always ``1.0``.
+
+   * - ``CRVAL1A``
+     - double
      -
      - `Exposure.getXY0`
 
-       Image origin, X axis = -_x0 [2]_.
+       Access as ``exposure.getXY0[0]``.
 
-   * - ``LTV2``
-     - int
+   * - ``CRVAL2A``
+     - double
      -
      - `Exposure.getXY0`
 
-       Image origin, Y axis = -_y0 [2]_.
+       Access as ``exposure.getXY0[1]``.
+
+   * - ``CTYPE1A``
+     - str
+     -
+     - Always ``"LINEAR"``.
+
+   * - ``CTYPE2A``
+     - str
+     -
+     - Always ``"LINEAR"``.
+
+   * - ``CUNIT1A``
+     - str
+     -
+     - Always ``"PIXEL"``.
+
+   * - ``CUNIT2A``
+     - str
+     -
+     - Always ``"PIXEL"``.
 
 .. [1] Unless otherwise noted, each object is contained in the ExposureInfo and has a getter.
    Thus to get ``VisitInfo`` use ``exposure.getExposureInfo().getVisitInfo()``.
    In some cases a direct shortcut is also available, e.g. ``exposure.getFilter()`` is a shortcut for ``exposure.getExposureInfo().getFilter()``.
-
-.. [2] If this Exposure is a portion of a larger image, ``_x0`` and ``_y0`` indicate the origin (the position of the bottom left corner) of the sub-image with respect to the origin of the parent image.
-   This is stored in the fits header using the LTV convention used by STScI (see `§2.6.2 of HST Data Handbook for STIS`_, version 5.0).
-   This is not a FITS standard keyword, but is recognised by ds9.
-   LTV keywords use the opposite convention to the LSST, in that they represent the position of the origin of the parent image relative to the origin of the sub-image.
-
-.. _`§2.6.2 of HST Data Handbook for STIS`: http://www.stsci.edu/hst/stis/documents/handbooks/currentDHB/ch2_stis_data7.html#429287
