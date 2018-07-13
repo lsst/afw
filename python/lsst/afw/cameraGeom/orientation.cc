@@ -36,6 +36,8 @@ namespace cameraGeom {
 PYBIND11_PLUGIN(orientation) {
     py::module mod("orientation");
 
+    py::module::import("lsst.geom");
+
     /* Module level */
     py::class_<Orientation> cls(mod, "Orientation");
 

@@ -57,6 +57,8 @@ PYBIND11_PLUGIN(ellipse) {
     //    clsEllipseGridTransform.def("getDeterminant", &Ellipse::GridTransform::getDeterminant);
     //    clsEllipseGridTransform.def("invert", &Ellipse::GridTransform::invert);
 
+    py::module::import("lsst.geom");
+
     /* Constructors */
     clsEllipse.def(py::init<BaseCore const &, lsst::geom::Point2D const &>(), "core"_a, "center"_a = lsst::geom::Point2D());
     clsEllipse.def(py::init<Ellipse const &>());

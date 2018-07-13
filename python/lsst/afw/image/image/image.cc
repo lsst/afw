@@ -413,6 +413,8 @@ static void addGeneralizedCopyConstructors(PyClass &cls) {
 PYBIND11_PLUGIN(image) {
     py::module mod("image");
 
+    py::module::import("lsst.daf.base");
+
     py::enum_<ImageOrigin>(mod, "ImageOrigin")
             .value("PARENT", ImageOrigin::PARENT)
             .value("LOCAL", ImageOrigin::LOCAL)

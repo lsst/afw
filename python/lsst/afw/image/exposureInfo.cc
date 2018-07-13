@@ -51,6 +51,8 @@ PYBIND11_PLUGIN(exposureInfo) {
 
     py::module::import("lsst.daf.base");
     py::module::import("lsst.afw.geom.skyWcs");
+    py::module::import("lsst.afw.cameraGeom.detector");
+    py::module::import("lsst.afw.detection.psf");
     py::module::import("lsst.afw.image.calib");
     py::module::import("lsst.afw.image.apCorrMap");
     py::module::import("lsst.afw.image.coaddInputs");
