@@ -65,8 +65,8 @@ void declareAll(py::module &mod) {
 }
 }  // namespace
 
-PYBIND11_PLUGIN(_convolve) {
-    py::module mod("_convolve", "Python wrapper for afw _convolve library");
+PYBIND11_PLUGIN(convolve) {
+    py::module mod("convolve");
 
     declareAll<double, double>(mod);
     declareAll<double, float>(mod);

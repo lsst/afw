@@ -71,8 +71,8 @@ void declareAll(py::module &mod) {
 }
 }
 
-PYBIND11_PLUGIN(_convolveImage) {
-    py::module mod("_convolveImage", "Python wrapper for afw _convolveImage library");
+PYBIND11_PLUGIN(convolveImage) {
+    py::module mod("convolveImage");
 
     py::class_<ConvolutionControl, std::shared_ptr<ConvolutionControl>> clsConvolutionControl(
             mod, "ConvolutionControl");

@@ -53,8 +53,8 @@ void declareApproximate(py::module &mod, std::string const &suffix) {
 }
 }
 
-PYBIND11_PLUGIN(_approximate) {
-    py::module mod("_approximate", "Python wrapper for afw _approximate library");
+PYBIND11_PLUGIN(approximate) {
+    py::module mod("approximate");
 
     py::class_<ApproximateControl, std::shared_ptr<ApproximateControl>> clsApproximateControl(
             mod, "ApproximateControl");

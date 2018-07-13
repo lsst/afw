@@ -30,8 +30,8 @@ namespace py = pybind11;
 
 using namespace lsst::afw::geom::ellipses;
 
-PYBIND11_PLUGIN(_pixelRegion) {
-    py::module mod("_pixelRegion", "Python wrapper for afw _pixelRegion library");
+PYBIND11_PLUGIN(pixelRegion) {
+    py::module mod("pixelRegion");
 
     py::class_<PixelRegion> clsPixelRegion(mod, "PixelRegion");
 

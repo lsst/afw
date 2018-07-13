@@ -3,14 +3,14 @@ import lsst.afw.table.io
 import lsst.afw.image
 from lsst.afw.geom import Span
 
-from ._psf import *
-from ._footprint import *
-from ._footprintSet import *
-from ._threshold import *
-from ._peak import *
+from .psf import *
+from .footprint import *
+from .footprintSet import *
+from .threshold import *
 from .peak import *
-from ._footprintCtrl import *
-from ._gaussianPsf import *
-from ._footprintMerge import *
+from .peak import *
+from .footprintCtrl import *
+from .gaussianPsf import *
 from .footprintMerge import *
-from ._heavyFootprint import *
+from .footprintMerge import *
+from .heavyFootprint import *

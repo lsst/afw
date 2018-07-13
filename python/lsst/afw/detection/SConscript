@@ -4,8 +4,9 @@ scripts.BasicSConscript.pybind11(['psf',
                                   'footprint',
                                   'footprintSet',
                                   'threshold',
-                                  'peak',
+                                  'peak/peak',
                                   'footprintCtrl',
                                   'gaussianPsf',
-                                  'footprintMerge',
-                                  'heavyFootprint'])
+                                  'footprintMerge/footprintMerge',
+                                  'heavyFootprint'],
+                                 addUnderscore=False)

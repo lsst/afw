@@ -81,8 +81,8 @@ void declareHeavyFootprint(py::module &mod, std::string const &suffix) {
 }
 }  // namespace
 
-PYBIND11_PLUGIN(_heavyFootprint) {
-    py::module mod("_heavyFootprint", "Python wrapper for afw _heavyFootprint library");
+PYBIND11_PLUGIN(heavyFootprint) {
+    py::module mod("heavyFootprint");
 
     declareHeavyFootprint<int>(mod, "I");
     declareHeavyFootprint<std::uint16_t>(mod, "U");

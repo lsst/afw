@@ -33,8 +33,8 @@ using namespace py::literals;
 
 using namespace lsst::afw::geom::ellipses;
 
-PYBIND11_PLUGIN(_conformalShear) {
-    py::module mod("_conformalShear", "Python wrapper for afw _conformalShear library");
+PYBIND11_PLUGIN(conformalShear) {
+    py::module mod("conformalShear");
 
     py::class_<ConformalShear, detail::EllipticityBase> cls(mod, "ConformalShear");
 

@@ -42,8 +42,8 @@ namespace afw {
 namespace geom {
 namespace polygon {
 
-PYBIND11_PLUGIN(_polygon) {
-    py::module mod("_polygon", "Python wrapper for afw _polygon library");
+PYBIND11_PLUGIN(polygon) {
+    py::module mod("polygon");
 
     // TODO: Commented-out code is waiting until needed and is untested.
     // Add tests for it and enable it or remove it before the final pybind11 merge.

@@ -140,8 +140,8 @@ void declareAllFunctions(py::module &mod, const std::string &suffix) {
 
 }  // namespace <anonymous>
 
-PYBIND11_PLUGIN(_function) {
-    py::module mod("_function", "Python wrapper for afw _function library");
+PYBIND11_PLUGIN(function) {
+    py::module mod("function");
 
     declareAllFunctions<float>(mod, "F");
     declareAllFunctions<double>(mod, "D");

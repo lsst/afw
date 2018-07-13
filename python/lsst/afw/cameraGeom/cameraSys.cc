@@ -59,8 +59,8 @@ void declareCommonSysMethods(PyClass &cls) {
 }
 }
 
-PYBIND11_PLUGIN(_cameraSys) {
-    py::module mod("_cameraSys", "Python wrapper for afw _cameraSys library");
+PYBIND11_PLUGIN(cameraSys) {
+    py::module mod("cameraSys");
 
     /* Module level */
     py::class_<CameraSysPrefix> clsCameraSysPrefix(mod, "CameraSysPrefix");

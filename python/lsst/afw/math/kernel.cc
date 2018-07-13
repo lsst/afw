@@ -34,8 +34,8 @@ using namespace py::literals;
 
 using namespace lsst::afw::math;
 
-PYBIND11_PLUGIN(_kernel) {
-    py::module mod("_kernel", "Python wrapper for afw _kernel library");
+PYBIND11_PLUGIN(kernel) {
+    py::module mod("kernel");
 
     py::class_<Kernel, std::shared_ptr<Kernel>, lsst::daf::base::Persistable> clsKernel(mod, "Kernel");
 

@@ -100,8 +100,8 @@ void declareStatisticsStack(py::module &mod) {
             "wvector"_a = std::vector<lsst::afw::image::VariancePixel>(0));
 }
 
-PYBIND11_PLUGIN(_stack) {
-    py::module mod("_stack", "Python wrapper for afw _stack library");
+PYBIND11_PLUGIN(stack) {
+    py::module mod("stack");
 
     /* Module level */
     declareStatisticsStack<float>(mod);

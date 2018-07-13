@@ -137,8 +137,10 @@ void DummyPsf::write(OutputArchiveHandle& handle) const {
 
 PYBIND11_DECLARE_HOLDER_TYPE(MyType, std::shared_ptr<MyType>);
 
-PYBIND11_PLUGIN(_testTableArchivesLib) {
-    py::module mod("_testTableArchivesLib", "Python wrapper for DummyPsf");
+PYBIND11_PLUGIN(testTableArchivesLib) {
+    py::module mod("testTableArchivesLib", "Python wrapper for DummyPsf");
+
+    py::module::import("lsst.afw.detection.psf");
 
     py::class_<DummyPsf, std::shared_ptr<DummyPsf>, lsst::afw::detection::Psf> cls(mod, "DummyPsf");
 

@@ -33,8 +33,8 @@ using namespace py::literals;
 
 using namespace lsst::afw::geom::ellipses;
 
-PYBIND11_PLUGIN(_reducedShear) {
-    py::module mod("_reducedShear", "Python wrapper for afw _reducedShear library");
+PYBIND11_PLUGIN(reducedShear) {
+    py::module mod("reducedShear");
 
     py::class_<ReducedShear, detail::EllipticityBase> cls(mod, "ReducedShear");
 

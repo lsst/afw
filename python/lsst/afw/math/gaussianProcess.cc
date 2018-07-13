@@ -135,22 +135,12 @@ void declareGaussianProcess(py::module &mod, const std::string &suffix) {
                                    GaussianProcess<T>::getData);
 };
 
-PYBIND11_PLUGIN(_gaussianProcess) {
-    py::module mod("_gaussianProcess", "Python wrapper for afw _gaussianProcess library");
+PYBIND11_PLUGIN(gaussianProcess) {
+    py::module mod("gaussianProcess");
 
     declareCovariograms<double>(mod, "D");
     declareGaussianProcess<double>(mod, "D");
     declareKdTree<double>(mod, "D");
-
-    /* Module level */
-
-    /* Member types and enums */
-
-    /* Constructors */
-
-    /* Operators */
-
-    /* Members */
 
     return mod.ptr();
 }

@@ -187,8 +187,8 @@ void declareFits(py::module & mod) {
 }
 
 
-PYBIND11_PLUGIN(_fits) {
-    py::module mod("_fits", "Python wrapper for afw _fits library");
+PYBIND11_PLUGIN(fits) {
+    py::module mod("fits");
 
     py::class_<MemFileManager> clsMemFileManager(mod, "MemFileManager");
 

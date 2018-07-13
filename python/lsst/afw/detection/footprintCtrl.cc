@@ -34,8 +34,8 @@ namespace lsst {
 namespace afw {
 namespace detection {
 
-PYBIND11_PLUGIN(_footprintCtrl) {
-    py::module mod("_footprintCtrl", "Python wrapper for afw _footprintCtrl library");
+PYBIND11_PLUGIN(footprintCtrl) {
+    py::module mod("footprintCtrl");
 
     py::class_<FootprintControl> clsFootprintControl(mod, "FootprintControl");
 

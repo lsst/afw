@@ -32,8 +32,8 @@ using namespace py::literals;
 
 using namespace lsst::afw::geom::ellipses;
 
-PYBIND11_PLUGIN(_ellipticityBase) {
-    py::module mod("_ellipticityBase", "Python wrapper for afw _ellipticityBase library");
+PYBIND11_PLUGIN(ellipticityBase) {
+    py::module mod("ellipticityBase");
 
     py::class_<detail::EllipticityBase> cls(mod, "EllipticityBase");
 

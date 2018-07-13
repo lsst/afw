@@ -5,7 +5,7 @@
 #include "boost/format.hpp"
 #include "lsst/afw/detection.h"
 #include "lsst/afw/image/MaskedImage.h"
-#include "Rgb.h"
+#include "rgb/Rgb.h"
 
 namespace lsst {
 namespace afw {

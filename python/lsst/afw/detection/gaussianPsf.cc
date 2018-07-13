@@ -34,8 +34,8 @@ namespace lsst {
 namespace afw {
 namespace detection {
 
-PYBIND11_PLUGIN(_gaussianPsf) {
-    py::module mod("_gaussianPsf", "Python wrapper for afw _gaussianPsf library");
+PYBIND11_PLUGIN(gaussianPsf) {
+    py::module mod("gaussianPsf");
 
     py::class_<GaussianPsf, std::shared_ptr<GaussianPsf>, Psf> clsGaussianPsf(mod, "GaussianPsf");
 
