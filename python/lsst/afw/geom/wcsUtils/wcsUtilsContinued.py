@@ -29,29 +29,29 @@ from .wcsUtils import _getSipMatrixFromMetadata
 
 
 def getSipMatrixFromMetadata(metadata, name):
-    """Extract a SIP matrix from FITS TAN-SIP WCS metadata
+    """Extract a SIP matrix from FITS TAN-SIP WCS metadata.
 
     Omitted coefficients are set to 0 and all coefficients may be omitted.
 
     Parameters
     ----------
-    metadata : lsst.daf.base.PropertySet
-        FITS metadata
-    name : str
-        Name of TAN-SIP matrix; one of "A", "B", "Ap", "Bp"
+    metadata : `lsst.daf.base.PropertySet`
+        FITS metadata.
+    name : `str`
+        Name of TAN-SIP matrix (``"A"``, ``"B"``, ``"Ap"``, or ``"Bp"``).
 
     Returns
     -------
-    numpy.array
-        The SIP matrix
+    `numpy.array`
+        The SIP matrix.
 
     Raises
     ------
     TypeError
-        If the order keyword <name>_ORDER (e.g. AP_ORDER) is not found,
+        If the order keyword ``<name>_ORDER`` (e.g. ``AP_ORDER``) is not found,
         the value of the order keyword cannot be read as an integer,
         the value of the order keyword is negative,
-        or if a matrix parameter (e.g. AP_5_0) cannot be read as a float.
+        or if a matrix parameter (e.g. ``AP_5_0``) cannot be read as a float.
     """
     arr = _getSipMatrixFromMetadata(metadata, name)
     if arr.shape == ():  # order=0
@@ -60,25 +60,24 @@ def getSipMatrixFromMetadata(metadata, name):
 
 
 def makeDistortedTanWcs(tanWcs, pixelToFocalPlane, focalPlaneToFieldAngle):
-    """
-    Compute a WCS that includes a model of optical distortion.
+    """Compute a WCS that includes a model of optical distortion.
 
     This is useful in the common case that the initial WCS entirely ignores
     the effect of optical distortion.
 
     Parameters
     ----------
-    tanWcs : lsst.afw.geom.SkyWcs
+    tanWcs : `lsst.afw.geom.SkyWcs`
         A pure TAN WCS, such as is usually provided in raw data.
         This should have no existing compensation for optical distortion
-        (though it may include an ACTUAL_PIXELS frame to model pixel-level
+        (though it may include an ``ACTUAL_PIXELS`` frame to model pixel-level
         distortions).
-    pixelToFocalPlane : lsst.afw.geom.TransformPoint2ToPoint2
+    pixelToFocalPlane : `lsst.afw.geom.TransformPoint2ToPoint2`
         Transform parent pixel coordinates to focal plane coordinates.
         This models the location of the CCD on the focal plane
         and is almost always an affine transformation.
         This can be obtained from the detector of an exposure.
-    focalPlaneToFieldAngle : lsst.afw.geom.TransformPoint2ToPoint2
+    focalPlaneToFieldAngle : `lsst.afw.geom.TransformPoint2ToPoint2`
         Transform focal plane coordinates to field angle coordinates.
         This is a model for optical distortion, and is often a radial
         polynomial. This can be obtained from the camera geometry.
@@ -152,27 +151,29 @@ def makeDistortedTanWcs(tanWcs, pixelToFocalPlane, focalPlaneToFieldAngle):
 
 
 def computePixelToDistortedPixel(pixelToFocalPlane, focalPlaneToFieldAngle):
-    """
-    Compute the transform pixelToDistortedPixel, which applies optical
-    distortion specified by focalPlaneToFieldAngle
+    """Compute the transform ``pixelToDistortedPixel``, which applies optical
+    distortion specified by ``focalPlaneToFieldAngle``.
 
     The resulting transform is designed to be used to convert a pure TAN WCS
     to a WCS that includes a model for optical distortion. In detail,
-    the initial WCS will contain these frames and transforms:
+    the initial WCS will contain these frames and transforms::
+
         PIXELS frame -> pixelToIwc -> IWC frame ->  gridToIwc -> SkyFrame
-    To produce the WCS with distortion, replace pixelToIwc with:
+
+    To produce the WCS with distortion, replace ``pixelToIwc`` with::
+
         pixelToDistortedPixel -> pixelToIwc
 
     Parameters
     ----------
-    pixelToFocalPlane : lsst.afw.geom.TransformPoint2ToPoint2
+    pixelToFocalPlane : `lsst.afw.geom.TransformPoint2ToPoint2`
         Transform parent pixel coordinates to focal plane coordinates
-    focalPlaneToFieldAngle : lsst.afw.geom.TransformPoint2ToPoint2
+    focalPlaneToFieldAngle : `lsst.afw.geom.TransformPoint2ToPoint2`
         Transform focal plane coordinates to field angle coordinates
 
     Returns
     -------
-    pixelToDistortedPixel : lsst.afw.geom.TransformPoint2ToPoint2
+    pixelToDistortedPixel : `lsst.afw.geom.TransformPoint2ToPoint2`
         A transform that applies the effect of the optical distortion model.
     """
     # return pixelToFocalPlane -> focalPlaneToFieldAngle -> tanFieldAngleToocalPlane -> focalPlaneToPixel

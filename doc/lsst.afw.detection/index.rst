@@ -6,7 +6,15 @@ lsst.afw.detection
 
 .. Paragraph that describes what this Python module does and links to related modules and frameworks.
 
-.. Add subsections with toctree to individual topic pages.
+.. _lsst.afw.detection-using:
+
+Using lsst.afw.detection
+========================
+
+.. toctree::
+   :maxdepth: 1
+
+   Footprint
 
 Python API reference
 ====================

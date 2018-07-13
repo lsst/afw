@@ -20,5 +20,3 @@ afw documentation preview
    lsst.afw.image/index
    lsst.afw.math/index
    lsst.afw.table/index
-   detection/index
-   FITS headers for exposures.rst

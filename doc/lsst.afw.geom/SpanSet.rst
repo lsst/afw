@@ -1,6 +1,6 @@
-#######
-SpanSet
-#######
+####################################################################
+Using lsst.afw.geom.SpanSet to represent irregular regions of pixels
+####################################################################
 
 A ``SpanSet`` is a class that represents regions of pixels on an image.  As the
 name implies, a ``SpanSet`` is a collection of ``Span`` objects which behave as
