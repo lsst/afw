@@ -45,7 +45,6 @@ namespace math = lsst::afw::math;
 typedef image::Image<float> ImageF;
 typedef image::MaskedImage<float> MImageF;
 typedef std::vector<float> VecF;
-typedef std::shared_ptr<VecF> VecFPtr;
 
 BOOST_AUTO_TEST_CASE(
         MeanStack) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
@@ -111,13 +110,13 @@ BOOST_AUTO_TEST_CASE(
 
     // ====================================================
     // std::vector, and also with a constant weight vector
-    std::vector<VecFPtr> vecList;
+    std::vector<VecF> vecList;
     for (int iImg = 0; iImg < nImg; ++iImg) {
-        VecFPtr v = VecFPtr(new VecF(nX * nY, iImg));
+        VecF v(nX * nY, iImg);
         vecList.push_back(v);
     }
-    VecFPtr vecStack = math::statisticsStack<float>(vecList, math::MEAN);
-    VecFPtr wvecStack = math::statisticsStack<float>(vecList, math::MEAN, sctrl, wvec);
-    BOOST_CHECK_EQUAL((*vecStack)[nX * nY / 2], knownMean);
-    BOOST_CHECK_EQUAL((*wvecStack)[nX * nY / 2], knownWeightMean);
+    VecF vecStack = math::statisticsStack<float>(vecList, math::MEAN);
+    VecF wvecStack = math::statisticsStack<float>(vecList, math::MEAN, sctrl, wvec);
+    BOOST_CHECK_EQUAL((vecStack)[nX * nY / 2], knownMean);
+    BOOST_CHECK_EQUAL((wvecStack)[nX * nY / 2], knownWeightMean);
 }

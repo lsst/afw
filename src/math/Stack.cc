@@ -375,12 +375,12 @@ namespace {
  *   to handle cases when we are, or are not, weighting
  */
 template <typename PixelT, bool isWeighted>
-std::shared_ptr<std::vector<PixelT>> computeVectorStack(
-        std::vector<std::shared_ptr<std::vector<PixelT>>> &vectors, Property flags,
+std::vector<PixelT> computeVectorStack(
+        std::vector<std::vector<PixelT>> &vectors, Property flags,
         StatisticsControl const &sctrl, WeightVector const &wvector = WeightVector()) {
     // create the image to be returned
     typedef std::vector<PixelT> Vect;
-    std::shared_ptr<Vect> vecStack(new Vect(vectors[0]->size(), 0.0));
+    Vect vecStack(vectors[0].size(), 0.0);
 
     MaskedVector<PixelT> pixelSet(vectors.size());  // values from a given pixel of each image
 
@@ -393,16 +393,16 @@ std::shared_ptr<std::vector<PixelT>> computeVectorStack(
     }
 
     // collect elements from the stack into the MaskedVector to do stats
-    for (unsigned int x = 0; x < vectors[0]->size(); ++x) {
+    for (unsigned int x = 0; x < vectors[0].size(); ++x) {
         typename MaskedVector<PixelT>::iterator psPtr = pixelSet.begin();
         for (unsigned int i = 0; i < vectors.size(); ++i, ++psPtr) {
-            psPtr.value() = (*vectors[i])[x];
+            psPtr.value() = (vectors[i])[x];
         }
 
         if (isWeighted) {
-            (*vecStack)[x] = makeStatistics(pixelSet, wvector, flags, sctrlTmp).getValue(flags);
+            (vecStack)[x] = makeStatistics(pixelSet, wvector, flags, sctrlTmp).getValue(flags);
         } else {
-            (*vecStack)[x] = makeStatistics(pixelSet, flags, sctrlTmp).getValue(flags);
+            (vecStack)[x] = makeStatistics(pixelSet, flags, sctrlTmp).getValue(flags);
         }
     }
 
@@ -412,8 +412,8 @@ std::shared_ptr<std::vector<PixelT>> computeVectorStack(
 }  // end anonymous namespace
 
 template <typename PixelT>
-std::shared_ptr<std::vector<PixelT>> statisticsStack(
-        std::vector<std::shared_ptr<std::vector<PixelT>>> &vectors, Property flags,
+std::vector<PixelT> statisticsStack(
+        std::vector<std::vector<PixelT>> &vectors, Property flags,
         StatisticsControl const &sctrl, WeightVector const &wvector) {
     checkObjectsAndWeights(vectors, wvector);
     checkOnlyOneFlag(flags);
@@ -546,8 +546,8 @@ std::shared_ptr<image::MaskedImage<PixelT>> statisticsStack(image::MaskedImage<P
             image::MaskedImage<TYPE> & out, std::vector<std::shared_ptr<image::MaskedImage<TYPE>>> & images, \
             Property flags, StatisticsControl const &sctrl, WeightVector const &wvector, image::MaskPixel,   \
             std::vector<std::pair<image::MaskPixel, image::MaskPixel>> const &);                             \
-    template std::shared_ptr<std::vector<TYPE>> statisticsStack<TYPE>(                                       \
-            std::vector<std::shared_ptr<std::vector<TYPE>>> & vectors, Property flags,                       \
+    template std::vector<TYPE> statisticsStack<TYPE>(                                       \
+            std::vector<std::vector<TYPE>> & vectors, Property flags,                       \
             StatisticsControl const &sctrl, WeightVector const &wvector);                                    \
     template std::shared_ptr<image::MaskedImage<TYPE>> statisticsStack(image::Image<TYPE> const &image,      \
                                                                        Property flags, char dimension,       \
