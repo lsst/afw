@@ -130,9 +130,7 @@ void declareWarpingFunctions(py::module &mod) {
 }
 }
 
-PYBIND11_PLUGIN(warpExposure) {
-    py::module mod("warpExposure");
-
+PYBIND11_MODULE(warpExposure, mod) {
     /* Module level */
     auto clsLanczosWarpingKernel = declareWarpingKernel<LanczosWarpingKernel>(mod, "LanczosWarpingKernel");
     declareSimpleWarpingKernel<BilinearWarpingKernel>(mod, "BilinearWarpingKernel");
@@ -182,8 +180,6 @@ PYBIND11_PLUGIN(warpExposure) {
     clsWarpingControl.def("setGrowFullMask", &WarpingControl::setGrowFullMask, "growFullMask"_a);
 
     /* Members */
-
-    return mod.ptr();
 }
 }
 }

@@ -46,9 +46,7 @@ namespace {
 
 using PyExposureInfo = py::class_<ExposureInfo, std::shared_ptr<ExposureInfo>>;
 
-PYBIND11_PLUGIN(exposureInfo) {
-    py::module mod("exposureInfo");
-
+PYBIND11_MODULE(exposureInfo, mod) {
     py::module::import("lsst.daf.base");
     py::module::import("lsst.afw.geom.skyWcs");
     py::module::import("lsst.afw.cameraGeom.detector");
@@ -151,8 +149,6 @@ PYBIND11_PLUGIN(exposureInfo) {
     cls.def("hasTransmissionCurve", &ExposureInfo::hasTransmissionCurve);
     cls.def("getTransmissionCurve", &ExposureInfo::getTransmissionCurve);
     cls.def("setTransmissionCurve", &ExposureInfo::setTransmissionCurve, "transmissionCurve"_a);
-
-    return mod.ptr();
 }
 }
 }

@@ -154,8 +154,7 @@ PyExposureCatalog declareExposureCatalog(py::module &mod) {
 
 }  // anonymous namespace
 
-PYBIND11_PLUGIN(exposure) {
-    py::module mod("exposure");
+PYBIND11_MODULE(exposure, mod) {
     py::module::import("lsst.afw.table.simple");
     py::module::import("lsst.afw.geom");
     // afw.image and afw.detection cannot be imported due to circular dependencies
@@ -174,8 +173,6 @@ PYBIND11_PLUGIN(exposure) {
     clsExposureCatalog.attr("Record") = clsExposureRecord;
     clsExposureCatalog.attr("Table") = clsExposureTable;
     clsExposureCatalog.attr("ColumnView") = clsExposureColumnView;
-
-    return mod.ptr();
 }
 }
 }

@@ -45,9 +45,7 @@ namespace afw {
 namespace geom {
 namespace {
 
-PYBIND11_PLUGIN(skyWcs) {
-    py::module mod("skyWcs");
-
+PYBIND11_MODULE(skyWcs, mod) {
     py::module::import("lsst.geom");
     py::module::import("lsst.afw.geom.transform");
 
@@ -151,8 +149,6 @@ PYBIND11_PLUGIN(skyWcs) {
     // Do not wrap readStream or writeStream because C++ streams are not easy to wrap.
     cls.def_static("readString", &SkyWcs::readString);
     cls.def("writeString", &SkyWcs::writeString);
-
-    return mod.ptr();
 }
 
 }  // namespace

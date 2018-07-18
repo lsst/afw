@@ -81,9 +81,7 @@ void declareMatch1(py::module &mod) {
 
 }  // <anonymous>
 
-PYBIND11_PLUGIN(match) {
-    py::module mod("match", "Python wrapper for afw _match library");
-
+PYBIND11_MODULE(match, mod) {
     py::class_<MatchControl> clsMatchControl(mod, "MatchControl");
     clsMatchControl.def(py::init<>());
     LSST_DECLARE_CONTROL_FIELD(clsMatchControl, MatchControl, findOnlyClosest);
@@ -108,8 +106,6 @@ PYBIND11_PLUGIN(match) {
     // mod.def("matchXy",
     //         (SourceMatchVector (*)(SourceCatalog const &, double, bool))
     //          &matchXy, "cat"_a, "radius"_a, "symmetric"_a);
-
-    return mod.ptr();
 }
 }
 }

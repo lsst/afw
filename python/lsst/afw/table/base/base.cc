@@ -165,9 +165,7 @@ PyBaseTable declareBaseTable(py::module &mod) {
     return cls;
 }
 
-PYBIND11_PLUGIN(base) {
-    py::module mod("base");
-
+PYBIND11_MODULE(base, mod) {
     py::module::import("lsst.afw.table.schema");
     py::module::import("lsst.afw.table.baseColumnView");
 
@@ -185,8 +183,6 @@ PYBIND11_PLUGIN(base) {
     clsBaseCatalog.attr("Record") = clsBaseRecord;
     clsBaseCatalog.attr("Table") = clsBaseTable;
     clsBaseCatalog.attr("ColumnView") = clsBaseColumnView;
-
-    return mod.ptr();
 }
 }
 }

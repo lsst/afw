@@ -47,9 +47,7 @@ void declareTemplates(ClsField & cls) {
                                   ChebyshevBoundedField::fit);
 }
 
-PYBIND11_PLUGIN(chebyshevBoundedField) {
-    py::module mod("chebyshevBoundedField");
-
+PYBIND11_MODULE(chebyshevBoundedField, mod) {
     /* Module level */
     py::class_<ChebyshevBoundedFieldControl> clsChebyshevBoundedFieldControl(mod,
                                                                              "ChebyshevBoundedFieldControl");
@@ -92,6 +90,4 @@ PYBIND11_PLUGIN(chebyshevBoundedField) {
     // Pybind11 resolves overloads by picking the first one that might work
     declareTemplates<double>(clsChebyshevBoundedField);
     declareTemplates<float>(clsChebyshevBoundedField);
-
-    return mod.ptr();
 }

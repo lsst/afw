@@ -31,13 +31,9 @@ namespace lsst {
 namespace afw {
 namespace image {
 
-PYBIND11_PLUGIN(readMetadata) {  // wraps code in Utils.h, but there's an unrelated utils.py
-    py::module mod("readMetadata");
-
+PYBIND11_MODULE(readMetadata, mod) {  // wraps code in Utils.h, but there's an unrelated utils.py
     /* Module level */
     mod.def("readMetadata", readMetadata, "fileName"_a, "hdu"_a = fits::DEFAULT_HDU, "strip"_a = false);
-
-    return mod.ptr();
 }
 }
 }

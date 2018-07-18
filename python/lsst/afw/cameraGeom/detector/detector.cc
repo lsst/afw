@@ -74,9 +74,7 @@ void declare2SysMethods(PyClass &cls) {
             "points"_a, "fromSys"_a, "toSys"_a);
 }
 
-PYBIND11_PLUGIN(detector) {
-    py::module mod("detector");
-
+PYBIND11_MODULE(detector, mod) {
     /* Module level */
     py::class_<Detector, std::shared_ptr<Detector>> cls(mod, "Detector");
 
@@ -123,8 +121,6 @@ PYBIND11_PLUGIN(detector) {
     declare2SysMethods<CameraSys, CameraSysPrefix>(cls);
     declare2SysMethods<CameraSysPrefix, CameraSys>(cls);
     declare2SysMethods<CameraSysPrefix, CameraSysPrefix>(cls);
-
-    return mod.ptr();
 }
 }  // namespace cameraGeom
 }  // namespace afw

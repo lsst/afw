@@ -40,17 +40,13 @@ namespace geom {
 namespace detail {
 namespace {
 
-PYBIND11_PLUGIN(frameSetUtils) {
-    py::module mod("frameSetUtils");
-
+PYBIND11_MODULE(frameSetUtils, mod) {
     py::module::import("lsst.daf.base");
     py::module::import("lsst.geom");
 
     mod.def("readFitsWcs", readFitsWcs, "metadata"_a, "strip"_a = true);
     mod.def("readLsstSkyWcs", readLsstSkyWcs, "metadata"_a, "strip"_a = true);
     mod.def("getPropertyListFromFitsChan", getPropertyListFromFitsChan, "fitsChan"_a);
-
-    return mod.ptr();
 }
 
 }  // namespace

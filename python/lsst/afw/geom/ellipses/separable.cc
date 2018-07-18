@@ -85,9 +85,7 @@ void declareSeparable(py::module &mod, const std::string &suffix) {
     });
 }
 
-PYBIND11_PLUGIN(separable) {
-    py::module mod("separable");
-
+PYBIND11_MODULE(separable, mod) {
     declareSeparable<Distortion, DeterminantRadius>(mod, "DistortionDeterminantRadius");
     declareSeparable<Distortion, TraceRadius>(mod, "DistortionTraceRadius");
     declareSeparable<Distortion, LogDeterminantRadius>(mod, "DistortionLogDeterminantRadius");
@@ -102,6 +100,4 @@ PYBIND11_PLUGIN(separable) {
     declareSeparable<ReducedShear, TraceRadius>(mod, "ReducedShearTraceRadius");
     declareSeparable<ReducedShear, LogDeterminantRadius>(mod, "ReducedShearLogDeterminantRadius");
     declareSeparable<ReducedShear, LogTraceRadius>(mod, "ReducedShearLogTraceRadius");
-
-    return mod.ptr();
 }

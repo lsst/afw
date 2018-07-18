@@ -197,9 +197,7 @@ void declareLanczosFunctions(py::module &mod, const std::string &suffix) {
     clsLanczosFunction2.def("toString", &LanczosFunction2<ReturnT>::toString, "prefix"_a = "");
 };
 
-PYBIND11_PLUGIN(functionLibrary) {
-    py::module mod("functionLibrary");
-
+PYBIND11_MODULE(functionLibrary, mod) {
     py::module::import("lsst.geom");
     py::module::import("lsst.afw.math.function");
 
@@ -214,8 +212,6 @@ PYBIND11_PLUGIN(functionLibrary) {
     declareGaussianFunctions<double>(mod, "D");
     declareIntegerDeltaFunctions<double>(mod, "D");
     declareLanczosFunctions<double>(mod, "D");
-
-    return mod.ptr();
 }
 
 }  // namespace math

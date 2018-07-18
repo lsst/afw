@@ -410,9 +410,7 @@ static void addGeneralizedCopyConstructors(PyClass &cls) {
     cls.def("convertDouble", [](Image<PixelT> const &self) { return Image<double>(self, true); });
 }
 
-PYBIND11_PLUGIN(image) {
-    py::module mod("image");
-
+PYBIND11_MODULE(image, mod) {
     py::module::import("lsst.daf.base");
 
     py::enum_<ImageOrigin>(mod, "ImageOrigin")
@@ -471,8 +469,6 @@ PYBIND11_PLUGIN(image) {
     // as wrapping the Image version here results in it being invisible in lsst.afw.image
 
     mod.def("bboxFromMetadata", &bboxFromMetadata);
-
-    return mod.ptr();
 }
 }
 }

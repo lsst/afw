@@ -31,9 +31,7 @@ namespace lsst {
 namespace afw {
 namespace coord {
 
-PYBIND11_PLUGIN(observatory) {
-    py::module mod("observatory");
-
+PYBIND11_MODULE(observatory, mod) {
     py::class_<Observatory, std::shared_ptr<Observatory>> cls(mod, "Observatory");
 
     /* Constructors */
@@ -57,8 +55,6 @@ PYBIND11_PLUGIN(observatory) {
     cls.def("setLongitude", &Observatory::setLongitude, "longitude"_a);
     cls.def("setLatitude", &Observatory::setLatitude, "latitude"_a);
     cls.def("setElevation", &Observatory::setElevation, "elevation"_a);
-
-    return mod.ptr();
 }
 }
 }

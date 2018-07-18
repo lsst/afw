@@ -51,9 +51,7 @@ void declareMeasurement(py::module &mod) {
     cls.def_readonly("err", &Measurement::err);
 }
 
-PYBIND11_PLUGIN(photoCalib) {
-    py::module mod("photoCalib");
-
+PYBIND11_MODULE(photoCalib, mod) {
     declareMeasurement(mod);
 
     py::class_<PhotoCalib, std::shared_ptr<PhotoCalib>> cls(mod, "PhotoCalib");
@@ -156,8 +154,6 @@ PYBIND11_PLUGIN(photoCalib) {
         os << "PhotoCalib(" << self << ")";
         return os.str();
     });
-
-    return mod.ptr();
 }
 }  // namespace
 }  // namespace image

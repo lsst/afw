@@ -60,9 +60,7 @@ static void declareSpanIterator(py::module &mod) {
     cls.def("__next__", &SpanIterator::next);
 }
 
-PYBIND11_PLUGIN(span) {
-    py::module mod("span");
-
+PYBIND11_MODULE(span, mod) {
     py::module::import("lsst.geom");
 
     declareSpanIterator(mod);
@@ -95,8 +93,6 @@ PYBIND11_PLUGIN(span) {
     cls.def("isEmpty", &Span::isEmpty);
     cls.def("toString", &Span::toString);
     cls.def("shift", &Span::shift);
-
-    return mod.ptr();
 }
 }
 }

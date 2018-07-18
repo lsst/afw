@@ -236,9 +236,7 @@ void wrapTestClasses(py::module &mod) {
     clsTestImageCandidate.def("getMaskedImage", &TestImageCandidate::getMaskedImage);
 };
 
-PYBIND11_PLUGIN(spatialCell) {
-    py::module mod("spatialCell", "Python wrapper for afw spatialCell library");
-
+PYBIND11_MODULE(spatialCell, mod) {
     wrapSpatialCellCandidate(mod);
     wrapSpatialCellCandidateIterator(mod);
     wrapSpatialCell(mod);
@@ -248,8 +246,6 @@ PYBIND11_PLUGIN(spatialCell) {
 
     /* Test Members */
     wrapTestClasses(mod);
-
-    return mod.ptr();
 }
 }
 }

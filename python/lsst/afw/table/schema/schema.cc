@@ -386,9 +386,7 @@ void declareSubSchema(py::module &mod) {
     cls.def("__getitem__", [](SubSchema &self, std::string const &name) { return self[name]; });
 }
 
-PYBIND11_PLUGIN(schema) {
-    py::module mod("schema");
-
+PYBIND11_MODULE(schema, mod) {
     // We'll add instantiations of Field, Key, and SchemaItem to these private
     // dicts, and then in schemaContinued.py we'll add them to a TemplateMeta
     // ABC.
@@ -413,8 +411,6 @@ PYBIND11_PLUGIN(schema) {
 
     declareSchema(mod);
     declareSubSchema(mod);
-
-    return mod.ptr();
 }
 }
 }

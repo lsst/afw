@@ -71,9 +71,7 @@ void declareAll(py::module &mod) {
 }
 }
 
-PYBIND11_PLUGIN(convolveImage) {
-    py::module mod("convolveImage");
-
+PYBIND11_MODULE(convolveImage, mod) {
     py::class_<ConvolutionControl, std::shared_ptr<ConvolutionControl>> clsConvolutionControl(
             mod, "ConvolutionControl");
 
@@ -98,8 +96,6 @@ PYBIND11_PLUGIN(convolveImage) {
     declareAll<float, std::uint16_t>(mod);
     declareAll<int, int>(mod);
     declareAll<std::uint16_t, std::uint16_t>(mod);
-
-    return mod.ptr();
 }
 }
 }

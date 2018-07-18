@@ -28,12 +28,8 @@ namespace py = pybind11;
 
 using namespace lsst::afw::image;
 
-PYBIND11_PLUGIN(imageUtils) {
-    py::module mod("imageUtils");
-
+PYBIND11_MODULE(imageUtils, mod) {
     mod.def("indexToPosition", indexToPosition);
     mod.def("positionToIndex", (int (*)(double))positionToIndex);
     mod.def("positionToIndex", (std::pair<int, double>(*)(double const, bool))positionToIndex);
-
-    return mod.ptr();
 }

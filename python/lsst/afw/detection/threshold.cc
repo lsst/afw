@@ -32,9 +32,7 @@ namespace lsst {
 namespace afw {
 namespace detection {
 
-PYBIND11_PLUGIN(threshold) {
-    py::module mod("threshold");
-
+PYBIND11_MODULE(threshold, mod) {
     py::class_<Threshold, std::shared_ptr<Threshold>> clsThreshold(mod, "Threshold");
 
     /* Member types and enums */
@@ -68,8 +66,6 @@ PYBIND11_PLUGIN(threshold) {
 
     /* Module level */
     mod.def("createThreshold", createThreshold, "value"_a, "type"_a = "value", "polarity"_a = true);
-
-    return mod.ptr();
 }
 }
 }

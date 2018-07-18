@@ -30,9 +30,7 @@ namespace py = pybind11;
 
 using namespace lsst::afw::geom::ellipses;
 
-PYBIND11_PLUGIN(pixelRegion) {
-    py::module mod("pixelRegion");
-
+PYBIND11_MODULE(pixelRegion, mod) {
     py::class_<PixelRegion> clsPixelRegion(mod, "PixelRegion");
 
     /* Constructors */
@@ -44,6 +42,4 @@ PYBIND11_PLUGIN(pixelRegion) {
     clsPixelRegion.def("__iter__",
                        [](const PixelRegion &self) { return py::make_iterator(self.begin(), self.end()); },
                        py::keep_alive<0, 1>() /* Essential: keep object alive while iterator exists */);
-
-    return mod.ptr();
 }

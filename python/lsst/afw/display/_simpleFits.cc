@@ -50,9 +50,7 @@ void declareAll(py::module &mod) {
 
 }  // <anonymous>
 
-PYBIND11_PLUGIN(_simpleFits) {
-    py::module mod("_simpleFits", "");
-
+PYBIND11_MODULE(_simpleFits, mod) {
     declareAll<image::Image<std::uint16_t>>(mod);
     declareAll<image::Image<std::uint64_t>>(mod);
     declareAll<image::Image<int>>(mod);
@@ -60,8 +58,6 @@ PYBIND11_PLUGIN(_simpleFits) {
     declareAll<image::Image<double>>(mod);
     declareAll<image::Mask<std::uint16_t>>(mod);
     declareAll<image::Mask<image::MaskPixel>>(mod);
-
-    return mod.ptr();
 }
 
 }  // display

@@ -191,16 +191,12 @@ void declareSpherePointEndpoint(py::module& mod) {
     addStrAndRepr(cls);
 }
 
-PYBIND11_PLUGIN(endpoint) {
-    py::module mod("endpoint");
-
+PYBIND11_MODULE(endpoint, mod) {
     py::module::import("lsst.geom");
 
     declareGenericEndpoint(mod);
     declarePoint2Endpoint(mod);
     declareSpherePointEndpoint(mod);
-
-    return mod.ptr();
 }
 
 }  // namespace

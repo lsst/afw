@@ -81,15 +81,11 @@ void declareHeavyFootprint(py::module &mod, std::string const &suffix) {
 }
 }  // namespace
 
-PYBIND11_PLUGIN(heavyFootprint) {
-    py::module mod("heavyFootprint");
-
+PYBIND11_MODULE(heavyFootprint, mod) {
     declareHeavyFootprint<int>(mod, "I");
     declareHeavyFootprint<std::uint16_t>(mod, "U");
     declareHeavyFootprint<float>(mod, "F");
     declareHeavyFootprint<double>(mod, "D");
-
-    return mod.ptr();
 }
 }
 }

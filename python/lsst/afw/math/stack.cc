@@ -107,12 +107,8 @@ void declareStatisticsStack(py::module &mod) {
 
 }  // namespace
 
-PYBIND11_PLUGIN(stack) {
-    py::module mod("stack");
-
+PYBIND11_MODULE(stack, mod) {
     /* Module level */
     declareStatisticsStack<float>(mod);
     declareStatisticsStack<double>(mod);
-
-    return mod.ptr();
 }

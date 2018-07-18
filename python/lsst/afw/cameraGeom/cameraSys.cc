@@ -59,9 +59,7 @@ void declareCommonSysMethods(PyClass &cls) {
 }
 }
 
-PYBIND11_PLUGIN(cameraSys) {
-    py::module mod("cameraSys");
-
+PYBIND11_MODULE(cameraSys, mod) {
     /* Module level */
     py::class_<CameraSysPrefix> clsCameraSysPrefix(mod, "CameraSysPrefix");
     py::class_<CameraSys> clsCameraSys(mod, "CameraSys");
@@ -90,8 +88,6 @@ PYBIND11_PLUGIN(cameraSys) {
     /* Members */
     clsCameraSys.def("getDetectorName", &CameraSys::getDetectorName);
     clsCameraSys.def("hasDetectorName", &CameraSys::hasDetectorName);
-
-    return mod.ptr();
 }
 }
 }

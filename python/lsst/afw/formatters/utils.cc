@@ -36,13 +36,9 @@ namespace afw {
 namespace formatters {
 namespace {
 
-PYBIND11_PLUGIN(utils) {
-    py::module mod("utils");
-
+PYBIND11_MODULE(utils, mod) {
     mod.def("stringToBytes", stringToBytes);
     mod.def("bytesToString", bytesToString);
-
-    return mod.ptr();
 }
 
 }  // namespace

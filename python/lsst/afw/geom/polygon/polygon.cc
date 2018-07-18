@@ -42,9 +42,7 @@ namespace afw {
 namespace geom {
 namespace polygon {
 
-PYBIND11_PLUGIN(polygon) {
-    py::module mod("polygon");
-
+PYBIND11_MODULE(polygon, mod) {
     py::module::import("lsst.pex.exceptions");
 
     // TODO: Commented-out code is waiting until needed and is untested.
@@ -127,8 +125,6 @@ PYBIND11_PLUGIN(polygon) {
             (std::shared_ptr<afw::image::Image<float>>(Polygon::*)(lsst::geom::Extent2I const &) const) &
                     Polygon::createImage);
     // clsPolygon.def("isPersistable", &Polygon::isPersistable);
-
-    return mod.ptr();
 }
 }  // namespace polygon
 }  // namespace geom

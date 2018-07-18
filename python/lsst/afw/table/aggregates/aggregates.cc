@@ -180,11 +180,9 @@ static void declareCovarianceMatrixKey(py::module &mod, const ::std::string &suf
 
 }  // namespace lsst::afw::table::<anonymous>
 
-PYBIND11_PLUGIN(aggregates) {
+PYBIND11_MODULE(aggregates, mod) {
     py::module::import("lsst.afw.geom.ellipses");
     py::module::import("lsst.afw.table.base");
-    py::module mod("aggregates");
-
     py::enum_<CoordinateType>(mod, "CoordinateType")
             .value("PIXEL", CoordinateType::PIXEL)
             .value("CELESTIAL", CoordinateType::CELESTIAL)
@@ -208,8 +206,6 @@ PYBIND11_PLUGIN(aggregates) {
     declareCovarianceMatrixKey<double, 3>(mod, "3d");
     declareCovarianceMatrixKey<double, 4>(mod, "4d");
     declareCovarianceMatrixKey<double, Eigen::Dynamic>(mod, "Xd");
-
-    return mod.ptr();
 }
 }
 }

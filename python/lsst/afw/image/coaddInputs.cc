@@ -37,9 +37,7 @@ namespace {
 
 using PyCoaddInputs = py::class_<CoaddInputs, std::shared_ptr<CoaddInputs>>;
 
-PYBIND11_PLUGIN(coaddInputs) {
-    py::module mod("coaddInputs");
-
+PYBIND11_MODULE(coaddInputs, mod) {
     /* Module level */
 
     PyCoaddInputs cls(mod, "CoaddInputs");
@@ -55,8 +53,6 @@ PYBIND11_PLUGIN(coaddInputs) {
     cls.def_readwrite("visits", &CoaddInputs::visits);
     cls.def_readwrite("ccds", &CoaddInputs::ccds);
     cls.def("isPersistable", &CoaddInputs::isPersistable);
-
-    return mod.ptr();
 }
 }
 }

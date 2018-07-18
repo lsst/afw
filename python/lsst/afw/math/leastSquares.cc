@@ -69,10 +69,6 @@ void declareLeastSquares(py::module &mod) {
     cls.def("setThreshold", &LeastSquares::setThreshold);
 };
 
-PYBIND11_PLUGIN(leastSquares) {
-    py::module mod("leastSquares");
-
+PYBIND11_MODULE(leastSquares, mod) {
     declareLeastSquares<double, double, 0, 0>(mod);
-
-    return mod.ptr();
 }

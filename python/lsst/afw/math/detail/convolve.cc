@@ -65,9 +65,7 @@ void declareAll(py::module &mod) {
 }
 }  // namespace
 
-PYBIND11_PLUGIN(convolve) {
-    py::module mod("convolve");
-
+PYBIND11_MODULE(convolve, mod) {
     declareAll<double, double>(mod);
     declareAll<double, float>(mod);
     declareAll<double, int>(mod);
@@ -134,8 +132,6 @@ PYBIND11_PLUGIN(convolve) {
     /* Operators */
 
     /* Members */
-
-    return mod.ptr();
 }
 }
 }

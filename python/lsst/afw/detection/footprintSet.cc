@@ -77,9 +77,7 @@ void declareTemplatedMembers(PyClass &cls) {
 }
 }  // namespace
 
-PYBIND11_PLUGIN(footprintSet) {
-    py::module mod("footprintSet");
-
+PYBIND11_MODULE(footprintSet, mod) {
     py::module::import("lsst.afw.detection.footprint");
 
     py::class_<FootprintSet, std::shared_ptr<FootprintSet>, lsst::daf::base::Citizen> clsFootprintSet(
@@ -126,8 +124,6 @@ PYBIND11_PLUGIN(footprintSet) {
     /* Module level */
 
     /* Member types and enums */
-
-    return mod.ptr();
 }
 }
 }

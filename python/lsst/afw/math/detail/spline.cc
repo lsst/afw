@@ -31,9 +31,7 @@ using namespace pybind11::literals;
 
 using namespace lsst::afw::math::detail;
 
-PYBIND11_PLUGIN(spline) {
-    py::module mod("spline");
-
+PYBIND11_MODULE(spline, mod) {
     /* Module level */
     py::class_<Spline> clsSpline(mod, "Spline");
     py::class_<TautSpline, Spline> clsTautSpline(mod, "TautSpline");
@@ -57,6 +55,4 @@ PYBIND11_PLUGIN(spline) {
                                TautSpline::Symmetry>(),
                       "x"_a, "y"_a, "gamma"_a = 0, "type"_a = lsst::afw::math::detail::TautSpline::Unknown);
     clsTautSpline.def("roots", &TautSpline::roots);
-
-    return mod.ptr();
 }

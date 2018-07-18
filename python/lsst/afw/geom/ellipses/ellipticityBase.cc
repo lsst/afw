@@ -32,9 +32,7 @@ using namespace py::literals;
 
 using namespace lsst::afw::geom::ellipses;
 
-PYBIND11_PLUGIN(ellipticityBase) {
-    py::module mod("ellipticityBase");
-
+PYBIND11_MODULE(ellipticityBase, mod) {
     py::class_<detail::EllipticityBase> cls(mod, "EllipticityBase");
 
     /* Member types and enums */
@@ -55,6 +53,4 @@ PYBIND11_PLUGIN(ellipticityBase) {
     cls.def("__str__", [](detail::EllipticityBase const& self) {
         return py::str("(%g, %g)").format(self.getE1(), self.getE2());
     });
-
-    return mod.ptr();
 }

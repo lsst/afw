@@ -36,9 +36,7 @@ namespace afw {
 namespace geom {
 namespace {
 
-PYBIND11_PLUGIN(transformFactory) {
-    py::module mod("transformFactory");
-
+PYBIND11_MODULE(transformFactory, mod) {
     py::module::import("lsst.afw.geom.transform");
 
     mod.def("linearizeTransform",
@@ -56,8 +54,6 @@ PYBIND11_PLUGIN(transformFactory) {
                     makeRadialTransform,
             "forwardCoeffs"_a, "inverseCoeffs"_a);
     mod.def("makeIdentityTransform", &makeIdentityTransform);
-
-    return mod.ptr();
 }
 
 }  // namespace

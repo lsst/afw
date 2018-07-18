@@ -43,9 +43,7 @@ void declareMinimize(py::module &mod) {
                            std::vector<double> const &, double))minimize<ReturnT>);
 };
 
-PYBIND11_PLUGIN(minimize) {
-    py::module mod("minimize");
-
+PYBIND11_MODULE(minimize, mod) {
     py::class_<FitResults> clsFitResults(mod, "FitResults");
     clsFitResults.def_readwrite("isValid", &FitResults::isValid);
     clsFitResults.def_readwrite("chiSq", &FitResults::chiSq);
@@ -54,6 +52,4 @@ PYBIND11_PLUGIN(minimize) {
 
     declareMinimize<double>(mod);
     declareMinimize<float>(mod);
-
-    return mod.ptr();
 }

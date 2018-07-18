@@ -51,9 +51,7 @@ static lsst::geom::Angle const nanAngle(nan);
 
 }  // namespace
 
-PYBIND11_PLUGIN(visitInfo) {
-    py::module mod("visitInfo");
-
+PYBIND11_MODULE(visitInfo, mod) {
     py::module::import("lsst.daf.base");
     py::module::import("lsst.geom");
     py::module::import("lsst.afw.coord.observatory");
@@ -116,8 +114,6 @@ PYBIND11_PLUGIN(visitInfo) {
     /* Free Functions */
     mod.def("setVisitInfoMetadata", &detail::setVisitInfoMetadata, "metadata"_a, "visitInfo"_a);
     mod.def("stripVisitInfoKeywords", &detail::stripVisitInfoKeywords, "metadata"_a);
-
-    return mod.ptr();
 }
 }  // namespace image
 }  // namespace afw

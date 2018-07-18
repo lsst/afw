@@ -88,14 +88,11 @@ void declareArrayKey(py::module &mod, std::string const &suffix) {
     cls.def("slice", &ArrayKey<T>::slice);
 };
 
-PYBIND11_PLUGIN(arrays) {
-    py::module mod("arrays");
+PYBIND11_MODULE(arrays, mod) {
     py::module::import("lsst.afw.table.base");
 
     declareArrayKey<float>(mod, "F");
     declareArrayKey<double>(mod, "D");
-
-    return mod.ptr();
 }
 }
 }

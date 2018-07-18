@@ -53,9 +53,7 @@ void declareApproximate(py::module &mod, std::string const &suffix) {
 }
 }
 
-PYBIND11_PLUGIN(approximate) {
-    py::module mod("approximate");
-
+PYBIND11_MODULE(approximate, mod) {
     py::class_<ApproximateControl, std::shared_ptr<ApproximateControl>> clsApproximateControl(
             mod, "ApproximateControl");
 
@@ -79,8 +77,6 @@ PYBIND11_PLUGIN(approximate) {
 
     // Yes, really only float
     declareApproximate<float>(mod, "F");
-
-    return mod.ptr();
 }
 }
 }

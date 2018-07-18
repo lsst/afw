@@ -33,9 +33,7 @@ using namespace py::literals;
 
 using namespace lsst::afw::geom::ellipses;
 
-PYBIND11_PLUGIN(distortion) {
-    py::module mod("distortion");
-
+PYBIND11_MODULE(distortion, mod) {
     py::class_<Distortion, detail::EllipticityBase> cls(mod, "Distortion");
 
     /* Constructors */
@@ -51,6 +49,4 @@ PYBIND11_PLUGIN(distortion) {
     cls.def("__repr__", [](Distortion const& self) {
         return py::str("%s(%g, %g)").format(self.getName(), self.getE1(), self.getE2());
     });
-
-    return mod.ptr();
 }

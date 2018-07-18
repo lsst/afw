@@ -34,9 +34,7 @@ namespace lsst {
 namespace afw {
 namespace detection {
 
-PYBIND11_PLUGIN(footprintCtrl) {
-    py::module mod("footprintCtrl");
-
+PYBIND11_MODULE(footprintCtrl, mod) {
     py::class_<FootprintControl> clsFootprintControl(mod, "FootprintControl");
 
     /* Constructors */
@@ -81,8 +79,6 @@ PYBIND11_PLUGIN(footprintCtrl) {
     /* Module level */
 
     /* Member types and enums */
-
-    return mod.ptr();
 }
 }
 }
