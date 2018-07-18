@@ -92,7 +92,7 @@ PySortedCatalog<Record> declareSortedCatalog(pybind11::module &mod, std::string 
     // to the base class.
     cls.def("isSorted",
             [clsBase](py::object const &self, py::object key) -> py::object {
-                if (key == py::none()) {
+                if (key.is(py::none())) {
                     key = self.attr("table").attr("getIdKey")();
                 }
                 return clsBase.attr("isSorted")(self, key);
@@ -100,7 +100,7 @@ PySortedCatalog<Record> declareSortedCatalog(pybind11::module &mod, std::string 
             "key"_a = py::none());
     cls.def("sort",
             [clsBase](py::object const &self, py::object key) -> py::object {
-                if (key == py::none()) {
+                if (key.is(py::none())) {
                     key = self.attr("table").attr("getIdKey")();
                 }
                 return clsBase.attr("sort")(self, key);
@@ -108,7 +108,7 @@ PySortedCatalog<Record> declareSortedCatalog(pybind11::module &mod, std::string 
             "key"_a = py::none());
     cls.def("find",
             [clsBase](py::object const &self, py::object const &value, py::object key) -> py::object {
-                if (key == py::none()) {
+                if (key.is(py::none())) {
                     key = self.attr("table").attr("getIdKey")();
                 }
                 return clsBase.attr("find")(self, value, key);

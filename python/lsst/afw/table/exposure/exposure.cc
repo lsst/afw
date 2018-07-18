@@ -85,7 +85,7 @@ PyExposureRecord declareExposureRecord(py::module &mod) {
     // Workaround for DM-10289.
     cls.def("setValidPolygon",
             [](ExposureRecord &self, py::object polygon) {
-                if (polygon == py::none()) {
+                if (polygon.is(py::none())) {
                     self.setValidPolygon(nullptr);
                 } else {
                     self.setValidPolygon(py::cast<std::shared_ptr<afw::geom::polygon::Polygon>>(polygon));

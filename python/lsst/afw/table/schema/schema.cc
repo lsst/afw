@@ -205,7 +205,7 @@ void declareSchemaType(py::module &mod) {
                          py::str const &units, py::object const &size, py::str const &parse_strict) {
                      astropyUnit(units, "parse_strict"_a = parse_strict);
                      std::string u = py::cast<std::string>(units);
-                     if (size == py::none()) {
+                     if (size.is(py::none())) {
                          return new Field<T>(name, doc, u);
                      } else {
                          int s = py::cast<int>(size);
