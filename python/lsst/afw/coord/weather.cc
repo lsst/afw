@@ -35,8 +35,8 @@ namespace lsst {
 namespace afw {
 namespace coord {
 
-PYBIND11_PLUGIN(_weather) {
-    py::module mod("_weather", "Python wrapper for afw _weather library");
+PYBIND11_PLUGIN(weather) {
+    py::module mod("weather");
 
     py::class_<lsst::afw::coord::Weather> cls(mod, "Weather");
 

@@ -35,8 +35,8 @@ namespace lsst {
 namespace afw {
 namespace cameraGeom {
 
-PYBIND11_PLUGIN(_transformMap) {
-    py::module mod("_transformMap");
+PYBIND11_PLUGIN(transformMap) {
+    py::module mod("transformMap");
 
     /* Module level */
     py::class_<TransformMap, std::shared_ptr<TransformMap>> cls(mod, "TransformMap");

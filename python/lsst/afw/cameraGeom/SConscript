@@ -1,17 +1,7 @@
 ## -*- python -*-
 from lsst.sconsUtils import scripts
 scripts.BasicSConscript.pybind11(['cameraSys',
-                                  'detector',
+                                  'detector/detector',
                                   'orientation',
-                                  'transformMap'])
-
-#from lsst.sconsUtils import env, targets
-#
-## We can't use BasicSConscript here because the circular dependency requires the -D option in SWIGFLAGS
-#targets["python"].extend(
-#    env.SwigLoadableModule(
-#        "_cameraGeomLib", ["cameraGeomLib.i"],
-#        SWIGFLAGS=(env["SWIGFLAGS"] + ["-DIMPORT_IMAGE_I"]),
-#        LIBS=env.getLibs("main python")
-#    )
-#)
+                                  'transformMap'],
+                                 addUnderscore=False)

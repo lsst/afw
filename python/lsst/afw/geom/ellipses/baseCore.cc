@@ -34,8 +34,8 @@ namespace py = pybind11;
 
 using namespace lsst::afw::geom::ellipses;
 
-PYBIND11_PLUGIN(_baseCore) {
-    py::module mod("_baseCore", "Python wrapper for afw _baseCore library");
+PYBIND11_PLUGIN(baseCore) {
+    py::module mod("baseCore");
 
     /* Module level */
     py::class_<BaseCore, std::shared_ptr<BaseCore>> clsBaseCore(mod, "BaseCore");

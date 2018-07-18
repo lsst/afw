@@ -41,8 +41,8 @@ namespace {
 
 using ClsField = py::class_<TransformBoundedField, std::shared_ptr<TransformBoundedField>, BoundedField>;
 
-PYBIND11_PLUGIN(_transformBoundedField) {
-    py::module mod("_transformBoundedField");
+PYBIND11_PLUGIN(transformBoundedField) {
+    py::module mod("transformBoundedField");
 
     /* Module level */
     ClsField cls(mod, "TransformBoundedField");

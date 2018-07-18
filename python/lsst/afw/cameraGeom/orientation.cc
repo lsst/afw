@@ -33,8 +33,10 @@ namespace lsst {
 namespace afw {
 namespace cameraGeom {
 
-PYBIND11_PLUGIN(_orientation) {
-    py::module mod("_orientation", "Python wrapper for afw _orientation library");
+PYBIND11_PLUGIN(orientation) {
+    py::module mod("orientation");
+
+    py::module::import("lsst.geom");
 
     /* Module level */
     py::class_<Orientation> cls(mod, "Orientation");

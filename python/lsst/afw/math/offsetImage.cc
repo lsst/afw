@@ -63,8 +63,8 @@ static void declareBinImage(py::module& mod) {
 }
 }  // namespace
 
-PYBIND11_PLUGIN(_offsetImage) {
-    py::module mod("_offsetImage", "Python wrapper for afw _offsetImage library");
+PYBIND11_PLUGIN(offsetImage) {
+    py::module mod("offsetImage");
     using MaskPixel = lsst::afw::image::MaskPixel;
 
     /* Module level */

@@ -66,8 +66,8 @@ void declareMaskFromFootprintList(py::module &mod) {
 
 }  // end anonymous namespace
 
-PYBIND11_PLUGIN(_footprint) {
-    py::module mod("_footprint", "Python wrapper for afw Footprint library");
+PYBIND11_PLUGIN(footprint) {
+    py::module mod("footprint");
 
     /* Footprint Constructors */
     py::class_<Footprint, std::shared_ptr<Footprint>, daf::base::Citizen> clsFootprint(mod, "Footprint");

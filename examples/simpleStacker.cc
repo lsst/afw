@@ -37,7 +37,6 @@ namespace math = lsst::afw::math;
 typedef image::Image<float> ImageF;
 typedef image::MaskedImage<float> MImageF;
 typedef std::vector<float> VecF;
-typedef std::shared_ptr<VecF> VecFPtr;
 
 int main(int argc, char **argv) {
     int const nImg = 10;
@@ -85,13 +84,13 @@ int main(int argc, char **argv) {
     std::cout << "MaskedImage (const weight): " << (*wmimgStack->getImage())(nX / 2, nY / 2) << std::endl;
 
     // std::vector, and also with a constant weight vector
-    std::vector<VecFPtr> vecList;
+    std::vector<VecF> vecList;
     for (int iImg = 0; iImg < nImg; ++iImg) {
-        VecFPtr v = VecFPtr(new VecF(nX * nY, iImg));
+        VecF v(nX * nY, iImg);
         vecList.push_back(v);
     }
-    VecFPtr vecStack = math::statisticsStack<float>(vecList, math::MEAN);
-    std::cout << "Vector:                     " << (*vecStack)[nX * nY / 2] << std::endl;
-    VecFPtr wvecStack = math::statisticsStack<float>(vecList, math::MEAN, sctrl, wvec);
-    std::cout << "Vector (const weight):      " << (*wvecStack)[nX * nY / 2] << std::endl;
+    VecF vecStack = math::statisticsStack<float>(vecList, math::MEAN);
+    std::cout << "Vector:                     " << (vecStack)[nX * nY / 2] << std::endl;
+    VecF wvecStack = math::statisticsStack<float>(vecList, math::MEAN, sctrl, wvec);
+    std::cout << "Vector (const weight):      " << (wvecStack)[nX * nY / 2] << std::endl;
 }

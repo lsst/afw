@@ -33,8 +33,8 @@ using namespace py::literals;
 
 using namespace lsst::afw::geom::ellipses;
 
-PYBIND11_PLUGIN(_distortion) {
-    py::module mod("_distortion", "Python wrapper for afw _distortion library");
+PYBIND11_PLUGIN(distortion) {
+    py::module mod("distortion");
 
     py::class_<Distortion, detail::EllipticityBase> cls(mod, "Distortion");
 

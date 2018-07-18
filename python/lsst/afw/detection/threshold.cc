@@ -32,8 +32,8 @@ namespace lsst {
 namespace afw {
 namespace detection {
 
-PYBIND11_PLUGIN(_threshold) {
-    py::module mod("_threshold", "Python wrapper for afw _threshold library");
+PYBIND11_PLUGIN(threshold) {
+    py::module mod("threshold");
 
     py::class_<Threshold, std::shared_ptr<Threshold>> clsThreshold(mod, "Threshold");
 

@@ -1,8 +1,8 @@
 __all__ = []
 
 from lsst.utils import continueClass
-from ._fits import (Fits, ImageWriteOptions, ImageCompressionOptions, ImageScalingOptions,
-                    compressionAlgorithmToString, scalingAlgorithmToString)
+from .fits import (Fits, ImageWriteOptions, ImageCompressionOptions, ImageScalingOptions,
+                   compressionAlgorithmToString, scalingAlgorithmToString)
 
 
 @continueClass  # noqa F811

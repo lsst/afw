@@ -197,8 +197,11 @@ void declareLanczosFunctions(py::module &mod, const std::string &suffix) {
     clsLanczosFunction2.def("toString", &LanczosFunction2<ReturnT>::toString, "prefix"_a = "");
 };
 
-PYBIND11_PLUGIN(_functionLibrary) {
-    py::module mod("_functionLibrary", "Python wrapper for afw _functionLibrary library");
+PYBIND11_PLUGIN(functionLibrary) {
+    py::module mod("functionLibrary");
+
+    py::module::import("lsst.geom");
+    py::module::import("lsst.afw.math.function");
 
     declarePolynomialFunctions<float>(mod, "F");
     declareChebyshevFunctions<float>(mod, "F");

@@ -130,8 +130,8 @@ void declareWarpingFunctions(py::module &mod) {
 }
 }
 
-PYBIND11_PLUGIN(_warpExposure) {
-    py::module mod("_warpExposure", "Python wrapper for afw _warpExposure library");
+PYBIND11_PLUGIN(warpExposure) {
+    py::module mod("warpExposure");
 
     /* Module level */
     auto clsLanczosWarpingKernel = declareWarpingKernel<LanczosWarpingKernel>(mod, "LanczosWarpingKernel");

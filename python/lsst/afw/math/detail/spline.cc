@@ -31,8 +31,8 @@ using namespace pybind11::literals;
 
 using namespace lsst::afw::math::detail;
 
-PYBIND11_PLUGIN(_spline) {
-    py::module mod("_spline", "Python wrapper for afw _spline library");
+PYBIND11_PLUGIN(spline) {
+    py::module mod("spline");
 
     /* Module level */
     py::class_<Spline> clsSpline(mod, "Spline");

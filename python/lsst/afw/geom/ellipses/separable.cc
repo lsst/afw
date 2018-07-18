@@ -85,8 +85,8 @@ void declareSeparable(py::module &mod, const std::string &suffix) {
     });
 }
 
-PYBIND11_PLUGIN(_separable) {
-    py::module mod("_separable", "Python wrapper for afw _separable library");
+PYBIND11_PLUGIN(separable) {
+    py::module mod("separable");
 
     declareSeparable<Distortion, DeterminantRadius>(mod, "DistortionDeterminantRadius");
     declareSeparable<Distortion, TraceRadius>(mod, "DistortionTraceRadius");

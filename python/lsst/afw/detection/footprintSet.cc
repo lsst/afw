@@ -34,6 +34,7 @@ namespace afw {
 namespace detection {
 
 namespace {
+
 template <typename PixelT, typename PyClass>
 void declareMakeHeavy(PyClass &cls) {
     //    cls.def("makeHeavy", [](FootprintSet & self, image::MaskedImage<PixelT, image::MaskPixel> const&
@@ -76,8 +77,10 @@ void declareTemplatedMembers(PyClass &cls) {
 }
 }  // namespace
 
-PYBIND11_PLUGIN(_footprintSet) {
-    py::module mod("_footprintSet", "Python wrapper for afw _footprintSet library");
+PYBIND11_PLUGIN(footprintSet) {
+    py::module mod("footprintSet");
+
+    py::module::import("lsst.afw.detection.footprint");
 
     py::class_<FootprintSet, std::shared_ptr<FootprintSet>, lsst::daf::base::Citizen> clsFootprintSet(
             mod, "FootprintSet");
@@ -100,22 +103,11 @@ PYBIND11_PLUGIN(_footprintSet) {
                         "footprints2"_a, "includePeaks"_a);
 
     clsFootprintSet.def("swap", &FootprintSet::swap);
-    //    clsFootprintSet.def("swapFootprintList", &FootprintSet::swapFootprintList);
-    // The pybind11 wrapped getFootprints dereferences the shared pointer to the std::vector of Footprints
-    // held by the FootprintSet when returning to python to work around an STL caster issue. However this
-    // creates a problem for the setter that now expects a shared pointer, making the setter unable to
-    // operate on the output from the getter. Below defines two overrides for the setter function, one
-    // that can handle a shared pointer (in case somewhere else in the stack has one somehow) and one
-    // that will accept a standard vector of Footprints, which will be internally placed in a shared
-    // pointer to match the underlying C++ function signature
-    clsFootprintSet.def("setFootprints",
-                            [](FootprintSet &self, std::shared_ptr<FootprintSet::FootprintList> footListPtr) {
-                                self.setFootprints(footListPtr);
-                            });
+    // setFootprints takes shared_ptr<FootprintList> and getFootprints returns it,
+    // but pybind11 can't handle that type, so use a custom getter and setter
     clsFootprintSet.def("setFootprints", [](FootprintSet &self, FootprintSet::FootprintList footList) {
-        self.setFootprints(std::make_shared<FootprintSet::FootprintList>(footList));
+        self.setFootprints(std::make_shared<FootprintSet::FootprintList>(std::move(footList)));
     });
-    // getFootprints returns shared_ptr<FootprintList>, but stl caster can't handle this
     clsFootprintSet.def("getFootprints", [](FootprintSet &self) { return *(self.getFootprints()); });
     clsFootprintSet.def("makeSources", &FootprintSet::makeSources);
     clsFootprintSet.def("setRegion", &FootprintSet::setRegion);

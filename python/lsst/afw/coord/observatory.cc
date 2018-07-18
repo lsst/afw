@@ -31,8 +31,8 @@ namespace lsst {
 namespace afw {
 namespace coord {
 
-PYBIND11_PLUGIN(_observatory) {
-    py::module mod("_observatory", "Python wrapper for afw _observatory library");
+PYBIND11_PLUGIN(observatory) {
+    py::module mod("observatory");
 
     py::class_<Observatory, std::shared_ptr<Observatory>> cls(mod, "Observatory");
 

@@ -28,7 +28,7 @@ import numpy as np
 import lsst.pex.policy as pexPolicy
 import lsst.afw.detection as afwDetect
 from .maskedImage import MaskedImage, makeMaskedImage
-from .mask import Mask
+from .image import Mask
 from .filter import Filter, FilterProperty
 from .calib import Calib
 

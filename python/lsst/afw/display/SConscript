@@ -1,7 +1,8 @@
 # -*- python -*-
 from lsst.sconsUtils import scripts
 scripts.BasicSConscript.pybind11(
-    ['rgb', "_simpleFits"],
-    extraSrc={"rgb": ["saturated.cc", "scaling.cc"],
+    ["rgb/rgb", "_simpleFits"],
+    addUnderscore=False,
+    extraSrc={"rgb/rgb": ["saturated.cc", "scaling.cc"],
               "_simpleFits": ["simpleFits.cc"]},
 )

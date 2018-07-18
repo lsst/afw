@@ -196,6 +196,7 @@ PYBIND11_PLUGIN(spanSet) {
     py::module mod("spanSet");
     using MaskPixel = image::MaskPixel;
 
+    py::module::import("lsst.geom");
     py::module::import("lsst.afw.geom.span");
 
     py::enum_<Stencil>(mod, "Stencil")

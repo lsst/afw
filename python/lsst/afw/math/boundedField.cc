@@ -58,8 +58,8 @@ void declareTemplates(PyClass &cls) {
             "image"_a, "overlapOnly"_a = false, "xStep"_a = 1, "yStep"_a = 1);
 }
 
-PYBIND11_PLUGIN(_boundedField) {
-    py::module mod("_boundedField", "Python wrapper for afw _boundedField library");
+PYBIND11_PLUGIN(boundedField) {
+    py::module mod("boundedField");
 
     PyClass cls(mod, "BoundedField");
 

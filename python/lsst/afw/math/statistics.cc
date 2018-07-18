@@ -65,8 +65,8 @@ void declareStatisticsVectorOverloads(py::module &mod) {
             "v"_a, "vweights"_a, "flags"_a, "sctrl"_a = StatisticsControl());
 }
 
-PYBIND11_PLUGIN(_statistics) {
-    py::module mod("_statistics", "Python wrapper for afw _statistics library");
+PYBIND11_PLUGIN(statistics) {
+    py::module mod("statistics");
 
     /* Module level */
     py::enum_<Property>(mod, "Property", py::arithmetic())

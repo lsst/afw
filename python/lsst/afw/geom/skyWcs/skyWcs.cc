@@ -48,6 +48,7 @@ namespace {
 PYBIND11_PLUGIN(skyWcs) {
     py::module mod("skyWcs");
 
+    py::module::import("lsst.geom");
     py::module::import("lsst.afw.geom.transform");
 
     mod.def("makeCdMatrix", makeCdMatrix, "scale"_a, "orientation"_a = 0 * lsst::geom::degrees,

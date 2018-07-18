@@ -22,7 +22,7 @@
 
 import lsst.pex.config
 
-from ._chebyshevBoundedField import ChebyshevBoundedField, ChebyshevBoundedFieldControl
+from .chebyshevBoundedField import ChebyshevBoundedField, ChebyshevBoundedFieldControl
 
 
 @lsst.pex.config.wrap(ChebyshevBoundedFieldControl)

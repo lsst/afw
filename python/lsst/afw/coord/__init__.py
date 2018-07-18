@@ -21,5 +21,5 @@
 #
 import lsst.afw.geom
 
-from ._observatory import *
-from ._weather import *
+from .observatory import *
+from .weather import *

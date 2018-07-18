@@ -1,7 +1,7 @@
 __all__ = ["imageCompressionDisabled"]
 
 from contextlib import contextmanager
-from ._fits import getAllowImageCompression, setAllowImageCompression
+from .fits import getAllowImageCompression, setAllowImageCompression
 
 
 @contextmanager

@@ -43,6 +43,8 @@ using namespace pybind11::literals;
 void declareImageCompression(py::module & mod) {
     py::class_<ImageCompressionOptions> cls(mod, "ImageCompressionOptions");
 
+    py::module::import("lsst.pex.exceptions");
+
     py::enum_<ImageCompressionOptions::CompressionAlgorithm>(cls, "CompressionAlgorithm").
         value("NONE", ImageCompressionOptions::CompressionAlgorithm::NONE).
         value("GZIP", ImageCompressionOptions::CompressionAlgorithm::GZIP).
@@ -187,8 +189,8 @@ void declareFits(py::module & mod) {
 }
 
 
-PYBIND11_PLUGIN(_fits) {
-    py::module mod("_fits", "Python wrapper for afw _fits library");
+PYBIND11_PLUGIN(fits) {
+    py::module mod("fits");
 
     py::class_<MemFileManager> clsMemFileManager(mod, "MemFileManager");
 

@@ -43,8 +43,8 @@ namespace {
 auto const NullPoint = lsst::geom::Point2D(std::numeric_limits<double>::quiet_NaN());
 }
 
-PYBIND11_PLUGIN(_psf) {
-    py::module mod("_psf", "Python wrapper for afw _psf library");
+PYBIND11_PLUGIN(psf) {
+    py::module mod("psf");
 
     /* Module level */
     py::class_<Psf, std::shared_ptr<Psf>, daf::base::Persistable, daf::base::Citizen> cls(mod, "Psf");

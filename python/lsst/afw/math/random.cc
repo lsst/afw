@@ -45,8 +45,8 @@ void declareRandomImage(py::module &mod) {
     mod.def("randomPoissonImage", (void (*)(ImageT *, Random &, double const))randomPoissonImage<ImageT>);
 }
 
-PYBIND11_PLUGIN(_random) {
-    py::module mod("_random", "Python wrapper for afw _random library");
+PYBIND11_PLUGIN(random) {
+    py::module mod("random");
 
     py::class_<Random> clsRandom(mod, "Random");
 

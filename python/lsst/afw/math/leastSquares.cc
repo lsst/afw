@@ -69,20 +69,10 @@ void declareLeastSquares(py::module &mod) {
     cls.def("setThreshold", &LeastSquares::setThreshold);
 };
 
-PYBIND11_PLUGIN(_leastSquares) {
-    py::module mod("_leastSquares", "Python wrapper for afw _leastSquares library");
+PYBIND11_PLUGIN(leastSquares) {
+    py::module mod("leastSquares");
 
     declareLeastSquares<double, double, 0, 0>(mod);
-
-    /* Module level */
-
-    /* Member types and enums */
-
-    /* Constructors */
-
-    /* Operators */
-
-    /* Members */
 
     return mod.ptr();
 }

@@ -37,6 +37,8 @@ template <typename PixelT>
 static void declareImageSlice(py::module &mod, std::string const &suffix) {
     using Class = ImageSlice<PixelT>;
 
+    py::module::import("lsst.afw.image.image");
+
     py::class_<Class, std::shared_ptr<Class>, Image<PixelT>> cls(mod, ("ImageSlice" + suffix).c_str());
 
     cls.def(py::init<Image<PixelT> const &>(), "img"_a);

@@ -20,6 +20,9 @@
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 
+#include <memory>
+#include <vector>
+
 #include <pybind11/pybind11.h>
 //#include <pybind11/operators.h>
 #include <pybind11/stl.h>
@@ -31,6 +34,8 @@ namespace py = pybind11;
 using namespace py::literals;
 
 using namespace lsst::afw::math;
+
+namespace {
 
 template <typename PixelT>
 void declareStatisticsStack(py::module &mod) {
@@ -93,15 +98,17 @@ void declareStatisticsStack(py::module &mod) {
                 ))statisticsStack<PixelT>,
             "images"_a, "flags"_a, "sctrl"_a, "wvector"_a, "clipped"_a, "maskMap"_a);
     mod.def("statisticsStack",
-            (std::shared_ptr<std::vector<PixelT>>(*)(
-                    std::vector<std::shared_ptr<std::vector<PixelT>>> &, Property, StatisticsControl const &,
+            (std::vector<PixelT>(*)(
+                    std::vector<std::vector<PixelT>> &, Property, StatisticsControl const &,
                     std::vector<lsst::afw::image::VariancePixel> const &))statisticsStack<PixelT>,
             "vectors"_a, "flags"_a, "sctrl"_a = StatisticsControl(),
             "wvector"_a = std::vector<lsst::afw::image::VariancePixel>(0));
 }
 
-PYBIND11_PLUGIN(_stack) {
-    py::module mod("_stack", "Python wrapper for afw _stack library");
+}  // namespace
+
+PYBIND11_PLUGIN(stack) {
+    py::module mod("stack");
 
     /* Module level */
     declareStatisticsStack<float>(mod);

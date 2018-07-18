@@ -56,6 +56,8 @@ template <typename ImagePixelT>
 PyMaskedImage<ImagePixelT> declareMaskedImage(py::module &mod, const std::string &suffix) {
     using MI = MaskedImage<ImagePixelT>;
 
+    py::module::import("lsst.daf.base");
+
     PyMaskedImage<ImagePixelT> cls(mod, ("MaskedImage" + suffix).c_str());
 
     mod.def("makeMaskedImage", &makeMaskedImage<ImagePixelT, MaskPixel, VariancePixel>, "image"_a,
@@ -224,7 +226,6 @@ PYBIND11_PLUGIN(maskedImage) {
     py::module mod("maskedImage");
 
     py::module::import("lsst.afw.image.image");
-    py::module::import("lsst.afw.image.mask");
 
     auto clsMaskedImageF = declareMaskedImage<float>(mod, "F");
     auto clsMaskedImageD = declareMaskedImage<double>(mod, "D");

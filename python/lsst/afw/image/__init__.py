@@ -30,7 +30,6 @@ from .defect import *
 from .filter import *
 from .image import *
 from .imageSlice import *
-from .mask import *
 from .maskedImage import *
 from .visitInfo import *
 from .transmissionCurve import *

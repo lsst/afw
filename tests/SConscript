@@ -3,7 +3,7 @@ from lsst.sconsUtils import scripts, env, targets
 
 pybind11_test_modules = ['testTableArchivesLib']
 
-scripts.BasicSConscript.pybind11(pybind11_test_modules)
+scripts.BasicSConscript.pybind11(pybind11_test_modules, addUnderscore=False)
 
 # copy AFWDATA_DIR to the test's environment
 afwdataDir = env.ProductDir("afwdata")

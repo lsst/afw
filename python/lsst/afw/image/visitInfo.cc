@@ -54,7 +54,10 @@ static lsst::geom::Angle const nanAngle(nan);
 PYBIND11_PLUGIN(visitInfo) {
     py::module mod("visitInfo");
 
-    py::module::import("lsst.afw.geom");
+    py::module::import("lsst.daf.base");
+    py::module::import("lsst.geom");
+    py::module::import("lsst.afw.coord.observatory");
+    py::module::import("lsst.afw.coord.weather");
 
     /* Module level */
     py::class_<VisitInfo, std::shared_ptr<VisitInfo>> cls(mod, "VisitInfo");

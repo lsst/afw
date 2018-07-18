@@ -10,7 +10,6 @@ scripts.BasicSConscript.pybind11(
      'photoCalib',
      'exposure/exposure',
      'exposureInfo',
-     'mask/mask',
      'maskedImage/maskedImage',
      'imageUtils',
      'imageSlice',

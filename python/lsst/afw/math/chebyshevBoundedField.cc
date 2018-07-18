@@ -47,8 +47,8 @@ void declareTemplates(ClsField & cls) {
                                   ChebyshevBoundedField::fit);
 }
 
-PYBIND11_PLUGIN(_chebyshevBoundedField) {
-    py::module mod("_chebyshevBoundedField", "Python wrapper for afw _chebyshevBoundedField library");
+PYBIND11_PLUGIN(chebyshevBoundedField) {
+    py::module mod("chebyshevBoundedField");
 
     /* Module level */
     py::class_<ChebyshevBoundedFieldControl> clsChebyshevBoundedFieldControl(mod,

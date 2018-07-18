@@ -43,18 +43,9 @@ void declareMinimize(py::module &mod) {
                            std::vector<double> const &, double))minimize<ReturnT>);
 };
 
-PYBIND11_PLUGIN(_minimize) {
-    py::module mod("_minimize", "Python wrapper for afw _minimize library");
+PYBIND11_PLUGIN(minimize) {
+    py::module mod("minimize");
 
-    /* Module level */
-
-    /* Member types and enums */
-
-    /* Constructors */
-
-    /* Operators */
-
-    /* Members */
     py::class_<FitResults> clsFitResults(mod, "FitResults");
     clsFitResults.def_readwrite("isValid", &FitResults::isValid);
     clsFitResults.def_readwrite("chiSq", &FitResults::chiSq);
