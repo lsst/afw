@@ -23,10 +23,10 @@ __all__ = ["MultibandPixel", "MultibandImage", "MultibandMask", "MultibandMasked
 
 import numpy as np
 
-from lsst.geom import Point2I, Box2I, Extent2I, Point2D
-from . import Image, ImageF, Mask, MaskPixel, PARENT, LOCAL 
+from lsst.geom import Point2I, Box2I, Extent2I
+from . import Image, ImageF, Mask, MaskPixel, PARENT, LOCAL
 from ..maskedImage import MaskedImage, MaskedImageF
-from ..slicing import interpretSliceArgs, imageIndicesToNumpy
+from ..slicing import imageIndicesToNumpy
 from ...multiband import MultibandBase
 
 

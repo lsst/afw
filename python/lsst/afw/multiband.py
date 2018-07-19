@@ -23,7 +23,7 @@ __all__ = ["MultibandBase"]
 
 from abc import ABC, abstractmethod
 
-from lsst.geom import Point2I, Box2I, Extent2I
+from lsst.geom import Box2I
 
 
 class MultibandBase(ABC):
