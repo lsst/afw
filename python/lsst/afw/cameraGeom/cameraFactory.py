@@ -52,7 +52,7 @@ def makeDetector(detectorConfig, ampInfoCatalog, focalPlaneToField):
         transforms,
     ]
     crosstalk = detectorConfig.getCrosstalk(len(ampInfoCatalog))
-    if crosstalk:
+    if crosstalk is not None:
         args.append(crosstalk)
     return Detector(*args)
 
