@@ -24,8 +24,6 @@ __all__ = ["MultibandBase"]
 from abc import ABC, abstractmethod
 
 from lsst.geom import Point2I, Box2I, Extent2I
-from .image import PARENT, LOCAL
-from .image.slicing import interpretSliceArgs
 
 
 class MultibandBase(ABC):
@@ -96,14 +94,10 @@ class MultibandBase(ABC):
         """
         return self._singles
 
-    def getBBox(self, origin=PARENT):
+    def getBBox(self):
         """Bounding box
         """
-        if origin == PARENT:
-            return self._bbox
-        elif origin == LOCAL:
-            return Box2I(Point2I(0, 0), self._bbox.getDimensions())
-        raise ValueError("Unrecognized origin, expected either PARENT or LOCAL")
+        return self._bbox
 
     def getXY0(self):
         """Minimum coordinate in the bounding box
@@ -230,62 +224,6 @@ class MultibandBase(ABC):
                     filterNames = [filterIndex]
                 filterIndices = [self.filters.index(f) for f in filterNames]
         return tuple(filterNames), filterIndices
-
-    def imageIndicesToNumpy(self, sliceArgs):
-        """Convert slicing format to numpy
-
-        LSST `afw` image-like objects use an `[x,y]` coordinate
-        convention, accept `Point2I` and `Box2I`
-        objects for slicing, and slice relative to the
-        bounding box `XY0` location;
-        while python and numpy use the convention `[y,x]`
-        with no `XY0`, so this method converts the `afw`
-        indices or slices into numpy indices or slices
-
-        Parameters
-        ----------
-        sliceArgs: `sequence`, `Point2I` or `Box2I`
-            An `(xIndex, yIndex)` pair, or a single `(xIndex,)` tuple,
-            where `xIndex` and `yIndex` can be a `slice` or `int`,
-            or list of `int` objects, and if only a single `xIndex` is
-            given, a `Point2I` or `Box2I`.
-
-        Returns
-        -------
-        y: `int` or `slice`
-            Index or `slice` in the y dimension
-        x: `int` or `slice`
-            Index or `slice` in the x dimension
-        bbox: `Box2I`
-            Bounding box of the image.
-            If `bbox` is `None` then the result is a point and
-            not a subset of an image.
-        """
-        # Use a common slicing algorithm as single band images
-        x, y, origin = interpretSliceArgs(sliceArgs, self.getBBox)
-
-        if origin == PARENT:
-            if isinstance(x, slice):
-                assert isinstance(y, slice)
-                bbox = Box2I(Point2I(x.start, y.start), Extent2I(x.stop-x.start, y.stop-y.start))
-                x = slice(x.start - self.x0, x.stop - self.x0)
-                y = slice(y.start - self.y0, y.stop - self.y0)
-            else:
-                x = x - self.x0
-                y = y - self.y0
-                bbox = None
-            return y, x, bbox
-        elif origin != LOCAL:
-            raise ValueError("Unrecognized value for origin")
-
-        # Use a local bounding box
-        if isinstance(x, slice):
-            assert isinstance(y, slice)
-            bbox = Box2I(Point2I(x.start + self.x0, y.start + self.y0),
-                         Extent2I(x.stop-x.start, y.stop-y.start))
-        else:
-            bbox = None
-        return y, x, bbox
 
     def setXY0(self, xy0):
         """Shift the bounding box but keep the same Extent

@@ -33,8 +33,8 @@ from lsst.geom import Point2I, Box2I, Extent2I
 from lsst.afw.geom import SpanSet, Stencil
 from lsst.afw.detection import GaussianPsf, Footprint, makeHeavyFootprint, MultibandFootprint, HeavyFootprintF
 from lsst.afw.image import ImageF, Mask, MaskPixel, MaskedImage, ExposureF, MaskedImageF, LOCAL
-from lsst.afw.image.multiband import MultibandPixel, MultibandImage, MultibandMask, MultibandMaskedImage
-from lsst.afw.image.multiband import MultibandExposure
+from lsst.afw.image import MultibandPixel, MultibandImage, MultibandMask, MultibandMaskedImage
+from lsst.afw.image import MultibandExposure
 
 
 def _testImageFilterSlicing(testCase, mImage, singleType, bbox, value):
