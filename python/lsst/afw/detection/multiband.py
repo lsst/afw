@@ -247,7 +247,7 @@ class MultibandFootprint(MultibandBase):
         image = [maskedImage.image for maskedImage in maskedImages]
         mask = [maskedImage.mask for maskedImage in maskedImages]
         variance = [maskedImage.variance for maskedImage in maskedImages]
-        return MultibandFootprint.fromImages(fitlers, image, mask, variance, footprint, thresh, peaks)
+        return MultibandFootprint.fromImages(filters, image, mask, variance, footprint, thresh, peaks)
 
     def getSpans(self):
         """Get the full `SpanSet`"""
