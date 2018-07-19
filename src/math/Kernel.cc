@@ -181,7 +181,7 @@ std::vector<double> Kernel::getKernelParameters() const { return std::vector<dou
 lsst::geom::Box2I Kernel::growBBox(lsst::geom::Box2I const &bbox) const {
     return lsst::geom::Box2I(
             lsst::geom::Point2I(bbox.getMin() - lsst::geom::Extent2I(getCtr())),
-            lsst::geom::Extent2I(bbox.getDimensions() + getDimensions() - lsst::geom::Extent2I(1, 1)));
+            lsst::geom::Extent2I(bbox.getDimensions() + getDimensions() - lsst::geom::Extent2I(1, 1)), false);
 }
 
 lsst::geom::Box2I Kernel::shrinkBBox(lsst::geom::Box2I const &bbox) const {
@@ -193,7 +193,7 @@ lsst::geom::Box2I Kernel::shrinkBBox(lsst::geom::Box2I const &bbox) const {
     }
     return lsst::geom::Box2I(
             lsst::geom::Point2I(bbox.getMinX() + getCtrX(), bbox.getMinY() + getCtrY()),
-            lsst::geom::Extent2I(bbox.getWidth() + 1 - getWidth(), bbox.getHeight() + 1 - getHeight()));
+            lsst::geom::Extent2I(bbox.getWidth() + 1 - getWidth(), bbox.getHeight() + 1 - getHeight()), false);
 }
 
 std::string Kernel::toString(std::string const &prefix) const {

@@ -147,7 +147,7 @@ def makeBoxFromSlices(x, y, origin, bbox):
         handleNegativeIndex(x.stop, bbox.getWidth(), origin, default=bbox.getEndX()),
         handleNegativeIndex(y.stop, bbox.getHeight(), origin, default=bbox.getEndY())
     )
-    return Box2I(begin, end - begin)
+    return Box2I(begin, end - begin, invert=False)
 
 
 def interpretSliceArgs(sliceArgs, bboxGetter):

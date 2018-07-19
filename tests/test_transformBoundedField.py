@@ -65,7 +65,7 @@ class TransformBoundedFieldTestCase(lsst.utils.tests.TestCase):
 
         # an arbitrary bounding box (not that this kind of field cares)
         self.bbox = lsst.geom.Box2I(lsst.geom.Point2I(-3, 4),
-                                    lsst.geom.Extent2I(5, 30))
+                                    lsst.geom.Extent2I(5, 30), invert=False)
 
         # a list of points contained in the bbox
         self.pointList = lsst.geom.Box2D(self.bbox).getCorners()

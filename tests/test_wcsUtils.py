@@ -55,7 +55,7 @@ class BaseTestCase(lsst.utils.tests.TestCase):
         self.pixelSizeMm = 0.024  # mm/pixel
         self.ccdOrientation = 5*lsst.geom.degrees  # orientation of pixel w.r.t. focal plane
         self.plateScale = 0.15*lsst.geom.arcseconds  # angle/pixel
-        self.bbox = lsst.geom.Box2I(lsst.geom.Point2I(0, 0), lsst.geom.Extent2I(2000, 4000))
+        self.bbox = lsst.geom.Box2I(lsst.geom.Point2I(0, 0), lsst.geom.Extent2I(2000, 4000), invert=False)
         self.crpix = lsst.geom.Point2D(1000, 2000)
         self.crval = lsst.geom.SpherePoint(10, 40, lsst.geom.degrees)
         self.orientation = -45*lsst.geom.degrees

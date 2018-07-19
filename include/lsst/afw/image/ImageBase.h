@@ -467,9 +467,9 @@ public:
 
     lsst::geom::Box2I getBBox(ImageOrigin origin = PARENT) const {
         if (origin == PARENT) {
-            return lsst::geom::Box2I(_origin, getDimensions());
+            return lsst::geom::Box2I(_origin, getDimensions(), false);
         } else
-            return lsst::geom::Box2I(lsst::geom::Point2I(0, 0), getDimensions());
+            return lsst::geom::Box2I(lsst::geom::Point2I(0, 0), getDimensions(), false);
     }
 
 private:

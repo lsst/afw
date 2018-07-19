@@ -128,8 +128,7 @@ def run():
     if len(sys.argv) < 2:
         srcExposure = afwImage.ExposureF(InputExposurePath)
         if WarpSubregion:
-            bbox = lsst.geom.Box2I(lsst.geom.Point2I(0, 0),
-                                   lsst.geom.Extent2I(2000, 2000))
+            bbox = lsst.geom.Box2I(lsst.geom.Point2I(0, 0), lsst.geom.Extent2I(2000, 2000), invert=False)
             srcExposure = afwImage.ExposureF(
                 srcExposure, bbox, afwImage.LOCAL, False)
     else:

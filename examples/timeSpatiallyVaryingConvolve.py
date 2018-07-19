@@ -222,8 +222,7 @@ def run():
             inImage = imageClass(InputMaskedImagePath)
             # to get original behavior change True to False:
             if (False):
-                bbox = lsst.geom.Box2I(lsst.geom.Point2I(
-                    0, 0), lsst.geom.Extent2I(256, 256))
+                bbox = lsst.geom.Box2I(lsst.geom.Point2I(0, 0), lsst.geom.Extent2I(256, 256), invert=False)
                 inImage = imageClass(inImage, bbox, afwImage.LOCAL, False)
         else:
             inImage = imageClass(sys.argv[1])

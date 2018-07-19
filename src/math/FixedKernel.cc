@@ -88,7 +88,7 @@ std::shared_ptr<Kernel> FixedKernel::resized(int width, int height) const {
     int offsetY = _image.getY0() - getBBox().getMinY();
     lsst::geom::Box2I bboxIntersectShifted = lsst::geom::Box2I(
             lsst::geom::Point2I(bboxIntersect.getMinX() + offsetX, bboxIntersect.getMinY() + offsetY),
-            bboxIntersect.getDimensions());
+            bboxIntersect.getDimensions(), false);
     image::Image<Pixel> imIntersect = image::Image<Pixel>(_image, bboxIntersectShifted);
 
     imNew->assign(imIntersect, bboxIntersect);

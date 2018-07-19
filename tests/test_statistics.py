@@ -129,7 +129,8 @@ class StatisticsTestCase(lsst.utils.tests.TestCase):
         width = image2.getWidth()
         for y in range(1, image2.getHeight(), 2):
             sim = image2.Factory(image2,
-                                 lsst.geom.Box2I(lsst.geom.Point2I(0, y), lsst.geom.Extent2I(width, 1)),
+                                 lsst.geom.Box2I(lsst.geom.Point2I(0, y), lsst.geom.Extent2I(width, 1),
+                                                 invert=False),
                                  afwImage.LOCAL)
             sim += 1
 
@@ -513,7 +514,7 @@ class StatisticsTestCase(lsst.utils.tests.TestCase):
                           self.image, mask, afwMath.MEDIAN, ctrl)
         subMask = afwImage.Mask(
             mask,
-            lsst.geom.Box2I(lsst.geom.Point2I(dims*(scale - 1)), dims))
+            lsst.geom.Box2I(lsst.geom.Point2I(dims*(scale - 1)), dims, invert=False))
         subMask.set(0)
         # Using subMask is successful.
         self.assertEqual(afwMath.makeStatistics(self.image, subMask, afwMath.MEDIAN, ctrl).getValue(),

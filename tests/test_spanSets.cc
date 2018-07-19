@@ -184,7 +184,7 @@ BOOST_AUTO_TEST_CASE(SpanSet_testShiftedBy) {
 }
 
 BOOST_AUTO_TEST_CASE(SpanSet_testClippedTo) {
-    lsst::geom::Box2I clipBox(lsst::geom::Box2I(lsst::geom::Point2I(-2, -2), lsst::geom::Point2I(2, 2)));
+    lsst::geom::Box2I clipBox(lsst::geom::Box2I(lsst::geom::Point2I(-2, -2), lsst::geom::Point2I(2, 2), false));
     // BBox lower corner shouuld be at -4,-4
     auto SpanSetNoClip = afwGeom::SpanSet::fromShape(4, afwGeom::Stencil::CIRCLE);
     auto SpanSetClip = SpanSetNoClip->clippedTo(clipBox);

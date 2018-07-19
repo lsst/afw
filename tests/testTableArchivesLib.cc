@@ -53,7 +53,7 @@ public:
 
     virtual lsst::geom::Box2I doComputeBBox(lsst::geom::Point2D const& position,
                                             lsst::afw::image::Color const& color) const {
-        return lsst::geom::Box2I(lsst::geom::Point2I(-1, -1), lsst::geom::Point2I(1, 1));
+        return lsst::geom::Box2I(lsst::geom::Point2I(-1, -1), lsst::geom::Point2I(1, 1), false);
     }
 
     explicit DummyPsf(double x) : _x(x) {}

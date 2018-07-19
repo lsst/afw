@@ -97,9 +97,11 @@ void declareChebyshevFunctions(py::module &mod, const std::string &suffix) {
             clsChebyshev1Function2(mod, ("Chebyshev1Function2" + suffix).c_str());
 
     clsChebyshev1Function2.def(py::init<std::vector<double>, lsst::geom::Box2D const &>(), "params"_a,
-                               "xyRange"_a = lsst::geom::Box2D(lsst::geom::Point2D(-1.0, -1.0), lsst::geom::Point2D(1.0, 1.0)));
+                               "xyRange"_a = lsst::geom::Box2D(lsst::geom::Point2D(-1.0, -1.0),
+                                                               lsst::geom::Point2D(1.0, 1.0), false));
     clsChebyshev1Function2.def(py::init<unsigned int, lsst::geom::Box2D const &>(), "order"_a,
-                               "xyRange"_a = lsst::geom::Box2D(lsst::geom::Point2D(-1.0, -1.0), lsst::geom::Point2D(1.0, 1.0)));
+                               "xyRange"_a = lsst::geom::Box2D(lsst::geom::Point2D(-1.0, -1.0),
+                                                               lsst::geom::Point2D(1.0, 1.0), false));
 
     clsChebyshev1Function2.def("__call__", &Chebyshev1Function2<ReturnT>::operator(), "x"_a, "y"_a);
     clsChebyshev1Function2.def("clone", &Chebyshev1Function2<ReturnT>::clone);

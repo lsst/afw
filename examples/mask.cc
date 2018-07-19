@@ -58,9 +58,11 @@ int main() {
 
     // img will be modified
     afwImage::Mask<afwImage::MaskPixel> simg1(
-            img, lsst::geom::Box2I(lsst::geom::Point2I(1, 1), lsst::geom::Extent2I(7, 3)), afwImage::LOCAL);
+            img, lsst::geom::Box2I(lsst::geom::Point2I(1, 1), lsst::geom::Extent2I(7, 3), false),
+            afwImage::LOCAL);
     afwImage::Mask<afwImage::MaskPixel> simg(
-            simg1, lsst::geom::Box2I(lsst::geom::Point2I(0, 0), lsst::geom::Extent2I(5, 2)), afwImage::LOCAL);
+            simg1, lsst::geom::Box2I(lsst::geom::Point2I(0, 0), lsst::geom::Extent2I(5, 2), false),
+            afwImage::LOCAL);
 
     {
         afwImage::Mask<afwImage::MaskPixel> nimg(simg.getDimensions());

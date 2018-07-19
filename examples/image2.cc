@@ -108,7 +108,8 @@ int main() {
     {
         ImageT center = ImageT(
                 *out2,
-                lsst::geom::Box2I(lsst::geom::Point2I(1, 1), in.getDimensions() - lsst::geom::Extent2I(2)),
+                lsst::geom::Box2I(lsst::geom::Point2I(1, 1), in.getDimensions() - lsst::geom::Extent2I(2),
+                                  false),
                 image::LOCAL);
         center /= 16;
     }

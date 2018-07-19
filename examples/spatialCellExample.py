@@ -62,8 +62,7 @@ def readImage(filename=None):
         filename = os.path.join(afwDataDir, "CFHT", "D4",
                                 "cal-53535-i-797722_1.fits")
 
-        bbox = lsst.geom.Box2I(lsst.geom.Point2I(270, 2530),
-                               lsst.geom.Extent2I(512, 512))
+        bbox = lsst.geom.Box2I(lsst.geom.Point2I(270, 2530), lsst.geom.Extent2I(512, 512), invert=False)
     else:
         bbox = None
 
@@ -113,8 +112,10 @@ def SpatialCellSetDemo(filename=None):
     #
     # Create an (empty) SpatialCellSet
     #
-    cellSet = afwMath.SpatialCellSet(lsst.geom.Box2I(lsst.geom.Point2I(0, 0), im.getDimensions()),
-                                     260, 200)
+    cellSet = afwMath.SpatialCellSet(
+        lsst.geom.Box2I(lsst.geom.Point2I(0, 0), im.getDimensions(), invert=False),
+        260, 200
+    )
 
     if display:
         for i in range(len(cellSet.getCellList())):

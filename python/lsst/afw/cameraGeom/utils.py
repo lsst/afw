@@ -816,7 +816,7 @@ def getCcdInCamBBoxList(ccdList, binSize, pixelSize_o, origin):
         ex = cbbox.getDimensions().getX()//binSize
         ey = cbbox.getDimensions().getY()//binSize
         bbox = lsst.geom.Box2I(
-            cbbox.getMin(), lsst.geom.Extent2I(int(ex), int(ey)))
+            cbbox.getMin(), lsst.geom.Extent2I(int(ex), int(ey)), invert=False)
         bbox = rotateBBoxBy90(bbox, nQuarter, bbox.getDimensions())
         bbox.shift(lsst.geom.Extent2I(int(llc.getX()//pixelSize_o.getX()/binSize),
                                       int(llc.getY()//pixelSize_o.getY()/binSize)))
@@ -847,7 +847,7 @@ def getCameraImageBBox(camBbox, pixelSize, bufferSize):
                                int(camBbox.getMinY()//pixelSize.getY()))
     pixMax = lsst.geom.Point2I(int(camBbox.getMaxX()//pixelSize.getX()),
                                int(camBbox.getMaxY()//pixelSize.getY()))
-    retBox = lsst.geom.Box2I(pixMin, pixMax)
+    retBox = lsst.geom.Box2I(pixMin, pixMax, invert=False)
     retBox.grow(bufferSize)
     return retBox
 

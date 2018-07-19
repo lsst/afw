@@ -157,7 +157,7 @@ geom::ellipses::Quadrupole GaussianPsf::doComputeShape(lsst::geom::Point2D const
 lsst::geom::Box2I GaussianPsf::doComputeBBox(lsst::geom::Point2D const& position,
                                              image::Color const& color) const {
     return lsst::geom::Box2I(lsst::geom::Point2I(-_dimensions / 2),
-                             _dimensions);  // integer truncation intentional
+                             _dimensions, invert=True);  // integer truncation intentional
 }
 }  // namespace detection
 }  // namespace afw

@@ -272,7 +272,7 @@ void SpanSet::_initialize() {
         _area += span.getMaxX() - span.getMinX() + 1;
     }
     _bbox = lsst::geom::Box2I(lsst::geom::Point2I(minX, _spanVector.front().getY()),
-                              lsst::geom::Point2I(maxX, _spanVector.back().getY()));
+                              lsst::geom::Point2I(maxX, _spanVector.back().getY()), false);
 }
 
 // Getter for the area property

@@ -219,7 +219,8 @@ class Mosaic:
                 llc = lsst.geom.PointI((smosaic.getWidth() - im.getWidth())//2,
                                        (smosaic.getHeight() - im.getHeight())//2)
                 smosaic = smosaic.Factory(smosaic, lsst.geom.Box2I(
-                    llc, im.getDimensions()), afwImage.LOCAL)
+                    llc, im.getDimensions(), invert=False),
+                    afwImage.LOCAL)
 
             smosaic[:] = im
 
@@ -259,7 +260,7 @@ class Mosaic:
             ix, iy = ix % self.nx, ix//self.nx
 
         return lsst.geom.Box2I(lsst.geom.PointI(ix*(self.xsize + self.gutter), iy*(self.ysize + self.gutter)),
-                               lsst.geom.ExtentI(self.xsize, self.ysize))
+                               lsst.geom.ExtentI(self.xsize, self.ysize), invert=False)
 
     def drawLabels(self, labels=None, display="deferToFrame", frame=None):
         """Draw the list labels at the corners of each panel.  If labels is None, use the ones

@@ -91,7 +91,7 @@ def rotateBBoxBy90(bbox, n90, dimensions):
     LLC = lsst.geom.Point2I(centerPixel[0] + x0, centerPixel[1] + y0)
     URC = lsst.geom.Point2I(centerPixel[0] + x1, centerPixel[1] + y1)
 
-    newBbox = lsst.geom.Box2I(LLC, URC)
+    newBbox = lsst.geom.Box2I(LLC, URC, invert=False)
 
     dxy0 = centerPixel[0] - centerPixel[1]
     if n90%2 == 1 and not dxy0 == 0:

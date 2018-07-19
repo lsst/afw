@@ -30,7 +30,7 @@ def makeDetector(detectorConfig, ampInfoCatalog, focalPlaneToField):
 
     llPoint = lsst.geom.Point2I(detectorConfig.bbox_x0, detectorConfig.bbox_y0)
     urPoint = lsst.geom.Point2I(detectorConfig.bbox_x1, detectorConfig.bbox_y1)
-    bbox = lsst.geom.Box2I(llPoint, urPoint)
+    bbox = lsst.geom.Box2I(llPoint, urPoint, invert=False)
 
     tanPixSys = CameraSys(TAN_PIXELS, detectorConfig.name)
     transforms[tanPixSys] = makePixelToTanPixel(

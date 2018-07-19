@@ -43,7 +43,7 @@ class ValidPolygonTestCase(lsst.utils.tests.TestCase):
 
     def setUp(self):
         self.bbox = lsst.geom.Box2I(
-            lsst.geom.Point2I(0, 0), lsst.geom.Point2I(20, 20))
+            lsst.geom.Point2I(0, 0), lsst.geom.Point2I(20, 20), invert=False)
         x = [0, 0, 10, 10]
         y = [0, 10, 10, 0]
         self.polygon = afwGeom.Polygon([lsst.geom.Point2D(xc, yc)
