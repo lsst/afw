@@ -224,10 +224,10 @@ void WarpingControl::_testWarpingKernels(SeparableKernel const &warpingKernel,
                                          SeparableKernel const &maskWarpingKernel) const {
     lsst::geom::Box2I kernelBBox =
             lsst::geom::Box2I(lsst::geom::Point2I(0, 0) - lsst::geom::Extent2I(warpingKernel.getCtr()),
-                              warpingKernel.getDimensions());
+                              warpingKernel.getDimensions(), false);
     lsst::geom::Box2I maskKernelBBox =
             lsst::geom::Box2I(lsst::geom::Point2I(0, 0) - lsst::geom::Extent2I(maskWarpingKernel.getCtr()),
-                              maskWarpingKernel.getDimensions());
+                              maskWarpingKernel.getDimensions(), false);
     if (!kernelBBox.contains(maskKernelBBox)) {
         throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
                           "warping kernel is smaller than mask warping kernel");

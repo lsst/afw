@@ -41,8 +41,7 @@ class MakePixelToTanPixelTestCaseCase(lsst.utils.tests.TestCase):
         pupil center = focal plane center
         CCD x is along focal plane x
         """
-        bbox = lsst.geom.Box2I(lsst.geom.Point2I(0, 0),
-                               lsst.geom.Extent2I(1000, 1000))
+        bbox = lsst.geom.Box2I(lsst.geom.Point2I(0, 0), lsst.geom.Extent2I(1000, 1000), invert=False)
         pixelSizeMm = lsst.geom.Extent2D(0.02, 0.02)
         plateScale = 25.0   # arcsec/mm
         yaw = 0 * lsst.geom.degrees
@@ -102,8 +101,7 @@ class MakePixelToTanPixelTestCaseCase(lsst.utils.tests.TestCase):
     def testCurvedFocalPlane(self):
         """Test a curved focal plane (with rectangular pixels)
         """
-        bbox = lsst.geom.Box2I(lsst.geom.Point2I(0, 0),
-                               lsst.geom.Extent2I(1000, 1000))
+        bbox = lsst.geom.Box2I(lsst.geom.Point2I(0, 0), lsst.geom.Extent2I(1000, 1000), invert=False)
         pixelSizeMm = lsst.geom.Extent2D(0.02, 0.03)
         plateScale = 25.0   # arcsec/mm
         yaw = lsst.geom.Angle(20, lsst.geom.degrees)
@@ -157,8 +155,7 @@ class MakePixelToTanPixelTestCaseCase(lsst.utils.tests.TestCase):
     def testFlatFocalPlane(self):
         """Test an undistorted focal plane (with rectangular pixels)
         """
-        bbox = lsst.geom.Box2I(lsst.geom.Point2I(0, 0),
-                               lsst.geom.Extent2I(1000, 1000))
+        bbox = lsst.geom.Box2I(lsst.geom.Point2I(0, 0), lsst.geom.Extent2I(1000, 1000), invert=False)
         pixelSizeMm = lsst.geom.Extent2D(0.02, 0.03)
         plateScale = 25.0   # arcsec/mm
         yaw = lsst.geom.Angle(20, lsst.geom.degrees)

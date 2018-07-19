@@ -242,7 +242,7 @@ public:
     /// Note that the center of the lower-left pixel is 0,0.
     std::shared_ptr<afw::image::Image<float>> createImage(lsst::geom::Box2I const& bbox) const;
     std::shared_ptr<afw::image::Image<float>> createImage(lsst::geom::Extent2I const& extent) const {
-        return createImage(lsst::geom::Box2I(lsst::geom::Point2I(0, 0), extent));
+        return createImage(lsst::geom::Box2I(lsst::geom::Point2I(0, 0), extent, false));
     }
     //@}
 

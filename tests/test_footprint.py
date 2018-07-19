@@ -37,7 +37,7 @@ class FootprintTestCase(unittest.TestCase):
         self.spans = afwGeom.SpanSet.fromShape(self.spanRad, afwGeom.Stencil.BOX)
         minPoint = lsst.geom.Point2I(-self.regionRad, -self.regionRad)
         maxPoint = lsst.geom.Point2I(self.regionRad, self.regionRad)
-        self.region = lsst.geom.Box2I(minPoint, maxPoint)
+        self.region = lsst.geom.Box2I(minPoint, maxPoint, invert=False)
         self.schema = afwDet.PeakTable.makeMinimalSchema()
         # Run the the constructors test to ensure the Footprints are setUp
         self.testConstructors()
@@ -152,14 +152,14 @@ class FootprintTestCase(unittest.TestCase):
         self.assertEqual(self.footprintWithRegion.getRegion(), self.region)
         largeRad = 20
         testRegion = lsst.geom.Box2I(lsst.geom.Point2I(-largeRad, -largeRad),
-                                     lsst.geom.Point2I(largeRad, largeRad))
+                                     lsst.geom.Point2I(largeRad, largeRad), invert=False)
         self.footprintWithRegion.setRegion(testRegion)
         self.assertEqual(testRegion, self.footprintWithRegion.getRegion())
 
     def testMutationFunctionality(self):
         clipRad = 2
         clipBox = lsst.geom.Box2I(lsst.geom.Point2I(-clipRad, -clipRad),
-                                  lsst.geom.Point2I(clipRad, clipRad))
+                                  lsst.geom.Point2I(clipRad, clipRad), invert=False)
         self.footprint.clipTo(clipBox)
         # Fetch the bounding box using the property notation
         bBox = self.footprint.getBBox()
@@ -211,7 +211,7 @@ class FootprintTestCase(unittest.TestCase):
                     afwGeom.Span(12, 4, 7)]
 
         spans = afwGeom.SpanSet(spanList)
-        region = lsst.geom.Box2I(lsst.geom.PointI(-6, -6), lsst.geom.PointI(20, 20))
+        region = lsst.geom.Box2I(lsst.geom.PointI(-6, -6), lsst.geom.PointI(20, 20), invert=False)
         multiFoot = afwDet.Footprint(spans, region)
 
         records = [multiFoot.addPeak(3, 1, 100),
@@ -258,7 +258,7 @@ class FootprintTestCase(unittest.TestCase):
         self.assertEqual(len(legacyFootprint.peaks), 48)
         self.assertEqual(legacyFootprint.spans.getBBox(),
                          lsst.geom.Box2I(lsst.geom.Point2I(32676, 27387),
-                                         lsst.geom.Extent2I(175, 153)))
+                                         lsst.geom.Extent2I(175, 153), invert=False))
         legacyCenter = legacyFootprint.spans.computeCentroid()
         self.assertAlmostEqual(legacyCenter.getY(), 27456.70733, 5)
         self.assertAlmostEqual(legacyCenter.getX(), 32775.47611, 5)

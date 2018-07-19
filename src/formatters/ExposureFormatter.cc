@@ -174,7 +174,7 @@ dafBase::Persistable* ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>
             int llcY = additionalData->get<int>("llcY");
             int width = additionalData->get<int>("width");
             int height = additionalData->get<int>("height");
-            box = lsst::geom::Box2I(lsst::geom::Point2I(llcX, llcY), lsst::geom::Extent2I(width, height));
+            box = lsst::geom::Box2I(lsst::geom::Point2I(llcX, llcY), lsst::geom::Extent2I(width, height), false);
         }
         image::ImageOrigin origin = image::PARENT;
         if (additionalData->exists("imageOrigin")) {

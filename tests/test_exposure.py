@@ -387,8 +387,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         #
         # This subExposure is valid
         #
-        subBBox = lsst.geom.Box2I(lsst.geom.Point2I(40, 50),
-                                  lsst.geom.Extent2I(10, 10))
+        subBBox = lsst.geom.Box2I(lsst.geom.Point2I(40, 50), lsst.geom.Extent2I(10, 10), invert=False)
         subExposure = self.exposureCrWcs.Factory(
             self.exposureCrWcs, subBBox, afwImage.LOCAL)
 
@@ -398,8 +397,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         # from the MaskedImage class and should trigger an exception
         # from the WCS class for the MaskedImage 871034p_1_MI.
 
-        subRegion3 = lsst.geom.Box2I(lsst.geom.Point2I(100, 100),
-                                     lsst.geom.Extent2I(10, 10))
+        subRegion3 = lsst.geom.Box2I(lsst.geom.Point2I(100, 100), lsst.geom.Extent2I(10, 10), invert=False)
 
         def getSubRegion():
             self.exposureCrWcs.Factory(
@@ -411,8 +409,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         # from the MaskedImage class only for the MaskedImage small_MI.
         # small_MI (cols, rows) = (256, 256)
 
-        subRegion4 = lsst.geom.Box2I(lsst.geom.Point2I(250, 250),
-                                     lsst.geom.Extent2I(10, 10))
+        subRegion4 = lsst.geom.Box2I(lsst.geom.Point2I(250, 250), lsst.geom.Extent2I(10, 10), invert=False)
 
         def getSubRegion():
             self.exposureCrWcs.Factory(
@@ -422,8 +419,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
 
         # check the sub- and parent- exposures are using the same Wcs
         # transformation
-        subBBox = lsst.geom.Box2I(lsst.geom.Point2I(40, 50),
-                                  lsst.geom.Extent2I(10, 10))
+        subBBox = lsst.geom.Box2I(lsst.geom.Point2I(40, 50), lsst.geom.Extent2I(10, 10), invert=False)
         subExposure = self.exposureCrWcs.Factory(
             self.exposureCrWcs, subBBox, afwImage.LOCAL)
         parentSkyPos = self.exposureCrWcs.getWcs().pixelToSky(0, 0)
@@ -439,8 +435,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         mainExposure = afwImage.ExposureF(inFilePathSmall)
         mainExposure.setDetector(self.detector)
 
-        subBBox = lsst.geom.Box2I(lsst.geom.Point2I(10, 10),
-                                  lsst.geom.Extent2I(40, 50))
+        subBBox = lsst.geom.Box2I(lsst.geom.Point2I(10, 10), lsst.geom.Extent2I(40, 50), invert=False)
         subExposure = mainExposure.Factory(
             mainExposure, subBBox, afwImage.LOCAL)
         self.checkWcs(mainExposure, subExposure)
@@ -596,7 +591,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         mi.getMask().set(5)
         mi.getVariance().set(200)
 
-        bbox = lsst.geom.Box2I(lsst.geom.Point2I(1, 0), lsst.geom.Extent2I(5, 4))
+        bbox = lsst.geom.Box2I(lsst.geom.Point2I(1, 0), lsst.geom.Extent2I(5, 4), invert=False)
         expCopy = exp.Factory(exp, bbox, afwImage.PARENT, True)
         miCopy = expCopy.getMaskedImage()
         miCopy.getImage().set(-50)
@@ -630,7 +625,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         exp = afwImage.ExposureF(10, 10)
         expMeta = exp.getMetadata()
         expMeta.set("foo", 5)
-        bbox = lsst.geom.Box2I(lsst.geom.Point2I(1, 0), lsst.geom.Extent2I(5, 5))
+        bbox = lsst.geom.Box2I(lsst.geom.Point2I(1, 0), lsst.geom.Extent2I(5, 5), invert=False)
         expCopy = exp.Factory(exp, bbox, afwImage.PARENT, True)
         expCopyMeta = expCopy.getMetadata()
         expCopyMeta.set("foo", 6)

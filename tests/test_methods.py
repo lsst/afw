@@ -38,8 +38,7 @@ class TestTestUtils(lsst.utils.tests.TestCase):
     """
     def testAssertWcsAlmostEqualOverBBox(self):
         """Test assertWcsAlmostEqualOverBBox and wcsAlmostEqualOverBBox"""
-        bbox = lsst.geom.Box2I(lsst.geom.Point2I(0, 0),
-                               lsst.geom.Extent2I(3001, 3001))
+        bbox = lsst.geom.Box2I(lsst.geom.Point2I(0, 0), lsst.geom.Extent2I(3001, 3001), invert=False)
         ctrPix = lsst.geom.Point2I(1500, 1500)
         metadata = dafBase.PropertySet()
         metadata.set("RADESYS", "FK5")

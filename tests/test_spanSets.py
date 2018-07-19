@@ -48,7 +48,7 @@ class SpanSetTestCase(lsst.utils.tests.TestCase):
 
     def testBBoxSpanSet(self):
         boxSS = afwGeom.SpanSet(lsst.geom.Box2I(lsst.geom.Point2I(2, 2),
-                                                lsst.geom.Point2I(6, 6)))
+                                                lsst.geom.Point2I(6, 6), invert=False))
         self.assertEqual(boxSS.getArea(), 25)
         bBox = boxSS.getBBox()
         self.assertEqual(bBox.getMinX(), 2)
@@ -349,7 +349,7 @@ class SpanSetTestCase(lsst.utils.tests.TestCase):
     def testFromMask(self):
         xy0 = lsst.geom.Point2I(12345, 67890)  # xy0 for image
         dims = lsst.geom.Extent2I(123, 45)  # Dimensions of image
-        box = lsst.geom.Box2I(xy0, dims)  # Bounding box of image
+        box = lsst.geom.Box2I(xy0, dims, invert=False)  # Bounding box of image
         value = 32
         other = 16
         assert value & other == 0  # Setting 'other' unsets 'value'

@@ -50,7 +50,7 @@ std::shared_ptr<ImageT> offsetImage(ImageT const& inImage, float dx, float dy,
         lsst::geom::Extent2I const& dims = inImage.getDimensions();
         std::shared_ptr<ImageT> buffered(new ImageT(dims.getX() + 2 * buffer, dims.getY() + 2 * buffer));
         buffImage = buffered;
-        lsst::geom::Box2I box(lsst::geom::Point2I(buffer, buffer), dims);
+        lsst::geom::Box2I box(lsst::geom::Point2I(buffer, buffer), dims, false);
         buffImage->assign(inImage, box);
     } else {
         buffImage = std::make_shared<ImageT>(inImage);
@@ -106,7 +106,7 @@ std::shared_ptr<ImageT> offsetImage(ImageT const& inImage, float dx, float dy,
 
     std::shared_ptr<ImageT> outImage;
     if (buffer > 0) {
-        lsst::geom::Box2I box(lsst::geom::Point2I(buffer, buffer), inImage.getDimensions());
+        lsst::geom::Box2I box(lsst::geom::Point2I(buffer, buffer), inImage.getDimensions(), false);
         std::shared_ptr<ImageT> out(new ImageT(*convImage, box, afwImage::LOCAL, true));
         outImage = out;
     } else {

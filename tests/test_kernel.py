@@ -195,7 +195,7 @@ class KernelTestCase(lsst.utils.tests.TestCase):
                         kernel = afwMath.DeltaFunctionKernel(
                             kWidth, kHeight, lsst.geom.Point2I(0, 0))
                         fullBBox = lsst.geom.Box2I(
-                            boxStart, lsst.geom.Extent2I(fullWidth, fullHeight))
+                            boxStart, lsst.geom.Extent2I(fullWidth, fullHeight), invert=False)
                         if (fullWidth < kWidth) or (fullHeight < kHeight):
                             self.assertRaises(
                                 Exception, kernel.shrinkBBox, fullBBox)

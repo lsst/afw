@@ -36,7 +36,7 @@ def insertPsf(pos, im, psf, kernelSize, flux):
         x0 = x-kernelSize//2
         y0 = y-kernelSize//2
         tmpbox = lsst.geom.Box2I(lsst.geom.Point2I(x0, y0),
-                                 lsst.geom.Extent2I(kernelSize, kernelSize))
+                                 lsst.geom.Extent2I(kernelSize, kernelSize), invert=False)
         tmp = psf.computeImage(lsst.geom.Point2D(x0, y0))
         tmp *= flux
         im.image[tmpbox, afwImage.LOCAL] += tmp
@@ -81,7 +81,7 @@ class FootprintMergeCatalogTestCase(lsst.utils.tests.TestCase):
                 ]
         pos3 = [(70, 170), (219, 41), (253, 173), (253, 192)]
 
-        box = lsst.geom.Box2I(lsst.geom.Point2I(0, 0), lsst.geom.Point2I(300, 300))
+        box = lsst.geom.Box2I(lsst.geom.Point2I(0, 0), lsst.geom.Point2I(300, 300), invert=False)
         psfsig = 1.
         kernelSize = 41
         flux = 1000

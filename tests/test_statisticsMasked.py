@@ -50,9 +50,9 @@ class StatisticsTestCase(unittest.TestCase):
         self.n = self.nRow*self.nCol
 
         self.bboxL = lsst.geom.Box2I(lsst.geom.Point2I(0, 0),
-                                     lsst.geom.Point2I(self.nRow//2 - 1, self.nCol - 1))
+                                     lsst.geom.Point2I(self.nRow//2 - 1, self.nCol - 1), invert=False)
         self.bboxR = lsst.geom.Box2I(lsst.geom.Point2I(self.nRow//2, 0),
-                                     lsst.geom.Point2I(self.nRow - 1, self.nCol - 1))
+                                     lsst.geom.Point2I(self.nRow - 1, self.nCol - 1), invert=False)
 
         # create masked images and set the left side to valL, and right to valR
         self.mimg = afwImage.MaskedImageF(

@@ -91,7 +91,7 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
         centre = afwImage.Mask(
             self.mimage.mask,
             lsst.geom.Box2I(lsst.geom.Point2I(2, 2),
-                            self.mimage.getDimensions() - lsst.geom.Extent2I(4)),
+                            self.mimage.getDimensions() - lsst.geom.Extent2I(4), invert=False),
             afwImage.LOCAL)
         centre.set(0x0)
         #
@@ -159,9 +159,9 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
         # and some of which do not, and include the full image bounding box
         bboxes = (
             lsst.geom.Box2I(lsst.geom.Point2I(0, 0), dim),
-            lsst.geom.Box2I(lsst.geom.Point2I(0, 0), lsst.geom.Extent2I(3, 3)),
-            lsst.geom.Box2I(lsst.geom.Point2I(2, 2), lsst.geom.Extent2I(6, 4)),
-            lsst.geom.Box2I(lsst.geom.Point2I(4, 4), lsst.geom.Extent2I(6, 4)),
+            lsst.geom.Box2I(lsst.geom.Point2I(0, 0), lsst.geom.Extent2I(3, 3), invert=False),
+            lsst.geom.Box2I(lsst.geom.Point2I(2, 2), lsst.geom.Extent2I(6, 4), invert=False),
+            lsst.geom.Box2I(lsst.geom.Point2I(4, 4), lsst.geom.Extent2I(6, 4), invert=False),
         )
         masks = [afwImage.Mask(dim), afwImage.Mask(dim)]
         variances = [afwImage.ImageF(dim), afwImage.ImageF(dim)]
@@ -351,7 +351,7 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
                     destImage[:] = -1.0
                     destVariance[:] = -1.0
                     destMask[:] = 0xFFFF
-                    bbox = lsst.geom.Box2I(validMin, srcMI.getDimensions())
+                    bbox = lsst.geom.Box2I(validMin, srcMI.getDimensions(), invert=False)
                     if origin != afwImage.LOCAL:
                         bbox.shift(lsst.geom.Extent2I(xy0))
                     if origin is None:
@@ -381,7 +381,7 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
             )):
                 # None to omit the argument
                 for origin in (None, afwImage.PARENT, afwImage.LOCAL):
-                    bbox = lsst.geom.Box2I(validMin, srcMI.getDimensions())
+                    bbox = lsst.geom.Box2I(validMin, srcMI.getDimensions(), invert=False)
                     if origin != afwImage.LOCAL:
                         bbox.shift(lsst.geom.Extent2I(xy0))
                     if origin is None:
@@ -652,13 +652,13 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
     def testSubimages1(self):
         smimage = afwImage.MaskedImageF(
             self.mimage,
-            lsst.geom.Box2I(lsst.geom.Point2I(1, 1), lsst.geom.Extent2I(10, 5)),
+            lsst.geom.Box2I(lsst.geom.Point2I(1, 1), lsst.geom.Extent2I(10, 5), invert=False),
             afwImage.LOCAL
         )
 
         simage = afwImage.MaskedImageF(
             smimage,
-            lsst.geom.Box2I(lsst.geom.Point2I(1, 1), lsst.geom.Extent2I(3, 2)),
+            lsst.geom.Box2I(lsst.geom.Point2I(1, 1), lsst.geom.Extent2I(3, 2), invert=False),
             afwImage.LOCAL
         )
         self.assertEqual(simage.getX0(), 2)
@@ -682,15 +682,14 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
 
         smimage = afwImage.MaskedImageF(
             self.mimage,
-            lsst.geom.Box2I(lsst.geom.Point2I(1, 1), lsst.geom.Extent2I(10, 5)),
+            lsst.geom.Box2I(lsst.geom.Point2I(1, 1), lsst.geom.Extent2I(10, 5), invert=False),
             afwImage.LOCAL
         )
         # reset origin; doesn't affect pixel coordinate systems
         smimage.setXY0(lsst.geom.Point2I(0, 0))
 
         simage = afwImage.MaskedImageF(
-            smimage, lsst.geom.Box2I(lsst.geom.Point2I(1, 1),
-                                     lsst.geom.Extent2I(3, 2)),
+            smimage, lsst.geom.Box2I(lsst.geom.Point2I(1, 1), lsst.geom.Extent2I(3, 2), invert=False),
             afwImage.LOCAL
         )
         self.assertEqual(simage.getX0(), 1)
@@ -724,8 +723,7 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
         for deep in (True, False):
             mimage = self.mimage.Factory(
                 self.mimage,
-                lsst.geom.Box2I(lsst.geom.Point2I(10, 10),
-                                lsst.geom.Extent2I(64, 64)),
+                lsst.geom.Box2I(lsst.geom.Point2I(10, 10), lsst.geom.Extent2I(64, 64), invert=False),
                 afwImage.LOCAL,
                 deep)
             mimage.setXY0(lsst.geom.Point2I(0, 0))

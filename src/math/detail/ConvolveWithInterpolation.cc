@@ -58,7 +58,8 @@ void convolveWithInterpolation(OutImageT &outImage, InImageT const &inImage, mat
 
     // compute region covering good area of output image
     lsst::geom::Box2I fullBBox = lsst::geom::Box2I(
-            lsst::geom::Point2I(0, 0), lsst::geom::Extent2I(outImage.getWidth(), outImage.getHeight()));
+            lsst::geom::Point2I(0, 0), lsst::geom::Extent2I(outImage.getWidth(), outImage.getHeight()),
+            false);
     lsst::geom::Box2I goodBBox = kernel.shrinkBBox(fullBBox);
     KernelImagesForRegion goodRegion(KernelImagesForRegion(kernel.clone(), goodBBox, inImage.getXY0(),
                                                            convolutionControl.getDoNormalize()));

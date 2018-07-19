@@ -797,7 +797,8 @@ public:
     explicit Chebyshev1Function2(unsigned int order,  ///< order of polynomial (0 for constant)
                                  lsst::geom::Box2D const& xyRange = lsst::geom::Box2D(
                                          lsst::geom::Point2D(-1.0, -1.0),
-                                         lsst::geom::Point2D(1.0, 1.0)))  ///< allowed x,y range
+                                         lsst::geom::Point2D(1.0, 1.0),
+                                         false))  ///< allowed x,y range
             : BasePolynomialFunction2<ReturnT>(order),
               _oldYPrime(0),
               _yCheby(this->_order + 1),
@@ -816,7 +817,8 @@ public:
                                                               ///< length must be one of 1, 3, 6, 10, 15...
                                  lsst::geom::Box2D const& xyRange = lsst::geom::Box2D(
                                          lsst::geom::Point2D(-1.0, -1.0),
-                                         lsst::geom::Point2D(1.0, 1.0)))  ///< allowed x,y range
+                                         lsst::geom::Point2D(1.0, 1.0),
+                                         false))  ///< allowed x,y range
             : BasePolynomialFunction2<ReturnT>(params),
               _oldYPrime(0),
               _yCheby(this->_order + 1),
@@ -839,7 +841,7 @@ public:
      * Get x,y range
      */
     lsst::geom::Box2D getXYRange() const noexcept {
-        return lsst::geom::Box2D(lsst::geom::Point2D(_minX, _minY), lsst::geom::Point2D(_maxX, _maxY));
+        return lsst::geom::Box2D(lsst::geom::Point2D(_minX, _minY), lsst::geom::Point2D(_maxX, _maxY), false);
     };
 
     /**

@@ -207,8 +207,7 @@ class MaskTestCase(utilsTests.TestCase):
 
     def testSubmasks(self):
         smask = afwImage.Mask(self.mask1,
-                              lsst.geom.Box2I(lsst.geom.Point2I(1, 1),
-                                              lsst.geom.ExtentI(3, 2)),
+                              lsst.geom.Box2I(lsst.geom.Point2I(1, 1), lsst.geom.ExtentI(3, 2), invert=False),
                               afwImage.LOCAL)
         mask2 = afwImage.Mask(smask.getDimensions())
 
@@ -358,8 +357,7 @@ class OldMaskTestCase(unittest.TestCase):
         for p in ("CR", "BP"):
             self.Mask.addMaskPlane(p)
 
-        self.region = lsst.geom.Box2I(lsst.geom.Point2I(100, 300),
-                                      lsst.geom.Extent2I(10, 40))
+        self.region = lsst.geom.Box2I(lsst.geom.Point2I(100, 300), lsst.geom.Extent2I(10, 40), invert=False)
         self.subTestMask = self.Mask(
             self.testMask, self.region, afwImage.LOCAL)
 

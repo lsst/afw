@@ -148,7 +148,7 @@ class SpatialCellSetTestCase(unittest.TestCase):
 
     def setUp(self):
         self.cellSet = afwMath.SpatialCellSet(lsst.geom.Box2I(
-            lsst.geom.Point2I(0, 0), lsst.geom.Extent2I(501, 501)), 260, 200)
+            lsst.geom.Point2I(0, 0), lsst.geom.Extent2I(501, 501), invert=False), 260, 200)
 
     def makeTestCandidateCellSet(self):
         """Populate a SpatialCellSet"""
@@ -182,7 +182,7 @@ class SpatialCellSetTestCase(unittest.TestCase):
         """Test that we check for a request to make a SpatialCellSet with no cells"""
         def tst():
             afwMath.SpatialCellSet(lsst.geom.Box2I(
-                lsst.geom.Point2I(0, 0), lsst.geom.Extent2I(500, 500)), 0, 3)
+                lsst.geom.Point2I(0, 0), lsst.geom.Extent2I(500, 500), invert=False), 0, 3)
 
         self.assertRaises(pexExcept.LengthError, tst)
 
@@ -253,7 +253,7 @@ class SpatialCellSetTestCase(unittest.TestCase):
             assert(dy//sy == float(dy)/float(sy))
 
             bbox = lsst.geom.Box2I(lsst.geom.Point2I(x0, y0),
-                                   lsst.geom.Extent2I(dx, dy))
+                                   lsst.geom.Extent2I(dx, dy), invert=False)
             cset = afwMath.SpatialCellSet(bbox, sx, sy)
             for cell in cset.getCellList():
                 label = cell.getLabel()
@@ -300,7 +300,7 @@ class TestImageCandidateCase(unittest.TestCase):
 
     def setUp(self):
         self.cellSet = afwMath.SpatialCellSet(lsst.geom.Box2I(
-            lsst.geom.Point2I(0, 0), lsst.geom.Extent2I(501, 501)), 2, 3)
+            lsst.geom.Point2I(0, 0), lsst.geom.Extent2I(501, 501), invert=False), 2, 3)
 
     def tearDown(self):
         del self.cellSet

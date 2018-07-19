@@ -546,10 +546,10 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(len(fp2.getPeaks()), 1)
         self.assertEqual(fp1.getBBox(),
                          lsst.geom.Box2I(lsst.geom.Point2I(129, 2),
-                                         lsst.geom.Extent2I(25, 29)))
+                                         lsst.geom.Extent2I(25, 29), invert=False))
         self.assertEqual(fp2.getBBox(),
                          lsst.geom.Box2I(lsst.geom.Point2I(1184, 2),
-                                         lsst.geom.Extent2I(78, 38)))
+                                         lsst.geom.Extent2I(78, 38), invert=False))
         hfp = lsst.afw.detection.HeavyFootprintF(fp2)
         self.assertEqual(len(hfp.getImageArray()), fp2.getArea())
         self.assertEqual(len(hfp.getMaskArray()), fp2.getArea())

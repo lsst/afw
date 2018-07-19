@@ -447,7 +447,7 @@ std::shared_ptr<image::MaskedImage<PixelT>> statisticsStack(image::Image<PixelT>
         typename MImage::y_iterator oEnd = imgOut->col_end(0);
         for (typename MImage::y_iterator oPtr = imgOut->col_begin(0); oPtr != oEnd; ++oPtr, ++y) {
             lsst::geom::Box2I bbox =
-                    lsst::geom::Box2I(lsst::geom::Point2I(x0, y), lsst::geom::Extent2I(image.getWidth(), 1));
+                    lsst::geom::Box2I(lsst::geom::Point2I(x0, y), lsst::geom::Extent2I(image.getWidth(), 1), false);
             image::Image<PixelT> subImage(image, bbox);
             Statistics stat = makeStatistics(subImage, flags | ERRORS, sctrl);
             *oPtr = typename image::MaskedImage<PixelT>::Pixel(stat.getValue(), 0x0,
@@ -460,7 +460,7 @@ std::shared_ptr<image::MaskedImage<PixelT>> statisticsStack(image::Image<PixelT>
         typename MImage::x_iterator oEnd = imgOut->row_end(0);
         for (typename MImage::x_iterator oPtr = imgOut->row_begin(0); oPtr != oEnd; ++oPtr, ++x) {
             lsst::geom::Box2I bbox =
-                    lsst::geom::Box2I(lsst::geom::Point2I(x, y0), lsst::geom::Extent2I(1, image.getHeight()));
+                    lsst::geom::Box2I(lsst::geom::Point2I(x, y0), lsst::geom::Extent2I(1, image.getHeight()), false);
             image::Image<PixelT> subImage(image, bbox);
             Statistics stat = makeStatistics(subImage, flags | ERRORS, sctrl);
             *oPtr = typename image::MaskedImage<PixelT>::Pixel(stat.getValue(), 0x0,
@@ -491,7 +491,7 @@ std::shared_ptr<image::MaskedImage<PixelT>> statisticsStack(image::MaskedImage<P
         typename MImage::y_iterator oEnd = imgOut->col_end(0);
         for (typename MImage::y_iterator oPtr = imgOut->col_begin(0); oPtr != oEnd; ++oPtr, ++y) {
             lsst::geom::Box2I bbox =
-                    lsst::geom::Box2I(lsst::geom::Point2I(x0, y), lsst::geom::Extent2I(image.getWidth(), 1));
+                    lsst::geom::Box2I(lsst::geom::Point2I(x0, y), lsst::geom::Extent2I(image.getWidth(), 1), false);
             image::MaskedImage<PixelT> subImage(image, bbox);
             Statistics stat = makeStatistics(subImage, flags | ERRORS, sctrl);
             *oPtr = typename image::MaskedImage<PixelT>::Pixel(stat.getValue(), 0x0,
@@ -504,7 +504,7 @@ std::shared_ptr<image::MaskedImage<PixelT>> statisticsStack(image::MaskedImage<P
         typename MImage::x_iterator oEnd = imgOut->row_end(0);
         for (typename MImage::x_iterator oPtr = imgOut->row_begin(0); oPtr != oEnd; ++oPtr, ++x) {
             lsst::geom::Box2I bbox =
-                    lsst::geom::Box2I(lsst::geom::Point2I(x, y0), lsst::geom::Extent2I(1, image.getHeight()));
+                    lsst::geom::Box2I(lsst::geom::Point2I(x, y0), lsst::geom::Extent2I(1, image.getHeight()), false);
             image::MaskedImage<PixelT> subImage(image, bbox);
             Statistics stat = makeStatistics(subImage, flags | ERRORS, sctrl);
             *oPtr = typename image::MaskedImage<PixelT>::Pixel(stat.getValue(), 0x0,

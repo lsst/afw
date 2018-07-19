@@ -81,13 +81,13 @@ inline void setEdgePixels(OutImageT& outImage, Kernel const& kernel, InImageT co
     // left edge, right edge (both omitting pixels already in the bottom and top edge regions)
     int const numHeight = kHeight - (1 + kCtrY);
     int const numWidth = kWidth - (1 + kCtrX);
-    bboxList.push_back(lsst::geom::Box2I(lsst::geom::Point2I(0, 0), lsst::geom::Extent2I(imWidth, kCtrY)));
+    bboxList.push_back(lsst::geom::Box2I(lsst::geom::Point2I(0, 0), lsst::geom::Extent2I(imWidth, kCtrY), false));
     bboxList.push_back(lsst::geom::Box2I(lsst::geom::Point2I(0, imHeight - numHeight),
-                                         lsst::geom::Extent2I(imWidth, numHeight)));
+                                         lsst::geom::Extent2I(imWidth, numHeight), false));
     bboxList.push_back(lsst::geom::Box2I(lsst::geom::Point2I(0, kCtrY),
-                                         lsst::geom::Extent2I(kCtrX, imHeight + 1 - kHeight)));
+                                         lsst::geom::Extent2I(kCtrX, imHeight + 1 - kHeight), false));
     bboxList.push_back(lsst::geom::Box2I(lsst::geom::Point2I(imWidth - numWidth, kCtrY),
-                                         lsst::geom::Extent2I(numWidth, imHeight + 1 - kHeight)));
+                                         lsst::geom::Extent2I(numWidth, imHeight + 1 - kHeight), false));
 
     for (std::vector<lsst::geom::Box2I>::const_iterator bboxIter = bboxList.begin();
          bboxIter != bboxList.end(); ++bboxIter) {
@@ -133,13 +133,13 @@ inline void setEdgePixels(OutImageT& outImage, Kernel const& kernel, InImageT co
     // left edge, right edge (both omitting pixels already in the bottom and top edge regions)
     int const numHeight = kHeight - (1 + kCtrY);
     int const numWidth = kWidth - (1 + kCtrX);
-    bboxList.push_back(lsst::geom::Box2I(lsst::geom::Point2I(0, 0), lsst::geom::Extent2I(imWidth, kCtrY)));
+    bboxList.push_back(lsst::geom::Box2I(lsst::geom::Point2I(0, 0), lsst::geom::Extent2I(imWidth, kCtrY), false));
     bboxList.push_back(lsst::geom::Box2I(lsst::geom::Point2I(0, imHeight - numHeight),
-                                         lsst::geom::Extent2I(imWidth, numHeight)));
+                                         lsst::geom::Extent2I(imWidth, numHeight), false));
     bboxList.push_back(lsst::geom::Box2I(lsst::geom::Point2I(0, kCtrY),
-                                         lsst::geom::Extent2I(kCtrX, imHeight + 1 - kHeight)));
+                                         lsst::geom::Extent2I(kCtrX, imHeight + 1 - kHeight), false));
     bboxList.push_back(lsst::geom::Box2I(lsst::geom::Point2I(imWidth - numWidth, kCtrY),
-                                         lsst::geom::Extent2I(numWidth, imHeight + 1 - kHeight)));
+                                         lsst::geom::Extent2I(numWidth, imHeight + 1 - kHeight), false));
 
     image::MaskPixel const edgeMask = image::Mask<image::MaskPixel>::getPlaneBitMask("EDGE");
     for (std::vector<lsst::geom::Box2I>::const_iterator bboxIter = bboxList.begin();

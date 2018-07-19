@@ -88,7 +88,7 @@ class ImageScalingTestCase(lsst.utils.tests.TestCase):
     (low, high and masked pixels) that we check.
     """
     def setUp(self):
-        self.bbox = lsst.geom.Box2I(lsst.geom.Point2I(123, 456), lsst.geom.Extent2I(7, 8))
+        self.bbox = lsst.geom.Box2I(lsst.geom.Point2I(123, 456), lsst.geom.Extent2I(7, 8), invert=False)
         self.base = 456  # Base value for pixels
         self.highValue = 789  # Value for high pixel
         self.lowValue = 123  # Value for low pixel
@@ -397,7 +397,7 @@ class ImageCompressionTestCase(lsst.utils.tests.TestCase):
     that will affect the compression ratio (e.g., size, noise properties).
     """
     def setUp(self):
-        self.bbox = lsst.geom.Box2I(lsst.geom.Point2I(123, 456), lsst.geom.Extent2I(7, 8))
+        self.bbox = lsst.geom.Box2I(lsst.geom.Point2I(123, 456), lsst.geom.Extent2I(7, 8), invert=False)
         self.background = 12345.6789  # Background value
         self.noise = 67.89  # Noise (stdev)
         self.maskPlanes = ["FOO", "BAR"]  # Mask planes to add

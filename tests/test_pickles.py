@@ -139,14 +139,14 @@ class Box2DTestCase(PickleBase, unittest.TestCase):
 
     def setUp(self):
         p, e = lsst.geom.Point2D(1.0, 1.0), lsst.geom.Extent2D(0.5, 0.5)
-        self.data = lsst.geom.Box2D(p, e)
+        self.data = lsst.geom.Box2D(p, e, invert=False)
 
 
 class Box2ITestCase(PickleBase, unittest.TestCase):
 
     def setUp(self):
         p, e = lsst.geom.Point2I(1, 2), lsst.geom.Extent2I(1, 1)
-        self.data = lsst.geom.Box2I(p, e)
+        self.data = lsst.geom.Box2I(p, e, invert=False)
 
 
 class AffineTransformTestCase(PickleBase, unittest.TestCase):

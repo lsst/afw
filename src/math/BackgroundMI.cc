@@ -94,7 +94,7 @@ BackgroundMI::BackgroundMI(ImageT const& img, BackgroundControl const& bgCtrl)
         for (int iY = 0; iY < nySample; ++iY) {
             ImageT subimg = ImageT(img,
                                    lsst::geom::Box2I(lsst::geom::Point2I(_xorig[iX], _yorig[iY]),
-                                                     lsst::geom::Extent2I(_xsize[iX], _ysize[iY])),
+                                                     lsst::geom::Extent2I(_xsize[iX], _ysize[iY]), false),
                                    image::LOCAL);
 
             std::pair<double, double> res = makeStatistics(subimg, bgCtrl.getStatisticsProperty() | ERRORS,
@@ -363,7 +363,7 @@ std::shared_ptr<Approximate<PixelT>> BackgroundMI::doGetApproximate(
         ApproximateControl const& actrl,        /* Approximation style */
         UndersampleStyle const undersampleStyle /* Behaviour if there are too few points */
         ) const {
-    auto const localBBox = lsst::geom::Box2I(lsst::geom::Point2I(0, 0), _imgBBox.getDimensions());
+    auto const localBBox = lsst::geom::Box2I(lsst::geom::Point2I(0, 0), _imgBBox.getDimensions(), false);
     return makeApproximate(_xcen, _ycen, _statsImage, localBBox, actrl);
 }
 

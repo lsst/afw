@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(
     BOOST_CHECK_EQUAL(img(3, 4), 304);
 
     // create a subimage:   x in [1,3], y in [2,4]
-    ImageT subimg(img, lsst::geom::Box2I(lsst::geom::Point2I(1, 2), lsst::geom::Extent2I(3, 3)));
+    ImageT subimg(img, lsst::geom::Box2I(lsst::geom::Point2I(1, 2), lsst::geom::Extent2I(3, 3), false));
     BOOST_CHECK_EQUAL(subimg.getWidth(), 3);
     BOOST_CHECK_EQUAL(subimg.getHeight(), 3);
     BOOST_CHECK_EQUAL(subimg.getX0(), 1);

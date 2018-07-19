@@ -122,7 +122,7 @@ readImage() {
         std::string filename = dataDir + "/CFHT/D4/cal-53535-i-797722_1.fits";
 
         lsst::geom::Box2I bbox =
-                lsst::geom::Box2I(lsst::geom::Point2I(270, 2530), lsst::geom::Extent2I(512, 512));
+                lsst::geom::Box2I(lsst::geom::Point2I(270, 2530), lsst::geom::Extent2I(512, 512), false);
 
         std::shared_ptr<lsst::daf::base::PropertySet> md;
         mi.reset(new afwImage::MaskedImage<PixelT>(filename, md, bbox));

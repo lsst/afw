@@ -194,7 +194,7 @@ Persistable* ImageFormatter<ImagePixelT>::read(std::shared_ptr<FormatterStorage>
             int llcY = additionalData->get<int>("llcY");
             int width = additionalData->get<int>("width");
             int height = additionalData->get<int>("height");
-            box = lsst::geom::Box2I(lsst::geom::Point2I(llcX, llcY), lsst::geom::Extent2I(width, height));
+            box = lsst::geom::Box2I(lsst::geom::Point2I(llcX, llcY), lsst::geom::Extent2I(width, height), false);
         }
         afwImg::ImageOrigin origin = afwImg::PARENT;
         if (additionalData->exists("imageOrigin")) {

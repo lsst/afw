@@ -75,23 +75,21 @@ class AmpInfoTableTestCase(unittest.TestCase):
             readNoise = -0.523
             linearityCoeffs = (1.1, 2.2, 3.3, 4.4)
             linearityType = "Polynomial"
-            bbox = lsst.geom.Box2I(lsst.geom.Point2I(3, -2),
-                                   lsst.geom.Extent2I(231, 320))
+            bbox = lsst.geom.Box2I(lsst.geom.Point2I(3, -2), lsst.geom.Extent2I(231, 320), invert=False)
             hasRawInfo = hasRawInfo
             rawFlipX = True
             rawFlipY = False
             readoutCorner = afwTable.UL
-            rawBBox = lsst.geom.Box2I(lsst.geom.Point2I(-25, 2),
-                                      lsst.geom.Extent2I(550, 629))
+            rawBBox = lsst.geom.Box2I(lsst.geom.Point2I(-25, 2), lsst.geom.Extent2I(550, 629), invert=False)
             rawXYOffset = lsst.geom.Extent2I(-97, 253)
             rawDataBBox = lsst.geom.Box2I(lsst.geom.Point2I(-2, 29),
-                                          lsst.geom.Extent2I(123, 307))
+                                          lsst.geom.Extent2I(123, 307), invert=False)
             rawHorizontalOverscanBBox = lsst.geom.Box2I(
-                lsst.geom.Point2I(150, 29), lsst.geom.Extent2I(25, 307))
+                lsst.geom.Point2I(150, 29), lsst.geom.Extent2I(25, 307), invert=False)
             rawVerticalOverscanBBox = lsst.geom.Box2I(
-                lsst.geom.Point2I(-2, 201), lsst.geom.Extent2I(123, 6))
+                lsst.geom.Point2I(-2, 201), lsst.geom.Extent2I(123, 6), invert=False)
             rawPrescanBBox = lsst.geom.Box2I(
-                lsst.geom.Point2I(-20, 2), lsst.geom.Extent2I(5, 307))
+                lsst.geom.Point2I(-20, 2), lsst.geom.Extent2I(5, 307), invert=False)
 
             record = self.catalog.addNew()
             record.setBBox(bbox)

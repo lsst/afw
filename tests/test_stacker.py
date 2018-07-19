@@ -160,7 +160,7 @@ class StackTestCase(lsst.utils.tests.TestCase):
             simg = img.Factory(
                 img,
                 lsst.geom.Box2I(lsst.geom.Point2I(0, y),
-                                lsst.geom.Extent2I(img.getWidth(), 1)),
+                                lsst.geom.Extent2I(img.getWidth(), 1), invert=False),
                 afwImage.LOCAL)
             simg.set(y)
 
@@ -191,7 +191,7 @@ class StackTestCase(lsst.utils.tests.TestCase):
 
         # set these pixels to EDGE
         edgeBBox = lsst.geom.Box2I(lsst.geom.Point2I(0, 0),
-                                   lsst.geom.Extent2I(20, 20))
+                                   lsst.geom.Extent2I(20, 20), invert=False)
         width, height = 512, 512
         dim = lsst.geom.Extent2I(width, height)
         val, maskVal = 10, DETECTED
@@ -202,7 +202,7 @@ class StackTestCase(lsst.utils.tests.TestCase):
             # Set part of the image to NaN (with the INTRP bit set)
             #
             llc = lsst.geom.Point2I(width//2*(i//2), height//2*(i % 2))
-            bbox = lsst.geom.Box2I(llc, dim//2)
+            bbox = lsst.geom.Box2I(llc, dim//2, invert=False)
 
             smimg = mimg.Factory(mimg, bbox, afwImage.LOCAL)
             del smimg
@@ -359,7 +359,7 @@ class StackTestCase(lsst.utils.tests.TestCase):
 
     def testClipped(self):
         """Test that we set mask bits when pixels are clipped"""
-        box = lsst.geom.Box2I(lsst.geom.Point2I(12345, 67890), lsst.geom.Extent2I(3, 3))
+        box = lsst.geom.Box2I(lsst.geom.Point2I(12345, 67890), lsst.geom.Extent2I(3, 3), invert=False)
         num = 10
         maskVal = 0xAD
         value = 0.0

@@ -16,7 +16,7 @@ class MakeRampImageTestCase(lsst.utils.tests.TestCase):
         """
         for imageClass in (afwImage.ImageU, afwImage.ImageF, afwImage.ImageD):
             dim = lsst.geom.Extent2I(7, 9)
-            box = lsst.geom.Box2I(lsst.geom.Point2I(-1, 3), dim)
+            box = lsst.geom.Box2I(lsst.geom.Point2I(-1, 3), dim, invert=False)
             numPix = dim[0]*dim[1]
             for start in (-5, 0, 4):
                 if imageClass == afwImage.ImageU and start < 0:
@@ -35,7 +35,7 @@ class MakeRampImageTestCase(lsst.utils.tests.TestCase):
         """
         for imageClass in (afwImage.ImageU, afwImage.ImageF, afwImage.ImageD):
             dim = lsst.geom.Extent2I(7, 9)
-            box = lsst.geom.Box2I(lsst.geom.Point2I(-1, 3), dim)
+            box = lsst.geom.Box2I(lsst.geom.Point2I(-1, 3), dim, invert=False)
             numPix = dim[0]*dim[1]
             for start in (-5.1, 0, 4.3):
                 if imageClass == afwImage.ImageU and start < 0:

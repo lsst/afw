@@ -165,7 +165,7 @@ bool KernelImagesForRegion::computeNextRow(RowOfKernelImagesForRegion &regionRow
             remWidth -= width;
 
             std::shared_ptr<KernelImagesForRegion> regionPtr(new KernelImagesForRegion(
-                    _kernelPtr, lsst::geom::Box2I(blCorner, lsst::geom::Extent2I(width, height)), _xy0,
+                    _kernelPtr, lsst::geom::Box2I(blCorner, lsst::geom::Extent2I(width, height), false), _xy0,
                     _doNormalize, blImagePtr, brImagePtr, tlImagePtr, trImageNullPtr));
             *rgnIter = regionPtr;
 
@@ -219,7 +219,7 @@ std::vector<int> KernelImagesForRegion::_computeSubregionLengths(int length, int
 void KernelImagesForRegion::_moveUp(bool isFirst, int newHeight) {
     // move bbox up (this must be done before recomputing the top kernel images)
     _bbox = lsst::geom::Box2I(lsst::geom::Point2I(_bbox.getMinX(), _bbox.getMaxY() + 1),
-                              lsst::geom::Extent2I(_bbox.getWidth(), newHeight));
+                              lsst::geom::Extent2I(_bbox.getWidth(), newHeight), false);
 
     // swap top and bottom image pointers
     _imagePtrList[BOTTOM_RIGHT].swap(_imagePtrList[TOP_RIGHT]);

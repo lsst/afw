@@ -51,8 +51,7 @@ class ApCorrMapTestCase(lsst.utils.tests.TestCase):
 
     def setUp(self):
         np.random.seed(100)
-        self.bbox = lsst.geom.Box2I(
-            lsst.geom.Point2I(-5, -5), lsst.geom.Point2I(5, 5))
+        self.bbox = lsst.geom.Box2I(lsst.geom.Point2I(-5, -5), lsst.geom.Point2I(5, 5), invert=False)
         self.map = lsst.afw.image.ApCorrMap()
         for name in ("a", "b", "c"):
             self.map.set(name, lsst.afw.math.ChebyshevBoundedField(

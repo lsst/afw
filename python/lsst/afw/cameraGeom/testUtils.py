@@ -65,7 +65,7 @@ class DetectorWrapper:
         self.type = detType
         self.serial = serial
         if bbox is None:
-            bbox = lsst.geom.Box2I(lsst.geom.Point2I(0, 0), lsst.geom.Extent2I(1024, 1048))
+            bbox = lsst.geom.Box2I(lsst.geom.Point2I(0, 0), lsst.geom.Extent2I(1024, 1048), invert=False)
         self.bbox = bbox
         self.pixelSize = lsst.geom.Extent2D(*pixelSize)
         self.ampExtent = lsst.geom.Extent2I(*ampExtent)
@@ -77,7 +77,7 @@ class DetectorWrapper:
             record = self.ampInfo.addNew()
             ampName = "amp %d" % (i + 1,)
             record.setName(ampName)
-            record.setBBox(lsst.geom.Box2I(lsst.geom.Point2I(-1, 1), self.ampExtent))
+            record.setBBox(lsst.geom.Box2I(lsst.geom.Point2I(-1, 1), self.ampExtent, invert=False))
             record.setGain(1.71234e3)
             record.setReadNoise(0.521237e2)
             record.setReadoutCorner(afwTable.LL)
@@ -235,34 +235,28 @@ class CameraWrapper:
                 ampTablesDict[amp['ccd_name']] = ampCatalog
                 self.ampInfoDict[amp['ccd_name']] = {'namps': 1, 'linInfo': {}}
             record = ampCatalog.addNew()
-            bbox = lsst.geom.Box2I(lsst.geom.Point2I(int(amp['trimmed_xmin']),
-                                                     int(amp['trimmed_ymin'])),
-                                   lsst.geom.Point2I(int(amp['trimmed_xmax']),
-                                                     int(amp['trimmed_ymax'])))
-            rawBbox = lsst.geom.Box2I(lsst.geom.Point2I(int(amp['raw_xmin']),
-                                                        int(amp['raw_ymin'])),
-                                      lsst.geom.Point2I(int(amp['raw_xmax']),
-                                                        int(amp['raw_ymax'])))
+            bbox = lsst.geom.Box2I(lsst.geom.Point2I(int(amp['trimmed_xmin']), int(amp['trimmed_ymin'])),
+                                   lsst.geom.Point2I(int(amp['trimmed_xmax']), int(amp['trimmed_ymax'])),
+                                   invert=False)
+            rawBbox = lsst.geom.Box2I(lsst.geom.Point2I(int(amp['raw_xmin']), int(amp['raw_ymin'])),
+                                      lsst.geom.Point2I(int(amp['raw_xmax']), int(amp['raw_ymax'])),
+                                      invert=False)
             rawDataBbox = lsst.geom.Box2I(
-                lsst.geom.Point2I(int(amp['raw_data_xmin']),
-                                  int(amp['raw_data_ymin'])),
-                lsst.geom.Point2I(int(amp['raw_data_xmax']),
-                                  int(amp['raw_data_ymax'])))
+                lsst.geom.Point2I(int(amp['raw_data_xmin']), int(amp['raw_data_ymin'])),
+                lsst.geom.Point2I(int(amp['raw_data_xmax']), int(amp['raw_data_ymax'])),
+                invert=False)
             rawHOverscanBbox = lsst.geom.Box2I(
-                lsst.geom.Point2I(int(amp['hoscan_xmin']),
-                                  int(amp['hoscan_ymin'])),
-                lsst.geom.Point2I(int(amp['hoscan_xmax']),
-                                  int(amp['hoscan_ymax'])))
+                lsst.geom.Point2I(int(amp['hoscan_xmin']), int(amp['hoscan_ymin'])),
+                lsst.geom.Point2I(int(amp['hoscan_xmax']), int(amp['hoscan_ymax'])),
+                invert=False)
             rawVOverscanBbox = lsst.geom.Box2I(
-                lsst.geom.Point2I(int(amp['voscan_xmin']),
-                                  int(amp['voscan_ymin'])),
-                lsst.geom.Point2I(int(amp['voscan_xmax']),
-                                  int(amp['voscan_ymax'])))
+                lsst.geom.Point2I(int(amp['voscan_xmin']), int(amp['voscan_ymin'])),
+                lsst.geom.Point2I(int(amp['voscan_xmax']), int(amp['voscan_ymax'])),
+                invert=False)
             rawPrescanBbox = lsst.geom.Box2I(
-                lsst.geom.Point2I(int(amp['pscan_xmin']),
-                                  int(amp['pscan_ymin'])),
-                lsst.geom.Point2I(int(amp['pscan_xmax']),
-                                  int(amp['pscan_ymax'])))
+                lsst.geom.Point2I(int(amp['pscan_xmin']), int(amp['pscan_ymin'])),
+                lsst.geom.Point2I(int(amp['pscan_xmax']), int(amp['pscan_ymax'])),
+                invert=False)
             xoffset = int(amp['x_offset'])
             yoffset = int(amp['y_offset'])
             flipx = bool(int(amp['flipx']))

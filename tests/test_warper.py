@@ -129,7 +129,7 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         originalExposure, swarpedImage, swarpedWcs = self.getSwarpedImage(
             kernelName=kernelName, useSubregion=True, useDeepCopy=False)
 
-        bbox = lsst.geom.Box2I(lsst.geom.Point2I(100, 25), lsst.geom.Extent2I(3, 7))
+        bbox = lsst.geom.Box2I(lsst.geom.Point2I(100, 25), lsst.geom.Extent2I(3, 7), invert=False)
         warpedExposure = warper.warpExposure(
             destWcs=swarpedWcs,
             srcExposure=originalExposure,
@@ -137,8 +137,7 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
             # should be ignored
             border=-2,
             # should be ignored
-            maxBBox=lsst.geom.Box2I(lsst.geom.Point2I(1, 2),
-                                    lsst.geom.Extent2I(8, 9)),
+            maxBBox=lsst.geom.Box2I(lsst.geom.Point2I(1, 2), lsst.geom.Extent2I(8, 9), invert=False),
         )
         self.assertEqual(bbox, warpedExposure.getBBox(afwImage.PARENT))
 
@@ -160,8 +159,7 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         if useSubregion:
             originalFullExposure = afwImage.ExposureF(originalExposurePath)
             # "medsub" is a subregion of med starting at 0-indexed pixel (40, 150) of size 145 x 200
-            bbox = lsst.geom.Box2I(lsst.geom.Point2I(40, 150),
-                                   lsst.geom.Extent2I(145, 200))
+            bbox = lsst.geom.Box2I(lsst.geom.Point2I(40, 150), lsst.geom.Extent2I(145, 200), invert=False)
             originalExposure = afwImage.ExposureF(
                 originalFullExposure, bbox, afwImage.LOCAL, useDeepCopy)
             swarpedImageName = "medsubswarp1%s.fits" % (kernelName,)
@@ -205,7 +203,8 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
             kernelName=kernelName, useSubregion=useSubregion, useDeepCopy=useDeepCopy)
         maxBBox = lsst.geom.Box2I(
             lsst.geom.Point2I(swarpedImage.getX0(), swarpedImage.getY0()),
-            lsst.geom.Extent2I(swarpedImage.getWidth(), swarpedImage.getHeight()))
+            lsst.geom.Extent2I(swarpedImage.getWidth(), swarpedImage.getHeight()),
+            invert=False)
 
         # warning: this test assumes that the swarped image is smaller than it needs to be
         # to hold all of the warped pixels

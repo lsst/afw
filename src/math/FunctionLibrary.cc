@@ -166,7 +166,7 @@ public:
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
         Chebyshev1Function2PersistenceHelper keys(catalogs.front().getSchema());
         table::BaseRecord const& record = catalogs.front().front();
-        lsst::geom::Box2D bbox(record.get(keys.min), record.get(keys.max));
+        lsst::geom::Box2D bbox(record.get(keys.min), record.get(keys.max), false);
         return std::make_shared<Chebyshev1Function2<ReturnT> >(keys.coefficients.extractVector(record), bbox);
     }
 

@@ -708,7 +708,7 @@ lsst::geom::Box2I bboxFromMetadata(daf::base::PropertySet& metadata) {
         dims = lsst::geom::Extent2I(metadata.getAsInt("NAXIS1"), metadata.getAsInt("NAXIS2"));
     }
     lsst::geom::Point2I xy0 = geom::getImageXY0FromMetadata(metadata, detail::wcsNameForXY0);
-    return lsst::geom::Box2I(xy0, dims);
+    return lsst::geom::Box2I(xy0, dims, false);
 }
 
 template <typename T1, typename T2>

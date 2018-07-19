@@ -63,11 +63,11 @@ else:
     FullMaskedImage = afwImage.MaskedImageF(InputMaskedImagePath)
 
 # input image contains a saturated star, a bad column, and a faint star
-InputBBox = lsst.geom.Box2I(lsst.geom.Point2I(52, 574), lsst.geom.Extent2I(76, 80))
+InputBBox = lsst.geom.Box2I(lsst.geom.Point2I(52, 574), lsst.geom.Extent2I(76, 80), invert=False)
 # the shifted BBox is for a same-sized region containing different pixels;
 # this is used to initialize the convolved image, to make sure convolve
 # fully overwrites it
-ShiftedBBox = lsst.geom.Box2I(lsst.geom.Point2I(0, 460), lsst.geom.Extent2I(76, 80))
+ShiftedBBox = lsst.geom.Box2I(lsst.geom.Point2I(0, 460), lsst.geom.Extent2I(76, 80), invert=False)
 
 EdgeMaskPixel = 1 << afwImage.Mask.getMaskPlane("EDGE")
 NoDataMaskPixel = afwImage.Mask.getPlaneBitMask("NO_DATA")
@@ -325,10 +325,7 @@ class ConvolveTestCase(lsst.utils.tests.TestCase):
     def runBasicConvolveEdgeTest(self, kernel, kernelDescr):
         """Verify that basicConvolve does not write to edge pixels for this kind of kernel
         """
-        fullBox = lsst.geom.Box2I(
-            lsst.geom.Point2I(0, 0),
-            ShiftedBBox.getDimensions(),
-        )
+        fullBox = lsst.geom.Box2I(lsst.geom.Point2I(0, 0), ShiftedBBox.getDimensions(), invert=False)
         goodBox = kernel.shrinkBBox(fullBox)
         cnvMaskedImage = afwImage.MaskedImageF(
             FullMaskedImage, ShiftedBBox, afwImage.LOCAL, True)

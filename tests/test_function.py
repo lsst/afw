@@ -185,7 +185,7 @@ class FunctionTestCase(lsst.utils.tests.TestCase):
             yDelta = (yMax - yMin) / float(nPoints - 1)
 
             xyRange = lsst.geom.Box2D(lsst.geom.Point2D(xMin, yMin),
-                                      lsst.geom.Point2D(xMax, yMax))
+                                      lsst.geom.Point2D(xMax, yMax), invert=False)
 
             f = afwMath.Chebyshev1Function2D(order, xyRange)
             numParams = f.getNParameters()
@@ -274,8 +274,7 @@ class FunctionTestCase(lsst.utils.tests.TestCase):
         order = 3
         numParams = numParamsFromOrder(order)
         f = afwMath.Chebyshev1Function2D(order)
-        xyRange = lsst.geom.Box2D(
-            lsst.geom.Point2D(-1.0, -1.0), lsst.geom.Point2D(1.0, 1.0))
+        xyRange = lsst.geom.Box2D(lsst.geom.Point2D(-1.0, -1.0), lsst.geom.Point2D(1.0, 1.0), invert=False)
         x = 0.5
         y = -0.24
         for addValue in (0.0, 0.2):
@@ -309,7 +308,7 @@ class FunctionTestCase(lsst.utils.tests.TestCase):
             yDelta = (yMax - yMin) / float(nPoints - 1)
 
             xyRange = lsst.geom.Box2D(lsst.geom.Point2D(xMin, yMin),
-                                      lsst.geom.Point2D(xMax, yMax))
+                                      lsst.geom.Point2D(xMax, yMax), invert=False)
 
             fullNParams = afwMath.Chebyshev1Function2D.nParametersFromOrder(
                 order)

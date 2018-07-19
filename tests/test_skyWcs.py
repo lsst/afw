@@ -109,7 +109,7 @@ class SkyWcsBaseTestCase(lsst.utils.tests.TestCase):
         # and does not include zero in the other axis
         # the center of the bbox is used as the center of flipping
         # and the corners of the bbox are the input positions that are tested
-        bbox = lsst.geom.Box2D(lsst.geom.Point2D(-100, 1000), lsst.geom.Extent2D(2000, 1501))
+        bbox = lsst.geom.Box2D(lsst.geom.Point2D(-100, 1000), lsst.geom.Extent2D(2000, 1501), invert=False)
         # dict of (isRight, isTop): position
         minPos = bbox.getMin()
         maxPos = bbox.getMax()
@@ -227,7 +227,7 @@ class SimpleSkyWcsTestCase(SkyWcsBaseTestCase):
         self.tinyPixels = 1.0e-10
         self.tinyAngle = 1.0e-10 * lsst.geom.radians
         self.bbox = lsst.geom.Box2I(lsst.geom.Point2I(-1000, -1000),
-                                    lsst.geom.Extent2I(2000, 2000))  # arbitrary but reasonable
+                                    lsst.geom.Extent2I(2000, 2000), invert=False)  # arbitrary but reasonable
 
     def checkTanWcs(self, crval, orientation, flipX):
         """Construct a pure TAN SkyWcs and check that it operates as specified
@@ -324,7 +324,7 @@ class SimpleSkyWcsTestCase(SkyWcsBaseTestCase):
         shiftedMetadata = shiftedWcs.getFitsMetadata(precise=True)
         shiftedWcsCopy = makeSkyWcs(shiftedMetadata)
         shiftedBBox = lsst.geom.Box2D(predShiftedPixelOrigin,
-                                      predShiftedPixelOrigin + lsst.geom.Extent2I(2000, 2000))
+                                      predShiftedPixelOrigin + lsst.geom.Extent2I(2000, 2000), invert=False)
         self.assertWcsAlmostEqualOverBBox(shiftedWcs, shiftedWcsCopy, shiftedBBox)
 
         wcsCopy = SkyWcs.readString(wcs.writeString())
@@ -531,7 +531,7 @@ class SimpleSkyWcsTestCase(SkyWcsBaseTestCase):
 
     @unittest.skipIf(sys.version_info[0] < 3, "astropy.wcs rejects the header on py2")
     def testAgainstAstropyWcs(self):
-        bbox = lsst.geom.Box2D(lsst.geom.Point2D(-1000, -1000), lsst.geom.Extent2D(2000, 2000))
+        bbox = lsst.geom.Box2D(lsst.geom.Point2D(-1000, -1000), lsst.geom.Extent2D(2000, 2000), invert=False)
         for crval, orientation, flipX, projection in itertools.product(self.crvalList,
                                                                        self.orientationList,
                                                                        (False, True),
@@ -597,7 +597,7 @@ class MetadataWcsTestCase(SkyWcsBaseTestCase):
         skyWcs = makeSkyWcs(self.metadata, strip=False)
         header = makeLimitedFitsHeader(self.metadata)
         astropyWcs = astropy.wcs.WCS(header)
-        bbox = lsst.geom.Box2D(lsst.geom.Point2D(-1000, -1000), lsst.geom.Extent2D(3000, 3000))
+        bbox = lsst.geom.Box2D(lsst.geom.Point2D(-1000, -1000), lsst.geom.Extent2D(3000, 3000), invert=False)
         self.assertSkyWcsAstropyWcsAlmostEqual(skyWcs=skyWcs, astropyWcs=astropyWcs, bbox=bbox)
 
     def testLinearizeMethods(self):
@@ -868,7 +868,8 @@ class TestTanSipTestCase(SkyWcsBaseTestCase):
         ):
             metadata.set(name, value)
         self.metadata = metadata
-        self.bbox = lsst.geom.Box2D(lsst.geom.Point2D(-1000, -1000), lsst.geom.Extent2D(3000, 3000))
+        self.bbox = lsst.geom.Box2D(lsst.geom.Point2D(-1000, -1000), lsst.geom.Extent2D(3000, 3000),
+                                    invert=False)
 
     def testTanSipFromFrameDict(self):
         """Test making a TAN-SIP WCS from a FrameDict
@@ -976,7 +977,7 @@ class TestTanSipTestCase(SkyWcsBaseTestCase):
 
         wcsFromMetadata = makeSkyWcs(self.metadata)
 
-        bbox = lsst.geom.Box2D(lsst.geom.Point2D(-1000, -1000), lsst.geom.Extent2D(3000, 3000))
+        bbox = lsst.geom.Box2D(lsst.geom.Point2D(-1000, -1000), lsst.geom.Extent2D(3000, 3000), invert=False)
         self.assertWcsAlmostEqualOverBBox(wcsFromFits, wcsFromMetadata, bbox)
 
     def testReadOldTanFits(self):
@@ -1012,7 +1013,7 @@ class TestTanSipTestCase(SkyWcsBaseTestCase):
 
         wcsFromMetadata = makeSkyWcs(tanMetadata)
 
-        bbox = lsst.geom.Box2D(lsst.geom.Point2D(-1000, -1000), lsst.geom.Extent2D(3000, 3000))
+        bbox = lsst.geom.Box2D(lsst.geom.Point2D(-1000, -1000), lsst.geom.Extent2D(3000, 3000), invert=False)
         self.assertWcsAlmostEqualOverBBox(wcsFromFits, wcsFromMetadata, bbox)
 
 

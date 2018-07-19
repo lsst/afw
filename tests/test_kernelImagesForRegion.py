@@ -49,7 +49,7 @@ class KernelImagesForRegion(lsst.utils.tests.TestCase):
     def setUp(self):
         boxCorner = lsst.geom.Point2I(11, 50)
         boxExtent = lsst.geom.Extent2I(100, 99)
-        self.bbox = lsst.geom.Box2I(boxCorner, boxExtent)
+        self.bbox = lsst.geom.Box2I(boxCorner, boxExtent, invert=False)
         self.xy0 = lsst.geom.Point2I(100, 251)
         self.kernel = self.makeKernel()
 

@@ -73,7 +73,7 @@ std::shared_ptr<Kernel> FixedKernel::resized(int width, int height) const {
     }
 
     lsst::geom::Box2I bboxNew(lsst::geom::Point2I((1 - width) / 2, (1 - height) / 2),
-                              lsst::geom::Extent2I(width, height));
+                              lsst::geom::Extent2I(width, height), false);
     std::shared_ptr<image::Image<Pixel>> imNew = std::make_shared<image::Image<Pixel>>(bboxNew);
 
     // getBBox() instantiates a new BBox from member data _width, _height, _ctrX, _ctrY
@@ -88,7 +88,7 @@ std::shared_ptr<Kernel> FixedKernel::resized(int width, int height) const {
     int offsetY = _image.getY0() - getBBox().getMinY();
     lsst::geom::Box2I bboxIntersectShifted = lsst::geom::Box2I(
             lsst::geom::Point2I(bboxIntersect.getMinX() + offsetX, bboxIntersect.getMinY() + offsetY),
-            bboxIntersect.getDimensions());
+            bboxIntersect.getDimensions(), false);
     image::Image<Pixel> imIntersect = image::Image<Pixel>(_image, bboxIntersectShifted);
 
     imNew->assign(imIntersect, bboxIntersect);

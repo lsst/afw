@@ -332,7 +332,7 @@ SpatialCellSet::SpatialCellSet(lsst::geom::Box2I const &region, int xSize, int y
         for (int x = 0; x < nx; ++x) {
             // nx may not be a factor of width
             int const x1 = (x == nx - 1) ? region.getMaxX() : x0 + xSize - 1;
-            lsst::geom::Box2I bbox(lsst::geom::Point2I(x0, y0), lsst::geom::Point2I(x1, y1));
+            lsst::geom::Box2I bbox(lsst::geom::Point2I(x0, y0), lsst::geom::Point2I(x1, y1), false);
             std::string label = (boost::format("Cell %dx%d") % x % y).str();
 
             _cellList.push_back(std::shared_ptr<SpatialCell>(new SpatialCell(label, bbox)));

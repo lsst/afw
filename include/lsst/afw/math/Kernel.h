@@ -267,7 +267,8 @@ public:
      * return parent bounding box, with XY0 = -center
      */
     inline lsst::geom::Box2I getBBox() const {
-        return lsst::geom::Box2I(lsst::geom::Point2I(-_ctrX, -_ctrY), lsst::geom::Extent2I(_width, _height));
+        return lsst::geom::Box2I(lsst::geom::Point2I(-_ctrX, -_ctrY), lsst::geom::Extent2I(_width, _height),
+                                 false);
     }
 
     /**

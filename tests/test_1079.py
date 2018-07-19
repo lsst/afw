@@ -85,7 +85,7 @@ class SavingSubImagesTest(unittest.TestCase):
         saved correctly"""
 
         llc = lsst.geom.Point2I(20, 30)
-        bbox = lsst.geom.Box2I(llc, lsst.geom.Extent2I(60, 50))
+        bbox = lsst.geom.Box2I(llc, lsst.geom.Extent2I(60, 50), invert=False)
         subImg = afwImage.ExposureF(self.parent, bbox, afwImage.LOCAL)
 
         subImgLlc = subImg.getMaskedImage().getXY0()
@@ -109,7 +109,7 @@ class SavingSubImagesTest(unittest.TestCase):
 
         # Load sub-image directly off of disk
         llc = lsst.geom.Point2I(20, 30)
-        bbox = lsst.geom.Box2I(llc, lsst.geom.Extent2I(60, 50))
+        bbox = lsst.geom.Box2I(llc, lsst.geom.Extent2I(60, 50), invert=False)
         subImg = afwImage.ExposureF(self.parentFile, bbox, afwImage.LOCAL)
         oSubImage = subImg.getWcs().getPixelOrigin()
         subImgLlc = subImg.getMaskedImage().getXY0()
@@ -130,7 +130,7 @@ class SavingSubImagesTest(unittest.TestCase):
 
         for deep in (True, False):
             llc = lsst.geom.Point2I(20, 30)
-            bbox = lsst.geom.Box2I(llc, lsst.geom.Extent2I(60, 50))
+            bbox = lsst.geom.Box2I(llc, lsst.geom.Extent2I(60, 50), invert=False)
             subImg = afwImage.ExposureF(
                 self.parent, bbox, afwImage.LOCAL, deep)
 
@@ -167,18 +167,18 @@ class SavingSubImagesTest(unittest.TestCase):
         that the parent is an invarient"""
 
         llc1 = lsst.geom.Point2I(20, 30)
-        bbox = lsst.geom.Box2I(llc1, lsst.geom.Extent2I(60, 50))
+        bbox = lsst.geom.Box2I(llc1, lsst.geom.Extent2I(60, 50), invert=False)
         subImg = afwImage.ExposureF(self.parentFile, bbox, afwImage.LOCAL)
 
         llc2 = lsst.geom.Point2I(22, 23)
 
         # This subsub image should fail. Although it's big enough to fit in the parent image
         # it's too small for the sub-image
-        bbox = lsst.geom.Box2I(llc2, lsst.geom.Extent2I(100, 110))
+        bbox = lsst.geom.Box2I(llc2, lsst.geom.Extent2I(100, 110), invert=False)
         self.assertRaises(lsst.pex.exceptions.Exception,
                           afwImage.ExposureF, subImg, bbox, afwImage.LOCAL)
 
-        bbox = lsst.geom.Box2I(llc2, lsst.geom.Extent2I(10, 11))
+        bbox = lsst.geom.Box2I(llc2, lsst.geom.Extent2I(10, 11), invert=False)
         subSubImg = afwImage.ExposureF(subImg, bbox, afwImage.LOCAL)
 
         sub0 = subImg.getMaskedImage().getXY0()
@@ -203,7 +203,7 @@ class SavingSubImagesTest(unittest.TestCase):
     def testRoundTrip(self):
         """Test that saving and retrieving an image doesn't alter the metadata"""
         llc = lsst.geom.Point2I(20, 30)
-        bbox = lsst.geom.Box2I(llc, lsst.geom.Extent2I(60, 50))
+        bbox = lsst.geom.Box2I(llc, lsst.geom.Extent2I(60, 50), invert=False)
         for deep in (False, True):
             subImg = afwImage.ExposureF(
                 self.parent, bbox, afwImage.LOCAL, deep)
@@ -235,7 +235,7 @@ class SavingSubImagesTest(unittest.TestCase):
         # Make a sub-image
         x0, y0 = 20, 30
         llc = lsst.geom.Point2I(x0, y0)
-        bbox = lsst.geom.Box2I(llc, lsst.geom.Extent2I(60, 50))
+        bbox = lsst.geom.Box2I(llc, lsst.geom.Extent2I(60, 50), invert=False)
         deep = False
         subImg = afwImage.ExposureF(self.parent, bbox, afwImage.LOCAL, deep)
 

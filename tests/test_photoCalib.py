@@ -49,7 +49,7 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
         self.point0 = lsst.geom.Point2D(0, 0)
         self.pointXShift = lsst.geom.Point2D(-10, 0)
         self.pointYShift = lsst.geom.Point2D(0, -10)
-        self.bbox = lsst.geom.Box2I(lsst.geom.Point2I(-100, -100), lsst.geom.Point2I(100, 100))
+        self.bbox = lsst.geom.Box2I(lsst.geom.Point2I(-100, -100), lsst.geom.Point2I(100, 100), invert=False)
 
         # calibration and instFlux designed to produce calibrated flux of 1.
         self.calibration = 1e-3

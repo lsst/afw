@@ -36,7 +36,7 @@ class BoxGridTestCase(lsst.utils.tests.TestCase):
         minPt = lsst.geom.Point2I(0, 0)
         extent = lsst.geom.Extent2I(5, 7)
         numColRow = (2, 3)
-        outerBox = lsst.geom.Box2I(minPt, extent)
+        outerBox = lsst.geom.Box2I(minPt, extent, invert=False)
         boxGrid = BoxGrid(box=outerBox, numColRow=numColRow)
         desColStarts = (0, 2)
         desWidths = (2, 3)

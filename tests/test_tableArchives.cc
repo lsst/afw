@@ -698,11 +698,11 @@ BOOST_AUTO_TEST_CASE(ArchiveMetadata) {
     using namespace lsst::afw::geom;
     OutputArchive outArchive;
     outArchive.put(std::make_shared<Footprint>(std::make_shared<SpanSet>(
-            lsst::geom::Box2I(lsst::geom::Point2I(2, 3), lsst::geom::Point2I(5, 4)))));
+            lsst::geom::Box2I(lsst::geom::Point2I(2, 3), lsst::geom::Point2I(5, 4), false))));
     outArchive.put(std::make_shared<Footprint>(std::make_shared<SpanSet>(
-            lsst::geom::Box2I(lsst::geom::Point2I(1, 2), lsst::geom::Point2I(7, 6)))));
+            lsst::geom::Box2I(lsst::geom::Point2I(1, 2), lsst::geom::Point2I(7, 6), false))));
     outArchive.put(std::make_shared<HeavyFootprint<float>>(Footprint(std::make_shared<SpanSet>(
-            lsst::geom::Box2I(lsst::geom::Point2I(1, 2), lsst::geom::Point2I(7, 6))))));
+            lsst::geom::Box2I(lsst::geom::Point2I(1, 2), lsst::geom::Point2I(7, 6), false)))));
     MemFileManager manager;
     Fits outFits(manager, "w", Fits::AUTO_CHECK);
     outArchive.writeFits(outFits);

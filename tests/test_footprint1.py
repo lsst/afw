@@ -251,7 +251,7 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(bbox.getMaxX(), 105)
         self.assertEqual(bbox.getMaxY(), 11)
         # clip with a bbox that doesn't overlap at all
-        bbox2 = lsst.geom.Box2I(lsst.geom.Point2I(5, 90), lsst.geom.Extent2I(1, 2))
+        bbox2 = lsst.geom.Box2I(lsst.geom.Point2I(5, 90), lsst.geom.Extent2I(1, 2), invert=False)
         foot.clipTo(bbox2)
         self.assertTrue(foot.getBBox().isEmpty())
         self.assertEqual(foot.getArea(), 0)
@@ -260,7 +260,7 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         """Create a rectangular Footprint"""
         x0, y0, w, h = 9, 10, 7, 4
         spanSet = afwGeom.SpanSet(lsst.geom.Box2I(lsst.geom.Point2I(x0, y0),
-                                                  lsst.geom.Extent2I(w, h)))
+                                                  lsst.geom.Extent2I(w, h), invert=False))
         foot = afwDetect.Footprint(spanSet)
 
         bbox = foot.getBBox()
@@ -282,7 +282,7 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         """Check that Footprint.getBBox() returns a copy"""
         x0, y0, w, h = 9, 10, 7, 4
         spanSet = afwGeom.SpanSet(lsst.geom.Box2I(lsst.geom.Point2I(x0, y0),
-                                                  lsst.geom.Extent2I(w, h)))
+                                                  lsst.geom.Extent2I(w, h), invert=False))
         foot = afwDetect.Footprint(spanSet)
         bbox = foot.getBBox()
 
@@ -299,7 +299,7 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         spanSet = afwGeom.SpanSet.fromShape(ellipse)
         foot = afwDetect.Footprint(spanSet,
                                    lsst.geom.Box2I(lsst.geom.Point2I(0, 0),
-                                                   lsst.geom.Extent2I(20, 30)))
+                                                   lsst.geom.Extent2I(20, 30), invert=False))
 
         idImage = afwImage.ImageU(
             lsst.geom.Extent2I(foot.getRegion().getWidth(),
@@ -321,7 +321,7 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         spanSet = afwGeom.SpanSet.fromShape(ellipse)
         foot = afwDetect.Footprint(spanSet,
                                    lsst.geom.Box2I(lsst.geom.Point2I(0, 0),
-                                                   lsst.geom.Extent2I(50, 60)))
+                                                   lsst.geom.Extent2I(50, 60), invert=False))
 
         idImage = afwImage.ImageU(lsst.geom.Extent2I(
             foot.getRegion().getWidth(), foot.getRegion().getHeight()))
@@ -388,9 +388,9 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         imwidth, imheight = 100, 100  # Size of image
 
         spanSet = afwGeom.SpanSet(lsst.geom.Box2I(lsst.geom.Point2I(x0, y0),
-                                                  lsst.geom.Extent2I(width, height)))
+                                                  lsst.geom.Extent2I(width, height), invert=False))
         region = lsst.geom.Box2I(lsst.geom.Point2I(0, 0),
-                                 lsst.geom.Extent2I(imwidth, imheight))
+                                 lsst.geom.Extent2I(imwidth, imheight), invert=False)
         foot = afwDetect.Footprint(spanSet, region)
         self.assertEqual(foot.getArea(), width*height)
 
@@ -438,8 +438,7 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         spanSet = afwGeom.SpanSet.fromShape(ellipse)
         foot = afwDetect.Footprint(
             spanSet,
-            lsst.geom.Box2I(lsst.geom.Point2I(0, 0),
-                            lsst.geom.Extent2I(imwidth, imheight)))
+            lsst.geom.Box2I(lsst.geom.Point2I(0, 0), lsst.geom.Extent2I(imwidth, imheight), invert=False))
         footIsotropic = afwDetect.Footprint()
         footIsotropic.assign(foot)
 
@@ -461,8 +460,7 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         initial_npix = circle_npix * 2 - 1  # touch at one pixel
         shrunk_npix = 26
 
-        box = lsst.geom.Box2I(lsst.geom.Point2I(0, 0),
-                              lsst.geom.Extent2I(imwidth, imheight))
+        box = lsst.geom.Box2I(lsst.geom.Point2I(0, 0), lsst.geom.Extent2I(imwidth, imheight), invert=False)
 
         e1 = afwGeom.Ellipse(afwGeomEllipses.Axes(radius, radius, 0),
                              lsst.geom.Point2D(x1, y1))
@@ -508,10 +506,10 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         x0, y0 = 20, 20
         width, height = 20, 30
         spanSet = afwGeom.SpanSet(lsst.geom.Box2I(lsst.geom.Point2I(x0, y0),
-                                                  lsst.geom.Extent2I(width, height)))
+                                                  lsst.geom.Extent2I(width, height), invert=False))
         foot1 = afwDetect.Footprint(spanSet,
                                     lsst.geom.Box2I(lsst.geom.Point2I(0, 0),
-                                                    lsst.geom.Extent2I(100, 100)))
+                                                    lsst.geom.Extent2I(100, 100), invert=False))
 
         # Add some peaks and check that they get copied into the new grown footprint
         foot1.addPeak(20, 20, 1)
@@ -571,7 +569,7 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
 
     def testFootprintToBBoxList(self):
         """Test footprintToBBoxList"""
-        region = lsst.geom.Box2I(lsst.geom.Point2I(0, 0), lsst.geom.Extent2I(12, 10))
+        region = lsst.geom.Box2I(lsst.geom.Point2I(0, 0), lsst.geom.Extent2I(12, 10), invert=False)
         foot = afwDetect.Footprint(afwGeom.SpanSet(), region)
         spanList = [afwGeom.Span(*span) for span in ((3, 3, 5), (3, 7, 7),
                                                      (4, 2, 3), (4, 5, 7),
@@ -613,7 +611,7 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
 
     def testWriteDefect(self):
         """Write a Footprint as a set of Defects"""
-        region = lsst.geom.Box2I(lsst.geom.Point2I(0, 0), lsst.geom.Extent2I(12, 10))
+        region = lsst.geom.Box2I(lsst.geom.Point2I(0, 0), lsst.geom.Extent2I(12, 10), invert=False)
         spanSet = afwGeom.SpanSet([afwGeom.Span(*span) for span in [(3, 3, 5),
                                                                     (3, 7, 7),
                                                                     (4, 2, 3),
@@ -707,7 +705,7 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
 
     def testTransform(self):
         dims = lsst.geom.Extent2I(512, 512)
-        bbox = lsst.geom.Box2I(lsst.geom.Point2I(0, 0), dims)
+        bbox = lsst.geom.Box2I(lsst.geom.Point2I(0, 0), dims, invert=False)
         radius = 5
         offset = lsst.geom.Extent2D(123, 456)
         crval = lsst.geom.SpherePoint(0, 0, lsst.geom.degrees)
@@ -798,7 +796,7 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         target = afwImage.ImageF(100, 100)
         target.set(0)
         subTarget = afwImage.ImageF(target, lsst.geom.Box2I(lsst.geom.Point2I(40, 40),
-                                                            lsst.geom.Extent2I(20, 20)))
+                                                            lsst.geom.Extent2I(20, 20), invert=False))
         source = afwImage.ImageF(10, 30)
         source.setXY0(45, 45)
         source.set(1.0)
@@ -948,7 +946,7 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
 
     def testPeakSort(self):
         spanSet = afwGeom.SpanSet(lsst.geom.Box2I(lsst.geom.Point2I(0, 0),
-                                                  lsst.geom.Point2I(10, 10)))
+                                                  lsst.geom.Point2I(10, 10), invert=False))
         footprint = afwDetect.Footprint(spanSet)
         footprint.addPeak(4, 5, 1)
         footprint.addPeak(3, 2, 5)
@@ -962,18 +960,18 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         """Test that we can expand a Footprint to include the union of itself and all others provided."""
         region = lsst.geom.Box2I(lsst.geom.Point2I(-6, -6), lsst.geom.Point2I(6, 6))
         parentSpanSet = afwGeom.SpanSet(lsst.geom.Box2I(lsst.geom.Point2I(-2, -2),
-                                                        lsst.geom.Point2I(2, 2)))
+                                                        lsst.geom.Point2I(2, 2), invert=False))
         parent = afwDetect.Footprint(parentSpanSet, region)
         parent.addPeak(0, 0, float("NaN"))
         child1SpanSet = afwGeom.SpanSet(lsst.geom.Box2I(lsst.geom.Point2I(-3, 0),
-                                                        lsst.geom.Point2I(0, 3)))
+                                                        lsst.geom.Point2I(0, 3), invert=False))
         child1 = afwDetect.Footprint(child1SpanSet, region)
         child1.addPeak(-1, 1, float("NaN"))
         child2SpanSet = afwGeom.SpanSet(lsst.geom.Box2I(lsst.geom.Point2I(-4, -3),
-                                                        lsst.geom.Point2I(-1, 0)))
+                                                        lsst.geom.Point2I(-1, 0), invert=False))
         child2 = afwDetect.Footprint(child2SpanSet, region)
         child3SpanSet = afwGeom.SpanSet(lsst.geom.Box2I(lsst.geom.Point2I(4, -1),
-                                                        lsst.geom.Point2I(6, 1)))
+                                                        lsst.geom.Point2I(6, 1), invert=False))
         child3 = afwDetect.Footprint(child3SpanSet)
         merge123 = afwDetect.Footprint(parent)
         merge123.spans = merge123.spans.union(child1.spans).union(child2.spans).union(child3.spans)

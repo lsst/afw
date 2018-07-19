@@ -53,7 +53,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         np.random.seed(1)
         self.val = 10
         self.image = afwImage.ImageF(lsst.geom.Box2I(
-            lsst.geom.Point2I(1000, 500), lsst.geom.Extent2I(100, 200)))
+            lsst.geom.Point2I(1000, 500), lsst.geom.Extent2I(100, 200)), invert=False)
         self.image.set(self.val)
 
     def tearDown(self):
@@ -153,7 +153,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         nx = 512
         ny = 512
         x0, y0 = 9876, 54321
-        box = lsst.geom.Box2I(lsst.geom.Point2I(x0, y0), lsst.geom.Extent2I(nx, ny))
+        box = lsst.geom.Box2I(lsst.geom.Point2I(x0, y0), lsst.geom.Extent2I(nx, ny), invert=False)
         rampimg = afwImage.ImageF(box)
         dzdx, dzdy, z0 = 0.1, 0.2, 10000.0
         for x in range(nx):
@@ -203,8 +203,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         self.assertBackgroundEqual(backobj, new)
 
         # Check creation of sub-image
-        box = lsst.geom.Box2I(lsst.geom.Point2I(123, 45),
-                              lsst.geom.Extent2I(45, 123))
+        box = lsst.geom.Box2I(lsst.geom.Point2I(123, 45), lsst.geom.Extent2I(45, 123), invert=False)
         box.shift(lsst.geom.Extent2I(x0, y0))
         bgImage = backobj.getImageF("AKIMA_SPLINE")
         bgSubImage = afwImage.ImageF(bgImage, box)
@@ -291,7 +290,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
             AfwdataDir, "CFHT", "D4", "cal-53535-i-797722_1.fits"))
         mi = mi.Factory(mi,
                         lsst.geom.Box2I(lsst.geom.Point2I(32, 2),
-                                        lsst.geom.Point2I(2079, 4609)),
+                                        lsst.geom.Point2I(2079, 4609), invert=False),
                         afwImage.LOCAL)
 
         bctrl = afwMath.BackgroundControl(afwMath.Interpolate.AKIMA_SPLINE)
@@ -312,8 +311,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
 
     def getCfhtImage(self):
         """Get a portion of a CFHT image as a MaskedImageF"""
-        bbox = lsst.geom.Box2I(lsst.geom.Point2I(500, 2000),
-                               lsst.geom.Point2I(2079, 4609))
+        bbox = lsst.geom.Box2I(lsst.geom.Point2I(500, 2000), lsst.geom.Point2I(2079, 4609), invert=False)
         imagePath = os.path.join(
             AfwdataDir, "CFHT", "D4", "cal-53535-i-797722_1.fits")
         return afwImage.MaskedImageF(imagePath, PropertySet(), bbox)
@@ -360,8 +358,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         bctrl = afwMath.BackgroundControl(
             mi.getWidth()//128, mi.getHeight()//128)
         backobj = afwMath.makeBackground(mi.getImage(), bctrl)
-        subBBox = lsst.geom.Box2I(lsst.geom.Point2I(1000, 3000),
-                                  lsst.geom.Extent2I(100, 100))
+        subBBox = lsst.geom.Box2I(lsst.geom.Point2I(1000, 3000), lsst.geom.Extent2I(100, 100), invert=False)
 
         bgFullImage = backobj.getImageF()
         self.assertEqual(bgFullImage.getBBox(), mi.getBBox())

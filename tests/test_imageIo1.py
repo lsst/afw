@@ -104,8 +104,7 @@ class ReadFitsTestCase(lsst.utils.tests.TestCase):
         fileName, hdu = os.path.join(dataDir, "871034p_1_MI.fits"), 3
         im = afwImage.ImageF(fileName, hdu)
 
-        bbox = lsst.geom.Box2I(lsst.geom.Point2I(110, 120),
-                               lsst.geom.Extent2I(20, 15))
+        bbox = lsst.geom.Box2I(lsst.geom.Point2I(110, 120), lsst.geom.Extent2I(20, 15), invert=False)
         sim = im.Factory(im, bbox, afwImage.LOCAL)
 
         im2 = afwImage.ImageF(fileName, hdu, None, bbox, afwImage.LOCAL)
@@ -180,15 +179,15 @@ class ReadFitsTestCase(lsst.utils.tests.TestCase):
     def testBBoxFromMetadata(self):
         self.checkBBoxFromMetadata(os.path.join(dataDir, "871034p_1_img.fits"),
                                    lsst.geom.Box2I(lsst.geom.Point2I(0, 0),
-                                                   lsst.geom.Extent2I(2112, 4644)))
+                                                   lsst.geom.Extent2I(2112, 4644), invert=False))
         for hdu in range(1, 4):
             self.checkBBoxFromMetadata(os.path.join(dataDir, "871034p_1_MI.fits"),
                                        lsst.geom.Box2I(lsst.geom.Point2I(0, 0),
-                                                       lsst.geom.Extent2I(2112, 4644)),
+                                                       lsst.geom.Extent2I(2112, 4644), invert=False),
                                        hdu=hdu)
             self.checkBBoxFromMetadata(os.path.join(dataDir, "medsub.fits"),
                                        lsst.geom.Box2I(lsst.geom.Point2I(40, 150),
-                                                       lsst.geom.Extent2I(145, 200)),
+                                                       lsst.geom.Extent2I(145, 200), invert=False),
                                        hdu=hdu)
 
 

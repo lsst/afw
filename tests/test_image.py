@@ -129,10 +129,10 @@ class ImageTestCase(lsst.utils.tests.TestCase):
         # a set of bounding boxes, some of which overlap each other
         # and some of which do not, and include the full image bounding box
         bboxes = (
-            lsst.geom.Box2I(lsst.geom.Point2I(0, 0), dim),
-            lsst.geom.Box2I(lsst.geom.Point2I(0, 0), lsst.geom.Extent2I(3, 3)),
-            lsst.geom.Box2I(lsst.geom.Point2I(2, 2), lsst.geom.Extent2I(6, 4)),
-            lsst.geom.Box2I(lsst.geom.Point2I(4, 4), lsst.geom.Extent2I(6, 4)),
+            lsst.geom.Box2I(lsst.geom.Point2I(0, 0), dim, invert=False),
+            lsst.geom.Box2I(lsst.geom.Point2I(0, 0), lsst.geom.Extent2I(3, 3), invert=False),
+            lsst.geom.Box2I(lsst.geom.Point2I(2, 2), lsst.geom.Extent2I(6, 4), invert=False),
+            lsst.geom.Box2I(lsst.geom.Point2I(4, 4), lsst.geom.Extent2I(6, 4), invert=False),
         )
 
         imageClasses = (afwImage.ImageF, afwImage.ImageD, afwImage.ImageI, afwImage.Mask)
@@ -165,7 +165,7 @@ class ImageTestCase(lsst.utils.tests.TestCase):
             self.assertEqual(im[0, 0], val)
 
             im2 = ctor(lsst.geom.Box2I(lsst.geom.Point2I(0, 0),
-                                       lsst.geom.Extent2I(10, 10)), val)
+                                       lsst.geom.Extent2I(10, 10), invert=False), val)
             self.assertEqual(im2[0, 0], val)
 
     def testSetGetImages(self):
@@ -228,7 +228,7 @@ class ImageTestCase(lsst.utils.tests.TestCase):
                 # None to omit the argument
                 for origin in (None, afwImage.PARENT, afwImage.LOCAL):
                     destIm[:] = -1.0
-                    bbox = lsst.geom.Box2I(validMin, srcIm.getDimensions())
+                    bbox = lsst.geom.Box2I(validMin, srcIm.getDimensions(), invert=False)
                     if origin != afwImage.LOCAL:
                         bbox.shift(lsst.geom.Extent2I(xy0))
                     if origin is None:
@@ -252,7 +252,7 @@ class ImageTestCase(lsst.utils.tests.TestCase):
             )):
                 # None to omit the argument
                 for origin in (None, afwImage.PARENT, afwImage.LOCAL):
-                    bbox = lsst.geom.Box2I(badMin, srcIm.getDimensions())
+                    bbox = lsst.geom.Box2I(badMin, srcIm.getDimensions(), invert=False)
                     if origin != afwImage.LOCAL:
                         bbox.shift(lsst.geom.Extent2I(xy0))
                     if origin is None:
@@ -279,7 +279,7 @@ class ImageTestCase(lsst.utils.tests.TestCase):
             self.assertFloatsEqual(destIm.getArray(), srcIm.getArray())
 
             destIm[:] = -1.0
-            destIm.assign(srcIm, lsst.geom.Box2I())
+            destIm.assign(srcIm, lsst.geom.Box2I(), invert=False)
             self.assertFloatsEqual(destIm.getArray(), srcIm.getArray())
 
     def testAddScaledImages(self):
@@ -427,12 +427,12 @@ class ImageTestCase(lsst.utils.tests.TestCase):
     def testSubimages(self):
         simage1 = afwImage.ImageF(
             self.image1,
-            lsst.geom.Box2I(lsst.geom.Point2I(1, 1), lsst.geom.Extent2I(10, 5)),
+            lsst.geom.Box2I(lsst.geom.Point2I(1, 1), lsst.geom.Extent2I(10, 5), invert=False),
             afwImage.LOCAL)
 
         simage = afwImage.ImageF(
             simage1,
-            lsst.geom.Box2I(lsst.geom.Point2I(1, 1), lsst.geom.Extent2I(3, 2)),
+            lsst.geom.Box2I(lsst.geom.Point2I(1, 1), lsst.geom.Extent2I(3, 2), invert=False),
             afwImage.LOCAL
         )
         self.assertEqual(simage.getX0(), 2)
@@ -454,7 +454,7 @@ class ImageTestCase(lsst.utils.tests.TestCase):
 
         simage1 = afwImage.ImageF(
             self.image1,
-            lsst.geom.Box2I(lsst.geom.Point2I(1, 1), lsst.geom.Extent2I(10, 5)),
+            lsst.geom.Box2I(lsst.geom.Point2I(1, 1), lsst.geom.Extent2I(10, 5), invert=False),
             afwImage.LOCAL
         )
         # reset origin; doesn't affect pixel coordinate systems
@@ -462,7 +462,7 @@ class ImageTestCase(lsst.utils.tests.TestCase):
 
         simage = afwImage.ImageF(
             simage1,
-            lsst.geom.Box2I(lsst.geom.Point2I(1, 1), lsst.geom.Extent2I(3, 2)),
+            lsst.geom.Box2I(lsst.geom.Point2I(1, 1), lsst.geom.Extent2I(3, 2), invert=False),
             afwImage.LOCAL
         )
         self.assertEqual(simage.getX0(), 1)
@@ -481,7 +481,7 @@ class ImageTestCase(lsst.utils.tests.TestCase):
         def tst():
             afwImage.ImageF(
                 self.image1,
-                lsst.geom.Box2I(lsst.geom.Point2I(1, -1), lsst.geom.Extent2I(10, 5)),
+                lsst.geom.Box2I(lsst.geom.Point2I(1, -1), lsst.geom.Extent2I(10, 5), invert=False),
                 afwImage.LOCAL
             )
 
@@ -717,7 +717,7 @@ class DecoratedImageTestCase(lsst.utils.tests.TestCase):
         image = afwImage.ImageD(lsst.geom.Extent2I(6, 6))
         image[2, 2] = 100
 
-        bbox = lsst.geom.Box2I(lsst.geom.Point2I(1, 1), lsst.geom.Extent2I(5, 5))
+        bbox = lsst.geom.Box2I(lsst.geom.Point2I(1, 1), lsst.geom.Extent2I(5, 5), invert=False)
         subImage = image.Factory(image, bbox)
         subImageF = subImage.convertFloat()
 

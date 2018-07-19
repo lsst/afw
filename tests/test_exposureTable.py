@@ -115,13 +115,13 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
         self.bbox0 = lsst.geom.Box2I(
             lsst.geom.Box2D(
                 self.wcs.getPixelOrigin() - lsst.geom.Extent2D(5.0, 4.0),
-                self.wcs.getPixelOrigin() + lsst.geom.Extent2D(20.0, 30.0)
+                self.wcs.getPixelOrigin() + lsst.geom.Extent2D(20.0, 30.0), invert=False
             )
         )
         self.bbox1 = lsst.geom.Box2I(
             lsst.geom.Box2D(
                 self.wcs.getPixelOrigin() - lsst.geom.Extent2D(15.0, 40.0),
-                self.wcs.getPixelOrigin() + lsst.geom.Extent2D(3.0, 6.0)
+                self.wcs.getPixelOrigin() + lsst.geom.Extent2D(3.0, 6.0), invert=False
             )
         )
         self.calib = lsst.afw.image.Calib()
@@ -251,7 +251,7 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(self.cat[0].get(self.ka), catV1[0].get(self.ka))
         self.assertEqual(self.cat[0].get(self.kb), catV1[0].get(self.kb))
         self.comparePsfs(self.cat[0].getPsf(), catV1[0].getPsf())
-        bbox = Box2D(Point2D(0, 0), Extent2D(2000, 2000))
+        bbox = Box2D(Point2D(0, 0), Extent2D(2000, 2000), invert=False)
         self.assertWcsAlmostEqualOverBBox(self.cat[0].getWcs(), catV1[0].getWcs(), bbox)
         self.assertEqual(self.cat[1].get(self.ka), catV1[1].get(self.ka))
         self.assertEqual(self.cat[1].get(self.kb), catV1[1].get(self.kb))

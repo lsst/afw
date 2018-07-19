@@ -115,8 +115,7 @@ class PolygonTest(lsst.utils.tests.TestCase):
     def testFromBox(self):
         size = 1.0
         poly1 = self.square(size=size)
-        box = lsst.geom.Box2D(lsst.geom.Point2D(-1.0, -1.0),
-                              lsst.geom.Point2D(1.0, 1.0))
+        box = lsst.geom.Box2D(lsst.geom.Point2D(-1.0, -1.0), lsst.geom.Point2D(1.0, 1.0), invert=False)
         poly2 = afwGeom.Polygon(box)
         self.assertEqual(poly1, poly2)
 
@@ -255,8 +254,7 @@ class PolygonTest(lsst.utils.tests.TestCase):
         """Test Polygon.createImage"""
         for i, num in enumerate(range(3, 30)):
             poly = self.polygon(num, 25, 75, 75)
-            box = lsst.geom.Box2I(lsst.geom.Point2I(15, 15),
-                                  lsst.geom.Extent2I(115, 115))
+            box = lsst.geom.Box2I(lsst.geom.Point2I(15, 15), lsst.geom.Extent2I(115, 115), invert=False)
             image = poly.createImage(box)
             if DEBUG:
                 import lsst.afw.display.ds9 as ds9
@@ -268,8 +266,7 @@ class PolygonTest(lsst.utils.tests.TestCase):
 
     def testTransform(self):
         """Test constructor for Polygon involving transforms"""
-        box = lsst.geom.Box2D(lsst.geom.Point2D(0.0, 0.0),
-                              lsst.geom.Point2D(123.4, 567.8))
+        box = lsst.geom.Box2D(lsst.geom.Point2D(0.0, 0.0), lsst.geom.Point2D(123.4, 567.8), invert=False)
         poly1 = afwGeom.Polygon(box)
         scale = 1.5
         shift = lsst.geom.Extent2D(3.0, 4.0)
