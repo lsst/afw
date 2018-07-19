@@ -45,11 +45,11 @@ class MultibandBase(ABC):
 
     Parameters
     ----------
-    filters: list
+    filters: `list`
         List of filter names.
-    singles: list
+    singles: `list`
         List of single band objects
-    bbox: Box2I
+    bbox: `Box2I`
         By default `MultibandBase` uses `singles[0].getBBox()` to set
         the bounding box of the multiband
     """
@@ -74,7 +74,7 @@ class MultibandBase(ABC):
 
         Parameters
         ----------
-        deep: bool
+        deep: `bool`
             Whether or not to make a deep copy
 
         Returns
@@ -192,7 +192,7 @@ class MultibandBase(ABC):
 
         Parameters
         ----------
-        filterIndex: iterable or object
+        filterIndex: iterable or `object`
             Index to specify a filter or list of filters,
             usually a string or enum.
             For example `filterIndex` can be
@@ -201,9 +201,9 @@ class MultibandBase(ABC):
 
         Returns
         -------
-        filterNames: list
+        filterNames: `list`
             Names of the filters in the slice
-        filterIndex: slice or list of `int`
+        filterIndex: `slice` or `list` of `int`
             Index of each filter in `filterNames` in
             `self.filters`.
         """
@@ -219,12 +219,16 @@ class MultibandBase(ABC):
             filterIndices = slice(start, stop, filterIndex.step)
             filterNames = self.filters[filterIndices]
         else:
-            try:
-                # Check to see if the filterIndex is an iterable
-                filterNames = [f for f in filterIndex]
-            except TypeError:
+            if isinstance(filterIndex, str):
                 filterNames = [filterIndex]
-            filterIndices = [self.filters.index(f) for f in filterNames]
+                filterIndices = [self.filters.index(filterIndex)]
+            else:
+                try:
+                    # Check to see if the filterIndex is an iterable
+                    filterNames = [f for f in filterIndex]
+                except TypeError:
+                    filterNames = [filterIndex]
+                filterIndices = [self.filters.index(f) for f in filterNames]
         return tuple(filterNames), filterIndices
 
     def imageIndicesToNumpy(self, sliceArgs):
@@ -248,11 +252,11 @@ class MultibandBase(ABC):
 
         Returns
         -------
-        y: index or slice
-            Index or slice in the y dimension
-        x: index or slice
-            Index or slice in the x dimension
-        bbox: Box2I
+        y: `int` or `slice`
+            Index or `slice` in the y dimension
+        x: `int` or `slice`
+            Index or `slice` in the x dimension
+        bbox: `Box2I`
             Bounding box of the image.
             If `bbox` is `None` then the result is a point and
             not a subset of an image.
@@ -283,7 +287,7 @@ class MultibandBase(ABC):
             bbox = None
         return y, x, bbox
 
-    def shiftedTo(self, xy0):
+    def setXY0(self, xy0):
         """Shift the bounding box but keep the same Extent
 
         Parameters
@@ -295,16 +299,46 @@ class MultibandBase(ABC):
         for singleObj in self.singles:
             singleObj.setXY0(xy0)
 
+    def shiftedTo(self, xy0):
+        """Shift the bounding box but keep the same Extent
+
+        This method is broken until DM-10781 is completed.
+
+        Parameters
+        ----------
+        xy0: `Point2I`
+            New minimum bounds of the bounding box
+
+        Returns
+        -------
+        result: `MultibandBase`
+            A copy of the object, shifted to `xy0`.
+        """
+        raise NotImplementedError("shiftedBy not implemented until DM-10781")
+        result = self.clone(False)
+        result._bbox = Box2I(xy0, result._bbox.getDimensions())
+        for singleObj in result.singles:
+            singleObj.setXY0(xy0)
+        return result
+
     def shiftedBy(self, offset):
         """Shift a bounding box by an offset, but keep the same Extent
+
+        This method is broken until DM-10781 is completed.
 
         Parameters
         ----------
         offset: `Extent2I`
             Amount to shift the bounding box in x and y.
+
+        Returns
+        -------
+        result: `MultibandBase`
+            A copy of the object, shifted by `offset`
         """
+        raise NotImplementedError("shiftedBy not implemented until DM-10781")
         xy0 = self._bbox.getMin() + offset
-        self.shiftedTo(xy0)
+        return self.shiftedTo(xy0)
 
     @abstractmethod
     def _slice(self, filters, filterIndex, indices):
@@ -315,12 +349,12 @@ class MultibandBase(ABC):
 
         Parameters
         ----------
-        filters: list of str
+        filters: `list` of `str`
             List of filter names for the slice. This is a subset of the
             filters in the parent multiband object
-        filterIndex: list of indices or slice
+        filterIndex: `list` of `int` or `slice`
             Index along the filter dimension
-        indices: tuple of remaining indices
+        indices: `tuple` of remaining indices
             `MultibandBase.__getitem__` separates the first (filter)
             index from the remaining indices, so `indices` is a tuple
             of all of the indices that come after `filter` in the
@@ -328,7 +362,7 @@ class MultibandBase(ABC):
 
         Returns
         -------
-        result: object
+        result: `object`
             Sliced version of the current object, which could be the
             same class or a different class depending on the
             slice being made.

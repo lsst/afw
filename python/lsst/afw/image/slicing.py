@@ -87,7 +87,7 @@ def handleNegativeIndex(index, size, origin, default):
     return index
 
 
-def makeBoxFromSlices(sliceArgs, bboxGetter):
+def translateSliceArgs(sliceArgs, bboxGetter):
     """Transform a tuple of slice objects into a Box2I, correctly handling negative indices.
 
     see `interpretSliceArgs` for a description of parameters
@@ -194,14 +194,14 @@ def supportSlicing(cls):
     cls.clone = clone
 
     def __getitem__(self, imageSlice):
-        box, index, origin = makeBoxFromSlices(imageSlice, self.getBBox)
+        box, index, origin = translateSliceArgs(imageSlice, self.getBBox)
         if box is not None:
             return self.subset(box, origin=origin)
         return self._get(index, origin=origin)
     cls.__getitem__ = __getitem__
 
     def __setitem__(self, imageSlice, rhs):
-        box, index, origin = makeBoxFromSlices(imageSlice, self.getBBox)
+        box, index, origin = translateSliceArgs(imageSlice, self.getBBox)
         if box is not None:
             if self.assign(rhs, box, origin) is NotImplemented:
                 lhs = self.subset(box, origin=origin)

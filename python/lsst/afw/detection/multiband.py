@@ -37,7 +37,7 @@ def getSpanSetFromImages(images, thresh=0, xy0=None):
     ----------
     images: `MultibandImage` or list of `Image`, array
         Images to extract the footprint from
-    thresh: float
+    thresh: `float`
         All pixels above `thresh` will be included in the footprint
     xy0: `Point2I`
         Location of the minimum value of the images bounding box
@@ -45,9 +45,9 @@ def getSpanSetFromImages(images, thresh=0, xy0=None):
 
     Returns
     -------
-    spans: SpanSet
+    spans: `SpanSet`
         Union of all spans in the images above the threshold
-    imageBBox: Box2I
+    imageBBox: `Box2I`
         Bounding box for the input images.
     """
     # Set the threshold for each band
@@ -87,7 +87,7 @@ def heavyFootprintToImage(heavy, fill=np.nan, bbox=None, imageType=MaskedImage):
         contained in `heavy`.
     bbox: `Box2I`
         Bounding box of the output image.
-    imageType: type
+    imageType: `type`
         This should be either a `MaskedImage` or `Image` and describes
         the type of the output image.
 
@@ -113,19 +113,25 @@ class MultibandFootprint(MultibandBase):
 
     Parameters
     ----------
-    filters: list
+    filters: `list`
         List of filter names.
-    footprint: `Footprint`
-        `Footprint` that contains the `SpanSet` and `PeakCatalog`
-        to use for the `HeavyFootprint` in each band.
-    mMaskedImage: `MultibandMaskedImage`
-        MultibandMaskedImage that footprint is a view into.
+    singles: `list`
+        A list of single band `HeavyFootprint` objects.
+        Each `HeavyFootprint` should have the same `PeakCatalog`
+        and the same `SpanSet`, however to save CPU cycles there
+        is no internal check for consistency of the peak catalog.
     """
-    def __init__(self, filters, footprint, mMaskedImage):
-        singles = [makeHeavyFootprint(footprint, mimg) for mimg in mMaskedImage]
+    def __init__(self, filters, singles):
         super().__init__(filters, singles)
+        # Ensure that all HeavyFootprints have the same SpanSet
+        spans = singles[0].getSpans()
+        if not all([heavy.getSpans() == spans for heavy in singles]):
+            raise ValueError("All HeavyFootprints in singles are expected to have the same SpanSet")
+
+        # Assume that all footprints have the same SpanSet and PeakCatalog
+        footprint = Footprint(spans)
+        footprint.setPeakCatalog(singles[0].getPeaks())
         self._footprint = footprint
-        self._mMaskedImage = mMaskedImage
 
     @staticmethod
     def fromArrays(filters, image, mask=None, variance=None, footprint=None, xy0=None, thresh=0, peaks=None):
@@ -133,7 +139,7 @@ class MultibandFootprint(MultibandBase):
 
         Parameters
         ----------
-        filters: list
+        filters: `list`
             List of filter names.
         image: array
             An array to convert into `HeavyFootprint` objects.
@@ -162,7 +168,7 @@ class MultibandFootprint(MultibandBase):
 
         Returns
         -------
-        result: MultibandFootprint
+        result: `MultibandFootprint`
             MultibandFootprint created from the arrays
         """
         # Generate a new Footprint if one has not been specified
@@ -175,7 +181,8 @@ class MultibandFootprint(MultibandBase):
         if peaks is not None:
             footprint.setPeakCatalog(peaks)
         mMaskedImage = MultibandMaskedImage.fromArrays(filters, image, mask, variance, imageBBox)
-        return MultibandFootprint(filters, footprint, mMaskedImage)
+        singles = [makeHeavyFootprint(footprint, maskedImage) for maskedImage in mMaskedImage]
+        return MultibandFootprint(filters, singles)
 
     @staticmethod
     def fromImages(filters, image, mask=None, variance=None, footprint=None, thresh=0, peaks=None):
@@ -194,7 +201,7 @@ class MultibandFootprint(MultibandBase):
             Mask for the `image`.
         variance: `MultibandImage`, or list of `Image`
             Variance of the `image`.
-        thresh: float or list of floats
+        thresh: `float` or `list` of floats
             Threshold in each band (or the same threshold to be used in all bands)
             to include a pixel in the `SpanSet` of the `MultibandFootprint`.
             If `Footprint` is not `None` then `thresh` is ignored.
@@ -204,7 +211,7 @@ class MultibandFootprint(MultibandBase):
 
         Returns
         -------
-        result: MultibandFootprint
+        result: `MultibandFootprint`
             MultibandFootprint created from the image, mask, and variance
         """
         # Generate a new Footprint if one has not been specified
@@ -215,49 +222,32 @@ class MultibandFootprint(MultibandBase):
         if peaks is not None:
             footprint.setPeakCatalog(peaks)
         mMaskedImage = MultibandMaskedImage(filters, image, mask, variance)
-        return MultibandFootprint(filters, footprint, mMaskedImage)
+        singles = [makeHeavyFootprint(footprint, maskedImage) for maskedImage in mMaskedImage]
+        return MultibandFootprint(filters, singles)
 
     @staticmethod
-    def fromHeavyFootprints(filters, heavies, fill=np.nan):
-        """Build a `MultibandFootprint` from a list of `HeavyFootprint`s
+    def fromMaskedImages(filters, maskedImages, footprint=None, thresh=0, peaks=None):
+        """Create a `MultibandFootprint` from a list of `MaskedImage`
 
-        Each `HeavyFootprint` is expected to have the same `SpanSet`.
+        See `fromImages` for a description of the parameters not listed below
 
         Parameters
         ----------
-        filters: list
-            List of filter names.
-        heavies: list
-            A list of single band `HeavyFootprint` objects.
-            Either `singles` or `images` must be specified.
-            If `singles` is not `None`, then all arguments other than
-            `filters` are ignored.
-            Each `HeavyFootprint` should have the same `PeakCatalog` but
-            is allowed to have a different `SpanSet`, in which case the
-            `SpanSet` for each band is combined into the `SpanSet` of the
-            `MultibandFootprint`.
-        fill: fill: number
-            Number to fill the pixels in the image that are not
-            contained in a `HeavyFootprint`.
+        maskedImages: `list` of `MaskedImage`
+            MaskedImages to extract the single band heavy footprints from.
+            Like `fromImage`, if a `footprint` is not specified then all
+            pixels above `thresh` will be used, and `peaks` will be added
+            to the `PeakCatalog`.
 
         Returns
         -------
-        result: MultibandFootprint
-            MultibandFootprint created from the heavy footprints
+        result: `MultibandFootprint`
+            MultibandFootprint created from the image, mask, and variance
         """
-        # Ensure that all HeavyFootprints have the same SpanSet
-        spans = heavies[0].getSpans()
-        if not all([heavy.getSpans() == spans for heavy in heavies]):
-            raise ValueError("All HeavyFootprints in heavies are expected to have the same SpanSet")
-
-        # Assume that all footprints have the same SpanSet and PeakCatalog
-        footprint = Footprint(heavies[0].getSpans())
-        footprint.setPeakCatalog(heavies[0].getPeaks())
-
-        # Build the full masked images
-        maskedImages = [heavyFootprintToImage(heavy, fill=fill) for heavy in heavies]
-        mMaskedImage = MultibandMaskedImage.fromImages(filters, maskedImages)
-        return MultibandFootprint(filters, footprint, mMaskedImage)
+        image = [maskedImage.image for maskedImage in maskedImages]
+        mask = [maskedImage.mask for maskedImage in maskedImages]
+        variance = [maskedImage.variance for maskedImage in maskedImages]
+        return MultibandFootprint.fromImages(fitlers, image, mask, variance, footprint, thresh, peaks)
 
     def getSpans(self):
         """Get the full `SpanSet`"""
@@ -299,21 +289,11 @@ class MultibandFootprint(MultibandBase):
             raise IndexError("MultibandFootprints can only be sliced in the filter dimension")
 
         if isinstance(filterIndex, slice):
-            if filterIndex.start is not None:
-                start = self.filters[filterIndex.start]
-            else:
-                start = None
-            if filterIndex.stop is not None:
-                stop = self.filters[filterIndex.stop]
-            else:
-                stop = None
-            index = slice(start, stop, filterIndex.step)
+            singles = self.singles[filterIndex]
         else:
-            index = [self.filters[idx] for idx in filterIndex]
-        mMaskedImage = self.mMaskedImage[index]
-        assert mMaskedImage.filters == filters
-        result = MultibandFootprint(filters, self.footprint, mMaskedImage)
-        return result
+            singles = [self.singles[idx] for idx in filterIndex]
+
+        return MultibandFootprint(filters, singles)
 
     def getImage(self, bbox=None, fill=np.nan, imageType=MultibandMaskedImage):
         """Convert a `MultibandFootprint` to a `MultibandImage`
@@ -327,20 +307,20 @@ class MultibandFootprint(MultibandBase):
 
         Parameters
         ----------
-        bbox: Box2I
+        bbox: `Box2I`
             Bounding box of the resulting image.
             If no bounding box is specified, then the bounding box
             of the footprint is used.
-        fill: float
+        fill: `float`
             Value to use for any pixel in the resulting image
             outside of the `SpanSet`.
-        imageType: type
+        imageType: `type`
             This should be either a `MultibandMaskedImage`
             or `MultibandImage` and describes the type of the output image.
 
         Returns
         -------
-        result: MultibandBase
+        result: `MultibandBase`
             The resulting `MultibandImage` or `MultibandMaskedImage` created
             from the `MultibandHeavyFootprint`.
         """
@@ -359,7 +339,7 @@ class MultibandFootprint(MultibandBase):
 
         Parameters
         ----------
-        deep: bool
+        deep: `bool`
             Whether or not to make a deep copy
 
         Returns
@@ -371,8 +351,9 @@ class MultibandFootprint(MultibandBase):
             footprint = Footprint(self.footprint.getSpans())
             for peak in self.footprint.getPeaks():
                 footprint.addPeak(peak.getX(), peak.getY(), peak.getValue())
+            mMaskedImage = self.getImage()
+            filters = tuple([f for f in self.filters])
+            result = MultibandFootprint.fromMaskedImages(filters, mMaskedImage, footprint)
         else:
-            footprint = self.footprint
-        mMaskedImage = self.mMaskedImage.clone(deep)
-        result = MultibandFootprint(self.filters, footprint, mMaskedImage)
+            result = MultibandFootprint(self.filters, self.singles)
         return result

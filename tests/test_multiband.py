@@ -99,7 +99,7 @@ def _testImageModification(testCase, mImage1, mImage2, bbox1, bbox2, value1, val
     mImage1[:"R", bbox2].array = value2
     testCase.assertFloatsEqual(mImage1["G", bbox2].array, mImage2["G"].array)
     testCase.assertFloatsEqual(mImage1["R"].array, value1)
-    mImage1.shiftedTo(Point2I(500, 150))
+    mImage1.setXY0(Point2I(500, 150))
     testCase.assertEqual(mImage1.getBBox(), Box2I(Point2I(500, 150), Extent2I(bbox1.getDimensions())))
 
     mImage1["G"].array[:] = value2
@@ -113,22 +113,24 @@ def _testImageModification(testCase, mImage1, mImage2, bbox1, bbox2, value1, val
     mImage1[filterSlice].array[:] = 7
     testCase.assertFloatsEqual(mImage1["I"].array, 7)
     newBBox = Box2I(Point2I(10000, 20000), mImage1.getBBox().getDimensions())
-    mImage1.shiftedTo(newBBox.getMin())
+    mImage1.setXY0(newBBox.getMin())
     testCase.assertEqual(mImage1.getBBox(), newBBox)
     for image in mImage1:
         testCase.assertEqual(image.getBBox(), newBBox)
-    offset = Extent2I(-9000, -18000)
-    mImage1.shiftedBy(offset)
-    newBBox = Box2I(Point2I(1000, 2000), newBBox.getDimensions())
-    testCase.assertEqual(mImage1.getBBox(), newBBox)
-    for image in mImage1:
-        testCase.assertEqual(image.getBBox(), newBBox)
+
+    # Uncomment this test when DM-10781 is implemented
+    # offset = Extent2I(-9000, -18000)
+    # mImage1.shiftedBy(offset)
+    # newBBox = Box2I(Point2I(1000, 2000), newBBox.getDimensions())
+    # testCase.assertEqual(mImage1.getBBox(), newBBox)
+    # for image in mImage1:
+    #    testCase.assertEqual(image.getBBox(), newBBox)
 
 
 def _testImageCopy(testCase, mImage1, value1, value2):
     """Test copy and deep copy in image-like objects"""
     mImage2 = mImage1.clone()
-    mImage2.shiftedTo(Point2I(11, 23))
+    mImage2.setXY0(Point2I(11, 23))
     testCase.assertEqual(mImage2.getBBox(), Box2I(Point2I(11, 23), Extent2I(200, 100)))
     testCase.assertEqual(mImage1.getBBox(), Box2I(Point2I(1000, 2000), Extent2I(200, 100)))
     testCase.assertTrue(np.all([s.getBBox() == mImage1.getBBox() for s in mImage1.singles]))
@@ -143,7 +145,7 @@ def _testImageCopy(testCase, mImage1, value1, value2):
     testCase.assertFloatsEqual(mImage2["G"].array, value2)
 
     mImage2 = mImage1.clone(False)
-    mImage2.shiftedTo(Point2I(11, 23))
+    mImage2.setXY0(Point2I(11, 23))
     mImage2.array[:] = 17
     testCase.assertFloatsEqual(mImage2.array, mImage1.array)
 
@@ -379,7 +381,7 @@ def _testMaskedImageSlicing(testCase, maskedImage):
     testCase.assertFloatsAlmostEqual(maskedPixel[2].array, np.array([.01, .01, .01]), 1e-6)
 
     newBox = Box2I(Point2I(100, 500), Extent2I(200, 100))
-    maskedImage.shiftedTo(newBox.getMin())
+    maskedImage.setXY0(newBox.getMin())
     testCase.assertEqual(maskedImage.getBBox(), newBox)
     testCase.assertEqual(maskedImage.image.getBBox(), newBox)
     testCase.assertEqual(maskedImage.mask.getBBox(), newBox)
@@ -437,7 +439,7 @@ def _testMaskedmageModification(testCase, maskedImage):
 def _testMaskedImageCopy(testCase, maskedImage1):
     maskedImage2 = maskedImage1.clone()
 
-    maskedImage2.shiftedTo(Point2I(11, 23))
+    maskedImage2.setXY0(Point2I(11, 23))
     testCase.assertEqual(maskedImage2.getBBox(), Box2I(Point2I(11, 23), Extent2I(200, 100)))
     testCase.assertEqual(maskedImage1.getBBox(), Box2I(Point2I(1000, 2000), Extent2I(200, 100)))
     testCase.assertTrue(np.all([img.getBBox() == maskedImage1.getBBox() for img in maskedImage1.image]))
@@ -624,7 +626,7 @@ class MultibandFootprintTestCase(lsst.utils.tests.TestCase):
             heavy = makeHeavyFootprint(self.footprint, maskedImage)
             singles.append(heavy)
         self.image = np.array(images)
-        self.mFoot = MultibandFootprint.fromHeavyFootprints(self.filters, singles)
+        self.mFoot = MultibandFootprint(self.filters, singles)
 
     def tearDown(self):
         del self.spans
