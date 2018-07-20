@@ -16,6 +16,11 @@ Using lsst.afw.detection
 
    Footprint
 
+.. toctree::
+    : maxdepth: 1
+
+    Footprint.rst
+
 Python API reference
 ====================
 

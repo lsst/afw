@@ -90,6 +90,7 @@ PYBIND11_PLUGIN(footprint) {
     clsFootprint.def("addPeak", &Footprint::addPeak);
     clsFootprint.def("sortPeaks", &Footprint::sortPeaks, "key"_a = afw::table::Key<float>());
     clsFootprint.def("setPeakSchema", &Footprint::setPeakSchema);
+    clsFootprint.def("setPeakCatalog", &Footprint::setPeakCatalog, "otherPeaks"_a);
     clsFootprint.def("getArea", &Footprint::getArea);
     clsFootprint.def("getCentroid", &Footprint::getCentroid);
     clsFootprint.def("getShape", &Footprint::getShape);
