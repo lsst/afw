@@ -42,9 +42,7 @@ namespace afw {
 namespace geom {
 namespace {
 
-PYBIND11_PLUGIN(wcsUtils) {
-    py::module mod("wcsUtils");
-
+PYBIND11_MODULE(wcsUtils, mod) {
     mod.def("createTrivialWcsMetadata", createTrivialWcsMetadata, "wcsName"_a, "xy0"_a);
     mod.def("deleteBasicWcsMetadata", deleteBasicWcsMetadata, "metadata"_a, "wcsName"_a);
     mod.def("getCdMatrixFromMetadata", getCdMatrixFromMetadata, "metadata"_a);
@@ -65,9 +63,7 @@ PYBIND11_PLUGIN(wcsUtils) {
                     lsst::geom::Point2D const&, lsst::geom::SpherePoint const&, Eigen::Matrix2d const&,
                     Eigen::MatrixXd const&, Eigen::MatrixXd const&, Eigen::MatrixXd const&,
                     Eigen::MatrixXd const&))makeTanSipMetadata,
-            "crpix"_a, "crval"_a, "cdMatrix"_a, "sipA"_a, "sipB"_a, "sipAp"_a, "sipBp"_a);
-    return mod.ptr();
-}
+            "crpix"_a, "crval"_a, "cdMatrix"_a, "sipA"_a, "sipB"_a, "sipAp"_a, "sipBp"_a);}
 
 }  // namespace
 }  // namespace geom

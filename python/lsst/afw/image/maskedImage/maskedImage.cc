@@ -222,9 +222,7 @@ void declareImagesOverlap(py::module &mod) {
 
 }  // anonymous
 
-PYBIND11_PLUGIN(maskedImage) {
-    py::module mod("maskedImage");
-
+PYBIND11_MODULE(maskedImage, mod) {
     py::module::import("lsst.afw.image.image");
 
     auto clsMaskedImageF = declareMaskedImage<float>(mod, "F");
@@ -280,8 +278,6 @@ PYBIND11_PLUGIN(maskedImage) {
     declareImagesOverlap<std::uint64_t, double>(mod);
     declareImagesOverlap<std::uint64_t, std::uint16_t>(mod);
     declareImagesOverlap<std::uint64_t, std::uint64_t>(mod);
-
-    return mod.ptr();
 }
 }
 }

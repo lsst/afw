@@ -131,9 +131,7 @@ static PyAmpInfoTable declareAmpInfoTable(py::module &mod) {
     return cls;
 }
 
-PYBIND11_PLUGIN(ampInfo) {
-    py::module mod("ampInfo");
-
+PYBIND11_MODULE(ampInfo, mod) {
     py::enum_<ReadoutCorner>(mod, "ReadoutCorner")
             .value("LL", ReadoutCorner::LL)
             .value("LR", ReadoutCorner::LR)
@@ -155,8 +153,6 @@ PYBIND11_PLUGIN(ampInfo) {
     clsAmpInfoCatalog.attr("Record") = clsAmpInfoRecord;
     clsAmpInfoCatalog.attr("Table") = clsAmpInfoTable;
     clsAmpInfoCatalog.attr("ColumnView") = clsAmpInfoColumnView;
-
-    return mod.ptr();
 }
 }
 }

@@ -35,8 +35,7 @@ namespace io {
 
 using PyPersistable = py::class_<Persistable, std::shared_ptr<Persistable>>;
 
-PYBIND11_PLUGIN(persistable) {
-    py::module mod("persistable");
+PYBIND11_MODULE(persistable, mod) {
     py::module::import("lsst.afw.fits");
 
     PyPersistable cls(mod, "Persistable");
@@ -47,8 +46,6 @@ PYBIND11_PLUGIN(persistable) {
                                  Persistable::writeFits,
             "manager"_a, "mode"_a = "w");
     cls.def("isPersistable", &Persistable::isPersistable);
-
-    return mod.ptr();
 }
 }
 }

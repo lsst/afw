@@ -83,12 +83,10 @@ PySimpleTable declareSimpleTable(py::module &mod) {
 
 }  // namespace lsst::afw::table::<anonymous>
 
-PYBIND11_PLUGIN(simple) {
+PYBIND11_MODULE(simple, mod) {
     py::module::import("lsst.afw.coord");  // needed, but why? Perhaps can be removed after RFC-460
     py::module::import("lsst.afw.table.base");
     py::module::import("lsst.afw.table.idFactory");
-
-    py::module mod("simple");
 
     auto clsSimpleRecord = declareSimpleRecord(mod);
     auto clsSimpleTable = declareSimpleTable(mod);
@@ -104,8 +102,6 @@ PYBIND11_PLUGIN(simple) {
     clsSimpleCatalog.attr("Record") = clsSimpleRecord;
     clsSimpleCatalog.attr("Table") = clsSimpleTable;
     clsSimpleCatalog.attr("ColumnView") = clsSimpleColumnView;
-
-    return mod.ptr();
 }
 }
 }

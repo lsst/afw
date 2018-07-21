@@ -46,9 +46,7 @@ namespace {
 
 using PyExposureInfo = py::class_<ExposureInfo, std::shared_ptr<ExposureInfo>>;
 
-PYBIND11_PLUGIN(exposureInfo) {
-    py::module mod("exposureInfo");
-
+PYBIND11_MODULE(exposureInfo, mod) {
     py::module::import("lsst.daf.base");
     py::module::import("lsst.afw.geom.skyWcs");
     py::module::import("lsst.afw.cameraGeom.detector");
@@ -93,7 +91,7 @@ PYBIND11_PLUGIN(exposureInfo) {
     cls.def("getDetector", &ExposureInfo::getDetector);
     cls.def("setDetector",
             [](ExposureInfo &self, py::object detector) {
-                if (detector == py::none()) {
+                if (detector.is(py::none())) {
                     self.setDetector(nullptr);
                 } else {
                     self.setDetector(py::cast<std::shared_ptr<afw::cameraGeom::Detector>>(detector));
@@ -115,7 +113,7 @@ PYBIND11_PLUGIN(exposureInfo) {
     cls.def("getPsf", &ExposureInfo::getPsf);
     cls.def("setPsf",
             [](ExposureInfo &self, py::object psf) {
-                if (psf == py::none()) {
+                if (psf.is(py::none())) {
                     self.setPsf(nullptr);
                 } else {
                     self.setPsf(py::cast<std::shared_ptr<afw::detection::Psf>>(psf));
@@ -127,7 +125,7 @@ PYBIND11_PLUGIN(exposureInfo) {
     cls.def("getValidPolygon", &ExposureInfo::getValidPolygon);
     cls.def("setValidPolygon",
             [](ExposureInfo &self, py::object polygon) {
-                if (polygon == py::none()) {
+                if (polygon.is(py::none())) {
                     self.setValidPolygon(nullptr);
                 } else {
                     self.setValidPolygon(py::cast<std::shared_ptr<afw::geom::polygon::Polygon>>(polygon));
@@ -151,8 +149,6 @@ PYBIND11_PLUGIN(exposureInfo) {
     cls.def("hasTransmissionCurve", &ExposureInfo::hasTransmissionCurve);
     cls.def("getTransmissionCurve", &ExposureInfo::getTransmissionCurve);
     cls.def("setTransmissionCurve", &ExposureInfo::setTransmissionCurve, "transmissionCurve"_a);
-
-    return mod.ptr();
 }
 }
 }

@@ -32,9 +32,7 @@ using namespace pybind11::literals;
 
 using namespace lsst::afw::geom::ellipses;
 
-PYBIND11_PLUGIN(quadrupole) {
-    py::module mod("quadrupole");
-
+PYBIND11_MODULE(quadrupole, mod) {
     /* Module level */
     py::class_<Quadrupole, std::shared_ptr<Quadrupole>, BaseCore> clsQuadrupole(mod, "Quadrupole");
 
@@ -78,6 +76,4 @@ PYBIND11_PLUGIN(quadrupole) {
     clsQuadrupole.def("convolve", [](Quadrupole &self, BaseCore const &other) {
         return Quadrupole(self.convolve(other));
     });
-
-    return mod.ptr();
 }

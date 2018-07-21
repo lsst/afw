@@ -116,9 +116,7 @@ void declareTransform(py::module &mod) {
     table::io::python::addPersistableMethods<Class>(cls);
 }
 
-PYBIND11_PLUGIN(transform) {
-    py::module mod("transform");
-
+PYBIND11_MODULE(transform, mod) {
     py::module::import("astshim");
     py::module::import("lsst.afw.geom.endpoint");
 
@@ -131,8 +129,6 @@ PYBIND11_PLUGIN(transform) {
     declareTransform<SpherePointEndpoint, GenericEndpoint>(mod);
     declareTransform<SpherePointEndpoint, Point2Endpoint>(mod);
     declareTransform<SpherePointEndpoint, SpherePointEndpoint>(mod);
-
-    return mod.ptr();
 }
 
 }  // namespace

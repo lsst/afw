@@ -49,9 +49,7 @@ void declareUpdateSourceCoords(py::module &mod) {
     mod.def("updateSourceCoords", updateSourceCoords<SourceCollection>, "wcs"_a, "sourceList"_a);
 }
 
-PYBIND11_PLUGIN(wcsUtils) {
-    py::module mod("wcsUtils");
-
+PYBIND11_MODULE(wcsUtils, mod) {
     py::module::import("lsst.afw.table.aggregates");
     py::module::import("lsst.afw.table.simple");
     py::module::import("lsst.afw.table.source");
@@ -61,8 +59,6 @@ PYBIND11_PLUGIN(wcsUtils) {
 
     declareUpdateSourceCoords<std::vector<std::shared_ptr<lsst::afw::table::SourceRecord>>>(mod);
     declareUpdateSourceCoords<lsst::afw::table::SourceCatalog>(mod);
-
-    return mod.ptr();
 }
 
 }  // namespace

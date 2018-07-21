@@ -35,9 +35,7 @@ namespace lsst {
 namespace afw {
 namespace coord {
 
-PYBIND11_PLUGIN(weather) {
-    py::module mod("weather");
-
+PYBIND11_MODULE(weather, mod) {
     py::class_<lsst::afw::coord::Weather> cls(mod, "Weather");
 
     /* Constructors */
@@ -56,8 +54,6 @@ PYBIND11_PLUGIN(weather) {
     cls.def("getHumidity", &lsst::afw::coord::Weather::getHumidity);
     utils::python::addOutputOp(cls, "__str__");
     utils::python::addOutputOp(cls, "__repr__");
-
-    return mod.ptr();
 }
 }
 }

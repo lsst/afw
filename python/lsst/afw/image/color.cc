@@ -36,9 +36,7 @@ namespace {
 
 using PyColor = py::class_<Color, std::shared_ptr<Color>>;
 
-PYBIND11_PLUGIN(color) {
-    py::module mod("color");
-
+PYBIND11_MODULE(color, mod) {
     /* Module level */
     PyColor cls(mod, "Color");
 
@@ -52,8 +50,6 @@ PYBIND11_PLUGIN(color) {
     /* Members */
     cls.def("isIndeterminate", &Color::isIndeterminate);
     cls.def("getLambdaEff", &Color::getLambdaEff, "filter"_a);
-
-    return mod.ptr();
 }
 }
 }

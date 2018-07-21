@@ -43,9 +43,7 @@ namespace {
 auto const NullPoint = lsst::geom::Point2D(std::numeric_limits<double>::quiet_NaN());
 }
 
-PYBIND11_PLUGIN(psf) {
-    py::module mod("psf");
-
+PYBIND11_MODULE(psf, mod) {
     /* Module level */
     py::class_<Psf, std::shared_ptr<Psf>, daf::base::Persistable, daf::base::Citizen> cls(mod, "Psf");
 
@@ -76,8 +74,6 @@ PYBIND11_PLUGIN(psf) {
                    "warpAlgorithm"_a = "lanczos5", "warpBuffer"_a = 5);
     cls.def("getCacheCapacity", &Psf::getCacheCapacity);
     cls.def("setCacheCapacity", &Psf::setCacheCapacity);
-
-    return mod.ptr();
 }
 }
 }

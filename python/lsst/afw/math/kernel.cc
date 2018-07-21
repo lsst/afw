@@ -34,9 +34,7 @@ using namespace py::literals;
 
 using namespace lsst::afw::math;
 
-PYBIND11_PLUGIN(kernel) {
-    py::module mod("kernel");
-
+PYBIND11_MODULE(kernel, mod) {
     py::class_<Kernel, std::shared_ptr<Kernel>, lsst::daf::base::Persistable> clsKernel(mod, "Kernel");
 
     lsst::afw::table::io::python::addPersistableMethods<Kernel>(clsKernel);
@@ -173,6 +171,4 @@ PYBIND11_PLUGIN(kernel) {
     clsSeparableKernel.def("toString", &SeparableKernel::toString, "prefix"_a = "");
     clsSeparableKernel.def("computeCache", &SeparableKernel::computeCache);
     clsSeparableKernel.def("getCacheSize", &SeparableKernel::getCacheSize);
-
-    return mod.ptr();
 }

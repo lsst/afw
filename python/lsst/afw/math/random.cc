@@ -45,9 +45,7 @@ void declareRandomImage(py::module &mod) {
     mod.def("randomPoissonImage", (void (*)(ImageT *, Random &, double const))randomPoissonImage<ImageT>);
 }
 
-PYBIND11_PLUGIN(random) {
-    py::module mod("random");
-
+PYBIND11_MODULE(random, mod) {
     py::class_<Random> clsRandom(mod, "Random");
 
     /* Member types and enums */
@@ -100,6 +98,4 @@ PYBIND11_PLUGIN(random) {
     /* Module level */
     declareRandomImage<lsst::afw::image::Image<double>>(mod);
     declareRandomImage<lsst::afw::image::Image<float>>(mod);
-
-    return mod.ptr();
 }

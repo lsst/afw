@@ -63,8 +63,7 @@ static void declareBinImage(py::module& mod) {
 }
 }  // namespace
 
-PYBIND11_PLUGIN(offsetImage) {
-    py::module mod("offsetImage");
+PYBIND11_MODULE(offsetImage, mod) {
     using MaskPixel = lsst::afw::image::MaskPixel;
 
     /* Module level */
@@ -103,8 +102,6 @@ PYBIND11_PLUGIN(offsetImage) {
     declareBinImage<lsst::afw::image::MaskedImage<int>>(mod);
     declareBinImage<lsst::afw::image::MaskedImage<float>>(mod);
     declareBinImage<lsst::afw::image::MaskedImage<double>>(mod);
-
-    return mod.ptr();
 }
 }
 }

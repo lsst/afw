@@ -93,15 +93,11 @@ static void declareImageSlice(py::module &mod, std::string const &suffix) {
     });
 }
 
-PYBIND11_PLUGIN(imageSlice) {
-    py::module mod("imageSlice");
-
+PYBIND11_MODULE(imageSlice, mod) {
     py::module::import("lsst.afw.image.image");
 
     declareImageSlice<float>(mod, "F");
     declareImageSlice<double>(mod, "D");
-
-    return mod.ptr();
 }
 }
 }

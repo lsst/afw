@@ -32,9 +32,7 @@ using namespace py::literals;
 
 using namespace lsst::afw::geom::ellipses;
 
-PYBIND11_PLUGIN(axes) {
-    py::module mod("axes");
-
+PYBIND11_MODULE(axes, mod) {
     py::class_<Axes, std::shared_ptr<Axes>, BaseCore> clsAxes(mod, "Axes");
 
     /* Constructors */
@@ -66,6 +64,4 @@ PYBIND11_PLUGIN(axes) {
     });
     clsAxes.def("transformInPlace",
                 [](Axes &self, lsst::geom::LinearTransform const &t) { self.transform(t).inPlace(); });
-
-    return mod.ptr();
 }

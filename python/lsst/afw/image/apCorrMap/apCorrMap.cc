@@ -40,9 +40,7 @@ namespace {
 
 using PyApCorrMap = py::class_<ApCorrMap, std::shared_ptr<ApCorrMap>>;
 
-PYBIND11_PLUGIN(apCorrMap) {
-    py::module mod("apCorrMap");
-
+PYBIND11_MODULE(apCorrMap, mod) {
     py::module::import("lsst.afw.table.io");
 
     /* Declare CRTP base class. */
@@ -69,8 +67,6 @@ PYBIND11_PLUGIN(apCorrMap) {
     cls.def("__setitem__", &ApCorrMap::set);
     cls.def("__contains__",
             [](ApCorrMap const& self, std::string name) { return static_cast<bool>(self.get(name)); });
-
-    return mod.ptr();
 }
 }
 }

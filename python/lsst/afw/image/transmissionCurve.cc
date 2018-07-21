@@ -79,17 +79,13 @@ void define(PyTransmissionCurve & cls) {
     );
 }
 
-PYBIND11_PLUGIN(transmissionCurve) {
-    py::module mod("transmissionCurve");
-
+PYBIND11_MODULE(transmissionCurve, mod) {
     // then declare classes
     auto cls = declare(mod);
     // then import dependencies used in method signatures
     py::module::import("lsst.afw.geom");
     // and now we can safely define methods and other attributes
     define(cls);
-
-    return mod.ptr();
 }
 
 }}}}  // namespace lsst::afw::image::<anonymous>

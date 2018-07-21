@@ -39,9 +39,7 @@ using namespace pybind11::literals;
 using namespace lsst::afw::geom;
 using namespace ellipses;
 
-PYBIND11_PLUGIN(ellipse) {
-    py::module mod("ellipse");
-
+PYBIND11_MODULE(ellipse, mod) {
     /* Module level */
     py::class_<Ellipse, std::shared_ptr<Ellipse>> clsEllipse(mod, "Ellipse");
 
@@ -88,6 +86,4 @@ PYBIND11_PLUGIN(ellipse) {
         return self.getGridTransform();  // delibarate conversion to lsst::geom::AffineTransform
     });
     clsEllipse.def("computeBBox", &Ellipse::computeBBox);
-
-    return mod.ptr();
 }

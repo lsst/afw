@@ -58,16 +58,12 @@ void declareSinglePixel(py::module& mod, std::string const& name) {
 
 }  // anonymous
 
-PYBIND11_PLUGIN(pixel) {
-    py::module mod("pixel");
-
+PYBIND11_MODULE(pixel, mod) {
     declareSinglePixel<float>(mod, "SinglePixelF");
     declareSinglePixel<double>(mod, "SinglePixelD");
     declareSinglePixel<int>(mod, "SinglePixelI");
     declareSinglePixel<std::uint16_t>(mod, "SinglePixelU");
     declareSinglePixel<std::uint64_t>(mod, "SinglePixelL");
-
-    return mod.ptr();
 }
 }
 }

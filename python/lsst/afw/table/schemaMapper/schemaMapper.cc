@@ -44,8 +44,7 @@ void declareSchemaMapperOverloads(PySchemaMapper &cls, std::string const &suffix
     cls.def("getMapping", (Key<T> (SchemaMapper::*)(Key<T> const &) const) & SchemaMapper::getMapping);
 };
 
-PYBIND11_PLUGIN(schemaMapper) {
-    py::module mod("schemaMapper");
+PYBIND11_MODULE(schemaMapper, mod) {
     py::module::import("lsst.afw.table.schema");
 
     PySchemaMapper cls(mod, "SchemaMapper");
@@ -74,8 +73,6 @@ PYBIND11_PLUGIN(schemaMapper) {
     declareSchemaMapperOverloads<lsst::afw::table::Array<int>>(cls, "ArrayI");
     declareSchemaMapperOverloads<lsst::afw::table::Array<float>>(cls, "ArrayF");
     declareSchemaMapperOverloads<lsst::afw::table::Array<double>>(cls, "ArrayD");
-
-    return mod.ptr();
 }
 }
 }

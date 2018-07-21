@@ -189,9 +189,7 @@ void declareFits(py::module & mod) {
 }
 
 
-PYBIND11_PLUGIN(fits) {
-    py::module mod("fits");
-
+PYBIND11_MODULE(fits, mod) {
     py::class_<MemFileManager> clsMemFileManager(mod, "MemFileManager");
 
     lsst::pex::exceptions::python::declareException<FitsError, lsst::pex::exceptions::IoError>(
@@ -238,6 +236,4 @@ PYBIND11_PLUGIN(fits) {
     mod.def("compressionAlgorithmToString", &compressionAlgorithmToString);
     mod.def("scalingAlgorithmFromString", &scalingAlgorithmFromString);
     mod.def("scalingAlgorithmToString", &scalingAlgorithmToString);
-
-    return mod.ptr();
 }

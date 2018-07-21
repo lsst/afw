@@ -199,19 +199,19 @@ void declareSchemaType(py::module &mod) {
     // Field
     PyField<T> clsField(mod, ("Field" + suffix).c_str());
     mod.attr("_Field")[pySuffix] = clsField;
-    clsField.def("__init__",
+    clsField.def(py::init(
                  [astropyUnit](  // capture by value to refcount in Python instead of dangle in C++
-                         Field<T> &self, std::string const &name, std::string const &doc,
+                         std::string const &name, std::string const &doc,
                          py::str const &units, py::object const &size, py::str const &parse_strict) {
                      astropyUnit(units, "parse_strict"_a = parse_strict);
                      std::string u = py::cast<std::string>(units);
-                     if (size == py::none()) {
-                         new (&self) Field<T>(name, doc, u);
+                     if (size.is(py::none())) {
+                         return new Field<T>(name, doc, u);
                      } else {
                          int s = py::cast<int>(size);
-                         new (&self) Field<T>(name, doc, u, s);
+                         return new Field<T>(name, doc, u, s);
                      }
-                 },
+                 }),
                  "name"_a, "doc"_a = "", "units"_a = "", "size"_a = py::none(), "parse_strict"_a = "raise");
     clsField.def("_addTo", [](Field<T> const &self, Schema &schema, bool doReplace) -> Key<T> {
         return schema.addField(self, doReplace);
@@ -386,9 +386,7 @@ void declareSubSchema(py::module &mod) {
     cls.def("__getitem__", [](SubSchema &self, std::string const &name) { return self[name]; });
 }
 
-PYBIND11_PLUGIN(schema) {
-    py::module mod("schema");
-
+PYBIND11_MODULE(schema, mod) {
     // We'll add instantiations of Field, Key, and SchemaItem to these private
     // dicts, and then in schemaContinued.py we'll add them to a TemplateMeta
     // ABC.
@@ -413,8 +411,6 @@ PYBIND11_PLUGIN(schema) {
 
     declareSchema(mod);
     declareSubSchema(mod);
-
-    return mod.ptr();
 }
 }
 }

@@ -33,9 +33,7 @@ namespace lsst {
 namespace afw {
 namespace cameraGeom {
 
-PYBIND11_PLUGIN(orientation) {
-    py::module mod("orientation");
-
+PYBIND11_MODULE(orientation, mod) {
     py::module::import("lsst.geom");
 
     /* Module level */
@@ -63,8 +61,6 @@ PYBIND11_PLUGIN(orientation) {
     cls.def("getFpPosition", &Orientation::getFpPosition);
     cls.def("getFpPosition", &Orientation::getFpPosition);
     cls.def("getFpPosition", &Orientation::getFpPosition);
-
-    return mod.ptr();
 }
 }
 }

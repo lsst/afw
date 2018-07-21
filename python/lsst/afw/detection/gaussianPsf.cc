@@ -34,9 +34,7 @@ namespace lsst {
 namespace afw {
 namespace detection {
 
-PYBIND11_PLUGIN(gaussianPsf) {
-    py::module mod("gaussianPsf");
-
+PYBIND11_MODULE(gaussianPsf, mod) {
     py::class_<GaussianPsf, std::shared_ptr<GaussianPsf>, Psf> clsGaussianPsf(mod, "GaussianPsf");
 
     table::io::python::addPersistableMethods<GaussianPsf>(clsGaussianPsf);    
@@ -51,8 +49,6 @@ PYBIND11_PLUGIN(gaussianPsf) {
     clsGaussianPsf.def("getDimensions", &GaussianPsf::getDimensions);
     clsGaussianPsf.def("getSigma", &GaussianPsf::getSigma);
     clsGaussianPsf.def("isPersistable", &GaussianPsf::isPersistable);
-
-    return mod.ptr();
 }
 }
 }

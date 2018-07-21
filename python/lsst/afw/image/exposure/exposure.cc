@@ -145,9 +145,7 @@ PyExposure<PixelT> declareExposure(py::module &mod, const std::string &suffix) {
     return cls;
 }
 
-PYBIND11_PLUGIN(exposure) {
-    py::module mod("exposure");
-
+PYBIND11_MODULE(exposure, mod) {
     py::module::import("lsst.afw.image.exposureInfo");
     py::module::import("lsst.afw.image.maskedImage");
 
@@ -171,8 +169,6 @@ PYBIND11_PLUGIN(exposure) {
 
     declareCastConstructor<std::uint64_t, float>(clsExposureF);
     declareCastConstructor<std::uint64_t, double>(clsExposureD);
-
-    return mod.ptr();
 }
 }  // namespace
 }  // namespace image

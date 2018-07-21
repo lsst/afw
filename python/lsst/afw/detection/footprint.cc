@@ -66,9 +66,7 @@ void declareMaskFromFootprintList(py::module &mod) {
 
 }  // end anonymous namespace
 
-PYBIND11_PLUGIN(footprint) {
-    py::module mod("footprint");
-
+PYBIND11_MODULE(footprint, mod) {
     /* Footprint Constructors */
     py::class_<Footprint, std::shared_ptr<Footprint>, daf::base::Citizen> clsFootprint(mod, "Footprint");
     clsFootprint.def(py::init<std::shared_ptr<geom::SpanSet>, lsst::geom::Box2I const &>(), "inputSpans"_a,
@@ -154,8 +152,6 @@ PYBIND11_PLUGIN(footprint) {
 
     mod.def("mergeFootprints", &mergeFootprints);
     mod.def("footprintToBBoxList", &footprintToBBoxList);
-
-    return mod.ptr();
 }
 }
 }

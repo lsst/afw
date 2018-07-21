@@ -33,9 +33,7 @@ using namespace py::literals;
 
 using namespace lsst::afw::geom::ellipses;
 
-PYBIND11_PLUGIN(reducedShear) {
-    py::module mod("reducedShear");
-
+PYBIND11_MODULE(reducedShear, mod) {
     py::class_<ReducedShear, detail::EllipticityBase> cls(mod, "ReducedShear");
 
     /* Constructors */
@@ -51,6 +49,4 @@ PYBIND11_PLUGIN(reducedShear) {
     cls.def("__repr__", [](ReducedShear const& self) {
         return py::str("%s(%g, %g)").format(self.getName(), self.getE1(), self.getE2());
     });
-
-    return mod.ptr();
 }

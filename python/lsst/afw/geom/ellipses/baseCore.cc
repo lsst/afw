@@ -34,9 +34,7 @@ namespace py = pybind11;
 
 using namespace lsst::afw::geom::ellipses;
 
-PYBIND11_PLUGIN(baseCore) {
-    py::module mod("baseCore");
-
+PYBIND11_MODULE(baseCore, mod) {
     /* Module level */
     py::class_<BaseCore, std::shared_ptr<BaseCore>> clsBaseCore(mod, "BaseCore");
 
@@ -80,6 +78,4 @@ PYBIND11_PLUGIN(baseCore) {
     //    {
     //       self.transform(t).inPlace();
     //    });
-
-    return mod.ptr();
 }

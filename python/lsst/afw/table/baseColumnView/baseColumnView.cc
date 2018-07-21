@@ -117,15 +117,11 @@ static void declareBitsColumn(py::module &mod) {
             "name"_a);
 }
 
-PYBIND11_PLUGIN(baseColumnView) {
-    py::module mod("baseColumnView");
-
+PYBIND11_MODULE(baseColumnView, mod) {
     py::module::import("lsst.afw.table.schema");
 
     declareBaseColumnView(mod);
     declareBitsColumn(mod);
-
-    return mod.ptr();
 }
 }
 }

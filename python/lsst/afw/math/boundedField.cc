@@ -58,9 +58,7 @@ void declareTemplates(PyClass &cls) {
             "image"_a, "overlapOnly"_a = false, "xStep"_a = 1, "yStep"_a = 1);
 }
 
-PYBIND11_PLUGIN(boundedField) {
-    py::module mod("boundedField");
-
+PYBIND11_MODULE(boundedField, mod) {
     PyClass cls(mod, "BoundedField");
 
     table::io::python::addPersistableMethods<BoundedField>(cls);
@@ -92,8 +90,6 @@ PYBIND11_PLUGIN(boundedField) {
         os << "BoundedField(" << self << ")";
         return os.str();
     });
-
-    return mod.ptr();
 }
 
 }  // <anonymous>

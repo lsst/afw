@@ -56,9 +56,7 @@ void declareVectorOperations(py::module & mod)
 }
 
 
-PYBIND11_PLUGIN(calib) {
-    py::module mod("calib");
-
+PYBIND11_MODULE(calib, mod) {
     /* Module level */
     mod.def("abMagFromFlux", (double(*)(double))&abMagFromFlux, "flux"_a);
     mod.def("abMagErrFromFluxErr", (double(*)(double, double))&abMagErrFromFluxErr, "fluxErr"_a, "flux"_a);
@@ -119,8 +117,6 @@ PYBIND11_PLUGIN(calib) {
     cls.def_static("setThrowOnNegativeFlux", Calib::setThrowOnNegativeFlux, "raiseException"_a);
     cls.def_static("getThrowOnNegativeFlux", Calib::getThrowOnNegativeFlux);
     cls.def("isPersistable", &Calib::isPersistable);
-
-    return mod.ptr();
 }
 }
 }

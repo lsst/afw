@@ -60,9 +60,7 @@ static void declareInnerProduct(py::module &mod) {
 
 }  // namespace
 
-PYBIND11_PLUGIN(imagePca) {
-    py::module mod("imagePca");
-
+PYBIND11_MODULE(imagePca, mod) {
     declareImagePca<Image<int>>(mod, "I");
     declareImagePca<Image<float>>(mod, "F");
     declareImagePca<Image<double>>(mod, "D");
@@ -82,8 +80,6 @@ PYBIND11_PLUGIN(imagePca) {
 
     declareInnerProduct<Image<float>, Image<double>>(mod);
     declareInnerProduct<Image<double>, Image<float>>(mod);
-
-    return mod.ptr();
 }
 }
 }

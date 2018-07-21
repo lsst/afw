@@ -99,9 +99,7 @@ void declarePeakTable(PyPeakTable &cls) {
 
 }  // lsst::afw::detection::<anonymous>
 
-PYBIND11_PLUGIN(peak) {
-    py::module mod("peak");
-
+PYBIND11_MODULE(peak, mod) {
     /* Module level */
     PyPeakRecord clsPeakRecord(mod, "PeakRecord");
     PyPeakTable clsPeakTable(mod, "PeakTable");
@@ -121,8 +119,6 @@ PYBIND11_PLUGIN(peak) {
     clsPeakCatalog.attr("Record") = clsPeakRecord;
     clsPeakCatalog.attr("Table") = clsPeakTable;
     clsPeakCatalog.attr("ColumnView") = clsPeakColumnView;
-
-    return mod.ptr();
 }
 }
 }

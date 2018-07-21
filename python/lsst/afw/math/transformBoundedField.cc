@@ -41,9 +41,7 @@ namespace {
 
 using ClsField = py::class_<TransformBoundedField, std::shared_ptr<TransformBoundedField>, BoundedField>;
 
-PYBIND11_PLUGIN(transformBoundedField) {
-    py::module mod("transformBoundedField");
-
+PYBIND11_MODULE(transformBoundedField, mod) {
     /* Module level */
     ClsField cls(mod, "TransformBoundedField");
 
@@ -63,8 +61,6 @@ PYBIND11_PLUGIN(transformBoundedField) {
                     TransformBoundedField::evaluate);
     cls.def("evaluate", (double (TransformBoundedField::*)(lsst::geom::Point2D const &) const) &
                                 TransformBoundedField::evaluate);
-
-    return mod.ptr();
 }
 
 }  // namespace

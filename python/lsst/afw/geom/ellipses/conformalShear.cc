@@ -33,9 +33,7 @@ using namespace py::literals;
 
 using namespace lsst::afw::geom::ellipses;
 
-PYBIND11_PLUGIN(conformalShear) {
-    py::module mod("conformalShear");
-
+PYBIND11_MODULE(conformalShear, mod) {
     py::class_<ConformalShear, detail::EllipticityBase> cls(mod, "ConformalShear");
 
     /* Constructors */
@@ -51,6 +49,4 @@ PYBIND11_PLUGIN(conformalShear) {
     cls.def("__repr__", [](ConformalShear const& self) {
         return py::str("%s(%g, %g)").format(self.getName(), self.getE1(), self.getE2());
     });
-
-    return mod.ptr();
 }

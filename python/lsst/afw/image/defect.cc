@@ -34,9 +34,7 @@ namespace {
 
 using PyDefectBase = py::class_<DefectBase, std::shared_ptr<DefectBase>>;
 
-PYBIND11_PLUGIN(defect) {
-    py::module mod("defect");
-
+PYBIND11_MODULE(defect, mod) {
     py::module::import("lsst.afw.geom");
 
     PyDefectBase cls(mod, "DefectBase");
@@ -53,8 +51,6 @@ PYBIND11_PLUGIN(defect) {
     cls.def("clip", &DefectBase::clip);
     cls.def("shift", (void (DefectBase::*)(int, int)) & DefectBase::shift, "dx"_a, "dy"_a);
     cls.def("shift", (void (DefectBase::*)(lsst::geom::Extent2I const &)) & DefectBase::shift, "d"_a);
-
-    return mod.ptr();
 }
 }
 }

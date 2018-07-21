@@ -33,9 +33,7 @@ using namespace pybind11::literals;
 
 using namespace lsst::afw::math;
 
-PYBIND11_PLUGIN(interpolate) {
-    py::module mod("interpolate", "Python wrapper for afw interpolate library");
-
+PYBIND11_MODULE(interpolate, mod) {
     py::class_<Interpolate, std::shared_ptr<Interpolate>> clsInterpolate(mod, "Interpolate");
     py::enum_<Interpolate::Style>(clsInterpolate, "Style")
             .value("UNKNOWN", Interpolate::Style::UNKNOWN)
@@ -77,6 +75,4 @@ PYBIND11_PLUGIN(interpolate) {
     mod.def("stringToInterpStyle", stringToInterpStyle, "style"_a);
     mod.def("lookupMaxInterpStyle", lookupMaxInterpStyle, "n"_a);
     mod.def("lookupMinInterpPoints", lookupMinInterpPoints, "style"_a);
-
-    return mod.ptr();
 }

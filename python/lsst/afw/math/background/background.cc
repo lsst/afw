@@ -70,9 +70,7 @@ void declareGetImage(PyClass &cls, std::string const &suffix) {
 }
 }
 
-PYBIND11_PLUGIN(background) {
-    py::module mod("background", "Python wrapper for afw background library");
-
+PYBIND11_MODULE(background, mod) {
     py::module::import("lsst.afw.image.image");
 
     /* Member types and enums */
@@ -178,8 +176,6 @@ PYBIND11_PLUGIN(background) {
     declareMakeBackground<image::MaskedImage<float>>(mod);
 
     mod.def("stringToUndersampleStyle", stringToUndersampleStyle, "style"_a);
-
-    return mod.ptr();
 }
 }
 }

@@ -65,9 +65,7 @@ void declareStatisticsVectorOverloads(py::module &mod) {
             "v"_a, "vweights"_a, "flags"_a, "sctrl"_a = StatisticsControl());
 }
 
-PYBIND11_PLUGIN(statistics) {
-    py::module mod("statistics");
-
+PYBIND11_MODULE(statistics, mod) {
     /* Module level */
     py::enum_<Property>(mod, "Property", py::arithmetic())
             .value("NOTHING", Property::NOTHING)
@@ -145,8 +143,6 @@ PYBIND11_PLUGIN(statistics) {
     declareStatisticsVectorOverloads<double>(mod);
     declareStatisticsVectorOverloads<float>(mod);
     declareStatisticsVectorOverloads<int>(mod);
-
-    return mod.ptr();
 }
 
 }  // math

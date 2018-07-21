@@ -56,16 +56,13 @@ void declareSlotDefinitionSubclass(py::module &mod, std::string const &name) {
     cls.def("setKeys", &Class::setKeys, "alias"_a, "schema"_a);
 }
 
-PYBIND11_PLUGIN(slots) {
-    py::module mod("slots");
+PYBIND11_MODULE(slots, mod) {
     py::module::import("lsst.afw.table.aggregates");
 
     declareSlotDefinition(mod);
     declareSlotDefinitionSubclass<FluxSlotDefinition>(mod, "Flux");
     declareSlotDefinitionSubclass<CentroidSlotDefinition>(mod, "Centroid");
     declareSlotDefinitionSubclass<ShapeSlotDefinition>(mod, "Shape");
-
-    return mod.ptr();
 }
 }
 }

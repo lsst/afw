@@ -204,13 +204,11 @@ PySourceColumnView declareSourceColumnView(py::module &mod) {
     return cls;
 };
 
-PYBIND11_PLUGIN(source) {
+PYBIND11_MODULE(source, mod) {
     py::module::import("lsst.afw.geom.ellipses");
     py::module::import("lsst.afw.table.simple");
     py::module::import("lsst.afw.table.aggregates");
     py::module::import("lsst.afw.table.slots");
-
-    py::module mod("source");
 
     // SourceFitsFlags enum values are used as integer masks, so wrap as attributes instead of an enum
     // static_cast is required to avoid an import error (py::cast and py::int_ do not work by themselves
@@ -233,8 +231,6 @@ PYBIND11_PLUGIN(source) {
     clsSourceCatalog.attr("Record") = clsSourceRecord;
     clsSourceCatalog.attr("Table") = clsSourceTable;
     clsSourceCatalog.attr("ColumnView") = clsSourceColumnView;
-
-    return mod.ptr();
 }
 }
 }

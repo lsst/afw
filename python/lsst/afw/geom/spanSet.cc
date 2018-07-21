@@ -192,8 +192,7 @@ void declareImageTypes(PyClass &cls) {
 
 }  // end anonymous namespace
 
-PYBIND11_PLUGIN(spanSet) {
-    py::module mod("spanSet");
+PYBIND11_MODULE(spanSet, mod) {
     using MaskPixel = image::MaskPixel;
 
     py::module::import("lsst.geom");
@@ -322,8 +321,6 @@ PYBIND11_PLUGIN(spanSet) {
     declareUnflattenMethod<long>(cls);
 
     declarefromMask<MaskPixel>(cls);
-
-    return mod.ptr();
 }
 }  // namespace geom
 }  // namespace afw

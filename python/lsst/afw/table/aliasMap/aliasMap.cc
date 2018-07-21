@@ -34,9 +34,7 @@ namespace {
 
 using PyAliasMap = py::class_<AliasMap, std::shared_ptr<AliasMap>>;
 
-PYBIND11_PLUGIN(aliasMap) {
-    py::module mod("aliasMap");
-
+PYBIND11_MODULE(aliasMap, mod) {
     PyAliasMap cls(mod, "AliasMap");
 
     cls.def(py::init<>());
@@ -57,8 +55,6 @@ PYBIND11_PLUGIN(aliasMap) {
     cls.def("__contains__", &AliasMap::contains);
     cls.def("items", [](AliasMap &self) { return py::make_iterator(self.begin(), self.end()); },
             py::keep_alive<0, 1>());
-
-    return mod.ptr();
 }
 }
 }

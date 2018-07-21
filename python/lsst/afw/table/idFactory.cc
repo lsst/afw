@@ -34,17 +34,13 @@ namespace {
 
 using PyIdFactory = py::class_<IdFactory, std::shared_ptr<IdFactory>>;
 
-PYBIND11_PLUGIN(idFactory) {
-    py::module mod("idFactory");
-
+PYBIND11_MODULE(idFactory, mod) {
     PyIdFactory cls(mod, "IdFactory");
     cls.def("__call__", &IdFactory::operator());
     cls.def("notify", &IdFactory::notify, "id"_a);
     cls.def("clone", &IdFactory::clone);
     cls.def_static("makeSimple", IdFactory::makeSimple);
     cls.def_static("makeSource", IdFactory::makeSource, "expId"_a, "reserved"_a);
-
-    return mod.ptr();
 }
 }
 }

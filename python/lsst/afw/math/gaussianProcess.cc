@@ -135,12 +135,8 @@ void declareGaussianProcess(py::module &mod, const std::string &suffix) {
                                    GaussianProcess<T>::getData);
 };
 
-PYBIND11_PLUGIN(gaussianProcess) {
-    py::module mod("gaussianProcess");
-
+PYBIND11_MODULE(gaussianProcess, mod) {
     declareCovariograms<double>(mod, "D");
     declareGaussianProcess<double>(mod, "D");
     declareKdTree<double>(mod, "D");
-
-    return mod.ptr();
 }

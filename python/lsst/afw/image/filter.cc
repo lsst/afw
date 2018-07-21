@@ -40,9 +40,7 @@ using PyFilterProperty = py::class_<FilterProperty, std::shared_ptr<FilterProper
 
 using PyFilter = py::class_<Filter, std::shared_ptr<Filter>>;
 
-PYBIND11_PLUGIN(filter) {
-    py::module mod("filter");
-
+PYBIND11_MODULE(filter, mod) {
     py::module::import("lsst.daf.base");
     py::module::import("lsst.pex.policy");
 
@@ -92,8 +90,6 @@ PYBIND11_PLUGIN(filter) {
                          "force"_a = false);
     clsFilter.def_static("defineAlias", &Filter::defineAlias, "oldName"_a, "newName"_a, "force"_a = false);
     clsFilter.def_static("getNames", &Filter::getNames);
-
-    return mod.ptr();
 }
 }
 }

@@ -33,9 +33,7 @@ namespace lsst {
 namespace afw {
 namespace detection {
 
-PYBIND11_PLUGIN(footprintMerge) {
-    py::module mod("footprintMerge");
-
+PYBIND11_MODULE(footprintMerge, mod) {
     py::class_<FootprintMergeList> clsFootprintMergeList(mod, "FootprintMergeList");
 
     /* Constructors */
@@ -52,8 +50,6 @@ PYBIND11_PLUGIN(footprintMerge) {
                               "maxSamePeakDist"_a = -1.);
     clsFootprintMergeList.def("clearCatalog", &FootprintMergeList::clearCatalog);
     clsFootprintMergeList.def("getFinalSources", &FootprintMergeList::getFinalSources, "outputCat"_a);
-
-    return mod.ptr();
 }
 }
 }

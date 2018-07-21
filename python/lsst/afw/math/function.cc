@@ -140,13 +140,9 @@ void declareAllFunctions(py::module &mod, const std::string &suffix) {
 
 }  // namespace <anonymous>
 
-PYBIND11_PLUGIN(function) {
-    py::module mod("function");
-
+PYBIND11_MODULE(function, mod) {
     declareAllFunctions<float>(mod, "F");
     declareAllFunctions<double>(mod, "D");
-
-    return mod.ptr();
 }
 
 }  // namespace math

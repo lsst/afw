@@ -32,9 +32,7 @@ using namespace py::literals;
 
 using namespace lsst::afw::geom::ellipses;
 
-PYBIND11_PLUGIN(radii) {
-    py::module mod("radii");
-
+PYBIND11_MODULE(radii, mod) {
     py::class_<DeterminantRadius> clsDeterminantRadius(mod, "DeterminantRadius");
 
     clsDeterminantRadius.def(py::init<double>(), "value"_a = 1.0);
@@ -75,6 +73,4 @@ PYBIND11_PLUGIN(radii) {
     clsLogTraceRadius.def("__repr__", [](LogTraceRadius const& self) {
         return self.getName() + "(" + std::to_string(self) + ")";
     });
-
-    return mod.ptr();
 }
