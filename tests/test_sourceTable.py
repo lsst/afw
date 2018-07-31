@@ -94,7 +94,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         np.random.seed(1)
         self.schema = lsst.afw.table.SourceTable.makeMinimalSchema()
         self.fluxKey = self.schema.addField("a_flux", type="D")
-        self.fluxErrKey = self.schema.addField("a_fluxSigma", type="D")
+        self.fluxErrKey = self.schema.addField("a_fluxErr", type="D")
         self.fluxFlagKey = self.schema.addField("a_flag", type="Flag")
 
         # the meas field is added using a functor key, but the error is added
@@ -205,7 +205,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(len(self.catalog), len(new))
         for r1, r2 in zip(self.catalog, new):
             # Columns that are easy to test
-            for field in ("a_flux", "a_fluxSigma", "id"):
+            for field in ("a_flux", "a_fluxErr", "id"):
                 k1 = self.catalog.schema.find(field).getKey()
                 k2 = new.schema.find(field).getKey()
                 self.assertEqual(r1[k1], r2[k2])
@@ -254,7 +254,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.table.defineCentroid("b")
         self.table.defineShape("c")
         self.assertFloatsEqual(cols2["a_flux"], cols2.getPsfFlux())
-        self.assertFloatsEqual(cols2["a_fluxSigma"], cols2.getPsfFluxErr())
+        self.assertFloatsEqual(cols2["a_fluxErr"], cols2.getPsfFluxErr())
         self.assertFloatsEqual(cols2["b_x"], cols2.getX())
         self.assertFloatsEqual(cols2["b_y"], cols2.getY())
         self.assertFloatsEqual(cols2["c_xx"], cols2.getIxx())
@@ -592,7 +592,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         baseName = "afw_Test"
         fluxKey = schema.addField("%s_flux" % (baseName,),
                                   type=np.float64, doc="flux")
-        errKey = schema.addField("%s_fluxSigma" % (baseName,),
+        errKey = schema.addField("%s_fluxErr" % (baseName,),
                                  type=np.float64, doc="flux uncertainty")
         flagKey = schema.addField("%s_flag" % (baseName,),
                                   type="Flag", doc="flux flag")

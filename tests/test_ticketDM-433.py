@@ -77,7 +77,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.fluxKey = self.schema.addField(prefix+"_flux", type="D")
         if uncertainty:
             self.fluxErrKey = self.schema.addField(
-                prefix+"_fluxSigma", type="D")
+                prefix+"_fluxErr", type="D")
         self.fluxFlagKey = self.schema.addField(prefix+"_flag", type="Flag")
 
     def makeCentroid(self, schema, prefix, uncertainty):
@@ -222,7 +222,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.table.defineCentroid("b")
         self.table.defineShape("c")
         self.assertTrue((cols2["a_flux"] == cols2.getPsfFlux()).all())
-        self.assertTrue((cols2["a_fluxSigma"] == cols2.getPsfFluxErr()).all())
+        self.assertTrue((cols2["a_fluxErr"] == cols2.getPsfFluxErr()).all())
         self.assertTrue((cols2["b_x"] == cols2.getX()).all())
         self.assertTrue((cols2["b_y"] == cols2.getY()).all())
         self.assertTrue((cols2["c_xx"] == cols2.getIxx()).all())

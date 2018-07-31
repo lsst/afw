@@ -62,7 +62,7 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
         lsst.afw.table.Point2DKey.addFields(self.schema, "centroid", "centroid", "pixels")
         self.instFluxKey = self.schema.addField(
             self.instFluxKeyName+"_flux", type="D", doc="post-ISR instFlux")
-        self.instFluxErrKey = self.schema.addField(self.instFluxKeyName+"_fluxSigma", type="D",
+        self.instFluxErrKey = self.schema.addField(self.instFluxKeyName+"_fluxErr", type="D",
                                                    doc="post-ISR instFlux stddev")
         self.magnitudeKey = self.schema.addField(self.instFluxKeyName+"_mag", type="D", doc="magnitude")
         self.magnitudeErrKey = self.schema.addField(self.instFluxKeyName+"_magErr", type="D",
@@ -75,13 +75,13 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
         record.set('centroid_x', self.point0[0])
         record.set('centroid_y', self.point0[1])
         record.set(self.instFluxKeyName+'_flux', self.instFlux)
-        record.set(self.instFluxKeyName+'_fluxSigma', self.instFluxErr)
+        record.set(self.instFluxKeyName+'_fluxErr', self.instFluxErr)
         record = self.catalog.addNew()
         record.set('id', 2)
         record.set('centroid_x', self.pointYShift[0])
         record.set('centroid_y', self.pointYShift[1])
         record.set(self.instFluxKeyName+'_flux', self.instFlux*1e-9)
-        record.set(self.instFluxKeyName+'_fluxSigma', self.instFluxErr)
+        record.set(self.instFluxKeyName+'_fluxErr', self.instFluxErr)
 
         self.constantCalibration = lsst.afw.math.ChebyshevBoundedField(self.bbox,
                                                                        np.array([[self.calibration]]))
@@ -189,14 +189,14 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
 
         # TODO: have to save the values and restore them, until DM-10302 is implemented.
         origFlux = catalog[self.instFluxKeyName+'_flux'].copy()
-        origFluxSigma = catalog[self.instFluxKeyName+'_fluxSigma'].copy()
+        origFluxErr = catalog[self.instFluxKeyName+'_fluxErr'].copy()
         photoCalib.instFluxToMaggies(catalog, self.instFluxKeyName, self.instFluxKeyName)
         self.assertFloatsAlmostEqual(catalog[self.instFluxKeyName+'_flux'], expectMaggies[:, 0])
-        self.assertFloatsAlmostEqual(catalog[self.instFluxKeyName+'_fluxSigma'], expectMaggies[:, 1])
+        self.assertFloatsAlmostEqual(catalog[self.instFluxKeyName+'_fluxErr'], expectMaggies[:, 1])
         # TODO: restore values, until DM-10302 is implemented.
-        for record, f, fSigma in zip(catalog, origFlux, origFluxSigma):
+        for record, f, fErr in zip(catalog, origFlux, origFluxErr):
             record.set(self.instFluxKeyName+'_flux', f)
-            record.set(self.instFluxKeyName+'_fluxSigma', fSigma)
+            record.set(self.instFluxKeyName+'_fluxErr', fErr)
 
     def testNonVarying(self):
         """Tests a non-spatially-varying Calibration."""
