@@ -87,9 +87,9 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         covArray = []
         if uncertainty > 0:
             self.centroidXErrKey = self.schema.addField(
-                prefix+"_xSigma", type="F")
+                prefix+"_xErr", type="F")
             self.centroidYErrKey = self.schema.addField(
-                prefix+"_ySigma", type="F")
+                prefix+"_yErr", type="F")
             sigmaArray.append(self.centroidXErrKey)
             sigmaArray.append(self.centroidYErrKey)
         if uncertainty > 1:
@@ -113,11 +113,11 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         covArray = []
         if uncertainty > 0:
             self.shapeXXErrKey = self.schema.addField(
-                prefix+"_xxSigma", type="F")
+                prefix+"_xxErr", type="F")
             self.shapeYYErrKey = self.schema.addField(
-                prefix+"_yySigma", type="F")
+                prefix+"_yyErr", type="F")
             self.shapeXYErrKey = self.schema.addField(
-                prefix+"_xySigma", type="F")
+                prefix+"_xyErr", type="F")
             sigmaArray.append(self.shapeXXErrKey)
             sigmaArray.append(self.shapeYYErrKey)
             sigmaArray.append(self.shapeXYErrKey)

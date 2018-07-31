@@ -405,7 +405,7 @@ private:
 template <typename T, int N>
 class CovarianceMatrixKey : public FunctorKey<Eigen::Matrix<T, N, N> > {
 public:
-    typedef std::vector<Key<T> > SigmaKeyArray;
+    typedef std::vector<Key<T> > ErrKeyArray;
     typedef std::vector<Key<T> > CovarianceKeyArray;
     typedef std::vector<std::string> NameArray;
 
@@ -414,13 +414,13 @@ public:
      *
      *  @param[out] schema    Schema to add fields to.
      *  @param[in]  prefix    String used to form the first part of all field names.  Suffixes of
-     *                        the form '_xSigma' and '_x_y_Cov' will be added to form the full
+     *                        the form '_xErr' and '_x_y_Cov' will be added to form the full
      *                        field names (using names={'x', 'y'} as an example).
-     *  @param[in]  unit      Unit for for sigma values (covariance matrix elements will be
-     *                        unit^2).
+     *  @param[in]  unit      Unit for for error (standard deviation) values; covariance matrix
+     *                        elements will be unit^2.
      *  @param[in]  names     Vector of strings containing the names of the quantities the
      *                        covariance matrix represents the uncertainty of.
-     *  @param[in]  diagonalOnly   If true, only create fields for the Sigma values.
+     *  @param[in]  diagonalOnly   If true, only create fields for the error values.
      */
     static CovarianceMatrixKey addFields(Schema& schema, std::string const& prefix, NameArray const& names,
                                          std::string const& unit, bool diagonalOnly = false);
@@ -430,14 +430,14 @@ public:
      *
      *  @param[out] schema    Schema to add fields to.
      *  @param[in]  prefix    String used to form the first part of all field names.  Suffixes of
-     *                        the form '_xSigma' and '_x_y_Cov' will be added to form the full
+     *                        the form '_xErr' and '_x_y_Cov' will be added to form the full
      *                        field names (using names={'x', 'y'} as an example).
-     *  @param[in]  units     Vector of units for for sigma values (covariance matrix elements will
-     *                        have "{units[i]} {units[j]}" or "{units[i]}^2", depending on whether
-     *                        units[i] == units[j].
+     *  @param[in]  units     Vector of units for for error (standard deviation) values; covariance
+     *                        matrix elements will have "{units[i]} {units[j]}" or "{units[i]}^2",
+     *                        depending on whether units[i] == units[j].
      *  @param[in]  names     Vector of strings containing the names of the quantities the
      *                        covariance matrix represents the uncertainty of.
-     *  @param[in]  diagonalOnly   If true, only create fields for the Sigma values.
+     *  @param[in]  diagonalOnly   If true, only create fields for the error values.
      */
     static CovarianceMatrixKey addFields(Schema& schema, std::string const& prefix, NameArray const& names,
                                          NameArray const& units, bool diagonalOnly = false);
@@ -448,33 +448,33 @@ public:
     /**
      *  Construct a from arrays of per-element Keys
      *
-     *  The sigma array Keys should point to the square root of the diagonal of the
+     *  The err array Keys should point to the square root of the diagonal of the
      *  covariance matrix.  The cov array Keys should point to the off-diagonal elements
      *  of the lower-triangle, packed first in rows, then in columns (or equivalently,
      *  in the upper-triangle, packed first in columns, then in rows).  For a 4x4 matrix,
      *  the order is is:
      *
-     *      sigma[0]^2   cov[0]       cov[1]       cov[3]
-     *      cov[0]       sigma[1]^2   cov[2]       cov[4]
-     *      cov[1]       cov[2]       sigma[2]^2   cov[5]
-     *      cov[3]       cov[4]       cov[5]       sigma[3]^2
+     *      err[0]^2   cov[0]     cov[1]     cov[3]
+     *      cov[0]     err[1]^2   cov[2]     cov[4]
+     *      cov[1]     cov[2]     err[2]^2   cov[5]
+     *      cov[3]     cov[4]     cov[5]     err[3]^2
      *
      *  The cov array may also be empty, to indicate that no off-diagonal elements are
      *  stored, and should be set to zero.  If not empty, the size of the cov matrix
-     *  must be exactly n*(n-1)/2, where n is the size of the sigma matrix.
+     *  must be exactly n*(n-1)/2, where n is the size of the err matrix.
      */
-    explicit CovarianceMatrixKey(SigmaKeyArray const& sigma,
+    explicit CovarianceMatrixKey(ErrKeyArray const& err,
                                  CovarianceKeyArray const& cov = CovarianceKeyArray());
 
     /**
      *  Construct from a subschema and an array of names for each parameter of the matrix.
      *
      *  The field names should match the following convention:
-     *   - diagonal elements should have names like "p1Sigma", where "p1" is the name of the parameter,
+     *   - diagonal elements should have names like "p1Err", where "p1" is the name of the parameter,
      *     and should contain the square root of the variance in that parameter.
      *   - off-diagonal elements hould have names like "p1_p2_Cov", where "p1" and "p2" are names of
      *     parameters.
-     *  For example, for the covariance matrix of a position, we'd look for "xSigma", "ySigma", and
+     *  For example, for the covariance matrix of a position, we'd look for "xErr", "yErr", and
      *  "x_y_Cov".
      */
     CovarianceMatrixKey(SubSchema const& s, NameArray const& names);
@@ -498,7 +498,7 @@ public:
     void setElement(BaseRecord& record, int i, int j, T value) const;
 
     /**
-     *  Return True if all the constituent sigma Keys are valid
+     *  Return True if all the constituent error Keys are valid
      *
      *  Note that if the only one or more off-diagonal keys are invalid, we assume that means those terms
      *  are zero, not that the whole FunctorKey is invalid.
@@ -512,7 +512,7 @@ public:
     //@}
 
 private:
-    SigmaKeyArray _sigma;
+    ErrKeyArray _err;
     CovarianceKeyArray _cov;
 };
 }  // namespace table

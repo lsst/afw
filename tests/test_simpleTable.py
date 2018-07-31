@@ -311,9 +311,9 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         schema.addField("a_d2", type=np.float32)
         pointKey = lsst.afw.table.Point2IKey.addFields(
             schema, "q_e1", "doc for point field", "pixel")
-        schema.addField("q_e2_xxSigma", type=np.float32)
-        schema.addField("q_e2_yySigma", type=np.float32)
-        schema.addField("q_e2_xySigma", type=np.float32)
+        schema.addField("q_e2_xxErr", type=np.float32)
+        schema.addField("q_e2_yyErr", type=np.float32)
+        schema.addField("q_e2_xyErr", type=np.float32)
         schema.addField("q_e2_xx_yy_Cov", type=np.float32)
         schema.addField("q_e2_xx_xy_Cov", type=np.float32)
         schema.addField("q_e2_yy_xy_Cov", type=np.float32)

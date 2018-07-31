@@ -331,10 +331,10 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
             schema, "a", names, ["m", "s"], varianceOnly)
         fKey2 = FunctorKeyType.addFields(
             schema, "b", names, "kg", varianceOnly)
-        self.assertEqual(schema.find("a_xSigma").field.getUnits(), "m")
-        self.assertEqual(schema.find("a_ySigma").field.getUnits(), "s")
-        self.assertEqual(schema.find("b_xSigma").field.getUnits(), "kg")
-        self.assertEqual(schema.find("b_ySigma").field.getUnits(), "kg")
+        self.assertEqual(schema.find("a_xErr").field.getUnits(), "m")
+        self.assertEqual(schema.find("a_yErr").field.getUnits(), "s")
+        self.assertEqual(schema.find("b_xErr").field.getUnits(), "kg")
+        self.assertEqual(schema.find("b_yErr").field.getUnits(), "kg")
         dtype = numpy.float64 if fieldType == "D" else numpy.float32
         if varianceOnly:
             m = numpy.diagflat(numpy.random.randn(2)**2).astype(dtype)
@@ -359,7 +359,7 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
         # we generate a schema with a complete set of fields for the diagonal and some (but not all)
         # of the covariance elements
         for i, pi in enumerate(parameterNames):
-            sigmaKeys.append(schema.addField("a_%sSigma" %
+            sigmaKeys.append(schema.addField("a_%sErr" %
                                              pi, type=fieldType, doc="uncertainty on %s" % pi))
             if varianceOnly:
                 continue  # in this case we have fields for only the diagonal

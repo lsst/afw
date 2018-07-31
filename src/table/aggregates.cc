@@ -155,11 +155,11 @@ CovarianceMatrixKey<T, N> CovarianceMatrixKey<T, N>::addFields(Schema &schema, s
         LSST_THROW_IF_NE(units.size(), std::size_t(N), pex::exceptions::LengthError,
                          "Size of units array (%d) does not match template argument (%d)");
     }
-    SigmaKeyArray sigma;
+    ErrKeyArray err;
     CovarianceKeyArray cov;
-    sigma.reserve(names.size());
+    err.reserve(names.size());
     for (std::size_t i = 0; i < names.size(); ++i) {
-        sigma.push_back(schema.addField<T>(schema.join(prefix, names[i] + "Sigma"),
+        err.push_back(schema.addField<T>(schema.join(prefix, names[i] + "Err"),
                                            "1-sigma uncertainty on " + names[i], units[i]));
     }
     if (!diagonalOnly) {
@@ -178,22 +178,22 @@ CovarianceMatrixKey<T, N> CovarianceMatrixKey<T, N>::addFields(Schema &schema, s
             }
         }
     }
-    return CovarianceMatrixKey<T, N>(sigma, cov);
+    return CovarianceMatrixKey<T, N>(err, cov);
 }
 
 template <typename T, int N>
 CovarianceMatrixKey<T, N>::CovarianceMatrixKey() {}
 
 template <typename T, int N>
-CovarianceMatrixKey<T, N>::CovarianceMatrixKey(SigmaKeyArray const &sigma, CovarianceKeyArray const &cov)
-        : _sigma(sigma), _cov(cov) {
+CovarianceMatrixKey<T, N>::CovarianceMatrixKey(ErrKeyArray const &err, CovarianceKeyArray const &cov)
+        : _err(err), _cov(cov) {
     if (N != Eigen::Dynamic) {
-        LSST_THROW_IF_NE(sigma.size(), std::size_t(N), pex::exceptions::LengthError,
-                         "Size of sigma array (%d) does not match template argument (%d)");
+        LSST_THROW_IF_NE(err.size(), std::size_t(N), pex::exceptions::LengthError,
+                         "Size of err array (%d) does not match template argument (%d)");
     }
     if (!cov.empty()) {
-        LSST_THROW_IF_NE(cov.size(), sigma.size() * (sigma.size() - 1) / 2, pex::exceptions::LengthError,
-                         "Size of cov array (%d) is does not match with size inferred from sigma array (%d)");
+        LSST_THROW_IF_NE(cov.size(), err.size() * (err.size() - 1) / 2, pex::exceptions::LengthError,
+                         "Size of cov array (%d) is does not match with size inferred from err array (%d)");
         bool haveCov = false;
         for (typename CovarianceKeyArray::const_iterator i = _cov.begin(); i != _cov.end(); ++i) {
             if (i->isValid()) haveCov = true;
@@ -204,12 +204,12 @@ CovarianceMatrixKey<T, N>::CovarianceMatrixKey(SigmaKeyArray const &sigma, Covar
 
 template <typename T, int N>
 CovarianceMatrixKey<T, N>::CovarianceMatrixKey(SubSchema const &s, NameArray const &names)
-        : _sigma(names.size()), _cov(names.size() * (names.size() - 1) / 2) {
+        : _err(names.size()), _cov(names.size() * (names.size() - 1) / 2) {
     int const n = names.size();
     int k = 0;
     bool haveCov = false;
     for (int i = 0; i < n; ++i) {
-        _sigma[i] = s[names[i] + "Sigma"];
+        _err[i] = s[names[i] + "Err"];
         for (int j = 0; j < i; ++j, ++k) {
             try {
                 _cov[k] = s[names[i] + "_" + names[j] + "_Cov"];
@@ -257,12 +257,12 @@ Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> makeZeroMatrix(
 
 template <typename T, int N>
 Eigen::Matrix<T, N, N> CovarianceMatrixKey<T, N>::get(BaseRecord const &record) const {
-    Eigen::Matrix<T, N, N> value = makeZeroMatrix(_sigma.size(), this);
-    int const n = _sigma.size();
+    Eigen::Matrix<T, N, N> value = makeZeroMatrix(_err.size(), this);
+    int const n = _err.size();
     int k = 0;
     for (int i = 0; i < n; ++i) {
-        T sigma = record.get(_sigma[i]);
-        value(i, i) = sigma * sigma;
+        T err = record.get(_err[i]);
+        value(i, i) = err * err;
         if (!_cov.empty()) {
             for (int j = 0; j < i; ++j, ++k) {
                 if (_cov[k].isValid()) {
@@ -276,10 +276,10 @@ Eigen::Matrix<T, N, N> CovarianceMatrixKey<T, N>::get(BaseRecord const &record) 
 
 template <typename T, int N>
 void CovarianceMatrixKey<T, N>::set(BaseRecord &record, Eigen::Matrix<T, N, N> const &value) const {
-    int const n = _sigma.size();
+    int const n = _err.size();
     int k = 0;
     for (int i = 0; i < n; ++i) {
-        record.set(_sigma[i], std::sqrt(value(i, i)));
+        record.set(_err[i], std::sqrt(value(i, i)));
         if (!_cov.empty()) {
             for (int j = 0; j < i; ++j, ++k) {
                 if (_cov[k].isValid()) {
@@ -292,26 +292,26 @@ void CovarianceMatrixKey<T, N>::set(BaseRecord &record, Eigen::Matrix<T, N, N> c
 
 template <typename T, int N>
 bool CovarianceMatrixKey<T, N>::isValid() const noexcept {
-    int const n = _sigma.size();
+    int const n = _err.size();
     if (n < 1) return false;
     for (int i = 0; i < n; ++i) {
-        if (!_sigma[i].isValid()) return false;
+        if (!_err[i].isValid()) return false;
     }
     return true;
 }
 
 template <typename T, int N>
 bool CovarianceMatrixKey<T, N>::operator==(CovarianceMatrixKey const &other) const noexcept {
-    if (_sigma.size() != other._sigma.size()) {
+    if (_err.size() != other._err.size()) {
         return false;
     }
     if (_cov.size() != other._cov.size()) {
         return false;
     }
-    int const n = _sigma.size();
+    int const n = _err.size();
     int k = 0;
     for (int i = 0; i < n; ++i) {
-        if (_sigma[i] != other._sigma[i]) {
+        if (_err[i] != other._err[i]) {
             return false;
         }
         if (!_cov.empty()) {
@@ -328,8 +328,8 @@ bool CovarianceMatrixKey<T, N>::operator==(CovarianceMatrixKey const &other) con
 template <typename T, int N>
 T CovarianceMatrixKey<T, N>::getElement(BaseRecord const &record, int i, int j) const {
     if (i == j) {
-        T sigma = record.get(_sigma[i]);
-        return sigma * sigma;
+        T err = record.get(_err[i]);
+        return err * err;
     }
     if (_cov.empty()) {
         return 0.0;
@@ -341,7 +341,7 @@ T CovarianceMatrixKey<T, N>::getElement(BaseRecord const &record, int i, int j) 
 template <typename T, int N>
 void CovarianceMatrixKey<T, N>::setElement(BaseRecord &record, int i, int j, T value) const {
     if (i == j) {
-        record.set(_sigma[i], std::sqrt(value));
+        record.set(_err[i], std::sqrt(value));
     } else {
         if (_cov.empty()) {
             throw LSST_EXCEPT(

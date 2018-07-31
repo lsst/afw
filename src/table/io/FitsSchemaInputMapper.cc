@@ -736,31 +736,41 @@ Schema FitsSchemaInputMapper::finalize() {
                 // the same prefix, but AliasMap know hows to handle that no-op set.
                 aliases.set(prefix + "flags", prefix + "flag");
             } else if (iter->ttype.find("flux") != std::string::npos) {
-                // Create aliases that resolve "(.*)_flux" and "(.*)_fluxSigma" to "$1" and "$1_err",
-                // if $1 contains the string "flux".
+                // Create aliases that resolve "(.*)_flux" to "$1"
+                // and "(.*)_fluxErr" to "$1_err" if $1 contains the string "flux".
                 if (endswith(iter->ttype, "_err")) {
-                    aliases.set(replaceSuffix(iter->ttype, 4, "_fluxSigma"), iter->ttype);
+                    aliases.set(replaceSuffix(iter->ttype, 4, "_fluxErr"), iter->ttype);
                 } else {
                     aliases.set(iter->ttype + "_flux", iter->ttype);
                 }
             } else if (endswith(iter->ttype, "_err")) {
-                // Create aliases that resolve "(.*)_(.*)Sigma" and "(.*)_(.*)_(.*)_Cov" to
-                // "$1_err_$2Sigma" and "$1_err_$2_$3_Cov", to make centroid and shape uncertainties
+                // Create aliases that resolve "(.*)_(.*)Err" and "(.*)_(.*)_(.*)_Cov" to
+                // "$1_err_$2Err" and "$1_err_$2_$3_Cov", to make centroid and shape uncertainties
                 // available under the new conventions.  We don't have to create aliases for the
                 // centroid and shape values themselves, as those will automatically be correct
                 // after the PointConversionReader and MomentsConversionReader do their work.
                 if (iter->tccls == "Covariance(Point)") {
-                    aliases.set(replaceSuffix(iter->ttype, 4, "_xSigma"), iter->ttype + "_xSigma");
-                    aliases.set(replaceSuffix(iter->ttype, 4, "_ySigma"), iter->ttype + "_ySigma");
+                    aliases.set(replaceSuffix(iter->ttype, 4, "_xErr"), iter->ttype + "_xErr");
+                    aliases.set(replaceSuffix(iter->ttype, 4, "_yErr"), iter->ttype + "_yErr");
                     aliases.set(replaceSuffix(iter->ttype, 4, "_x_y_Cov"), iter->ttype + "_x_y_Cov");
                 } else if (iter->tccls == "Covariance(Moments)") {
-                    aliases.set(replaceSuffix(iter->ttype, 4, "_xxSigma"), iter->ttype + "_xxSigma");
-                    aliases.set(replaceSuffix(iter->ttype, 4, "_yySigma"), iter->ttype + "_yySigma");
-                    aliases.set(replaceSuffix(iter->ttype, 4, "_xySigma"), iter->ttype + "_xySigma");
+                    aliases.set(replaceSuffix(iter->ttype, 4, "_xxErr"), iter->ttype + "_xxErr");
+                    aliases.set(replaceSuffix(iter->ttype, 4, "_yyErr"), iter->ttype + "_yyErr");
+                    aliases.set(replaceSuffix(iter->ttype, 4, "_xyErr"), iter->ttype + "_xyErr");
                     aliases.set(replaceSuffix(iter->ttype, 4, "_xx_yy_Cov"), iter->ttype + "_xx_yy_Cov");
                     aliases.set(replaceSuffix(iter->ttype, 4, "_xx_xy_Cov"), iter->ttype + "_xx_xy_Cov");
                     aliases.set(replaceSuffix(iter->ttype, 4, "_yy_xy_Cov"), iter->ttype + "_yy_xy_Cov");
                 }
+            }
+        }
+    }
+    if (_impl->version == 1) {
+        // Version 1 tables use Sigma when we should use Err (see RFC-333) and had no fields
+        // that should have been named Sigma. So provide aliases xErr -> xSigma
+        AliasMap &aliases = *_impl->schema.getAliasMap();
+        for (auto iter = _impl->asList().begin(); iter != _impl->asList().end(); ++iter) {
+            if (endswith(iter->ttype, "Sigma")) {
+                aliases.set(replaceSuffix(iter->ttype, 5, "Err"), iter->ttype);
             }
         }
     }

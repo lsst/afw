@@ -61,7 +61,7 @@ private:
     };
 
 public:
-    static int const VERSION = 1;
+    static int const VERSION = 2;
 
     /// An MPL sequence of all the allowed SchemaItem templates.
     typedef boost::mpl::transform<FieldTypes, MakeItem>::type ItemTypes;

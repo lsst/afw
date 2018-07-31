@@ -101,15 +101,15 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         # as scalars, as we lack a ResultKey functor as exists in meas_base
         self.centroidKey = lsst.afw.table.Point2DKey.addFields(
             self.schema, "b", "", "pixel")
-        self.xErrKey = self.schema.addField("b_xSigma", type="F")
-        self.yErrKey = self.schema.addField("b_ySigma", type="F")
+        self.xErrKey = self.schema.addField("b_xErr", type="F")
+        self.yErrKey = self.schema.addField("b_yErr", type="F")
         self.centroidFlagKey = self.schema.addField("b_flag", type="Flag")
 
         self.shapeKey = lsst.afw.table.QuadrupoleKey.addFields(
             self.schema, "c", "", lsst.afw.table.CoordinateType.PIXEL)
-        self.xxErrKey = self.schema.addField("c_xxSigma", type="F")
-        self.xyErrKey = self.schema.addField("c_xySigma", type="F")
-        self.yyErrKey = self.schema.addField("c_yySigma", type="F")
+        self.xxErrKey = self.schema.addField("c_xxErr", type="F")
+        self.xyErrKey = self.schema.addField("c_xyErr", type="F")
+        self.yyErrKey = self.schema.addField("c_yyErr", type="F")
         self.shapeFlagKey = self.schema.addField("c_flag", type="Flag")
 
         self.table = lsst.afw.table.SourceTable.make(self.schema)
@@ -444,7 +444,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.catalog.sort(parentKey)
         self.catalog.getChildren(0)  # Just care this succeeds
 
-    def testFitsReadBackwardsCompatibility(self):
+    def testFitsReadVersion0Compatibility(self):
         cat = lsst.afw.table.SourceCatalog.readFits(
             os.path.join(testPath, "data/empty-v0.fits"))
         self.assertTrue(cat.getPsfFluxSlot().isValid())
@@ -501,6 +501,26 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
                          cat.schema.find("centroid_sdss_flags").key)
         self.assertEqual(cat.getShapeSlot().getFlagKey(),
                          cat.schema.find("shape_hsm_moments_flags").key)
+
+    def testFitsReadVersion1Compatibility(self):
+        """Test reading of catalogs with version 1 schema
+
+        Version 2 catalogs (the current version) provide aliases to
+        fields whose names end in Sigma: xErr -> xSigma for any x
+        """
+        cat = lsst.afw.table.SourceCatalog.readFits(
+            os.path.join(testPath, "data", "sourceTable-v1.fits"))
+        self.assertEqual(cat.schema["a_fluxSigma"].asKey(), cat.schema["a_fluxErr"].asKey())
+        self.assertEqual(
+            cat.getCentroidSlot().getErrKey(),
+            lsst.afw.table.CovarianceMatrix2fKey(
+                cat.schema["slot_Centroid"],
+                ["x", "y"]))
+        self.assertEqual(
+            cat.getShapeSlot().getErrKey(),
+            lsst.afw.table.CovarianceMatrix3fKey(
+                cat.schema["slot_Shape"],
+                ["xx", "yy", "xy"]))
 
     def testDM1083(self):
         schema = lsst.afw.table.SourceTable.makeMinimalSchema()
