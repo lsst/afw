@@ -97,23 +97,23 @@ ndarray::Array<T, 1> fluxErrFromABMagErr(ndarray::Array<T const, 1> const& magEr
     return out;
 }
 
-Calib::Calib() noexcept : _fluxMag0(0.0), _fluxMag0Sigma(0.0) {}
-Calib::Calib(double fluxMag0) : _fluxMag0(fluxMag0), _fluxMag0Sigma(0.0) {}
-Calib::Calib(std::vector<std::shared_ptr<Calib const>> const& calibs) : _fluxMag0(0.0), _fluxMag0Sigma(0.0) {
+Calib::Calib() noexcept : _fluxMag0(0.0), _fluxMag0Err(0.0) {}
+Calib::Calib(double fluxMag0) : _fluxMag0(fluxMag0), _fluxMag0Err(0.0) {}
+Calib::Calib(std::vector<std::shared_ptr<Calib const>> const& calibs) : _fluxMag0(0.0), _fluxMag0Err(0.0) {
     if (calibs.empty()) {
         throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                           "You must provide at least one input Calib");
     }
 
     double const fluxMag00 = calibs[0]->_fluxMag0;
-    double const fluxMag0Sigma0 = calibs[0]->_fluxMag0Sigma;
+    double const fluxMag0Err0 = calibs[0]->_fluxMag0Err;
 
     for (std::vector<std::shared_ptr<Calib const>>::const_iterator ptr = calibs.begin(); ptr != calibs.end();
          ++ptr) {
         Calib const& calib = **ptr;
 
         if (::fabs(fluxMag00 - calib._fluxMag0) > std::numeric_limits<double>::epsilon() ||
-            ::fabs(fluxMag0Sigma0 - calib._fluxMag0Sigma) > std::numeric_limits<double>::epsilon()) {
+            ::fabs(fluxMag0Err0 - calib._fluxMag0Err) > std::numeric_limits<double>::epsilon()) {
             throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                               (boost::format("You may only combine calibs with the same fluxMag0: "
                                              "%g +- %g v %g +- %g") %
@@ -125,7 +125,7 @@ Calib::Calib(std::vector<std::shared_ptr<Calib const>> const& calibs) : _fluxMag
 }
 
 Calib::Calib(std::shared_ptr<lsst::daf::base::PropertySet const> metadata) {
-    double fluxMag0 = 0.0, fluxMag0Sigma = 0.0;
+    double fluxMag0 = 0.0, fluxMag0Err = 0.0;
 
     auto key = "FLUXMAG0";
     if (metadata->exists(key)) {
@@ -133,12 +133,12 @@ Calib::Calib(std::shared_ptr<lsst::daf::base::PropertySet const> metadata) {
 
         key = "FLUXMAG0ERR";
         if (metadata->exists(key)) {
-            fluxMag0Sigma = metadata->getAsDouble(key);
+            fluxMag0Err = metadata->getAsDouble(key);
         }
     }
 
     _fluxMag0 = fluxMag0;
-    _fluxMag0Sigma = fluxMag0Sigma;
+    _fluxMag0Err = fluxMag0Err;
 }
 bool Calib::_throwOnNegativeFlux = true;
 void Calib::setThrowOnNegativeFlux(bool raiseException) noexcept { _throwOnNegativeFlux = raiseException; }
@@ -172,19 +172,19 @@ int stripCalibKeywords(std::shared_ptr<lsst::daf::base::PropertySet> metadata) {
 }  // namespace detail
 
 bool Calib::operator==(Calib const& rhs) const noexcept {
-    return _fluxMag0 == rhs._fluxMag0 && _fluxMag0Sigma == rhs._fluxMag0Sigma;
+    return _fluxMag0 == rhs._fluxMag0 && _fluxMag0Err == rhs._fluxMag0Err;
 }
 
-void Calib::setFluxMag0(double fluxMag0, double fluxMag0Sigma) {
+void Calib::setFluxMag0(double fluxMag0, double fluxMag0Err) {
     _fluxMag0 = fluxMag0;
-    _fluxMag0Sigma = fluxMag0Sigma;
+    _fluxMag0Err = fluxMag0Err;
 }
-void Calib::setFluxMag0(std::pair<double, double> fluxMag0AndSigma) {
-    _fluxMag0 = fluxMag0AndSigma.first;
-    _fluxMag0Sigma = fluxMag0AndSigma.second;
+void Calib::setFluxMag0(std::pair<double, double> fluxMag0AndErr) {
+    _fluxMag0 = fluxMag0AndErr.first;
+    _fluxMag0Err = fluxMag0AndErr.second;
 }
 
-std::pair<double, double> Calib::getFluxMag0() const { return std::make_pair(_fluxMag0, _fluxMag0Sigma); }
+std::pair<double, double> Calib::getFluxMag0() const { return std::make_pair(_fluxMag0, _fluxMag0Err); }
 
 namespace {
 
@@ -207,7 +207,7 @@ inline bool isNegativeFlux(double flux, bool doThrow) {
 inline double convertToFlux(double fluxMag0, double mag) { return fluxMag0 * ::pow(10.0, -0.4 * mag); }
 inline double convertToFluxErr(double fluxMag0InvSNR, double flux, double magErr) {
     // Want to:
-    //     return flux * hypot(_fluxMag0Sigma/_fluxMag0, 0.4*std::log(10)*magSigma/mag);
+    //     return flux * hypot(_fluxMag0Err/_fluxMag0, 0.4*std::log(10)*magSigma/mag);
     // But hypot is not standard C++ so use <http://en.wikipedia.org/wiki/Hypot#Implementation>
     double a = fluxMag0InvSNR;
     double b = 0.4 * std::log(10.0) * magErr;
@@ -246,7 +246,7 @@ ndarray::Array<double, 1> Calib::getFlux(ndarray::Array<double const, 1> const& 
 std::pair<double, double> Calib::getFlux(double const mag, double const magSigma) const {
     checkNegativeFlux0(_fluxMag0);
     double const flux = convertToFlux(_fluxMag0, mag);
-    double const fluxErr = convertToFluxErr(_fluxMag0Sigma / _fluxMag0, flux, magSigma);
+    double const fluxErr = convertToFluxErr(_fluxMag0Err / _fluxMag0, flux, magSigma);
     return std::make_pair(flux, fluxErr);
 }
 
@@ -267,7 +267,7 @@ std::pair<ndarray::Array<double, 1>, ndarray::Array<double, 1>> Calib::getFlux(
     ndarray::Array<double, 1>::Iterator fluxIter = flux.begin();
     ndarray::Array<double, 1>::Iterator fluxErrIter = fluxErr.begin();
 
-    double fluxMag0InvSNR = _fluxMag0Sigma / _fluxMag0;
+    double fluxMag0InvSNR = _fluxMag0Err / _fluxMag0;
     for (; magIter != mag.end(); ++magIter, ++magErrIter, ++fluxIter, ++fluxErrIter) {
         *fluxIter = convertToFlux(_fluxMag0, *magIter);
         *fluxErrIter = convertToFluxErr(fluxMag0InvSNR, *fluxIter, *magErrIter);
@@ -292,7 +292,7 @@ std::pair<double, double> Calib::getMagnitude(double const flux, double const fl
     }
 
     double mag, magErr;
-    convertToMagWithErr(&mag, &magErr, _fluxMag0, _fluxMag0Sigma, flux, fluxErr);
+    convertToMagWithErr(&mag, &magErr, _fluxMag0, _fluxMag0Err, flux, fluxErr);
     return std::make_pair(mag, magErr);
 }
 
@@ -343,7 +343,7 @@ std::pair<ndarray::Array<double, 1>, ndarray::Array<double, 1>> Calib::getMagnit
             continue;
         }
         double f, df;
-        convertToMagWithErr(&f, &df, _fluxMag0, _fluxMag0Sigma, *fluxIter, *fluxErrIter);
+        convertToMagWithErr(&f, &df, _fluxMag0, _fluxMag0Err, *fluxIter, *fluxErrIter);
         *magIter = f;
         *magErrIter = df;
     }
@@ -365,7 +365,7 @@ public:
     table::Key<std::int64_t> midTime;
     table::Key<double> expTime;
     table::Key<double> fluxMag0;
-    table::Key<double> fluxMag0Sigma;
+    table::Key<double> fluxMag0Err;
 
     // No copying
     CalibKeys(const CalibKeys&) = delete;
@@ -376,7 +376,7 @@ public:
     CalibKeys& operator=(CalibKeys&&) = delete;
 
     CalibKeys(int tableVersion = CALIB_TABLE_CURRENT_VERSION)
-            : schema(), midTime(), expTime(), fluxMag0(), fluxMag0Sigma() {
+            : schema(), midTime(), expTime(), fluxMag0(), fluxMag0Err() {
         if (tableVersion == 1) {
             // obsolete fields
             midTime = schema.addField<std::int64_t>(
@@ -384,7 +384,7 @@ public:
             expTime = schema.addField<double>(EXPTIME_FIELD_NAME, "exposure time", "s");
         }
         fluxMag0 = schema.addField<double>("fluxmag0", "flux of a zero-magnitude object", "count");
-        fluxMag0Sigma = schema.addField<double>("fluxmag0.err", "1-sigma error on fluxmag0", "count");
+        fluxMag0Err = schema.addField<double>("fluxmag0.err", "1-sigma error on fluxmag0", "count");
     }
 };
 
@@ -407,7 +407,7 @@ public:
         LSST_ARCHIVE_ASSERT(catalogs.front().getSchema() == keys.schema);
         table::BaseRecord const& record = catalogs.front().front();
         std::shared_ptr<Calib> result(new Calib());
-        result->setFluxMag0(record.get(keys.fluxMag0), record.get(keys.fluxMag0Sigma));
+        result->setFluxMag0(record.get(keys.fluxMag0), record.get(keys.fluxMag0Err));
         return result;
     }
 
@@ -428,13 +428,13 @@ void Calib::write(OutputArchiveHandle& handle) const {
     std::shared_ptr<table::BaseRecord> record = cat.addNew();
     std::pair<double, double> fluxMag0 = getFluxMag0();
     record->set(keys.fluxMag0, fluxMag0.first);
-    record->set(keys.fluxMag0Sigma, fluxMag0.second);
+    record->set(keys.fluxMag0Err, fluxMag0.second);
     handle.saveCatalog(cat);
 }
 
 Calib& Calib::operator*=(double const scale) {
     _fluxMag0 *= scale;
-    _fluxMag0Sigma *= scale;
+    _fluxMag0Err *= scale;
     return *this;
 }
 

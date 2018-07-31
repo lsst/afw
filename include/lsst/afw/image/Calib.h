@@ -125,13 +125,13 @@ public:
      * Set the flux of a zero-magnitude object
      *
      * @param fluxMag0 The flux in question (ADUs)
-     * @param fluxMag0Sigma The error in the flux (ADUs)
+     * @param fluxMag0Err The error in the flux (ADUs)
      */
-    void setFluxMag0(double fluxMag0, double fluxMag0Sigma = 0.0);
+    void setFluxMag0(double fluxMag0, double fluxMag0Err = 0.0);
     /**
-     * @param fluxMag0AndSigma The flux and error (ADUs)
+     * @param fluxMag0AndErr The flux and error (ADUs)
      */
-    void setFluxMag0(std::pair<double, double> fluxMag0AndSigma);
+    void setFluxMag0(std::pair<double, double> fluxMag0AndErr);
     /**
      * Return the flux, and error in flux, of a zero-magnitude object
      */
@@ -213,7 +213,7 @@ protected:
 
 private:
     double _fluxMag0;
-    double _fluxMag0Sigma;
+    double _fluxMag0Err;
     /**
      * Control whether we throw an exception when faced with a negative flux
      */
