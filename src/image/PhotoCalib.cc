@@ -37,7 +37,7 @@ namespace lsst {
 namespace afw {
 
 template std::shared_ptr<image::PhotoCalib> table::io::PersistableFacade<image::PhotoCalib>::dynamicCast(
-        std::shared_ptr<table::io::Persistable> const&);
+        std::shared_ptr<table::io::Persistable> const &);
 
 namespace image {
 
@@ -51,6 +51,30 @@ double toMagnitude(double instFlux, double scale) { return -2.5 * log10(instFlux
 
 double toMaggiesErr(double instFlux, double instFluxErr, double scale, double scaleErr, double maggies) {
     return maggies * hypot(instFluxErr / instFlux, scaleErr / scale);
+}
+
+/**
+ * Compute the variance of an array of fluxes, for calculations on MaskedImages.
+ *
+ * MaskedImage stores the variance instead of the standard deviation, so we can skip a sqrt().
+ * Usage in calibrateImage() is to compute maggies directly, so that the calibration scale is
+ * `maggies/instFlux` (and thus not passed as an argument).
+ *
+ * @param instFlux[in] The instrumental flux.
+ * @param instFluxVar[in] The variance of the instrumental fluxes.
+ * @param scaleErr[in] The error on the calibration scale.
+ * @param maggies[in] The physical fluxes calculated from the instrumental fluxes.
+ * @param out[out] The output array to fill with the variance values.
+ */
+void toMaggiesVariance(ndarray::Array<float const, 2, 1> const &instFlux,
+                       ndarray::Array<float const, 2, 1> const &instFluxVar, float scaleErr,
+                       ndarray::Array<float const, 2, 1> const &maggies, ndarray::Array<float, 2, 1> out) {
+    auto eigenMaggies = ndarray::asEigen<Eigen::ArrayXpr>(maggies);
+    auto eigenInstFluxVar = ndarray::asEigen<Eigen::ArrayXpr>(instFluxVar);
+    auto eigenInstFlux = ndarray::asEigen<Eigen::ArrayXpr>(instFlux);
+    auto eigenOut = ndarray::asEigen<Eigen::ArrayXpr>(out);
+    eigenOut = eigenMaggies.square() * (eigenInstFluxVar / eigenInstFlux.square() +
+                                        (scaleErr / eigenMaggies * eigenInstFlux).square());
 }
 
 double toMagnitudeErr(double instFlux, double instFluxErr, double scale, double scaleErr) {
@@ -195,6 +219,21 @@ std::ostream &operator<<(std::ostream &os, PhotoCalib const &photoCalib) {
     else
         os << *(photoCalib._calibration) << " with ";
     return os << "mean: " << photoCalib._calibrationMean << " err: " << photoCalib._calibrationErr;
+}
+
+MaskedImage<float> PhotoCalib::calibrateImage(MaskedImage<float> const &maskedImage) const {
+    // Deep copy construct, as we're mutiplying in-place.
+    auto result = MaskedImage<float>(maskedImage, true);
+
+    if (_isConstant) {
+        *(result.getImage()) *= _calibrationMean;
+    } else {
+        _calibration->multiplyImage(*(result.getImage()), true);  // only in the overlap region
+    }
+    toMaggiesVariance(maskedImage.getImage()->getArray(), maskedImage.getVariance()->getArray(),
+                      _calibrationErr, result.getImage()->getArray(), result.getVariance()->getArray());
+
+    return result;
 }
 
 // ------------------- persistence -------------------
