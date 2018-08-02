@@ -117,7 +117,7 @@ def translateSliceArgs(sliceArgs, bboxGetter):
             raise ValueError("Slices with steps are not supported in image indexing.")
         begin = Point2I(x.start, y.start)
         end = Point2I(x.stop, y.stop)
-        return Box2I(begin, end - begin), None, origin
+        return Box2I(begin, end - begin, invert=False), None, origin
 
     assert not isinstance(y, slice)
     return None, Point2I(x, y), origin
@@ -220,7 +220,7 @@ def imageIndicesToNumpy(sliceArgs, bboxGetter):
     if origin == PARENT:
         if isinstance(x, slice):
             assert isinstance(y, slice)
-            bbox = Box2I(Point2I(x.start, y.start), Extent2I(x.stop-x.start, y.stop-y.start))
+            bbox = Box2I(Point2I(x.start, y.start), Extent2I(x.stop-x.start, y.stop-y.start), invert=False)
             x = slice(x.start - x0, x.stop - x0)
             y = slice(y.start - y0, y.stop - y0)
         else:
@@ -234,8 +234,8 @@ def imageIndicesToNumpy(sliceArgs, bboxGetter):
     # Use a local bounding box
     if isinstance(x, slice):
         assert isinstance(y, slice)
-        bbox = Box2I(Point2I(x.start + x0, y.start + y0),
-                     Extent2I(x.stop-x.start, y.stop-y.start))
+        bbox = Box2I(Point2I(x.start + x0, y.start + y0), Extent2I(x.stop-x.start, y.stop-y.start), 
+                     invert=False)
     else:
         bbox = None
     return y, x, bbox
