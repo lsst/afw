@@ -169,7 +169,7 @@ afwMath.Background and extract the interpStyle and undersampleStyle from the as-
             width = md.getScalar("BKGD_WIDTH")
             height = md.getScalar("BKGD_HEIGHT")
             imageBBox = lsst.geom.BoxI(lsst.geom.PointI(
-                x0, y0), lsst.geom.ExtentI(width, height))
+                x0, y0), lsst.geom.ExtentI(width, height), invert=False)
 
             interpStyle = afwMath.Interpolate.Style(md.getScalar("INTERPSTYLE"))
             undersampleStyle = afwMath.UndersampleStyle(

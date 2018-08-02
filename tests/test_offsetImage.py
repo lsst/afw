@@ -278,8 +278,8 @@ class BinImageTestCase(unittest.TestCase):
         self.assertEqual(stats.getValue(afwMath.MAX), val)
 
         inImage.set(0)
-        subImg = inImage.Factory(inImage, lsst.geom.BoxI(lsst.geom.PointI(4, 4), lsst.geom.ExtentI(4, 8)),
-                                 afwImage.LOCAL)
+        subImg = inImage.Factory(inImage, lsst.geom.BoxI(lsst.geom.PointI(4, 4), lsst.geom.ExtentI(4, 8),
+                                                         invert=False), afwImage.LOCAL)
         subImg.set(100)
         del subImg
         outImage = afwMath.binImage(inImage, binX, binY)

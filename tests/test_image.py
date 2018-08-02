@@ -182,7 +182,8 @@ class ImageTestCase(lsst.utils.tests.TestCase):
     def testAllocateLargeImages(self):
         """Try to allocate a Very large image"""
         bbox = lsst.geom.BoxI(lsst.geom.PointI(-1 << 30, -1 << 30),
-                              lsst.geom.PointI(1 << 30, 1 << 30))
+                              lsst.geom.PointI(1 << 30, 1 << 30),
+                              invert=False)
 
         def tst():
             afwImage.ImageF(bbox)
@@ -279,7 +280,7 @@ class ImageTestCase(lsst.utils.tests.TestCase):
             self.assertFloatsEqual(destIm.getArray(), srcIm.getArray())
 
             destIm[:] = -1.0
-            destIm.assign(srcIm, lsst.geom.Box2I(), invert=False)
+            destIm.assign(srcIm, lsst.geom.Box2I())
             self.assertFloatsEqual(destIm.getArray(), srcIm.getArray())
 
     def testAddScaledImages(self):
@@ -526,7 +527,7 @@ class ImageTestCase(lsst.utils.tests.TestCase):
     def testImageSliceFromBox(self):
         """Test using a Box2I to index an Image"""
         im = afwImage.ImageF(10, 20)
-        bbox = lsst.geom.BoxI(lsst.geom.PointI(1, 3), lsst.geom.PointI(6, 9))
+        bbox = lsst.geom.BoxI(lsst.geom.PointI(1, 3), lsst.geom.PointI(6, 9), invert=False)
         im[bbox] = -1
 
         if display:
@@ -540,7 +541,7 @@ class ImageTestCase(lsst.utils.tests.TestCase):
         """Test using a Box2I to index an Image"""
         im = afwImage.ImageF(10, 20)
         im.setXY0(50, 100)
-        bbox = lsst.geom.BoxI(lsst.geom.PointI(51, 103), lsst.geom.ExtentI(6, 7))
+        bbox = lsst.geom.BoxI(lsst.geom.PointI(51, 103), lsst.geom.ExtentI(6, 7), invert=False)
         im[bbox] = -1
 
         if display:

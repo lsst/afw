@@ -87,7 +87,7 @@ struct tag<LsstRing> {
 namespace {
 
 /// @internal Convert BoostBox to LsstBox
-LsstBox boostBoxToLsst(BoostBox const& box) { return LsstBox(box.min_corner(), box.max_corner()); }
+LsstBox boostBoxToLsst(BoostBox const& box) { return LsstBox(box.min_corner(), box.max_corner(), false); }
 
 /// @internal Convert box to corners
 std::vector<LsstPoint> boxToCorners(LsstBox const& box) {
@@ -120,7 +120,8 @@ void addSubSampledEdge(std::vector<LsstPoint>& vertices,  // Vector of points to
 /// @internal Calculate area of overlap between polygon and pixel
 double pixelOverlap(BoostPolygon const& poly, int const x, int const y) {
     std::vector<BoostPolygon> overlap;  // Overlap between pixel and polygon
-    LsstBox const pixel(lsst::geom::Point2D(x - 0.5, y - 0.5), lsst::geom::Point2D(x + 0.5, y + 0.5));
+    LsstBox const pixel(lsst::geom::Point2D(x - 0.5, y - 0.5), lsst::geom::Point2D(x + 0.5, y + 0.5),
+                        false);
     boost::geometry::intersection(poly, pixel, overlap);
     double area = 0.0;
     for (std::vector<BoostPolygon>::const_iterator i = overlap.begin(); i != overlap.end(); ++i) {
@@ -441,7 +442,7 @@ std::shared_ptr<afw::image::Image<float>> Polygon::createImage(lsst::geom::Box2I
         double const yPixelMin = (double)y - 0.5, yPixelMax = (double)y + 0.5;
         BoostPolygon row;  // A polygon of row y
         boost::geometry::assign(
-                row, LsstBox(lsst::geom::Point2D(xMin, yPixelMin), lsst::geom::Point2D(xMax, yPixelMax)));
+                row, LsstBox(lsst::geom::Point2D(xMin, yPixelMin), lsst::geom::Point2D(xMax, yPixelMax), false));
         std::vector<BoostPolygon> intersections;
         boost::geometry::intersection(_impl->poly, row, intersections);
 

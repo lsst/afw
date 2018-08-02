@@ -157,7 +157,7 @@ class HeavyFootprintTestCase(lsst.utils.tests.TestCase):
 
         fs.makeHeavy(self.mi)
 
-        bbox = lsst.geom.BoxI(lsst.geom.PointI(9, 1), lsst.geom.ExtentI(7, 4))
+        bbox = lsst.geom.BoxI(lsst.geom.PointI(9, 1), lsst.geom.ExtentI(7, 4), invert=False)
         omi = self.mi.Factory(self.mi, bbox, afwImage.LOCAL, True)
         omi.set((0, 0x0, 0))
 

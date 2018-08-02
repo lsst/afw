@@ -70,7 +70,8 @@ class ApproximateTestCase(lsst.utils.tests.TestCase):
         # bbox of the image returned by getImage)
         bbox = lsst.geom.BoxI(lsst.geom.PointI(0, 0),
                               lsst.geom.PointI(binsize*ramp.getWidth() - 1,
-                                               binsize*ramp.getHeight() - 1))
+                                               binsize*ramp.getHeight() - 1),
+                              invert=False)
 
         order = 3                       # 1 would be enough to fit the ramp
         actrl = afwMath.ApproximateControl(
@@ -106,7 +107,8 @@ class ApproximateTestCase(lsst.utils.tests.TestCase):
             ramp, rampCoeffs, xVec, yVec = self.makeRamp(binsize)
             ramp.set(badValue)
             bbox = lsst.geom.BoxI(lsst.geom.PointI(0, 0), lsst.geom.PointI(binsize*ramp.getWidth() - 1,
-                                                                           binsize*ramp.getHeight() - 1))
+                                                                           binsize*ramp.getHeight() - 1),
+                                  invert=False)
             order = 2
             actrl = afwMath.ApproximateControl(
                 afwMath.ApproximateControl.CHEBYSHEV, order)

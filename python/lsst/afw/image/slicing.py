@@ -234,7 +234,7 @@ def imageIndicesToNumpy(sliceArgs, bboxGetter):
     # Use a local bounding box
     if isinstance(x, slice):
         assert isinstance(y, slice)
-        bbox = Box2I(Point2I(x.start + x0, y.start + y0), Extent2I(x.stop-x.start, y.stop-y.start), 
+        bbox = Box2I(Point2I(x.start + x0, y.start + y0), Extent2I(x.stop-x.start, y.stop-y.start),
                      invert=False)
     else:
         bbox = None

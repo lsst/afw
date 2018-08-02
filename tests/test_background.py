@@ -53,7 +53,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         np.random.seed(1)
         self.val = 10
         self.image = afwImage.ImageF(lsst.geom.Box2I(
-            lsst.geom.Point2I(1000, 500), lsst.geom.Extent2I(100, 200)), invert=False)
+            lsst.geom.Point2I(1000, 500), lsst.geom.Extent2I(100, 200), invert=False))
         self.image.set(self.val)
 
     def tearDown(self):
@@ -485,7 +485,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         """Check that an extensively masked image doesn't lead to NaNs in the background estimation"""
         image = afwImage.MaskedImageF(800, 800)
         msk = image.getMask()
-        bbox = lsst.geom.BoxI(lsst.geom.PointI(560, 0), lsst.geom.PointI(799, 335))
+        bbox = lsst.geom.BoxI(lsst.geom.PointI(560, 0), lsst.geom.PointI(799, 335), invert=False)
         smsk = msk.Factory(msk, bbox)
         smsk.set(msk.getPlaneBitMask("DETECTED"))
 

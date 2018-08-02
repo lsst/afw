@@ -54,7 +54,7 @@ void Ellipse::writeParameters(double* iter) const {
 
 lsst::geom::Box2D Ellipse::computeBBox() const {
     lsst::geom::Extent2D dimensions = getCore().computeDimensions();
-    return lsst::geom::Box2D(getCenter() - dimensions * 0.5, dimensions);
+    return lsst::geom::Box2D(getCenter() - dimensions * 0.5, dimensions, false);
 }
 
 Ellipse& Ellipse::operator=(Ellipse const& other) {

@@ -267,7 +267,7 @@ class DetectorBuilder:
         # strip off brackets and split into parts
         x1, x2, y1, y2 = [int(el) for el in re.split(
             '[:,]', boxString.strip()[1:-1])]
-        box = lsst.geom.BoxI(lsst.geom.PointI(x1, y1), lsst.geom.PointI(x2, y2))
+        box = lsst.geom.BoxI(lsst.geom.PointI(x1, y1), lsst.geom.PointI(x2, y2), invert=False)
         # account for the difference between FITS convention and LSST convention for
         # index of LLC.
         box.shift(lsst.geom.Extent2I(-1, -1))

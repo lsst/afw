@@ -810,7 +810,7 @@ FootprintSet::FootprintSet(const image::MaskedImage<ImagePixelT, MaskPixelT> &ma
         : daf::base::Citizen(typeid(this)),
           _footprints(new FootprintList()),
           _region(lsst::geom::Point2I(maskedImg.getX0(), maskedImg.getY0()),
-                  lsst::geom::Extent2I(maskedImg.getWidth(), maskedImg.getHeight())) {
+                  lsst::geom::Extent2I(maskedImg.getWidth(), maskedImg.getHeight()), false) {
     typedef typename image::MaskedImage<ImagePixelT, MaskPixelT>::Variance::Pixel VariancePixelT;
     // Find the Footprints
     switch (threshold.getType()) {
