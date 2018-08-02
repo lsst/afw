@@ -233,7 +233,7 @@ class MultibandBase(ABC):
         xy0: `Point2I`
             New minimum bounds of the bounding box
         """
-        self._bbox = Box2I(xy0, self._bbox.getDimensions())
+        self._bbox = Box2I(xy0, self._bbox.getDimensions(), invert=False)
         for singleObj in self.singles:
             singleObj.setXY0(xy0)
 
@@ -254,7 +254,7 @@ class MultibandBase(ABC):
         """
         raise NotImplementedError("shiftedBy not implemented until DM-10781")
         result = self.clone(False)
-        result._bbox = Box2I(xy0, result._bbox.getDimensions())
+        result._bbox = Box2I(xy0, result._bbox.getDimensions(), invert=False)
         for singleObj in result.singles:
             singleObj.setXY0(xy0)
         return result
