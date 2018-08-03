@@ -572,6 +572,14 @@ class MultibandExposureTestCase(lsst.utils.tests.TestCase):
             self.Mask.addMaskPlane(p)
         del self.defaultMaskPlanes
 
+    def testConstructor(self):
+        exposures = self.exposure.singles
+        print(exposures[0].getPsf())
+        filters = self.exposure.filters
+        newExposure = MultibandExposure.fromExposures(filters, exposures)
+        for exposure in newExposure.singles:
+            self.assertNotEqual(exposure.getPsf(), None)
+
     def testFilterSlicing(self):
         _testMaskedImageFilters(self, self.exposure, ExposureF)
 

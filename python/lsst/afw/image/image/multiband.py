@@ -696,7 +696,7 @@ class MultibandTripleBase(MultibandBase):
         raise ValueError("Unrecognized origin, expected either PARENT or LOCAL")
 
 
-def tripleFromSingles(cls, filters, singles):
+def tripleFromSingles(cls, filters, singles, **kwargs):
     """Construct a MultibandTriple from a collection of single band objects
 
     Parameters
@@ -712,7 +712,7 @@ def tripleFromSingles(cls, filters, singles):
     image = MultibandImage.fromImages(filters, [s.image for s in singles])
     mask = MultibandMask.fromMasks(filters, [s.mask for s in singles])
     variance = MultibandImage.fromImages(filters, [s.variance for s in singles])
-    return cls(filters, image, mask, variance)
+    return cls(filters, image, mask, variance, **kwargs)
 
 
 def tripleFromArrays(cls, filters, image, mask, variance, bbox=None):
