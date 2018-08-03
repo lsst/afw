@@ -62,10 +62,7 @@ double toMagnitudeErr(double instFlux, double instFluxErr, double scale, double 
 // ------------------- Conversions to Maggies -------------------
 
 double PhotoCalib::instFluxToMaggies(double instFlux, lsst::geom::Point<double, 2> const &point) const {
-    if (_isConstant)
-        return toMaggies(instFlux, _calibrationMean);
-    else
-        return toMaggies(instFlux, _calibration->evaluate(point));
+    return toMaggies(instFlux, evaluate(point));
 }
 
 double PhotoCalib::instFluxToMaggies(double instFlux) const { return toMaggies(instFlux, _calibrationMean); }
@@ -73,10 +70,7 @@ double PhotoCalib::instFluxToMaggies(double instFlux) const { return toMaggies(i
 Measurement PhotoCalib::instFluxToMaggies(double instFlux, double instFluxErr,
                                           lsst::geom::Point<double, 2> const &point) const {
     double calibration, err, maggies;
-    if (_isConstant)
-        calibration = _calibrationMean;
-    else
-        calibration = _calibration->evaluate(point);
+    calibration = evaluate(point);
     maggies = toMaggies(instFlux, calibration);
     err = toMaggiesErr(instFlux, instFluxErr, calibration, _calibrationErr, maggies);
     return Measurement(maggies, err);
@@ -120,10 +114,7 @@ void PhotoCalib::instFluxToMaggies(afw::table::SourceCatalog &sourceCatalog, std
 // ------------------- Conversions to Magnitudes -------------------
 
 double PhotoCalib::instFluxToMagnitude(double instFlux, lsst::geom::Point<double, 2> const &point) const {
-    if (_isConstant)
-        return toMagnitude(instFlux, _calibrationMean);
-    else
-        return toMagnitude(instFlux, _calibration->evaluate(point));
+    return toMagnitude(instFlux, evaluate(point));
 }
 
 double PhotoCalib::instFluxToMagnitude(double instFlux) const {
@@ -133,10 +124,7 @@ double PhotoCalib::instFluxToMagnitude(double instFlux) const {
 Measurement PhotoCalib::instFluxToMagnitude(double instFlux, double instFluxErr,
                                             lsst::geom::Point<double, 2> const &point) const {
     double calibration, err, magnitude;
-    if (_isConstant)
-        calibration = _calibrationMean;
-    else
-        calibration = _calibration->evaluate(point);
+    calibration = evaluate(point);
     magnitude = toMagnitude(instFlux, calibration);
     err = toMagnitudeErr(instFlux, instFluxErr, calibration, _calibrationErr);
     return Measurement(magnitude, err);
@@ -281,6 +269,13 @@ void PhotoCalib::write(OutputArchiveHandle &handle) const {
 
 // ------------------- private/protected helpers -------------------
 
+double PhotoCalib::evaluate(lsst::geom::Point<double, 2> const &point) const {
+    if (_isConstant)
+        return _calibrationMean;
+    else
+        return _calibration->evaluate(point);
+}
+
 void PhotoCalib::instFluxToMaggiesArray(afw::table::SourceCatalog const &sourceCatalog,
                                         std::string const &instFluxField,
                                         ndarray::Array<double, 2, 2> result) const {
@@ -291,10 +286,7 @@ void PhotoCalib::instFluxToMaggiesArray(afw::table::SourceCatalog const &sourceC
     for (auto const &rec : sourceCatalog) {
         instFlux = rec.get(instFluxKey);
         instFluxErr = rec.get(instFluxErrKey);
-        if (_isConstant)
-            calibration = _calibrationMean;
-        else
-            calibration = _calibration->evaluate(rec.getCentroid());
+        calibration = evaluate(rec.getCentroid());
         maggies = toMaggies(instFlux, calibration);
         (*iter)[0] = maggies;
         (*iter)[1] = toMaggiesErr(instFlux, instFluxErr, calibration, _calibrationErr, maggies);
@@ -312,15 +304,13 @@ void PhotoCalib::instFluxToMagnitudeArray(afw::table::SourceCatalog const &sourc
     for (auto const &rec : sourceCatalog) {
         instFlux = rec.get(instFluxKey);
         instFluxErr = rec.get(instFluxErrKey);
-        if (_isConstant)
-            calibration = _calibrationMean;
-        else
-            calibration = _calibration->evaluate(rec.getCentroid());
+        calibration = evaluate(rec.getCentroid());
         (*iter)[0] = toMagnitude(instFlux, calibration);
         (*iter)[1] = toMagnitudeErr(instFlux, instFluxErr, calibration, _calibrationErr);
         iter++;
     }
 }
+
 }  // namespace image
 }  // namespace afw
 }  // namespace lsst

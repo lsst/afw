@@ -419,6 +419,13 @@ private:
     // Is this spatially-constant? Used to short-circuit getting centroids.
     bool _isConstant;
 
+    /**
+     * Return the calibration evaluated at a point.
+     *
+     * Helper function to manage constant vs. non-constant PhotoCalibs
+     */
+    double evaluate(lsst::geom::Point<double, 2> const &point) const;
+
     /// Returns the spatially-constant calibration (for setting _calibrationMean)
     double computeCalibrationMean(std::shared_ptr<afw::math::BoundedField> calibration) const;
 
