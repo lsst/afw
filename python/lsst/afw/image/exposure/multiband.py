@@ -51,7 +51,8 @@ class MultibandExposure(MultibandTripleBase):
 
         see `tripleFromExposures` for a description of parameters
         """
-        return tripleFromSingles(MultibandExposure, filters, singles)
+        psfs = [s.getPsf() for s in singles]
+        return tripleFromSingles(MultibandExposure, filters, singles, psfs=psfs)
 
     @staticmethod
     def fromArrays(filters, image, mask, variance, bbox=None):
