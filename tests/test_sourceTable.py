@@ -94,22 +94,22 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         np.random.seed(1)
         self.schema = lsst.afw.table.SourceTable.makeMinimalSchema()
         self.fluxKey = self.schema.addField("a_flux", type="D")
-        self.fluxErrKey = self.schema.addField("a_fluxSigma", type="D")
+        self.fluxErrKey = self.schema.addField("a_fluxErr", type="D")
         self.fluxFlagKey = self.schema.addField("a_flag", type="Flag")
 
         # the meas field is added using a functor key, but the error is added
         # as scalars, as we lack a ResultKey functor as exists in meas_base
         self.centroidKey = lsst.afw.table.Point2DKey.addFields(
             self.schema, "b", "", "pixel")
-        self.xErrKey = self.schema.addField("b_xSigma", type="F")
-        self.yErrKey = self.schema.addField("b_ySigma", type="F")
+        self.xErrKey = self.schema.addField("b_xErr", type="F")
+        self.yErrKey = self.schema.addField("b_yErr", type="F")
         self.centroidFlagKey = self.schema.addField("b_flag", type="Flag")
 
         self.shapeKey = lsst.afw.table.QuadrupoleKey.addFields(
             self.schema, "c", "", lsst.afw.table.CoordinateType.PIXEL)
-        self.xxErrKey = self.schema.addField("c_xxSigma", type="F")
-        self.xyErrKey = self.schema.addField("c_xySigma", type="F")
-        self.yyErrKey = self.schema.addField("c_yySigma", type="F")
+        self.xxErrKey = self.schema.addField("c_xxErr", type="F")
+        self.xyErrKey = self.schema.addField("c_xyErr", type="F")
+        self.yyErrKey = self.schema.addField("c_yyErr", type="F")
         self.shapeFlagKey = self.schema.addField("c_flag", type="Flag")
 
         self.table = lsst.afw.table.SourceTable.make(self.schema)
@@ -205,7 +205,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(len(self.catalog), len(new))
         for r1, r2 in zip(self.catalog, new):
             # Columns that are easy to test
-            for field in ("a_flux", "a_fluxSigma", "id"):
+            for field in ("a_flux", "a_fluxErr", "id"):
                 k1 = self.catalog.schema.find(field).getKey()
                 k2 = new.schema.find(field).getKey()
                 self.assertEqual(r1[k1], r2[k2])
@@ -254,7 +254,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.table.defineCentroid("b")
         self.table.defineShape("c")
         self.assertFloatsEqual(cols2["a_flux"], cols2.getPsfFlux())
-        self.assertFloatsEqual(cols2["a_fluxSigma"], cols2.getPsfFluxErr())
+        self.assertFloatsEqual(cols2["a_fluxErr"], cols2.getPsfFluxErr())
         self.assertFloatsEqual(cols2["b_x"], cols2.getX())
         self.assertFloatsEqual(cols2["b_y"], cols2.getY())
         self.assertFloatsEqual(cols2["c_xx"], cols2.getIxx())
@@ -444,7 +444,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.catalog.sort(parentKey)
         self.catalog.getChildren(0)  # Just care this succeeds
 
-    def testFitsReadBackwardsCompatibility(self):
+    def testFitsReadVersion0Compatibility(self):
         cat = lsst.afw.table.SourceCatalog.readFits(
             os.path.join(testPath, "data/empty-v0.fits"))
         self.assertTrue(cat.getPsfFluxSlot().isValid())
@@ -501,6 +501,26 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
                          cat.schema.find("centroid_sdss_flags").key)
         self.assertEqual(cat.getShapeSlot().getFlagKey(),
                          cat.schema.find("shape_hsm_moments_flags").key)
+
+    def testFitsReadVersion1Compatibility(self):
+        """Test reading of catalogs with version 1 schema
+
+        Version 2 catalogs (the current version) provide aliases to
+        fields whose names end in Sigma: xErr -> xSigma for any x
+        """
+        cat = lsst.afw.table.SourceCatalog.readFits(
+            os.path.join(testPath, "data", "sourceTable-v1.fits"))
+        self.assertEqual(cat.schema["a_fluxSigma"].asKey(), cat.schema["a_fluxErr"].asKey())
+        self.assertEqual(
+            cat.getCentroidSlot().getErrKey(),
+            lsst.afw.table.CovarianceMatrix2fKey(
+                cat.schema["slot_Centroid"],
+                ["x", "y"]))
+        self.assertEqual(
+            cat.getShapeSlot().getErrKey(),
+            lsst.afw.table.CovarianceMatrix3fKey(
+                cat.schema["slot_Shape"],
+                ["xx", "yy", "xy"]))
 
     def testDM1083(self):
         schema = lsst.afw.table.SourceTable.makeMinimalSchema()
@@ -572,7 +592,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         baseName = "afw_Test"
         fluxKey = schema.addField("%s_flux" % (baseName,),
                                   type=np.float64, doc="flux")
-        errKey = schema.addField("%s_fluxSigma" % (baseName,),
+        errKey = schema.addField("%s_fluxErr" % (baseName,),
                                  type=np.float64, doc="flux uncertainty")
         flagKey = schema.addField("%s_flag" % (baseName,),
                                   type="Flag", doc="flux flag")

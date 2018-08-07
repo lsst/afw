@@ -149,7 +149,7 @@ static void declareEllipseKey(py::module &mod) {
 
 template <typename T, int N>
 static void declareCovarianceMatrixKey(py::module &mod, const ::std::string &suffix) {
-    typedef std::vector<Key<T>> SigmaKeyArray;
+    typedef std::vector<Key<T>> ErrKeyArray;
     typedef std::vector<Key<T>> CovarianceKeyArray;
     typedef std::vector<std::string> NameArray;
 
@@ -158,7 +158,7 @@ static void declareCovarianceMatrixKey(py::module &mod, const ::std::string &suf
     cls.def(py::init<>());
     // Ordering of the next two ctor declaration matters, as a workaround for DM-8580.
     cls.def(py::init<SubSchema const &, NameArray const &>());
-    cls.def(py::init<SigmaKeyArray const &, CovarianceKeyArray const &>(), "sigma"_a,
+    cls.def(py::init<ErrKeyArray const &, CovarianceKeyArray const &>(), "err"_a,
             "cov"_a = CovarianceKeyArray());
     cls.def("__eq__", &CovarianceMatrixKey<T, N>::operator==, py::is_operator());
     cls.def("__ne__", &CovarianceMatrixKey<T, N>::operator!=, py::is_operator());

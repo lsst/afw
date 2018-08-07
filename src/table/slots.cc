@@ -41,7 +41,7 @@ void FluxSlotDefinition::setKeys(std::string const &alias, Schema const &schema)
     }
     _measKey = helper.replaced;
     try {
-        _errKey = s["fluxSigma"];
+        _errKey = s["fluxErr"];
     } catch (pex::exceptions::NotFoundError &) {
     }
     try {

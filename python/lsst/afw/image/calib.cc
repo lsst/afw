@@ -85,9 +85,9 @@ PYBIND11_MODULE(calib, mod) {
 
     /* Members */
     cls.def("setFluxMag0", (void (Calib::*)(double, double)) & Calib::setFluxMag0, "fluxMag0"_a,
-            "fluxMag0Sigma"_a = 0.0);
+            "fluxMag0Err"_a = 0.0);
     cls.def("setFluxMag0", (void (Calib::*)(std::pair<double, double>)) & Calib::setFluxMag0,
-            "fluxMag0AndSigma"_a);
+            "fluxMag0AndErr"_a);
     cls.def("getFluxMag0", &Calib::getFluxMag0);
     cls.def("getFlux", (double (Calib::*)(double const) const) & Calib::getFlux, "mag"_a);
     cls.def("getFlux",
