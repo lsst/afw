@@ -220,7 +220,7 @@ SchemaItem<T> SchemaImpl::find(std::string const &name) const {
         if (extractor.result) return *extractor.result;
     }
     throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundError,
-                      (boost::format("Field or subfield withname '%s' not found with type '%s'.") % name %
+                      (boost::format("Field or subfield with name '%s' not found with type '%s'.") % name %
                        Field<T>::getTypeString())
                               .str());
 }
