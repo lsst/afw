@@ -97,9 +97,11 @@ PySourceRecord declareSourceRecord(py::module &mod) {
     cls.def("getIxx", &SourceRecord::getIxx);
     cls.def("getIyy", &SourceRecord::getIyy);
     cls.def("getIxy", &SourceRecord::getIxy);
-    cls.def("updateCoord", (void (SourceRecord::*)(geom::SkyWcs const &)) & SourceRecord::updateCoord, "wcs"_a);
-    cls.def("updateCoord", (void (SourceRecord::*)(geom::SkyWcs const &, PointKey<double> const &)) &
-                                   SourceRecord::updateCoord,
+    cls.def("updateCoord", (void (SourceRecord::*)(geom::SkyWcs const &)) & SourceRecord::updateCoord,
+            "wcs"_a);
+    cls.def("updateCoord",
+            (void (SourceRecord::*)(geom::SkyWcs const &, PointKey<double> const &)) &
+                    SourceRecord::updateCoord,
             "wcs"_a, "key"_a);
     return cls;
 }
@@ -117,9 +119,9 @@ PySourceTable declareSourceTable(py::module &mod) {
     cls.def_static("makeMinimalSchema", &SourceTable::makeMinimalSchema);
     cls.def_static("getParentKey", &SourceTable::getParentKey);
     cls.def("copyRecord",
-            (std::shared_ptr<SourceRecord> (SourceTable::*)(BaseRecord const &)) & SourceTable::copyRecord);
+            (std::shared_ptr<SourceRecord>(SourceTable::*)(BaseRecord const &)) & SourceTable::copyRecord);
     cls.def("copyRecord",
-            (std::shared_ptr<SourceRecord> (SourceTable::*)(BaseRecord const &, SchemaMapper const &)) &
+            (std::shared_ptr<SourceRecord>(SourceTable::*)(BaseRecord const &, SchemaMapper const &)) &
                     SourceTable::copyRecord);
     cls.def("makeRecord", &SourceTable::makeRecord);
 
@@ -232,7 +234,7 @@ PYBIND11_MODULE(source, mod) {
     clsSourceCatalog.attr("Table") = clsSourceTable;
     clsSourceCatalog.attr("ColumnView") = clsSourceColumnView;
 }
-}
-}
-}
-}  // namespace lsst::afw::table::<anonymous>
+}  // namespace
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst
