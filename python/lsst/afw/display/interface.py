@@ -396,7 +396,7 @@ class Display:
         if isinstance(transparency, dict):
             assert name is None
             for k, v in transparency.items():
-                self.setMaskTransparency(k, v)
+                self.setMaskTransparency(v, k)
             return
 
         if transparency is not None and (transparency < 0 or transparency > 100):
