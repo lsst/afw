@@ -28,11 +28,13 @@ import numpy
 import warnings
 
 import lsst.geom
+from lsst.afw.fits import FitsError
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.daf.base as dafBase
 import lsst.log
+import lsst.pex.exceptions as pexExceptions
 
 from .rotateBBoxBy90 import rotateBBoxBy90
 from .assembleImage import assembleAmplifierImage, assembleAmplifierRawImage
@@ -459,44 +461,39 @@ class ButlerImage(FakeImageDataSource):
 
         im = None
         if self.butler is not None:
-            e = None
-            if self.type == "calexp":    # reading the exposure can die if the PSF's unknown
-                try:                     # need to switch to cid as below.  RHL has no calexp to test with
-                    fileName = self.butler.get(self.type + "_filename", ccd=ccd.getId(),
-                                               **self.kwargs)[0]
-                    im = imageFactory(fileName)
-                except Exception as e:
-                    pass
-            else:
-                im = None
-                for cid in [ccd.getId(), ccd.getName()]:
-                    try:
-                        im = self.butler.get(self.type, ccd=cid, **self.kwargs)
-                        ccd = im.getDetector()  # possibly modified by assembleCcdTask
-                        e = None
-                        break
-                    except Exception as e:
-                        continue
-
-                if im:
-                    im = im.getMaskedImage().getImage()
+            err = None
+            for dataId in [dict(detector=ccd.getId()), dict(ccd=ccd.getId()), dict(ccd=ccd.getName())]:
+                try:
+                    im = self.butler.get(self.type, dataId, **self.kwargs)
+                except FitsError as e:  # no point trying another dataId
+                    err = IOError(e.args[0].split('\n')[0]) # It's a very chatty error
+                    break
+                except Exception as e:  # try a different dataId
+                    if err is None:
+                        err = e
+                    continue
                 else:
-                    raise e
+                    ccd = im.getDetector()  # possibly modified by assembleCcdTask
+                    break
 
-            if e:
+            if im:
+                im = im.getMaskedImage().getImage()
+            else:
                 if self.verbose:
-                    log.info("Reading %s: %s" % (ccd.getId(), e))
+                    print("Reading %s: %s" % (ccd.getId(), err))  # lost by jupyterLab
+
+                log.warn("Reading %s: %s", ccd.getId(), err)
 
         if im is None:
             return self._prepareImage(ccd, imageFactory(*bbox.getDimensions()), binSize), ccd
 
         if self.type == "raw":
-            allowRotate = True          # all other images were rotated by the ISR
             if hasattr(im, 'convertF'):
                 im = im.convertF()
             if False and self.callback is None:   # we need to trim the raw image
                 self.callback = rawCallback
 
+        allowRotate = True
         if self.callback:
             try:
                 im = self.callback(im, ccd, imageSource=self)
@@ -504,6 +501,8 @@ class ButlerImage(FakeImageDataSource):
                 if self.verbose:
                     log.error("callback failed: %s" % e)
                 im = imageFactory(*bbox.getDimensions())
+            else:
+                allowRotate = False     # the callback was responsible for any rotations
 
         return self._prepareImage(ccd, im, binSize, allowRotate=allowRotate), ccd
 
