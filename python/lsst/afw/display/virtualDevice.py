@@ -117,6 +117,14 @@ class DisplayImpl:
                   (self.frame, "Image" if image else None,
                    "Mask" if mask else None, "Wcs" if wcs else None, title))
 
+    def _setImageColormap(self, cmap):
+        """Set the desired colourmap
+
+        @param the name of a colourmap (e.g. "gray") or a backend-specific object
+        """
+        if self.verbose:
+            print("virtual[%s]._setImageColormap(cmap=\"%s\")" % (self.frame, cmap))
+
     def _setMaskTransparency(self, transparency, maskplane):
         """Set the transparency of a maskplane
         @param transparency The desired transparency, in the range [0, 100]

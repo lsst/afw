@@ -165,6 +165,16 @@ class DisplayTestCase(unittest.TestCase):
         maskPlane = 'DETECTED'
         self.assertEqual(mpc[maskPlane], self.display0.getMaskPlaneColor(maskPlane))
 
+    def testSetDefaultImageColormap(self):
+        """Test that we can set the default colourmap
+        """
+        self.display0.setDefaultImageColormap("gray")
+
+    def testSetImageColormap(self):
+        """Test that we can set a colourmap
+        """
+        self.display0.setImageColormap("gray")
+
     def testClose(self):
         """Test that we can close devices."""
         self.display0.close()
