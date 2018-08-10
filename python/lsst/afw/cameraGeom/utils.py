@@ -466,7 +466,7 @@ class ButlerImage(FakeImageDataSource):
                 try:
                     im = self.butler.get(self.type, dataId, **self.kwargs)
                 except FitsError as e:  # no point trying another dataId
-                    err = IOError(e.args[0].split('\n')[0]) # It's a very chatty error
+                    err = IOError(e.args[0].split('\n')[0])  # It's a very chatty error
                     break
                 except Exception as e:  # try a different dataId
                     if err is None:
@@ -917,7 +917,6 @@ def makeImageFromCamera(camera, detectorNameList=None, background=numpy.nan, buf
         im = afwMath.rotateImageBy90(im, nQuarter)
 
         imView = camIm.Factory(camIm, bbox, afwImage.LOCAL)
-        import lsst.pex.exceptions as pexExceptions
         try:
             imView[:] = im
         except pexExceptions.LengthError as e:
