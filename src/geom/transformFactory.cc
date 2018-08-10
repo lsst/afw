@@ -158,7 +158,7 @@ std::shared_ptr<TransformPoint2ToPoint2> makeTransform(lsst::geom::AffineTransfo
     Point2Endpoint toEndpoint;
     auto const map = ast::MatrixMap(toNdArray(jacobian))
                              .then(ast::ShiftMap(toEndpoint.dataFromPoint(offset)))
-                             .simplify();
+                             .simplified();
     return std::make_shared<TransformPoint2ToPoint2>(*map);
 }
 

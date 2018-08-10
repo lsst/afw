@@ -43,7 +43,7 @@ namespace geom {
 template <class FromEndpoint, class ToEndpoint>
 Transform<FromEndpoint, ToEndpoint>::Transform(ast::Mapping const &mapping, bool simplify)
         : _fromEndpoint(mapping.getNIn()),
-          _mapping(simplify ? mapping.simplify() : mapping.copy()),
+          _mapping(simplify ? mapping.simplified() : mapping.copy()),
           _toEndpoint(mapping.getNOut()) {}
 
 template <typename FromEndpoint, typename ToEndpoint>
@@ -67,7 +67,7 @@ Transform<FromEndpoint, ToEndpoint>::Transform(ast::FrameSet const &frameSet, bo
     _fromEndpoint.normalizeFrame(frameSetCopy);
     frameSetCopy->setBase(baseIndex);
     frameSetCopy->setCurrent(currentIndex);
-    _mapping = simplify ? frameSetCopy->getMapping()->simplify() : frameSetCopy->getMapping();
+    _mapping = simplify ? frameSetCopy->getMapping()->simplified() : frameSetCopy->getMapping();
 }
 
 template <typename FromEndpoint, typename ToEndpoint>
@@ -173,7 +173,7 @@ std::shared_ptr<Transform<FromEndpoint, NextToEndpoint>> Transform<FromEndpoint,
         auto nextMapping = next.getMapping();
         auto combinedMapping = getMapping()->then(*next.getMapping());
         if (simplify) {
-            return std::make_shared<Transform<FromEndpoint, NextToEndpoint>>(*combinedMapping.simplify());
+            return std::make_shared<Transform<FromEndpoint, NextToEndpoint>>(*combinedMapping.simplified());
         } else {
             return std::make_shared<Transform<FromEndpoint, NextToEndpoint>>(combinedMapping);
         }

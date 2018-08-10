@@ -451,17 +451,17 @@ std::shared_ptr<SkyWcs> makeModifiedWcs(TransformPoint2ToPoint2 const& pixelTran
         auto const oldActualPixelToPixels = oldFrameDict->getMapping("ACTUAL_PIXELS", "PIXELS");
         std::shared_ptr<ast::Mapping> newActualPixelsToPixels;
         if (modifyActualPixels) {
-            newActualPixelsToPixels = pixelMapping->then(*oldActualPixelToPixels).simplify();
+            newActualPixelsToPixels = pixelMapping->then(*oldActualPixelToPixels).simplified();
             newPixelToIwc = oldPixelToIwc;
         } else {
             newActualPixelsToPixels = oldActualPixelToPixels;
-            newPixelToIwc = pixelMapping->then(*oldPixelToIwc).simplify();
+            newPixelToIwc = pixelMapping->then(*oldPixelToIwc).simplified();
         }
         newFrameDict =
                 std::make_shared<ast::FrameDict>(*actualPixelFrame, *newActualPixelsToPixels, *pixelFrame);
         newFrameDict->addFrame("PIXELS", *newPixelToIwc, *iwcFrame);
     } else {
-        newPixelToIwc = pixelMapping->then(*oldPixelToIwc).simplify();
+        newPixelToIwc = pixelMapping->then(*oldPixelToIwc).simplified();
         newFrameDict = std::make_shared<ast::FrameDict>(*pixelFrame, *newPixelToIwc, *iwcFrame);
     }
     newFrameDict->addFrame("IWC", *iwcToSky, *skyFrame);
