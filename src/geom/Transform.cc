@@ -108,11 +108,11 @@ typename FromEndpoint::Array Transform<FromEndpoint, ToEndpoint>::applyInverse(
 
 template <class FromEndpoint, class ToEndpoint>
 std::shared_ptr<Transform<ToEndpoint, FromEndpoint>> Transform<FromEndpoint, ToEndpoint>::getInverse() const {
-    auto inverse = std::dynamic_pointer_cast<ast::Mapping>(_mapping->getInverse());
+    auto inverse = std::dynamic_pointer_cast<ast::Mapping>(_mapping->inverted());
     if (!inverse) {
         // don't throw std::bad_cast because it doesn't let you provide debugging info
         std::ostringstream buffer;
-        buffer << "Mapping.getInverse() does not return a Mapping. Called from: " << _mapping;
+        buffer << "Mapping.inverted() does not return a Mapping. Called from: " << _mapping;
         throw LSST_EXCEPT(pex::exceptions::LogicError, buffer.str());
     }
     return std::make_shared<Transform<ToEndpoint, FromEndpoint>>(*inverse);

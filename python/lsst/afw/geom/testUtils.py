@@ -230,7 +230,7 @@ def makeSipIwcToPixel(metadata):
     coeffArr = np.array(coeffList, dtype=float)
     sipPolyMap = ast.PolyMap(coeffArr, 2, "IterInverse=0")
 
-    iwcToPixelMap = cdMatrixMap.getInverse().then(sipPolyMap).then(pixelRelativeToAbsoluteMap)
+    iwcToPixelMap = cdMatrixMap.inverted().then(sipPolyMap).then(pixelRelativeToAbsoluteMap)
     return afwGeom.TransformPoint2ToPoint2(iwcToPixelMap)
 
 
@@ -262,7 +262,7 @@ def makeSipPixelToIwc(metadata):
         where dxy = pixelPosition - pixelOrigin
     """
     crpix = (metadata.getScalar("CRPIX1") - 1, metadata.getScalar("CRPIX2") - 1)
-    pixelAbsoluteToRelativeMap = ast.ShiftMap(crpix).getInverse()
+    pixelAbsoluteToRelativeMap = ast.ShiftMap(crpix).inverted()
     cdMatrix = getCdMatrixFromMetadata(metadata)
     cdMatrixMap = ast.MatrixMap(cdMatrix.copy())
     coeffList = makeSipPolyMapCoeffs(metadata, "A") + makeSipPolyMapCoeffs(metadata, "B")
@@ -798,7 +798,7 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
             self.checkTransformation(transform, polyMap, msg=msg)
 
             # Inverse transform but no forward
-            polyMap = makeForwardPolyMap(nOut, nIn).getInverse()
+            polyMap = makeForwardPolyMap(nOut, nIn).inverted()
             transform = TransformClass(polyMap)
             self.checkTransformation(transform, polyMap, msg=msg)
 
@@ -915,7 +915,7 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
                 "{}, Map={}".format(msg, "Forward"))
             self.checkInverseMapping(
                 TransformClass,
-                makeForwardPolyMap(nOut, nIn).getInverse(),
+                makeForwardPolyMap(nOut, nIn).inverted(),
                 "{}, Map={}".format(msg, "Inverse"))
 
     def checkInverseMapping(self, TransformClass, mapping, msg):

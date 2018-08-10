@@ -37,7 +37,7 @@ def addActualPixelsFrame(skyWcs, actualPixelsToPixels):
     actualPixelsToPixelsMap = actualPixelsToPixels.getMapping()
     actualPixelsFrame = ast.Frame(2, "Domain=ACTUAL_PIXELS")
     frameDict = skyWcs.getFrameDict()
-    frameDict.addFrame("PIXELS", actualPixelsToPixelsMap.getInverse(), actualPixelsFrame)
+    frameDict.addFrame("PIXELS", actualPixelsToPixelsMap.inverted(), actualPixelsFrame)
     frameDict.setBase("ACTUAL_PIXELS")
     frameDict.setCurrent("SKY")
     return SkyWcs(frameDict)
