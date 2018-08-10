@@ -107,7 +107,7 @@ typename FromEndpoint::Array Transform<FromEndpoint, ToEndpoint>::applyInverse(
 }
 
 template <class FromEndpoint, class ToEndpoint>
-std::shared_ptr<Transform<ToEndpoint, FromEndpoint>> Transform<FromEndpoint, ToEndpoint>::getInverse() const {
+std::shared_ptr<Transform<ToEndpoint, FromEndpoint>> Transform<FromEndpoint, ToEndpoint>::inverted() const {
     auto inverse = std::dynamic_pointer_cast<ast::Mapping>(_mapping->inverted());
     if (!inverse) {
         // don't throw std::bad_cast because it doesn't let you provide debugging info

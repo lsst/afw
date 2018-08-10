@@ -890,8 +890,10 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
                 permTransform = TransformClass(permutedFS.frameSet)
                 self.checkTransformation(permTransform, mapping=polyMap, msg=msg)
 
-    def checkGetInverse(self, fromName, toName):
-        """Test Transform<fromName>To<toName>.getInverse
+    def checkInverted(self, fromName, toName):
+        """Test Transform<fromName>To<toName>.inverted
+
+        and the deprecated old name getInverse
 
         Parameters
         ----------
@@ -919,8 +921,11 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
                 "{}, Map={}".format(msg, "Inverse"))
 
     def checkInverseMapping(self, TransformClass, mapping, msg):
-        """Test Transform<fromName>To<toName>.getInverse for a specific
+        """Test Transform<fromName>To<toName>.inverted for a specific
         mapping.
+
+        Also check that inverted() and getInverted() return the same
+        transform.
 
         Parameters
         ----------
@@ -932,12 +937,15 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
             Error message suffix
         """
         transform = TransformClass(mapping)
-        inverse = transform.getInverse()
-        inverseInverse = inverse.getInverse()
+        inverse = transform.inverted()
+        inverseInverse = inverse.inverted()
 
         self.checkInverseTransformation(transform, inverse, msg=msg)
         self.checkInverseTransformation(inverse, inverseInverse, msg=msg)
         self.checkTransformation(inverseInverse, mapping, msg=msg)
+
+        inverse2 = transform.getInverse()
+        self.assertEqual(inverse.getMapping(), inverse2.getMapping())
 
     def checkGetJacobian(self, fromName, toName):
         """Test Transform<fromName>To<toName>.getJacobian

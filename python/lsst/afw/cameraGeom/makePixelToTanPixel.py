@@ -47,6 +47,6 @@ def makePixelToTanPixel(bbox, orientation, focalPlaneToField, pixelSizeMm):
     # so the same consideration applies to pixelToField)
     pixAtFieldCtr = pixelToField.applyInverse(lsst.geom.Point2D(0, 0))
     tanPixToFieldAffine = lsst.afw.geom.linearizeTransform(pixelToField, pixAtFieldCtr)
-    fieldToTanPix = lsst.afw.geom.makeTransform(tanPixToFieldAffine.invert())
+    fieldToTanPix = lsst.afw.geom.makeTransform(tanPixToFieldAffine.inverted())
 
     return pixelToField.then(fieldToTanPix)

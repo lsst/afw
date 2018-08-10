@@ -80,7 +80,7 @@ class OneTransformConfig(Config):
 def invertingFactory(config):
     """Invert a ``Transform`` specified by config.
     """
-    return config.transform.apply().getInverse()
+    return config.transform.apply().inverted()
 
 
 invertingFactory.ConfigClass = OneTransformConfig
