@@ -384,7 +384,7 @@ namespace gil {
 
 /// transform_pixels with three sources
 template <typename View1, typename View2, typename View3, typename ViewDest, typename F>
-GIL_FORCEINLINE F transform_pixels(const View1& src1, const View2& src2, const View3& src3,
+BOOST_FORCEINLINE F transform_pixels(const View1& src1, const View2& src2, const View3& src3,
                                    const ViewDest& dst, F fun) {
     for (std::ptrdiff_t y = 0; y < dst.height(); ++y) {
         typename View1::x_iterator srcIt1 = src1.row_begin(y);
@@ -398,7 +398,7 @@ GIL_FORCEINLINE F transform_pixels(const View1& src1, const View2& src2, const V
 
 /// transform_pixels with four sources
 template <typename View1, typename View2, typename View3, typename View4, typename ViewDest, typename F>
-GIL_FORCEINLINE F transform_pixels(const View1& src1, const View2& src2, const View3& src3, const View4& src4,
+BOOST_FORCEINLINE F transform_pixels(const View1& src1, const View2& src2, const View3& src3, const View4& src4,
                                    const ViewDest& dst, F fun) {
     for (std::ptrdiff_t y = 0; y < dst.height(); ++y) {
         typename View1::x_iterator srcIt1 = src1.row_begin(y);
