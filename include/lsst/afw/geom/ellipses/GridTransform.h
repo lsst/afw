@@ -65,8 +65,15 @@ public:
     /// Return the determinant of the lsst::geom::LinearTransform.
     double getDeterminant() const;
 
-    /// Return the inverse of the lsst::geom::LinearTransform;
-    lsst::geom::LinearTransform invert() const;
+    //@{
+    /**
+     * Return the inverse of the lsst::geom::LinearTransform;
+     *
+     * @deprecated invert is deprecated in favor of inverted
+     */
+    lsst::geom::LinearTransform inverted() const;
+    lsst::geom::LinearTransform invert() const { return inverted(); };
+    //@}
 
 private:
     BaseCore const& _input;  ///< @internal input core to be transformed
@@ -98,7 +105,8 @@ public:
     operator lsst::geom::AffineTransform() const;
 
     /// Return the inverse of the AffineTransform.
-    lsst::geom::AffineTransform invert() const;
+    lsst::geom::AffineTransform inverted() const;
+    lsst::geom::AffineTransform invert() const { return inverted(); };
 
 private:
     Ellipse const& _input;  ///< @internal input ellipse to be transformed

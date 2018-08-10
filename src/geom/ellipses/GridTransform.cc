@@ -93,7 +93,7 @@ BaseCore::GridTransform::DerivativeMatrix BaseCore::GridTransform::d() const {
 
 double BaseCore::GridTransform::getDeterminant() const { return sqrt(1.0 / _eig.eigenvalues().prod()); }
 
-lsst::geom::LinearTransform BaseCore::GridTransform::invert() const {
+lsst::geom::LinearTransform BaseCore::GridTransform::inverted() const {
     return lsst::geom::LinearTransform(_eig.operatorSqrt());
 }
 
@@ -139,8 +139,8 @@ Ellipse::GridTransform::operator lsst::geom::AffineTransform() const {
     return lsst::geom::AffineTransform(linear, linear(lsst::geom::Point2D() - _input.getCenter()));
 }
 
-lsst::geom::AffineTransform Ellipse::GridTransform::invert() const {
-    return lsst::geom::AffineTransform(_coreGt.invert(), lsst::geom::Extent2D(_input.getCenter()));
+lsst::geom::AffineTransform Ellipse::GridTransform::inverted() const {
+    return lsst::geom::AffineTransform(_coreGt.inverted(), lsst::geom::Extent2D(_input.getCenter()));
 }
 }  // namespace ellipses
 }  // namespace geom

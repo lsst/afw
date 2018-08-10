@@ -316,8 +316,8 @@ struct GridTransformTest {
                 boost::str(boost::format("GridTransform::d failed for %s:\nAnalytic:\n%s\nNumeric:\n%s\n") %
                            core.getName() % d_analytic % d_numeric));
 
-        lsst::geom::AffineTransform inverse1 = input.getGridTransform().invert();
-        lsst::geom::AffineTransform inverse2 = lsst::geom::AffineTransform(input.getGridTransform()).invert();
+        lsst::geom::AffineTransform inverse1 = input.getGridTransform().inverted();
+        lsst::geom::AffineTransform inverse2 = lsst::geom::AffineTransform(input.getGridTransform()).inverted();
         static double const TRANSFORM_INVERSE_EPSILON = 1E-8;
         BOOST_CHECK_CLOSE(inverse1[0], inverse2[0], TRANSFORM_INVERSE_EPSILON);
         BOOST_CHECK_CLOSE(inverse1[1], inverse2[1], TRANSFORM_INVERSE_EPSILON);
