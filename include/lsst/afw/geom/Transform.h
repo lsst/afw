@@ -48,7 +48,7 @@ class SkyWcs;
  *
  * Depending on the ast::FrameSet or ast::Mapping used to define it, a Transform may
  * provide either a forward transform, an inverse transform, or both. In particular, the
- * @ref getInverse "inverse" of a forward-only transform is an inverse-only transform. The
+ * @ref inverted "inverse" of a forward-only transform is an inverse-only transform. The
  * @ref hasForward and @ref hasInverse methods can be used to check which transforms are available.
  *
  * Unless otherwise stated, all constructors and methods may throw `std::runtime_error` to indicate
@@ -167,15 +167,20 @@ public:
      */
     FromArray applyInverse(ToArray const &array) const;
 
+    //@{
     /**
      * The inverse of this Transform.
      *
      * @returns a Transform whose `applyForward` is equivalent to this Transform's
      *          `applyInverse`, and vice versa.
      *
+     * @deprecated `getInverse` is deprecated in favor of `inverted`
+     *
      * @exceptsafe Provides basic exception safety.
      */
-    std::shared_ptr<Transform<ToEndpoint, FromEndpoint>> getInverse() const;
+    std::shared_ptr<Transform<ToEndpoint, FromEndpoint>> inverted() const;
+    std::shared_ptr<Transform<ToEndpoint, FromEndpoint>> getInverse() const { return inverted(); };
+    //@}
 
     /**
      * The Jacobian matrix of this Transform.

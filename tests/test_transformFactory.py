@@ -117,7 +117,7 @@ class TransformFactoryTestSuite(TransformTestBaseClass):
         if invertible:
             rng = np.random.RandomState(42)
             nDelta = 100
-            inverse = affine.invert()
+            inverse = affine.inverted()
             deltaFrom = rng.normal(0.0, 10.0, (nIn, nDelta))
             for i in range(nDelta):
                 pointMsg = "{}, point={}".format(msg, tweakedInPoint)
@@ -136,7 +136,7 @@ class TransformFactoryTestSuite(TransformTestBaseClass):
         else:
             # TODO: replace with correct type after fixing DM-11248
             with self.assertRaises(Exception):
-                affine.invert()
+                affine.inverted()
 
         # Can't test exceptions without reliable way to make invalid transform
 

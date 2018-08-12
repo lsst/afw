@@ -37,7 +37,7 @@ class TransformTestCase(TransformTestBaseClass):
             for toName in self.endpointPrefixes:
                 self.checkTransformFromMapping(fromName, toName)
                 self.checkTransformFromFrameSet(fromName, toName)
-                self.checkGetInverse(fromName, toName)
+                self.checkInverted(fromName, toName)
                 self.checkGetJacobian(fromName, toName)
                 for midName in self.endpointPrefixes:
                     self.checkThen(fromName, midName, toName)

@@ -43,7 +43,7 @@ namespace geom {
 template <class FromEndpoint, class ToEndpoint>
 Transform<FromEndpoint, ToEndpoint>::Transform(ast::Mapping const &mapping, bool simplify)
         : _fromEndpoint(mapping.getNIn()),
-          _mapping(simplify ? mapping.simplify() : mapping.copy()),
+          _mapping(simplify ? mapping.simplified() : mapping.copy()),
           _toEndpoint(mapping.getNOut()) {}
 
 template <typename FromEndpoint, typename ToEndpoint>
@@ -67,7 +67,7 @@ Transform<FromEndpoint, ToEndpoint>::Transform(ast::FrameSet const &frameSet, bo
     _fromEndpoint.normalizeFrame(frameSetCopy);
     frameSetCopy->setBase(baseIndex);
     frameSetCopy->setCurrent(currentIndex);
-    _mapping = simplify ? frameSetCopy->getMapping()->simplify() : frameSetCopy->getMapping();
+    _mapping = simplify ? frameSetCopy->getMapping()->simplified() : frameSetCopy->getMapping();
 }
 
 template <typename FromEndpoint, typename ToEndpoint>
@@ -107,12 +107,12 @@ typename FromEndpoint::Array Transform<FromEndpoint, ToEndpoint>::applyInverse(
 }
 
 template <class FromEndpoint, class ToEndpoint>
-std::shared_ptr<Transform<ToEndpoint, FromEndpoint>> Transform<FromEndpoint, ToEndpoint>::getInverse() const {
-    auto inverse = std::dynamic_pointer_cast<ast::Mapping>(_mapping->getInverse());
+std::shared_ptr<Transform<ToEndpoint, FromEndpoint>> Transform<FromEndpoint, ToEndpoint>::inverted() const {
+    auto inverse = std::dynamic_pointer_cast<ast::Mapping>(_mapping->inverted());
     if (!inverse) {
         // don't throw std::bad_cast because it doesn't let you provide debugging info
         std::ostringstream buffer;
-        buffer << "Mapping.getInverse() does not return a Mapping. Called from: " << _mapping;
+        buffer << "Mapping.inverted() does not return a Mapping. Called from: " << _mapping;
         throw LSST_EXCEPT(pex::exceptions::LogicError, buffer.str());
     }
     return std::make_shared<Transform<ToEndpoint, FromEndpoint>>(*inverse);
@@ -173,7 +173,7 @@ std::shared_ptr<Transform<FromEndpoint, NextToEndpoint>> Transform<FromEndpoint,
         auto nextMapping = next.getMapping();
         auto combinedMapping = getMapping()->then(*next.getMapping());
         if (simplify) {
-            return std::make_shared<Transform<FromEndpoint, NextToEndpoint>>(*combinedMapping.simplify());
+            return std::make_shared<Transform<FromEndpoint, NextToEndpoint>>(*combinedMapping.simplified());
         } else {
             return std::make_shared<Transform<FromEndpoint, NextToEndpoint>>(combinedMapping);
         }

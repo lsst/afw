@@ -145,7 +145,7 @@ Eigen::Matrix2d makeCdMatrix(lsst::geom::Angle const& scale, lsst::geom::Angle c
 }
 
 std::shared_ptr<TransformPoint2ToPoint2> makeWcsPairTransform(SkyWcs const& src, SkyWcs const& dst) {
-    auto const dstInverse = dst.getTransform()->getInverse();
+    auto const dstInverse = dst.getTransform()->inverted();
     return src.getTransform()->then(*dstInverse);
 }
 
@@ -411,7 +411,7 @@ lsst::geom::AffineTransform SkyWcs::_linearizeSkyToPixel(lsst::geom::Point2D con
                                                          lsst::geom::SpherePoint const& coord,
                                                          lsst::geom::AngleUnit const& skyUnit) const {
     lsst::geom::AffineTransform inverse = _linearizePixelToSky(pix00, coord, skyUnit);
-    return inverse.invert();
+    return inverse.inverted();
 }
 
 std::shared_ptr<SkyWcs> makeFlippedWcs(SkyWcs const& wcs, bool flipLR, bool flipTB,
@@ -451,17 +451,17 @@ std::shared_ptr<SkyWcs> makeModifiedWcs(TransformPoint2ToPoint2 const& pixelTran
         auto const oldActualPixelToPixels = oldFrameDict->getMapping("ACTUAL_PIXELS", "PIXELS");
         std::shared_ptr<ast::Mapping> newActualPixelsToPixels;
         if (modifyActualPixels) {
-            newActualPixelsToPixels = pixelMapping->then(*oldActualPixelToPixels).simplify();
+            newActualPixelsToPixels = pixelMapping->then(*oldActualPixelToPixels).simplified();
             newPixelToIwc = oldPixelToIwc;
         } else {
             newActualPixelsToPixels = oldActualPixelToPixels;
-            newPixelToIwc = pixelMapping->then(*oldPixelToIwc).simplify();
+            newPixelToIwc = pixelMapping->then(*oldPixelToIwc).simplified();
         }
         newFrameDict =
                 std::make_shared<ast::FrameDict>(*actualPixelFrame, *newActualPixelsToPixels, *pixelFrame);
         newFrameDict->addFrame("PIXELS", *newPixelToIwc, *iwcFrame);
     } else {
-        newPixelToIwc = pixelMapping->then(*oldPixelToIwc).simplify();
+        newPixelToIwc = pixelMapping->then(*oldPixelToIwc).simplified();
         newFrameDict = std::make_shared<ast::FrameDict>(*pixelFrame, *newPixelToIwc, *iwcFrame);
     }
     newFrameDict->addFrame("IWC", *iwcToSky, *skyFrame);

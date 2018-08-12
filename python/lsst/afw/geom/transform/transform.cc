@@ -93,6 +93,7 @@ void declareTransform(py::module &mod) {
     cls.def("applyForward", (ToPoint(Class::*)(FromPoint const &) const) & Class::applyForward, "point"_a);
     cls.def("applyInverse", (FromArray(Class::*)(ToArray const &) const) & Class::applyInverse, "array"_a);
     cls.def("applyInverse", (FromPoint(Class::*)(ToPoint const &) const) & Class::applyInverse, "point"_a);
+    cls.def("inverted", &Class::inverted);
     cls.def("getInverse", &Class::getInverse);
     /* Need some extra handling of ndarray return type in Python to prevent dimensions
      * of length 1 from being deleted */

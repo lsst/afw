@@ -158,7 +158,7 @@ std::shared_ptr<TransformPoint2ToPoint2> makeTransform(lsst::geom::AffineTransfo
     Point2Endpoint toEndpoint;
     auto const map = ast::MatrixMap(toNdArray(jacobian))
                              .then(ast::ShiftMap(toEndpoint.dataFromPoint(offset)))
-                             .simplify();
+                             .simplified();
     return std::make_shared<TransformPoint2ToPoint2>(*map);
 }
 
@@ -206,7 +206,7 @@ std::shared_ptr<TransformPoint2ToPoint2> makeRadialTransform(std::vector<double>
     // the polynomial has coefficients specified for both the forward and inverse directions
     std::vector<double> center = {0.0, 0.0};
     ast::PolyMap const forward = makeOneDDistortion(forwardCoeffs);
-    auto inverse = makeOneDDistortion(inverseCoeffs).getInverse();
+    auto inverse = makeOneDDistortion(inverseCoeffs).inverted();
     auto distortion = ast::TranMap(forward, *inverse);
     return std::make_shared<TransformPoint2ToPoint2>(*ast::makeRadialMapping(center, distortion));
 }

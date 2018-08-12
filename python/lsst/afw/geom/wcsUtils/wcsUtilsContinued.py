@@ -180,5 +180,5 @@ def computePixelToDistortedPixel(pixelToFocalPlane, focalPlaneToFieldAngle):
     focalPlaneToTanFieldAngle = makeTransform(linearizeTransform(focalPlaneToFieldAngle,
                                                                  lsst.geom.Point2D(0, 0)))
     return pixelToFocalPlane.then(focalPlaneToFieldAngle) \
-        .then(focalPlaneToTanFieldAngle.getInverse()) \
-        .then(pixelToFocalPlane.getInverse())
+        .then(focalPlaneToTanFieldAngle.inverted()) \
+        .then(pixelToFocalPlane.inverted())

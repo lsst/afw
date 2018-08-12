@@ -106,7 +106,7 @@ std::shared_ptr<afw::geom::TransformPoint2ToPoint2> Orientation::makePixelFpTran
 
 std::shared_ptr<afw::geom::TransformPoint2ToPoint2> Orientation::makeFpPixelTransform(
         lsst::geom::Extent2D const pixelSizeMm) const {
-    return makePixelFpTransform(pixelSizeMm)->getInverse();
+    return makePixelFpTransform(pixelSizeMm)->inverted();
 }
 
 }  // namespace cameraGeom

@@ -110,7 +110,7 @@ class MakeDistortedTanWcsTestCase(BaseTestCase):
         # Compute a distorted wcs that matches self.tanWcs at the center of the field;
         # the amount of distortion is 10s of pixels over the detector
         fieldAngleToFocalPlane = afwGeom.makeRadialTransform([0.0, 1/self.radPerMm, 0.0, 1000/self.radPerMm])
-        focalPlaneToFieldAngle = fieldAngleToFocalPlane.getInverse()
+        focalPlaneToFieldAngle = fieldAngleToFocalPlane.inverted()
         focalPlaneToTanFieldAngle = self.makeAffineTransform(scale=self.radPerMm)
         wcs = makeDistortedTanWcs(
             tanWcs=self.tanWcs,
@@ -142,8 +142,8 @@ class MakeDistortedTanWcsTestCase(BaseTestCase):
         # the following sky positions should be almost equal:
         # fieldAngle -> fieldAngleToTanFocalPlane -> focalPlaneToPixel -> tanWcs.pixelToSky
         # fieldAngle -> fieldAngleToFocalPlane -> focalPlaneToPixel -> wcs.pixelToSky
-        focalPlaneToPixel = self.pixelToFocalPlane.getInverse()
-        fieldAngleToTanFocalPlane = focalPlaneToTanFieldAngle.getInverse()
+        focalPlaneToPixel = self.pixelToFocalPlane.inverted()
+        fieldAngleToTanFocalPlane = focalPlaneToTanFieldAngle.inverted()
         tanSkyPoints2 = self.tanWcs.pixelToSky(
             focalPlaneToPixel.applyForward(
                 fieldAngleToTanFocalPlane.applyForward(fieldAnglePoints)))

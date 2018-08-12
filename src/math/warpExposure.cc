@@ -319,7 +319,7 @@ int warpImage(DestImageT &destImage, SrcImageT const &srcImage,
     int numGoodPixels = 0;
 
     // compute a transform from local destination pixels to parent source pixels
-    auto const parentDestToParentSrc = srcToDest.getInverse();
+    auto const parentDestToParentSrc = srcToDest.inverted();
     std::vector<double> const localDestToParentDestVec = {static_cast<double>(destImage.getX0()),
                                                           static_cast<double>(destImage.getY0())};
     auto const localDestToParentDest = geom::TransformPoint2ToPoint2(ast::ShiftMap(localDestToParentDestVec));

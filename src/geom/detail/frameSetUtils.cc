@@ -216,7 +216,7 @@ std::shared_ptr<ast::FrameDict> readLsstSkyWcs(daf::base::PropertySet& metadata,
     // Note: we use stdSkyFrameSet as the new frame (meaning stdSkyFrameSet's current frame),
     // because, unlike stdSkyFrameTemplate, stdSkyFrameSet's current frame has inherited some
     // potentially useful attributes from the old sky frame, such as epoch.
-    rawFrameSet->addFrame(initialSkyIndex, *stdSkyFrameSet->getMapping()->simplify(),
+    rawFrameSet->addFrame(initialSkyIndex, *stdSkyFrameSet->getMapping()->simplified(),
                           *stdSkyFrameSet->getFrame(ast::FrameSet::CURRENT));
     auto const stdSkyIndex = rawFrameSet->getCurrent();
     auto const stdSkyFrame = rawFrameSet->getFrame(stdSkyIndex, false);
@@ -228,8 +228,8 @@ std::shared_ptr<ast::FrameDict> readLsstSkyWcs(daf::base::PropertySet& metadata,
     auto pixelToGrid = ast::ShiftMap(pixelToGridArray);
 
     // Now construct the returned FrameDict
-    auto const gridToIwc = rawFrameSet->getMapping(gridIndex, iwcIndex)->simplify();
-    auto const pixelToIwc = pixelToGrid.then(*gridToIwc).simplify();
+    auto const gridToIwc = rawFrameSet->getMapping(gridIndex, iwcIndex)->simplified();
+    auto const pixelToIwc = pixelToGrid.then(*gridToIwc).simplified();
     auto const iwcToStdSky = rawFrameSet->getMapping(iwcIndex, stdSkyIndex);
 
     auto frameDict = std::make_shared<ast::FrameDict>(ast::Frame(2, "Domain=PIXELS"), *pixelToIwc, *iwcFrame);
