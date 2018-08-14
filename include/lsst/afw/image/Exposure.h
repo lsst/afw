@@ -214,14 +214,12 @@ public:
      *       references to images (just as the copy constructor does).
      *       This is an intrinsic flaw in Image's design.
      */
-    Exposure subset(lsst::geom::Box2I const & bbox, ImageOrigin origin=PARENT) const {
+    Exposure subset(lsst::geom::Box2I const& bbox, ImageOrigin origin = PARENT) const {
         return Exposure(*this, bbox, origin, false);
     }
 
     /// Return a subimage corresponding to the given box (interpreted as PARENT coordinates).
-    Exposure operator[](lsst::geom::Box2I const & bbox) const {
-        return subset(bbox);
-    }
+    Exposure operator[](lsst::geom::Box2I const& bbox) const { return subset(bbox); }
 
     /** Destructor
      */
