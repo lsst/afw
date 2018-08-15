@@ -713,7 +713,8 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         wcs = self.smallExposure.getWcs()
 
         dimensions = [lsst.geom.Extent2I(100, 50), lsst.geom.Extent2I(15, 15), lsst.geom.Extent2I(0, 10),
-                      lsst.geom.Extent2I(25, 30), lsst.geom.Extent2I(15, -5)]
+                      lsst.geom.Extent2I(25, 30), lsst.geom.Extent2I(15, -5),
+                      2*self.smallExposure.getDimensions()]
         locations = [("center", self._getExposureCenter(self.smallExposure)),
                      ("edge", wcs.pixelToSky(lsst.geom.Point2D(0, 0))),
                      ("rounding test", wcs.pixelToSky(lsst.geom.Point2D(0.2, 0.7))),
@@ -728,12 +729,16 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
                     centerInPixels = wcs.skyToPixel(cutoutCenter)
                     precision = (1 + 1e-4)*np.sqrt(0.5)*wcs.getPixelScale(centerInPixels)
                     self._checkCutoutProperties(cutout, cutoutSize, cutoutCenter, precision, msg)
+                    self._checkCutoutPixels(
+                        cutout,
+                        self._getValidCorners(self.smallExposure.getBBox(), cutout.getBBox()),
+                        msg)
 
                     # Need a valid WCS
                     with self.assertRaises(pexExcept.LogicError, msg=msg):
                         self.exposureMiOnly.getCutout(cutoutCenter, cutoutSize)
                 else:
-                    with self.assertRaises(pexExcept.InvalidParameterError):
+                    with self.assertRaises(pexExcept.InvalidParameterError, msg=msg):
                         self.smallExposure.getCutout(cutoutCenter, cutoutSize)
 
     def _checkCutoutProperties(self, cutout, size, center, precision, msg):
@@ -758,6 +763,28 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(cutout.getWidth(), size[0], msg=msg)
         self.assertEqual(cutout.getHeight(), size[1], msg=msg)
 
+    def _checkCutoutPixels(self, cutout, validCorners, msg):
+        """Test whether a cutout has valid/empty pixels where expected.
+
+        Parameters
+        ----------
+        cutout : `lsst.afw.image.Exposure`
+            The cutout to test.
+        validCorners : iterable of `lsst.geom.Point2I`
+            The corners of ``cutout`` that should be drawn from the original image.
+        msg : `str`
+            An error message suffix describing test parameters.
+        """
+        mask = cutout.getMaskedImage().getMask()
+        edgeMask = mask.getPlaneBitMask("NO_DATA")
+
+        for corner in cutout.getBBox().getCorners():
+            maskBitsSet = mask[corner] & edgeMask
+            if corner in validCorners:
+                self.assertEqual(maskBitsSet, 0, msg=msg)
+            else:
+                self.assertEqual(maskBitsSet, edgeMask, msg=msg)
+
     def _getExposureCenter(self, exposure):
         """Return the sky coordinates of an Exposure's center.
 
@@ -772,6 +799,23 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
             The position at the center of ``exposure``.
         """
         return exposure.getWcs().pixelToSky(lsst.geom.Box2D(exposure.getBBox()).getCenter())
+
+    def _getValidCorners(self, imageBox, cutoutBox):
+        """Return the corners of a cutout that are constrained by the original image.
+
+        Parameters
+        ----------
+        imageBox: `lsst.geom.Extent2I`
+            The bounding box of the original image.
+        cutoutBox : `lsst.geom.Box2I`
+            The bounding box of the cutout.
+
+        Returns
+        -------
+        corners : iterable of `lsst.geom.Point2I`
+            The corners that are drawn from the original image.
+        """
+        return [corner for corner in cutoutBox.getCorners() if corner in imageBox]
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):

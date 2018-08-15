@@ -421,7 +421,8 @@ public:
      *
      * @return An Exposure of the requested size centered on `center` to within
      *     half a pixel in either dimension. Pixels past the edge of the original
-     *     exposure will be zero.
+     *     exposure will equal @ref math::edgePixel(image::detail::MaskedImage_tag)
+     *     "math::edgePixel<MaskedImageT>".
      *
      * @throws lsst::pex::exceptions::LogicError Thrown if this Exposure does
      *     not have a WCS.
