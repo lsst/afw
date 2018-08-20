@@ -126,6 +126,7 @@ class Display:
         SAT=GREEN,
     )
     _defaultMaskTransparency = {}
+    _defaultImageColormap = "gray"
 
     def __init__(self, frame=None, backend=None, *args, **kwargs):
         """!Create an object able to display images and overplot glyphs
@@ -155,6 +156,7 @@ class Display:
         self.setMaskTransparency(Display._defaultMaskTransparency)
         self._maskPlaneColors = {}
         self.setMaskPlaneColor(Display._defaultMaskPlaneColor)
+        self.setImageColormap(Display._defaultImageColormap)
 
         self._callbacks = {}
 
@@ -298,6 +300,27 @@ class Display:
         # Set the individual colour values
         #
         Display._defaultMaskPlaneColor[name] = color
+
+    @staticmethod
+    def setDefaultImageColormap(cmap):
+        """!Set the default colourmap for images
+        @param cmap Name of colourmap, as interpreted by the backend
+
+        The only colourmaps that all backends are required to honour
+        (if they pay any attention to setImageColormap) are "gray" and "grey"
+        """
+
+        Display._defaultImageColormap = cmap
+
+    def setImageColormap(self, cmap):
+        """!Set the colourmap to use for images
+        @param cmap Name of colourmap, as interpreted by the backend
+
+        The only colourmaps that all backends are required to honour
+        (if they pay any attention to setImageColormap) are "gray" and "grey"
+        """
+
+        self._impl._setImageColormap(cmap)
 
     @staticmethod
     def getDisplay(frame=None, backend=None, create=True, verbose=False, *args, **kwargs):
