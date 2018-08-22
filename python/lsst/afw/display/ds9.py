@@ -27,14 +27,15 @@
 
 import lsst.afw.display
 import lsst.afw.image as afwImage
-from .interface import getDisplay as _getDisplay, setDefaultBackend
+from .interface import getDisplay as _getDisplay, getDefaultBackend, setDefaultBackend
 # Backwards compatibility.  Downstream code should be converted to use display.RED etc.
 from .interface import BLACK, RED, GREEN, BLUE, CYAN, MAGENTA, YELLOW, WHITE  # noqa F401
 try:
     loaded
 except NameError:
     try:
-        setDefaultBackend("lsst.display.ds9")
+        if getDefaultBackend() is None:
+            setDefaultBackend("lsst.display.ds9")
         getDisplay = _getDisplay
     except Exception as e:
         # No usable version of display_ds9.
