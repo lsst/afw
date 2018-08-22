@@ -228,7 +228,10 @@ typename ImageT::SinglePixel edgePixel(lsst::afw::image::detail::Image_tag
  * The components are:
  * - %image = quiet_NaN if that exists for the pixel type, else 0
  * - mask = NO_DATA bit set
- * - variance = infinity
+ * - variance = infinity if that exists for the pixel type, else 0
+ *
+ * @throws lsst::pex::exceptions::LogicError Thrown if the global
+ *     mask plane dictionary does not have a NO_DATA bit.
  */
 template <typename MaskedImageT>
 typename MaskedImageT::SinglePixel edgePixel(
@@ -238,10 +241,14 @@ typename MaskedImageT::SinglePixel edgePixel(
     typedef typename MaskedImageT::Image::Pixel ImagePixelT;
     typedef typename MaskedImageT::Variance::Pixel VariancePixelT;
 
-    return typename MaskedImageT::SinglePixel(
-            std::numeric_limits<ImagePixelT>::has_quiet_NaN ? std::numeric_limits<ImagePixelT>::quiet_NaN()
-                                                            : 0,
-            MaskedImageT::Mask::getPlaneBitMask("NO_DATA"), std::numeric_limits<VariancePixelT>::infinity());
+    auto imagePixel = std::numeric_limits<ImagePixelT>::has_quiet_NaN
+                              ? std::numeric_limits<ImagePixelT>::quiet_NaN()
+                              : 0;
+    auto maskPixel = MaskedImageT::Mask::getPlaneBitMask("NO_DATA");
+    auto variancePixel = std::numeric_limits<VariancePixelT>::has_infinity
+                                 ? std::numeric_limits<VariancePixelT>::infinity()
+                                 : 0;
+    return typename MaskedImageT::SinglePixel(imagePixel, maskPixel, variancePixel);
 }
 
 /*
