@@ -3,5 +3,6 @@ from lsst.sconsUtils import scripts
 scripts.BasicSConscript.pybind11(['cameraSys',
                                   'detector/detector',
                                   'orientation',
-                                  'transformMap'],
+                                  'transformMap',
+                                  'detectorCollection/detectorCollection'],
                                  addUnderscore=False)
