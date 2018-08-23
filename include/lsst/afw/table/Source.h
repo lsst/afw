@@ -38,11 +38,12 @@
 #include "lsst/afw/table/slots.h"
 #include "lsst/afw/table/io/FitsWriter.h"
 
-namespace lsst { namespace afw {
+namespace lsst {
+namespace afw {
 
 namespace geom {
 class SkyWcs;
-} // namespace image
+}  // namespace geom
 
 namespace table {
 
@@ -62,7 +63,8 @@ typedef lsst::afw::detection::Footprint Footprint;
 class SourceRecord;
 class SourceTable;
 
-template <typename RecordT> class SourceColumnViewT;
+template <typename RecordT>
+class SourceColumnViewT;
 
 /**
  *  Record class that contains measurements made on a single exposure.
@@ -79,7 +81,6 @@ template <typename RecordT> class SourceColumnViewT;
  */
 class SourceRecord : public SimpleRecord {
 public:
-
     typedef SourceTable Table;
     typedef SourceColumnViewT<SourceRecord> ColumnView;
     typedef SortedCatalogT<SourceRecord> Catalog;
@@ -87,7 +88,7 @@ public:
 
     std::shared_ptr<Footprint> getFootprint() const { return _footprint; }
 
-    void setFootprint(std::shared_ptr<Footprint> const & footprint) { _footprint = footprint; }
+    void setFootprint(std::shared_ptr<Footprint> const &footprint) { _footprint = footprint; }
 
     std::shared_ptr<SourceTable const> getTable() const {
         return std::static_pointer_cast<SourceTable const>(BaseRecord::getTable());
@@ -162,7 +163,6 @@ public:
     /// Return true if the measurement in the Shape slot failed.
     bool getShapeFlag() const;
 
-
     /// Return the centroid slot x coordinate.
     double getX() const;
 
@@ -179,25 +179,23 @@ public:
     double getIxy() const;
 
     /// Update the coord field using the given Wcs and the field in the centroid slot.
-    void updateCoord(geom::SkyWcs const & wcs);
+    void updateCoord(geom::SkyWcs const &wcs);
 
     /// Update the coord field using the given Wcs and the image center from the given key.
-    void updateCoord(geom::SkyWcs const & wcs, PointKey<double> const & key);
+    void updateCoord(geom::SkyWcs const &wcs, PointKey<double> const &key);
 
-    SourceRecord(const SourceRecord&) = delete;
-    SourceRecord& operator=(const SourceRecord&) = delete;
-    SourceRecord(SourceRecord&&) = delete;
-    SourceRecord& operator=(SourceRecord&&) = delete;
+    SourceRecord(const SourceRecord &) = delete;
+    SourceRecord &operator=(const SourceRecord &) = delete;
+    SourceRecord(SourceRecord &&) = delete;
+    SourceRecord &operator=(SourceRecord &&) = delete;
     ~SourceRecord();
 
 protected:
+    explicit SourceRecord(std::shared_ptr<SourceTable> const &table);
 
-    explicit SourceRecord(std::shared_ptr<SourceTable> const & table);
-
-    virtual void _assign(BaseRecord const & other);
+    virtual void _assign(BaseRecord const &other);
 
 private:
-
     friend class SourceTable;
 
     std::shared_ptr<Footprint> _footprint;
@@ -210,7 +208,6 @@ private:
  */
 class SourceTable : public SimpleTable {
 public:
-
     typedef SourceRecord Record;
     typedef SourceColumnViewT<SourceRecord> ColumnView;
     typedef SortedCatalogT<Record> Catalog;
@@ -226,7 +223,8 @@ public:
      *  Note that not passing an IdFactory at all will call the other override of make(), which will
      *  set the ID factory to IdFactory::makeSimple().
      */
-    static std::shared_ptr<SourceTable> make(Schema const & schema, std::shared_ptr<IdFactory> const & idFactory);
+    static std::shared_ptr<SourceTable> make(Schema const &schema,
+                                             std::shared_ptr<IdFactory> const &idFactory);
 
     /**
      *  Construct a new table.
@@ -235,7 +233,9 @@ public:
      *
      *  This overload sets the ID factory to IdFactory::makeSimple().
      */
-    static std::shared_ptr<SourceTable> make(Schema const & schema) { return make(schema, IdFactory::makeSimple()); }
+    static std::shared_ptr<SourceTable> make(Schema const &schema) {
+        return make(schema, IdFactory::makeSimple());
+    }
 
     /**
      *  Return a minimal schema for Source tables and records.
@@ -259,9 +259,7 @@ public:
      *  This will always be true if the given schema was originally constructed
      *  using makeMinimalSchema(), and will rarely be true otherwise.
      */
-    static bool checkSchema(Schema const & other) {
-        return other.contains(getMinimalSchema().schema);
-    }
+    static bool checkSchema(Schema const &other) { return other.contains(getMinimalSchema().schema); }
 
     /// Key for the parent ID.
     static Key<RecordId> getParentKey() { return getMinimalSchema().parent; }
@@ -270,20 +268,21 @@ public:
     std::shared_ptr<SourceTable> clone() const { return std::static_pointer_cast<SourceTable>(_clone()); }
 
     /// @copydoc BaseTable::makeRecord
-    std::shared_ptr<SourceRecord> makeRecord() { return std::static_pointer_cast<SourceRecord>(_makeRecord()); }
+    std::shared_ptr<SourceRecord> makeRecord() {
+        return std::static_pointer_cast<SourceRecord>(_makeRecord());
+    }
 
     /// @copydoc BaseTable::copyRecord
-    std::shared_ptr<SourceRecord> copyRecord(BaseRecord const & other) {
+    std::shared_ptr<SourceRecord> copyRecord(BaseRecord const &other) {
         return std::static_pointer_cast<SourceRecord>(BaseTable::copyRecord(other));
     }
 
     /// @copydoc BaseTable::copyRecord
-    std::shared_ptr<SourceRecord> copyRecord(BaseRecord const & other, SchemaMapper const & mapper) {
+    std::shared_ptr<SourceRecord> copyRecord(BaseRecord const &other, SchemaMapper const &mapper) {
         return std::static_pointer_cast<SourceRecord>(BaseTable::copyRecord(other, mapper));
     }
 
-    
-    FluxSlotDefinition const & getPsfFluxSlot() const { return _slots.defPsfFlux; }
+    FluxSlotDefinition const &getPsfFluxSlot() const { return _slots.defPsfFlux; }
 
     /**
      *  Set the measurement used for the PsfFlux slot.
@@ -292,7 +291,7 @@ public:
      *  AliasMap, so this simply sets the "slot_PsfFlux" alias
      *  to point to the given field name prefix.  See FluxSlotDefinition for more information.
      */
-    void definePsfFlux(std::string const & name) {
+    void definePsfFlux(std::string const &name) {
         getSchema().getAliasMap()->set(getPsfFluxSlot().getAlias(), name);
     }
 
@@ -302,7 +301,7 @@ public:
      *  @throws pex::exceptions::NotFoundError if the slot is not defined.
      *
      *  @deprecated in favor of
-     *  
+     *
      *      getSchema().getAliasMap()->get("slot_PsfFlux")
      */
     std::string getPsfFluxDefinition() const {
@@ -314,39 +313,30 @@ public:
      *
      *  @deprecated in favor of getPsfFluxSlot().isValid().
      */
-    bool hasPsfFluxSlot() const {
-        return getPsfFluxSlot().isValid();
-    }
+    bool hasPsfFluxSlot() const { return getPsfFluxSlot().isValid(); }
 
     /**
      *  Return the key used for the PsfFlux slot measurement value.
      *
      *  @deprecated in favor of getPsfFluxSlot().getMeasKey().
      */
-    FluxSlotDefinition::MeasKey getPsfFluxKey() const {
-        return getPsfFluxSlot().getMeasKey();
-    }
+    FluxSlotDefinition::MeasKey getPsfFluxKey() const { return getPsfFluxSlot().getMeasKey(); }
 
     /**
      *  Return the key used for the PsfFlux slot uncertainty.
      *
      *  @deprecated in favor of getPsfFluxSlot().getErrKey().
      */
-    FluxSlotDefinition::ErrKey getPsfFluxErrKey() const {
-        return getPsfFluxSlot().getErrKey();
-    }
+    FluxSlotDefinition::ErrKey getPsfFluxErrKey() const { return getPsfFluxSlot().getErrKey(); }
 
     /**
      *  Return the key used for the PsfFlux slot failure flag.
      *
      *  @deprecated in favor of getPsfFluxSlot().getFlagKey().
      */
-    Key<Flag> getPsfFluxFlagKey() const {
-        return getPsfFluxSlot().getFlagKey();
-    }
+    Key<Flag> getPsfFluxFlagKey() const { return getPsfFluxSlot().getFlagKey(); }
 
-    
-    FluxSlotDefinition const & getModelFluxSlot() const { return _slots.defModelFlux; }
+    FluxSlotDefinition const &getModelFluxSlot() const { return _slots.defModelFlux; }
 
     /**
      *  Set the measurement used for the ModelFlux slot.
@@ -355,7 +345,7 @@ public:
      *  AliasMap, so this simply sets the "slot_ModelFlux" alias
      *  to point to the given field name prefix.  See FluxSlotDefinition for more information.
      */
-    void defineModelFlux(std::string const & name) {
+    void defineModelFlux(std::string const &name) {
         getSchema().getAliasMap()->set(getModelFluxSlot().getAlias(), name);
     }
 
@@ -365,7 +355,7 @@ public:
      *  @throws pex::exceptions::NotFoundError if the slot is not defined.
      *
      *  @deprecated in favor of
-     *  
+     *
      *      getSchema().getAliasMap()->get("slot_ModelFlux")
      */
     std::string getModelFluxDefinition() const {
@@ -377,39 +367,30 @@ public:
      *
      *  @deprecated in favor of getModelFluxSlot().isValid().
      */
-    bool hasModelFluxSlot() const {
-        return getModelFluxSlot().isValid();
-    }
+    bool hasModelFluxSlot() const { return getModelFluxSlot().isValid(); }
 
     /**
      *  Return the key used for the ModelFlux slot measurement value.
      *
      *  @deprecated in favor of getModelFluxSlot().getMeasKey().
      */
-    FluxSlotDefinition::MeasKey getModelFluxKey() const {
-        return getModelFluxSlot().getMeasKey();
-    }
+    FluxSlotDefinition::MeasKey getModelFluxKey() const { return getModelFluxSlot().getMeasKey(); }
 
     /**
      *  Return the key used for the ModelFlux slot uncertainty.
      *
      *  @deprecated in favor of getModelFluxSlot().getErrKey().
      */
-    FluxSlotDefinition::ErrKey getModelFluxErrKey() const {
-        return getModelFluxSlot().getErrKey();
-    }
+    FluxSlotDefinition::ErrKey getModelFluxErrKey() const { return getModelFluxSlot().getErrKey(); }
 
     /**
      *  Return the key used for the ModelFlux slot failure flag.
      *
      *  @deprecated in favor of getModelFluxSlot().getFlagKey().
      */
-    Key<Flag> getModelFluxFlagKey() const {
-        return getModelFluxSlot().getFlagKey();
-    }
+    Key<Flag> getModelFluxFlagKey() const { return getModelFluxSlot().getFlagKey(); }
 
-    
-    FluxSlotDefinition const & getApFluxSlot() const { return _slots.defApFlux; }
+    FluxSlotDefinition const &getApFluxSlot() const { return _slots.defApFlux; }
 
     /**
      *  Set the measurement used for the ApFlux slot.
@@ -418,7 +399,7 @@ public:
      *  AliasMap, so this simply sets the "slot_ApFlux" alias
      *  to point to the given field name prefix.  See FluxSlotDefinition for more information.
      */
-    void defineApFlux(std::string const & name) {
+    void defineApFlux(std::string const &name) {
         getSchema().getAliasMap()->set(getApFluxSlot().getAlias(), name);
     }
 
@@ -428,7 +409,7 @@ public:
      *  @throws pex::exceptions::NotFoundError if the slot is not defined.
      *
      *  @deprecated in favor of
-     *  
+     *
      *      getSchema().getAliasMap()->get("slot_ApFlux")
      */
     std::string getApFluxDefinition() const {
@@ -440,39 +421,30 @@ public:
      *
      *  @deprecated in favor of getApFluxSlot().isValid().
      */
-    bool hasApFluxSlot() const {
-        return getApFluxSlot().isValid();
-    }
+    bool hasApFluxSlot() const { return getApFluxSlot().isValid(); }
 
     /**
      *  Return the key used for the ApFlux slot measurement value.
      *
      *  @deprecated in favor of getApFluxSlot().getMeasKey().
      */
-    FluxSlotDefinition::MeasKey getApFluxKey() const {
-        return getApFluxSlot().getMeasKey();
-    }
+    FluxSlotDefinition::MeasKey getApFluxKey() const { return getApFluxSlot().getMeasKey(); }
 
     /**
      *  Return the key used for the ApFlux slot uncertainty.
      *
      *  @deprecated in favor of getApFluxSlot().getErrKey().
      */
-    FluxSlotDefinition::ErrKey getApFluxErrKey() const {
-        return getApFluxSlot().getErrKey();
-    }
+    FluxSlotDefinition::ErrKey getApFluxErrKey() const { return getApFluxSlot().getErrKey(); }
 
     /**
      *  Return the key used for the ApFlux slot failure flag.
      *
      *  @deprecated in favor of getApFluxSlot().getFlagKey().
      */
-    Key<Flag> getApFluxFlagKey() const {
-        return getApFluxSlot().getFlagKey();
-    }
+    Key<Flag> getApFluxFlagKey() const { return getApFluxSlot().getFlagKey(); }
 
-    
-    FluxSlotDefinition const & getInstFluxSlot() const { return _slots.defInstFlux; }
+    FluxSlotDefinition const &getInstFluxSlot() const { return _slots.defInstFlux; }
 
     /**
      *  Set the measurement used for the InstFlux slot.
@@ -481,7 +453,7 @@ public:
      *  AliasMap, so this simply sets the "slot_InstFlux" alias
      *  to point to the given field name prefix.  See FluxSlotDefinition for more information.
      */
-    void defineInstFlux(std::string const & name) {
+    void defineInstFlux(std::string const &name) {
         getSchema().getAliasMap()->set(getInstFluxSlot().getAlias(), name);
     }
 
@@ -491,7 +463,7 @@ public:
      *  @throws pex::exceptions::NotFoundError if the slot is not defined.
      *
      *  @deprecated in favor of
-     *  
+     *
      *      getSchema().getAliasMap()->get("slot_InstFlux")
      */
     std::string getInstFluxDefinition() const {
@@ -503,39 +475,30 @@ public:
      *
      *  @deprecated in favor of getInstFluxSlot().isValid().
      */
-    bool hasInstFluxSlot() const {
-        return getInstFluxSlot().isValid();
-    }
+    bool hasInstFluxSlot() const { return getInstFluxSlot().isValid(); }
 
     /**
      *  Return the key used for the InstFlux slot measurement value.
      *
      *  @deprecated in favor of getInstFluxSlot().getMeasKey().
      */
-    FluxSlotDefinition::MeasKey getInstFluxKey() const {
-        return getInstFluxSlot().getMeasKey();
-    }
+    FluxSlotDefinition::MeasKey getInstFluxKey() const { return getInstFluxSlot().getMeasKey(); }
 
     /**
      *  Return the key used for the InstFlux slot uncertainty.
      *
      *  @deprecated in favor of getInstFluxSlot().getErrKey().
      */
-    FluxSlotDefinition::ErrKey getInstFluxErrKey() const {
-        return getInstFluxSlot().getErrKey();
-    }
+    FluxSlotDefinition::ErrKey getInstFluxErrKey() const { return getInstFluxSlot().getErrKey(); }
 
     /**
      *  Return the key used for the InstFlux slot failure flag.
      *
      *  @deprecated in favor of getInstFluxSlot().getFlagKey().
      */
-    Key<Flag> getInstFluxFlagKey() const {
-        return getInstFluxSlot().getFlagKey();
-    }
+    Key<Flag> getInstFluxFlagKey() const { return getInstFluxSlot().getFlagKey(); }
 
-    
-    FluxSlotDefinition const & getCalibFluxSlot() const { return _slots.defCalibFlux; }
+    FluxSlotDefinition const &getCalibFluxSlot() const { return _slots.defCalibFlux; }
 
     /**
      *  Set the measurement used for the CalibFlux slot.
@@ -544,7 +507,7 @@ public:
      *  AliasMap, so this simply sets the "slot_CalibFlux" alias
      *  to point to the given field name prefix.  See FluxSlotDefinition for more information.
      */
-    void defineCalibFlux(std::string const & name) {
+    void defineCalibFlux(std::string const &name) {
         getSchema().getAliasMap()->set(getCalibFluxSlot().getAlias(), name);
     }
 
@@ -554,7 +517,7 @@ public:
      *  @throws pex::exceptions::NotFoundError if the slot is not defined.
      *
      *  @deprecated in favor of
-     *  
+     *
      *      getSchema().getAliasMap()->get("slot_CalibFlux")
      */
     std::string getCalibFluxDefinition() const {
@@ -566,39 +529,30 @@ public:
      *
      *  @deprecated in favor of getCalibFluxSlot().isValid().
      */
-    bool hasCalibFluxSlot() const {
-        return getCalibFluxSlot().isValid();
-    }
+    bool hasCalibFluxSlot() const { return getCalibFluxSlot().isValid(); }
 
     /**
      *  Return the key used for the CalibFlux slot measurement value.
      *
      *  @deprecated in favor of getCalibFluxSlot().getMeasKey().
      */
-    FluxSlotDefinition::MeasKey getCalibFluxKey() const {
-        return getCalibFluxSlot().getMeasKey();
-    }
+    FluxSlotDefinition::MeasKey getCalibFluxKey() const { return getCalibFluxSlot().getMeasKey(); }
 
     /**
      *  Return the key used for the CalibFlux slot uncertainty.
      *
      *  @deprecated in favor of getCalibFluxSlot().getErrKey().
      */
-    FluxSlotDefinition::ErrKey getCalibFluxErrKey() const {
-        return getCalibFluxSlot().getErrKey();
-    }
+    FluxSlotDefinition::ErrKey getCalibFluxErrKey() const { return getCalibFluxSlot().getErrKey(); }
 
     /**
      *  Return the key used for the CalibFlux slot failure flag.
      *
      *  @deprecated in favor of getCalibFluxSlot().getFlagKey().
      */
-    Key<Flag> getCalibFluxFlagKey() const {
-        return getCalibFluxSlot().getFlagKey();
-    }
+    Key<Flag> getCalibFluxFlagKey() const { return getCalibFluxSlot().getFlagKey(); }
 
-    
-    CentroidSlotDefinition const & getCentroidSlot() const { return _slots.defCentroid; }
+    CentroidSlotDefinition const &getCentroidSlot() const { return _slots.defCentroid; }
 
     /**
      *  Set the measurement used for the Centroid slot.
@@ -607,7 +561,7 @@ public:
      *  AliasMap, so this simply sets the "slot_Centroid" alias
      *  to point to the given field name prefix.  See CentroidSlotDefinition for more information.
      */
-    void defineCentroid(std::string const & name) {
+    void defineCentroid(std::string const &name) {
         getSchema().getAliasMap()->set(getCentroidSlot().getAlias(), name);
     }
 
@@ -617,7 +571,7 @@ public:
      *  @throws pex::exceptions::NotFoundError if the slot is not defined.
      *
      *  @deprecated in favor of
-     *  
+     *
      *      getSchema().getAliasMap()->get("slot_Centroid")
      */
     std::string getCentroidDefinition() const {
@@ -629,39 +583,30 @@ public:
      *
      *  @deprecated in favor of getCentroidSlot().isValid().
      */
-    bool hasCentroidSlot() const {
-        return getCentroidSlot().isValid();
-    }
+    bool hasCentroidSlot() const { return getCentroidSlot().isValid(); }
 
     /**
      *  Return the key used for the Centroid slot measurement value.
      *
      *  @deprecated in favor of getCentroidSlot().getMeasKey().
      */
-    CentroidSlotDefinition::MeasKey getCentroidKey() const {
-        return getCentroidSlot().getMeasKey();
-    }
+    CentroidSlotDefinition::MeasKey getCentroidKey() const { return getCentroidSlot().getMeasKey(); }
 
     /**
      *  Return the key used for the Centroid slot uncertainty.
      *
      *  @deprecated in favor of getCentroidSlot().getErrKey().
      */
-    CentroidSlotDefinition::ErrKey getCentroidErrKey() const {
-        return getCentroidSlot().getErrKey();
-    }
+    CentroidSlotDefinition::ErrKey getCentroidErrKey() const { return getCentroidSlot().getErrKey(); }
 
     /**
      *  Return the key used for the Centroid slot failure flag.
      *
      *  @deprecated in favor of getCentroidSlot().getFlagKey().
      */
-    Key<Flag> getCentroidFlagKey() const {
-        return getCentroidSlot().getFlagKey();
-    }
+    Key<Flag> getCentroidFlagKey() const { return getCentroidSlot().getFlagKey(); }
 
-    
-    ShapeSlotDefinition const & getShapeSlot() const { return _slots.defShape; }
+    ShapeSlotDefinition const &getShapeSlot() const { return _slots.defShape; }
 
     /**
      *  Set the measurement used for the Shape slot.
@@ -670,7 +615,7 @@ public:
      *  AliasMap, so this simply sets the "slot_Shape" alias
      *  to point to the given field name prefix.  See ShapeSlotDefinition for more information.
      */
-    void defineShape(std::string const & name) {
+    void defineShape(std::string const &name) {
         getSchema().getAliasMap()->set(getShapeSlot().getAlias(), name);
     }
 
@@ -680,7 +625,7 @@ public:
      *  @throws pex::exceptions::NotFoundError if the slot is not defined.
      *
      *  @deprecated in favor of
-     *  
+     *
      *      getSchema().getAliasMap()->get("slot_Shape")
      */
     std::string getShapeDefinition() const {
@@ -692,56 +637,45 @@ public:
      *
      *  @deprecated in favor of getShapeSlot().isValid().
      */
-    bool hasShapeSlot() const {
-        return getShapeSlot().isValid();
-    }
+    bool hasShapeSlot() const { return getShapeSlot().isValid(); }
 
     /**
      *  Return the key used for the Shape slot measurement value.
      *
      *  @deprecated in favor of getShapeSlot().getMeasKey().
      */
-    ShapeSlotDefinition::MeasKey getShapeKey() const {
-        return getShapeSlot().getMeasKey();
-    }
+    ShapeSlotDefinition::MeasKey getShapeKey() const { return getShapeSlot().getMeasKey(); }
 
     /**
      *  Return the key used for the Shape slot uncertainty.
      *
      *  @deprecated in favor of getShapeSlot().getErrKey().
      */
-    ShapeSlotDefinition::ErrKey getShapeErrKey() const {
-        return getShapeSlot().getErrKey();
-    }
+    ShapeSlotDefinition::ErrKey getShapeErrKey() const { return getShapeSlot().getErrKey(); }
 
     /**
      *  Return the key used for the Shape slot failure flag.
      *
      *  @deprecated in favor of getShapeSlot().getFlagKey().
      */
-    Key<Flag> getShapeFlagKey() const {
-        return getShapeSlot().getFlagKey();
-    }
+    Key<Flag> getShapeFlagKey() const { return getShapeSlot().getFlagKey(); }
 
-
-    SourceTable & operator=(SourceTable const &) = delete;
-    SourceTable & operator=(SourceTable &&) = delete;
+    SourceTable &operator=(SourceTable const &) = delete;
+    SourceTable &operator=(SourceTable &&) = delete;
 
 protected:
+    SourceTable(Schema const &schema, std::shared_ptr<IdFactory> const &idFactory);
 
-    SourceTable(Schema const & schema, std::shared_ptr<IdFactory> const & idFactory);
+    SourceTable(SourceTable const &other);
+    SourceTable(SourceTable &&other);
 
-    SourceTable(SourceTable const & other);
-    SourceTable(SourceTable && other);
-
-    void handleAliasChange(std::string const & alias) override;
+    void handleAliasChange(std::string const &alias) override;
 
     std::shared_ptr<BaseTable> _clone() const override;
 
     std::shared_ptr<BaseRecord> _makeRecord() override;
 
 private:
-
     // Struct that holds the minimal schema and the special keys we've added to it.
     struct MinimalSchema {
         Schema schema;
@@ -751,13 +685,13 @@ private:
     };
 
     // Return the singleton minimal schema.
-    static MinimalSchema & getMinimalSchema();
+    static MinimalSchema &getMinimalSchema();
 
     friend class io::FitsWriter;
     friend class SourceRecord;
 
-     // Return a writer object that knows how to save in FITS format.  See also FitsWriter.
-    std::shared_ptr<io::FitsWriter> makeFitsWriter(fits::Fits * fitsfile, int flags) const override;
+    // Return a writer object that knows how to save in FITS format.  See also FitsWriter.
+    std::shared_ptr<io::FitsWriter> makeFitsWriter(fits::Fits *fitsfile, int flags) const override;
 
     SlotSuite _slots;
 };
@@ -765,7 +699,6 @@ private:
 template <typename RecordT>
 class SourceColumnViewT : public ColumnViewT<RecordT> {
 public:
-
     typedef RecordT Record;
     typedef typename RecordT::Table Table;
 
@@ -773,82 +706,82 @@ public:
     // accessors *appear* to violate const-correctness.
 
     /// Get the value of the PsfFlux slot measurement.
-    ndarray::Array<double,1> getPsfFlux() const {
+    ndarray::Array<double, 1> getPsfFlux() const {
         return this->operator[](this->getTable()->getPsfFluxSlot().getMeasKey());
     }
     /// Get the uncertainty on the PsfFlux slot measurement.
-    ndarray::Array<double,1> getPsfFluxErr() const {
+    ndarray::Array<double, 1> getPsfFluxErr() const {
         return this->operator[](this->getTable()->getPsfFluxSlot().getErrKey());
     }
 
     /// Get the value of the ApFlux slot measurement.
-    ndarray::Array<double,1> getApFlux() const {
+    ndarray::Array<double, 1> getApFlux() const {
         return this->operator[](this->getTable()->getApFluxSlot().getMeasKey());
     }
     /// Get the uncertainty on the ApFlux slot measurement.
-    ndarray::Array<double,1> getApFluxErr() const {
+    ndarray::Array<double, 1> getApFluxErr() const {
         return this->operator[](this->getTable()->getApFluxSlot().getErrKey());
     }
 
     /// Get the value of the ModelFlux slot measurement.
-    ndarray::Array<double,1> getModelFlux() const {
+    ndarray::Array<double, 1> getModelFlux() const {
         return this->operator[](this->getTable()->getModelFluxSlot().getMeasKey());
     }
     /// Get the uncertainty on the ModelFlux slot measurement.
-    ndarray::Array<double,1> getModelFluxErr() const {
+    ndarray::Array<double, 1> getModelFluxErr() const {
         return this->operator[](this->getTable()->getModelFluxSlot().getErrKey());
     }
 
     /// Get the value of the InstFlux slot measurement.
-    ndarray::Array<double,1> getInstFlux() const {
+    ndarray::Array<double, 1> getInstFlux() const {
         return this->operator[](this->getTable()->getInstFluxSlot().getMeasKey());
     }
     /// Get the uncertainty on the InstFlux slot measurement.
-    ndarray::Array<double,1> getInstFluxErr() const {
+    ndarray::Array<double, 1> getInstFluxErr() const {
         return this->operator[](this->getTable()->getInstFluxSlot().getErrKey());
     }
 
     /// Get the value of the CalibFlux slot measurement.
-    ndarray::Array<double,1> getCalibFlux() const {
+    ndarray::Array<double, 1> getCalibFlux() const {
         return this->operator[](this->getTable()->getCalibFluxSlot().getMeasKey());
     }
     /// Get the uncertainty on the CalibFlux slot measurement.
-    ndarray::Array<double,1> getCalibFluxErr() const {
+    ndarray::Array<double, 1> getCalibFluxErr() const {
         return this->operator[](this->getTable()->getCalibFluxSlot().getErrKey());
     }
 
-
-    ndarray::Array<double,1> const getX() const {
+    ndarray::Array<double, 1> const getX() const {
         return this->operator[](this->getTable()->getCentroidKey().getX());
     }
-    ndarray::Array<double,1> const getY() const {
+    ndarray::Array<double, 1> const getY() const {
         return this->operator[](this->getTable()->getCentroidKey().getY());
     }
 
-    ndarray::Array<double,1> const getIxx() const {
+    ndarray::Array<double, 1> const getIxx() const {
         return this->operator[](this->getTable()->getShapeKey().getIxx());
     }
-    ndarray::Array<double,1> const getIyy() const {
+    ndarray::Array<double, 1> const getIyy() const {
         return this->operator[](this->getTable()->getShapeKey().getIyy());
     }
-    ndarray::Array<double,1> const getIxy() const {
+    ndarray::Array<double, 1> const getIxy() const {
         return this->operator[](this->getTable()->getShapeKey().getIxy());
     }
 
     /// @copydoc BaseColumnView::make
     template <typename InputIterator>
-    static SourceColumnViewT make(std::shared_ptr<Table> const & table, InputIterator first, InputIterator last) {
+    static SourceColumnViewT make(std::shared_ptr<Table> const &table, InputIterator first,
+                                  InputIterator last) {
         return SourceColumnViewT(BaseColumnView::make(table, first, last));
     }
 
     SourceColumnViewT(SourceColumnViewT const &) = default;
     SourceColumnViewT(SourceColumnViewT &&) = default;
-    SourceColumnViewT & operator=(SourceColumnViewT const &) = default;
-    SourceColumnViewT & operator=(SourceColumnViewT &&) = default;
+    SourceColumnViewT &operator=(SourceColumnViewT const &) = default;
+    SourceColumnViewT &operator=(SourceColumnViewT &&) = default;
     ~SourceColumnViewT() = default;
 
 protected:
-    explicit SourceColumnViewT(BaseColumnView const & base) : ColumnViewT<RecordT>(base) {}
+    explicit SourceColumnViewT(BaseColumnView const &base) : ColumnViewT<RecordT>(base) {}
 };
 
 typedef SourceColumnViewT<SourceRecord> SourceColumnView;
@@ -933,29 +866,18 @@ inline ShapeSlotDefinition::ErrValue SourceRecord::getShapeErr() const {
     return this->get(getTable()->getShapeSlot().getErrKey());
 }
 
-inline bool SourceRecord::getShapeFlag() const {
-    return this->get(getTable()->getShapeSlot().getFlagKey());
-}
-
+inline bool SourceRecord::getShapeFlag() const { return this->get(getTable()->getShapeSlot().getFlagKey()); }
 
 inline RecordId SourceRecord::getParent() const { return get(SourceTable::getParentKey()); }
 inline void SourceRecord::setParent(RecordId id) { set(SourceTable::getParentKey(), id); }
-inline double SourceRecord::getX() const {
-    return get(getTable()->getCentroidKey().getX());
-}
-inline double SourceRecord::getY() const {
-    return get(getTable()->getCentroidKey().getY());
-}
-inline double SourceRecord::getIxx() const {
-    return get(getTable()->getShapeKey().getIxx());
-}
-inline double SourceRecord::getIyy() const {
-    return get(getTable()->getShapeKey().getIyy());
-}
-inline double SourceRecord::getIxy() const {
-    return get(getTable()->getShapeKey().getIxy());
-}
+inline double SourceRecord::getX() const { return get(getTable()->getCentroidKey().getX()); }
+inline double SourceRecord::getY() const { return get(getTable()->getCentroidKey().getY()); }
+inline double SourceRecord::getIxx() const { return get(getTable()->getShapeKey().getIxx()); }
+inline double SourceRecord::getIyy() const { return get(getTable()->getShapeKey().getIyy()); }
+inline double SourceRecord::getIxy() const { return get(getTable()->getShapeKey().getIxy()); }
 
-}}} // namespace lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst
 
-#endif // !AFW_TABLE_Source_h_INCLUDED
+#endif  // !AFW_TABLE_Source_h_INCLUDED
