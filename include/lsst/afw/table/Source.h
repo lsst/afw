@@ -295,47 +295,6 @@ public:
         getSchema().getAliasMap()->set(getPsfFluxSlot().getAlias(), name);
     }
 
-    /**
-     *  Return the name of the field used for the PsfFlux slot.
-     *
-     *  @throws pex::exceptions::NotFoundError if the slot is not defined.
-     *
-     *  @deprecated in favor of
-     *
-     *      getSchema().getAliasMap()->get("slot_PsfFlux")
-     */
-    std::string getPsfFluxDefinition() const {
-        return getSchema().getAliasMap()->get(getPsfFluxSlot().getAlias());
-    }
-
-    /**
-     *  Return true if the PsfFlux slot corresponds to a valid field.
-     *
-     *  @deprecated in favor of getPsfFluxSlot().isValid().
-     */
-    bool hasPsfFluxSlot() const { return getPsfFluxSlot().isValid(); }
-
-    /**
-     *  Return the key used for the PsfFlux slot measurement value.
-     *
-     *  @deprecated in favor of getPsfFluxSlot().getMeasKey().
-     */
-    FluxSlotDefinition::MeasKey getPsfFluxKey() const { return getPsfFluxSlot().getMeasKey(); }
-
-    /**
-     *  Return the key used for the PsfFlux slot uncertainty.
-     *
-     *  @deprecated in favor of getPsfFluxSlot().getErrKey().
-     */
-    FluxSlotDefinition::ErrKey getPsfFluxErrKey() const { return getPsfFluxSlot().getErrKey(); }
-
-    /**
-     *  Return the key used for the PsfFlux slot failure flag.
-     *
-     *  @deprecated in favor of getPsfFluxSlot().getFlagKey().
-     */
-    Key<Flag> getPsfFluxFlagKey() const { return getPsfFluxSlot().getFlagKey(); }
-
     FluxSlotDefinition const &getModelFluxSlot() const { return _slots.defModelFlux; }
 
     /**
@@ -348,47 +307,6 @@ public:
     void defineModelFlux(std::string const &name) {
         getSchema().getAliasMap()->set(getModelFluxSlot().getAlias(), name);
     }
-
-    /**
-     *  Return the name of the field used for the ModelFlux slot.
-     *
-     *  @throws pex::exceptions::NotFoundError if the slot is not defined.
-     *
-     *  @deprecated in favor of
-     *
-     *      getSchema().getAliasMap()->get("slot_ModelFlux")
-     */
-    std::string getModelFluxDefinition() const {
-        return getSchema().getAliasMap()->get(getModelFluxSlot().getAlias());
-    }
-
-    /**
-     *  Return true if the ModelFlux slot corresponds to a valid field.
-     *
-     *  @deprecated in favor of getModelFluxSlot().isValid().
-     */
-    bool hasModelFluxSlot() const { return getModelFluxSlot().isValid(); }
-
-    /**
-     *  Return the key used for the ModelFlux slot measurement value.
-     *
-     *  @deprecated in favor of getModelFluxSlot().getMeasKey().
-     */
-    FluxSlotDefinition::MeasKey getModelFluxKey() const { return getModelFluxSlot().getMeasKey(); }
-
-    /**
-     *  Return the key used for the ModelFlux slot uncertainty.
-     *
-     *  @deprecated in favor of getModelFluxSlot().getErrKey().
-     */
-    FluxSlotDefinition::ErrKey getModelFluxErrKey() const { return getModelFluxSlot().getErrKey(); }
-
-    /**
-     *  Return the key used for the ModelFlux slot failure flag.
-     *
-     *  @deprecated in favor of getModelFluxSlot().getFlagKey().
-     */
-    Key<Flag> getModelFluxFlagKey() const { return getModelFluxSlot().getFlagKey(); }
 
     FluxSlotDefinition const &getApFluxSlot() const { return _slots.defApFlux; }
 
@@ -403,47 +321,6 @@ public:
         getSchema().getAliasMap()->set(getApFluxSlot().getAlias(), name);
     }
 
-    /**
-     *  Return the name of the field used for the ApFlux slot.
-     *
-     *  @throws pex::exceptions::NotFoundError if the slot is not defined.
-     *
-     *  @deprecated in favor of
-     *
-     *      getSchema().getAliasMap()->get("slot_ApFlux")
-     */
-    std::string getApFluxDefinition() const {
-        return getSchema().getAliasMap()->get(getApFluxSlot().getAlias());
-    }
-
-    /**
-     *  Return true if the ApFlux slot corresponds to a valid field.
-     *
-     *  @deprecated in favor of getApFluxSlot().isValid().
-     */
-    bool hasApFluxSlot() const { return getApFluxSlot().isValid(); }
-
-    /**
-     *  Return the key used for the ApFlux slot measurement value.
-     *
-     *  @deprecated in favor of getApFluxSlot().getMeasKey().
-     */
-    FluxSlotDefinition::MeasKey getApFluxKey() const { return getApFluxSlot().getMeasKey(); }
-
-    /**
-     *  Return the key used for the ApFlux slot uncertainty.
-     *
-     *  @deprecated in favor of getApFluxSlot().getErrKey().
-     */
-    FluxSlotDefinition::ErrKey getApFluxErrKey() const { return getApFluxSlot().getErrKey(); }
-
-    /**
-     *  Return the key used for the ApFlux slot failure flag.
-     *
-     *  @deprecated in favor of getApFluxSlot().getFlagKey().
-     */
-    Key<Flag> getApFluxFlagKey() const { return getApFluxSlot().getFlagKey(); }
-
     FluxSlotDefinition const &getInstFluxSlot() const { return _slots.defInstFlux; }
 
     /**
@@ -457,47 +334,6 @@ public:
         getSchema().getAliasMap()->set(getInstFluxSlot().getAlias(), name);
     }
 
-    /**
-     *  Return the name of the field used for the InstFlux slot.
-     *
-     *  @throws pex::exceptions::NotFoundError if the slot is not defined.
-     *
-     *  @deprecated in favor of
-     *
-     *      getSchema().getAliasMap()->get("slot_InstFlux")
-     */
-    std::string getInstFluxDefinition() const {
-        return getSchema().getAliasMap()->get(getInstFluxSlot().getAlias());
-    }
-
-    /**
-     *  Return true if the InstFlux slot corresponds to a valid field.
-     *
-     *  @deprecated in favor of getInstFluxSlot().isValid().
-     */
-    bool hasInstFluxSlot() const { return getInstFluxSlot().isValid(); }
-
-    /**
-     *  Return the key used for the InstFlux slot measurement value.
-     *
-     *  @deprecated in favor of getInstFluxSlot().getMeasKey().
-     */
-    FluxSlotDefinition::MeasKey getInstFluxKey() const { return getInstFluxSlot().getMeasKey(); }
-
-    /**
-     *  Return the key used for the InstFlux slot uncertainty.
-     *
-     *  @deprecated in favor of getInstFluxSlot().getErrKey().
-     */
-    FluxSlotDefinition::ErrKey getInstFluxErrKey() const { return getInstFluxSlot().getErrKey(); }
-
-    /**
-     *  Return the key used for the InstFlux slot failure flag.
-     *
-     *  @deprecated in favor of getInstFluxSlot().getFlagKey().
-     */
-    Key<Flag> getInstFluxFlagKey() const { return getInstFluxSlot().getFlagKey(); }
-
     FluxSlotDefinition const &getCalibFluxSlot() const { return _slots.defCalibFlux; }
 
     /**
@@ -510,47 +346,6 @@ public:
     void defineCalibFlux(std::string const &name) {
         getSchema().getAliasMap()->set(getCalibFluxSlot().getAlias(), name);
     }
-
-    /**
-     *  Return the name of the field used for the CalibFlux slot.
-     *
-     *  @throws pex::exceptions::NotFoundError if the slot is not defined.
-     *
-     *  @deprecated in favor of
-     *
-     *      getSchema().getAliasMap()->get("slot_CalibFlux")
-     */
-    std::string getCalibFluxDefinition() const {
-        return getSchema().getAliasMap()->get(getCalibFluxSlot().getAlias());
-    }
-
-    /**
-     *  Return true if the CalibFlux slot corresponds to a valid field.
-     *
-     *  @deprecated in favor of getCalibFluxSlot().isValid().
-     */
-    bool hasCalibFluxSlot() const { return getCalibFluxSlot().isValid(); }
-
-    /**
-     *  Return the key used for the CalibFlux slot measurement value.
-     *
-     *  @deprecated in favor of getCalibFluxSlot().getMeasKey().
-     */
-    FluxSlotDefinition::MeasKey getCalibFluxKey() const { return getCalibFluxSlot().getMeasKey(); }
-
-    /**
-     *  Return the key used for the CalibFlux slot uncertainty.
-     *
-     *  @deprecated in favor of getCalibFluxSlot().getErrKey().
-     */
-    FluxSlotDefinition::ErrKey getCalibFluxErrKey() const { return getCalibFluxSlot().getErrKey(); }
-
-    /**
-     *  Return the key used for the CalibFlux slot failure flag.
-     *
-     *  @deprecated in favor of getCalibFluxSlot().getFlagKey().
-     */
-    Key<Flag> getCalibFluxFlagKey() const { return getCalibFluxSlot().getFlagKey(); }
 
     CentroidSlotDefinition const &getCentroidSlot() const { return _slots.defCentroid; }
 

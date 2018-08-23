@@ -127,43 +127,18 @@ PySourceTable declareSourceTable(py::module &mod) {
 
     cls.def("getPsfFluxSlot", &SourceTable::getPsfFluxSlot);
     cls.def("definePsfFlux", &SourceTable::definePsfFlux, "name"_a);
-    cls.def("getPsfFluxDefinition", &SourceTable::getPsfFluxDefinition);
-    cls.def("hasPsfFluxSlot", &SourceTable::hasPsfFluxSlot);
-    cls.def("getPsfFluxKey", &SourceTable::getPsfFluxKey);
-    cls.def("getPsfFluxErrKey", &SourceTable::getPsfFluxErrKey);
-    cls.def("getPsfFluxFlagKey", &SourceTable::getPsfFluxFlagKey);
 
     cls.def("getModelFluxSlot", &SourceTable::getModelFluxSlot);
     cls.def("defineModelFlux", &SourceTable::defineModelFlux, "name"_a);
-    cls.def("getModelFluxDefinition", &SourceTable::getModelFluxDefinition);
-    cls.def("hasModelFluxSlot", &SourceTable::hasModelFluxSlot);
-    cls.def("getModelFluxKey", &SourceTable::getModelFluxKey);
-    cls.def("getModelFluxErrKey", &SourceTable::getModelFluxErrKey);
-    cls.def("getModelFluxFlagKey", &SourceTable::getModelFluxFlagKey);
 
     cls.def("getApFluxSlot", &SourceTable::getApFluxSlot);
     cls.def("defineApFlux", &SourceTable::defineApFlux, "name"_a);
-    cls.def("getApFluxDefinition", &SourceTable::getApFluxDefinition);
-    cls.def("hasApFluxSlot", &SourceTable::hasApFluxSlot);
-    cls.def("getApFluxKey", &SourceTable::getApFluxKey);
-    cls.def("getApFluxErrKey", &SourceTable::getApFluxErrKey);
-    cls.def("getApFluxFlagKey", &SourceTable::getApFluxFlagKey);
 
     cls.def("getInstFluxSlot", &SourceTable::getInstFluxSlot);
     cls.def("defineInstFlux", &SourceTable::defineInstFlux, "name"_a);
-    cls.def("getInstFluxDefinition", &SourceTable::getInstFluxDefinition);
-    cls.def("hasInstFluxSlot", &SourceTable::hasInstFluxSlot);
-    cls.def("getInstFluxKey", &SourceTable::getInstFluxKey);
-    cls.def("getInstFluxErrKey", &SourceTable::getInstFluxErrKey);
-    cls.def("getInstFluxFlagKey", &SourceTable::getInstFluxFlagKey);
 
     cls.def("getCalibFluxSlot", &SourceTable::getCalibFluxSlot);
     cls.def("defineCalibFlux", &SourceTable::defineCalibFlux, "name"_a);
-    cls.def("getCalibFluxDefinition", &SourceTable::getCalibFluxDefinition);
-    cls.def("hasCalibFluxSlot", &SourceTable::hasCalibFluxSlot);
-    cls.def("getCalibFluxKey", &SourceTable::getCalibFluxKey);
-    cls.def("getCalibFluxErrKey", &SourceTable::getCalibFluxErrKey);
-    cls.def("getCalibFluxFlagKey", &SourceTable::getCalibFluxFlagKey);
 
     cls.def("getCentroidSlot", &SourceTable::getCentroidSlot);
     cls.def("defineCentroid", &SourceTable::defineCentroid, "name"_a);

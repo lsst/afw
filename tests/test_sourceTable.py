@@ -127,7 +127,6 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         del self.catalog
 
     def checkCanonical(self):
-        self.assertEqual(self.table.getPsfFluxDefinition(), "a")
         self.assertEqual(self.record.get(self.fluxKey),
                          self.record.getPsfFlux())
         self.assertEqual(self.record.get(self.fluxFlagKey),
@@ -165,7 +164,6 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
             record = catalog[0]
             # I'm using the keys from the non-persisted table.  They should work at least in the
             # current implementation
-            self.assertEqual(table.getPsfFluxDefinition(), "a")
             self.assertEqual(record.get(self.fluxKey), record.getPsfFlux())
             self.assertEqual(record.get(self.fluxFlagKey),
                              record.getPsfFluxFlag())
@@ -272,7 +270,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
                                self.catalog.get(self.fluxKey))
         self.assertFloatsEqual(self.catalog.columns.get(self.fluxKey),
                                self.catalog.getPsfFlux())
-        self.assertEqual(self.fluxKey, self.catalog.getPsfFluxKey())
+        self.assertEqual(self.instFluxKey, self.catalog.getPsfFluxSlot().getMeasKey())
         with self.assertRaises(AttributeError):
             self.catalog.foo()
 
@@ -540,9 +538,9 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         key = schema.addField("a_flux", type=np.float64, doc="flux field")
         table = lsst.afw.table.SourceTable.make(schema)
         table.definePsfFlux("a")
-        self.assertEqual(table.getPsfFluxKey(), key)
+        self.assertEqual(table.getPsfFluxSlot().getMeasKey(), key)
         table.schema.getAliasMap().erase("slot_PsfFlux")
-        self.assertFalse(table.getPsfFluxKey().isValid())
+        self.assertFalse(table.getPsfFluxSlot().isValid())
 
     def testOldFootprintPersistence(self):
         """Test that we can still read SourceCatalogs with (Heavy)Footprints saved by an older
@@ -599,20 +597,14 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         table = lsst.afw.table.SourceTable.make(schema)
 
         # Initially, the slot is undefined.
-        # For some reason this doesn't work with a context manager for assertRaises
-        self.assertRaises(lsst.pex.exceptions.NotFoundError,
-                          getattr(table, "get%sDefinition" % (slotName,)))
+        self.assertFalse(getattr(table, "get%sSlot" % (slotName,))().isValid())
 
         # After definition, it maps to the keys defined above.
         getattr(table, "define%s" % (slotName,))(baseName)
-        self.assertEqual(getattr(table, "get%sDefinition" % (slotName,))(),
-                         baseName)
-        self.assertEqual(getattr(table, "get%sKey" % (slotName,))(),
-                         fluxKey)
-        self.assertEqual(getattr(table, "get%sErrKey" % (slotName,))(),
-                         errKey)
-        self.assertEqual(getattr(table, "get%sFlagKey" % (slotName,))(),
-                         flagKey)
+        self.assertTrue(getattr(table, "get%sSlot" % (slotName,))().isValid())
+        self.assertEqual(getattr(table, "get%sSlot" % (slotName,))().getMeasKey(), instFluxKey)
+        self.assertEqual(getattr(table, "get%sSlot" % (slotName,))().getErrKey(), errKey)
+        self.assertEqual(getattr(table, "get%sSlot" % (slotName,))().getFlagKey(), flagKey)
 
         # We should be able to retrieve arbitrary values set in records.
         record = table.makeRecord()
@@ -626,12 +618,10 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
 
         # And we should be able to delete the slot, breaking the mapping.
         table.schema.getAliasMap().erase("slot_%s" % (slotName,))
-        self.assertNotEqual(getattr(table, "get%sKey" % (slotName,))(),
-                            fluxKey)
-        self.assertNotEqual(getattr(table, "get%sErrKey" % (slotName,))(),
-                            errKey)
-        self.assertNotEqual(getattr(table, "get%sFlagKey" % (slotName,))(),
-                            flagKey)
+        self.assertFalse(getattr(table, "get%sSlot" % (slotName,))().isValid())
+        self.assertNotEqual(getattr(table, "get%sSlot" % (slotName,))().getMeasKey(), instFluxKey)
+        self.assertNotEqual(getattr(table, "get%sSlot" % (slotName,))().getErrKey(), errKey)
+        self.assertNotEqual(getattr(table, "get%sSlot" % (slotName,))().getFlagKey(), flagKey)
 
     def testFluxSlots(self):
         """Check that all the expected flux slots are present & correct."""

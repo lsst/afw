@@ -169,7 +169,6 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
             record = catalog[0]
             # I'm using the keys from the non-persisted table.  They should work at least in the
             # current implementation
-            self.assertEqual(table.getPsfFluxDefinition(), "a")
             self.assertEqual(record.get(self.fluxKey), record.getPsfFlux())
             self.assertEqual(record.get(self.fluxFlagKey),
                              record.getPsfFluxFlag())
@@ -189,7 +188,6 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.table.definePsfFlux("a")
         self.table.defineCentroid("b")
         self.table.defineShape("c")
-        self.assertEqual(self.table.getPsfFluxDefinition(), "a")
         self.assertEqual(self.record.get(self.fluxKey),
                          self.record.getPsfFlux())
         self.assertEqual(self.record.get(self.fluxFlagKey),

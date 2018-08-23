@@ -44,7 +44,7 @@ class DirTestCase(lsst.utils.tests.TestCase):
         # Compare catalog attributes with those from various catalog subclasses
         attrNames = dir(catalog)
         desiredNames = set(['_columns', '__module__', 'getX', 'getY',
-                            'asAstropy', 'hasPsfFluxSlot'])
+                            'asAstropy', 'getPsfFluxSlot'])
         self.assertTrue(desiredNames.issubset(attrNames))
 
 

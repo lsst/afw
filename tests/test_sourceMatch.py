@@ -175,7 +175,7 @@ class SourceMatchTestCase(lsst.utils.tests.TestCase):
                 s.setId(objId)
                 s.setRa(ra * lsst.geom.degrees)
                 s.setDec(dec * lsst.geom.degrees)
-                s.set(self.table.getPsfFluxKey(), psfMags[band])
+                s.set(self.table.getPsfFluxSlot().getMeasKey(), psfMags[band])
 
         del ifd
 
@@ -205,7 +205,7 @@ class SourceMatchTestCase(lsst.utils.tests.TestCase):
                       ra * lsst.geom.degrees)
                 s.set(afwTable.SourceTable.getCoordKey().getDec(),
                       dec * lsst.geom.degrees)
-                s.set(self.table.getPsfFluxKey(), flux[0])
+                s.set(self.table.getPsfFluxSlot().getMeasKey(), flux[0])
 
         del ifd
 
