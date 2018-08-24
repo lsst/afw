@@ -116,18 +116,18 @@ memory_based_2d_locator<T>& operator-=(memory_based_2d_locator<T>& loc, std::pai
 typedef uint64_t bits64;
 typedef int64_t bits64s;
 
-GIL_DEFINE_BASE_TYPEDEFS(64, gray)
-GIL_DEFINE_ALL_TYPEDEFS_INTERNAL(64, dev2n, devicen_t<2>, devicen_layout_t<2>)
-GIL_DEFINE_BASE_TYPEDEFS(64s, gray)
-GIL_DEFINE_ALL_TYPEDEFS_INTERNAL(64s, dev2n, devicen_t<2>, devicen_layout_t<2>)
+GIL_DEFINE_BASE_TYPEDEFS(64, bits64, gray)
+GIL_DEFINE_ALL_TYPEDEFS_INTERNAL(64, bits64, dev2n, devicen_t<2>, devicen_layout_t<2>)
+GIL_DEFINE_BASE_TYPEDEFS(64s, bits64s, gray)
+GIL_DEFINE_ALL_TYPEDEFS_INTERNAL(64s, bits64s, dev2n, devicen_t<2>, devicen_layout_t<2>)
 
 /*
  * Define a type that's a pure float, without scaling into [0, 1]
  */
 typedef float bits32f_noscale;
 
-GIL_DEFINE_BASE_TYPEDEFS(32f_noscale, gray)
-GIL_DEFINE_ALL_TYPEDEFS_INTERNAL(32f_noscale, dev2n, devicen_t<2>, devicen_layout_t<2>)
+GIL_DEFINE_BASE_TYPEDEFS(32f_noscale, bits32f_noscale, gray)
+GIL_DEFINE_ALL_TYPEDEFS_INTERNAL(32f_noscale, bits32f_noscale, dev2n, devicen_t<2>, devicen_layout_t<2>)
 
 template <>
 struct channel_multiplier<bits32f_noscale>
@@ -140,8 +140,8 @@ struct channel_multiplier<bits32f_noscale>
  */
 typedef double bits64f_noscale;
 
-GIL_DEFINE_BASE_TYPEDEFS(64f_noscale, gray)
-GIL_DEFINE_ALL_TYPEDEFS_INTERNAL(64f_noscale, dev2n, devicen_t<2>, devicen_layout_t<2>)
+GIL_DEFINE_BASE_TYPEDEFS(64f_noscale, bits64f_noscale, gray)
+GIL_DEFINE_ALL_TYPEDEFS_INTERNAL(64f_noscale, bits64f_noscale, dev2n, devicen_t<2>, devicen_layout_t<2>)
 
 //
 // Conversions that don't scale
@@ -384,7 +384,7 @@ namespace gil {
 
 /// transform_pixels with three sources
 template <typename View1, typename View2, typename View3, typename ViewDest, typename F>
-GIL_FORCEINLINE F transform_pixels(const View1& src1, const View2& src2, const View3& src3,
+BOOST_FORCEINLINE F transform_pixels(const View1& src1, const View2& src2, const View3& src3,
                                    const ViewDest& dst, F fun) {
     for (std::ptrdiff_t y = 0; y < dst.height(); ++y) {
         typename View1::x_iterator srcIt1 = src1.row_begin(y);
@@ -398,7 +398,7 @@ GIL_FORCEINLINE F transform_pixels(const View1& src1, const View2& src2, const V
 
 /// transform_pixels with four sources
 template <typename View1, typename View2, typename View3, typename View4, typename ViewDest, typename F>
-GIL_FORCEINLINE F transform_pixels(const View1& src1, const View2& src2, const View3& src3, const View4& src4,
+BOOST_FORCEINLINE F transform_pixels(const View1& src1, const View2& src2, const View3& src3, const View4& src4,
                                    const ViewDest& dst, F fun) {
     for (std::ptrdiff_t y = 0; y < dst.height(); ++y) {
         typename View1::x_iterator srcIt1 = src1.row_begin(y);
