@@ -526,6 +526,11 @@ public:
     bool checkImageType();
 
     /**
+     *  Return the numpy dtype equivalent of the image pixel type (e.g. "uint16", "float64").
+     */
+    std::string getImageDType();
+
+    /**
      *  Read an array from a FITS image.
      *
      *  @param[out]  array    Array to be filled.  Must already be allocated to the desired shape.

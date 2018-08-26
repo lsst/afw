@@ -1331,6 +1331,35 @@ bool Fits::checkImageType() {
     }
 }
 
+std::string Fits::getImageDType() {
+    int bitpix = 0;
+    fits_get_img_equivtype(reinterpret_cast<fitsfile *>(fptr), &bitpix, &status);
+    if (behavior & AUTO_CHECK) LSST_FITS_CHECK_STATUS(*this, "Getting image type");
+    // FITS' 'BITPIX' key is the number of bits in a pixel, but negative for
+    // floats.  But the above CFITSIO routine adds support for unsigned
+    // integers by checking BZERO for an offset as well.  So the 'bitpix' value
+    // we get back from that should be the raw value for signed integers and
+    // floats, but may be something else (still positive) for unsigned, and
+    // hence we'll compare to some FITSIO constants to be safe looking at
+    // integers.
+    if (bitpix < 0) {
+        return "float" + std::to_string(-bitpix);
+    }
+    switch (bitpix) {
+        case BYTE_IMG: return "uint8";
+        case SBYTE_IMG: return "int8";
+        case SHORT_IMG: return "int16";
+        case USHORT_IMG: return "uint16";
+        case LONG_IMG: return "int32";
+        case ULONG_IMG: return "uint32";
+        case LONGLONG_IMG: return "int64";
+    }
+    throw LSST_EXCEPT(
+        FitsError,
+        (boost::format("Unrecognized BITPIX value: %d") % bitpix).str()
+    );
+}
+
 ImageCompressionOptions Fits::getImageCompression() {
     auto fits = reinterpret_cast<fitsfile *>(fptr);
     int compType = 0;  // cfitsio compression type
