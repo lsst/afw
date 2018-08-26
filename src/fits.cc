@@ -1715,8 +1715,8 @@ std::shared_ptr<daf::base::PropertySet> ImageWriteOptions::validate(daf::base::P
             float)(double)(std::complex<float>)(std::complex<double>)(std::string)
 
 #define COLUMN_TYPES                                                                             \
-    (bool)(std::string)(std::uint8_t)(std::int16_t)(std::uint16_t)(std::int32_t)(std::uint32_t)( \
-            std::int64_t)(float)(double)(lsst::geom::Angle)(std::complex<float>)(std::complex<double>)
+    (bool)(std::string)(std::int8_t)(std::uint8_t)(std::int16_t)(std::uint16_t)(std::int32_t)(std::uint32_t) \
+            (std::int64_t)(float)(double)(lsst::geom::Angle)(std::complex<float>)(std::complex<double>)
 
 #define COLUMN_ARRAY_TYPES                                                                              \
     (bool)(char)(std::uint8_t)(std::int16_t)(std::uint16_t)(std::int32_t)(std::uint32_t)(std::int64_t)( \
