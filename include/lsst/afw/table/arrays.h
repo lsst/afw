@@ -100,22 +100,22 @@ public:
     ArrayKey(ArrayKey&&) noexcept;
     ArrayKey& operator=(ArrayKey const&) noexcept;
     ArrayKey& operator=(ArrayKey&&) noexcept;
-    virtual ~ArrayKey() noexcept;
+    ~ArrayKey() noexcept override;
 
     /// Return the number of elements in the array.
     int getSize() const noexcept { return _size; }
 
     /// Get an array from the given record
-    virtual ndarray::Array<T const, 1, 1> get(BaseRecord const& record) const;
+    ndarray::Array<T const, 1, 1> get(BaseRecord const& record) const override;
 
     /// Set an array in the given record
-    virtual void set(BaseRecord& record, ndarray::Array<T const, 1, 1> const& value) const;
+    void set(BaseRecord& record, ndarray::Array<T const, 1, 1> const& value) const override;
 
     /// Get non-const reference array from the given record
-    virtual ndarray::ArrayRef<T, 1, 1> getReference(BaseRecord& record) const;
+    ndarray::ArrayRef<T, 1, 1> getReference(BaseRecord& record) const override;
 
     /// Get const reference array from the given record
-    virtual ndarray::ArrayRef<T const, 1, 1> getConstReference(BaseRecord const& record) const;
+    ndarray::ArrayRef<T const, 1, 1> getConstReference(BaseRecord const& record) const override;
 
     //@{
     /// Compare the FunctorKey for equality with another, using the underlying scalar Keys

@@ -763,7 +763,7 @@ public:
     MaskedImage& operator=(MaskedImage const& rhs);
     MaskedImage& operator=(MaskedImage&& rhs);
 
-    virtual ~MaskedImage() = default;
+    ~MaskedImage() override = default;
 
     void swap(MaskedImage& rhs);
 

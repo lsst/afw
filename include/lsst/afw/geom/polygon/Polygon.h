@@ -70,7 +70,7 @@ public:
     Polygon& operator=(Polygon const&);
     Polygon& operator=(Polygon&&);
 
-    virtual ~Polygon();
+    ~Polygon() override;
 
     /**
      * Construct a 4-sided Polygon from a transformed box
@@ -248,12 +248,12 @@ public:
 
     //@{
     /// Whether Polygon is persistable which is always true
-    virtual bool isPersistable() const noexcept override { return true; }
+    bool isPersistable() const noexcept override { return true; }
 
 protected:
-    virtual std::string getPersistenceName() const;
+    std::string getPersistenceName() const override;
 
-    virtual void write(OutputArchiveHandle& handle) const;
+    void write(OutputArchiveHandle& handle) const override;
 
 private:
     //@{

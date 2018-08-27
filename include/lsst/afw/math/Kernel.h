@@ -175,7 +175,7 @@ public:
     Kernel &operator=(const Kernel &) = delete;
     Kernel &operator=(Kernel &&) = delete;
 
-    virtual ~Kernel() = default;
+    ~Kernel() override = default;
 
     /**
      * Return a pointer to a deep copy of this kernel
@@ -459,7 +459,7 @@ public:
     struct PersistenceHelper;
 
 protected:
-    virtual std::string getPythonModule() const;
+    std::string getPythonModule() const override;
 
     /**
      * Set one kernel parameter
@@ -545,26 +545,26 @@ public:
     FixedKernel &operator=(const FixedKernel &) = delete;
     FixedKernel &operator=(FixedKernel &&) = delete;
 
-    virtual ~FixedKernel() = default;
+    ~FixedKernel() override = default;
 
-    virtual std::shared_ptr<Kernel> clone() const;
+    std::shared_ptr<Kernel> clone() const override;
 
-    virtual std::shared_ptr<Kernel> resized(int width, int height) const;
+    std::shared_ptr<Kernel> resized(int width, int height) const override;
 
-    virtual std::string toString(std::string const &prefix = "") const;
+    std::string toString(std::string const &prefix = "") const override;
 
     virtual Pixel getSum() const { return _sum; }
 
-    virtual bool isPersistable() const noexcept override { return true; }
+    bool isPersistable() const noexcept override { return true; }
 
     class Factory;
 
 protected:
-    double doComputeImage(lsst::afw::image::Image<Pixel> &image, bool doNormalize) const;
+    double doComputeImage(lsst::afw::image::Image<Pixel> &image, bool doNormalize) const override;
 
-    virtual std::string getPersistenceName() const;
+    std::string getPersistenceName() const override;
 
-    virtual void write(OutputArchiveHandle &handle) const;
+    void write(OutputArchiveHandle &handle) const override;
 
 private:
     lsst::afw::image::Image<Pixel> _image;
@@ -638,11 +638,11 @@ public:
     AnalyticKernel &operator=(const AnalyticKernel &) = delete;
     AnalyticKernel &operator=(AnalyticKernel &&) = delete;
 
-    virtual ~AnalyticKernel() = default;
+    ~AnalyticKernel() override = default;
 
-    virtual std::shared_ptr<Kernel> clone() const;
+    std::shared_ptr<Kernel> clone() const override;
 
-    virtual std::shared_ptr<Kernel> resized(int width, int height) const;
+    std::shared_ptr<Kernel> resized(int width, int height) const override;
 
     /**
      * Compute an image (pixellized representation of the kernel) in place
@@ -667,28 +667,28 @@ public:
     double computeImage(lsst::afw::image::Image<Pixel> &image, bool doNormalize, double x = 0.0,
                         double y = 0.0) const;
 
-    virtual std::vector<double> getKernelParameters() const;
+    std::vector<double> getKernelParameters() const override;
 
     /**
      * Get a deep copy of the kernel function
      */
     virtual KernelFunctionPtr getKernelFunction() const;
 
-    virtual std::string toString(std::string const &prefix = "") const;
+    std::string toString(std::string const &prefix = "") const override;
 
-    virtual bool isPersistable() const noexcept override { return true; }
+    bool isPersistable() const noexcept override { return true; }
 
     class Factory;
 
 protected:
-    virtual double doComputeImage(lsst::afw::image::Image<Pixel> &image, bool doNormalize) const;
+    double doComputeImage(lsst::afw::image::Image<Pixel> &image, bool doNormalize) const override;
 
-    virtual std::string getPersistenceName() const;
+    std::string getPersistenceName() const override;
 
-    virtual void write(OutputArchiveHandle &handle) const;
+    void write(OutputArchiveHandle &handle) const override;
 
 protected:
-    virtual void setKernelParameter(unsigned int ind, double value) const;
+    void setKernelParameter(unsigned int ind, double value) const override;
 
     KernelFunctionPtr _kernelFunctionPtr;
 
@@ -728,26 +728,26 @@ public:
     DeltaFunctionKernel &operator=(const DeltaFunctionKernel &) = delete;
     DeltaFunctionKernel &operator=(DeltaFunctionKernel &&) = delete;
 
-    virtual ~DeltaFunctionKernel() = default;
+    ~DeltaFunctionKernel() override = default;
 
-    virtual std::shared_ptr<Kernel> clone() const;
+    std::shared_ptr<Kernel> clone() const override;
 
-    virtual std::shared_ptr<Kernel> resized(int width, int height) const;
+    std::shared_ptr<Kernel> resized(int width, int height) const override;
 
     lsst::geom::Point2I getPixel() const { return _pixel; }
 
-    virtual std::string toString(std::string const &prefix = "") const;
+    std::string toString(std::string const &prefix = "") const override;
 
-    virtual bool isPersistable() const noexcept override { return true; }
+    bool isPersistable() const noexcept override { return true; }
 
     class Factory;
 
 protected:
-    virtual double doComputeImage(lsst::afw::image::Image<Pixel> &image, bool doNormalize) const;
+    double doComputeImage(lsst::afw::image::Image<Pixel> &image, bool doNormalize) const override;
 
-    virtual std::string getPersistenceName() const;
+    std::string getPersistenceName() const override;
 
-    virtual void write(OutputArchiveHandle &handle) const;
+    void write(OutputArchiveHandle &handle) const override;
 
 private:
     lsst::geom::Point2I _pixel;
@@ -818,13 +818,13 @@ public:
     LinearCombinationKernel &operator=(const LinearCombinationKernel &) = delete;
     LinearCombinationKernel &operator=(LinearCombinationKernel &&) = delete;
 
-    virtual ~LinearCombinationKernel() = default;
+    ~LinearCombinationKernel() override = default;
 
-    virtual std::shared_ptr<Kernel> clone() const;
+    std::shared_ptr<Kernel> clone() const override;
 
-    virtual std::shared_ptr<Kernel> resized(int width, int height) const;
+    std::shared_ptr<Kernel> resized(int width, int height) const override;
 
-    virtual std::vector<double> getKernelParameters() const;
+    std::vector<double> getKernelParameters() const override;
 
     /**
      * Get the fixed basis kernels
@@ -889,20 +889,20 @@ public:
      */
     std::shared_ptr<Kernel> refactor() const;
 
-    virtual std::string toString(std::string const &prefix = "") const;
+    std::string toString(std::string const &prefix = "") const override;
 
-    virtual bool isPersistable() const noexcept override { return true; }
+    bool isPersistable() const noexcept override { return true; }
 
     class Factory;
 
 protected:
-    virtual double doComputeImage(lsst::afw::image::Image<Pixel> &image, bool doNormalize) const;
+    double doComputeImage(lsst::afw::image::Image<Pixel> &image, bool doNormalize) const override;
 
-    virtual std::string getPersistenceName() const;
+    std::string getPersistenceName() const override;
 
-    virtual void write(OutputArchiveHandle &handle) const;
+    void write(OutputArchiveHandle &handle) const override;
 
-    virtual void setKernelParameter(unsigned int ind, double value) const;
+    void setKernelParameter(unsigned int ind, double value) const override;
 
 private:
     /**
@@ -994,11 +994,11 @@ public:
     SeparableKernel &operator=(const SeparableKernel &) = delete;
     SeparableKernel &operator=(SeparableKernel &&) = delete;
 
-    virtual ~SeparableKernel() = default;
+    ~SeparableKernel() override = default;
 
-    virtual std::shared_ptr<Kernel> clone() const;
+    std::shared_ptr<Kernel> clone() const override;
 
-    virtual std::shared_ptr<Kernel> resized(int width, int height) const;
+    std::shared_ptr<Kernel> resized(int width, int height) const override;
 
     /**
      * Compute the column and row arrays in place, where kernel(col, row) = colList(col) * rowList(row)
@@ -1019,7 +1019,7 @@ public:
     double computeVectors(std::vector<Pixel> &colList, std::vector<Pixel> &rowList, bool doNormalize,
                           double x = 0.0, double y = 0.0) const;
 
-    virtual double getKernelParameter(unsigned int i) const {
+    double getKernelParameter(unsigned int i) const override {
         unsigned int const ncol = _kernelColFunctionPtr->getNParameters();
         if (i < ncol) {
             return _kernelColFunctionPtr->getParameter(i);
@@ -1028,7 +1028,7 @@ public:
             return _kernelRowFunctionPtr->getParameter(i);
         }
     }
-    virtual std::vector<double> getKernelParameters() const;
+    std::vector<double> getKernelParameters() const override;
 
     /**
      * Get a deep copy of the col kernel function
@@ -1040,7 +1040,7 @@ public:
      */
     KernelFunctionPtr getKernelRowFunction() const;
 
-    virtual std::string toString(std::string const &prefix = "") const;
+    std::string toString(std::string const &prefix = "") const override;
 
     /***
      * Compute a cache of values for the x and y kernel functions
@@ -1051,17 +1051,17 @@ public:
      *
      * @param cacheSize cache size (number of double precision array elements in the x and y caches)
      */
-    virtual void computeCache(int const cacheSize);
+    void computeCache(int const cacheSize) override;
 
     /**
      * Get the current cache size (0 if none)
      */
-    virtual int getCacheSize() const;
+    int getCacheSize() const override;
 
 protected:
-    virtual double doComputeImage(lsst::afw::image::Image<Pixel> &image, bool doNormalize) const;
+    double doComputeImage(lsst::afw::image::Image<Pixel> &image, bool doNormalize) const override;
 
-    virtual void setKernelParameter(unsigned int ind, double value) const;
+    void setKernelParameter(unsigned int ind, double value) const override;
 
 private:
     /**
@@ -1104,7 +1104,7 @@ private:
         ar &make_nvp("kernelY", _kernelY);
     }
 
-    virtual void _setKernelXY() {
+    void _setKernelXY() override {
         lsst::geom::Extent2I const dim = getDimensions();
         lsst::geom::Point2I const ctr = getCtr();
 

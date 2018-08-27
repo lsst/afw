@@ -43,22 +43,21 @@ namespace formatters {
 template <typename ImagePixelT>
 class DecoratedImageFormatter : public lsst::daf::persistence::Formatter {
 public:
-    virtual ~DecoratedImageFormatter();
+    ~DecoratedImageFormatter() override;
 
     DecoratedImageFormatter(DecoratedImageFormatter const&) = default;
     DecoratedImageFormatter(DecoratedImageFormatter&&) = default;
     DecoratedImageFormatter& operator=(DecoratedImageFormatter const&) = default;
     DecoratedImageFormatter& operator=(DecoratedImageFormatter&&) = default;
 
-    virtual void write(lsst::daf::base::Persistable const* persistable,
-                       std::shared_ptr<lsst::daf::persistence::FormatterStorage> storage,
-                       std::shared_ptr<lsst::daf::base::PropertySet> additionalData);
-    virtual lsst::daf::base::Persistable* read(
-            std::shared_ptr<lsst::daf::persistence::FormatterStorage> storage,
-            std::shared_ptr<lsst::daf::base::PropertySet> additionalData);
-    virtual void update(lsst::daf::base::Persistable* persistable,
-                        std::shared_ptr<lsst::daf::persistence::FormatterStorage> storage,
-                        std::shared_ptr<lsst::daf::base::PropertySet> additionalData);
+    void write(lsst::daf::base::Persistable const* persistable,
+               std::shared_ptr<lsst::daf::persistence::FormatterStorage> storage,
+               std::shared_ptr<lsst::daf::base::PropertySet> additionalData) override;
+    lsst::daf::base::Persistable* read(std::shared_ptr<lsst::daf::persistence::FormatterStorage> storage,
+                                       std::shared_ptr<lsst::daf::base::PropertySet> additionalData) override;
+    void update(lsst::daf::base::Persistable* persistable,
+                std::shared_ptr<lsst::daf::persistence::FormatterStorage> storage,
+                std::shared_ptr<lsst::daf::base::PropertySet> additionalData) override;
 
     static std::shared_ptr<lsst::daf::persistence::Formatter> createInstance(
             std::shared_ptr<lsst::pex::policy::Policy> policy);

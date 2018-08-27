@@ -46,24 +46,23 @@ class KernelFormatter : public lsst::daf::persistence::Formatter {
 public:
     /** Minimal destructor.
      */
-    virtual ~KernelFormatter();
+    ~KernelFormatter() override;
 
     KernelFormatter(KernelFormatter const&);
     KernelFormatter(KernelFormatter&&);
     KernelFormatter& operator=(KernelFormatter const&);
     KernelFormatter& operator=(KernelFormatter&&);
 
-    virtual void write(lsst::daf::base::Persistable const* persistable,
-                       std::shared_ptr<lsst::daf::persistence::FormatterStorage> storage,
-                       std::shared_ptr<lsst::daf::base::PropertySet> additionalData);
+    void write(lsst::daf::base::Persistable const* persistable,
+               std::shared_ptr<lsst::daf::persistence::FormatterStorage> storage,
+               std::shared_ptr<lsst::daf::base::PropertySet> additionalData) override;
 
-    virtual lsst::daf::base::Persistable* read(
-            std::shared_ptr<lsst::daf::persistence::FormatterStorage> storage,
-            std::shared_ptr<lsst::daf::base::PropertySet> additionalData);
+    lsst::daf::base::Persistable* read(std::shared_ptr<lsst::daf::persistence::FormatterStorage> storage,
+                                       std::shared_ptr<lsst::daf::base::PropertySet> additionalData) override;
 
-    virtual void update(lsst::daf::base::Persistable* persistable,
-                        std::shared_ptr<lsst::daf::persistence::FormatterStorage> storage,
-                        std::shared_ptr<lsst::daf::base::PropertySet> additionalData);
+    void update(lsst::daf::base::Persistable* persistable,
+                std::shared_ptr<lsst::daf::persistence::FormatterStorage> storage,
+                std::shared_ptr<lsst::daf::base::PropertySet> additionalData) override;
 
     /** Serialize a Kernel to a Boost archive.  Handles text or XML
      * archives, input or output.

@@ -58,17 +58,17 @@ public:
      */
     GaussianPsf(lsst::geom::Extent2I const& dimensions, double sigma);
 
-    ~GaussianPsf();
+    ~GaussianPsf() override;
     GaussianPsf(GaussianPsf const&);
     GaussianPsf(GaussianPsf&&);
     GaussianPsf& operator=(GaussianPsf const&) = delete;
     GaussianPsf& operator=(GaussianPsf&&) = delete;
 
     /// Polymorphic deep copy; should usually be unnecessary because Psfs are immutable.
-    virtual std::shared_ptr<afw::detection::Psf> clone() const;
+    std::shared_ptr<afw::detection::Psf> clone() const override;
 
     /// Return a clone with specified kernel dimensions
-    virtual std::shared_ptr<afw::detection::Psf> resized(int width, int height) const;
+    std::shared_ptr<afw::detection::Psf> resized(int width, int height) const override;
 
     /// Return the dimensions of the images returned by computeImage()
     lsst::geom::Extent2I getDimensions() const { return _dimensions; }
@@ -77,14 +77,14 @@ public:
     double getSigma() const { return _sigma; }
 
     /// Whether the Psf is persistable; always true.
-    virtual bool isPersistable() const noexcept override { return true; }
+    bool isPersistable() const noexcept override { return true; }
 
 protected:
-    virtual std::string getPersistenceName() const;
+    std::string getPersistenceName() const override;
 
-    virtual std::string getPythonModule() const;
+    std::string getPythonModule() const override;
 
-    virtual void write(OutputArchiveHandle& handle) const;
+    void write(OutputArchiveHandle& handle) const override;
 
 private:
 #if 0  // We could reimplement this more efficiently than what's in the base class,
@@ -95,17 +95,17 @@ private:
     ) const;
 #endif
 
-    virtual std::shared_ptr<Image> doComputeKernelImage(lsst::geom::Point2D const& position,
-                                                        image::Color const& color) const;
+    std::shared_ptr<Image> doComputeKernelImage(lsst::geom::Point2D const& position,
+                                                image::Color const& color) const override;
 
-    virtual double doComputeApertureFlux(double radius, lsst::geom::Point2D const& position,
-                                         image::Color const& color) const;
+    double doComputeApertureFlux(double radius, lsst::geom::Point2D const& position,
+                                 image::Color const& color) const override;
 
-    virtual geom::ellipses::Quadrupole doComputeShape(lsst::geom::Point2D const& position,
-                                                      image::Color const& color) const;
+    geom::ellipses::Quadrupole doComputeShape(lsst::geom::Point2D const& position,
+                                              image::Color const& color) const override;
 
-    virtual lsst::geom::Box2I doComputeBBox(lsst::geom::Point2D const& position,
-                                            image::Color const& color) const;
+    lsst::geom::Box2I doComputeBBox(lsst::geom::Point2D const& position,
+                                    image::Color const& color) const override;
 
     lsst::geom::Extent2I _dimensions;
     double _sigma;

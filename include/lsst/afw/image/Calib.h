@@ -119,7 +119,7 @@ public:
     Calib(Calib&&) noexcept;
     Calib& operator=(Calib const&) noexcept;
     Calib& operator=(Calib&&) noexcept;
-    virtual ~Calib() noexcept;
+    ~Calib() noexcept override;
 
     /**
      * Set the flux of a zero-magnitude object
@@ -207,9 +207,9 @@ public:
     bool isPersistable() const noexcept override { return true; }
 
 protected:
-    virtual std::string getPersistenceName() const;
+    std::string getPersistenceName() const override;
 
-    virtual void write(OutputArchiveHandle& handle) const;
+    void write(OutputArchiveHandle& handle) const override;
 
 private:
     double _fluxMag0;

@@ -229,7 +229,7 @@ public:
      */
     Mask(const Mask& src, const bool deep = false);
     Mask(Mask&& src);
-    ~Mask();
+    ~Mask() override;
     /**
      * Construct a Mask from a subregion of another Mask
      *

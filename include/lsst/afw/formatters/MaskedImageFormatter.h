@@ -43,22 +43,21 @@ namespace formatters {
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 class MaskedImageFormatter : public lsst::daf::persistence::Formatter {
 public:
-    virtual ~MaskedImageFormatter();
+    ~MaskedImageFormatter() override;
 
     MaskedImageFormatter(MaskedImageFormatter const&) = default;
     MaskedImageFormatter(MaskedImageFormatter&&) = default;
     MaskedImageFormatter& operator=(MaskedImageFormatter const&) = default;
     MaskedImageFormatter& operator=(MaskedImageFormatter&&) = default;
 
-    virtual void write(lsst::daf::base::Persistable const* persistable,
-                       std::shared_ptr<lsst::daf::persistence::FormatterStorage> storage,
-                       std::shared_ptr<lsst::daf::base::PropertySet> additionalData);
-    virtual lsst::daf::base::Persistable* read(
-            std::shared_ptr<lsst::daf::persistence::FormatterStorage> storage,
-            std::shared_ptr<lsst::daf::base::PropertySet> additionalData);
-    virtual void update(lsst::daf::base::Persistable* persistable,
-                        std::shared_ptr<lsst::daf::persistence::FormatterStorage> storage,
-                        std::shared_ptr<lsst::daf::base::PropertySet> additionalData);
+    void write(lsst::daf::base::Persistable const* persistable,
+               std::shared_ptr<lsst::daf::persistence::FormatterStorage> storage,
+               std::shared_ptr<lsst::daf::base::PropertySet> additionalData) override;
+    lsst::daf::base::Persistable* read(std::shared_ptr<lsst::daf::persistence::FormatterStorage> storage,
+                                       std::shared_ptr<lsst::daf::base::PropertySet> additionalData) override;
+    void update(lsst::daf::base::Persistable* persistable,
+                std::shared_ptr<lsst::daf::persistence::FormatterStorage> storage,
+                std::shared_ptr<lsst::daf::base::PropertySet> additionalData) override;
 
     static std::shared_ptr<lsst::daf::persistence::Formatter> createInstance(
             std::shared_ptr<lsst::pex::policy::Policy> policy);

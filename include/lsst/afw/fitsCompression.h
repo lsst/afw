@@ -116,7 +116,7 @@ public:
                   const_cast<typename std::remove_const<T>::type*>(reinterpret_cast<T const*>(_pixels)));
     }
 
-    virtual ~PixelArray() {}
+    ~PixelArray() override {}
 
     void const* getData() const override { return _pixels; }
 

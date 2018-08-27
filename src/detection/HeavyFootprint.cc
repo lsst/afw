@@ -289,8 +289,8 @@ class HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::Factory
 public:
     explicit Factory(std::string const& name) : afw::table::io::PersistableFactory(name) {}
 
-    virtual std::shared_ptr<afw::table::io::Persistable> read(InputArchive const& archive,
-                                                              CatalogVector const& catalogs) const {
+    std::shared_ptr<afw::table::io::Persistable> read(InputArchive const& archive,
+                                                      CatalogVector const& catalogs) const override {
         HeavyFootprintPersistenceHelper<ImagePixelT, MaskPixelT, VariancePixelT> const& keys =
                 HeavyFootprintPersistenceHelper<ImagePixelT, MaskPixelT, VariancePixelT>::get();
         HeavyFootprintPersistenceHelper<ImagePixelT, std::uint16_t, VariancePixelT> const& legacyKeys =

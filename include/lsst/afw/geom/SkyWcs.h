@@ -118,7 +118,7 @@ public:
     SkyWcs(SkyWcs &&) = default;
     SkyWcs &operator=(SkyWcs const &) = delete;
     SkyWcs &operator=(SkyWcs &&) = delete;
-    ~SkyWcs() = default;
+    ~SkyWcs() override = default;
 
     /**
      * Equality is based on the string representations being equal

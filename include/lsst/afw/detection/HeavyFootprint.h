@@ -79,7 +79,7 @@ public:
      * with the assignment operator
      */
     HeavyFootprint() = default;
-    ~HeavyFootprint() = default;
+    ~HeavyFootprint() override = default;
 
     HeavyFootprint(HeavyFootprint const& other) = default;
     HeavyFootprint(HeavyFootprint&& other) = default;
@@ -90,7 +90,7 @@ public:
     /**
      * Is this a HeavyFootprint (yes!)
      */
-    virtual bool isHeavy() const { return true; }
+    bool isHeavy() const override { return true; }
 
     /**
      * Replace all the pixels in the image with the values in the HeavyFootprint.
@@ -130,9 +130,9 @@ public:
 protected:
     class Factory;  // factory class used for persistence, public only so we can instantiate it in .cc file
 
-    virtual std::string getPersistenceName() const;
+    std::string getPersistenceName() const override;
 
-    virtual void write(OutputArchiveHandle& handle) const;
+    void write(OutputArchiveHandle& handle) const override;
 
 private:
     ndarray::Array<ImagePixelT, 1, 1> _image;

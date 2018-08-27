@@ -146,12 +146,12 @@ public:
     ExposureRecord(ExposureRecord&&) = delete;
     ExposureRecord& operator=(ExposureRecord const&) = delete;
     ExposureRecord& operator=(ExposureRecord&&) = delete;
-    ~ExposureRecord();
+    ~ExposureRecord() override;
 
 protected:
     explicit ExposureRecord(std::shared_ptr<ExposureTable> const& table);
 
-    virtual void _assign(BaseRecord const& other);
+    void _assign(BaseRecord const& other) override;
 
 private:
     friend class ExposureTable;
@@ -241,7 +241,7 @@ public:
 
     ExposureTable& operator=(ExposureTable const&) = delete;
     ExposureTable& operator=(ExposureTable&&) = delete;
-    ~ExposureTable();
+    ~ExposureTable() override;
 
 protected:
     explicit ExposureTable(Schema const& schema);

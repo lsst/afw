@@ -134,7 +134,7 @@ public:
     SpatialCellImageCandidate(SpatialCellImageCandidate&&) = default;
     SpatialCellImageCandidate& operator=(SpatialCellImageCandidate const&) = default;
     SpatialCellImageCandidate& operator=(SpatialCellImageCandidate&&) = default;
-    virtual ~SpatialCellImageCandidate() = default;
+    ~SpatialCellImageCandidate() override = default;
 
     /// Set the width of the image that getImage should return
     static void setWidth(int width) { _width = width; }

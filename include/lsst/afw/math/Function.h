@@ -110,7 +110,7 @@ public:
     Function& operator=(Function const&) = default;
     Function& operator=(Function&&) = default;
 
-    virtual ~Function() noexcept = default;
+    ~Function() noexcept override = default;
 
     /**
      * Return the number of function parameters
@@ -193,7 +193,7 @@ protected:
     std::vector<double> _params;
     mutable bool _isCacheValid;
 
-    virtual std::string getPythonModule() const { return "lsst.afw.math"; }
+    std::string getPythonModule() const override { return "lsst.afw.math"; }
 
     /* Default constructor: intended only for serialization */
     explicit Function() : lsst::daf::base::Citizen(typeid(this)), _params(0), _isCacheValid(false) {}
@@ -235,7 +235,7 @@ public:
     Function1& operator=(Function1 const&) = default;
     Function1& operator=(Function1&&) = default;
 
-    virtual ~Function1() noexcept = default;
+    ~Function1() noexcept override = default;
 
     /**
      * Return a pointer to a deep copy of this function
@@ -252,7 +252,7 @@ public:
 
     virtual ReturnT operator()(double x) const = 0;
 
-    virtual std::string toString(std::string const& prefix = "") const {
+    std::string toString(std::string const& prefix = "") const override {
         return std::string("Function1: ") + Function<ReturnT>::toString(prefix);
     }
 
@@ -301,7 +301,7 @@ public:
     Function2& operator=(Function2 const&) = default;
     Function2& operator=(Function2&&) = default;
 
-    virtual ~Function2() noexcept = default;
+    ~Function2() noexcept override = default;
 
     /**
      * Return a pointer to a deep copy of this function
@@ -318,7 +318,7 @@ public:
 
     virtual ReturnT operator()(double x, double y) const = 0;
 
-    virtual std::string toString(std::string const& prefix = "") const {
+    std::string toString(std::string const& prefix = "") const override {
         return std::string("Function2: ") + Function<ReturnT>::toString(prefix);
     }
     /**
@@ -381,14 +381,14 @@ public:
     BasePolynomialFunction2& operator=(BasePolynomialFunction2 const&) = default;
     BasePolynomialFunction2& operator=(BasePolynomialFunction2&&) = default;
 
-    virtual ~BasePolynomialFunction2() noexcept = default;
+    ~BasePolynomialFunction2() noexcept override = default;
 
     /**
      * Get the polynomial order
      */
     int getOrder() const noexcept { return _order; }
 
-    virtual bool isLinearCombination() const noexcept { return true; }
+    bool isLinearCombination() const noexcept override { return true; }
 
     /**
      * Compute number of parameters from polynomial order.
@@ -437,7 +437,7 @@ public:
      * This isn't necessarily the most efficient algorithm, but it's general,
      * and you can override it if it isn't suitable for your particular subclass.
      */
-    virtual std::vector<double> getDFuncDParameters(double x, double y) const {
+    std::vector<double> getDFuncDParameters(double x, double y) const override {
         unsigned int const numParams = this->getNParameters();  // Number of parameters
         std::vector<double> deriv(numParams);                   // Derivatives, to return
 
@@ -478,12 +478,14 @@ template <typename ReturnT>
 class NullFunction1 : public Function1<ReturnT> {
 public:
     explicit NullFunction1() : Function1<ReturnT>(0) {}
-    std::shared_ptr<Function1<ReturnT>> clone() const {
+    std::shared_ptr<Function1<ReturnT>> clone() const override {
         return std::shared_ptr<Function1<ReturnT>>(new NullFunction1());
     }
 
 private:
-    ReturnT operator()(double) const noexcept(IS_NOTHROW_INIT<ReturnT>) { return static_cast<ReturnT>(0); }
+    ReturnT operator()(double) const noexcept(IS_NOTHROW_INIT<ReturnT>) override {
+        return static_cast<ReturnT>(0);
+    }
 
 private:
     friend class boost::serialization::access;
@@ -500,12 +502,12 @@ template <typename ReturnT>
 class NullFunction2 : public Function2<ReturnT> {
 public:
     explicit NullFunction2() : Function2<ReturnT>(0) {}
-    std::shared_ptr<Function2<ReturnT>> clone() const {
+    std::shared_ptr<Function2<ReturnT>> clone() const override {
         return std::shared_ptr<Function2<ReturnT>>(new NullFunction2());
     }
 
 private:
-    ReturnT operator()(double, double) const noexcept(IS_NOTHROW_INIT<ReturnT>) {
+    ReturnT operator()(double, double) const noexcept(IS_NOTHROW_INIT<ReturnT>) override {
         return static_cast<ReturnT>(0);
     }
 

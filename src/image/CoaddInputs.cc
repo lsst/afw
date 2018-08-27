@@ -33,8 +33,8 @@ namespace {
 
 class CoaddInputsFactory : public table::io::PersistableFactory {
 public:
-    virtual std::shared_ptr<table::io::Persistable> read(InputArchive const& archive,
-                                                         CatalogVector const& catalogs) const {
+    std::shared_ptr<table::io::Persistable> read(InputArchive const& archive,
+                                                 CatalogVector const& catalogs) const override {
         LSST_ARCHIVE_ASSERT(catalogs.size() == 2);
         std::shared_ptr<CoaddInputs> result = std::make_shared<CoaddInputs>();
         result->visits = table::ExposureCatalog::readFromArchive(archive, catalogs.front());

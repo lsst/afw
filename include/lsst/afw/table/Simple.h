@@ -75,7 +75,7 @@ public:
     SimpleRecord& operator=(const SimpleRecord&) = delete;
     SimpleRecord(SimpleRecord&&) = delete;
     SimpleRecord& operator=(SimpleRecord&&) = delete;
-    ~SimpleRecord();
+    ~SimpleRecord() override;
 
 protected:
     friend class SimpleTable;
@@ -181,7 +181,7 @@ public:
 
     SimpleTable& operator=(SimpleTable const&) = delete;
     SimpleTable& operator=(SimpleTable&&) = delete;
-    ~SimpleTable();
+    ~SimpleTable() override;
 
 protected:
     SimpleTable(Schema const& schema, std::shared_ptr<IdFactory> const& idFactory);

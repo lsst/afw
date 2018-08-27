@@ -192,7 +192,7 @@ public:
                    lsst::geom::Point2I const& xy0 = lsst::geom::Point2I())
             : image::ImageBase<PixelT>(array, deep, xy0) {}
 
-    virtual ~Image() = default;
+    ~Image() override = default;
     //
     // Assignment operators are not inherited
     //

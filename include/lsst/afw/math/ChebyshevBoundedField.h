@@ -119,7 +119,7 @@ public:
     ChebyshevBoundedField(ChebyshevBoundedField&&);
     ChebyshevBoundedField& operator=(ChebyshevBoundedField const&) = delete;
     ChebyshevBoundedField& operator=(ChebyshevBoundedField&&) = delete;
-    ~ChebyshevBoundedField();
+    ~ChebyshevBoundedField() override;
 
     /**
      *  Fit a Chebyshev approximation to non-gridded data with equal weights.
@@ -191,31 +191,31 @@ public:
     std::shared_ptr<ChebyshevBoundedField> relocate(lsst::geom::Box2I const& bbox) const;
 
     /// @copydoc BoundedField::evaluate
-    virtual double evaluate(lsst::geom::Point2D const& position) const;
+    double evaluate(lsst::geom::Point2D const& position) const override;
 
     using BoundedField::evaluate;
 
     /// @copydoc BoundedField::integrate
-    virtual double integrate() const;
+    double integrate() const override;
 
     /// @copydoc BoundedField::mean
-    virtual double mean() const;
+    double mean() const override;
 
     /// ChebyshevBoundedField is always persistable.
-    virtual bool isPersistable() const noexcept override { return true; }
+    bool isPersistable() const noexcept override { return true; }
 
     /// @copydoc BoundedField::operator*
-    virtual std::shared_ptr<BoundedField> operator*(double const scale) const;
+    std::shared_ptr<BoundedField> operator*(double const scale) const override;
 
     /// @copydoc BoundedField::operator==
-    virtual bool operator==(BoundedField const& rhs) const;
+    bool operator==(BoundedField const& rhs) const override;
 
 protected:
-    virtual std::string getPersistenceName() const;
+    std::string getPersistenceName() const override;
 
-    virtual std::string getPythonModule() const;
+    std::string getPythonModule() const override;
 
-    virtual void write(OutputArchiveHandle& handle) const;
+    void write(OutputArchiveHandle& handle) const override;
 
 private:
     // Internal constructor for fit() routines: just initializes the transform,
@@ -225,7 +225,7 @@ private:
     lsst::geom::AffineTransform _toChebyshevRange;     // maps points from the bbox to [-1,1]x[-1,1]
     ndarray::Array<double const, 2, 2> _coefficients;  // shape=(orderY+1, orderX+1)
 
-    virtual std::string toString() const;
+    std::string toString() const override;
 };
 }  // namespace math
 }  // namespace afw

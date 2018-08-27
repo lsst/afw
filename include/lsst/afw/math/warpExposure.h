@@ -74,9 +74,9 @@ public:
     LanczosWarpingKernel &operator=(const LanczosWarpingKernel &) = delete;
     LanczosWarpingKernel &operator=(LanczosWarpingKernel &&) = delete;
 
-    virtual ~LanczosWarpingKernel() = default;
+    ~LanczosWarpingKernel() override = default;
 
-    virtual std::shared_ptr<Kernel> clone() const;
+    std::shared_ptr<Kernel> clone() const override;
 
     /**
      * get the order of the kernel
@@ -84,7 +84,7 @@ public:
     int getOrder() const;
 
 protected:
-    virtual void setKernelParameter(unsigned int ind, double value) const;
+    void setKernelParameter(unsigned int ind, double value) const override;
 };
 
 /**
@@ -106,9 +106,9 @@ public:
     BilinearWarpingKernel &operator=(const BilinearWarpingKernel &) = delete;
     BilinearWarpingKernel &operator=(BilinearWarpingKernel &&) = delete;
 
-    virtual ~BilinearWarpingKernel() = default;
+    ~BilinearWarpingKernel() override = default;
 
-    virtual std::shared_ptr<Kernel> clone() const;
+    std::shared_ptr<Kernel> clone() const override;
 
     /**
      * 1-dimensional bilinear interpolation function.
@@ -128,9 +128,9 @@ public:
                 : Function1<Kernel::Pixel>(1) {
             this->_params[0] = fracPos;
         }
-        virtual ~BilinearFunction1() {}
+        ~BilinearFunction1() override {}
 
-        virtual Function1Ptr clone() const { return Function1Ptr(new BilinearFunction1(this->_params[0])); }
+        Function1Ptr clone() const override { return Function1Ptr(new BilinearFunction1(this->_params[0])); }
 
         /**
          * Solve bilinear equation
@@ -139,16 +139,16 @@ public:
          * *  0.0 or 1.0 if the kernel center index is 0 in this axis
          * * -1.0 or 0.0 if the kernel center index is 1 in this axis
          */
-        virtual Kernel::Pixel operator()(double x) const;
+        Kernel::Pixel operator()(double x) const override;
 
         /**
          * Return string representation.
          */
-        virtual std::string toString(std::string const & = "") const;
+        std::string toString(std::string const & = "") const override;
     };
 
 protected:
-    virtual void setKernelParameter(unsigned int ind, double value) const;
+    void setKernelParameter(unsigned int ind, double value) const override;
 };
 
 /**
@@ -169,9 +169,9 @@ public:
     NearestWarpingKernel &operator=(const NearestWarpingKernel &) = delete;
     NearestWarpingKernel &operator=(NearestWarpingKernel &&) = delete;
 
-    virtual ~NearestWarpingKernel() = default;
+    ~NearestWarpingKernel() override = default;
 
-    virtual std::shared_ptr<Kernel> clone() const;
+    std::shared_ptr<Kernel> clone() const override;
 
     /**
      * 1-dimensional nearest neighbor interpolation function.
@@ -191,9 +191,9 @@ public:
                 : Function1<Kernel::Pixel>(1) {
             this->_params[0] = fracPos;
         }
-        virtual ~NearestFunction1() {}
+        ~NearestFunction1() override {}
 
-        virtual Function1Ptr clone() const { return Function1Ptr(new NearestFunction1(this->_params[0])); }
+        Function1Ptr clone() const override { return Function1Ptr(new NearestFunction1(this->_params[0])); }
 
         /**
          * Solve nearest neighbor equation
@@ -202,16 +202,16 @@ public:
          * *  0.0 or 1.0 if the kernel center index is 0 in this axis
          * * -1.0 or 0.0 if the kernel center index is 1 in this axis
          */
-        virtual Kernel::Pixel operator()(double x) const;
+        Kernel::Pixel operator()(double x) const override;
 
         /**
          * Return string representation.
          */
-        virtual std::string toString(std::string const & = "") const;
+        std::string toString(std::string const & = "") const override;
     };
 
 protected:
-    virtual void setKernelParameter(unsigned int ind, double value) const;
+    void setKernelParameter(unsigned int ind, double value) const override;
 };
 
 /**

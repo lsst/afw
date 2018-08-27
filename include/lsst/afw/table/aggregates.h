@@ -68,7 +68,7 @@ public:
     PointKey(PointKey&&) noexcept = default;
     PointKey& operator=(PointKey const&) noexcept = default;
     PointKey& operator=(PointKey&&) noexcept = default;
-    virtual ~PointKey() noexcept = default;
+    ~PointKey() noexcept override = default;
 
     /**
      *  Construct from a subschema, assuming x and y subfields
@@ -81,10 +81,10 @@ public:
     PointKey(SubSchema const& s) : _x(s["x"]), _y(s["y"]) {}
 
     /// Get a Point from the given record
-    virtual lsst::geom::Point<T, 2> get(BaseRecord const& record) const;
+    lsst::geom::Point<T, 2> get(BaseRecord const& record) const override;
 
     /// Set a Point in the given record
-    virtual void set(BaseRecord& record, lsst::geom::Point<T, 2> const& value) const;
+    void set(BaseRecord& record, lsst::geom::Point<T, 2> const& value) const override;
 
     //@{
     /// Compare the FunctorKey for equality with another, using the underlying x and y Keys
@@ -156,13 +156,13 @@ public:
     BoxKey(BoxKey&&) noexcept = default;
     BoxKey& operator=(BoxKey const&) noexcept = default;
     BoxKey& operator=(BoxKey&&) noexcept = default;
-    virtual ~BoxKey() noexcept = default;
+    ~BoxKey() noexcept override = default;
 
     /// Get a Point from the given record
-    virtual Box get(BaseRecord const& record) const;
+    Box get(BaseRecord const& record) const override;
 
     /// Set a Point in the given record
-    virtual void set(BaseRecord& record, Box const& value) const;
+    void set(BaseRecord& record, Box const& value) const override;
 
     //@{
     /// Compare the FunctorKey for equality with another, using the underlying x and y Keys
@@ -226,13 +226,13 @@ public:
     CoordKey(CoordKey&&) noexcept = default;
     CoordKey& operator=(CoordKey const&) noexcept = default;
     CoordKey& operator=(CoordKey&&) noexcept = default;
-    virtual ~CoordKey() noexcept = default;
+    ~CoordKey() noexcept override = default;
 
     /// Get an lsst::geom::SpherePoint from the given record
-    virtual lsst::geom::SpherePoint get(BaseRecord const& record) const;
+    lsst::geom::SpherePoint get(BaseRecord const& record) const override;
 
     /// Set an lsst::geom::SpherePoint in the given record
-    virtual void set(BaseRecord& record, lsst::geom::SpherePoint const& value) const;
+    void set(BaseRecord& record, lsst::geom::SpherePoint const& value) const override;
 
     //@{
     /// Compare CoordKeys for equality using the constituent `ra` and `dec` Keys
@@ -302,13 +302,13 @@ public:
     QuadrupoleKey(QuadrupoleKey&&) noexcept = default;
     QuadrupoleKey& operator=(QuadrupoleKey const&) noexcept = default;
     QuadrupoleKey& operator=(QuadrupoleKey&&) noexcept = default;
-    virtual ~QuadrupoleKey() noexcept = default;
+    ~QuadrupoleKey() noexcept override = default;
 
     /// Get a Quadrupole from the given record
-    virtual geom::ellipses::Quadrupole get(BaseRecord const& record) const;
+    geom::ellipses::Quadrupole get(BaseRecord const& record) const override;
 
     /// Set a Quadrupole in the given record
-    virtual void set(BaseRecord& record, geom::ellipses::Quadrupole const& value) const;
+    void set(BaseRecord& record, geom::ellipses::Quadrupole const& value) const override;
 
     //@{
     /// Compare the FunctorKey for equality with another, using the underlying Ixx, Iyy, Ixy Keys
@@ -372,13 +372,13 @@ public:
     EllipseKey(EllipseKey&&) noexcept = default;
     EllipseKey& operator=(EllipseKey const&) noexcept = default;
     EllipseKey& operator=(EllipseKey&&) noexcept = default;
-    virtual ~EllipseKey() noexcept = default;
+    ~EllipseKey() noexcept override = default;
 
     /// Get an Ellipse from the given record
-    virtual geom::ellipses::Ellipse get(BaseRecord const& record) const;
+    geom::ellipses::Ellipse get(BaseRecord const& record) const override;
 
     /// Set an Ellipse in the given record
-    virtual void set(BaseRecord& record, geom::ellipses::Ellipse const& value) const;
+    void set(BaseRecord& record, geom::ellipses::Ellipse const& value) const override;
 
     //@{
     /// Compare the FunctorKey for equality with another, using the underlying Ixx, Iyy, Ixy Keys
@@ -483,13 +483,13 @@ public:
     CovarianceMatrixKey(CovarianceMatrixKey&&);
     CovarianceMatrixKey& operator=(CovarianceMatrixKey const&);
     CovarianceMatrixKey& operator=(CovarianceMatrixKey&&);
-    virtual ~CovarianceMatrixKey() noexcept;
+    ~CovarianceMatrixKey() noexcept override;
 
     /// Get a covariance matrix from the given record
-    virtual Eigen::Matrix<T, N, N> get(BaseRecord const& record) const;
+    Eigen::Matrix<T, N, N> get(BaseRecord const& record) const override;
 
     /// Set a covariance matrix in the given record (uses only the lower triangle of the given matrix)
-    virtual void set(BaseRecord& record, Eigen::Matrix<T, N, N> const& value) const;
+    void set(BaseRecord& record, Eigen::Matrix<T, N, N> const& value) const override;
 
     /// Return the element in row i and column j
     T getElement(BaseRecord const& record, int i, int j) const;

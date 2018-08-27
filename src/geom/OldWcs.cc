@@ -75,8 +75,8 @@ class OldWcsFactory : public table::io::PersistableFactory {
 public:
     explicit OldWcsFactory(std::string const& name) : table::io::PersistableFactory(name) {}
 
-    virtual std::shared_ptr<table::io::Persistable> read(InputArchive const& archive,
-                                                         CatalogVector const& catalogs) const {
+    std::shared_ptr<table::io::Persistable> read(InputArchive const& archive,
+                                                 CatalogVector const& catalogs) const override {
         LSST_ARCHIVE_ASSERT(catalogs.size() >= 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
         auto const& record = catalogs.front().front();
@@ -92,8 +92,8 @@ class OldTanWcsFactory : public table::io::PersistableFactory {
 public:
     explicit OldTanWcsFactory(std::string const& name) : table::io::PersistableFactory(name) {}
 
-    virtual std::shared_ptr<table::io::Persistable> read(InputArchive const& archive,
-                                                         CatalogVector const& catalogs) const {
+    std::shared_ptr<table::io::Persistable> read(InputArchive const& archive,
+                                                 CatalogVector const& catalogs) const override {
         LSST_ARCHIVE_ASSERT(catalogs.size() >= 1u);
         auto const& record = catalogs.front().front();
         auto const metadata = getOldWcsMetadata(record);

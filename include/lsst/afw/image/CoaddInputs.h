@@ -68,7 +68,7 @@ public:
     CoaddInputs(CoaddInputs&&);
     CoaddInputs& operator=(CoaddInputs const&);
     CoaddInputs& operator=(CoaddInputs&&);
-    virtual ~CoaddInputs();
+    ~CoaddInputs() override;
 
     /**
      *  Whether the object is in fact persistable - in this case, always true.
@@ -76,12 +76,12 @@ public:
      *  To avoid letting coadd provenance prevent coadd code from running, if a nested Wcs or
      *  Psf is not persistable, it will silently not be saved, instead of throwing an exception.
      */
-    virtual bool isPersistable() const noexcept override;
+    bool isPersistable() const noexcept override;
 
 protected:
-    virtual std::string getPersistenceName() const;
-    virtual std::string getPythonModule() const;
-    virtual void write(OutputArchiveHandle& handle) const;
+    std::string getPersistenceName() const override;
+    std::string getPythonModule() const override;
+    void write(OutputArchiveHandle& handle) const override;
 };
 }  // namespace image
 }  // namespace afw

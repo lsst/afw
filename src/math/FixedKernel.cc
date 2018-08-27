@@ -147,8 +147,8 @@ struct FixedKernelPersistenceHelper : public Kernel::PersistenceHelper {
 
 class FixedKernel::Factory : public afw::table::io::PersistableFactory {
 public:
-    virtual std::shared_ptr<afw::table::io::Persistable> read(InputArchive const& archive,
-                                                              CatalogVector const& catalogs) const {
+    std::shared_ptr<afw::table::io::Persistable> read(InputArchive const& archive,
+                                                      CatalogVector const& catalogs) const override {
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
         FixedKernelPersistenceHelper const keys(catalogs.front().getSchema());

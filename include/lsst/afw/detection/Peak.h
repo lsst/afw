@@ -46,7 +46,7 @@ public:
     typedef afw::table::CatalogT<PeakRecord> Catalog;
     typedef afw::table::CatalogT<PeakRecord const> ConstCatalog;
 
-    virtual ~PeakRecord() = default;
+    ~PeakRecord() override = default;
     PeakRecord(PeakRecord const&) = delete;
     PeakRecord(PeakRecord&&) = delete;
     PeakRecord& operator=(PeakRecord const&) = delete;
@@ -96,7 +96,7 @@ public:
     typedef afw::table::CatalogT<Record> Catalog;
     typedef afw::table::CatalogT<Record const> ConstCatalog;
 
-    virtual ~PeakTable();
+    ~PeakTable() override;
     PeakTable& operator=(PeakTable const&) = delete;
     PeakTable& operator=(PeakTable&&) = delete;
 

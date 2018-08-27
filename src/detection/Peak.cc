@@ -44,7 +44,7 @@ public:
     explicit PeakFitsWriter(Fits* fits, int flags) : afw::table::io::FitsWriter(fits, flags) {}
 
 protected:
-    virtual void _writeTable(std::shared_ptr<afw::table::BaseTable const> const& table, std::size_t nRows);
+    void _writeTable(std::shared_ptr<afw::table::BaseTable const> const& table, std::size_t nRows) override;
 };
 
 void PeakFitsWriter::_writeTable(std::shared_ptr<afw::table::BaseTable const> const& t, std::size_t nRows) {
@@ -72,9 +72,9 @@ class PeakFitsReader : public afw::table::io::FitsReader {
 public:
     PeakFitsReader() : afw::table::io::FitsReader("PEAK") {}
 
-    virtual std::shared_ptr<afw::table::BaseTable> makeTable(
-            afw::table::io::FitsSchemaInputMapper& mapper, std::shared_ptr<daf::base::PropertyList> metadata,
-            int ioFlags, bool stripMetadata) const {
+    std::shared_ptr<afw::table::BaseTable> makeTable(afw::table::io::FitsSchemaInputMapper& mapper,
+                                                     std::shared_ptr<daf::base::PropertyList> metadata,
+                                                     int ioFlags, bool stripMetadata) const override {
         std::shared_ptr<PeakTable> table = PeakTable::make(mapper.finalize());
         table->setMetadata(metadata);
         return table;

@@ -79,8 +79,8 @@ class InterpolateConstant : public Interpolate {
                                                         Interpolate::Style const style);
 
 public:
-    virtual ~InterpolateConstant() {}
-    virtual double interpolate(double const x) const;
+    ~InterpolateConstant() override {}
+    double interpolate(double const x) const override;
 
 private:
     InterpolateConstant(std::vector<double> const &x,   ///< @internal the x-values of points
@@ -173,8 +173,8 @@ class InterpolateGsl : public Interpolate {
                                                         Interpolate::Style const style);
 
 public:
-    virtual ~InterpolateGsl();
-    virtual double interpolate(double const x) const;
+    ~InterpolateGsl() override;
+    double interpolate(double const x) const override;
 
 private:
     InterpolateGsl(std::vector<double> const &x, std::vector<double> const &y,

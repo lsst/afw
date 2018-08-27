@@ -22,24 +22,23 @@ class PsfFormatter : public lsst::daf::persistence::Formatter {
 public:
     /** Minimal destructor.
      */
-    virtual ~PsfFormatter();
+    ~PsfFormatter() override;
 
     PsfFormatter(PsfFormatter const&);
     PsfFormatter(PsfFormatter&&);
     PsfFormatter& operator=(PsfFormatter const&);
     PsfFormatter& operator=(PsfFormatter&&);
 
-    virtual void write(lsst::daf::base::Persistable const* persistable,
-                       std::shared_ptr<lsst::daf::persistence::FormatterStorage> storage,
-                       std::shared_ptr<lsst::daf::base::PropertySet> additionalData);
+    void write(lsst::daf::base::Persistable const* persistable,
+               std::shared_ptr<lsst::daf::persistence::FormatterStorage> storage,
+               std::shared_ptr<lsst::daf::base::PropertySet> additionalData) override;
 
-    virtual lsst::daf::base::Persistable* read(
-            std::shared_ptr<lsst::daf::persistence::FormatterStorage> storage,
-            std::shared_ptr<lsst::daf::base::PropertySet> additionalData);
+    lsst::daf::base::Persistable* read(std::shared_ptr<lsst::daf::persistence::FormatterStorage> storage,
+                                       std::shared_ptr<lsst::daf::base::PropertySet> additionalData) override;
 
-    virtual void update(lsst::daf::base::Persistable* persistable,
-                        std::shared_ptr<lsst::daf::persistence::FormatterStorage> storage,
-                        std::shared_ptr<lsst::daf::base::PropertySet> additionalData);
+    void update(lsst::daf::base::Persistable* persistable,
+                std::shared_ptr<lsst::daf::persistence::FormatterStorage> storage,
+                std::shared_ptr<lsst::daf::base::PropertySet> additionalData) override;
 
     /** Serialize a Psf to a Boost archive.  Handles text or XML
      * archives, input or output.

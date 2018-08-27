@@ -100,7 +100,7 @@ public:
     Psf& operator=(Psf&&) = delete;
 
     Psf(Psf&&);
-    virtual ~Psf();
+    ~Psf() override;
 
     /**
      *  Polymorphic deep-copy.
