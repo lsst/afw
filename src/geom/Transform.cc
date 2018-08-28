@@ -35,6 +35,7 @@
 #include "lsst/pex/exceptions/Exception.h"
 #include "lsst/afw/table/io/CatalogVector.h"
 #include "lsst/afw/table/io/OutputArchive.h"
+#include "lsst/afw/table/io/Persistable.cc"
 
 namespace lsst {
 namespace afw {
@@ -252,16 +253,21 @@ void Transform<FromEndpoint, ToEndpoint>::write(OutputArchiveHandle &handle) con
     Transform<FromEndpoint, ToEndpoint>::then<NextToEndpoint>(          \
             Transform<ToEndpoint, NextToEndpoint> const &next, bool) const;
 
-#define INSTANTIATE_TRANSFORM(FromEndpoint, ToEndpoint)                                \
-    template class Transform<FromEndpoint, ToEndpoint>;                                \
-    template std::ostream &operator<<<FromEndpoint, ToEndpoint>(                       \
-            std::ostream &os, Transform<FromEndpoint, ToEndpoint> const &transform);   \
-    namespace {                                                                        \
-    TransformFactory<FromEndpoint, ToEndpoint> registration##FromEndpoint##ToEndpoint( \
-            Transform<FromEndpoint, ToEndpoint>::getShortClassName());                 \
-    }                                                                                  \
-    INSTANTIATE_OVERLOADS(FromEndpoint, ToEndpoint, GenericEndpoint)                   \
-    INSTANTIATE_OVERLOADS(FromEndpoint, ToEndpoint, Point2Endpoint)                    \
+#define INSTANTIATE_TRANSFORM(FromEndpoint, ToEndpoint)                                               \
+    } /* namespace geom */                                                                            \
+    template std::shared_ptr<geom::Transform<geom::FromEndpoint, geom::ToEndpoint>>                   \
+    table::io::PersistableFacade<geom::Transform<geom::FromEndpoint, geom::ToEndpoint>>::dynamicCast( \
+            std::shared_ptr<table::io::Persistable> const &);                                         \
+    namespace geom {                                                                                  \
+    template class Transform<FromEndpoint, ToEndpoint>;                                               \
+    template std::ostream &operator<<<FromEndpoint, ToEndpoint>(                                      \
+            std::ostream &os, Transform<FromEndpoint, ToEndpoint> const &transform);                  \
+    namespace {                                                                                       \
+    TransformFactory<FromEndpoint, ToEndpoint> registration##FromEndpoint##ToEndpoint(                \
+            Transform<FromEndpoint, ToEndpoint>::getShortClassName());                                \
+    } /* namespace */                                                                                 \
+    INSTANTIATE_OVERLOADS(FromEndpoint, ToEndpoint, GenericEndpoint)                                  \
+    INSTANTIATE_OVERLOADS(FromEndpoint, ToEndpoint, Point2Endpoint)                                   \
     INSTANTIATE_OVERLOADS(FromEndpoint, ToEndpoint, SpherePointEndpoint)
 
 // explicit instantiations

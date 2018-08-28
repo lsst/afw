@@ -27,9 +27,14 @@
 #include "lsst/afw/table/io/InputArchive.h"
 #include "lsst/afw/table/io/OutputArchive.h"
 #include "lsst/afw/table/io/CatalogVector.h"
+#include "lsst/afw/table/io/Persistable.cc"
 
 namespace lsst {
 namespace afw {
+
+template std::shared_ptr<image::ApCorrMap> table::io::PersistableFacade<image::ApCorrMap>::dynamicCast(
+        std::shared_ptr<table::io::Persistable> const&);
+
 namespace image {
 
 // Even though this static const member is set in the header, it needs to be declared here if we need

@@ -30,9 +30,14 @@
 #include "lsst/afw/geom/ellipses/PixelRegion.h"
 #include "lsst/afw/geom/transformFactory.h"
 #include "lsst/afw/image/LsstImageTypes.h"
+#include "lsst/afw/table/io/Persistable.cc"
 
 namespace lsst {
 namespace afw {
+
+template std::shared_ptr<geom::SpanSet> table::io::PersistableFacade<geom::SpanSet>::dynamicCast(
+        std::shared_ptr<table::io::Persistable> const&);
+
 namespace geom {
 namespace {
 

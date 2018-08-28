@@ -36,6 +36,7 @@
 #include "lsst/afw/table/io/CatalogVector.h"
 #include "lsst/afw/table/io/OutputArchive.h"
 #include "lsst/afw/table/io/InputArchive.h"
+#include "lsst/afw/table/io/Persistable.cc"
 
 namespace lsst {
 namespace afw {
@@ -327,20 +328,23 @@ template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 typename HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::Factory
         HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::Factory::registration(
                 "HeavyFootprint" + ComputeSuffix<ImagePixelT, MaskPixelT, VariancePixelT>::apply());
+}  // namespace detection
 
 //
 // Explicit instantiations
 //
 //
-#define INSTANTIATE(TYPE)                                                                                  \
-    template class HeavyFootprint<TYPE>;                                                                   \
-    template std::shared_ptr<HeavyFootprint<TYPE>> mergeHeavyFootprints<TYPE>(HeavyFootprint<TYPE> const&, \
-                                                                              HeavyFootprint<TYPE> const&);
+#define INSTANTIATE(TYPE)                                                                            \
+    template std::shared_ptr<detection::HeavyFootprint<TYPE>>                                        \
+    table::io::PersistableFacade<detection::HeavyFootprint<TYPE>>::dynamicCast(                      \
+            std::shared_ptr<table::io::Persistable> const&);                                         \
+    template class detection::HeavyFootprint<TYPE>;                                                  \
+    template std::shared_ptr<detection::HeavyFootprint<TYPE>> detection::mergeHeavyFootprints<TYPE>( \
+            detection::HeavyFootprint<TYPE> const&, detection::HeavyFootprint<TYPE> const&);
 
 INSTANTIATE(std::uint16_t);
 INSTANTIATE(double);
 INSTANTIATE(float);
 INSTANTIATE(int);
-}  // namespace detection
 }  // namespace afw
 }  // namespace lsst

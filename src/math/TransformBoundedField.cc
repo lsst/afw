@@ -33,9 +33,14 @@
 #include "lsst/afw/table/io/OutputArchive.h"
 #include "lsst/afw/table/io/CatalogVector.h"
 #include "lsst/afw/table/aggregates.h"
+#include "lsst/afw/table/io/Persistable.cc"
 
 namespace lsst {
 namespace afw {
+
+template std::shared_ptr<math::TransformBoundedField> table::io::PersistableFacade<
+        math::TransformBoundedField>::dynamicCast(std::shared_ptr<table::io::Persistable> const&);
+
 namespace math {
 
 TransformBoundedField::TransformBoundedField(lsst::geom::Box2I const& bbox, Transform const& transform)

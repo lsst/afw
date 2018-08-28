@@ -26,11 +26,16 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/Kernel.h"
 #include "lsst/afw/math/KernelPersistenceHelper.h"
+#include "lsst/afw/table/io/Persistable.cc"
 
 namespace pexExcept = lsst::pex::exceptions;
 
 namespace lsst {
 namespace afw {
+
+template std::shared_ptr<math::AnalyticKernel> table::io::PersistableFacade<
+        math::AnalyticKernel>::dynamicCast(std::shared_ptr<table::io::Persistable> const &);
+
 namespace math {
 
 AnalyticKernel::AnalyticKernel() : Kernel(), _kernelFunctionPtr() {}

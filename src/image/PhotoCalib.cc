@@ -31,9 +31,14 @@
 #include "lsst/daf/base/PropertySet.h"
 #include "lsst/pex/exceptions.h"
 #include "ndarray.h"
+#include "lsst/afw/table/io/Persistable.cc"
 
 namespace lsst {
 namespace afw {
+
+template std::shared_ptr<image::PhotoCalib> table::io::PersistableFacade<image::PhotoCalib>::dynamicCast(
+        std::shared_ptr<table::io::Persistable> const&);
+
 namespace image {
 
 // ------------------- helpers -------------------

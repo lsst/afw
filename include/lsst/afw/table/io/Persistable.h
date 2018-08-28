@@ -181,7 +181,7 @@ public:
      *  @param[in]  fitsfile     FITS object to read from, already positioned at the desired HDU.
      */
     static std::shared_ptr<T> readFits(fits::Fits& fitsfile) {
-        return std::dynamic_pointer_cast<T>(Persistable::_readFits(fitsfile));
+        return dynamicCast(Persistable::_readFits(fitsfile));
     }
 
     /**
@@ -192,7 +192,7 @@ public:
      *                           afw::fits::DEFAULT_HDU skips the primary HDU if it is empty.
      */
     static std::shared_ptr<T> readFits(std::string const& fileName, int hdu = fits::DEFAULT_HDU) {
-        return std::dynamic_pointer_cast<T>(Persistable::_readFits(fileName, hdu));
+        return dynamicCast(Persistable::_readFits(fileName, hdu));
     }
 
     /**
@@ -203,8 +203,19 @@ public:
      *                           afw::fits::DEFAULT_HDU skips the primary HDU if it is empty.
      */
     static std::shared_ptr<T> readFits(fits::MemFileManager& manager, int hdu = fits::DEFAULT_HDU) {
-        return std::dynamic_pointer_cast<T>(Persistable::_readFits(manager, hdu));
+        return dynamicCast(Persistable::_readFits(manager, hdu));
     }
+
+    /**
+     * Dynamically cast a shared_ptr
+     *
+     * You must provide an explicit template instantiation in the .cc file
+     * for each class that inherits from PersistableFacade.
+     * Designed to work around RTTI issues on macOS with hidden symbols;
+     *
+     * @throw lsst::pex::exceptions::LogicError if the cast fails
+     */
+    static std::shared_ptr<T> dynamicCast(std::shared_ptr<Persistable> const &ptr);
 };
 
 /**
