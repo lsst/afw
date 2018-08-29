@@ -84,7 +84,7 @@ class TransmissionCurve;
  *  clone its input argument, because while it technically isn't, we can safely consider a
  *  Detector to be immutable once it's attached to an ExposureInfo.
  */
-class ExposureInfo {
+class ExposureInfo final {
 public:
     /// Does this exposure have a Wcs?
     bool hasWcs() const { return static_cast<bool>(_wcs); }

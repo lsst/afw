@@ -24,7 +24,7 @@ class SubSchema;
  *         (used for actual data access).
  */
 template <typename T>
-struct SchemaItem {
+struct SchemaItem final {
     Key<T> key;
     Field<T> field;
 

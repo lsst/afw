@@ -49,7 +49,7 @@ namespace cameraGeom {
  * This means that the default-constructed Orientation is not a unity transform,
  * but instead includes a 1/2 pixel shift.
  */
-class Orientation {
+class Orientation final {
 public:
     explicit Orientation(lsst::geom::Point2D const fpPosition = lsst::geom::Point2D(0, 0),
                          ///< Focal plane position of detector reference point (mm)

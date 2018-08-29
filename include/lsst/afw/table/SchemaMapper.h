@@ -18,7 +18,7 @@ class BaseRecord;
  *  SchemaMapper is initialized with its input Schema, and contains member functions
  *  to add mapped or unmapped fields to the output Schema.
  */
-class SchemaMapper {
+class SchemaMapper final {
 public:
     /// Return the input schema (copy-on-write).
     Schema const getInputSchema() const { return _impl->_input; }

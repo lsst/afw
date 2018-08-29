@@ -32,7 +32,7 @@ namespace io {
  *  name returned by Persistable::getPersistenceName() and used by InputArchive to
  *  look up a PersistableFactory in the registry.
  */
-struct ArchiveIndexSchema {
+struct ArchiveIndexSchema final {
     Schema schema;
     Key<int> id;
     Key<int> catArchive;      // 'cat.archive' in schema

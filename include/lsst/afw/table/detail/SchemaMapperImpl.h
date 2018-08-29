@@ -25,7 +25,7 @@ namespace detail {
  *  pimpl (forEach) to Citizen; look there for more information (though SchemaMapper is
  *  not copy-on-write).
  */
-class SchemaMapperImpl {
+class SchemaMapperImpl final {
 private:
     /// Boost.MPL metafunction that returns a std::pair< Key<T>, Key<T> > given a T.
     struct MakeKeyPair {

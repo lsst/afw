@@ -43,7 +43,7 @@ namespace ellipses {
 /**
  *  A temporary-only expression object for ellipse core convolution.
  */
-class BaseCore::Convolution {
+class BaseCore::Convolution final {
 public:
     /// Matrix type for derivative with respect to input ellipse parameters.
     typedef Eigen::Matrix3d DerivativeMatrix;
@@ -69,7 +69,7 @@ public:
 /**
  *  A temporary-only expression object for ellipse convolution.
  */
-class Ellipse::Convolution {
+class Ellipse::Convolution final {
 public:
     /// Matrix type for derivative with respect to input ellipse parameters.
     typedef Eigen::Matrix<double, 5, 5> DerivativeMatrix;

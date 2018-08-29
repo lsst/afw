@@ -51,7 +51,7 @@ namespace geom {
 /**
  * A range of pixels within one row of an Image
  */
-class Span {
+class Span final {
 public:
     /// An iterator over points in the Span.
     typedef SpanPixelIterator Iterator;

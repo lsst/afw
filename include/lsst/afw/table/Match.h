@@ -64,7 +64,7 @@ public:
  *  matches.
  */
 template <typename Record1, typename Record2>
-struct Match {
+struct Match final {
     std::shared_ptr<Record1> first;
     std::shared_ptr<Record2> second;
     double distance;  // may be pixels or radians

@@ -28,7 +28,7 @@ class CatalogVector;
  *
  *  @see OutputArchive
  */
-class InputArchive {
+class InputArchive final {
 public:
     typedef std::map<int, std::shared_ptr<Persistable>> Map;
 

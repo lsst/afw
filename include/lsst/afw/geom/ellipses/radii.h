@@ -54,7 +54,7 @@ class LogTraceRadius;
  * The determinant radius is equal to the standard radius for a circle, and
  * @f$\pi R_{det}^2@f$ is the area of the ellipse.
  */
-class DeterminantRadius {
+class DeterminantRadius final {
 public:
     void normalize() {
         if (_value < 0)
@@ -111,7 +111,7 @@ private:
  *
  * The trace radius is equal to the standard radius for a circle
  */
-class TraceRadius {
+class TraceRadius final {
 public:
     void normalize() {
         if (_value < 0)
@@ -166,7 +166,7 @@ private:
 /**
  * The natural logarithm of the DeterminantRadius
  */
-class LogDeterminantRadius {
+class LogDeterminantRadius final {
 public:
     void normalize() {}
 
@@ -217,7 +217,7 @@ private:
 /**
  * The natural logarithm of the TraceRadius
  */
-class LogTraceRadius {
+class LogTraceRadius final {
 public:
     void normalize() {}
 

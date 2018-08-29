@@ -85,7 +85,7 @@ void variadicIncrementPosition(T& first, Args&... x) {
  */
 
 template <typename T>
-class IterGetter {
+class IterGetter final {
     /* Getter class to manage retrieving values from a generic iterator
        !!! be careful !!! Because there is no way to easily check bounds
        for a generic iterator, it is possible to pass an iterator too
@@ -124,7 +124,7 @@ private:
 };
 
 template <typename T>
-class ConstantGetter {
+class ConstantGetter final {
     // Getter class which takes in a constant value, and simply returns that value
     // for each iteration
 public:
@@ -152,7 +152,7 @@ private:
 };
 
 template <typename T, int N, int C>
-class ImageNdGetter {
+class ImageNdGetter final {
     // Getter class to manage iterating though an ndarray which is interpreted as a 2D image
 public:
     using Reference = typename ndarray::Array<T, N, C>::Reference::Reference;
@@ -192,7 +192,7 @@ private:
 };
 
 template <typename T, int inA, int inC>
-class FlatNdGetter {
+class FlatNdGetter final {
     // Getter class to manage iterating though an ndarray which is interpreted as a 1D image
 public:
     using Reference = typename ndarray::Array<T, inA, inC>::Reference;
