@@ -60,173 +60,181 @@ class StatisticsTestCase(lsst.utils.tests.TestCase):
 
     def setUp(self):
         self.val = 10
-        self.image = afwImage.ImageF(lsst.geom.Extent2I(100, 200))
-        self.image.set(self.val)
+        self.images = (
+            afwImage.ImageI(lsst.geom.Extent2I(100, 200)),
+            afwImage.ImageF(lsst.geom.Extent2I(100, 200)),
+            )
+
+        for image in self.images:
+            image.set(self.val)
 
     def tearDown(self):
-        del self.image
+        del self.images
 
     def testDefaultGet(self):
         """Test that we can get a single statistic without specifying it"""
-        stats = afwMath.makeStatistics(self.image, afwMath.MEDIAN)
+        for image in self.images:
+            stats = afwMath.makeStatistics(image, afwMath.MEDIAN)
 
-        self.assertEqual(stats.getValue(), stats.getValue(afwMath.MEDIAN))
-        self.assertEqual(stats.getResult()[
-                         0], stats.getResult(afwMath.MEDIAN)[0])
-        #
-        stats = afwMath.makeStatistics(
-            self.image, afwMath.MEDIAN | afwMath.ERRORS)
+            self.assertEqual(stats.getValue(), stats.getValue(afwMath.MEDIAN))
+            self.assertEqual(stats.getResult()[
+                             0], stats.getResult(afwMath.MEDIAN)[0])
+            #
+            stats = afwMath.makeStatistics(image, afwMath.MEDIAN | afwMath.ERRORS)
 
-        self.assertEqual(stats.getValue(), stats.getValue(afwMath.MEDIAN))
-        self.assertEqual(stats.getResult(), stats.getResult(afwMath.MEDIAN))
-        self.assertEqual(stats.getError(), stats.getError(afwMath.MEDIAN))
+            self.assertEqual(stats.getValue(), stats.getValue(afwMath.MEDIAN))
+            self.assertEqual(stats.getResult(), stats.getResult(afwMath.MEDIAN))
+            self.assertEqual(stats.getError(), stats.getError(afwMath.MEDIAN))
 
-        def tst():
-            stats.getValue()
-        stats = afwMath.makeStatistics(
-            self.image, afwMath.MEDIAN | afwMath.MEAN)
-        self.assertRaises(lsst.pex.exceptions.InvalidParameterError, tst)
+            def tst():
+                stats.getValue()
+            stats = afwMath.makeStatistics(image, afwMath.MEDIAN | afwMath.MEAN)
+            self.assertRaises(lsst.pex.exceptions.InvalidParameterError, tst)
 
     def testStats1(self):
-        stats = afwMath.makeStatistics(self.image,
-                                       afwMath.NPOINT | afwMath.STDEV | afwMath.MEAN | afwMath.SUM)
+        for image in self.images:
+            stats = afwMath.makeStatistics(image, afwMath.NPOINT | afwMath.STDEV | afwMath.MEAN | afwMath.SUM)
 
-        self.assertEqual(stats.getValue(afwMath.NPOINT),
-                         self.image.getWidth()*self.image.getHeight())
-        self.assertEqual(stats.getValue(afwMath.NPOINT)*stats.getValue(afwMath.MEAN),
-                         stats.getValue(afwMath.SUM))
-        self.assertEqual(stats.getValue(afwMath.MEAN), self.val)
-        # didn't ask for error, so it's a NaN
-        self.assertTrue(np.isnan(stats.getError(afwMath.MEAN)))
-        self.assertEqual(stats.getValue(afwMath.STDEV), 0)
+            self.assertEqual(stats.getValue(afwMath.NPOINT), image.getWidth()*image.getHeight())
+            self.assertEqual(stats.getValue(afwMath.NPOINT)*stats.getValue(afwMath.MEAN),
+                             stats.getValue(afwMath.SUM))
+            self.assertEqual(stats.getValue(afwMath.MEAN), self.val)
+            # didn't ask for error, so it's a NaN
+            self.assertTrue(np.isnan(stats.getError(afwMath.MEAN)))
+            self.assertEqual(stats.getValue(afwMath.STDEV), 0)
 
     def testStats2(self):
-        stats = afwMath.makeStatistics(
-            self.image, afwMath.STDEV | afwMath.MEAN | afwMath.ERRORS)
-        mean = stats.getResult(afwMath.MEAN)
-        sd = stats.getValue(afwMath.STDEV)
+        for image in self.images:
+            stats = afwMath.makeStatistics(image, afwMath.STDEV | afwMath.MEAN | afwMath.ERRORS)
+            mean = stats.getResult(afwMath.MEAN)
+            sd = stats.getValue(afwMath.STDEV)
 
-        self.assertEqual(mean[0], self.image[0, 0, afwImage.LOCAL])
-        self.assertEqual(
-            mean[1],
-            sd/math.sqrt(self.image.getWidth()*self.image.getHeight()))
+            self.assertEqual(mean[0], image[0, 0, afwImage.LOCAL])
+            self.assertEqual(mean[1], sd/math.sqrt(image.getWidth()*image.getHeight()))
 
     def testStats3(self):
-        stats = afwMath.makeStatistics(self.image, afwMath.NPOINT)
+        for image in self.images:
+            stats = afwMath.makeStatistics(image, afwMath.NPOINT)
 
-        def getMean():
-            stats.getValue(afwMath.MEAN)
+            def getMean():
+                stats.getValue(afwMath.MEAN)
 
-        self.assertRaises(lsst.pex.exceptions.InvalidParameterError, getMean)
+            self.assertRaises(lsst.pex.exceptions.InvalidParameterError, getMean)
 
     def testStatsZebra(self):
         """Add 1 to every other row"""
-        image2 = self.image.Factory(self.image, True)
-        #
-        # Add 1 to every other row, so the variance is 1/4
-        #
-        self.assertEqual(image2.getHeight() % 2, 0)
-        width = image2.getWidth()
-        for y in range(1, image2.getHeight(), 2):
-            sim = image2.Factory(image2,
-                                 lsst.geom.Box2I(lsst.geom.Point2I(0, y), lsst.geom.Extent2I(width, 1)),
-                                 afwImage.LOCAL)
-            sim += 1
+        for image in self.images:
+            image2 = image.clone()
+            #
+            # Add 1 to every other row, so the variance is 1/4
+            #
+            self.assertEqual(image2.getHeight() % 2, 0)
+            width = image2.getWidth()
+            for y in range(1, image2.getHeight(), 2):
+                sim = image2.Factory(image2,
+                                     lsst.geom.Box2I(lsst.geom.Point2I(0, y), lsst.geom.Extent2I(width, 1)),
+                                     afwImage.LOCAL)
+                sim += 1
 
-        if display:
-            ds9.mtv(self.image, frame=0)
-            ds9.mtv(image2, frame=1)
+            if display:
+                ds9.mtv(image, frame=0)
+                ds9.mtv(image2, frame=1)
 
-        stats = afwMath.makeStatistics(image2,
-                                       afwMath.NPOINT | afwMath.STDEV | afwMath.MEAN | afwMath.ERRORS)
-        mean = stats.getResult(afwMath.MEAN)
-        n = stats.getValue(afwMath.NPOINT)
-        sd = stats.getValue(afwMath.STDEV)
+            stats = afwMath.makeStatistics(image2,
+                                           afwMath.NPOINT | afwMath.STDEV | afwMath.MEAN | afwMath.ERRORS)
+            mean = stats.getResult(afwMath.MEAN)
+            n = stats.getValue(afwMath.NPOINT)
+            sd = stats.getValue(afwMath.STDEV)
 
-        self.assertEqual(mean[0], image2[0, 0, afwImage.LOCAL] + 0.5)
-        self.assertEqual(sd, 1/math.sqrt(4.0)*math.sqrt(n/(n - 1)))
-        self.assertAlmostEqual(
-            mean[1], sd/math.sqrt(image2.getWidth()*image2.getHeight()), 10)
+            self.assertEqual(mean[0], image2[0, 0, afwImage.LOCAL] + 0.5)
+            self.assertEqual(sd, 1/math.sqrt(4.0)*math.sqrt(n/(n - 1)))
+            self.assertAlmostEqual(
+                mean[1], sd/math.sqrt(image2.getWidth()*image2.getHeight()), 10)
 
-        meanSquare = afwMath.makeStatistics(
-            image2, afwMath.MEANSQUARE).getValue()
-        self.assertEqual(meanSquare, 0.5*(image2[0, 0, afwImage.LOCAL] ** 2 +
-                                          image2[0, 1, afwImage.LOCAL] ** 2))
+            meanSquare = afwMath.makeStatistics(
+                image2, afwMath.MEANSQUARE).getValue()
+            self.assertEqual(meanSquare, 0.5*(image2[0, 0, afwImage.LOCAL] ** 2 +
+                                              image2[0, 1, afwImage.LOCAL] ** 2))
 
     def testStatsStdevclip(self):
         """Test STDEVCLIP; cf. #611"""
-        image2 = self.image.Factory(self.image, True)
+        for image in self.images:
+            image2 = image.clone()
 
-        stats = afwMath.makeStatistics(
-            image2, afwMath.STDEVCLIP | afwMath.NPOINT | afwMath.SUM)
-        self.assertEqual(stats.getValue(afwMath.STDEVCLIP), 0)
-        #
-        # Check we get the correct sum even when clipping
-        #
-        self.assertEqual(
-            stats.getValue(afwMath.NPOINT) * afwMath.makeStatistics(
-                image2, afwMath.MEAN).getValue(),
-            stats.getValue(afwMath.SUM))
+            stats = afwMath.makeStatistics(image2, afwMath.STDEVCLIP | afwMath.NPOINT | afwMath.SUM)
+            self.assertEqual(stats.getValue(afwMath.STDEVCLIP), 0)
+            #
+            # Check we get the correct sum even when clipping
+            #
+            self.assertEqual(
+                stats.getValue(afwMath.NPOINT)*afwMath.makeStatistics(image2, afwMath.MEAN).getValue(),
+                stats.getValue(afwMath.SUM))
 
     def testMedian(self):
         """Test the median code"""
-        stats = afwMath.makeStatistics(self.image, afwMath.MEDIAN)
+        for image in self.images:
+            stats = afwMath.makeStatistics(image, afwMath.MEDIAN)
 
-        self.assertEqual(stats.getValue(afwMath.MEDIAN), self.val)
+            self.assertEqual(stats.getValue(afwMath.MEDIAN), self.val)
 
-        values = [1.0, 2.0, 3.0, 2.0]
-        self.assertEqual(
-            afwMath.makeStatistics(values, afwMath.MEDIAN).getValue(),
-            2.0)
+            values = [1.0, 2.0, 3.0, 2.0]
+            self.assertEqual(afwMath.makeStatistics(values, afwMath.MEDIAN).getValue(), 2.0)
 
     def testIqrange(self):
         """Test the inter-quartile range"""
-        stats = afwMath.makeStatistics(self.image, afwMath.IQRANGE)
-        self.assertEqual(stats.getValue(afwMath.IQRANGE), 0)
+        for image in self.images:
+            stats = afwMath.makeStatistics(image, afwMath.IQRANGE)
+            self.assertEqual(stats.getValue(afwMath.IQRANGE), 0)
 
     def testMeanClip(self):
         """Test the 3-sigma clipped mean"""
-        stats = afwMath.makeStatistics(self.image, afwMath.MEANCLIP | afwMath.NCLIPPED)
-        self.assertEqual(stats.getValue(afwMath.MEANCLIP), self.val)
-        self.assertEqual(stats.getValue(afwMath.NCLIPPED), 0)
+        for image in self.images:
+            stats = afwMath.makeStatistics(image, afwMath.MEANCLIP | afwMath.NCLIPPED)
+            self.assertEqual(stats.getValue(afwMath.MEANCLIP), self.val)
+            self.assertEqual(stats.getValue(afwMath.NCLIPPED), 0)
 
     def testStdevClip(self):
         """Test the 3-sigma clipped standard deviation"""
-        stats = afwMath.makeStatistics(self.image, afwMath.STDEVCLIP)
-        self.assertEqual(stats.getValue(afwMath.STDEVCLIP), 0)
+        for image in self.images:
+            stats = afwMath.makeStatistics(image, afwMath.STDEVCLIP)
+            self.assertEqual(stats.getValue(afwMath.STDEVCLIP), 0)
 
     def testVarianceClip(self):
         """Test the 3-sigma clipped variance"""
-        stats = afwMath.makeStatistics(self.image, afwMath.VARIANCECLIP)
-        self.assertEqual(stats.getValue(afwMath.VARIANCECLIP), 0)
+        for image in self.images:
+            stats = afwMath.makeStatistics(image, afwMath.VARIANCECLIP)
+            self.assertEqual(stats.getValue(afwMath.VARIANCECLIP), 0)
 
     def _testBadValue(self, badVal):
-        """Test that we can handle an instance of `badVal` in the data correctly"""
+        """Test that we can handle an instance of `badVal` in the data correctly
+
+        Note that we only test ImageF here (as ImageI can't contain a NaN)
+        """
         x, y = 10, 10
         for useImage in [True, False]:
             if useImage:
-                self.image = afwImage.ImageF(100, 100)
-                self.image.set(self.val)
-                self.image[x, y, afwImage.LOCAL] = badVal
+                image = afwImage.ImageF(100, 100)
+                image.set(self.val)
+                image[x, y, afwImage.LOCAL] = badVal
             else:
-                self.image = afwImage.MaskedImageF(100, 100)
-                self.image.set(self.val, 0x0, 1.0)
-                self.image[x, y, afwImage.LOCAL] = (badVal, 0x0, 1.0)
+                image = afwImage.MaskedImageF(100, 100)
+                image.set(self.val, 0x0, 1.0)
+                image[x, y, afwImage.LOCAL] = (badVal, 0x0, 1.0)
 
             self.assertEqual(
-                afwMath.makeStatistics(self.image, afwMath.MAX).getValue(),
+                afwMath.makeStatistics(image, afwMath.MAX).getValue(),
                 self.val)
             self.assertEqual(
-                afwMath.makeStatistics(self.image, afwMath.MEAN).getValue(),
+                afwMath.makeStatistics(image, afwMath.MEAN).getValue(),
                 self.val)
 
             sctrl = afwMath.StatisticsControl()
 
             sctrl.setNanSafe(False)
             self.assertFalse(np.isfinite(afwMath.makeStatistics(
-                self.image, afwMath.MAX, sctrl).getValue()))
+                image, afwMath.MAX, sctrl).getValue()))
             self.assertFalse(np.isfinite(afwMath.makeStatistics(
-                self.image, afwMath.MEAN, sctrl).getValue()))
+                image, afwMath.MEAN, sctrl).getValue()))
 
     def testMaxWithNan(self):
         """Test that we can handle NaNs correctly"""
@@ -485,61 +493,64 @@ class StatisticsTestCase(lsst.utils.tests.TestCase):
 
     def testMeanClipSingleValue(self):
         """Verify that the 3-sigma clipped mean doesn't not return NaN for a single value."""
-        stats = afwMath.makeStatistics(self.image, afwMath.MEANCLIP | afwMath.NCLIPPED)
-        self.assertEqual(stats.getValue(afwMath.MEANCLIP), self.val)
-        self.assertEqual(stats.getValue(afwMath.NCLIPPED), 0)
+        for image in self.images:
+            stats = afwMath.makeStatistics(image, afwMath.MEANCLIP | afwMath.NCLIPPED)
+            self.assertEqual(stats.getValue(afwMath.MEANCLIP), self.val)
+            self.assertEqual(stats.getValue(afwMath.NCLIPPED), 0)
 
-        # this bug was caused by the iterative nature of the MEANCLIP.
-        # With only one point, the sample variance returns NaN to avoid a divide by zero error
-        # Thus, on the second iteration, the clip width (based on _variance) is NaN and corrupts
-        #   all further calculations.
-        img = afwImage.ImageF(lsst.geom.Extent2I(1, 1))
-        img.set(0)
-        stats = afwMath.makeStatistics(img, afwMath.MEANCLIP | afwMath.NCLIPPED)
-        self.assertEqual(stats.getValue(afwMath.MEANCLIP), 0)
-        self.assertEqual(stats.getValue(afwMath.NCLIPPED), 0)
+            # this bug was caused by the iterative nature of the MEANCLIP.
+            # With only one point, the sample variance returns NaN to avoid a divide by zero error
+            # Thus, on the second iteration, the clip width (based on _variance) is NaN and corrupts
+            #   all further calculations.
+            img = afwImage.ImageF(lsst.geom.Extent2I(1, 1))
+            img.set(0)
+            stats = afwMath.makeStatistics(img, afwMath.MEANCLIP | afwMath.NCLIPPED)
+            self.assertEqual(stats.getValue(afwMath.MEANCLIP), 0)
+            self.assertEqual(stats.getValue(afwMath.NCLIPPED), 0)
 
     def testMismatch(self):
         """Test that we get an exception when there's a size mismatch"""
         scale = 5
-        dims = self.image.getDimensions()
-        mask = afwImage.Mask(dims*scale)
-        mask.set(0xFF)
-        ctrl = afwMath.StatisticsControl()
-        ctrl.setAndMask(0xFF)
-        # If it didn't raise, this would result in a NaN (the image data is
-        # completely masked).
-        self.assertRaises(lsst.pex.exceptions.InvalidParameterError, afwMath.makeStatistics,
-                          self.image, mask, afwMath.MEDIAN, ctrl)
-        subMask = afwImage.Mask(
-            mask,
-            lsst.geom.Box2I(lsst.geom.Point2I(dims*(scale - 1)), dims))
-        subMask.set(0)
-        # Using subMask is successful.
-        self.assertEqual(afwMath.makeStatistics(self.image, subMask, afwMath.MEDIAN, ctrl).getValue(),
-                         self.val)
+        for image in self.images:
+            dims = image.getDimensions()
+            mask = afwImage.Mask(dims*scale)
+            mask.set(0xFF)
+            ctrl = afwMath.StatisticsControl()
+            ctrl.setAndMask(0xFF)
+            # If it didn't raise, this would result in a NaN (the image data is
+            # completely masked).
+            self.assertRaises(lsst.pex.exceptions.InvalidParameterError, afwMath.makeStatistics,
+                              image, mask, afwMath.MEDIAN, ctrl)
+            subMask = afwImage.Mask(
+                mask,
+                lsst.geom.Box2I(lsst.geom.Point2I(dims*(scale - 1)), dims))
+            subMask.set(0)
+            # Using subMask is successful.
+            self.assertEqual(afwMath.makeStatistics(image, subMask, afwMath.MEDIAN, ctrl).getValue(), self.val)
 
     def testClipping(self):
         """Test that clipping statistics work
 
         Insert a single bad pixel; it should be clipped.
         """
-        self.image[0, 0, afwImage.LOCAL] = 0
-        stats = afwMath.makeStatistics(self.image, afwMath.MEANCLIP | afwMath.NCLIPPED | afwMath.NPOINT)
-        self.assertEqual(stats.getValue(afwMath.MEANCLIP), self.val)
-        self.assertEqual(stats.getValue(afwMath.NCLIPPED), 1)
-        self.assertEqual(stats.getValue(afwMath.NPOINT), self.image.getBBox().getArea())
+        for image in self.images:
+            image[0, 0, afwImage.LOCAL] = 0
+            stats = afwMath.makeStatistics(image, afwMath.MEANCLIP | afwMath.NCLIPPED | afwMath.NPOINT)
+            self.assertEqual(stats.getValue(afwMath.MEANCLIP), self.val)
+            self.assertEqual(stats.getValue(afwMath.NCLIPPED), 1)
+            self.assertEqual(stats.getValue(afwMath.NPOINT), image.getBBox().getArea())
 
     def testNMasked(self):
         """Test that NMASKED works"""
         maskVal = 0xBE
         ctrl = afwMath.StatisticsControl()
         ctrl.setAndMask(maskVal)
-        mask = afwImage.Mask(self.image.getBBox())
-        mask.set(0)
-        self.assertEqual(afwMath.makeStatistics(self.image, mask, afwMath.NMASKED, ctrl).getValue(), 0)
-        mask[1, 1, afwImage.LOCAL] = maskVal
-        self.assertEqual(afwMath.makeStatistics(self.image, mask, afwMath.NMASKED, ctrl).getValue(), 1)
+        for image in self.images:
+            mask = afwImage.Mask(image.getBBox())
+            mask.set(0)
+            self.assertEqual(afwMath.makeStatistics(image, mask, afwMath.NMASKED, ctrl).getValue(), 0)
+            mask[1, 1, afwImage.LOCAL] = maskVal
+            self.assertEqual(afwMath.makeStatistics(image, mask, afwMath.NMASKED, ctrl).getValue(), 1)
 
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):

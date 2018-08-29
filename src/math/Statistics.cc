@@ -32,6 +32,7 @@
 #include <limits>
 #include <memory>
 #include <tuple>
+#include <type_traits>
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image/Image.h"
@@ -453,9 +454,11 @@ StandardReturn getStandard(ImageT const &img, MaskT const &msk, VarianceT const 
  * @param img       an afw::Image
  * @param fraction the desired percentile.
  *
+ * Specialisation for non-integral types (where ties are not a problem)
  */
 template <typename Pixel>
-double percentile(std::vector<Pixel> &img, double const fraction) {
+typename enable_if<!is_integral<Pixel>::value, double>::type 
+percentile(std::vector<Pixel> &img, double const fraction) {
     assert(fraction >= 0.0 && fraction <= 1.0);
 
     int const n = img.size();
@@ -472,8 +475,8 @@ double percentile(std::vector<Pixel> &img, double const fraction) {
         int const q1 = static_cast<int>(idx);
         int const q2 = q1 + 1;
 
-        typename std::vector<Pixel>::iterator mid1 = img.begin() + q1;
-        typename std::vector<Pixel>::iterator mid2 = img.begin() + q2;
+        auto mid1 = img.begin() + q1;
+        auto mid2 = img.begin() + q2;
         if (fraction > 0.5) {
             std::nth_element(img.begin(), mid1, img.end());
             std::nth_element(mid1, mid2, img.end());
@@ -495,15 +498,92 @@ double percentile(std::vector<Pixel> &img, double const fraction) {
     }
 }
 
+namespace {
+    //
+    // Helper function to estimate a floating-point quantile
+    //
+    // The data has been partially sorted, using nth_element
+    //
+    // begin:   iterator to a point which we know to be below our median
+    // end:     iterator to a point which we know to be beyond our median
+    // naive:   the integer value of the desired quantile
+    // target:  the number of points that should be to the left of the quantile.
+    //          N.b. if begin isn't the start of the data, this may not be the
+    //          desired number of points.  Caveat Callor
+    template<typename T>
+    double
+    computeQuantile(typename std::vector<T>::const_iterator begin,
+                    typename std::vector<T>::const_iterator end,
+                    T const naive,
+                    double const target
+                   )
+    {
+        // investigate the cumulative histogram near naive
+        unsigned long left = 0;       // number of values less than naive
+        unsigned long middle = 0;     // number of values equal to naive
+
+        for (auto ptr = begin; ptr != end; ++ptr) {
+            auto const val = *ptr;
+            if (val < naive) {
+                ++left;
+            } else if (val == naive) {
+                ++middle;
+            }
+        }
+
+        return naive - 0.5 + (target - left)/middle;
+    }
+}
+
+/**
+ * @internal A wrapper using the nth_element() built-in to compute percentiles for an image
+ *
+ * @param img       an afw::Image
+ * @param fraction the desired percentile.
+ *
+ * This is the specialisation for integral types where we have to handle ties carefully.
+ */
+template <typename Pixel>
+typename enable_if<is_integral<Pixel>::value, double>::type 
+percentile(std::vector<Pixel> &img, double const fraction) {
+    assert(fraction >= 0.0 && fraction <= 1.0);
+
+    int const n = img.size();
+
+    if (n == 0) {
+        return NaN;
+    } else if (n == 1) {
+        return img[0];
+    } else {
+        // We need to handle ties.  The proper way to do this is to analyse the cumulative curve after
+        // building the histograms (which is faster than a generic partitioning algorithm), but it's a
+        // nuisance as we don't know the range of values
+        //
+        // This code looks clean enough, but actually the call to nth_element is expensive
+        // and we *still* have to go through the array a second time
+
+        double const idx = fraction*(n - 1);
+
+        auto midP = img.begin() + static_cast<int>(idx);
+        std::nth_element(img.begin(), midP, img.end());
+        auto const naiveP = *midP;           // value of desired element
+
+        return computeQuantile(img.begin(), img.end(), naiveP, fraction*n);
+    }
+}
+
 typedef std::tuple<double, double, double> MedianQuartileReturn;
 
 /**
  * @internal A wrapper using the nth_element() built-in to compute median and Quartiles for an image
  *
  * @param img       an afw::Image
+ *
+ * Specialisation for non-integral types (where ties are not a problem)
  */
 template <typename Pixel>
-MedianQuartileReturn medianAndQuartiles(std::vector<Pixel> &img) {
+typename enable_if<!is_integral<Pixel>::value, MedianQuartileReturn>::type
+medianAndQuartiles(std::vector<Pixel> &img) {
     int const n = img.size();
 
     if (n > 1) {
@@ -523,12 +603,12 @@ MedianQuartileReturn medianAndQuartiles(std::vector<Pixel> &img) {
         int const q75a = static_cast<int>(idx75);
         int const q75b = q75a + 1;
 
-        typename std::vector<Pixel>::iterator mid50a = img.begin() + q50a;
-        typename std::vector<Pixel>::iterator mid50b = img.begin() + q50b;
-        typename std::vector<Pixel>::iterator mid25a = img.begin() + q25a;
-        typename std::vector<Pixel>::iterator mid25b = img.begin() + q25b;
-        typename std::vector<Pixel>::iterator mid75a = img.begin() + q75a;
-        typename std::vector<Pixel>::iterator mid75b = img.begin() + q75b;
+        auto mid50a = img.begin() + q50a;
+        auto mid50b = img.begin() + q50b;
+        auto mid25a = img.begin() + q25a;
+        auto mid25b = img.begin() + q25b;
+        auto mid75a = img.begin() + q75a;
+        auto mid75b = img.begin() + q75b;
 
         // get the 50th percentile, then get the 25th and 75th on the smaller partitions
         std::nth_element(img.begin(), mid50a, img.end());
@@ -564,6 +644,50 @@ MedianQuartileReturn medianAndQuartiles(std::vector<Pixel> &img) {
         return MedianQuartileReturn(img[0], img[0], img[0]);
     } else {
         return MedianQuartileReturn(NaN, NaN, NaN);
+    }
+}
+
+/**
+ * @internal A wrapper using the nth_element() built-in to compute median and Quartiles for an image
+ *
+ * @param img       an afw::Image
+ *
+ * This is the specialisation for integral types where we have to handle ties carefully.
+ */
+template <typename Pixel>
+typename enable_if<is_integral<Pixel>::value, MedianQuartileReturn>::type
+medianAndQuartiles(std::vector<Pixel> &img) {
+    int const n = img.size();
+
+    if (n == 0) {
+        return MedianQuartileReturn(NaN, NaN, NaN);
+    } else if (n == 1) {
+        return MedianQuartileReturn(img[0], img[0], img[0]);
+    } else {
+        // We need to handle ties.  The proper way to do this is to analyse the cumulative curve after
+        // building the histograms (which is faster than a generic partitioning algorithm), but it's a
+        // nuisance as we don't know the range of values
+        //
+        // This code looks clean enough, but actually the call to nth_element is expensive
+        // and we *still* have to go through the array a second time.
+        
+        // For efficiency:
+        // - partition at 50th, then partition the two half further to get 25th and 75th
+
+        auto mid25 = img.begin() + static_cast<int>(0.25*(n - 1));
+        auto mid50 = img.begin() + static_cast<int>(0.50*(n - 1));
+        auto mid75 = img.begin() + static_cast<int>(0.75*(n - 1));
+
+        // get the 50th percentile, then get the 25th and 75th on the smaller partitions
+        std::nth_element(img.begin(), mid50, img.end());
+        std::nth_element(img.begin(), mid25, mid50);
+        std::nth_element(mid50,       mid75, img.end());
+
+        double const q1     = computeQuantile(img.begin(), mid50,     *mid25, 0.25*n);
+        double const median = computeQuantile(mid25,       mid75,     *mid50, 0.50*n - (mid25 - img.begin()));
+        double const q3     = computeQuantile(mid50,       img.end(), *mid75, 0.75*n - (mid50 - img.begin()));
+
+        return MedianQuartileReturn(median, q1, q3);
     }
 }
 
