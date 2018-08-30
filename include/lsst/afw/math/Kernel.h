@@ -34,11 +34,6 @@
 
 #include "boost/mpl/or.hpp"
 
-#include "boost/serialization/shared_ptr.hpp"
-#include "boost/serialization/vector.hpp"
-#include "boost/serialization/export.hpp"
-
-#include "lsst/daf/base/Persistable.h"
 #include "lsst/daf/base/Citizen.h"
 #include "lsst/geom.h"
 #include "lsst/afw/image/Image.h"
@@ -51,13 +46,7 @@
 namespace lsst {
 namespace afw {
 
-namespace formatters {
-class KernelFormatter;
-}
-
 namespace math {
-
-using boost::serialization::make_nvp;
 
 /**
  * Kernels are used for convolution with MaskedImages and (eventually) Images
@@ -121,7 +110,6 @@ using boost::serialization::make_nvp;
  * @ingroup afw
  */
 class Kernel : public lsst::daf::base::Citizen,
-               public lsst::daf::base::Persistable,
                public afw::table::io::PersistableFacade<Kernel>,
                public afw::table::io::Persistable {
 public:
@@ -499,8 +487,6 @@ protected:
     std::vector<SpatialFunctionPtr> _spatialFunctionList;
 
 private:
-    LSST_PERSIST_FORMATTER(lsst::afw::formatters::KernelFormatter)
-
     int _width;
     int _height;
     int _ctrX;
@@ -569,14 +555,6 @@ protected:
 private:
     lsst::afw::image::Image<Pixel> _image;
     Pixel _sum;
-
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive &ar, unsigned int const version) {
-        ar &make_nvp("k", boost::serialization::base_object<Kernel>(*this));
-        ar &make_nvp("img", _image);
-        ar &make_nvp("sum", _sum);
-    }
 };
 
 /**
@@ -691,13 +669,6 @@ protected:
     void setKernelParameter(unsigned int ind, double value) const override;
 
     KernelFunctionPtr _kernelFunctionPtr;
-
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive &ar, unsigned int const version) {
-        ar &make_nvp("k", boost::serialization::base_object<Kernel>(*this));
-        ar &make_nvp("fn", _kernelFunctionPtr);
-    }
 };
 
 /**
@@ -751,13 +722,6 @@ protected:
 
 private:
     lsst::geom::Point2I _pixel;
-
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive &ar, unsigned int const version) {
-        boost::serialization::void_cast_register<DeltaFunctionKernel, Kernel>(
-                static_cast<DeltaFunctionKernel *>(0), static_cast<Kernel *>(0));
-    }
 };
 
 /**
@@ -916,21 +880,6 @@ private:
     std::vector<double> _kernelSumList;  ///< sum of each basis kernel (a cache)
     mutable std::vector<double> _kernelParams;
     bool _isDeltaFunctionBasis;
-
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive &ar, unsigned int const version) {
-        ar &make_nvp("k", boost::serialization::base_object<Kernel>(*this));
-        ar &make_nvp("klist", _kernelList);
-        ar &make_nvp("kimglist", _kernelImagePtrList);
-        ar &make_nvp("ksumlist", _kernelSumList);
-        ar &make_nvp("params", _kernelParams);
-        if (version > 0) {
-            ar &make_nvp("deltaBasis", _isDeltaFunctionBasis);
-        } else if (Archive::is_loading::value) {
-            _isDeltaFunctionBasis = false;
-        }
-    }
 };
 
 /**
@@ -1092,19 +1041,7 @@ private:
     mutable std::vector<std::vector<double>> _kernelRowCache;
     mutable std::vector<std::vector<double>> _kernelColCache;
 
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive &ar, unsigned int const version) {
-        ar &make_nvp("k", boost::serialization::base_object<Kernel>(*this));
-        ar &make_nvp("colfn", _kernelColFunctionPtr);
-        ar &make_nvp("rowfn", _kernelRowFunctionPtr);
-        ar &make_nvp("cols", _localColList);
-        ar &make_nvp("rows", _localRowList);
-        ar &make_nvp("kernelX", _kernelX);
-        ar &make_nvp("kernelY", _kernelY);
-    }
-
-    void _setKernelXY() override {
+    virtual void _setKernelXY() override {
         lsst::geom::Extent2I const dim = getDimensions();
         lsst::geom::Point2I const ctr = getCtr();
 
@@ -1122,39 +1059,5 @@ private:
 }  // namespace math
 }  // namespace afw
 }  // namespace lsst
-
-namespace boost {
-namespace serialization {
-
-template <class Archive>
-inline void save_construct_data(Archive &ar, lsst::afw::math::DeltaFunctionKernel const *k,
-                                unsigned int const file_version) {
-    int width = k->getWidth();
-    int height = k->getHeight();
-    int x = k->getPixel().getX();
-    int y = k->getPixel().getY();
-    ar << make_nvp("width", width);
-    ar << make_nvp("height", height);
-    ar << make_nvp("pixX", x);
-    ar << make_nvp("pixY", y);
-}
-
-template <class Archive>
-inline void load_construct_data(Archive &ar, lsst::afw::math::DeltaFunctionKernel *k,
-                                unsigned int const file_version) {
-    int width;
-    int height;
-    int x;
-    int y;
-    ar >> make_nvp("width", width);
-    ar >> make_nvp("height", height);
-    ar >> make_nvp("pixX", x);
-    ar >> make_nvp("pixY", y);
-    ::new (k) lsst::afw::math::DeltaFunctionKernel(width, height, lsst::geom::Point2I(x, y));
-}
-}  // namespace serialization
-}  // namespace boost
-
-BOOST_CLASS_VERSION(lsst::afw::math::LinearCombinationKernel, 1)
 
 #endif  // !defined(LSST_AFW_MATH_KERNEL_H)

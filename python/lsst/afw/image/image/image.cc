@@ -40,15 +40,14 @@ namespace image {
 namespace {
 
 template <typename PixelT>
-using PyImageBase = py::class_<ImageBase<PixelT>, std::shared_ptr<ImageBase<PixelT>>, daf::base::Persistable,
-                               daf::base::Citizen>;
+using PyImageBase = py::class_<ImageBase<PixelT>, std::shared_ptr<ImageBase<PixelT>>, daf::base::Citizen>;
 
 template <typename PixelT>
 using PyImage = py::class_<Image<PixelT>, std::shared_ptr<Image<PixelT>>, ImageBase<PixelT>>;
 
 template <typename PixelT>
 using PyDecoratedImage =
-        py::class_<DecoratedImage<PixelT>, std::shared_ptr<DecoratedImage<PixelT>>, daf::base::Persistable>;
+        py::class_<DecoratedImage<PixelT>, std::shared_ptr<DecoratedImage<PixelT>>>;
 
 template <typename MaskPixelT>
 using PyMask = py::class_<Mask<MaskPixelT>, std::shared_ptr<Mask<MaskPixelT>>, ImageBase<MaskPixelT>>;

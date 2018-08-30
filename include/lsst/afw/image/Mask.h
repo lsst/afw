@@ -37,20 +37,14 @@
 
 #include "lsst/base.h"
 #include "lsst/daf/base/Citizen.h"
-#include "lsst/daf/base/Persistable.h"
 #include "lsst/daf/base/PropertySet.h"
 #include "lsst/pex/exceptions.h"
-#include "lsst/afw/formatters/ImageFormatter.h"
 #include "lsst/afw/image/ImageBase.h"
 #include "lsst/afw/image/LsstImageTypes.h"
 #include "lsst/afw/fitsDefaults.h"
 
 namespace lsst {
 namespace afw {
-namespace formatters {
-template <typename>
-class MaskFormatter;
-}
 namespace image {
 
 namespace detail {
@@ -521,7 +515,6 @@ public:
     void conformMaskPlanes(const MaskPlaneDict& masterPlaneDict);
 
 private:
-    // LSST_PERSIST_FORMATTER(lsst::afw::formatters::MaskFormatter)
     std::shared_ptr<detail::MaskDict> _maskDict;  // our bitplane dictionary
 
     static std::shared_ptr<detail::MaskDict> _maskPlaneDict();

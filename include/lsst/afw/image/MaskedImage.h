@@ -40,8 +40,6 @@
 #include "boost/tuple/tuple.hpp"  // cannot convert to std::tuple (yet) because of use with boost::gil
 
 #include "lsst/daf/base/Citizen.h"
-#include "lsst/daf/base/Persistable.h"
-#include "lsst/afw/formatters/MaskedImageFormatter.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/Mask.h"
 
@@ -68,17 +66,12 @@ std::string const compressedFileNoMEF_RE = "(\\.gz)$";
 
 namespace lsst {
 namespace afw {
-namespace formatters {
-template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-class MaskedImageFormatter;
-}
-
 namespace image {
 
 /// A class to manipulate images, masks, and variance as a single object
 template <typename ImagePixelT, typename MaskPixelT = lsst::afw::image::MaskPixel,
           typename VariancePixelT = lsst::afw::image::VariancePixel>
-class MaskedImage : public lsst::daf::base::Persistable, public lsst::daf::base::Citizen {
+class MaskedImage : public lsst::daf::base::Citizen {
 public:
     /// shared pointer to the Image
     typedef std::shared_ptr<image::Image<ImagePixelT>> ImagePtr;
@@ -763,7 +756,7 @@ public:
     MaskedImage& operator=(MaskedImage const& rhs);
     MaskedImage& operator=(MaskedImage&& rhs);
 
-    ~MaskedImage() override = default;
+    virtual ~MaskedImage() = default;
 
     void swap(MaskedImage& rhs);
 
@@ -1264,10 +1257,6 @@ public:
     }
 
 private:
-#ifndef DOXYGEN
-    LSST_PERSIST_FORMATTER(
-            lsst::afw::formatters::MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>)
-#endif
     void conformSizes();
 
     ImagePtr _image;

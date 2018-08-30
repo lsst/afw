@@ -33,10 +33,6 @@
 #include <vector>
 
 #include "boost/format.hpp"
-#include "boost/serialization/nvp.hpp"
-#include "boost/serialization/vector.hpp"
-#include "boost/serialization/void_cast.hpp"
-#include "boost/serialization/export.hpp"
 
 #include "lsst/daf/base/Citizen.h"
 #include "lsst/pex/exceptions.h"
@@ -46,8 +42,6 @@
 namespace lsst {
 namespace afw {
 namespace math {
-
-using boost::serialization::make_nvp;
 
 /** Test that a Function's return value is nothrow-castable to T
  *
@@ -197,13 +191,6 @@ protected:
 
     /* Default constructor: intended only for serialization */
     explicit Function() : lsst::daf::base::Citizen(typeid(this)), _params(0), _isCacheValid(false) {}
-
-private:  // serialization support
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive& ar, unsigned int const version) {
-        ar& make_nvp("params", _params);
-    }
 };
 
 /**
@@ -261,13 +248,6 @@ public:
 protected:
     /* Default constructor: intended only for serialization */
     explicit Function1() : Function<ReturnT>() {}
-
-private:  // serialization
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive& ar, unsigned const int version) {
-        ar& make_nvp("fn", boost::serialization::base_object<Function<ReturnT>>(*this));
-    }
 };
 
 /**
@@ -332,13 +312,6 @@ public:
 protected:
     /* Default constructor: intended only for serialization */
     explicit Function2() : Function<ReturnT>() {}
-
-private:
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive& ar, unsigned const int version) {
-        ar& make_nvp("fn", boost::serialization::base_object<Function<ReturnT>>(*this));
-    }
 };
 
 /**
@@ -461,14 +434,6 @@ protected:
 
     /* Default constructor: intended only for serialization */
     explicit BasePolynomialFunction2() : Function2<ReturnT>(1), _order(0) {}
-
-private:
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive& ar, unsigned const int version) {
-        ar& make_nvp("fn2", boost::serialization::base_object<Function2<ReturnT>>(*this));
-        ar& make_nvp("order", _order);
-    }
 };
 
 /**
@@ -483,16 +448,7 @@ public:
     }
 
 private:
-    ReturnT operator()(double) const noexcept(IS_NOTHROW_INIT<ReturnT>) override {
-        return static_cast<ReturnT>(0);
-    }
-
-private:
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive& ar, unsigned int const version) {
-        ar& make_nvp("fn1", boost::serialization::base_object<Function1<ReturnT>>(*this));
-    }
+    ReturnT operator()(double) const noexcept(IS_NOTHROW_INIT<ReturnT>) override { return static_cast<ReturnT>(0); }
 };
 
 /**
@@ -509,13 +465,6 @@ public:
 private:
     ReturnT operator()(double, double) const noexcept(IS_NOTHROW_INIT<ReturnT>) override {
         return static_cast<ReturnT>(0);
-    }
-
-private:
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive& ar, unsigned int const version) {
-        ar& make_nvp("fn2", boost::serialization::base_object<Function2<ReturnT>>(*this));
     }
 };
 }  // namespace math

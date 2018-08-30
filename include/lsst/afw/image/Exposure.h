@@ -36,12 +36,6 @@
 
 namespace lsst {
 namespace afw {
-
-namespace formatters {
-template <typename ImageT, typename MaskT, typename VarianceT>
-class ExposureFormatter;
-}
-
 namespace image {
 
 /** A class to contain the data, WCS, and other information needed to describe an %image of the sky.
@@ -75,7 +69,7 @@ namespace image {
  */
 template <typename ImageT, typename MaskT = lsst::afw::image::MaskPixel,
           typename VarianceT = lsst::afw::image::VariancePixel>
-class Exposure : public lsst::daf::base::Persistable, public lsst::daf::base::Citizen {
+class Exposure : public lsst::daf::base::Citizen {
 public:
     typedef MaskedImage<ImageT, MaskT, VarianceT> MaskedImageT;
 
@@ -223,7 +217,7 @@ public:
 
     /** Destructor
      */
-    ~Exposure() override;
+    virtual ~Exposure();
 
     // Get Members
     /// Return the MaskedImage
@@ -432,8 +426,6 @@ public:
     Exposure getCutout(lsst::geom::SpherePoint const& center, lsst::geom::Extent2I const& size) const;
 
 private:
-    LSST_PERSIST_FORMATTER(lsst::afw::formatters::ExposureFormatter<ImageT, MaskT, VarianceT>)
-
     void _readFits(fits::Fits& fitsfile, lsst::geom::Box2I const& bbox, ImageOrigin origin,
                    bool conformMasks);
 

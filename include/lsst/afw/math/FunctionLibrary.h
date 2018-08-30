@@ -38,8 +38,6 @@ namespace lsst {
 namespace afw {
 namespace math {
 
-using boost::serialization::make_nvp;
-
 /**
  * 1-dimensional integer delta function.
  *
@@ -85,14 +83,6 @@ private:
 protected:
     /* Default constructor: intended only for serialization */
     explicit IntegerDeltaFunction1() : Function1<ReturnT>(0), _xo(0.0) {}
-
-private:
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive& ar, unsigned int const version) {
-        ar& make_nvp("fn1", boost::serialization::base_object<Function1<ReturnT>>(*this));
-        ar& make_nvp("xo", this->_xo);
-    }
 };
 
 /**
@@ -141,15 +131,6 @@ private:
 protected:
     /* Default constructor: intended only for serialization */
     explicit IntegerDeltaFunction2() : Function2<ReturnT>(0), _xo(0.0), _yo(0.0) {}
-
-private:
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive& ar, unsigned int const version) {
-        ar& make_nvp("fn2", boost::serialization::base_object<Function2<ReturnT>>(*this));
-        ar& make_nvp("xo", this->_xo);
-        ar& make_nvp("yo", this->_yo);
-    }
 };
 
 /**
@@ -200,13 +181,6 @@ private:
 protected:
     /* Default constructor: intended only for serialization */
     explicit GaussianFunction1() : Function1<ReturnT>(1), _multFac(1.0 / std::sqrt(lsst::geom::TWOPI)) {}
-
-private:
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive& ar, unsigned int const version) {
-        ar& make_nvp("fn1", boost::serialization::base_object<Function1<ReturnT>>(*this));
-    }
 };
 
 /**
@@ -311,16 +285,6 @@ protected:
               _angle(0.0),
               _sinAngle(0.0),
               _cosAngle(1.0) {}
-
-private:
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive& ar, unsigned int const version) {
-        ar& make_nvp("fn2", boost::serialization::base_object<Function2<ReturnT>>(*this));
-        ar& make_nvp("angle", this->_angle);
-        ar& make_nvp("sinAngle", this->_sinAngle);
-        ar& make_nvp("cosAngle", this->_cosAngle);
-    }
 };
 
 /**
@@ -394,13 +358,6 @@ private:
 protected:
     /* Default constructor: intended only for serialization */
     explicit DoubleGaussianFunction2() : Function2<ReturnT>(3), _multFac(1.0 / (lsst::geom::TWOPI)) {}
-
-private:
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive& ar, unsigned int const version) {
-        ar& make_nvp("fn2", boost::serialization::base_object<Function2<ReturnT>>(*this));
-    }
 };
 
 /**
@@ -472,13 +429,6 @@ public:
 protected:
     /* Default constructor: intended only for serialization */
     explicit PolynomialFunction1() : Function1<ReturnT>(1) {}
-
-private:
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive& ar, unsigned int const version) {
-        ar& make_nvp("fn1", boost::serialization::base_object<Function1<ReturnT>>(*this));
-    }
 };
 
 /**
@@ -610,14 +560,6 @@ private:
 protected:
     /* Default constructor: intended only for serialization */
     explicit PolynomialFunction2() : BasePolynomialFunction2<ReturnT>(), _oldY(0), _xCoeffs(0) {}
-
-private:
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive& ar, unsigned int const version) {
-        ar& make_nvp("fn2", boost::serialization::base_object<BasePolynomialFunction2<ReturnT>>(*this));
-        ar& make_nvp("yCoeffs", this->_xCoeffs);  // sets size of _xCoeffs; name is historical
-    }
 };
 
 /**
@@ -746,19 +688,6 @@ protected:
     /* Default constructor: intended only for serialization */
     explicit Chebyshev1Function1()
             : Function1<ReturnT>(1), _minX(0.0), _maxX(0.0), _scale(1.0), _offset(0.0), _order(0) {}
-
-private:
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive& ar, unsigned int const) {
-        ar& make_nvp("fn1", boost::serialization::base_object<Function1<ReturnT>>(*this));
-        ar& make_nvp("minX", this->_minX);
-        ar& make_nvp("minX", this->_minX);
-        ar& make_nvp("maxX", this->_maxX);
-        ar& make_nvp("scale", this->_scale);
-        ar& make_nvp("offset", this->_offset);
-        ar& make_nvp("maxInd", this->_order);
-    }
 };
 
 /**
@@ -980,23 +909,6 @@ protected:
               _scaleY(1.0),
               _offsetX(0.0),
               _offsetY(0.0) {}
-
-private:
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive& ar, unsigned int const version) {
-        ar& make_nvp("fn2", boost::serialization::base_object<BasePolynomialFunction2<ReturnT>>(*this));
-        ar& make_nvp("minX", this->_minX);
-        ar& make_nvp("minY", this->_minY);
-        ar& make_nvp("maxX", this->_maxX);
-        ar& make_nvp("maxY", this->_maxY);
-        ar& make_nvp("scaleX", this->_scaleX);
-        ar& make_nvp("scaleY", this->_scaleY);
-        ar& make_nvp("offsetX", this->_offsetX);
-        ar& make_nvp("offsetY", this->_offsetY);
-        ar& make_nvp("xCheby", this->_yCheby);  // sets size of _yCheby; name is historical
-        _xCoeffs.resize(_yCheby.size());
-    }
 };
 
 /**
@@ -1062,14 +974,6 @@ private:
 protected:
     /* Default constructor: intended only for serialization */
     explicit LanczosFunction1() : Function1<ReturnT>(1), _invN(1.0) {}
-
-private:
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive& ar, unsigned int const version) {
-        ar& make_nvp("fn1", boost::serialization::base_object<Function1<ReturnT>>(*this));
-        ar& make_nvp("invN", this->_invN);
-    }
 };
 
 /**
@@ -1144,14 +1048,6 @@ private:
 protected:
     /* Default constructor: intended only for serialization */
     explicit LanczosFunction2() : Function2<ReturnT>(2), _invN(1.0) {}
-
-private:
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive& ar, unsigned int const version) {
-        ar& make_nvp("fn2", boost::serialization::base_object<Function2<ReturnT>>(*this));
-        ar& make_nvp("invN", this->_invN);
-    }
 };
 }  // namespace math
 }  // namespace afw

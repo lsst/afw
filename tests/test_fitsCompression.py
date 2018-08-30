@@ -615,8 +615,8 @@ class ImageCompressionTestCase(lsst.utils.tests.TestCase):
 
         Parameters
         ----------
-        image : `lsst.afw.image.MaskedImage`
-            MaskedImage to compress.
+        image : `lsst.afw.image.MaskedImage` or `lsst.afw.image.Exposure`
+            MaskedImage or exposure to compress.
         imageOptions, maskOptions, varianceOptions : `lsst.afw.fits.ImageWriteOptions`
             Parameters for writing (compression and scaling) the image, mask
             and variance planes.
@@ -746,7 +746,7 @@ def optionsToPropertySet(options):
 
 
 def persistUnpersist(ImageClass, image, filename, additionalData):
-    """Use the persistence framework to persist and unpersist an image
+    """Use read/writeFitsWithOptions to persist and unpersist an image
 
     Parameters
     ----------
@@ -757,7 +757,7 @@ def persistUnpersist(ImageClass, image, filename, additionalData):
     filename : `str`
         Filename to write.
     additionalData : `lsst.daf.base.PropertySet`
-        Additionl data for persistence framework.
+        Additional data for persistence framework.
 
     Returns
     -------
@@ -767,23 +767,8 @@ def persistUnpersist(ImageClass, image, filename, additionalData):
     additionalData.set("visit", 12345)
     additionalData.set("ccd", 67)
 
-    persistence = lsst.daf.persistence.Persistence.getPersistence(lsst.pex.policy.Policy())
-    logicalLocation = lsst.daf.persistence.LogicalLocation(filename)
-    storage = persistence.getRetrieveStorage("FitsStorage", logicalLocation)
-    storageList = lsst.daf.persistence.StorageList([storage])
-
-    persistence.persist(image, storageList, additionalData)
-
-    classMenu = {
-        lsst.afw.image.ImageU: "ImageU",
-        lsst.afw.image.ImageI: "ImageI",
-        lsst.afw.image.ImageL: "ImageL",
-        lsst.afw.image.ImageF: "ImageF",
-        lsst.afw.image.ImageD: "ImageD",
-        lsst.afw.image.Mask: "Mask",
-        lsst.afw.image.MaskedImageF: "MaskedImageF",
-    }
-    return persistence.unsafeRetrieve(classMenu[ImageClass], storageList, lsst.daf.base.PropertySet())
+    image.writeFitsWithOptions(filename, additionalData)
+    return ImageClass.readFits(filename)
 
 
 class PersistenceTestCase(ImageCompressionTestCase):
@@ -822,7 +807,7 @@ class PersistenceTestCase(ImageCompressionTestCase):
 
         Parameters
         ----------
-        image : `lsst.afw.image.Image`
+        image : `lsst.afw.image.MaskedImage`
             Image to compress.
         filename : `str`
             Filename to which to write.

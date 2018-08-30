@@ -169,7 +169,7 @@ class RowOfKernelImagesForRegion;
  *
  * Also note that it uses lazy evaluation: images are computed when they are wanted.
  */
-class KernelImagesForRegion : public lsst::daf::base::Citizen, public lsst::daf::base::Persistable {
+class KernelImagesForRegion : public lsst::daf::base::Citizen {
 public:
     typedef std::shared_ptr<lsst::afw::math::Kernel const> KernelConstPtr;
     typedef lsst::afw::image::Image<lsst::afw::math::Kernel::Pixel> Image;

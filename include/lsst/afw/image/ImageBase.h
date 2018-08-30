@@ -40,7 +40,6 @@
 #include "lsst/afw/image/lsstGil.h"
 #include "lsst/afw/image/ImageUtils.h"
 #include "lsst/afw/math/Function.h"
-#include "lsst/daf/base.h"
 #include "lsst/daf/base/Citizen.h"
 #include "lsst/pex/exceptions.h"
 #include "ndarray.h"
@@ -101,7 +100,7 @@ enum ImageOrigin { PARENT, LOCAL };
 // specialised subclasses
 //
 template <typename PixelT>
-class ImageBase : public lsst::daf::base::Persistable, public lsst::daf::base::Citizen {
+class ImageBase : public lsst::daf::base::Citizen {
 private:
     typedef typename lsst::afw::image::detail::types_traits<PixelT>::view_t _view_t;
     typedef typename lsst::afw::image::detail::types_traits<PixelT>::const_view_t _const_view_t;
@@ -241,7 +240,7 @@ public:
     explicit ImageBase(Array const& array, bool deep = false,
                        lsst::geom::Point2I const& xy0 = lsst::geom::Point2I());
 
-    ~ImageBase() override = default;
+    virtual ~ImageBase() = default;
     /** Shallow assignment operator.
      *
      * @note that this has the effect of making the lhs share pixels with the rhs which may

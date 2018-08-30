@@ -37,7 +37,7 @@ namespace {
 
 template <typename ImagePixelT>  // only the image type varies; mask and variance are fixed
 using PyMaskedImage = py::class_<MaskedImage<ImagePixelT>, std::shared_ptr<MaskedImage<ImagePixelT>>,
-                                 daf::base::Persistable, daf::base::Citizen>;
+                                 daf::base::Citizen>;
 
 /**
 @internal Declare a constructor that takes a MaskedImage of FromPixelT and returns a MaskedImage cast to
