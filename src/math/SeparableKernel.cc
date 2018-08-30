@@ -27,6 +27,7 @@
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/Kernel.h"
+#include "lsst/afw/math/KernelPersistenceHelper.h"
 #include "lsst/afw/table/io/Persistable.cc"
 
 namespace pexExcept = lsst::pex::exceptions;
