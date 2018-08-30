@@ -813,7 +813,6 @@ class PersistenceTestCase(ImageCompressionTestCase):
         """
         additionalData = lsst.daf.base.PropertySet()
         additionalData.set("image", optionsToPropertySet(options))
-        additionalData.set("mask", optionsToPropertySet(options))
         return persistUnpersist(ImageClass, image, filename, additionalData)
 
     def readWriteMaskedImage(self, image, filename, imageOptions, maskOptions, varianceOptions):
