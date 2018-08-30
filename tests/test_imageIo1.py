@@ -23,10 +23,12 @@
 """
 Test cases to test image I/O
 """
+import itertools
 import os.path
 import unittest
 
 import lsst.utils
+import lsst.daf.base as dafBase
 import lsst.geom
 import lsst.afw.image as afwImage
 import lsst.afw.fits as afwFits
@@ -139,9 +141,6 @@ class ReadFitsTestCase(lsst.utils.tests.TestCase):
 
     def testWriteBool(self):
         """Test that we can read and write bools"""
-        import lsst.afw.image as afwImage
-        import lsst.daf.base as dafBase
-
         with lsst.utils.tests.getTempFilePath(".fits") as tmpFile:
             im = afwImage.ImageF(lsst.geom.ExtentI(10, 20))
             md = dafBase.PropertySet()
@@ -190,6 +189,48 @@ class ReadFitsTestCase(lsst.utils.tests.TestCase):
                                        lsst.geom.Box2I(lsst.geom.Point2I(40, 150),
                                                        lsst.geom.Extent2I(145, 200)),
                                        hdu=hdu)
+
+    @unittest.skipIf(dataDir is None, "afwdata not setup")
+    def testReadFitsWithOptions(self):
+        xy0Offset = lsst.geom.Extent2I(7, 5)
+        bbox = lsst.geom.Box2I(lsst.geom.Point2I(10, 11), lsst.geom.Extent2I(31, 22))
+
+        with lsst.utils.tests.getTempFilePath(".fits") as filepath:
+            # write a temporary version of the image with non-zero XY0
+            imagePath = os.path.join(dataDir, "med.fits")
+            maskedImage = afwImage.MaskedImageD(imagePath)
+            maskedImage.setXY0(lsst.geom.Point2I(xy0Offset))
+            maskedImage.writeFits(filepath)
+
+            for ImageClass, imageOrigin in itertools.product(
+                (afwImage.ImageF, afwImage.ImageD),
+                (None, "LOCAL", "PARENT"),
+            ):
+                with self.subTest(ImageClass=ImageClass, imageOrigin=imageOrigin):
+                    fullImage = ImageClass(filepath)
+                    options = dafBase.PropertySet()
+                    options.set("llcX", bbox.getMinX())
+                    options.set("llcY", bbox.getMinY())
+                    options.set("width", bbox.getWidth())
+                    options.set("height", bbox.getHeight())
+                    if imageOrigin is not None:
+                        options.set("imageOrigin", imageOrigin)
+                    image1 = ImageClass.readFitsWithOptions(filepath, options)
+                    readBBoxParent = lsst.geom.Box2I(bbox)
+                    if imageOrigin == "LOCAL":
+                        readBBoxParent.shift(xy0Offset)
+                    self.assertImagesEqual(image1, ImageClass(fullImage, readBBoxParent))
+
+                    for name in ("llcY", "width", "height"):
+                        badOptions = options.deepCopy()
+                        badOptions.remove(name)
+                        with self.assertRaises(pexExcept.NotFoundError):
+                            ImageClass.readFitsWithOptions(filepath, badOptions)
+
+                        badOptions = options.deepCopy()
+                        badOptions.set("imageOrigin", "INVALID")
+                        with self.assertRaises(RuntimeError):
+                            ImageClass.readFitsWithOptions(filepath, badOptions)
 
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
