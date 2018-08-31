@@ -1250,13 +1250,10 @@ void Fits::writeImage(image::ImageBase<T> const &image, ImageWriteOptions const 
         }
     }
 
-    if (scale.bitpix > 0) {
+    if (scale.bitpix > 0 && !std::numeric_limits<T>::is_integer) {
         fits_write_key_lng(fits, "BLANK", scale.blank, "Value for undefined pixels", &status);
-        fits_write_key_lng(fits, "ZBLANK", scale.blank, "Value for undefined pixels", &status);
-        if (!std::numeric_limits<T>::is_integer) {
-            fits_write_key_lng(fits, "ZDITHER0", options.scaling.seed, "Dithering seed", &status);
-            fits_write_key_str(fits, "ZQUANTIZ", "SUBTRACTIVE_DITHER_1", "Dithering algorithm", &status);
-        }
+        fits_write_key_lng(fits, "ZDITHER0", options.scaling.seed, "Dithering seed", &status);
+        fits_write_key_str(fits, "ZQUANTIZ", "SUBTRACTIVE_DITHER_1", "Dithering algorithm", &status);
         if (behavior & AUTO_CHECK) {
             LSST_FITS_CHECK_STATUS(*this, "Writing [Z]BLANK");
         }
