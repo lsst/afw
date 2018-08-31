@@ -292,7 +292,7 @@ struct Bzero<std::uint64_t> {
 template <typename T>
 struct Bzero<T, typename std::enable_if<std::numeric_limits<T>::is_integer &&
                                         !std::numeric_limits<T>::is_signed>::type> {
-    static double constexpr value = std::numeric_limits<T>::max() >> 1;
+    static double constexpr value = (std::numeric_limits<T>::max() >> 1) + 1;
 };
 
 #ifndef DOXYGEN  // suppress a bogus Doxygen complaint about an documented symbol
