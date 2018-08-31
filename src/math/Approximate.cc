@@ -67,7 +67,7 @@ class ApproximateChebyshev : public Approximate<PixelT> {
                                                                  ApproximateControl const& ctrl);
 
 public:
-    virtual ~ApproximateChebyshev();
+    ~ApproximateChebyshev() override;
 
 private:
     math::Chebyshev1Function2<double> _poly;
@@ -75,10 +75,10 @@ private:
     ApproximateChebyshev(std::vector<double> const& xVec, std::vector<double> const& yVec,
                          image::MaskedImage<PixelT> const& im, lsst::geom::Box2I const& bbox,
                          ApproximateControl const& ctrl);
-    virtual std::shared_ptr<image::Image<typename Approximate<PixelT>::OutPixelT>> doGetImage(
-            int orderX, int orderY) const;
-    virtual std::shared_ptr<image::MaskedImage<typename Approximate<PixelT>::OutPixelT>> doGetMaskedImage(
-            int orderX, int orderY) const;
+    std::shared_ptr<image::Image<typename Approximate<PixelT>::OutPixelT>> doGetImage(
+            int orderX, int orderY) const override;
+    std::shared_ptr<image::MaskedImage<typename Approximate<PixelT>::OutPixelT>> doGetMaskedImage(
+            int orderX, int orderY) const override;
 };
 
 namespace {

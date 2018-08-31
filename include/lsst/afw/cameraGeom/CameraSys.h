@@ -41,7 +41,7 @@ namespace cameraGeom {
  * This is Jim Bosch's clever idea for simplifying Detector.convert;
  * CameraSys is always complete and CameraSysPrefix is not.
  */
-class CameraSysPrefix {
+class CameraSysPrefix final {
 public:
     explicit CameraSysPrefix(std::string const &sysName  ///< coordinate system name
                              )
@@ -80,7 +80,7 @@ private:
 /**
  * Camera coordinate system; used as a key in in TransformMap
  */
-class CameraSys {
+class CameraSys final {
 public:
     /**
      * Construct a CameraSys from a sysName and a detectorName

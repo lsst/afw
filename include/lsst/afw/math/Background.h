@@ -484,20 +484,20 @@ public:
     BackgroundMI(BackgroundMI&&) = delete;
     BackgroundMI& operator=(BackgroundMI const&) = delete;
     BackgroundMI& operator=(BackgroundMI&&) = delete;
-    ~BackgroundMI() = default;
+    ~BackgroundMI() override = default;
 
     /**
      * Add a scalar to the Background (equivalent to adding a constant to the original image)
      *
      * @param delta Value to add
      */
-    virtual BackgroundMI& operator+=(float const delta);
+    BackgroundMI& operator+=(float const delta) override;
     /**
      * Subtract a scalar from the Background (equivalent to subtracting a constant from the original image)
      *
      * @param delta Value to subtract
      */
-    virtual BackgroundMI& operator-=(float const delta);
+    BackgroundMI& operator-=(float const delta) override;
 
     /**
      * Method to retrieve the background level at a pixel coord.
@@ -534,8 +534,9 @@ private:
                          int const iX, std::vector<int> const& ypix) const;
 
 #if defined(LSST_makeBackground_getImage)
-    BOOST_PP_SEQ_FOR_EACH(LSST_makeBackground_getImage, , LSST_makeBackground_getImage_types)
-    BOOST_PP_SEQ_FOR_EACH(LSST_makeBackground_getApproximate, , LSST_makeBackground_getApproximate_types)
+    BOOST_PP_SEQ_FOR_EACH(LSST_makeBackground_getImage, override, LSST_makeBackground_getImage_types)
+    BOOST_PP_SEQ_FOR_EACH(LSST_makeBackground_getApproximate, override,
+                          LSST_makeBackground_getApproximate_types)
 #if 0  // keep for use in Background instantiations
 #undef LSST_makeBackground_getImage_types
 #undef LSST_makeBackground_getApproximate_types

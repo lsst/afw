@@ -166,7 +166,7 @@ public:
 template <typename T>
 class SquaredExpCovariogram : public Covariogram<T> {
 public:
-    virtual ~SquaredExpCovariogram();
+    ~SquaredExpCovariogram() override;
 
     explicit SquaredExpCovariogram();
 
@@ -176,7 +176,7 @@ public:
      */
     void setEllSquared(double ellSquared);
 
-    virtual T operator()(ndarray::Array<const T, 1, 1> const &, ndarray::Array<const T, 1, 1> const &) const;
+    T operator()(ndarray::Array<const T, 1, 1> const &, ndarray::Array<const T, 1, 1> const &) const override;
 
 private:
     double _ellSquared;
@@ -195,7 +195,7 @@ private:
 template <typename T>
 class NeuralNetCovariogram : public Covariogram<T> {
 public:
-    virtual ~NeuralNetCovariogram();
+    ~NeuralNetCovariogram() override;
 
     explicit NeuralNetCovariogram();
 
@@ -209,7 +209,7 @@ public:
      */
     void setSigma1(double sigma1);
 
-    virtual T operator()(ndarray::Array<const T, 1, 1> const &, ndarray::Array<const T, 1, 1> const &) const;
+    T operator()(ndarray::Array<const T, 1, 1> const &, ndarray::Array<const T, 1, 1> const &) const override;
 
 private:
     double _sigma0, _sigma1;

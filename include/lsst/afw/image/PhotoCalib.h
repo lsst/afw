@@ -86,7 +86,7 @@ public:
     PhotoCalib &operator=(PhotoCalib const &) = delete;
     PhotoCalib &operator=(PhotoCalib &&) = delete;
 
-    virtual ~PhotoCalib() = default;
+    ~PhotoCalib() override = default;
 
     /**
      * Create a empty, zeroed calibration.
@@ -401,9 +401,9 @@ public:
     friend std::ostream &operator<<(std::ostream &os, PhotoCalib const &photoCalib);
 
 protected:
-    virtual std::string getPersistenceName() const;
+    std::string getPersistenceName() const override;
 
-    virtual void write(OutputArchiveHandle &handle) const;
+    void write(OutputArchiveHandle &handle) const override;
 
 private:
     std::shared_ptr<afw::math::BoundedField> _calibration;

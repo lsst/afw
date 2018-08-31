@@ -87,7 +87,7 @@ public:
     AmpInfoRecord(AmpInfoRecord &&) = delete;
     AmpInfoRecord &operator=(AmpInfoRecord const &) = delete;
     AmpInfoRecord &operator=(AmpInfoRecord &&) = delete;
-    ~AmpInfoRecord();
+    ~AmpInfoRecord() override;
 
     std::shared_ptr<AmpInfoTable const> getTable() const {
         return std::static_pointer_cast<AmpInfoTable const>(BaseRecord::getTable());
@@ -184,7 +184,7 @@ public:
 
     AmpInfoTable &operator=(AmpInfoTable const &) = delete;
     AmpInfoTable &operator=(AmpInfoTable &&) = delete;
-    ~AmpInfoTable();
+    ~AmpInfoTable() override;
 
     /**
      *  Construct a new table.

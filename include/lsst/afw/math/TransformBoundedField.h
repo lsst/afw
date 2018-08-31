@@ -50,7 +50,7 @@ public:
      */
     TransformBoundedField(lsst::geom::Box2I const &bbox, Transform const &transform);
 
-    ~TransformBoundedField() = default;
+    ~TransformBoundedField() override = default;
 
     TransformBoundedField(TransformBoundedField const &) = default;
     TransformBoundedField(TransformBoundedField &&) = default;

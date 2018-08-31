@@ -28,7 +28,7 @@ namespace detail {
  *  related classes.  This is less secure, but it's obviously not part of the public interface,
  *  and that's good enough.
  */
-class Access {
+class Access final {
 public:
     /// @internal Return a sub-field key corresponding to the nth element.
     template <typename T>

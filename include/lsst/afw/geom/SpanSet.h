@@ -162,7 +162,7 @@ public:
     // Explicitly delete copy and move constructors
     SpanSet(SpanSet const &other) = delete;
     SpanSet(SpanSet &&other) = delete;
-    ~SpanSet() = default;
+    ~SpanSet() override = default;
 
     SpanSet &operator=(SpanSet const &) = default;
     // Delegate to copy-assignment for backwards compatibility

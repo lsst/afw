@@ -206,7 +206,7 @@ int nfeval = 0;
 }  // namespace details
 
 template <class T>
-struct IntRegion {
+struct IntRegion final {
 public:
     IntRegion(T const a, T const b, std::ostream *dbgout = 0)
             : _a(a), _b(b), _error(0.0), _area(0), _dbgout(dbgout) {}

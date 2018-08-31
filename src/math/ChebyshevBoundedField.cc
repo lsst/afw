@@ -328,8 +328,8 @@ public:
     explicit ChebyshevBoundedFieldFactory(std::string const& name)
             : afw::table::io::PersistableFactory(name) {}
 
-    virtual std::shared_ptr<table::io::Persistable> read(InputArchive const& archive,
-                                                         CatalogVector const& catalogs) const {
+    std::shared_ptr<table::io::Persistable> read(InputArchive const& archive,
+                                                 CatalogVector const& catalogs) const override {
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
         table::BaseRecord const& record = catalogs.front().front();

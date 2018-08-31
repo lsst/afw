@@ -435,7 +435,7 @@ private:
 
 /// Class for representing binary operations
 template <typename ExprT1, typename ExprT2, typename ImageBinOp, typename MaskBinOp, typename VarianceBinOp>
-class BinaryExpr {
+class BinaryExpr final {
 public:
     typedef typename exprTraits<ExprT1>::ImagePixelT ImagePixelT;
     typedef typename exprTraits<ExprT1>::MaskPixelT MaskPixelT;
@@ -474,7 +474,7 @@ private:
  * @todo Could use a traits class to handle all scalar types
  */
 template <typename ExprT1, typename ImageBinOp, typename MaskBinOp, typename VarianceBinOp>
-class BinaryExpr<ExprT1, double, ImageBinOp, MaskBinOp, VarianceBinOp> {
+class BinaryExpr<ExprT1, double, ImageBinOp, MaskBinOp, VarianceBinOp> final {
 public:
     typedef typename exprTraits<ExprT1>::ImagePixelT ImagePixelT;
     typedef typename exprTraits<ExprT1>::MaskPixelT MaskPixelT;

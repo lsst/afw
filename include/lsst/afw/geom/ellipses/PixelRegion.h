@@ -35,7 +35,7 @@ namespace afw {
 namespace geom {
 namespace ellipses {
 
-class PixelRegion {
+class PixelRegion final {
 public:
     class Iterator;
 

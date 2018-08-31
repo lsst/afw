@@ -61,7 +61,7 @@ enum DetectorType {
  * @note code definitions use lsst::afw::table:: instead of table:: because the latter confused swig
  * when I tried it. This is a known issue: ticket #2461.
  */
-class Detector {
+class Detector final {
 public:
     typedef ndarray::Array<float const, 2> CrosstalkMatrix;
 

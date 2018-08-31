@@ -53,7 +53,7 @@ public:
      * @param img The image to represent as a slice.
      */
     explicit ImageSlice(Image<PixelT> const &img);
-    ~ImageSlice() {}
+    ~ImageSlice() override {}
     ImageSliceType getImageSliceType() const { return _sliceType; }
 
 private:

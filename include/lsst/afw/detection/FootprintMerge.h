@@ -53,7 +53,7 @@ class FootprintMerge;
  *  are operating on smallish number of objects, such as at the tract level.
  *
  */
-class FootprintMergeList {
+class FootprintMergeList final {
 public:
     /**
      *  Initialize the merge with a custom initial peak schema

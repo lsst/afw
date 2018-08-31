@@ -202,9 +202,9 @@ public:
     BaseVectorEndpoint &operator=(BaseVectorEndpoint const &) = delete;
     BaseVectorEndpoint &operator=(BaseVectorEndpoint &&) = delete;
 
-    virtual ~BaseVectorEndpoint() = default;
+    ~BaseVectorEndpoint() override = default;
 
-    virtual int getNPoints(Array const &arr) const override;
+    int getNPoints(Array const &arr) const override;
 
 protected:
     /**
@@ -239,17 +239,17 @@ public:
      */
     explicit GenericEndpoint(int nAxes) : BaseEndpoint(nAxes){};
 
-    virtual ~GenericEndpoint() = default;
+    ~GenericEndpoint() override = default;
 
-    virtual int getNPoints(Array const &arr) const override { return arr.getSize<1>(); }
+    int getNPoints(Array const &arr) const override { return arr.getSize<1>(); }
 
-    virtual std::vector<double> dataFromPoint(Point const &point) const override;
+    std::vector<double> dataFromPoint(Point const &point) const override;
 
-    virtual ndarray::Array<double, 2, 2> dataFromArray(Array const &arr) const override;
+    ndarray::Array<double, 2, 2> dataFromArray(Array const &arr) const override;
 
-    virtual Point pointFromData(std::vector<double> const &data) const override;
+    Point pointFromData(std::vector<double> const &data) const override;
 
-    virtual Array arrayFromData(ndarray::Array<double, 2, 2> const &data) const override;
+    Array arrayFromData(ndarray::Array<double, 2, 2> const &data) const override;
 
     /// Get the class name prefix, e.g. "Point2" for "Point2Endpoint"
     static std::string getClassPrefix() { return "Generic"; };
@@ -282,15 +282,15 @@ public:
      */
     explicit Point2Endpoint(int nAxes);
 
-    virtual ~Point2Endpoint() = default;
+    ~Point2Endpoint() override = default;
 
-    virtual std::vector<double> dataFromPoint(Point const &point) const override;
+    std::vector<double> dataFromPoint(Point const &point) const override;
 
-    virtual ndarray::Array<double, 2, 2> dataFromArray(Array const &arr) const override;
+    ndarray::Array<double, 2, 2> dataFromArray(Array const &arr) const override;
 
-    virtual Point pointFromData(std::vector<double> const &data) const override;
+    Point pointFromData(std::vector<double> const &data) const override;
 
-    virtual Array arrayFromData(ndarray::Array<double, 2, 2> const &data) const override;
+    Array arrayFromData(ndarray::Array<double, 2, 2> const &data) const override;
 
     /**
      * Check that framePtr points to a Frame, not a subclass
@@ -301,7 +301,7 @@ public:
      * in any case. A CmpFrame could be cartesian, but we play it safe and reject these
      * (however, a cartesian CmpFrame ought to simplify to a Frame).
      */
-    virtual void normalizeFrame(std::shared_ptr<ast::Frame> framePtr) const override;
+    void normalizeFrame(std::shared_ptr<ast::Frame> framePtr) const override;
 
     /// Get the class name prefix, e.g. "Point2" for "Point2Endpoint"
     static std::string getClassPrefix() { return "Point2"; };
@@ -336,21 +336,21 @@ public:
      */
     explicit SpherePointEndpoint(int nAxes);
 
-    virtual ~SpherePointEndpoint() = default;
+    ~SpherePointEndpoint() override = default;
 
-    virtual std::vector<double> dataFromPoint(Point const &point) const override;
+    std::vector<double> dataFromPoint(Point const &point) const override;
 
-    virtual ndarray::Array<double, 2, 2> dataFromArray(Array const &arr) const override;
+    ndarray::Array<double, 2, 2> dataFromArray(Array const &arr) const override;
 
-    virtual Point pointFromData(std::vector<double> const &data) const override;
+    Point pointFromData(std::vector<double> const &data) const override;
 
-    virtual Array arrayFromData(ndarray::Array<double, 2, 2> const &data) const override;
+    Array arrayFromData(ndarray::Array<double, 2, 2> const &data) const override;
 
     /// Create a Frame that can be used with this end point in a Transform
-    virtual std::shared_ptr<ast::Frame> makeFrame() const override;
+    std::shared_ptr<ast::Frame> makeFrame() const override;
 
     /// Check that framePtr points to a SkyFrame and set longitude axis to 0, latitude to 1
-    virtual void normalizeFrame(std::shared_ptr<ast::Frame> framePtr) const override;
+    void normalizeFrame(std::shared_ptr<ast::Frame> framePtr) const override;
 
     /// Get the class name prefix, e.g. "Point2" for "Point2Endpoint"
     static std::string getClassPrefix() { return "SpherePoint"; };

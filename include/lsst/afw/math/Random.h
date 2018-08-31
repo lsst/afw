@@ -59,7 +59,7 @@ namespace math {
  * @see <a href="http://www.gnu.org/software/gsl/manual/html_node/Random-Number-Distributions.html">Random
  * number distributions in GSL</a>
  */
-class Random {
+class Random final {
 public:
     /** Identifiers for the list of supported algorithms. */
     enum Algorithm {

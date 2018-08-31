@@ -110,8 +110,8 @@ struct Chebyshev1Function2PersistenceHelper : public PolynomialFunction2Persiste
 template <typename ReturnT>
 class GaussianFunction2Factory : public table::io::PersistableFactory {
 public:
-    virtual std::shared_ptr<table::io::Persistable> read(InputArchive const& archive,
-                                                         CatalogVector const& catalogs) const {
+    std::shared_ptr<table::io::Persistable> read(InputArchive const& archive,
+                                                 CatalogVector const& catalogs) const override {
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
         GaussianFunction2PersistenceHelper const& keys = GaussianFunction2PersistenceHelper::get();
@@ -127,8 +127,8 @@ public:
 template <typename ReturnT>
 class DoubleGaussianFunction2Factory : public table::io::PersistableFactory {
 public:
-    virtual std::shared_ptr<table::io::Persistable> read(InputArchive const& archive,
-                                                         CatalogVector const& catalogs) const {
+    std::shared_ptr<table::io::Persistable> read(InputArchive const& archive,
+                                                 CatalogVector const& catalogs) const override {
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
         DoubleGaussianFunction2PersistenceHelper const& keys =
@@ -145,8 +145,8 @@ public:
 template <typename ReturnT>
 class PolynomialFunction2Factory : public table::io::PersistableFactory {
 public:
-    virtual std::shared_ptr<table::io::Persistable> read(InputArchive const& archive,
-                                                         CatalogVector const& catalogs) const {
+    std::shared_ptr<table::io::Persistable> read(InputArchive const& archive,
+                                                 CatalogVector const& catalogs) const override {
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
         PolynomialFunction2PersistenceHelper const keys(catalogs.front().getSchema());
@@ -160,8 +160,8 @@ public:
 template <typename ReturnT>
 class Chebyshev1Function2Factory : public table::io::PersistableFactory {
 public:
-    virtual std::shared_ptr<table::io::Persistable> read(InputArchive const& archive,
-                                                         CatalogVector const& catalogs) const {
+    std::shared_ptr<table::io::Persistable> read(InputArchive const& archive,
+                                                 CatalogVector const& catalogs) const override {
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
         Chebyshev1Function2PersistenceHelper keys(catalogs.front().getSchema());

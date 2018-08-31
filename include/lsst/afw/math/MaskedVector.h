@@ -48,7 +48,7 @@ public:
     MaskedVector(MaskedVector &&) = default;
     MaskedVector &operator=(MaskedVector const &) = default;
     MaskedVector &operator=(MaskedVector &&) = default;
-    ~MaskedVector() = default;
+    ~MaskedVector() override = default;
 
     // Getters
     /// Return a (Ptr to) the MaskedImage's %image

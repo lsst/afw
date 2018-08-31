@@ -87,7 +87,7 @@ namespace detail {
  *      6   7   8
  *      9  10  11
  */
-struct TrapezoidalPacker {
+struct TrapezoidalPacker final {
     explicit TrapezoidalPacker(ChebyshevBoundedFieldControl const& ctrl);
 
     void pack(ndarray::Array<double, 1, 1> const& out, ndarray::Array<double const, 1, 1> const& tx,

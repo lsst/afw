@@ -91,7 +91,7 @@ namespace lsst { namespace afw { namespace geom {
  *  exact mapping from pixels to Intermediate World Coordinates with a SIP
  *  distortion.
  */
-class SipApproximation {
+class SipApproximation final {
 public:
 
     /**

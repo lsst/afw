@@ -39,7 +39,7 @@ class BaseColumnView;
  *
  *  A BitsColumn can only be constructed by calling BaseColumnView::getBits().
  */
-class BitsColumn {
+class BitsColumn final {
 public:
     typedef std::int64_t IntT;
 

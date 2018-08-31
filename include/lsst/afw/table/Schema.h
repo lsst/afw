@@ -47,7 +47,7 @@ class BaseRecord;
  *  When creating a Python interface, functions that return Schema by const reference should be
  *  converted to return by value (%returnCopy) to ensure proper memory management and encapsulation.
  */
-class Schema {
+class Schema final {
     typedef detail::SchemaImpl Impl;
 
 public:
@@ -354,7 +354,7 @@ private:
  *      assert(schema["a_i"] == "a_i");
  *      assert(schema.find("a_p_x") == a_p.getX());
  */
-class SubSchema {
+class SubSchema final {
     typedef detail::SchemaImpl Impl;
 
 public:

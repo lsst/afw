@@ -23,7 +23,7 @@ namespace image {
  * @note This is very much just a place holder until we work out what we need.  A full SED may be required,
  * in which case a constructor from an SED name might be appropriate, or a couple of colours, or ...
  */
-class Color {
+class Color final {
 public:
     explicit Color(double g_r = std::numeric_limits<double>::quiet_NaN()) : _g_r(g_r) {}
 

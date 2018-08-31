@@ -46,7 +46,7 @@ namespace ellipses {
  *  in-place and new-object transformations, derivatives of the transformations,
  *  and implicit conversion to a shared_ptr to a new transformed core.
  */
-class BaseCore::Transformer {
+class BaseCore::Transformer final {
 public:
     /// Matrix type for derivative with respect to input ellipse parameters.
     typedef Eigen::Matrix3d DerivativeMatrix;
@@ -83,7 +83,7 @@ public:
  *  in-place and new-object transformations, derivatives of the transformations, and implicit
  *  conversion to an auto_ptr to a new transformed ellipse.
  */
-class Ellipse::Transformer {
+class Ellipse::Transformer final {
 public:
     /// Matrix type for derivative with respect to input ellipse parameters.
     typedef Eigen::Matrix<double, 5, 5> DerivativeMatrix;

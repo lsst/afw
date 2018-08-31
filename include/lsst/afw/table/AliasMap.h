@@ -33,7 +33,7 @@ class BaseTable;
  *  by a Table will hold a pointer to that Table, and call BaseTable::handleAliasChanges() when its
  *  aliases are set or removed.
  */
-class AliasMap {
+class AliasMap final {
     typedef std::map<std::string, std::string> Internal;
 
 public:

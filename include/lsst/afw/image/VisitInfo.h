@@ -107,7 +107,7 @@ public:
 
     explicit VisitInfo(daf::base::PropertySet const &metadata);
 
-    virtual ~VisitInfo() = default;
+    ~VisitInfo() override = default;
 
     VisitInfo(VisitInfo const &) = default;
     VisitInfo(VisitInfo &&) = default;
@@ -184,9 +184,9 @@ public:
     lsst::geom::Angle getBoresightParAngle() const;
 
 protected:
-    virtual std::string getPersistenceName() const;
+    std::string getPersistenceName() const override;
 
-    virtual void write(OutputArchiveHandle &handle) const;
+    void write(OutputArchiveHandle &handle) const override;
 
 private:
     table::RecordId _exposureId;

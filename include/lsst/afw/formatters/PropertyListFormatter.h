@@ -38,23 +38,23 @@ namespace formatters {
  */
 class PropertyListFormatter : public daf::persistence::Formatter {
 public:
-    virtual ~PropertyListFormatter() = default;
+    ~PropertyListFormatter() override = default;
 
     PropertyListFormatter(PropertyListFormatter const&);
     PropertyListFormatter(PropertyListFormatter&&);
     PropertyListFormatter& operator=(PropertyListFormatter const&);
     PropertyListFormatter& operator=(PropertyListFormatter&&);
 
-    virtual void write(daf::base::Persistable const* persistable,
-                       std::shared_ptr<daf::persistence::FormatterStorage> storage,
-                       std::shared_ptr<daf::base::PropertySet> additionalData);
+    void write(daf::base::Persistable const* persistable,
+               std::shared_ptr<daf::persistence::FormatterStorage> storage,
+               std::shared_ptr<daf::base::PropertySet> additionalData) override;
 
-    virtual daf::base::Persistable* read(std::shared_ptr<daf::persistence::FormatterStorage> storage,
-                                         std::shared_ptr<daf::base::PropertySet> additionalData);
+    daf::base::Persistable* read(std::shared_ptr<daf::persistence::FormatterStorage> storage,
+                                 std::shared_ptr<daf::base::PropertySet> additionalData) override;
 
-    virtual void update(daf::base::Persistable* persistable,
-                        std::shared_ptr<daf::persistence::FormatterStorage> storage,
-                        std::shared_ptr<daf::base::PropertySet> additionalData);
+    void update(daf::base::Persistable* persistable,
+                std::shared_ptr<daf::persistence::FormatterStorage> storage,
+                std::shared_ptr<daf::base::PropertySet> additionalData) override;
 
     static std::shared_ptr<daf::persistence::Formatter> createInstance(
             std::shared_ptr<pex::policy::Policy> policy);

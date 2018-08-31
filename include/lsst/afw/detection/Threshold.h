@@ -40,7 +40,7 @@ namespace detection {
  * Note that the constructor is not declared explicit, so you may pass a bare
  * threshold, and it'll be interpreted as a VALUE.
  */
-class Threshold {
+class Threshold final {
 public:
     /// Types of threshold:
     enum ThresholdType {

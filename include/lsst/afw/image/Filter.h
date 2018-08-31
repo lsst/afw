@@ -53,7 +53,7 @@ namespace image {
 /**
  * Describe the properties of a Filter (e.g. effective wavelength)
  */
-class FilterProperty {
+class FilterProperty final {
 public:
     explicit FilterProperty(std::string const& name, double lambdaEff, double lambdaMin = NAN,
                             double lambdaMax = NAN, bool force = false)
@@ -150,7 +150,7 @@ private:
 /**
  * Holds an integer identifier for an LSST filter.
  */
-class Filter {
+class Filter final {
 public:
     static int const AUTO;
     static int const UNKNOWN;

@@ -232,7 +232,7 @@ std::pair<afw::table::Schema&, table::Key<int>&> spanSetPersistenceHelper() {
 
 class FootprintFactory : public table::io::PersistableFactory {
 public:
-    virtual std::shared_ptr<afw::table::io::Persistable> read(
+    std::shared_ptr<afw::table::io::Persistable> read(
             afw::table::io::InputArchive const& archive,
             afw::table::io::CatalogVector const& catalogs) const override {
         // Verify there are two catalogs

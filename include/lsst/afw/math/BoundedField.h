@@ -194,7 +194,7 @@ public:
     /// @copydoc operator==
     bool operator!=(BoundedField const& rhs) const { return !(*this == rhs); };
 
-    virtual ~BoundedField() = default;
+    ~BoundedField() override = default;
     BoundedField(BoundedField const&) = default;
     BoundedField(BoundedField&&) = default;
     BoundedField& operator=(BoundedField const&) = delete;

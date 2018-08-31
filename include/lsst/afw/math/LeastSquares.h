@@ -64,7 +64,7 @@ namespace math {
  *  to construct the normal equations in single precision, however, even when the data are
  *  single precision.
  */
-class LeastSquares {
+class LeastSquares final {
 public:
     class Impl;  ///< Private implementation; forward-declared publicly so we can inherit from it in .cc
 

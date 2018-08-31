@@ -23,7 +23,7 @@ public:
     explicit AmpInfoFitsWriter(Fits *fits, int flags) : io::FitsWriter(fits, flags) {}
 
 protected:
-    virtual void _writeTable(std::shared_ptr<BaseTable const> const &table, std::size_t nRows);
+    void _writeTable(std::shared_ptr<BaseTable const> const &table, std::size_t nRows) override;
 };
 
 void AmpInfoFitsWriter::_writeTable(std::shared_ptr<BaseTable const> const &t, std::size_t nRows) {
@@ -51,9 +51,9 @@ class AmpInfoFitsReader : public io::FitsReader {
 public:
     AmpInfoFitsReader() : io::FitsReader("AMPINFO") {}
 
-    virtual std::shared_ptr<BaseTable> makeTable(io::FitsSchemaInputMapper &mapper,
-                                                 std::shared_ptr<daf::base::PropertyList> metadata,
-                                                 int ioFlags, bool stripMetadata) const {
+    std::shared_ptr<BaseTable> makeTable(io::FitsSchemaInputMapper &mapper,
+                                         std::shared_ptr<daf::base::PropertyList> metadata, int ioFlags,
+                                         bool stripMetadata) const override {
         std::shared_ptr<AmpInfoTable> table = AmpInfoTable::make(mapper.finalize());
         table->setMetadata(metadata);
         return table;

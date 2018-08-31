@@ -331,7 +331,7 @@ private:
  *
  * Intended for iterating over subregions of a KernelImagesForRegion using computeNextRow.
  */
-class RowOfKernelImagesForRegion {
+class RowOfKernelImagesForRegion final {
 public:
     typedef std::vector<std::shared_ptr<KernelImagesForRegion>> RegionList;
     typedef RegionList::iterator Iterator;
@@ -415,7 +415,7 @@ void convolveWithInterpolation(OutImageT& outImage, InImageT const& inImage,
 /**
  * kernel images used by convolveRegionWithInterpolation
  */
-struct ConvolveWithInterpolationWorkingImages {
+struct ConvolveWithInterpolationWorkingImages final {
 public:
     typedef lsst::afw::image::Image<lsst::afw::math::Kernel::Pixel> Image;
     ConvolveWithInterpolationWorkingImages(lsst::geom::Extent2I const& dimensions)

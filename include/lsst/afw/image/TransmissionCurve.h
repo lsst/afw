@@ -142,7 +142,7 @@ public:
     // TransmissionCurve is not move-assignable.
     TransmissionCurve &operator=(TransmissionCurve &&) = delete;
 
-    virtual ~TransmissionCurve() = default;
+    ~TransmissionCurve() override = default;
 
     /**
      *  Return the wavelength interval on which this TransmissionCurve varies.

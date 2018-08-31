@@ -61,17 +61,17 @@ public:
     std::shared_ptr<Axes> clone() const { return std::static_pointer_cast<Axes>(_clone()); }
 
     /// Return a string that identifies this parametrization.
-    virtual std::string getName() const;
+    std::string getName() const override;
 
     /**
      *  @brief Put the parameters into a "standard form", if possible, and throw InvalidParameterError
      *         if they cannot be normalized.
      */
-    virtual void normalize();
+    void normalize() override;
 
-    virtual void readParameters(double const* iter);
+    void readParameters(double const* iter) override;
 
-    virtual void writeParameters(double* iter) const;
+    void writeParameters(double* iter) const override;
 
     /// Standard assignment.
     Axes& operator=(Axes const& other) {
@@ -102,7 +102,7 @@ public:
     Axes(Axes const& other) : _vector(other._vector) {}
     // Delegate to copy-constructor for backwards compatibility
     Axes(Axes&& other) : Axes(other) {}
-    ~Axes() = default;
+    ~Axes() override = default;
 
     /// Converting copy constructor.
     Axes(BaseCore const& other) { *this = other; }
@@ -114,19 +114,19 @@ public:
     Axes(BaseCore::Convolution const& convolution) { convolution.apply(*this); }
 
 protected:
-    virtual std::shared_ptr<BaseCore> _clone() const { return std::make_shared<Axes>(*this); }
+    std::shared_ptr<BaseCore> _clone() const override { return std::make_shared<Axes>(*this); }
 
-    virtual void _assignToQuadrupole(double& ixx, double& iyy, double& ixy) const;
-    virtual void _assignFromQuadrupole(double ixx, double iyy, double ixy);
+    void _assignToQuadrupole(double& ixx, double& iyy, double& ixy) const override;
+    void _assignFromQuadrupole(double ixx, double iyy, double ixy) override;
 
-    virtual void _assignToAxes(double& a, double& b, double& theta) const;
-    virtual void _assignFromAxes(double a, double b, double theta);
+    void _assignToAxes(double& a, double& b, double& theta) const override;
+    void _assignFromAxes(double a, double b, double theta) override;
 
-    virtual Jacobian _dAssignToQuadrupole(double& ixx, double& iyy, double& ixy) const;
-    virtual Jacobian _dAssignFromQuadrupole(double ixx, double iyy, double ixy);
+    Jacobian _dAssignToQuadrupole(double& ixx, double& iyy, double& ixy) const override;
+    Jacobian _dAssignFromQuadrupole(double ixx, double iyy, double ixy) override;
 
-    virtual Jacobian _dAssignToAxes(double& a, double& b, double& theta) const;
-    virtual Jacobian _dAssignFromAxes(double a, double b, double theta);
+    Jacobian _dAssignToAxes(double& a, double& b, double& theta) const override;
+    Jacobian _dAssignFromAxes(double a, double b, double theta) override;
 
 private:
     static Registrar<Axes> registrar;

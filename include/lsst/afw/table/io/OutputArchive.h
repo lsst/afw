@@ -31,7 +31,7 @@ class OutputArchiveHandle;
  *
  *  See getIndexCatalog() for a more detailed description of the index.
  */
-class OutputArchive {
+class OutputArchive final {
 public:
     friend class OutputArchiveHandle;
 
@@ -114,7 +114,7 @@ private:
  *  OutputArchiveHandle provides an interface to add additional catalogs and save nested
  *  Persistables to the same archive.
  */
-class OutputArchiveHandle {
+class OutputArchiveHandle final {
 public:
     /**
      *  Return a new, empty catalog with the given schema.

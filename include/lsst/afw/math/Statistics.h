@@ -212,7 +212,7 @@ private:
  *       clips at mean +/- numSigmaClip*stdev.
  *
  */
-class Statistics {
+class Statistics final {
 public:
     /// The type used to report (value, error) for desired statistics
     typedef std::pair<double, double> Value;
@@ -433,7 +433,7 @@ Statistics makeStatistics(
  *        be processed by Statistics as though it were an Image.
  */
 template <typename ValueT>
-class ImageImposter {
+class ImageImposter final {
 public:
     // types we'll use in Statistics
     typedef typename std::vector<ValueT>::const_iterator x_iterator;

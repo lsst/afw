@@ -57,7 +57,7 @@ public:
     ApCorrMap(ApCorrMap&&) = default;
     ApCorrMap& operator=(ApCorrMap const&) = default;
     ApCorrMap& operator=(ApCorrMap&&) = default;
-    virtual ~ApCorrMap() = default;
+    ~ApCorrMap() override = default;
 
     Iterator begin() const { return _internal.begin(); }
     Iterator end() const { return _internal.end(); }
@@ -74,18 +74,18 @@ public:
     void set(std::string const& name, std::shared_ptr<math::BoundedField> field);
 
     /// Whether the map is persistable (true IFF all contained BoundedFields are persistable).
-    virtual bool isPersistable() const noexcept override;
+    bool isPersistable() const noexcept override;
 
     /// Scale all fields by a constant
     ApCorrMap& operator*=(double const scale);
     ApCorrMap& operator/=(double const scale) { return *this *= 1.0 / scale; }
 
 private:
-    virtual std::string getPersistenceName() const;
+    std::string getPersistenceName() const override;
 
-    virtual std::string getPythonModule() const;
+    std::string getPythonModule() const override;
 
-    virtual void write(OutputArchiveHandle& handle) const;
+    void write(OutputArchiveHandle& handle) const override;
 
     Internal _internal;
 };

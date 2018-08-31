@@ -35,7 +35,7 @@ namespace coord {
  *
  * Weather is immutable.
  */
-class Weather {
+class Weather final {
 public:
     /**
      * Construct a Weather

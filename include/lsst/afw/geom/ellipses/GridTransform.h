@@ -45,7 +45,7 @@ namespace ellipses {
  *  @brief A temporary-only expression object representing an lsst::geom::LinearTransform that
  *         maps the ellipse core to a unit circle.
  */
-class BaseCore::GridTransform {
+class BaseCore::GridTransform final {
 public:
     /// Matrix type for derivative with respect to ellipse parameters.
     typedef Eigen::Matrix<double, 4, 3> DerivativeMatrix;
@@ -84,7 +84,7 @@ private:
  *  @brief A temporary-only expression object representing an lsst::geom::AffineTransform that
  *         maps the Ellipse to a unit circle at the origin.
  */
-class Ellipse::GridTransform {
+class Ellipse::GridTransform final {
 public:
     /// Matrix type for derivative with respect to input ellipse parameters.
     typedef Eigen::Matrix<double, 6, 5> DerivativeMatrix;

@@ -42,7 +42,7 @@ namespace math {
 /**
  * Results from minimizing a function
  */
-struct FitResults {
+struct FitResults final {
 public:
     bool isValid;                       ///< true if the fit converged; false otherwise
     double chiSq;                       ///< chi squared; may be nan or infinite, but only if isValid false

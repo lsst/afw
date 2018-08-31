@@ -79,7 +79,7 @@ public:
     Transform(Transform &&) = default;
     Transform &operator=(Transform const &) = delete;
     Transform &operator=(Transform &&) = delete;
-    ~Transform() = default;
+    ~Transform() override = default;
 
     /**
      * Construct a Transform from a deep copy of an ast::Mapping

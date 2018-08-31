@@ -37,7 +37,7 @@ namespace detail {
  * A functor that computes one warped pixel
  */
 template <typename DestImageT, typename SrcImageT>
-class WarpAtOnePoint {
+class WarpAtOnePoint final {
 public:
     WarpAtOnePoint(SrcImageT const &srcImage, WarpingControl const &control,
                    typename DestImageT::SinglePixel padValue)

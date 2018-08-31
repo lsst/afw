@@ -38,7 +38,7 @@ namespace coord {
 /**
  * Hold the location of an observatory
  */
-class Observatory {
+class Observatory final {
 public:
     /**
      * Construct an Observatory with longitude and latitude specified as lsst::geom::Angle
