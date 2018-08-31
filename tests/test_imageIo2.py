@@ -22,6 +22,8 @@
 
 import unittest
 
+import numpy as np
+import astropy.io.fits
 import lsst.utils.tests
 import lsst.afw.image as afwImage
 
@@ -59,8 +61,22 @@ class ImageIoTestCase(lsst.utils.tests.TestCase):
             with lsst.utils.tests.getTempFilePath("_%s.fits" % (Image.__name__,)) as filename:
                 image.writeFits(filename)
                 readImage = Image(filename)
+                with astropy.io.fits.open(filename) as astropyFits:
+                    astropyData = astropyFits[0].data
 
             self.checkImages(readImage, image)
+
+            dt1 = astropyData.dtype
+            dt2 = image.array.dtype
+            # dtypes won't be equal, because astropy doesn't byteswap,
+            # so we just compare kind (uint vs. int vs. float) and
+            # size.
+            if Image is not afwImage.ImageL:
+                # reading int64 into uint64 via nonzero BZERO is a
+                # CFITSIO special that astropy doesn't support.
+                self.assertEqual(dt1.kind, dt2.kind)
+            self.assertEqual(dt1.itemsize, dt2.itemsize)
+            self.assertTrue(np.all(astropyData == image.array))
 
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
