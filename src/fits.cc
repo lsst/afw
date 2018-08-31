@@ -1538,7 +1538,8 @@ std::shared_ptr<daf::base::PropertyList> readMetadata(fits::Fits &fitsfile, bool
     auto metadata = std::make_shared<lsst::daf::base::PropertyList>();
     fitsfile.readMetadata(*metadata, strip);
     // if INHERIT=T, we want to also include header entries from the primary HDU
-    if (fitsfile.getHdu() != 0 && metadata->exists("INHERIT")) {
+    int oldHdu = fitsfile.getHdu();
+    if (oldHdu != 0 && metadata->exists("INHERIT")) {
         bool inherit = false;
         if (metadata->typeOf("INHERIT") == typeid(std::string)) {
             inherit = (metadata->get<std::string>("INHERIT") == "T");
@@ -1547,7 +1548,7 @@ std::shared_ptr<daf::base::PropertyList> readMetadata(fits::Fits &fitsfile, bool
         }
         if (strip) metadata->remove("INHERIT");
         if (inherit) {
-            fitsfile.setHdu(0);
+            HduMoveGuard guard(fitsfile, 0);
             // Combine the metadata from the primary HDU with the metadata from the specified HDU,
             // with non-comment values from the specified HDU superseding those in the primary HDU
             // and comments from the specified HDU appended to comments from the primary HDU
