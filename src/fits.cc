@@ -1563,36 +1563,32 @@ std::shared_ptr<daf::base::PropertyList> readMetadata(fits::Fits &fitsfile, bool
     return metadata;
 }
 
-namespace {
 
-// RAII for moving the HDU
-class HduMove {
-public:
-    HduMove() = delete;
-    HduMove(HduMove const &) = delete;
+HduMoveGuard::HduMoveGuard(Fits & fits, int hdu, bool relative) :
+    _fits(fits),
+    _oldHdu(_fits.getHdu()),
+    _enabled(true)
+{
+    _fits.setHdu(hdu, relative);
+}
 
-    HduMove(Fits &fits, int hdu) : _fits(fits), _enabled(true) { _fits.setHdu(hdu); }
-    ~HduMove() {
-        if (!_enabled) {
-            return;
-        }
-        int status = 0;
-        std::swap(status, _fits.status);
-        try {
-            _fits.setHdu(0);
-        } catch (...) {
-            LOGLS_WARN("afw.fits", makeErrorMessage(_fits.fptr, _fits.status, "Failed to move back to PHU"));
-        }
-        std::swap(status, _fits.status);
+HduMoveGuard::~HduMoveGuard() {
+    if (!_enabled) {
+        return;
     }
-    void disable() { _enabled = false; }
-
-private:
-    Fits &_fits;    // FITS file we're working on
-    bool _enabled;  // Move back to PHU on destruction?
-};
-
-}  // anonymous namespace
+    int status = 0;
+    std::swap(status, _fits.status);  // unset error indicator, but remember the old status
+    try {
+        _fits.setHdu(_oldHdu);
+    } catch (...) {
+        LOGL_WARN(
+            "afw.fits",
+            makeErrorMessage(_fits.fptr, _fits.status, "Failed to move back to HDU %d").c_str(),
+            _oldHdu
+        );
+    }
+    std::swap(status, _fits.status);  // reset the old status
+}
 
 bool Fits::checkCompressedImagePhu() {
     auto fits = reinterpret_cast<fitsfile *>(fptr);
@@ -1609,7 +1605,7 @@ bool Fits::checkCompressedImagePhu() {
         return false;
     }
     // Check first extension (and move back there when we're done if we're not compressed)
-    HduMove move{*this, 1};
+    HduMoveGuard move(*this, 1);
     bool isCompressed = fits_is_compressed_image(fits, &status);
     if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, "Checking compression");
