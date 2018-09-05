@@ -460,6 +460,7 @@ std::shared_ptr<detail::PixelArrayBase> ImageScale::toFits(ndarray::Array<T cons
         out = CfitsioRandom(seed).forImage<double>(image.getShape(), tiles);
     } else {
         out = ndarray::allocate(num);
+        out.deep() = 0;
     }
     auto outIter = out.begin();
     auto const& flatImage = ndarray::flatten<1>(image);
