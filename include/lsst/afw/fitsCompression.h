@@ -382,7 +382,7 @@ public:
     /// General purpose Ctor
     ///
     /// @param[in] algorithm_  Scaling algorithm to use
-    /// @param[in] bitpix_  Bits per pixel (8,16,32,64,-32,-64)
+    /// @param[in] bitpix_  Bits per pixel (8,16,32,64,-32,-64), or 0 to match pixel type exactly.
     /// @param[in] maskPlanes_  Mask planes to ignore when doing statistics
     /// @param[in] seed_  Seed for random number generator when fuzzing
     /// @param[in] quantizeLevel_  Divisor of the standard deviation for STDEV_* scaling
@@ -397,7 +397,7 @@ public:
 
     /// Manual scaling Ctor
     ///
-    /// @param[in] bitpix_  Bits per pixel (8,16,32,64,-32,-64)
+    /// @param[in] bitpix_  Bits per pixel (8,16,32,64,-32,-64), or 0 to match pixel type exactly.
     /// @param[in] bscale_  Manually specified BSCALE
     /// @param[in] bzero_  Manually specified BZERO
     ImageScalingOptions(int bitpix_, double bscale_ = 1.0, double bzero_ = 0.0)
