@@ -121,9 +121,6 @@ TransformMap::TransformMap(
 // TransformMap is immutable, so we can just copy the shared_ptr
 TransformMap::TransformMap(TransformMap const &other) = default;
 
-// Cannot do any move optimizations without breaking immutability
-TransformMap::TransformMap(TransformMap const &&other) : TransformMap(other) {}
-
 // All resources owned by value or by smart pointer
 TransformMap::~TransformMap() = default;
 

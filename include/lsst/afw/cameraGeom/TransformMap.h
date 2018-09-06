@@ -88,15 +88,9 @@ public:
      */
     TransformMap(TransformMap const &other);
 
-    /**
-     * Create a TransformMap supporting the same Transforms using move semantics.
-     *
-     * @param other  The map to move from. It shall be left unchanged, as required by immutability.
-     */
-    TransformMap(TransformMap const &&other);
-
     ///@{
     /// TransformMap is immutable.
+    TransformMap(TransformMap &&other) = delete;
     TransformMap &operator=(TransformMap const &) = delete;
     TransformMap &operator=(TransformMap &&) = delete;
     ///@}
