@@ -47,7 +47,7 @@ DetectorCollection::~DetectorCollection() noexcept = default;
 std::shared_ptr<Detector> DetectorCollection::operator[](std::string const & name) const {
     auto det = get(name);
     if (det == nullptr) {
-        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, "Detector name not found");
+        throw LSST_EXCEPT(pex::exceptions::NotFoundError, "Detector name not found");
     }
     return det;
 }
@@ -55,7 +55,7 @@ std::shared_ptr<Detector> DetectorCollection::operator[](std::string const & nam
 std::shared_ptr<Detector> DetectorCollection::operator[](int id) const {
     auto det = get(id);
     if (det == nullptr) {
-        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, "Detector id not found");
+        throw LSST_EXCEPT(pex::exceptions::NotFoundError, "Detector id not found");
     }
     return det;
 }
