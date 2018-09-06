@@ -48,7 +48,6 @@ Detector::Detector(std::string const &name, int id, DetectorType type, std::stri
 }
 
 Detector::Detector(Detector const &) = default;
-Detector::Detector(Detector &&) = default;
 
 std::vector<lsst::geom::Point2D> Detector::getCorners(CameraSys const &cameraSys) const {
     std::vector<lsst::geom::Point2D> nativeCorners = lsst::geom::Box2D(_bbox).getCorners();
