@@ -28,8 +28,6 @@ from lsst.utils import TemplateMeta
 from .image import MaskX
 from ..slicing import supportSlicing
 
-supportSlicing(MaskX)
-
 MaskPixel = np.int32
 
 
