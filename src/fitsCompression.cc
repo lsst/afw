@@ -102,6 +102,7 @@ ImageScalingOptions::ScalingAlgorithm scalingAlgorithmFromString(std::string con
     if (name == "STDEV_POSITIVE") return ImageScalingOptions::STDEV_POSITIVE;
     if (name == "STDEV_NEGATIVE") return ImageScalingOptions::STDEV_NEGATIVE;
     if (name == "STDEV_BOTH") return ImageScalingOptions::STDEV_BOTH;
+    if (name == "MANUAL") return ImageScalingOptions::MANUAL;
     throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, "Unrecognized scaling algorithm: " + name);
 }
 
@@ -117,6 +118,8 @@ std::string scalingAlgorithmToString(ImageScalingOptions::ScalingAlgorithm algor
             return "STDEV_NEGATIVE";
         case ImageScalingOptions::STDEV_BOTH:
             return "STDEV_BOTH";
+        case ImageScalingOptions::MANUAL:
+            return "MANUAL";
         default:
             std::ostringstream os;
             os << "Unrecognized scaling algorithm: " << algorithm;
@@ -292,7 +295,7 @@ struct Bzero<std::uint64_t> {
 template <typename T>
 struct Bzero<T, typename std::enable_if<std::numeric_limits<T>::is_integer &&
                                         !std::numeric_limits<T>::is_signed>::type> {
-    static double constexpr value = std::numeric_limits<T>::max() >> 1;
+    static double constexpr value = (std::numeric_limits<T>::max() >> 1) + 1;
 };
 
 #ifndef DOXYGEN  // suppress a bogus Doxygen complaint about an documented symbol
@@ -457,6 +460,7 @@ std::shared_ptr<detail::PixelArrayBase> ImageScale::toFits(ndarray::Array<T cons
         out = CfitsioRandom(seed).forImage<double>(image.getShape(), tiles);
     } else {
         out = ndarray::allocate(num);
+        out.deep() = 0;
     }
     auto outIter = out.begin();
     auto const& flatImage = ndarray::flatten<1>(image);
