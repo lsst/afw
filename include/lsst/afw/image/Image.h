@@ -489,6 +489,19 @@ public:
                            std::shared_ptr<lsst::daf::base::PropertySet const>(),
                    std::string const& mode = "w") const;
 
+    /**
+     * Write a FITS file
+     *
+     * @param[in] fileName the file to write
+     * @param[in] options       Options controlling writing of FITS image.
+     * @param[in] metadata metadata to write to header; or NULL
+     * @param[in] mode "w" to write a new file; "a" to append
+     */
+    void writeFits(std::string const& fileName, fits::ImageWriteOptions const& options,
+                   std::shared_ptr<lsst::daf::base::PropertySet const> metadata =
+                           std::shared_ptr<lsst::daf::base::PropertySet const>(),
+                   std::string const& mode = "w") const;
+
     /// Return a shared_ptr to the DecoratedImage's Image
     std::shared_ptr<Image<PixelT>> getImage() { return _image; }
     /// Return a shared_ptr to the DecoratedImage's Image as const

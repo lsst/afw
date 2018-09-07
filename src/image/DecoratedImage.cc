@@ -31,6 +31,7 @@
 #include "boost/gil/gil_all.hpp"
 
 #include "lsst/pex/exceptions.h"
+#include "lsst/afw/fits.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/fits/fits_io.h"
 #include "lsst/afw/image/fits/fits_io_mpl.h"
@@ -101,6 +102,14 @@ DecoratedImage<PixelT>::DecoratedImage(const std::string& fileName, const int hd
 
 template <typename PixelT>
 void DecoratedImage<PixelT>::writeFits(std::string const& fileName,
+                                       std::shared_ptr<daf::base::PropertySet const> metadata,
+                                       std::string const& mode) const {
+    fits::ImageWriteOptions const options;
+    writeFits(fileName, options, metadata, mode);
+}
+
+template <typename PixelT>
+void DecoratedImage<PixelT>::writeFits(std::string const& fileName, fits::ImageWriteOptions const& options,
                                        std::shared_ptr<daf::base::PropertySet const> metadata_i,
                                        std::string const& mode) const {
     std::shared_ptr<daf::base::PropertySet> metadata;
@@ -112,7 +121,7 @@ void DecoratedImage<PixelT>::writeFits(std::string const& fileName,
         metadata = getMetadata();
     }
 
-    getImage()->writeFits(fileName, metadata, mode);
+    getImage()->writeFits(fileName, options, mode, metadata);
 }
 
 //

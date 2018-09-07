@@ -350,8 +350,16 @@ static void declareDecoratedImage(py::module &mod, std::string const &suffix) {
     cls.def("getY0", &DecoratedImage<PixelT>::getY0);
     cls.def("getDimensions", &DecoratedImage<PixelT>::getDimensions);
     cls.def("swap", &DecoratedImage<PixelT>::swap);
-    cls.def("writeFits", &DecoratedImage<PixelT>::writeFits, "fileName"_a,
-            "metadata"_a = std::shared_ptr<lsst::daf::base::PropertySet const>(), "mode"_a = "w");
+    cls.def("writeFits",
+            py::overload_cast<std::string const &, std::shared_ptr<daf::base::PropertySet const>,
+                              std::string const &>(&DecoratedImage<PixelT>::writeFits, py::const_),
+            "filename"_a, "metadata"_a = std::shared_ptr<daf::base::PropertyList>(), "mode"_a = "w");
+    cls.def("writeFits",
+            py::overload_cast<std::string const &, fits::ImageWriteOptions const &,
+                              std::shared_ptr<daf::base::PropertySet const>, std::string const &>(
+                    &DecoratedImage<PixelT>::writeFits, py::const_),
+            "filename"_a, "options"_a, "metadata"_a = std::shared_ptr<daf::base::PropertyList>(),
+            "mode"_a = "w");
     cls.def("getImage", py::overload_cast<>(&DecoratedImage<PixelT>::getImage));
     cls.def_property_readonly("image", py::overload_cast<>(&DecoratedImage<PixelT>::getImage));
     cls.def("getGain", &DecoratedImage<PixelT>::getGain);
