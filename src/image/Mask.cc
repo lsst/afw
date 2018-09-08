@@ -22,22 +22,10 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-// Implementations of Mask class methods
-
 /*
- * There are a number of classes defined here and in Mask.h
- *
- * The fundamental type visible to the user is Mask; a 2-d array of pixels.  Each of these pixels should
- * be thought of as a set of bits, and the names of these bits are given by MaskPlaneDict (which is
- * implemented as a std::map)
- *
- * Internally to this file, we have a MapWithHash which is like a std::map, but maintains a hash of its
- * contents;  this is used to check equality efficiently.
- *
- * We also have a MaskDict which isa MapWithHash, but also maintains a list of MaskDicts (or equivalently
- * MapWithHash) allowing us to iterate over these maps, updating them as needed.
- *
- * The list of MaskDicts is actually kept as a singleton of a helper class, DictState
+ * The fundamental type defined here is Mask; a 2-d array of pixels.  Each of
+ * these pixels should be thought of as a set of bits, and the names of these
+ * bits are given by MaskPlaneDict (which is implemented as a std::map)
  */
 
 #include <functional>
@@ -58,8 +46,8 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/log/Log.h"
 #include "lsst/afw/image/Mask.h"
-
 #include "lsst/afw/image/LsstImageTypes.h"
+#include "lsst/afw/image/detail/MaskDict.h"
 
 //
 // for FITS code
@@ -75,279 +63,16 @@ namespace pexExcept = lsst::pex::exceptions;
 namespace lsst {
 namespace afw {
 namespace image {
-namespace detail {
-class MaskDict;
-}
 
 namespace {
-void setInitMaskBits(std::shared_ptr<detail::MaskDict> dict);
-/*
- * A std::map that maintains a hash value of its contents
- *
- * We don't simply inherit from the std::map as we need to force the user to use add and remove;
- * we could inherit, make operator[] private, and never use MapWithHash via a base-class pointer
- * but it seemed simpler to only forward the functions we wish to support
- */
-struct MapWithHash {
-    typedef detail::MaskPlaneDict::value_type value_type;
-    typedef detail::MaskPlaneDict::const_iterator const_iterator;
 
-    MapWithHash(detail::MaskPlaneDict const& dict = detail::MaskPlaneDict())
-            : _dict(dict), _hash(_calcHash()) {}
-    ~MapWithHash() {}
-
-    bool operator==(MapWithHash const& rhs) const { return _hash == rhs._hash; }
-
-    const_iterator begin() const { return _dict.begin(); }
-    const_iterator end() const { return _dict.end(); }
-    const_iterator find(detail::MaskPlaneDict::key_type const& name) const { return _dict.find(name); }
-
-    void add(std::string const& str, int val) {
-        _dict[str] = val;
-        _calcHash();
-    }
-
-    bool empty() const { return _dict.empty(); }
-
-    void clear() { _dict.clear(); }
-
-    std::size_t size() const { return _dict.size(); }
-
-    void erase(std::string const& str) {
-        if (_dict.find(str) != _dict.end()) {
-            _dict.erase(str);
-            _calcHash();
-        }
-    }
-
-    detail::MaskPlaneDict const& getMaskPlaneDict() const { return _dict; }
-
-    std::size_t getHash() const { return _hash; }
-
-private:
-    detail::MaskPlaneDict _dict;
-    std::size_t _hash;
-
-    // calculate the hash
-    std::size_t _calcHash() {
-        _hash = 0x0;
-        for (const_iterator ptr = begin(); ptr != end(); ++ptr) {
-            _hash = (_hash << 1) ^
-                    boost::hash<std::string>()((*ptr).first + str(boost::format("%d") % ptr->second));
-        }
-
-        return _hash;
-    }
-};
-
-bool operator!=(MapWithHash const& lhs, MapWithHash const& rhs) { return !(lhs == rhs); }
-
-class DictState;  // forward declaration
-}  // namespace
-
-namespace detail {
-/*
- * A MaskDict is a MapWithHash, but additionally maintains a list of all live MaskDicts (the list is
- * actually kept in a singleton instance of DictState)
- */
-class MaskDict : public MapWithHash {
-    friend class ::lsst::afw::image::DictState;  // actually anonymous within lsst::afw::image; g++ is
-                                                 // confused
-
-    MaskDict() : MapWithHash() {}
-    MaskDict(MapWithHash const* dict) : MapWithHash(*dict) {}
-
-public:
-    static std::shared_ptr<MaskDict> makeMaskDict();
-    static std::shared_ptr<MaskDict> makeMaskDict(detail::MaskPlaneDict const& dict);
-    static std::shared_ptr<MaskDict> setDefaultDict(std::shared_ptr<MaskDict> dict);
-
-    std::shared_ptr<MaskDict> clone() const;
-
-    ~MaskDict();
-
-    int getUnusedPlane() const;
-    int getMaskPlane(const std::string& name) const;
-
-    void print() const {
-        for (MapWithHash::const_iterator ptr = begin(); ptr != end(); ++ptr) {
-            std::cout << "Plane " << ptr->second << " -> " << ptr->first << std::endl;
-        }
-    }
-
-    static std::shared_ptr<MaskDict> incrDefaultVersion();
-    static void listMaskDicts();
-};
-}  // namespace detail
-
-namespace {
-/*
- * A struct to hold our global state, and for whose components
- * we can control the order of creation/destruction
- */
-class DictState {
-    friend class detail::MaskDict;
-
-    typedef std::map<MapWithHash*, int> HandleList;
-
-public:
-    DictState() {
-        _dictCounter = 0;
-        _defaultMaskDict = std::shared_ptr<detail::MaskDict>(new detail::MaskDict);
-        _dicts[_defaultMaskDict.get()] = _dictCounter++;
-    }
-
-    ~DictState() {
-        _defaultMaskDict.reset();
-
-        for (HandleList::iterator ptr = _dicts.begin(); ptr != _dicts.end(); ++ptr) {
-            delete ptr->first;
-        }
-        _dicts.clear();
-    }
-
-    template <typename FunctorT>
-    void forEachMaskDict(FunctorT func) {
-        for (HandleList::const_iterator ptr = _dicts.begin(); ptr != _dicts.end(); ++ptr) {
-            func(ptr->first);
-        }
-    }
-
-private:
-    std::shared_ptr<detail::MaskDict> getDefaultDict() {
-        static bool first = true;
-
-        if (first) {
-            setInitMaskBits(_defaultMaskDict);
-
-            first = false;
-        }
-
-        return _defaultMaskDict;
-    }
-
-    std::shared_ptr<detail::MaskDict> setDefaultDict(std::shared_ptr<detail::MaskDict> newDefaultMaskDict) {
-        _defaultMaskDict = newDefaultMaskDict;
-
-        return _defaultMaskDict;
-    }
-
-    void addDict(MapWithHash* dict) { _dicts[dict] = _dictCounter++; }
-
-    void eraseDict(MapWithHash* dict) { _dicts.erase(dict); }
-
-    std::shared_ptr<detail::MaskDict> incrDefaultVersion() {
-        _defaultMaskDict = std::shared_ptr<detail::MaskDict>(new detail::MaskDict(*_defaultMaskDict.get()));
-        addDict(_defaultMaskDict.get());
-
-        return _defaultMaskDict;
-    }
-
-    std::shared_ptr<detail::MaskDict> _defaultMaskDict;  // default MaskDict to use
-    HandleList _dicts;                                   // all the live MaskDicts
-    int _dictCounter;
-};
-
-static DictState _state;
-}  // namespace
-
-namespace detail {
-/*
- * Implementation of MaskDict
- */
-/*
- * Return the default dictionary, unless you provide mpd in which case you get one of
- * your very very own
- */
-std::shared_ptr<MaskDict> MaskDict::makeMaskDict() { return _state.getDefaultDict(); }
-
-std::shared_ptr<MaskDict> MaskDict::makeMaskDict(detail::MaskPlaneDict const& mpd) {
-    std::shared_ptr<MaskDict> dict = _state.getDefaultDict();
-
-    if (!mpd.empty()) {
-        MapWithHash mwh(mpd);
-        dict = std::shared_ptr<MaskDict>(new MaskDict(&mwh));
-        _state.addDict(dict.get());
-    }
-
-    return dict;
-}
-
-std::shared_ptr<MaskDict> MaskDict::setDefaultDict(std::shared_ptr<MaskDict> dict) {
-    return _state.setDefaultDict(dict);
-}
-
-std::shared_ptr<MaskDict> MaskDict::clone() const {
-    std::shared_ptr<MaskDict> dict(new MaskDict(*this));
-
-    _state.addDict(dict.get());
-
-    return dict;
-}
-
-MaskDict::~MaskDict() { _state.eraseDict(this); }
-
-std::shared_ptr<MaskDict> MaskDict::incrDefaultVersion() { return _state.incrDefaultVersion(); }
-
-int MaskDict::getUnusedPlane() const {
-    if (empty()) {
-        return 0;
-    }
-
-    MapWithHash::const_iterator const it = std::max_element(
-            begin(), end(),
-            std::bind(std::less<int>(), std::bind(&MapWithHash::value_type::second, std::placeholders::_1),
-                      std::bind(&MapWithHash::value_type::second, std::placeholders::_2)));
-    assert(it != end());
-    int id = it->second + 1;  // The maskPlane to use if there are no gaps
-
-    for (int i = 0; i < id; ++i) {
-        MapWithHash::const_iterator const it =  // is i already used in this Mask?
-                std::find_if(
-                        begin(), end(),
-                        std::bind(std::equal_to<int>(),
-                                  std::bind(&MapWithHash::value_type::second, std::placeholders::_1), i));
-        if (it == end()) {  // Not used; so we'll use it
-            return i;
-        }
-    }
-
-    return id;
-}
-
-int detail::MaskDict::getMaskPlane(const std::string& name) const {
-    MapWithHash::const_iterator i = find(name);
-
-    return (i == end()) ? -1 : i->second;
-}
-}  // namespace detail
-
-namespace {
-/*
- * Definition of the default mask bits
- *
- * N.b. this function is in an anonymous namespace, and is invisible to doxygen.  ALL mask
- * planes defined here should be documented with the Mask class in Mask.h
- */
-void setInitMaskBits(std::shared_ptr<detail::MaskDict> dict) {
-    int i = -1;
-    dict->add("BAD", ++i);
-    dict->add("SAT", ++i);       // should be SATURATED
-    dict->add("INTRP", ++i);     // should be INTERPOLATED
-    dict->add("CR", ++i);        //
-    dict->add("EDGE", ++i);      //
-    dict->add("DETECTED", ++i);  //
-    dict->add("DETECTED_NEGATIVE", ++i);
-    dict->add("SUSPECT", ++i);
-    dict->add("NO_DATA", ++i);
-}
 }  // namespace
 
 template <typename MaskPixelT>
 void Mask<MaskPixelT>::_initializePlanes(MaskPlaneDict const& planeDefs) {
     LOGL_DEBUG("afw.image.Mask", "Number of mask planes: %d", getNumPlanesMax());
 
-    _maskDict = detail::MaskDict::makeMaskDict(planeDefs);
+    _maskDict = detail::MaskDict::copyOrGetDefault(planeDefs);
 }
 
 template <typename MaskPixelT>
@@ -412,7 +137,7 @@ Mask<MaskPixelT>::~Mask() = default;
 template <typename MaskPixelT>
 Mask<MaskPixelT>::Mask(ndarray::Array<MaskPixelT, 2, 1> const& array, bool deep,
                        lsst::geom::Point2I const& xy0)
-        : image::ImageBase<MaskPixelT>(array, deep, xy0), _maskDict(detail::MaskDict::makeMaskDict()) {}
+        : image::ImageBase<MaskPixelT>(array, deep, xy0), _maskDict(detail::MaskDict::getDefault()) {}
 
 template <typename PixelT>
 void Mask<PixelT>::swap(Mask& rhs) {
@@ -452,7 +177,7 @@ Mask<MaskPixelT>& Mask<MaskPixelT>::operator=(MaskPixelT const rhs) {
 template <typename MaskPixelT>
 Mask<MaskPixelT>::Mask(std::string const& fileName, int hdu, std::shared_ptr<daf::base::PropertySet> metadata,
                        lsst::geom::Box2I const& bbox, ImageOrigin origin, bool conformMasks)
-        : ImageBase<MaskPixelT>(), _maskDict(detail::MaskDict::makeMaskDict()) {
+        : ImageBase<MaskPixelT>(), _maskDict(detail::MaskDict::getDefault()) {
     fits::Fits fitsfile(fileName, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
     fitsfile.setHdu(hdu);
     *this = Mask(fitsfile, metadata, bbox, origin, conformMasks);
@@ -462,7 +187,7 @@ template <typename MaskPixelT>
 Mask<MaskPixelT>::Mask(fits::MemFileManager& manager, int hdu,
                        std::shared_ptr<daf::base::PropertySet> metadata, lsst::geom::Box2I const& bbox,
                        ImageOrigin origin, bool conformMasks)
-        : ImageBase<MaskPixelT>(), _maskDict(detail::MaskDict::makeMaskDict()) {
+        : ImageBase<MaskPixelT>(), _maskDict(detail::MaskDict::getDefault()) {
     fits::Fits fitsfile(manager, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
     fitsfile.setHdu(hdu);
     *this = Mask(fitsfile, metadata, bbox, origin, conformMasks);
@@ -471,7 +196,7 @@ Mask<MaskPixelT>::Mask(fits::MemFileManager& manager, int hdu,
 template <typename MaskPixelT>
 Mask<MaskPixelT>::Mask(fits::Fits& fitsfile, std::shared_ptr<daf::base::PropertySet> metadata,
                        lsst::geom::Box2I const& bbox, ImageOrigin const origin, bool const conformMasks)
-        : ImageBase<MaskPixelT>(), _maskDict(detail::MaskDict::makeMaskDict()) {
+        : ImageBase<MaskPixelT>(), _maskDict(detail::MaskDict::getDefault()) {
     // These are the permitted input file types
     typedef boost::mpl::vector<unsigned char, unsigned short, short, std::int32_t> fits_mask_types;
 
@@ -483,14 +208,15 @@ Mask<MaskPixelT>::Mask(fits::Fits& fitsfile, std::shared_ptr<daf::base::Property
 
     // look for mask planes in the file
     MaskPlaneDict fileMaskDict = parseMaskPlaneMetadata(metadata);
-    std::shared_ptr<detail::MaskDict> fileMD = detail::MaskDict::makeMaskDict(fileMaskDict);
+    std::shared_ptr<detail::MaskDict> fileMD = detail::MaskDict::copyOrGetDefault(fileMaskDict);
 
-    if (*fileMD == *detail::MaskDict::makeMaskDict()) {  // file is already consistent with Mask
+    if (*fileMD == *detail::MaskDict::getDefault()) {  // file is already consistent with Mask
         return;
     }
 
     if (conformMasks) {  // adopt the definitions in the file
-        _maskDict = detail::MaskDict::setDefaultDict(fileMD);
+        detail::MaskDict::setDefault(fileMD);
+        _maskDict = fileMD;
     }
 
     conformMaskPlanes(fileMaskDict);  // convert planes defined by fileMaskDict to the order
@@ -546,30 +272,6 @@ void Mask<MaskPixelT>::writeFits(fits::Fits& fitsfile, fits::ImageWriteOptions c
 
 #endif  // !DOXYGEN
 
-namespace {
-struct addPlaneFunctor {
-    addPlaneFunctor(std::string const& name, int id) : _name(name), _id(id) {}
-
-    void operator()(MapWithHash* dict) {
-        detail::MaskPlaneDict::const_iterator const it =  // is id already used in this Mask?
-                std::find_if(dict->begin(), dict->end(),
-                             std::bind(std::equal_to<int>(),
-                                       std::bind(&detail::MaskPlaneDict::value_type::second,
-                                                 std::placeholders::_1),
-                                       _id));
-        if (it != dict->end()) {  // mask plane is already in use
-            return;
-        }
-
-        if (dict->find(_name) == dict->end()) {  // not already set
-            dict->add(_name, _id);
-        }
-    }
-
-    std::string const& _name;
-    int _id;
-};
-}  // namespace
 
 template <typename MaskPixelT>
 std::string Mask<MaskPixelT>::interpret(MaskPixelT value) {
@@ -601,7 +303,7 @@ int Mask<MaskPixelT>::addMaskPlane(const std::string& name) {
                           str(boost::format("Max number of planes (%1%) already used") % getNumPlanesMax()));
     }
 
-    _state.forEachMaskDict(addPlaneFunctor(name, id));
+    detail::MaskDict::addAllMasksPlane(name, id);
 
     return id;
 }
@@ -626,12 +328,12 @@ detail::MaskPlaneDict const& Mask<MaskPixelT>::getMaskPlaneDict() const {
 
 template <typename MaskPixelT>
 void Mask<MaskPixelT>::removeMaskPlane(const std::string& name) {
-    if (detail::MaskDict::makeMaskDict()->getMaskPlane(name) < 0) {
+    if (detail::MaskDict::getDefault()->getMaskPlane(name) < 0) {
         throw LSST_EXCEPT(pexExcept::InvalidParameterError,
                           str(boost::format("Plane %s doesn't exist in the default Mask") % name));
     }
 
-    detail::MaskDict::incrDefaultVersion();  // leave current Masks alone
+    detail::MaskDict::detachDefault();  // leave current Masks alone
     _maskPlaneDict()->erase(name);
 }
 
@@ -641,7 +343,7 @@ void Mask<MaskPixelT>::removeAndClearMaskPlane(const std::string& name, bool con
 ) {
     clearMaskPlane(getMaskPlane(name));  // clear this bits in this Mask
 
-    if (_maskDict == detail::MaskDict::makeMaskDict() && removeFromDefault) {  // we are the default
+    if (_maskDict == detail::MaskDict::getDefault() && removeFromDefault) {  // we are the default
         ;
     } else {
         _maskDict = _maskDict->clone();
@@ -649,7 +351,7 @@ void Mask<MaskPixelT>::removeAndClearMaskPlane(const std::string& name, bool con
 
     _maskDict->erase(name);
 
-    if (removeFromDefault && detail::MaskDict::makeMaskDict()->getMaskPlane(name) >= 0) {
+    if (removeFromDefault && detail::MaskDict::getDefault()->getMaskPlane(name) >= 0) {
         removeMaskPlane(name);
     }
 }
@@ -729,10 +431,10 @@ void Mask<MaskPixelT>::clearMaskPlane(int planeId) {
 
 template <typename MaskPixelT>
 void Mask<MaskPixelT>::conformMaskPlanes(MaskPlaneDict const& currentPlaneDict) {
-    std::shared_ptr<detail::MaskDict> currentMD = detail::MaskDict::makeMaskDict(currentPlaneDict);
+    std::shared_ptr<detail::MaskDict> currentMD = detail::MaskDict::copyOrGetDefault(currentPlaneDict);
 
     if (*_maskDict == *currentMD) {
-        if (*detail::MaskDict::makeMaskDict() == *_maskDict) {
+        if (*detail::MaskDict::getDefault() == *_maskDict) {
             return;  // nothing to do
         }
     } else {
@@ -780,7 +482,7 @@ void Mask<MaskPixelT>::conformMaskPlanes(MaskPlaneDict const& currentPlaneDict) 
         }
     }
     // We've made the planes match the current mask dictionary
-    _maskDict = detail::MaskDict::makeMaskDict();
+    _maskDict = detail::MaskDict::getDefault();
 }
 
 template <typename MaskPixelT>
@@ -977,7 +679,7 @@ std::string const Mask<MaskPixelT>::maskPlanePrefix("MP_");
 
 template <typename MaskPixelT>
 std::shared_ptr<detail::MaskDict> Mask<MaskPixelT>::_maskPlaneDict() {
-    return detail::MaskDict::makeMaskDict();
+    return detail::MaskDict::getDefault();
 }
 
 //
