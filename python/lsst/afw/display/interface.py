@@ -460,7 +460,12 @@ class Display:
                     "You may not specify a wcs with an Exposure")
             data, wcs = data.getMaskedImage(), data.getWcs()
         elif isinstance(data, afwImage.DecoratedImage):  # it's a DecoratedImage; display it
-            data, wcs = data.getImage(), afwGeom.makeSkyWcs(data.getMetadata())
+            try:
+                wcs = afwGeom.makeSkyWcs(data.getMetadata())
+            except TypeError:
+                wcs = None
+            data = data.image
+
             self._xy0 = data.getXY0()   # DecoratedImage doesn't have getXY0()
 
         if isinstance(data, afwImage.Image):  # it's an Image; display it
