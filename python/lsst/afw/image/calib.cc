@@ -71,8 +71,8 @@ PYBIND11_MODULE(calib, mod) {
     /* Constructors */
     cls.def(py::init<>());
     cls.def(py::init<double>(), "fluxMag0"_a);
-    cls.def(py::init<std::vector<std::shared_ptr<const Calib>> const &>(), "calibs"_a);
     cls.def(py::init<std::shared_ptr<const daf::base::PropertySet>>(), "metadata"_a);
+    cls.def(py::init<std::vector<std::shared_ptr<const Calib>> const &>(), "calibs"_a);
 
     table::io::python::addPersistableMethods<Calib>(cls);
 
