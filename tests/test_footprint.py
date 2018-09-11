@@ -21,7 +21,6 @@
 
 import os
 import unittest
-import tempfile
 
 import lsst.utils.tests
 import lsst.geom
@@ -236,10 +235,10 @@ class FootprintTestCase(unittest.TestCase):
         # populate the peaks for the peak tests
         self.testPeakFunctionality()
 
-        with tempfile.NamedTemporaryFile() as f:
+        with lsst.utils.tests.getTempFilePath(".fits") as filepath:
             # Persist the Footprint to file and read it back
-            self.footprint.writeFits(f.name)
-            footprintFromFile = afwDet.Footprint.readFits(f.name)
+            self.footprint.writeFits(filepath)
+            footprintFromFile = afwDet.Footprint.readFits(filepath)
 
         # Check that the Footprint before and after saving are the same
         self.assertEqual(self.footprint, footprintFromFile)
