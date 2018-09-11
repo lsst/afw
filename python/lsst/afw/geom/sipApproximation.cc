@@ -34,9 +34,7 @@ namespace lsst { namespace afw { namespace geom { namespace {
 
 using PySipApproximation = py::class_<SipApproximation, std::shared_ptr<SipApproximation>>;
 
-PYBIND11_PLUGIN(sipApproximation) {
-    py::module mod("sipApproximation");
-
+PYBIND11_MODULE(sipApproximation, mod) {
     py::module::import("lsst.geom");
     py::module::import("lsst.afw.geom.transform");
 
@@ -99,8 +97,6 @@ PYBIND11_PLUGIN(sipApproximation) {
     cls.def("refineGrid", &SipApproximation::refineGrid, "factor"_a=2);
     cls.def("fit", &SipApproximation::fit, "order"_a, "svdThreshold"_a=-1);
     cls.def("computeMaxDeviation", &SipApproximation::computeMaxDeviation);
-
-    return mod.ptr();
 }
 
 }}}}  // namespace lsst::afw::<anonymous>

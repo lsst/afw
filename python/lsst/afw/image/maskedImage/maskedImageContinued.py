@@ -26,6 +26,7 @@ import numpy as np
 
 from lsst.utils import TemplateMeta
 
+from ..image.fitsIoWithOptions import imageReadFitsWithOptions, exposureWriteFitsWithOptions
 from ..slicing import supportSlicing
 from .maskedImage import MaskedImageI, MaskedImageF, MaskedImageD, MaskedImageU, MaskedImageL
 
@@ -93,6 +94,10 @@ class MaskedImage(metaclass=TemplateMeta):
     def __reduce__(self):
         from lsst.afw.fits import reduceToFits
         return reduceToFits(self)
+
+    readFitsWithOptions = classmethod(imageReadFitsWithOptions)
+
+    writeFitsWithOptions = exposureWriteFitsWithOptions
 
 
 MaskedImage.register(np.int32, MaskedImageI)

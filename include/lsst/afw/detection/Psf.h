@@ -28,7 +28,7 @@
 
 #include <memory>
 
-#include "lsst/daf/base.h"
+#include "lsst/daf/base/Citizen.h"
 #include "lsst/utils/CacheFwd.h"
 #include "lsst/afw/geom/ellipses/Quadrupole.h"
 #include "lsst/afw/math/Kernel.h"
@@ -44,8 +44,6 @@ namespace detail {
 struct PsfCacheKey;
 
 }  // namespace detail
-
-class PsfFormatter;
 
 /**
  *  A polymorphic base class for representing an image's Point Spread Function
@@ -75,7 +73,6 @@ class PsfFormatter;
  *  several member functions.
  */
 class Psf : public daf::base::Citizen,
-            public daf::base::Persistable,
             public afw::table::io::PersistableFacade<Psf>,
             public afw::table::io::Persistable {
     static lsst::geom::Point2D makeNullPoint() {
@@ -311,8 +308,6 @@ private:
     using PsfCache = utils::Cache<detail::PsfCacheKey, std::shared_ptr<Image>>;
     std::unique_ptr<PsfCache> _imageCache;
     std::unique_ptr<PsfCache> _kernelImageCache;
-
-    LSST_PERSIST_FORMATTER(PsfFormatter)
 };
 }  // namespace detection
 }  // namespace afw

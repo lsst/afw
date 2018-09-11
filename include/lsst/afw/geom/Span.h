@@ -27,17 +27,9 @@
 #include <string>
 #include <iostream>
 
-#include "boost/serialization/nvp.hpp"
-
 #include "lsst/base.h"
 #include "lsst/geom.h"
 #include "lsst/afw/geom/SpanPixelIterator.h"
-
-namespace boost {
-namespace serialization {
-class access;
-}
-}  // namespace boost
 
 namespace lsst {
 namespace afw {
@@ -129,13 +121,6 @@ public:
     friend class detection::Footprint;
 
 private:
-    friend class boost::serialization::access;
-    template <typename Archive>
-    void serialize(Archive& ar, const unsigned int version) {
-        ar& boost::serialization::make_nvp("y", _y) & boost::serialization::make_nvp("x0", _x0) &
-                boost::serialization::make_nvp("x1", _x1);
-    }
-
     int _y;   ///< Row that Span's in
     int _x0;  ///< Starting column (inclusive)
     int _x1;  ///< Ending column (inclusive)

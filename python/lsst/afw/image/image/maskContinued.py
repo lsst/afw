@@ -25,10 +25,9 @@ __all__ = ["Mask", "MaskPixel"]
 import numpy as np
 
 from lsst.utils import TemplateMeta
+from .fitsIoWithOptions import imageReadFitsWithOptions, imageWriteFitsWithOptions
 from .image import MaskX
 from ..slicing import supportSlicing
-
-supportSlicing(MaskX)
 
 MaskPixel = np.int32
 
@@ -40,6 +39,10 @@ class Mask(metaclass=TemplateMeta):
     def __reduce__(self):
         from lsst.afw.fits import reduceToFits
         return reduceToFits(self)
+
+    readFitsWithOptions = classmethod(imageReadFitsWithOptions)
+
+    writeFitsWithOptions = imageWriteFitsWithOptions
 
 
 Mask.register(MaskPixel, MaskX)

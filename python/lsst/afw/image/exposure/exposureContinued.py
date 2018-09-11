@@ -27,6 +27,7 @@ import numpy as np
 from lsst.utils import TemplateMeta
 
 from ..slicing import supportSlicing
+from ..image.fitsIoWithOptions import imageReadFitsWithOptions, exposureWriteFitsWithOptions
 from .exposure import ExposureI, ExposureF, ExposureD, ExposureU, ExposureL
 
 
@@ -91,6 +92,10 @@ class Exposure(metaclass=TemplateMeta):
         self.maskedImage.variance = variance
 
     variance = property(getVariance, setVariance)
+
+    readFitsWithOptions = classmethod(imageReadFitsWithOptions)
+
+    writeFitsWithOptions = exposureWriteFitsWithOptions
 
 
 Exposure.register(np.int32, ExposureI)

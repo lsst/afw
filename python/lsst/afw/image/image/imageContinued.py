@@ -26,6 +26,7 @@ import numpy as np
 from lsst.utils import TemplateMeta
 
 from ..slicing import supportSlicing
+from .fitsIoWithOptions import imageReadFitsWithOptions, imageWriteFitsWithOptions
 from .image import ImageI, ImageF, ImageD, ImageU, ImageL
 from .image import DecoratedImageI, DecoratedImageF, DecoratedImageD, DecoratedImageU, DecoratedImageL
 
@@ -35,6 +36,10 @@ class Image(metaclass=TemplateMeta):
     def __reduce__(self):
         from lsst.afw.fits import reduceToFits
         return reduceToFits(self)
+
+    readFitsWithOptions = classmethod(imageReadFitsWithOptions)
+
+    writeFitsWithOptions = imageWriteFitsWithOptions
 
 
 Image.register(np.int32, ImageI)
@@ -56,6 +61,10 @@ class DecoratedImage(metaclass=TemplateMeta):
 
     def convertD(self):
         return ImageD(self, deep=True)
+
+    readFitsWithOptions = classmethod(imageReadFitsWithOptions)
+
+    writeFitsWithOptions = imageWriteFitsWithOptions
 
 
 DecoratedImage.register(np.int32, DecoratedImageI)

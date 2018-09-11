@@ -40,15 +40,14 @@ namespace image {
 namespace {
 
 template <typename PixelT>
-using PyImageBase = py::class_<ImageBase<PixelT>, std::shared_ptr<ImageBase<PixelT>>, daf::base::Persistable,
-                               daf::base::Citizen>;
+using PyImageBase = py::class_<ImageBase<PixelT>, std::shared_ptr<ImageBase<PixelT>>, daf::base::Citizen>;
 
 template <typename PixelT>
 using PyImage = py::class_<Image<PixelT>, std::shared_ptr<Image<PixelT>>, ImageBase<PixelT>>;
 
 template <typename PixelT>
 using PyDecoratedImage =
-        py::class_<DecoratedImage<PixelT>, std::shared_ptr<DecoratedImage<PixelT>>, daf::base::Persistable>;
+        py::class_<DecoratedImage<PixelT>, std::shared_ptr<DecoratedImage<PixelT>>>;
 
 template <typename MaskPixelT>
 using PyMask = py::class_<Mask<MaskPixelT>, std::shared_ptr<Mask<MaskPixelT>>, ImageBase<MaskPixelT>>;
@@ -350,8 +349,16 @@ static void declareDecoratedImage(py::module &mod, std::string const &suffix) {
     cls.def("getY0", &DecoratedImage<PixelT>::getY0);
     cls.def("getDimensions", &DecoratedImage<PixelT>::getDimensions);
     cls.def("swap", &DecoratedImage<PixelT>::swap);
-    cls.def("writeFits", &DecoratedImage<PixelT>::writeFits, "fileName"_a,
-            "metadata"_a = std::shared_ptr<lsst::daf::base::PropertySet const>(), "mode"_a = "w");
+    cls.def("writeFits",
+            py::overload_cast<std::string const &, std::shared_ptr<daf::base::PropertySet const>,
+                              std::string const &>(&DecoratedImage<PixelT>::writeFits, py::const_),
+            "filename"_a, "metadata"_a = std::shared_ptr<daf::base::PropertyList>(), "mode"_a = "w");
+    cls.def("writeFits",
+            py::overload_cast<std::string const &, fits::ImageWriteOptions const &,
+                              std::shared_ptr<daf::base::PropertySet const>, std::string const &>(
+                    &DecoratedImage<PixelT>::writeFits, py::const_),
+            "filename"_a, "options"_a, "metadata"_a = std::shared_ptr<daf::base::PropertyList>(),
+            "mode"_a = "w");
     cls.def("getImage", py::overload_cast<>(&DecoratedImage<PixelT>::getImage));
     cls.def_property_readonly("image", py::overload_cast<>(&DecoratedImage<PixelT>::getImage));
     cls.def("getGain", &DecoratedImage<PixelT>::getGain);

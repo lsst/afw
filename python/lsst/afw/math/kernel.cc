@@ -24,7 +24,6 @@
 //#include <pybind11/operators.h>
 #include <pybind11/stl.h>
 
-#include "lsst/daf/base/Persistable.h"
 #include "lsst/afw/math/Kernel.h"
 #include "lsst/afw/table/io/python.h" // for addPersistableMethods
 
@@ -35,7 +34,7 @@ using namespace py::literals;
 using namespace lsst::afw::math;
 
 PYBIND11_MODULE(kernel, mod) {
-    py::class_<Kernel, std::shared_ptr<Kernel>, lsst::daf::base::Persistable> clsKernel(mod, "Kernel");
+    py::class_<Kernel, std::shared_ptr<Kernel>> clsKernel(mod, "Kernel");
 
     lsst::afw::table::io::python::addPersistableMethods<Kernel>(clsKernel);
 

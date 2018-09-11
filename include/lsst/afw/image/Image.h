@@ -45,21 +45,13 @@
 #include "lsst/afw/image/Mask.h"
 #include "lsst/afw/math/Function.h"
 #include "lsst/afw/fitsDefaults.h"
-#include "lsst/daf/base.h"
+#include "lsst/daf/base/PropertySet.h"
 #include "lsst/daf/base/Citizen.h"
 #include "lsst/pex/exceptions.h"
 #include "ndarray.h"
 
 namespace lsst {
 namespace afw {
-
-namespace formatters {
-template <typename PixelT>
-class ImageFormatter;
-template <typename PixelT>
-class DecoratedImageFormatter;
-}  // namespace formatters
-
 namespace image {
 
 /// A class to represent a 2-dimensional array of pixels
@@ -381,9 +373,6 @@ public:
 
 protected:
     using ImageBase<PixelT>::_getRawView;
-
-private:
-    LSST_PERSIST_FORMATTER(lsst::afw::formatters::ImageFormatter<PixelT>)
 };
 
 /// Add lhs to Image rhs (i.e. %pixel-by-%pixel addition) where types are different
@@ -406,7 +395,7 @@ void swap(Image<PixelT>& a, Image<PixelT>& b);
  * A container for an Image and its associated metadata
  */
 template <typename PixelT>
-class DecoratedImage : public lsst::daf::base::Persistable, public lsst::daf::base::Citizen {
+class DecoratedImage : public lsst::daf::base::Citizen {
 public:
     /**
      * Create an %image of the specified size
@@ -489,6 +478,19 @@ public:
                            std::shared_ptr<lsst::daf::base::PropertySet const>(),
                    std::string const& mode = "w") const;
 
+    /**
+     * Write a FITS file
+     *
+     * @param[in] fileName the file to write
+     * @param[in] options       Options controlling writing of FITS image.
+     * @param[in] metadata metadata to write to header; or NULL
+     * @param[in] mode "w" to write a new file; "a" to append
+     */
+    void writeFits(std::string const& fileName, fits::ImageWriteOptions const& options,
+                   std::shared_ptr<lsst::daf::base::PropertySet const> metadata =
+                           std::shared_ptr<lsst::daf::base::PropertySet const>(),
+                   std::string const& mode = "w") const;
+
     /// Return a shared_ptr to the DecoratedImage's Image
     std::shared_ptr<Image<PixelT>> getImage() { return _image; }
     /// Return a shared_ptr to the DecoratedImage's Image as const
@@ -504,7 +506,6 @@ public:
     void setGain(double gain) { _gain = gain; }
 
 private:
-    LSST_PERSIST_FORMATTER(lsst::afw::formatters::DecoratedImageFormatter<PixelT>)
     std::shared_ptr<Image<PixelT>> _image;
     std::shared_ptr<lsst::daf::base::PropertySet> _metadata;
 

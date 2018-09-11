@@ -31,6 +31,7 @@ or
 """
 
 import contextlib
+import itertools
 import os.path
 import unittest
 import shutil
@@ -41,6 +42,7 @@ import astropy.io.fits
 
 import lsst.utils
 import lsst.utils.tests
+import lsst.daf.base as dafBase
 import lsst.geom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
@@ -58,7 +60,7 @@ except NameError:
     display = False
 
 
-class MaskedImageTestCase(unittest.TestCase):
+class MaskedImageTestCase(lsst.utils.tests.TestCase):
     """A test case for MaskedImage"""
 
     def setUp(self):
@@ -196,6 +198,47 @@ class MaskedImageTestCase(unittest.TestCase):
 
             self.assertEqual(im2.getVariance().getX0(), x0)
             self.assertEqual(im2.getVariance().getY0(), y0)
+
+    def testReadFitsWithOptions(self):
+        xy0Offset = lsst.geom.Extent2I(7, 5)
+        bbox = lsst.geom.Box2I(lsst.geom.Point2I(10, 11), lsst.geom.Extent2I(31, 22))
+
+        with lsst.utils.tests.getTempFilePath(".fits") as filepath:
+            # write a temporary version of the image with non-zero XY0
+            imagePath = os.path.join(dataDir, "data", "med.fits")
+            maskedImage = afwImage.MaskedImageD(imagePath)
+            maskedImage.setXY0(lsst.geom.Point2I(xy0Offset))
+            maskedImage.writeFits(filepath)
+
+            for ImageClass, imageOrigin in itertools.product(
+                (afwImage.MaskedImageF, afwImage.MaskedImageD),
+                (None, "LOCAL", "PARENT"),
+            ):
+                with self.subTest(ImageClass=ImageClass, imageOrigin=imageOrigin):
+                    fullImage = ImageClass(filepath)
+                    options = dafBase.PropertySet()
+                    options.set("llcX", bbox.getMinX())
+                    options.set("llcY", bbox.getMinY())
+                    options.set("width", bbox.getWidth())
+                    options.set("height", bbox.getHeight())
+                    if imageOrigin is not None:
+                        options.set("imageOrigin", imageOrigin)
+                    image1 = ImageClass.readFitsWithOptions(filepath, options)
+                    readBBoxParent = lsst.geom.Box2I(bbox)
+                    if imageOrigin == "LOCAL":
+                        readBBoxParent.shift(xy0Offset)
+                    self.assertMaskedImagesEqual(image1, ImageClass(fullImage, readBBoxParent))
+
+                    for name in ("llcY", "width", "height"):
+                        badOptions = options.deepCopy()
+                        badOptions.remove(name)
+                        with self.assertRaises(pexEx.NotFoundError):
+                            ImageClass.readFitsWithOptions(filepath, badOptions)
+
+                        badOptions = options.deepCopy()
+                        badOptions.set("imageOrigin", "INVALID")
+                        with self.assertRaises(RuntimeError):
+                            ImageClass.readFitsWithOptions(filepath, badOptions)
 
 
 @contextlib.contextmanager

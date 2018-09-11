@@ -22,7 +22,6 @@
 
 #include "pybind11/pybind11.h"
 
-#include "lsst/daf/base/Persistable.h"
 #include "lsst/afw/cameraGeom/Detector.h"
 #include "lsst/afw/geom/SkyWcs.h"
 #include "lsst/afw/image/Calib.h"
@@ -39,8 +38,7 @@ namespace image {
 namespace {
 
 template <typename PixelT>
-using PyExposure =
-        py::class_<Exposure<PixelT>, std::shared_ptr<Exposure<PixelT>>, lsst::daf::base::Persistable>;
+using PyExposure = py::class_<Exposure<PixelT>, std::shared_ptr<Exposure<PixelT>>>;
 
 /*
 Declare a constructor that takes an Exposure of FromPixelT and returns an Exposure cast to ToPixelT
