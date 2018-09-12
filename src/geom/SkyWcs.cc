@@ -44,9 +44,14 @@
 #include "lsst/afw/geom/SkyWcs.h"
 #include "lsst/daf/base/PropertyList.h"
 #include "lsst/pex/exceptions.h"
+#include "lsst/afw/table/io/Persistable.cc"
 
 namespace lsst {
 namespace afw {
+
+template std::shared_ptr<geom::SkyWcs> table::io::PersistableFacade<geom::SkyWcs>::dynamicCast(
+        std::shared_ptr<table::io::Persistable> const&);
+
 namespace geom {
 namespace {
 

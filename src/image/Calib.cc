@@ -40,9 +40,14 @@
 #include "lsst/afw/table/io/OutputArchive.h"
 #include "lsst/afw/table/io/InputArchive.h"
 #include "lsst/afw/table/io/CatalogVector.h"
+#include "lsst/afw/table/io/Persistable.cc"
 
 namespace lsst {
 namespace afw {
+
+template std::shared_ptr<image::Calib> table::io::PersistableFacade<image::Calib>::dynamicCast(
+        std::shared_ptr<table::io::Persistable> const&);
+
 namespace image {
 
 /// Compute AB magnitude from flux in Janskys

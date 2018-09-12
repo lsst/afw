@@ -30,9 +30,14 @@
 #include "lsst/afw/table/io/OutputArchive.h"
 #include "lsst/afw/table/io/CatalogVector.h"
 #include "lsst/afw/table/aggregates.h"
+#include "lsst/afw/table/io/Persistable.cc"
 
 namespace lsst {
 namespace afw {
+
+template std::shared_ptr<detection::GaussianPsf> table::io::PersistableFacade<
+        detection::GaussianPsf>::dynamicCast(std::shared_ptr<table::io::Persistable> const&);
+
 namespace detection {
 
 namespace {

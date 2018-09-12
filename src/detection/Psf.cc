@@ -8,9 +8,14 @@
 #include "lsst/utils/hashCombine.h"
 #include "lsst/afw/detection/Psf.h"
 #include "lsst/afw/math/offsetImage.h"
+#include "lsst/afw/table/io/Persistable.cc"
 
 namespace lsst {
 namespace afw {
+
+template std::shared_ptr<detection::Psf> table::io::PersistableFacade<detection::Psf>::dynamicCast(
+        std::shared_ptr<table::io::Persistable> const&);
+
 namespace detection {
 namespace detail {
 

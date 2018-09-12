@@ -33,6 +33,7 @@
 #include "lsst/afw/table/io/InputArchive.h"
 #include "lsst/afw/table/io/OutputArchive.h"
 #include "lsst/afw/table/io/CatalogVector.h"
+#include "lsst/afw/table/io/Persistable.cc"
 
 using namespace std::string_literals;
 
@@ -41,6 +42,10 @@ using namespace std::string_literals;
 
 namespace lsst {
 namespace afw {
+
+template std::shared_ptr<image::TransmissionCurve> table::io::PersistableFacade<
+        image::TransmissionCurve>::dynamicCast(std::shared_ptr<table::io::Persistable> const&);
+
 namespace image {
 
 namespace {

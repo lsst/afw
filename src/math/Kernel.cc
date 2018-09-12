@@ -36,11 +36,16 @@
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/Kernel.h"
+#include "lsst/afw/table/io/Persistable.cc"
 
 namespace pexExcept = lsst::pex::exceptions;
 
 namespace lsst {
 namespace afw {
+
+template std::shared_ptr<math::Kernel> table::io::PersistableFacade<math::Kernel>::dynamicCast(
+        std::shared_ptr<table::io::Persistable> const&);
+
 namespace math {
 
 generic_kernel_tag generic_kernel_tag_;  ///< Used as default value in argument lists

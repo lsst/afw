@@ -24,9 +24,14 @@
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/BoundedField.h"
+#include "lsst/afw/table/io/Persistable.cc"
 
 namespace lsst {
 namespace afw {
+
+template std::shared_ptr<math::BoundedField> table::io::PersistableFacade<math::BoundedField>::dynamicCast(
+        std::shared_ptr<table::io::Persistable> const&);
+
 namespace math {
 
 ndarray::Array<double, 1, 1> BoundedField::evaluate(ndarray::Array<double const, 1> const &x,

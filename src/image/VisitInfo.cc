@@ -38,11 +38,16 @@
 #include "lsst/afw/table/io/InputArchive.h"
 #include "lsst/afw/table/io/CatalogVector.h"  // needed, but why?
 #include "lsst/afw/image/VisitInfo.h"
+#include "lsst/afw/table/io/Persistable.cc"
 
 using lsst::daf::base::DateTime;
 
 namespace lsst {
 namespace afw {
+
+template std::shared_ptr<image::VisitInfo> table::io::PersistableFacade<image::VisitInfo>::dynamicCast(
+        std::shared_ptr<table::io::Persistable> const&);
+
 namespace image {
 
 // the following persistence-related code emulates that in Calib.cc

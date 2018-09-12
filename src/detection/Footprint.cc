@@ -25,9 +25,14 @@
 #include "lsst/afw/table/io/CatalogVector.h"
 #include "lsst/afw/table/io/OutputArchive.h"
 #include "lsst/afw/geom/transformFactory.h"
+#include "lsst/afw/table/io/Persistable.cc"
 
 namespace lsst {
 namespace afw {
+
+template std::shared_ptr<detection::Footprint> table::io::PersistableFacade<
+        detection::Footprint>::dynamicCast(std::shared_ptr<table::io::Persistable> const&);
+
 namespace detection {
 
 Footprint::Footprint(std::shared_ptr<geom::SpanSet> inputSpans, lsst::geom::Box2I const& region)

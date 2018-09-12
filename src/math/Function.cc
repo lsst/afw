@@ -24,6 +24,7 @@
  * Support routines for
  */
 #include "lsst/afw/math/FunctionLibrary.h"
+#include "lsst/afw/table/io/Persistable.cc"
 
 namespace lsst {
 namespace afw {
@@ -60,13 +61,24 @@ std::vector<double> PolynomialFunction2<ReturnT>::getDFuncDParameters(double x, 
     return coeffs;
 }
 
+}  // namespace math
+
 /// @cond
-#define INSTANTIATE(TYPE) \
-    template std::vector<double> PolynomialFunction2<TYPE>::getDFuncDParameters(double x, double y) const
+#define INSTANTIATE(TYPE)                                                                                 \
+    template std::shared_ptr<math::Function<TYPE>>                                                        \
+    table::io::PersistableFacade<math::Function<TYPE>>::dynamicCast(                                      \
+            std::shared_ptr<table::io::Persistable> const&);                                              \
+    template std::shared_ptr<math::Function1<TYPE>>                                                       \
+    table::io::PersistableFacade<math::Function1<TYPE>>::dynamicCast(                                     \
+            std::shared_ptr<table::io::Persistable> const&);                                              \
+    template std::shared_ptr<math::Function2<TYPE>>                                                       \
+    table::io::PersistableFacade<math::Function2<TYPE>>::dynamicCast(                                     \
+            std::shared_ptr<table::io::Persistable> const&);                                              \
+    template std::vector<double> math::PolynomialFunction2<TYPE>::getDFuncDParameters(double x, double y) \
+            const
 
 INSTANTIATE(double);
 INSTANTIATE(float);
 /// @endcond
-}  // namespace math
 }  // namespace afw
 }  // namespace lsst

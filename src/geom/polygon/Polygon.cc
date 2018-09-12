@@ -12,6 +12,7 @@
 #include "lsst/afw/table/io/InputArchive.h"
 #include "lsst/afw/table/io/CatalogVector.h"
 #include "lsst/afw/table/aggregates.h"
+#include "lsst/afw/table/io/Persistable.cc"
 
 typedef lsst::afw::geom::polygon::Polygon::Point LsstPoint;
 typedef lsst::afw::geom::polygon::Polygon::Box LsstBox;
@@ -144,6 +145,10 @@ void pixelRowOverlap(std::shared_ptr<lsst::afw::image::Image<float>> const image
 
 namespace lsst {
 namespace afw {
+
+template std::shared_ptr<geom::polygon::Polygon> table::io::PersistableFacade<
+        geom::polygon::Polygon>::dynamicCast(std::shared_ptr<table::io::Persistable> const&);
+
 namespace geom {
 namespace polygon {
 

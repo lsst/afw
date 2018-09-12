@@ -31,9 +31,14 @@
 #include "lsst/afw/table/io/OutputArchive.h"
 #include "lsst/afw/table/io/CatalogVector.h"
 #include "lsst/afw/table/aggregates.h"
+#include "lsst/afw/table/io/Persistable.cc"
 
 namespace lsst {
 namespace afw {
+
+template std::shared_ptr<math::ChebyshevBoundedField> table::io::PersistableFacade<
+        math::ChebyshevBoundedField>::dynamicCast(std::shared_ptr<table::io::Persistable> const&);
+
 namespace math {
 
 int ChebyshevBoundedFieldControl::computeSize() const { return detail::TrapezoidalPacker(*this).size; }

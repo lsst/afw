@@ -33,11 +33,16 @@
 #include "lsst/afw/math/FunctionLibrary.h"
 #include "lsst/afw/math/Kernel.h"
 #include "lsst/afw/math/KernelPersistenceHelper.h"
+#include "lsst/afw/table/io/Persistable.cc"
 
 namespace pexExcept = lsst::pex::exceptions;
 
 namespace lsst {
 namespace afw {
+
+template std::shared_ptr<math::LinearCombinationKernel> table::io::PersistableFacade<
+        math::LinearCombinationKernel>::dynamicCast(std::shared_ptr<table::io::Persistable> const &);
+
 namespace math {
 
 LinearCombinationKernel::LinearCombinationKernel()
