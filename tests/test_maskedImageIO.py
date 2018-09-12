@@ -199,6 +199,7 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
             self.assertEqual(im2.getVariance().getX0(), x0)
             self.assertEqual(im2.getVariance().getY0(), y0)
 
+    @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testReadFitsWithOptions(self):
         xy0Offset = lsst.geom.Extent2I(7, 5)
         bbox = lsst.geom.Box2I(lsst.geom.Point2I(10, 11), lsst.geom.Extent2I(31, 22))
