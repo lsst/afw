@@ -25,6 +25,9 @@ namespace lsst {
 namespace afw {
 namespace cameraGeom {
 
+/**
+ * An immutable collection of Detectors that can be accessed by name or ID
+ */
 DetectorCollection::DetectorCollection(List const & detectorList) {
     for (auto const & detector : detectorList) {
         _nameDict[detector->getName()] = detector;

@@ -26,9 +26,24 @@ namespace afw {
 namespace cameraGeom {
 
 namespace {
-    // Set this as a function to ensure FOCAL_PLANE is defined before use.
-    CameraSys const getNativeCameraSys() { return FOCAL_PLANE; }
+// Set this as a function to ensure FOCAL_PLANE is defined before use.
+CameraSys const getNativeCameraSys() { return FOCAL_PLANE; }
 
+/**
+ * Get a transform from one TransformMap
+ *
+ * `fromSys` and `toSys` must both be present in the same TransformMap, but that TransformMap may be from
+ *    any detector or this camera object.
+ *
+ * @param[in] fromSys  Camera coordinate system of input points
+ * @param[in] toSys  Camera coordinate system of returned points
+ * @returns an afw::geom::TransformPoint2ToPoint2 that transforms from `fromSys` to `toSys` in the forward
+ *    direction
+ *
+ * @throws lsst::pex::exceptions::InvalidParameter if no transform is available.  This includes the case that
+ *    `fromSys` specifies a known detector and `toSys` specifies any other detector (known or unknown)
+ * @throws KeyError if an unknown detector is specified
+ */
 std::shared_ptr<afw::geom::TransformPoint2ToPoint2> getTransformFromOneTransformMap(
     Camera const &camera, CameraSys const &fromSys, CameraSys const &toSys) {
 
@@ -102,17 +117,13 @@ lsst::geom::Point2D Camera::transform(lsst::geom::Point2D const &point, CameraSy
     auto transform = getTransform(fromSys, toSys);
     return transform->applyForward(point);
 }
+
 std::vector<lsst::geom::Point2D> Camera::transform(std::vector<lsst::geom::Point2D> const &points,
                                                    CameraSys const &fromSys,
                                                    CameraSys const &toSys) const {
     auto transform = getTransform(fromSys, toSys);
     return transform->applyForward(points);
 }
-
-
-
-
-
 
 } // namespace cameraGeom
 } // namespace afw

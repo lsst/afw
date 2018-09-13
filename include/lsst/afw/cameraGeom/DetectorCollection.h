@@ -33,8 +33,10 @@ namespace lsst {
 namespace afw {
 namespace cameraGeom {
 
+/**
+ * An immutable collection of Detectors that can be accessed by name or ID
+ */
 class DetectorCollection {
-
 public:
     using NameMap = std::unordered_map<std::string, std::shared_ptr<Detector>>;
     using IdMap = std::unordered_map<int, std::shared_ptr<Detector>>;
@@ -44,28 +46,68 @@ public:
 
     DetectorCollection(DetectorCollection const &);
     DetectorCollection(DetectorCollection &&) noexcept;
-
     DetectorCollection & operator=(DetectorCollection const &);
     DetectorCollection & operator=(DetectorCollection &&) noexcept;
 
     virtual ~DetectorCollection() noexcept;
 
+    /// Get an unordered map over detector names
     NameMap const & getNameMap() const noexcept { return _nameDict; }
+
+    /// Get an unordered map over detector IDs
     IdMap const & getIdMap() const noexcept { return _idDict; }
+
+    /// Return a focal plane bounding box that encompasses all detectors
     lsst::geom::Box2D const & getFpBBox() const noexcept { return _fpBBox; }
 
+    /**
+     * Get the number of detectors.  Renamed to `__len__` in Python.
+     */
     std::size_t size() const noexcept { return _idDict.size(); }
+
+    /**
+     * Determine if the DetectorCollection contains any Detectors.
+     */
     bool empty() const noexcept { return _idDict.empty(); }
+
+    /**
+     * Implement the [name] operator
+     *
+     * @param[in] name  detector name
+     * @return pointer to detector entry
+     */
     std::shared_ptr<Detector> operator[](std::string const & name) const;
+
+    /**
+     * Implement the [id] operator
+     *
+     * @param[in] id  detector name
+     * @return pointer to detector entry
+     */
     std::shared_ptr<Detector> operator[](int id) const;
 
+    /**
+     * Support the "in" operator
+     *
+     * @param[in] name  detector name
+     * @param[in] def  default detector to return.  This defaults to the NULL pointer
+     * @return pointer to detector entry if the entry exists, else return the default value
+     */
     std::shared_ptr<Detector> get(std::string const & name, std::shared_ptr<Detector> def=nullptr) const;
+
+    /**
+     * Support the "in" operator
+     *
+     * @param[in] id  detector id
+     * @param[in] def  default detector to return.  This defaults to the NULL pointer
+     * @return pointer to detector entry if the entry exists, else return the default value
+     */
     std::shared_ptr<Detector> get(int id, std::shared_ptr<Detector> def=nullptr) const;
 
 private:
-    NameMap _nameDict;
-    IdMap _idDict;
-    lsst::geom::Box2D _fpBBox;
+    NameMap _nameDict;                //< map of detector names
+    IdMap _idDict;                    //< map of detector ids
+    lsst::geom::Box2D _fpBBox;        //< bounding box of collection
 };
 
 } // namespace cameraGeom
