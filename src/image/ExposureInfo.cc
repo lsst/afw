@@ -41,20 +41,6 @@ namespace lsst {
 namespace afw {
 namespace image {
 
-namespace {
-
-// Return an int value from a PropertySet if it exists and remove it, or return 0.
-int popInt(daf::base::PropertySet& metadata, std::string const& name) {
-    int r = 0;
-    if (metadata.exists(name)) {
-        r = metadata.get<int>(name);
-        metadata.remove(name);
-    }
-    return r;
-}
-
-}  // namespace
-
 // Clone various components; defined here so that we don't have to expose their insides in Exposure.h
 
 std::shared_ptr<Calib> ExposureInfo::_cloneCalib(std::shared_ptr<Calib const> calib) {
@@ -243,98 +229,6 @@ void ExposureInfo::_finishWriteFits(fits::Fits& fitsfile, FitsWriteData const& d
     data.archive.writeFits(fitsfile);
 }
 
-void ExposureInfo::_readFits(fits::Fits& fitsfile, std::shared_ptr<daf::base::PropertySet> metadata,
-                             std::shared_ptr<daf::base::PropertySet> imageMetadata) {
-    // Try to read WCS from image metadata, and if found, strip the keywords used
-    try {
-        _wcs = geom::makeSkyWcs(*imageMetadata, true);
-    } catch (lsst::pex::exceptions::TypeError) {
-        LOGLS_DEBUG(_log, "No WCS found in FITS metadata");
-    }
-
-    // Strip LTV1, LTV2 from imageMetadata, because we don't use it internally
-    imageMetadata->remove("LTV1");
-    imageMetadata->remove("LTV2");
-
-    if (!imageMetadata->exists("INHERIT")) {
-        // New-style exposures put everything but the Wcs in the primary HDU, use
-        // INHERIT keyword in the others.  For backwards compatibility, if we don't
-        // find the INHERIT keyword, we ignore the primary HDU metadata and expect
-        // everything to be in the image HDU metadata.  Note that we can't merge them,
-        // because they're probably duplicates.
-        metadata = imageMetadata;
-    }
-
-    _filter = Filter(metadata, true);
-    detail::stripFilterKeywords(metadata);
-
-    _visitInfo = std::shared_ptr<VisitInfo const>(new VisitInfo(*metadata));
-    detail::stripVisitInfoKeywords(*metadata);
-
-    std::shared_ptr<Calib> newCalib(new Calib(metadata));
-    setCalib(newCalib);
-    detail::stripCalibKeywords(metadata);
-
-    int archiveHdu = popInt(*metadata, "AR_HDU");
-
-    if (archiveHdu) {
-        --archiveHdu;  // see note above in _startWriteFits;  AR_HDU is *one* indexed
-
-        fitsfile.setHdu(archiveHdu);
-        table::io::InputArchive archive = table::io::InputArchive::readFits(fitsfile);
-        // Load the Psf and Wcs from the archive; id=0 results in a null pointer.
-        // Note that the binary table Wcs, if present, clobbers the FITS header one,
-        // because the former might be an approximation to something we can't represent
-        // using the FITS WCS standard but can represent with binary tables.
-        int psfId = popInt(*metadata, "PSF_ID");
-        try {
-            _psf = archive.get<detection::Psf>(psfId);
-        } catch (pex::exceptions::NotFoundError& err) {
-            LOGLS_WARN(_log, "Could not read PSF; setting to null: " << err.what());
-        }
-        int wcsId = popInt(*metadata, "SKYWCS_ID");
-        try {
-            auto archiveWcs = archive.get<geom::SkyWcs>(wcsId);
-            if (archiveWcs) {
-                _wcs = archiveWcs;
-            } else {
-                LOGLS_DEBUG(_log, "Null WCS seen in binary table");
-            }
-        } catch (pex::exceptions::NotFoundError& err) {
-            auto msg = str(boost::format("Could not read WCS extension; setting to null: %s") % err.what());
-            if (_wcs) {
-                msg += " ; using WCS from FITS header";
-            }
-            LOGLS_WARN(_log, msg);
-        }
-        int coaddInputsId = popInt(*metadata, "COADD_INPUTS_ID");
-        try {
-            _coaddInputs = archive.get<CoaddInputs>(coaddInputsId);
-        } catch (pex::exceptions::NotFoundError& err) {
-            LOGLS_WARN(_log, "Could not read CoaddInputs; setting to null: " << err.what());
-        }
-        int apCorrMapId = popInt(*metadata, "AP_CORR_MAP_ID");
-        try {
-            _apCorrMap = archive.get<ApCorrMap>(apCorrMapId);
-        } catch (pex::exceptions::NotFoundError& err) {
-            LOGLS_WARN(_log, "Could not read ApCorrMap; setting to null: " << err.what());
-        }
-        int validPolygonId = popInt(*metadata, "VALID_POLYGON_ID");
-        try {
-            _validPolygon = archive.get<geom::polygon::Polygon>(validPolygonId);
-        } catch (pex::exceptions::NotFoundError& err) {
-            LOGLS_WARN(_log, "Could not read ValidPolygon; setting to null: " << err.what());
-        }
-        int transmissionCurveId = popInt(*metadata, "TRANSMISSION_CURVE_ID");
-        try {
-            _transmissionCurve = archive.get<TransmissionCurve>(transmissionCurveId);
-        } catch (pex::exceptions::NotFoundError& err) {
-            LOGLS_WARN(_log, "Could not read TransmissionCurve; setting to null: " << err.what());
-        }
-    }
-
-    _metadata = metadata;
-}
 }  // namespace image
 }  // namespace afw
 }  // namespace lsst

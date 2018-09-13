@@ -515,6 +515,9 @@ public:
     void conformMaskPlanes(const MaskPlaneDict& masterPlaneDict);
 
 private:
+
+    friend class MaskFitsReader;
+
     std::shared_ptr<detail::MaskDict> _maskDict;  // our bitplane dictionary
 
     static std::shared_ptr<detail::MaskDict> _maskPlaneDict();

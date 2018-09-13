@@ -35,11 +35,10 @@
 #include "boost/filesystem/path.hpp"
 #include "lsst/log/Log.h"
 #include "lsst/pex/exceptions.h"
-#include "boost/algorithm/string/trim.hpp"
 
 #include "lsst/afw/image/MaskedImage.h"
-#include "lsst/afw/image/fits/fits_io.h"
 #include "lsst/afw/fits.h"
+#include "lsst/afw/image/MaskedImageFitsReader.h"
 
 namespace lsst {
 namespace afw {
@@ -89,9 +88,20 @@ MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
         std::shared_ptr<daf::base::PropertySet> maskMetadata,
         std::shared_ptr<daf::base::PropertySet> varianceMetadata)
         : daf::base::Citizen(typeid(this)), _image(), _mask(), _variance() {
-    fits::Fits fitsfile(fileName, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
-    *this = MaskedImage(fitsfile, metadata, bbox, origin, conformMasks, needAllHdus, imageMetadata,
-                        maskMetadata, varianceMetadata);
+    MaskedImageFitsReader reader(fileName);
+    *this = reader.read<ImagePixelT, MaskPixelT, VariancePixelT>(bbox, origin, conformMasks, needAllHdus);
+    if (metadata) {
+        metadata->combine(reader.readPrimaryMetadata());
+    }
+    if (imageMetadata) {
+        imageMetadata->combine(reader.readImageMetadata());
+    }
+    if (maskMetadata) {
+        maskMetadata->combine(reader.readMaskMetadata());
+    }
+    if (varianceMetadata) {
+        varianceMetadata->combine(reader.readVarianceMetadata());
+    }
 }
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
@@ -102,123 +112,43 @@ MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
         std::shared_ptr<daf::base::PropertySet> maskMetadata,
         std::shared_ptr<daf::base::PropertySet> varianceMetadata)
         : daf::base::Citizen(typeid(this)), _image(), _mask(), _variance() {
-    fits::Fits fitsfile(manager, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
-    *this = MaskedImage(fitsfile, metadata, bbox, origin, conformMasks, needAllHdus, imageMetadata,
-                        maskMetadata, varianceMetadata);
-}
-
-namespace {
-
-// Helper functions for MaskedImage FITS ctor.
-
-void checkExtType(fits::Fits& fitsfile, std::shared_ptr<daf::base::PropertySet> metadata,
-                  std::string const& expected) {
-    try {
-        std::string exttype = boost::algorithm::trim_right_copy(metadata->getAsString("EXTTYPE"));
-        if (exttype != "" && exttype != expected) {
-            throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
-                              (boost::format("Reading %s (hdu %d) Expected EXTTYPE==\"%s\", saw \"%s\"") %
-                               expected % fitsfile.getFileName() % fitsfile.getHdu() % exttype)
-                                      .str());
-        }
-        metadata->remove("EXTTYPE");
-    } catch (pex::exceptions::NotFoundError) {
-        LOGLS_WARN("afw.image.MaskedImage", "Expected extension type not found: " << expected);
+    MaskedImageFitsReader reader(manager);
+    *this = reader.read<ImagePixelT, MaskPixelT, VariancePixelT>(bbox, origin, conformMasks, needAllHdus);
+    if (metadata) {
+        metadata->combine(reader.readPrimaryMetadata());
+    }
+    if (imageMetadata) {
+        imageMetadata->combine(reader.readImageMetadata());
+    }
+    if (maskMetadata) {
+        maskMetadata->combine(reader.readMaskMetadata());
+    }
+    if (varianceMetadata) {
+        varianceMetadata->combine(reader.readVarianceMetadata());
     }
 }
-
-void ensureMetadata(std::shared_ptr<daf::base::PropertySet>& metadata) {
-    if (!metadata) {
-        metadata.reset(new daf::base::PropertyList());
-    }
-}
-
-}  // namespace
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
-        fits::Fits& fitsfile, std::shared_ptr<daf::base::PropertySet> metadata, lsst::geom::Box2I const& bbox,
+        fits::Fits& fitsFile, std::shared_ptr<daf::base::PropertySet> metadata, lsst::geom::Box2I const& bbox,
         ImageOrigin origin, bool conformMasks, bool needAllHdus,
         std::shared_ptr<daf::base::PropertySet> imageMetadata,
         std::shared_ptr<daf::base::PropertySet> maskMetadata,
         std::shared_ptr<daf::base::PropertySet> varianceMetadata)
         : daf::base::Citizen(typeid(this)), _image(), _mask(), _variance() {
-    // When reading a standard Masked Image, we expect four HDUs:
-    // * The primary (HDU 0) is empty;
-    // * The first extension (HDU 1) contains the image data;
-    // * The second extension (HDU 2) contains mask data;
-    // * The third extension (HDU 3) contains the variance.
-    //
-    // If the image HDU is unreadable, we will throw.
-    //
-    // If the user has specified a non-default HDU, we load image data from
-    // that HDU, but do not attempt to load mask/variance data; rather, log a
-    // warning and return (blank) defaults.
-    //
-    // If the mask and/or variance is unreadable, we log a warning and return
-    // (blank) defaults.
-
-    LOG_LOGGER _log = LOG_GET("afw.image.MaskedImage");
-
-    enum class Hdu { Primary = 0, Image, Mask, Variance };
-
-    // If the user has requested a non-default HDU and we require all HDUs, we fail.
-    if (needAllHdus && fitsfile.getHdu() > static_cast<int>(Hdu::Image)) {
-        throw LSST_EXCEPT(fits::FitsError, "Cannot read all HDUs starting from non-default");
-    }
-
+    MaskedImageFitsReader reader(&fitsFile);
+    *this = reader.read<ImagePixelT, MaskPixelT, VariancePixelT>(bbox, origin, conformMasks, needAllHdus);
     if (metadata) {
-        // Read primary metadata - only if user asks for it.
-        // If the primary HDU is not empty, this may be the same as imageMetadata.
-        auto prevHdu = fitsfile.getHdu();
-        fitsfile.setHdu(static_cast<int>(Hdu::Primary));
-        fitsfile.readMetadata(*metadata);
-        fitsfile.setHdu(prevHdu);
+        metadata->combine(reader.readPrimaryMetadata());
     }
-
-    // setHdu(fits::DEFAULT_HDU) jumps to the first extension iff the primary HDU is both
-    // empty and currently selected.
-    fitsfile.setHdu(fits::DEFAULT_HDU);
-    ensureMetadata(imageMetadata);
-    _image.reset(new Image(fitsfile, imageMetadata, bbox, origin));
-    checkExtType(fitsfile, imageMetadata, "IMAGE");
-
-    if (fitsfile.getHdu() != static_cast<int>(Hdu::Image)) {
-        // Reading the image from a non-default HDU means we do not attempt to
-        // read mask and variance.
-        _mask.reset(new Mask(_image->getBBox()));
-        _variance.reset(new Variance(_image->getBBox()));
-    } else {
-        try {
-            fitsfile.setHdu(static_cast<int>(Hdu::Mask));
-            ensureMetadata(maskMetadata);
-            _mask.reset(new Mask(fitsfile, maskMetadata, bbox, origin, conformMasks));
-            checkExtType(fitsfile, maskMetadata, "MASK");
-        } catch (fits::FitsError& e) {
-            if (needAllHdus) {
-                LSST_EXCEPT_ADD(e, "Reading Mask");
-                throw e;
-            }
-            LOGLS_WARN(_log, "Mask unreadable (" << e << "); using default");
-            // By resetting the status we are able to read the next HDU (the variance).
-            fitsfile.status = 0;
-            _mask.reset(new Mask(_image->getBBox()));
-        }
-
-        try {
-            fitsfile.setHdu(static_cast<int>(Hdu::Variance));
-            ensureMetadata(varianceMetadata);
-            _variance.reset(new Variance(fitsfile, varianceMetadata, bbox, origin));
-            checkExtType(fitsfile, varianceMetadata, "VARIANCE");
-        } catch (fits::FitsError& e) {
-            if (needAllHdus) {
-                LSST_EXCEPT_ADD(e, "Reading Variance");
-                throw e;
-            }
-            LOGLS_WARN(_log, "Variance unreadable (" << e << "); using default");
-            fitsfile.status = 0;
-            _variance.reset(new Variance(_image->getBBox()));
-        }
+    if (imageMetadata) {
+        imageMetadata->combine(reader.readImageMetadata());
+    }
+    if (maskMetadata) {
+        maskMetadata->combine(reader.readMaskMetadata());
+    }
+    if (varianceMetadata) {
+        varianceMetadata->combine(reader.readVarianceMetadata());
     }
 }
 

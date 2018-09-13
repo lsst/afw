@@ -286,16 +286,6 @@ private:
      */
     void _finishWriteFits(fits::Fits& fitsfile, FitsWriteData const& data) const;
 
-    /**
-     *  Read from a FITS file and metadata.
-     *
-     *  This operates in-place on this instead of returning a new object, because it will usually
-     *  only be called by the exposure constructor, which starts by default-constructing the
-     *  ExposureInfo.
-     */
-    void _readFits(fits::Fits& fitsfile, std::shared_ptr<daf::base::PropertySet> metadata,
-                   std::shared_ptr<daf::base::PropertySet> imageMetadata);
-
     static std::shared_ptr<Calib> _cloneCalib(std::shared_ptr<Calib const> calib);
     static std::shared_ptr<ApCorrMap> _cloneApCorrMap(std::shared_ptr<ApCorrMap const> apCorrMap);
 

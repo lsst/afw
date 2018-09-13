@@ -42,8 +42,7 @@
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/ImageAlgorithm.h"
 #include "lsst/afw/fits.h"
-#include "lsst/afw/image/fits/fits_io.h"
-#include "lsst/afw/image/fits/fits_io_mpl.h"
+#include "lsst/afw/image/ImageFitsReader.h"
 
 namespace lsst {
 namespace afw {
@@ -377,42 +376,35 @@ Image<PixelT>& Image<PixelT>::operator=(Image&& rhs) {
 template <typename PixelT>
 Image<PixelT>::Image(std::string const& fileName, int hdu, std::shared_ptr<daf::base::PropertySet> metadata,
                      lsst::geom::Box2I const& bbox, ImageOrigin origin)
-        : ImageBase<PixelT>() {
-    fits::Fits fitsfile(fileName, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
-    fitsfile.setHdu(hdu);
-    try {
-        *this = Image(fitsfile, metadata, bbox, origin);
-    } catch (fits::FitsError& e) {
-        fitsfile.status = 0;                // reset so we can read NAXIS
-        if (fitsfile.getImageDim() == 0) {  // no pixels to read
-            LSST_EXCEPT_ADD(e, str(boost::format("HDU %d has NAXIS == 0") % hdu));
-        }
-        throw e;
+{
+    ImageFitsReader reader(fileName, hdu);
+    *this = reader.read<PixelT>(bbox, origin);
+    if (metadata) {
+        metadata->combine(reader.readMetadata());
     }
 }
+
 template <typename PixelT>
 Image<PixelT>::Image(fits::MemFileManager& manager, int const hdu,
                      std::shared_ptr<daf::base::PropertySet> metadata, lsst::geom::Box2I const& bbox,
                      ImageOrigin const origin)
-        : ImageBase<PixelT>() {
-    fits::Fits fitsfile(manager, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
-    fitsfile.setHdu(hdu);
-    *this = Image(fitsfile, metadata, bbox, origin);
+{
+    ImageFitsReader reader(manager, hdu);
+    *this = reader.read<PixelT>(bbox, origin);
+    if (metadata) {
+        metadata->combine(reader.readMetadata());
+    }
 }
 
 template <typename PixelT>
-Image<PixelT>::Image(fits::Fits& fitsfile, std::shared_ptr<daf::base::PropertySet> metadata,
+Image<PixelT>::Image(fits::Fits& fitsFile, std::shared_ptr<daf::base::PropertySet> metadata,
                      lsst::geom::Box2I const& bbox, ImageOrigin const origin)
-        : ImageBase<PixelT>() {
-    typedef boost::mpl::vector<unsigned char, unsigned short, short, int, unsigned int, float, double,
-                               std::uint64_t>
-            fits_image_types;
-
-    if (!metadata) {
-        metadata.reset(new daf::base::PropertyList());
+{
+    ImageFitsReader reader(&fitsFile);
+    *this = reader.read<PixelT>(bbox, origin);
+    if (metadata) {
+        metadata->combine(reader.readMetadata());
     }
-
-    fits_read_image<fits_image_types>(fitsfile, *this, *metadata, bbox, origin);
 }
 
 template <typename PixelT>

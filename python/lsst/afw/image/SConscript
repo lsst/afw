@@ -17,6 +17,7 @@ scripts.BasicSConscript.pybind11(
      'imagePca',
      'transmissionCurve',
      'visitInfo',
-     'defect'],
+     'defect',
+     'readers'],
     addUnderscore=False
 )

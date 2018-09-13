@@ -43,3 +43,5 @@ from .readMetadata import *
 from .basicUtils import *
 from .testUtils import *
 from .makeVisitInfo import makeVisitInfo
+
+from .readers import *
