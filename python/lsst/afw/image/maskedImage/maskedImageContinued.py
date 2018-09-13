@@ -98,6 +98,17 @@ class MaskedImage(metaclass=TemplateMeta):
         from lsst.afw.fits import reduceToFits
         return reduceToFits(self)
 
+    def __str__(self):
+        string = "image={},\nmask={}, maskPlaneDict={}\nvariance={}, bbox={}"
+        return string.format(self.image.array,
+                             self.mask.array,
+                             self.mask.getMaskPlaneDict(),
+                             self.variance.array,
+                             self.getBBox())
+
+    def __repr__(self):
+        return "{}.{}=({})".format(self.__module__, self.__class__.__name__, str(self))
+
     readFitsWithOptions = classmethod(imageReadFitsWithOptions)
 
     writeFitsWithOptions = exposureWriteFitsWithOptions
