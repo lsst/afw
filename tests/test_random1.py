@@ -35,7 +35,6 @@ import time
 import unittest
 
 import lsst.pex.exceptions
-import lsst.pex.policy as pexPolicy
 import lsst.utils.tests
 import lsst.geom
 import lsst.afw.image as afwImage
@@ -79,20 +78,6 @@ class RandomTestCase(unittest.TestCase):
         rng1 = afwMath.Random(afwMath.Random.MT19937, getSeed())
         rng2 = rng1.deepCopy()
         checkRngEquivalence(rng1, rng2)
-
-    def testPolicy(self):
-        """
-        Tests that policy files and environment variables can override
-        user specified algorithms and seed values.
-        """
-        pol = pexPolicy.Policy()
-        seed = getSeed()
-        pol.set("rngSeed", str(seed))
-        pol.set("rngAlgorithm", afwMath.Random.getAlgorithmNames()
-                [int(afwMath.Random.Algorithm.RANLXD2)])
-        r1 = afwMath.Random(afwMath.Random.RANLXD2, seed)
-        r2 = afwMath.Random(pol)
-        checkRngEquivalence(r1, r2)
 
 
 class RandomImageTestCase(unittest.TestCase):

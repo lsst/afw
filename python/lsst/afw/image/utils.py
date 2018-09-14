@@ -21,11 +21,10 @@
 #
 
 __all__ = ["clipImage", "resetFilters", "defineFilter",
-           "defineFiltersFromPolicy", "CalibNoThrow", "projectImage", "getProjectionIndices"]
+           "CalibNoThrow", "projectImage", "getProjectionIndices"]
 
 import numpy as np
 
-import lsst.pex.policy as pexPolicy
 import lsst.afw.detection as afwDetect
 from .maskedImage import MaskedImage, makeMaskedImage
 from .image import Mask
@@ -67,29 +66,6 @@ def defineFilter(name, lambdaEff, lambdaMin=np.nan, lambdaMax=np.nan, alias=[], 
     else:
         for a in alias:
             Filter.defineAlias(name, a)
-
-
-def defineFiltersFromPolicy(filterPolicy, reset=False):
-    """Process a Policy and define the filters"""
-
-    if reset:
-        Filter.reset()
-        FilterProperty.reset()
-    #
-    # Process the Policy and define the filters
-    #
-    policyFile = pexPolicy.DefaultPolicyFile(
-        "afw", "FilterDictionary.paf", "policy")
-    defPolicy = pexPolicy.Policy.createPolicy(
-        policyFile, policyFile.getRepositoryPath(), True)
-
-    filterPolicy.mergeDefaults(defPolicy.getDictionary())
-
-    for p in filterPolicy.getArray("Filter"):
-        Filter.define(FilterProperty(p.get("name"), p))
-        if p.exists("alias"):
-            for a in p.getArray("alias"):
-                Filter.defineAlias(p.get("name"), a)
 
 
 class CalibNoThrow:

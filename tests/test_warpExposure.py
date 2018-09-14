@@ -36,7 +36,6 @@ import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.image.utils as imageUtils
-import lsst.pex.policy as pexPolicy
 import lsst.pex.exceptions as pexExcept
 import lsst.afw.display.ds9 as ds9
 from lsst.log import Log
@@ -104,11 +103,7 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         - bad mask pixels get smeared out so we have to excluded all bad mask pixels
           from the output image when comparing masks.
         """
-        filterPolicyFile = pexPolicy.DefaultPolicyFile(
-            "afw", "SdssFilters.paf", "tests")
-        filterPolicy = pexPolicy.Policy.createPolicy(
-            filterPolicyFile, filterPolicyFile.getRepositoryPath(), True)
-        imageUtils.defineFiltersFromPolicy(filterPolicy, reset=True)
+        imageUtils.defineFilter("i", 748.1)
 
         originalExposure = afwImage.ExposureF(originalExposurePath)
         originalExposure.getInfo().setVisitInfo(makeVisitInfo())

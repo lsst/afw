@@ -31,7 +31,6 @@ import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.image.utils as imageUtils
 import lsst.afw.math as afwMath
-import lsst.pex.policy as pexPolicy
 import lsst.pex.exceptions as pexExcept
 from lsst.log import Log
 
@@ -81,11 +80,7 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         originalExposure, swarpedImage, swarpedWcs = self.getSwarpedImage(
             kernelName=kernelName, useSubregion=True, useDeepCopy=False)
 
-        filterPolicyFile = pexPolicy.DefaultPolicyFile(
-            "afw", "SdssFilters.paf", "tests")
-        filterPolicy = pexPolicy.Policy.createPolicy(
-            filterPolicyFile, filterPolicyFile.getRepositoryPath(), True)
-        imageUtils.defineFiltersFromPolicy(filterPolicy, reset=True)
+        imageUtils.defineFilter("i", 748.1)
 
         originalFilter = afwImage.Filter("i")
         originalCalib = afwImage.Calib()
