@@ -38,8 +38,6 @@
 
 #include "lsst/afw/math/Random.h"
 
-using lsst::pex::policy::Policy;
-
 namespace ex = lsst::pex::exceptions;
 
 namespace lsst {
@@ -97,21 +95,6 @@ Random::Random(Algorithm const algorithm, unsigned long seed) : _rng(), _seed(se
 
 Random::Random(std::string const &algorithm, unsigned long seed) : _rng(), _seed(seed) {
     initialize(algorithm);
-}
-
-Random::Random(std::shared_ptr<pex::policy::Policy> const policy) : _rng(), _seed() {
-    std::string const seed(policy->getString("rngSeed"));
-    try {
-        _seed = std::stoul(seed);
-    } catch (std::invalid_argument &) {
-        throw LSST_EXCEPT(
-                ex::RuntimeError,
-                (boost::format("Invalid argument in \"rngSeed\" policy value: \"%1%\"") % seed).str());
-    } catch (std::out_of_range &) {
-        throw LSST_EXCEPT(ex::RuntimeError,
-                          (boost::format("Out of range in \"rngSeed\" policy value: \"%1%\"") % seed).str());
-    }
-    initialize(policy->getString("rngAlgorithm"));
 }
 
 Random Random::deepCopy() const {

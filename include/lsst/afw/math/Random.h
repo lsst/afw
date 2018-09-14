@@ -34,7 +34,6 @@
 #include "gsl/gsl_rng.h"
 
 #include "lsst/pex/exceptions.h"
-#include "lsst/pex/policy/Policy.h"
 
 namespace lsst {
 namespace afw {
@@ -49,10 +48,6 @@ namespace math {
  * <a href="http://www.gnu.org/software/gsl/">GSL</a>, which supports many
  * additional distributions that can easily be added to this class as the
  * need arises.
- *
- * To enable reproducibility, factory functions which determine the algorithm type and seed value
- * to used based on the the `LSST_RNG_ALGORITHM` and `LSST_RNG_SEED` environment variables (or the
- * "rngAlgorithm" and "rngSeed" keys in a policy) are provided.
  *
  * @see <a href="http://www.gnu.org/software/gsl/manual/html_node/Random-Number-Generation.html">Random number
  * generation in GSL</a>
@@ -126,23 +121,6 @@ public:
      *      Thrown if memory allocation for internal generator state fails.
      */
     explicit Random(std::string const &algorithm, unsigned long seed = 1);
-    /**
-     * Creates a random number generator using the algorithm and seed specified
-     * in the given policy. The algorithm name and seed are expected to be specified
-     * in string-valued keys named "rngAlgorithm" and "rngSeed" respectively. The
-     * "rngSeed" value is expected to be convertible to an unsigned long integer
-     * and must not be positive.
-     *
-     * @param[in] policy    policy which contains the algorithm and seed to
-     *                      to use for random number generation
-     * @returns              a newly created random number generator
-     *
-     * @throws lsst::pex::exceptions::InvalidParameterError
-     *      Thrown if the requested algorithm is not supported.
-     * @throws std::bad_alloc
-     *      Thrown if memory allocation for internal generator state fails.
-     */
-    explicit Random(std::shared_ptr<pex::policy::Policy> const policy);
 
     // Use compiler generated destructor and shallow copy constructor/assignment operator
     Random(Random const &) = default;
