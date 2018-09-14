@@ -34,8 +34,6 @@
 #include "lsst/daf/base/Citizen.h"
 #include "lsst/daf/base/DateTime.h"
 #include "lsst/pex/exceptions.h"
-#include "lsst/pex/policy.h"
-#include "lsst/pex/policy/Policy.h"
 
 namespace lsst {
 namespace afw {

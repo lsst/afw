@@ -70,7 +70,6 @@ PYBIND11_MODULE(random, mod) {
     clsRandom.def(py::init<Random::Algorithm, unsigned long>(), "algorithm"_a = Random::Algorithm::MT19937,
                   "seed"_a = 1);
     clsRandom.def(py::init<std::string const &, unsigned long>(), "algorithm"_a, "seed"_a = 1);
-    clsRandom.def(py::init<std::shared_ptr<lsst::pex::policy::Policy> const>(), "policy"_a);
 
     /* Members */
     clsRandom.def("deepCopy", &Random::deepCopy);

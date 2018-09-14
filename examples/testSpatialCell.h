@@ -23,7 +23,6 @@
 #if !defined(TESTSPATIALCELL_H)
 #define TESTSPATIALCELL_H
 #include <memory>
-#include "lsst/pex/policy.h"
 #include "lsst/geom.h"
 #include "lsst/afw/math.h"
 #include "lsst/afw/image/Image.h"
