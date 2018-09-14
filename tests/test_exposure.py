@@ -34,11 +34,11 @@ import lsst.utils
 import lsst.utils.tests
 import lsst.geom
 import lsst.afw.image as afwImage
+from lsst.afw.image.utils import defineFilter
 from lsst.afw.coord import Weather
 import lsst.afw.geom as afwGeom
 import lsst.afw.table as afwTable
 import lsst.pex.exceptions as pexExcept
-import lsst.pex.policy as pexPolicy
 from lsst.afw.fits import readMetadata, FitsError
 from lsst.afw.cameraGeom.testUtils import DetectorWrapper
 from lsst.log import Log
@@ -91,9 +91,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         afwImage.Filter.reset()
         afwImage.FilterProperty.reset()
 
-        filterPolicy = pexPolicy.Policy()
-        filterPolicy.add("lambdaEff", 470.0)
-        afwImage.Filter.define(afwImage.FilterProperty("g", filterPolicy))
+        defineFilter("g", 470.0)
 
     def tearDown(self):
         del self.smallExposure
