@@ -175,7 +175,7 @@ Mask<MaskPixelT>& Mask<MaskPixelT>::operator=(MaskPixelT const rhs) {
 #ifndef DOXYGEN  // doc for this section is already in header
 
 template <typename MaskPixelT>
-Mask<MaskPixelT>::Mask(std::string const& fileName, int hdu, std::shared_ptr<daf::base::PropertySet> metadata,
+Mask<MaskPixelT>::Mask(std::string const& fileName, int hdu, std::shared_ptr<daf::base::PropertyList> metadata,
                        lsst::geom::Box2I const& bbox, ImageOrigin origin, bool conformMasks)
         : ImageBase<MaskPixelT>(), _maskDict(detail::MaskDict::getDefault()) {
     fits::Fits fitsfile(fileName, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
@@ -185,7 +185,7 @@ Mask<MaskPixelT>::Mask(std::string const& fileName, int hdu, std::shared_ptr<daf
 
 template <typename MaskPixelT>
 Mask<MaskPixelT>::Mask(fits::MemFileManager& manager, int hdu,
-                       std::shared_ptr<daf::base::PropertySet> metadata, lsst::geom::Box2I const& bbox,
+                       std::shared_ptr<daf::base::PropertyList> metadata, lsst::geom::Box2I const& bbox,
                        ImageOrigin origin, bool conformMasks)
         : ImageBase<MaskPixelT>(), _maskDict(detail::MaskDict::getDefault()) {
     fits::Fits fitsfile(manager, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
@@ -194,14 +194,14 @@ Mask<MaskPixelT>::Mask(fits::MemFileManager& manager, int hdu,
 }
 
 template <typename MaskPixelT>
-Mask<MaskPixelT>::Mask(fits::Fits& fitsfile, std::shared_ptr<daf::base::PropertySet> metadata,
+Mask<MaskPixelT>::Mask(fits::Fits& fitsfile, std::shared_ptr<daf::base::PropertyList> metadata,
                        lsst::geom::Box2I const& bbox, ImageOrigin const origin, bool const conformMasks)
         : ImageBase<MaskPixelT>(), _maskDict(detail::MaskDict::getDefault()) {
     // These are the permitted input file types
     typedef boost::mpl::vector<unsigned char, unsigned short, short, std::int32_t> fits_mask_types;
 
     if (!metadata) {
-        metadata = std::shared_ptr<daf::base::PropertySet>(new daf::base::PropertyList);
+        metadata = std::shared_ptr<daf::base::PropertyList>(new daf::base::PropertyList);
     }
 
     fits_read_image<fits_mask_types>(fitsfile, *this, *metadata, bbox, origin);
@@ -225,7 +225,7 @@ Mask<MaskPixelT>::Mask(fits::Fits& fitsfile, std::shared_ptr<daf::base::Property
 
 template <typename MaskPixelT>
 void Mask<MaskPixelT>::writeFits(std::string const& fileName,
-                                 std::shared_ptr<lsst::daf::base::PropertySet const> metadata_i,
+                                 std::shared_ptr<lsst::daf::base::PropertyList const> metadata_i,
                                  std::string const& mode) const {
     fits::Fits fitsfile(fileName, mode, fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
     writeFits(fitsfile, metadata_i);
@@ -233,7 +233,7 @@ void Mask<MaskPixelT>::writeFits(std::string const& fileName,
 
 template <typename MaskPixelT>
 void Mask<MaskPixelT>::writeFits(fits::MemFileManager& manager,
-                                 std::shared_ptr<lsst::daf::base::PropertySet const> metadata_i,
+                                 std::shared_ptr<lsst::daf::base::PropertyList const> metadata_i,
                                  std::string const& mode) const {
     fits::Fits fitsfile(manager, mode, fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
     writeFits(fitsfile, metadata_i);
@@ -241,14 +241,14 @@ void Mask<MaskPixelT>::writeFits(fits::MemFileManager& manager,
 
 template <typename MaskPixelT>
 void Mask<MaskPixelT>::writeFits(fits::Fits& fitsfile,
-                                 std::shared_ptr<lsst::daf::base::PropertySet const> metadata) const {
+                                 std::shared_ptr<lsst::daf::base::PropertyList const> metadata) const {
     writeFits(fitsfile, fits::ImageWriteOptions(*this), metadata);
 }
 
 template <typename MaskPixelT>
 void Mask<MaskPixelT>::writeFits(std::string const& filename, fits::ImageWriteOptions const& options,
                                  std::string const& mode,
-                                 std::shared_ptr<daf::base::PropertySet const> header) const {
+                                 std::shared_ptr<daf::base::PropertyList const> header) const {
     fits::Fits fitsfile(filename, mode, fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
     writeFits(fitsfile, options, header);
 }
@@ -256,16 +256,16 @@ void Mask<MaskPixelT>::writeFits(std::string const& filename, fits::ImageWriteOp
 template <typename MaskPixelT>
 void Mask<MaskPixelT>::writeFits(fits::MemFileManager& manager, fits::ImageWriteOptions const& options,
                                  std::string const& mode,
-                                 std::shared_ptr<daf::base::PropertySet const> header) const {
+                                 std::shared_ptr<daf::base::PropertyList const> header) const {
     fits::Fits fitsfile(manager, mode, fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
     writeFits(fitsfile, options, header);
 }
 
 template <typename MaskPixelT>
 void Mask<MaskPixelT>::writeFits(fits::Fits& fitsfile, fits::ImageWriteOptions const& options,
-                                 std::shared_ptr<daf::base::PropertySet const> header) const {
-    std::shared_ptr<daf::base::PropertySet> useHeader =
-            header ? header->deepCopy() : std::make_shared<dafBase::PropertySet>();
+                                 std::shared_ptr<daf::base::PropertyList const> header) const {
+    std::shared_ptr<daf::base::PropertyList> useHeader =
+            header ? header->deepCopy() : std::make_shared<dafBase::PropertyList>();
     addMaskPlanesToMetadata(useHeader);
     fitsfile.writeImage(*this, options, useHeader);
 }
@@ -598,9 +598,9 @@ void Mask<MaskPixelT>::setMaskPlaneValues(int const planeId, int const x0, int c
 }
 
 template <typename MaskPixelT>
-void Mask<MaskPixelT>::addMaskPlanesToMetadata(std::shared_ptr<dafBase::PropertySet> metadata) {
+void Mask<MaskPixelT>::addMaskPlanesToMetadata(std::shared_ptr<dafBase::PropertyList> metadata) {
     if (!metadata) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterError, "Null std::shared_ptr<PropertySet>");
+        throw LSST_EXCEPT(pexExcept::InvalidParameterError, "Null std::shared_ptr<PropertyList>");
     }
 
     // First, clear existing MaskPlane metadata
@@ -627,7 +627,7 @@ void Mask<MaskPixelT>::addMaskPlanesToMetadata(std::shared_ptr<dafBase::Property
 
 template <typename MaskPixelT>
 typename Mask<MaskPixelT>::MaskPlaneDict Mask<MaskPixelT>::parseMaskPlaneMetadata(
-        std::shared_ptr<dafBase::PropertySet const> metadata) {
+        std::shared_ptr<dafBase::PropertyList const> metadata) {
     MaskPlaneDict newDict;
 
     // First, clear existing MaskPlane metadata

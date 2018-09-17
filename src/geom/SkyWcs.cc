@@ -154,7 +154,7 @@ std::shared_ptr<TransformPoint2ToPoint2> makeWcsPairTransform(SkyWcs const& src,
     return src.getTransform()->then(*dstInverse);
 }
 
-SkyWcs::SkyWcs(daf::base::PropertySet& metadata, bool strip)
+SkyWcs::SkyWcs(daf::base::PropertyList& metadata, bool strip)
         : SkyWcs(detail::readLsstSkyWcs(metadata, strip)) {}
 
 SkyWcs::SkyWcs(ast::FrameDict const& frameDict) : SkyWcs(_checkFrameDict(frameDict)) {}
@@ -473,7 +473,7 @@ std::shared_ptr<SkyWcs> makeModifiedWcs(TransformPoint2ToPoint2 const& pixelTran
     return std::make_shared<SkyWcs>(*newFrameDict);
 }
 
-std::shared_ptr<SkyWcs> makeSkyWcs(daf::base::PropertySet& metadata, bool strip) {
+std::shared_ptr<SkyWcs> makeSkyWcs(daf::base::PropertyList& metadata, bool strip) {
     return std::make_shared<SkyWcs>(metadata, strip);
 }
 

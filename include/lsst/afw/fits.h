@@ -80,7 +80,7 @@ inline std::string makeErrorMessage(void* fptr, int status, boost::format const&
 }
 
 /**
- * Format a PropertySet into an FITS header string in a simplistic fashion.
+ * Format a PropertyList into an FITS header string in a simplistic fashion.
  *
  * This function is designed to format data for creating a WCS. As such, it is quite limited:
  * - It skips entries whose name is longer than 8 characters, since none are used for FITS-WCS
@@ -94,7 +94,7 @@ inline std::string makeErrorMessage(void* fptr, int status, boost::format const&
  * @param[in] excludeNames  Names of entries to exclude from the returned header string
  * @return a FITS header string (exactly 80 characters per entry, no line terminators)
  */
-std::string makeLimitedFitsHeader(lsst::daf::base::PropertySet const& metadata,
+std::string makeLimitedFitsHeader(lsst::daf::base::PropertyList const& metadata,
                                   std::set<std::string> const& excludeNames = {});
 
 /**
@@ -386,26 +386,26 @@ public:
     //@}
 
     /**
-     *  Read a FITS header into a PropertySet or PropertyList.
+     *  Read a FITS header into a PropertyList or PropertyList.
      *
-     *  @param[in]     metadata  A PropertySet or PropertyList whose items will be appended
+     *  @param[in]     metadata  A PropertyList or PropertyList whose items will be appended
      *                           to the FITS header.
      *
      *  All keys will be appended to the FITS header rather than used to update existing keys.  Order of keys
      *  will be preserved if and only if the metadata object is actually a PropertyList.
      */
-    void writeMetadata(daf::base::PropertySet const& metadata);
+    void writeMetadata(daf::base::PropertyList const& metadata);
 
     /**
-     *  Read a FITS header into a PropertySet or PropertyList.
+     *  Read a FITS header into a PropertyList or PropertyList.
      *
-     *  @param[in,out] metadata  A PropertySet or PropertyList that FITS header items will be added to.
+     *  @param[in,out] metadata  A PropertyList or PropertyList that FITS header items will be added to.
      *  @param[in]     strip     If true, common FITS keys that usually have non-metadata intepretations
      *                           (e.g. NAXIS, BITPIX) will be ignored.
      *
      *  Order will preserved if and only if the metadata object is actually a PropertyList.
      */
-    void readMetadata(daf::base::PropertySet& metadata, bool strip = false);
+    void readMetadata(daf::base::PropertyList& metadata, bool strip = false);
 
     /// Read a FITS header key into the given reference.
     template <typename T>
@@ -492,7 +492,7 @@ public:
     template <typename T>
     void writeImage(
             image::ImageBase<T> const& image, ImageWriteOptions const& options,
-            std::shared_ptr<daf::base::PropertySet const> header = std::shared_ptr<daf::base::PropertyList>(),
+            std::shared_ptr<daf::base::PropertyList const> header = nullptr,
             std::shared_ptr<image::Mask<image::MaskPixel> const> mask =
                     std::shared_ptr<image::Mask<image::MaskPixel>>());
 

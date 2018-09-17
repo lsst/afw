@@ -41,7 +41,7 @@ class TestTestUtils(lsst.utils.tests.TestCase):
         bbox = lsst.geom.Box2I(lsst.geom.Point2I(0, 0),
                                lsst.geom.Extent2I(3001, 3001))
         ctrPix = lsst.geom.Point2I(1500, 1500)
-        metadata = dafBase.PropertySet()
+        metadata = dafBase.PropertyList()
         metadata.set("RADESYS", "FK5")
         metadata.set("EQUINOX", 2000.0)
         metadata.set("CTYPE1", "RA---TAN")

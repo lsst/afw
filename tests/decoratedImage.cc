@@ -61,7 +61,7 @@ DecoratedImageT make_image(int const width = 5, int const height = 6) {
 BOOST_AUTO_TEST_CASE(
         setValues) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     DecoratedImageT dimg = make_image();
-    std::shared_ptr<daf_base::PropertySet> metadata = dimg.getMetadata();
+    std::shared_ptr<daf_base::PropertyList> metadata = dimg.getMetadata();
 
     metadata->add("RHL", 1);
 }

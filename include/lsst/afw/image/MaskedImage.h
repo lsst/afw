@@ -645,13 +645,12 @@ public:
      */
     explicit MaskedImage(
             std::string const& fileName,
-            std::shared_ptr<daf::base::PropertySet> metadata = std::shared_ptr<daf::base::PropertySet>(),
+            std::shared_ptr<daf::base::PropertyList> metadata = nullptr,
             lsst::geom::Box2I const& bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT,
             bool conformMasks = false, bool needAllHdus = false,
-            std::shared_ptr<daf::base::PropertySet> imageMetadata = std::shared_ptr<daf::base::PropertySet>(),
-            std::shared_ptr<daf::base::PropertySet> maskMetadata = std::shared_ptr<daf::base::PropertySet>(),
-            std::shared_ptr<daf::base::PropertySet> varianceMetadata =
-                    std::shared_ptr<daf::base::PropertySet>());
+            std::shared_ptr<daf::base::PropertyList> imageMetadata = nullptr,
+            std::shared_ptr<daf::base::PropertyList> maskMetadata = nullptr,
+            std::shared_ptr<daf::base::PropertyList> varianceMetadata = nullptr);
 
     /**
      *  Construct a MaskedImage by reading a FITS image in memory.
@@ -670,13 +669,12 @@ public:
      */
     explicit MaskedImage(
             fits::MemFileManager& manager,
-            std::shared_ptr<daf::base::PropertySet> metadata = std::shared_ptr<daf::base::PropertySet>(),
+            std::shared_ptr<daf::base::PropertyList> metadata = nullptr,
             lsst::geom::Box2I const& bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT,
             bool conformMasks = false, bool needAllHdus = false,
-            std::shared_ptr<daf::base::PropertySet> imageMetadata = std::shared_ptr<daf::base::PropertySet>(),
-            std::shared_ptr<daf::base::PropertySet> maskMetadata = std::shared_ptr<daf::base::PropertySet>(),
-            std::shared_ptr<daf::base::PropertySet> varianceMetadata =
-                    std::shared_ptr<daf::base::PropertySet>());
+            std::shared_ptr<daf::base::PropertyList> imageMetadata = nullptr,
+            std::shared_ptr<daf::base::PropertyList> maskMetadata = nullptr,
+            std::shared_ptr<daf::base::PropertyList> varianceMetadata = nullptr);
 
     /**
      *  Construct a MaskedImage from an already-open FITS object.
@@ -695,13 +693,12 @@ public:
      */
     explicit MaskedImage(
             fits::Fits& fitsfile,
-            std::shared_ptr<daf::base::PropertySet> metadata = std::shared_ptr<daf::base::PropertySet>(),
+            std::shared_ptr<daf::base::PropertyList> metadata = nullptr,
             lsst::geom::Box2I const& bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT,
             bool conformMasks = false, bool needAllHdus = false,
-            std::shared_ptr<daf::base::PropertySet> imageMetadata = std::shared_ptr<daf::base::PropertySet>(),
-            std::shared_ptr<daf::base::PropertySet> maskMetadata = std::shared_ptr<daf::base::PropertySet>(),
-            std::shared_ptr<daf::base::PropertySet> varianceMetadata =
-                    std::shared_ptr<daf::base::PropertySet>());
+            std::shared_ptr<daf::base::PropertyList> imageMetadata = nullptr,
+            std::shared_ptr<daf::base::PropertyList> maskMetadata = nullptr,
+            std::shared_ptr<daf::base::PropertyList> varianceMetadata = nullptr);
 
     /**
      * Copy constructor;  shallow, unless deep is true.
@@ -901,14 +898,10 @@ public:
      *  to indicate that the primary metadata applies to those HDUs as well.
      */
     void writeFits(std::string const& fileName,
-                   std::shared_ptr<daf::base::PropertySet const> metadata =
-                           std::shared_ptr<daf::base::PropertySet const>(),
-                   std::shared_ptr<daf::base::PropertySet const> imageMetadata =
-                           std::shared_ptr<daf::base::PropertySet const>(),
-                   std::shared_ptr<daf::base::PropertySet const> maskMetadata =
-                           std::shared_ptr<daf::base::PropertySet const>(),
-                   std::shared_ptr<daf::base::PropertySet const> varianceMetadata =
-                           std::shared_ptr<daf::base::PropertySet const>()) const;
+                   std::shared_ptr<daf::base::PropertyList const> metadata = nullptr,
+                   std::shared_ptr<daf::base::PropertyList const> imageMetadata = nullptr,
+                   std::shared_ptr<daf::base::PropertyList const> maskMetadata = nullptr,
+                   std::shared_ptr<daf::base::PropertyList const> varianceMetadata = nullptr) const;
 
     /**
      *  Write a MaskedImage to a FITS RAM file.
@@ -924,14 +917,10 @@ public:
      *  to indicate that the primary metadata applies to those HDUs as well.
      */
     void writeFits(fits::MemFileManager& manager,
-                   std::shared_ptr<daf::base::PropertySet const> metadata =
-                           std::shared_ptr<daf::base::PropertySet const>(),
-                   std::shared_ptr<daf::base::PropertySet const> imageMetadata =
-                           std::shared_ptr<daf::base::PropertySet const>(),
-                   std::shared_ptr<daf::base::PropertySet const> maskMetadata =
-                           std::shared_ptr<daf::base::PropertySet const>(),
-                   std::shared_ptr<daf::base::PropertySet const> varianceMetadata =
-                           std::shared_ptr<daf::base::PropertySet const>()) const;
+                   std::shared_ptr<daf::base::PropertyList const> metadata = nullptr,
+                   std::shared_ptr<daf::base::PropertyList const> imageMetadata = nullptr,
+                   std::shared_ptr<daf::base::PropertyList const> maskMetadata = nullptr,
+                   std::shared_ptr<daf::base::PropertyList const> varianceMetadata = nullptr) const;
 
     /**
      *  Write a MaskedImage to a FITS file.
@@ -947,14 +936,10 @@ public:
      *  to indicate that the primary metadata applies to those HDUs as well.
      */
     void writeFits(fits::Fits& fitsfile,
-                   std::shared_ptr<daf::base::PropertySet const> metadata =
-                           std::shared_ptr<daf::base::PropertySet const>(),
-                   std::shared_ptr<daf::base::PropertySet const> imageMetadata =
-                           std::shared_ptr<daf::base::PropertySet const>(),
-                   std::shared_ptr<daf::base::PropertySet const> maskMetadata =
-                           std::shared_ptr<daf::base::PropertySet const>(),
-                   std::shared_ptr<daf::base::PropertySet const> varianceMetadata =
-                           std::shared_ptr<daf::base::PropertySet const>()) const;
+                   std::shared_ptr<daf::base::PropertyList const> metadata = nullptr,
+                   std::shared_ptr<daf::base::PropertyList const> imageMetadata = nullptr,
+                   std::shared_ptr<daf::base::PropertyList const> maskMetadata = nullptr,
+                   std::shared_ptr<daf::base::PropertyList const> varianceMetadata = nullptr) const;
 
     /**
      *  Write a MaskedImage to a FITS file.
@@ -974,10 +959,10 @@ public:
      */
     void writeFits(std::string const& fileName, fits::ImageWriteOptions const& imageOptions,
                    fits::ImageWriteOptions const& maskOptions, fits::ImageWriteOptions const& varianceOptions,
-                   std::shared_ptr<daf::base::PropertySet const> metadata = nullptr,
-                   std::shared_ptr<daf::base::PropertySet const> imageMetadata = nullptr,
-                   std::shared_ptr<daf::base::PropertySet const> maskMetadata = nullptr,
-                   std::shared_ptr<daf::base::PropertySet const> varianceMetadata = nullptr) const;
+                   std::shared_ptr<daf::base::PropertyList const> metadata = nullptr,
+                   std::shared_ptr<daf::base::PropertyList const> imageMetadata = nullptr,
+                   std::shared_ptr<daf::base::PropertyList const> maskMetadata = nullptr,
+                   std::shared_ptr<daf::base::PropertyList const> varianceMetadata = nullptr) const;
 
     /**
      *  Write a MaskedImage to a FITS file.
@@ -997,10 +982,10 @@ public:
      */
     void writeFits(fits::MemFileManager& manager, fits::ImageWriteOptions const& imageOptions,
                    fits::ImageWriteOptions const& maskOptions, fits::ImageWriteOptions const& varianceOptions,
-                   std::shared_ptr<daf::base::PropertySet const> metadata = nullptr,
-                   std::shared_ptr<daf::base::PropertySet const> imageMetadata = nullptr,
-                   std::shared_ptr<daf::base::PropertySet const> maskMetadata = nullptr,
-                   std::shared_ptr<daf::base::PropertySet const> varianceMetadata = nullptr) const;
+                   std::shared_ptr<daf::base::PropertyList const> metadata = nullptr,
+                   std::shared_ptr<daf::base::PropertyList const> imageMetadata = nullptr,
+                   std::shared_ptr<daf::base::PropertyList const> maskMetadata = nullptr,
+                   std::shared_ptr<daf::base::PropertyList const> varianceMetadata = nullptr) const;
 
     /**
      *  Write a MaskedImage to a FITS file.
@@ -1020,10 +1005,10 @@ public:
      */
     void writeFits(fits::Fits& fitsfile, fits::ImageWriteOptions const& imageOptions,
                    fits::ImageWriteOptions const& maskOptions, fits::ImageWriteOptions const& varianceOptions,
-                   std::shared_ptr<daf::base::PropertySet const> metadata = nullptr,
-                   std::shared_ptr<daf::base::PropertySet const> imageMetadata = nullptr,
-                   std::shared_ptr<daf::base::PropertySet const> maskMetadata = nullptr,
-                   std::shared_ptr<daf::base::PropertySet const> varianceMetadata = nullptr) const;
+                   std::shared_ptr<daf::base::PropertyList const> metadata = nullptr,
+                   std::shared_ptr<daf::base::PropertyList const> imageMetadata = nullptr,
+                   std::shared_ptr<daf::base::PropertyList const> maskMetadata = nullptr,
+                   std::shared_ptr<daf::base::PropertyList const> varianceMetadata = nullptr) const;
 
     /**
      *  Read a MaskedImage from a regular FITS file.

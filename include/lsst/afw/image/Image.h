@@ -45,7 +45,7 @@
 #include "lsst/afw/image/Mask.h"
 #include "lsst/afw/math/Function.h"
 #include "lsst/afw/fitsDefaults.h"
-#include "lsst/daf/base/PropertySet.h"
+#include "lsst/daf/base/PropertyList.h"
 #include "lsst/daf/base/Citizen.h"
 #include "lsst/pex/exceptions.h"
 #include "ndarray.h"
@@ -141,8 +141,7 @@ public:
      *                              should take into account the xy0 saved with the image.
      */
     explicit Image(std::string const& fileName, int hdu = fits::DEFAULT_HDU,
-                   std::shared_ptr<lsst::daf::base::PropertySet> metadata =
-                           std::shared_ptr<lsst::daf::base::PropertySet>(),
+                   std::shared_ptr<lsst::daf::base::PropertyList> metadata = nullptr,
                    lsst::geom::Box2I const& bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT);
 
     /**
@@ -158,8 +157,7 @@ public:
      *                              should take into account the xy0 saved with the image.
      */
     explicit Image(fits::MemFileManager& manager, int hdu = fits::DEFAULT_HDU,
-                   std::shared_ptr<lsst::daf::base::PropertySet> metadata =
-                           std::shared_ptr<lsst::daf::base::PropertySet>(),
+                   std::shared_ptr<lsst::daf::base::PropertyList> metadata = nullptr,
                    lsst::geom::Box2I const& bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT);
 
     /**
@@ -172,8 +170,7 @@ public:
      *                              should take into account the xy0 saved with the image.
      */
     explicit Image(fits::Fits& fitsfile,
-                   std::shared_ptr<lsst::daf::base::PropertySet> metadata =
-                           std::shared_ptr<lsst::daf::base::PropertySet>(),
+                   std::shared_ptr<lsst::daf::base::PropertyList> metadata = nullptr,
                    lsst::geom::Box2I const& bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT);
 
     // generalised copy constructor
@@ -234,8 +231,7 @@ public:
      *  @param[in] mode          "w"=Create a new file; "a"=Append a new HDU.
      */
     void writeFits(std::string const& fileName,
-                   std::shared_ptr<lsst::daf::base::PropertySet const> metadata =
-                           std::shared_ptr<lsst::daf::base::PropertySet const>(),
+                   std::shared_ptr<lsst::daf::base::PropertyList const> metadata = nullptr,
                    std::string const& mode = "w") const;
 
     /**
@@ -246,8 +242,7 @@ public:
      *  @param[in] mode          "w"=Create a new file; "a"=Append a new HDU.
      */
     void writeFits(fits::MemFileManager& manager,
-                   std::shared_ptr<lsst::daf::base::PropertySet const> metadata =
-                           std::shared_ptr<lsst::daf::base::PropertySet const>(),
+                   std::shared_ptr<lsst::daf::base::PropertyList const> metadata = nullptr,
                    std::string const& mode = "w") const;
 
     /**
@@ -256,8 +251,7 @@ public:
      *  @param[in] fitsfile      A FITS file already open to the desired HDU.
      *  @param[in] metadata      Additional values to write to the header (may be null).
      */
-    void writeFits(fits::Fits& fitsfile, std::shared_ptr<lsst::daf::base::PropertySet const> metadata =
-                                                 std::shared_ptr<lsst::daf::base::PropertySet const>()) const;
+    void writeFits(fits::Fits& fitsfile, std::shared_ptr<lsst::daf::base::PropertyList const> metadata = nullptr) const;
 
     /**
      *  Write an image to a regular FITS file.
@@ -270,7 +264,7 @@ public:
      */
     void writeFits(std::string const& filename, fits::ImageWriteOptions const& options,
                    std::string const& mode = "w",
-                   std::shared_ptr<daf::base::PropertySet const> header = nullptr,
+                   std::shared_ptr<daf::base::PropertyList const> header = nullptr,
                    std::shared_ptr<Mask<MaskPixel> const> mask = nullptr) const;
 
     /**
@@ -284,7 +278,7 @@ public:
      */
     void writeFits(fits::MemFileManager& manager, fits::ImageWriteOptions const& options,
                    std::string const& mode = "w",
-                   std::shared_ptr<daf::base::PropertySet const> header = nullptr,
+                   std::shared_ptr<daf::base::PropertyList const> header = nullptr,
                    std::shared_ptr<Mask<MaskPixel> const> mask = nullptr) const;
 
     /**
@@ -296,7 +290,7 @@ public:
      *  @param[in] mask          Mask, for calculation of statistics.
      */
     void writeFits(fits::Fits& fitsfile, fits::ImageWriteOptions const& options,
-                   std::shared_ptr<daf::base::PropertySet const> header = nullptr,
+                   std::shared_ptr<daf::base::PropertyList const> header = nullptr,
                    std::shared_ptr<Mask<MaskPixel> const> mask = nullptr) const;
 
     /**
@@ -448,8 +442,8 @@ public:
      */
     DecoratedImage& operator=(const DecoratedImage& image);
 
-    std::shared_ptr<lsst::daf::base::PropertySet> getMetadata() const { return _metadata; }
-    void setMetadata(std::shared_ptr<lsst::daf::base::PropertySet> metadata) { _metadata = metadata; }
+    std::shared_ptr<lsst::daf::base::PropertyList> getMetadata() const { return _metadata; }
+    void setMetadata(std::shared_ptr<lsst::daf::base::PropertyList> metadata) { _metadata = metadata; }
 
     /// Return the number of columns in the %image
     int getWidth() const { return _image->getWidth(); }
@@ -474,8 +468,7 @@ public:
      * @param mode "w" to write a new file; "a" to append
      */
     void writeFits(std::string const& fileName,
-                   std::shared_ptr<lsst::daf::base::PropertySet const> metadata =
-                           std::shared_ptr<lsst::daf::base::PropertySet const>(),
+                   std::shared_ptr<lsst::daf::base::PropertyList const> metadata = nullptr,
                    std::string const& mode = "w") const;
 
     /**
@@ -487,8 +480,7 @@ public:
      * @param[in] mode "w" to write a new file; "a" to append
      */
     void writeFits(std::string const& fileName, fits::ImageWriteOptions const& options,
-                   std::shared_ptr<lsst::daf::base::PropertySet const> metadata =
-                           std::shared_ptr<lsst::daf::base::PropertySet const>(),
+                   std::shared_ptr<lsst::daf::base::PropertyList const> metadata = nullptr,
                    std::string const& mode = "w") const;
 
     /// Return a shared_ptr to the DecoratedImage's Image
@@ -507,7 +499,7 @@ public:
 
 private:
     std::shared_ptr<Image<PixelT>> _image;
-    std::shared_ptr<lsst::daf::base::PropertySet> _metadata;
+    std::shared_ptr<lsst::daf::base::PropertyList> _metadata;
 
     double _gain;
 
@@ -521,7 +513,7 @@ void swap(DecoratedImage<PixelT>& a, DecoratedImage<PixelT>& b);
 ///
 /// Note that this modifies the metadata, stripping the WCS headers that
 /// provide the xy0.
-lsst::geom::Box2I bboxFromMetadata(daf::base::PropertySet& metadata);
+lsst::geom::Box2I bboxFromMetadata(daf::base::PropertyList& metadata);
 
 /**
  * Return true if the pixels for two images or masks overlap in memory.

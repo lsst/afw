@@ -28,7 +28,7 @@
 #include "lsst/afw/table/Source.h"
 #include "lsst/afw/table/io/CatalogVector.h"
 #include "lsst/afw/table/io/OutputArchive.h"
-#include "lsst/daf/base/PropertySet.h"
+#include "lsst/daf/base/PropertyList.h"
 #include "lsst/pex/exceptions.h"
 #include "ndarray.h"
 #include "lsst/afw/table/io/Persistable.cc"

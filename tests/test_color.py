@@ -121,7 +121,7 @@ class CalibTestCase(lsst.utils.tests.TestCase):
         flux0, flux0Err = 1e12, 1e10
         flux, fluxErr = 1000.0, 10.0
 
-        metadata = dafBase.PropertySet()
+        metadata = dafBase.PropertyList()
         metadata.add("FLUXMAG0", flux0)
         metadata.add("FLUXMAG0ERR", flux0Err)
 
@@ -251,7 +251,7 @@ class FilterTestCase(lsst.utils.tests.TestCase):
     def testCtorFromMetadata(self):
         """Test building a Filter from metadata"""
 
-        metadata = dafBase.PropertySet()
+        metadata = dafBase.PropertyList()
         metadata.add("FILTER", "g")
 
         f = afwImage.Filter(metadata)

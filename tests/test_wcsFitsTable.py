@@ -39,7 +39,7 @@ class WcsFitsTableTestCase(unittest.TestCase):
         # metadata taken from CFHT data
         # v695856-e0/v695856-e0-c000-a00.sci.fits
 
-        self.metadata = lsst.daf.base.PropertySet()
+        self.metadata = lsst.daf.base.PropertyList()
 
         self.metadata.set("SIMPLE", "T")
         self.metadata.set("BITPIX", -32)

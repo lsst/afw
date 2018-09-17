@@ -45,7 +45,7 @@
 namespace lsst {
 namespace daf {
 namespace base {
-class PropertySet;
+class PropertyList;
 }
 namespace persistence {
 class LogicalLocation;
@@ -63,27 +63,27 @@ namespace formatters {
  * Returns `true` if and only if `properties` is non-null and contains a
  * unique property with the given name that has type `bool` and a value of `true`.
  */
-bool extractOptionalFlag(std::shared_ptr<lsst::daf::base::PropertySet const> const& properties,
+bool extractOptionalFlag(std::shared_ptr<lsst::daf::base::PropertyList const> const& properties,
                          std::string const& name);
 
 /**
  * Extracts and returns the string-valued `"itemName"` property from the given data property object.
  *
  * @throws lsst::pex::exceptions::InvalidParameterError
- *        If the given pointer is null, or the `PropertySet` pointed
+ *        If the given pointer is null, or the `PropertyList` pointed
  *        to does not contain a unique property named `"itemName"`.
  */
-std::string const getItemName(std::shared_ptr<lsst::daf::base::PropertySet const> const& properties);
+std::string const getItemName(std::shared_ptr<lsst::daf::base::PropertyList const> const& properties);
 
-int extractSliceId(std::shared_ptr<lsst::daf::base::PropertySet const> const& properties);
-int64_t extractFpaExposureId(std::shared_ptr<lsst::daf::base::PropertySet const> const& properties);
-int64_t extractCcdExposureId(std::shared_ptr<lsst::daf::base::PropertySet const> const& properties);
-int64_t extractAmpExposureId(std::shared_ptr<lsst::daf::base::PropertySet const> const& properties);
-int extractVisitId(std::shared_ptr<lsst::daf::base::PropertySet const> const& properties);
-int extractCcdId(std::shared_ptr<lsst::daf::base::PropertySet const> const& properties);
-int extractAmpId(std::shared_ptr<lsst::daf::base::PropertySet const> const& properties);
+int extractSliceId(std::shared_ptr<lsst::daf::base::PropertyList const> const& properties);
+int64_t extractFpaExposureId(std::shared_ptr<lsst::daf::base::PropertyList const> const& properties);
+int64_t extractCcdExposureId(std::shared_ptr<lsst::daf::base::PropertyList const> const& properties);
+int64_t extractAmpExposureId(std::shared_ptr<lsst::daf::base::PropertyList const> const& properties);
+int extractVisitId(std::shared_ptr<lsst::daf::base::PropertyList const> const& properties);
+int extractCcdId(std::shared_ptr<lsst::daf::base::PropertyList const> const& properties);
+int extractAmpId(std::shared_ptr<lsst::daf::base::PropertyList const> const& properties);
 
-int countFitsHeaderCards(lsst::daf::base::PropertySet const& prop);
+int countFitsHeaderCards(lsst::daf::base::PropertyList const& prop);
 
 /**
  * Encode a std::string as a vector of uint8

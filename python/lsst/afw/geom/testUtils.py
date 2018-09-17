@@ -153,7 +153,7 @@ def makeSipPolyMapCoeffs(metadata, name):
 
     Parameters
     ----------
-    metadata : lsst.daf.base.PropertySet
+    metadata : lsst.daf.base.PropertyList
         FITS metadata describing a WCS with the specified SIP coefficients
     name : str
         The desired SIP terms: one of A, B, AP, BP
@@ -203,7 +203,7 @@ def makeSipIwcToPixel(metadata):
 
     Parameters
     ----------
-    metadata : lsst.daf.base.PropertySet
+    metadata : lsst.daf.base.PropertyList
         FITS metadata describing a WCS with inverse SIP coefficients
 
     Returns
@@ -242,7 +242,7 @@ def makeSipPixelToIwc(metadata):
 
     Parameters
     ----------
-    metadata : lsst.daf.base.PropertySet
+    metadata : lsst.daf.base.PropertyList
         FITS metadata describing a WCS with forward SIP coefficients
 
     Returns

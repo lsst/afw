@@ -54,7 +54,7 @@ class FitsUtilsTestCase(unittest.TestCase):
         return "Test String"
 
     def setUp(self):
-        self.metadata = dafBase.PropertySet()
+        self.metadata = dafBase.PropertyList()
         self.metadata.set('HELLO', 'hello')
         self.metadata.set('NAME', 'Presto')
         self.metadata.set('COPYOVER', 'copy over')

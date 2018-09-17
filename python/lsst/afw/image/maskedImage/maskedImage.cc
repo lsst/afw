@@ -74,15 +74,15 @@ PyMaskedImage<ImagePixelT> declareMaskedImage(py::module &mod, const std::string
             "mask"_a = nullptr, "variance"_a = nullptr);
     cls.def(py::init<lsst::geom::Box2I const &, typename MI::MaskPlaneDict const &>(), "bbox"_a,
             "planeDict"_a = typename MI::MaskPlaneDict());
-    cls.def(py::init<std::string const &, std::shared_ptr<daf::base::PropertySet>, lsst::geom::Box2I const &,
-                     ImageOrigin, bool, bool, std::shared_ptr<daf::base::PropertySet>,
-                     std::shared_ptr<daf::base::PropertySet>, std::shared_ptr<daf::base::PropertySet>>(),
+    cls.def(py::init<std::string const &, std::shared_ptr<daf::base::PropertyList>, lsst::geom::Box2I const &,
+                     ImageOrigin, bool, bool, std::shared_ptr<daf::base::PropertyList>,
+                     std::shared_ptr<daf::base::PropertyList>, std::shared_ptr<daf::base::PropertyList>>(),
             "fileName"_a, "metadata"_a = nullptr, "bbox"_a = lsst::geom::Box2I(), "origin"_a = PARENT,
             "conformMasks"_a = false, "needAllHdus"_a = false, "imageMetadata"_a = nullptr,
             "maskMetadata"_a = nullptr, "varianceMetadata"_a = nullptr);
-    cls.def(py::init<fits::MemFileManager &, std::shared_ptr<daf::base::PropertySet>, lsst::geom::Box2I const &,
-                     ImageOrigin, bool, bool, std::shared_ptr<daf::base::PropertySet>,
-                     std::shared_ptr<daf::base::PropertySet>, std::shared_ptr<daf::base::PropertySet>>(),
+    cls.def(py::init<fits::MemFileManager &, std::shared_ptr<daf::base::PropertyList>, lsst::geom::Box2I const &,
+                     ImageOrigin, bool, bool, std::shared_ptr<daf::base::PropertyList>,
+                     std::shared_ptr<daf::base::PropertyList>, std::shared_ptr<daf::base::PropertyList>>(),
             "manager"_a, "metadata"_a = nullptr, "bbox"_a = lsst::geom::Box2I(), "origin"_a = PARENT,
             "conformMasks"_a = false, "needAllHdus"_a = false, "imageMetadata"_a = nullptr,
             "maskMetadata"_a = nullptr, "varianceMetadata"_a = nullptr);
@@ -120,39 +120,39 @@ PyMaskedImage<ImagePixelT> declareMaskedImage(py::module &mod, const std::string
     cls.def("scaledDivides", &MI::scaledDivides);
 
     /* Members */
-    cls.def("writeFits", (void (MI::*)(std::string const &, std::shared_ptr<daf::base::PropertySet const>,
-                                       std::shared_ptr<daf::base::PropertySet const>,
-                                       std::shared_ptr<daf::base::PropertySet const>,
-                                       std::shared_ptr<daf::base::PropertySet const>) const) &
+    cls.def("writeFits", (void (MI::*)(std::string const &, std::shared_ptr<daf::base::PropertyList const>,
+                                       std::shared_ptr<daf::base::PropertyList const>,
+                                       std::shared_ptr<daf::base::PropertyList const>,
+                                       std::shared_ptr<daf::base::PropertyList const>) const) &
                                  MI::writeFits,
-            "fileName"_a, "metadata"_a = std::shared_ptr<daf::base::PropertySet const>(),
-            "imageMetadata"_a = std::shared_ptr<daf::base::PropertySet const>(),
-            "maskMetadata"_a = std::shared_ptr<daf::base::PropertySet const>(),
-            "varianceMetadata"_a = std::shared_ptr<daf::base::PropertySet const>());
-    cls.def("writeFits", (void (MI::*)(fits::MemFileManager &, std::shared_ptr<daf::base::PropertySet const>,
-                                       std::shared_ptr<daf::base::PropertySet const>,
-                                       std::shared_ptr<daf::base::PropertySet const>,
-                                       std::shared_ptr<daf::base::PropertySet const>) const) &
+            "fileName"_a, "metadata"_a = std::shared_ptr<daf::base::PropertyList const>(),
+            "imageMetadata"_a = std::shared_ptr<daf::base::PropertyList const>(),
+            "maskMetadata"_a = std::shared_ptr<daf::base::PropertyList const>(),
+            "varianceMetadata"_a = std::shared_ptr<daf::base::PropertyList const>());
+    cls.def("writeFits", (void (MI::*)(fits::MemFileManager &, std::shared_ptr<daf::base::PropertyList const>,
+                                       std::shared_ptr<daf::base::PropertyList const>,
+                                       std::shared_ptr<daf::base::PropertyList const>,
+                                       std::shared_ptr<daf::base::PropertyList const>) const) &
                                  MI::writeFits,
-            "manager"_a, "metadata"_a = std::shared_ptr<daf::base::PropertySet const>(),
-            "imageMetadata"_a = std::shared_ptr<daf::base::PropertySet const>(),
-            "maskMetadata"_a = std::shared_ptr<daf::base::PropertySet const>(),
-            "varianceMetadata"_a = std::shared_ptr<daf::base::PropertySet const>());
-    cls.def("writeFits", (void (MI::*)(fits::Fits &, std::shared_ptr<daf::base::PropertySet const>,
-                                       std::shared_ptr<daf::base::PropertySet const>,
-                                       std::shared_ptr<daf::base::PropertySet const>,
-                                       std::shared_ptr<daf::base::PropertySet const>) const) &
+            "manager"_a, "metadata"_a = std::shared_ptr<daf::base::PropertyList const>(),
+            "imageMetadata"_a = std::shared_ptr<daf::base::PropertyList const>(),
+            "maskMetadata"_a = std::shared_ptr<daf::base::PropertyList const>(),
+            "varianceMetadata"_a = std::shared_ptr<daf::base::PropertyList const>());
+    cls.def("writeFits", (void (MI::*)(fits::Fits &, std::shared_ptr<daf::base::PropertyList const>,
+                                       std::shared_ptr<daf::base::PropertyList const>,
+                                       std::shared_ptr<daf::base::PropertyList const>,
+                                       std::shared_ptr<daf::base::PropertyList const>) const) &
                                  MI::writeFits,
-            "fitsfile"_a, "metadata"_a = std::shared_ptr<daf::base::PropertySet const>(),
-            "imageMetadata"_a = std::shared_ptr<daf::base::PropertySet const>(),
-            "maskMetadata"_a = std::shared_ptr<daf::base::PropertySet const>(),
-            "varianceMetadata"_a = std::shared_ptr<daf::base::PropertySet const>());
+            "fitsfile"_a, "metadata"_a = std::shared_ptr<daf::base::PropertyList const>(),
+            "imageMetadata"_a = std::shared_ptr<daf::base::PropertyList const>(),
+            "maskMetadata"_a = std::shared_ptr<daf::base::PropertyList const>(),
+            "varianceMetadata"_a = std::shared_ptr<daf::base::PropertyList const>());
 
     cls.def("writeFits", [](MI & self, std::string const& filename,
                             fits::ImageWriteOptions const& imageOptions,
                             fits::ImageWriteOptions const& maskOptions,
                             fits::ImageWriteOptions const& varianceOptions,
-                            std::shared_ptr<daf::base::PropertySet const> header) {
+                            std::shared_ptr<daf::base::PropertyList const> header) {
                             self.writeFits(filename, imageOptions, maskOptions, varianceOptions, header); },
             "filename"_a, "imageOptions"_a, "maskOptions"_a, "varianceOptions"_a,
             "header"_a=std::shared_ptr<daf::base::PropertyList>());
@@ -160,14 +160,14 @@ PyMaskedImage<ImagePixelT> declareMaskedImage(py::module &mod, const std::string
                             fits::ImageWriteOptions const& imageOptions,
                             fits::ImageWriteOptions const& maskOptions,
                             fits::ImageWriteOptions const& varianceOptions,
-                            std::shared_ptr<daf::base::PropertySet const> header) {
+                            std::shared_ptr<daf::base::PropertyList const> header) {
                             self.writeFits(manager, imageOptions, maskOptions, varianceOptions, header); },
             "manager"_a, "imageOptions"_a, "maskOptions"_a, "varianceOptions"_a,
             "header"_a=std::shared_ptr<daf::base::PropertyList>());
     cls.def("writeFits", [](MI & self, fits::Fits &fits, fits::ImageWriteOptions const& imageOptions,
                             fits::ImageWriteOptions const& maskOptions,
                             fits::ImageWriteOptions const& varianceOptions,
-                            std::shared_ptr<daf::base::PropertySet const> header) {
+                            std::shared_ptr<daf::base::PropertyList const> header) {
                                 self.writeFits(fits, imageOptions, maskOptions, varianceOptions, header); },
             "fits"_a, "imageOptions"_a, "maskOptions"_a, "varianceOptions"_a,
             "header"_a=std::shared_ptr<daf::base::PropertyList>());

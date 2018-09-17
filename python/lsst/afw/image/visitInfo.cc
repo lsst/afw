@@ -28,7 +28,7 @@
 
 #include "lsst/utils/python.h"
 
-#include "lsst/daf/base/PropertySet.h"
+#include "lsst/daf/base/PropertyList.h"
 #include "lsst/afw/coord/Observatory.h"
 #include "lsst/afw/coord/Weather.h"
 #include "lsst/geom/Angle.h"
@@ -79,7 +79,7 @@ PYBIND11_MODULE(visitInfo, mod) {
             "boresightRotAngle"_a = nanAngle, "rotType"_a = RotType::UNKNOWN,
             "observatory"_a = coord::Observatory(nanAngle, nanAngle, nan),
             "weather"_a = coord::Weather(nan, nan, nan));
-    cls.def(py::init<daf::base::PropertySet const &>(), "metadata"_a);
+    cls.def(py::init<daf::base::PropertyList const &>(), "metadata"_a);
     cls.def(py::init<VisitInfo const &>(), "visitInfo"_a);
 
     table::io::python::addPersistableMethods<VisitInfo>(cls);

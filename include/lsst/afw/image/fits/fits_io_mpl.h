@@ -43,7 +43,7 @@ template <typename ImageT, typename ExceptionT>
 class try_fits_read_array {
 public:
     try_fits_read_array(fits::Fits& fitsfile, ndarray::Array<typename ImageT::Pixel, 2, 2>& array,
-                        lsst::geom::Point2I& xy0, daf::base::PropertySet& metadata,
+                        lsst::geom::Point2I& xy0, daf::base::PropertyList& metadata,
                         lsst::geom::Box2I const& bbox, ImageOrigin const origin)
             : _fitsfile(&fitsfile),
               _array(array),
@@ -80,7 +80,7 @@ private:
     fits::Fits* _fitsfile;
     ndarray::Array<typename ImageT::Pixel, 2, 2>& _array;
     lsst::geom::Point2I& _xy0;
-    daf::base::PropertySet& _metadata;
+    daf::base::PropertyList& _metadata;
     lsst::geom::Box2I const& _bbox;
     ImageOrigin _origin;
 };
@@ -88,7 +88,7 @@ private:
 }  // namespace
 
 template <typename supported_fits_types, typename ImageT>
-void fits_read_image(fits::Fits& fitsfile, ImageT& img, lsst::daf::base::PropertySet& metadata,
+void fits_read_image(fits::Fits& fitsfile, ImageT& img, lsst::daf::base::PropertyList& metadata,
                      lsst::geom::Box2I const& bbox = lsst::geom::Box2I(), ImageOrigin const origin = PARENT) {
     ndarray::Array<typename ImageT::Pixel, 2, 2> array;
     lsst::geom::Point2I xy0;
@@ -106,10 +106,9 @@ void fits_read_image(fits::Fits& fitsfile, ImageT& img, lsst::daf::base::Propert
 
 template <typename supported_fits_types, typename ImageT>
 void fits_read_image(fits::Fits& fitsfile, ImageT& img,
-                     std::shared_ptr<lsst::daf::base::PropertySet> metadata =
-                             std::shared_ptr<lsst::daf::base::PropertySet>(),
+                     std::shared_ptr<lsst::daf::base::PropertyList> metadata = nullptr,
                      lsst::geom::Box2I const& bbox = lsst::geom::Box2I(), ImageOrigin const origin = PARENT) {
-    lsst::daf::base::PropertySet metadata_s;
+    lsst::daf::base::PropertyList metadata_s;
     fits_read_image<supported_fits_types, ImageT>(fitsfile, img, (metadata ? *metadata : metadata_s), bbox,
                                                   origin);
 }

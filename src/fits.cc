@@ -36,7 +36,7 @@ namespace fits {
 namespace {
 
 /*
- * Format a PropertySet into a FITS header string using simplifying assumptions.
+ * Format a PropertyList into a FITS header string using simplifying assumptions.
  *
  * See @ref makeLimitedFitsHeader for details.
  *
@@ -45,7 +45,7 @@ namespace {
  * @return a FITS header string (exactly 80 characters per entry, no line terminators)
  */
 std::string makeLimitedFitsHeaderImpl(std::vector<std::string> const &paramNames,
-                                      daf::base::PropertySet const &metadata) {
+                                      daf::base::PropertyList const &metadata) {
     std::ostringstream result;
     for (auto const &fullName : paramNames) {
         std::size_t lastPeriod = fullName.rfind(char('.'));
@@ -419,15 +419,9 @@ std::string makeErrorMessage(void *fptr, int status, std::string const &msg) {
     return makeErrorMessage(fileName, status, msg);
 }
 
-std::string makeLimitedFitsHeader(daf::base::PropertySet const &metadata,
+std::string makeLimitedFitsHeader(daf::base::PropertyList const &metadata,
                                   std::set<std::string> const &excludeNames) {
-    daf::base::PropertyList const *pl = dynamic_cast<daf::base::PropertyList const *>(&metadata);
-    std::vector<std::string> allParamNames;
-    if (pl) {
-        allParamNames = pl->getOrderedNames();
-    } else {
-        allParamNames = metadata.paramNames(false);
-    }
+    std::vector<std::string> allParamNames = metadata.getOrderedNames();
     std::vector<std::string> desiredParamNames;
     for (auto const &name : allParamNames) {
         if (excludeNames.count(name) == 0) {
@@ -792,7 +786,7 @@ void Fits::forEachKey(HeaderIterationFunctor &functor) {
     }
 }
 
-// ---- Reading and writing PropertySet/PropertyList --------------------------------------------------------
+// ---- Reading and writing PropertyList/PropertyList --------------------------------------------------------
 
 namespace {
 
@@ -815,7 +809,7 @@ public:
     }
 
     bool strip;
-    daf::base::PropertySet *set;
+    daf::base::PropertyList *set;
     daf::base::PropertyList *list;
 };
 
@@ -868,7 +862,7 @@ void MetadataIterationFunctor::operator()(std::string const &key, std::string co
     }
 }
 
-void writeKeyFromProperty(Fits &fits, daf::base::PropertySet const &metadata, std::string const &key,
+void writeKeyFromProperty(Fits &fits, daf::base::PropertyList const &metadata, std::string const &key,
                           char const *comment = 0) {
     std::type_info const &valueType = metadata.typeOf(key);
     if (valueType == typeid(bool)) {
@@ -958,7 +952,7 @@ void writeKeyFromProperty(Fits &fits, daf::base::PropertySet const &metadata, st
 
 }  // namespace
 
-void Fits::readMetadata(daf::base::PropertySet &metadata, bool strip) {
+void Fits::readMetadata(daf::base::PropertyList &metadata, bool strip) {
     MetadataIterationFunctor f;
     f.strip = strip;
     f.set = &metadata;
@@ -966,22 +960,10 @@ void Fits::readMetadata(daf::base::PropertySet &metadata, bool strip) {
     forEachKey(f);
 }
 
-void Fits::writeMetadata(daf::base::PropertySet const &metadata) {
-    typedef std::vector<std::string> NameList;
-    daf::base::PropertyList const *pl = dynamic_cast<daf::base::PropertyList const *>(&metadata);
-    NameList paramNames;
-    if (pl) {
-        paramNames = pl->getOrderedNames();
-    } else {
-        paramNames = metadata.paramNames(false);
-    }
-    for (NameList::const_iterator i = paramNames.begin(); i != paramNames.end(); ++i) {
-        if (!isKeyIgnored(*i, true)) {
-            if (pl) {
-                writeKeyFromProperty(*this, metadata, *i, pl->getComment(*i).c_str());
-            } else {
-                writeKeyFromProperty(*this, metadata, *i);
-            }
+void Fits::writeMetadata(daf::base::PropertyList const &metadata) {
+    for (auto const & name : metadata.getOrderedNames()) {
+        if (!isKeyIgnored(name, true)) {
+            writeKeyFromProperty(*this, metadata, name, metadata.getComment(name).c_str());
         }
     }
 }
@@ -1168,7 +1150,7 @@ private:
 
 template <typename T>
 void Fits::writeImage(image::ImageBase<T> const &image, ImageWriteOptions const &options,
-                      std::shared_ptr<daf::base::PropertySet const> header,
+                      std::shared_ptr<daf::base::PropertyList const> header,
                       std::shared_ptr<image::Mask<image::MaskPixel> const> mask) {
     auto fits = reinterpret_cast<fitsfile *>(fptr);
     ImageCompressionOptions const &compression =
@@ -1191,7 +1173,7 @@ void Fits::writeImage(image::ImageBase<T> const &image, ImageWriteOptions const 
     std::shared_ptr<daf::base::PropertyList> wcsMetadata =
             geom::createTrivialWcsMetadata(image::detail::wcsNameForXY0, image.getXY0());
     if (header) {
-        std::shared_ptr<daf::base::PropertySet> copy = header->deepCopy();
+        auto copy = header->deepCopy();
         copy->combine(wcsMetadata);
         header = copy;
     } else {
@@ -1664,7 +1646,7 @@ std::shared_ptr<daf::base::PropertySet> ImageWriteOptions::validate(daf::base::P
 #define INSTANTIATE_IMAGE_OPS(r, data, T)                                                  \
     template void Fits::writeImageImpl(T const *, int);                                    \
     template void Fits::writeImage(image::ImageBase<T> const &, ImageWriteOptions const &, \
-                                   std::shared_ptr<daf::base::PropertySet const>,          \
+                                   std::shared_ptr<daf::base::PropertyList const>,          \
                                    std::shared_ptr<image::Mask<image::MaskPixel> const>);  \
     template void Fits::readImageImpl(int, T *, long *, long *, long *);                   \
     template bool Fits::checkImageType<T>();                                               \

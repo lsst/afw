@@ -100,7 +100,7 @@ void test6() {
     if (gFilename == "") throw runtime_error("Must specify SDSS image filename on command line");
 
     // Read FITS file from disk into an Image
-    std::shared_ptr<dafBase::PropertySet> miMetadata(new dafBase::PropertySet);
+    std::shared_ptr<dafBase::PropertyList> miMetadata(new dafBase::PropertyList);
     std::shared_ptr<ImageF> image(new ImageF(gFilename, afwFits::DEFAULT_HDU, miMetadata));
 
     // Write the Image to a RAM FITS file
@@ -123,7 +123,7 @@ void test7() {
     if (gFilename == "") throw runtime_error("Must specify SDSS image filename on command line");
 
     // Read FITS file from disk into an Exposure
-    std::shared_ptr<dafBase::PropertySet> miMetadata(new dafBase::PropertySet);
+    std::shared_ptr<dafBase::PropertyList> miMetadata(new dafBase::PropertyList);
     std::shared_ptr<ImageF> image =
             std::shared_ptr<ImageF>(new ImageF(gFilename, afwFits::DEFAULT_HDU, miMetadata));
     MaskedImageF maskedImage(image);

@@ -61,7 +61,7 @@ std::shared_ptr<daf::base::PropertyList> createTrivialWcsMetadata(std::string co
  * @param[in,out] metadata The metadata
  * @param[in] wcsName The WCS to search, e.g. "A"
  */
-void deleteBasicWcsMetadata(daf::base::PropertySet& metadata, std::string const& wcsName);
+void deleteBasicWcsMetadata(daf::base::PropertyList& metadata, std::string const& wcsName);
 
 /**
  * Read a CD matrix from FITS WCS metadata
@@ -71,7 +71,7 @@ void deleteBasicWcsMetadata(daf::base::PropertySet& metadata, std::string const&
  * @throws pex::exceptions::TypeError if no CD matrix coefficients found
  * (missing coefficients are set to 0, as usual, but they cannot all be missing).
  */
-Eigen::Matrix2d getCdMatrixFromMetadata(daf::base::PropertySet& metadata);
+Eigen::Matrix2d getCdMatrixFromMetadata(daf::base::PropertyList& metadata);
 
 /**
  * @internal Return XY0 as specified by a trivial named WCS, and delete the WCS keywords, if present.
@@ -87,7 +87,7 @@ Eigen::Matrix2d getCdMatrixFromMetadata(daf::base::PropertySet& metadata);
  * @param[in] wcsName the WCS to search, e.g. "A"
  * @param[in] strip  If true, strip the WCS keywords using deleteBasicWcsMetadata, if present.
  */
-lsst::geom::Point2I getImageXY0FromMetadata(daf::base::PropertySet& metadata, std::string const& wcsName,
+lsst::geom::Point2I getImageXY0FromMetadata(daf::base::PropertyList& metadata, std::string const& wcsName,
                                             bool strip = false);
 
 /**
@@ -104,7 +104,7 @@ lsst::geom::Point2I getImageXY0FromMetadata(daf::base::PropertySet& metadata, st
  * the value of the order keyword is negative,
  * or if a matrix parameter (e.g. AP_5_0) cannot be read as a float.
  */
-Eigen::MatrixXd getSipMatrixFromMetadata(daf::base::PropertySet const& metadata, std::string const& name);
+Eigen::MatrixXd getSipMatrixFromMetadata(daf::base::PropertyList const& metadata, std::string const& name);
 
 /**
  * @internal Return True if the metadata includes data for the specified FITS TAN-SIP WCS matrix
@@ -117,7 +117,7 @@ Eigen::MatrixXd getSipMatrixFromMetadata(daf::base::PropertySet const& metadata,
  *
  * @throws lsst::pex::exceptions::TypeError if <name>_ORDER exists but cannot be read as an integer.
  */
-bool hasSipMatrix(daf::base::PropertySet const& metadata, std::string const& name);
+bool hasSipMatrix(daf::base::PropertyList const& metadata, std::string const& name);
 
 /**
  * @internal Encode a SIP matrix as FITS TAN-SIP WCS metadata

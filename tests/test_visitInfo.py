@@ -27,7 +27,7 @@ import numpy as np
 
 import lsst.utils.tests
 import lsst.pex.exceptions
-from lsst.daf.base import DateTime, PropertySet, PropertyList
+from lsst.daf.base import DateTime, PropertyList
 from lsst.afw.geom import Angle, degrees, SpherePoint
 from lsst.afw.coord import Observatory, Weather
 import lsst.afw.image as afwImage
@@ -40,9 +40,9 @@ RotTypeEnumNameDict = {
 }
 
 
-def propertySetFromDict(keyValDict):
-    """Make an lsst.daf.base.PropertySet from a dict of key: value"""
-    metadata = PropertySet()
+def propertyListFromDict(keyValDict):
+    """Make an lsst.daf.base.PropertyList from a dict of key: value"""
+    metadata = PropertyList()
     for key, val in keyValDict.items():
         metadata.set(key, val)
     return metadata
@@ -272,36 +272,36 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
         """
         data = self.data1
 
-        metadata = propertySetFromDict({})
+        metadata = propertyListFromDict({})
         visitInfo = afwImage.VisitInfo(metadata)
         self._testIsEmpty(visitInfo)
 
-        metadata = propertySetFromDict({"EXPID": data.exposureId})
+        metadata = propertyListFromDict({"EXPID": data.exposureId})
         visitInfo = afwImage.VisitInfo(metadata)
         self.assertEqual(visitInfo.getExposureId(), data.exposureId)
         self.assertTrue(math.isnan(visitInfo.getExposureTime()))
 
-        metadata = propertySetFromDict({"EXPTIME": data.exposureTime})
+        metadata = propertyListFromDict({"EXPTIME": data.exposureTime})
         visitInfo = afwImage.VisitInfo(metadata)
         self.assertEqual(visitInfo.getExposureTime(), data.exposureTime)
 
-        metadata = propertySetFromDict({"DARKTIME": data.darkTime})
+        metadata = propertyListFromDict({"DARKTIME": data.darkTime})
         visitInfo = afwImage.VisitInfo(metadata)
         self.assertEqual(visitInfo.getDarkTime(), data.darkTime)
 
-        metadata = propertySetFromDict(
+        metadata = propertyListFromDict(
             {"DATE-AVG": data.date.toString(DateTime.TAI), "TIMESYS": "TAI"})
         visitInfo = afwImage.VisitInfo(metadata)
         self.assertEqual(visitInfo.getDate(), data.date)
 
         # TIME-MID in UTC is an acceptable alternative to DATE-AVG
-        metadata = propertySetFromDict(
+        metadata = propertyListFromDict(
             {"TIME-MID": data.date.toString(DateTime.UTC)})
         visitInfo = afwImage.VisitInfo(metadata)
         self.assertEqual(visitInfo.getDate(), data.date)
 
         # TIME-MID must be in UTC and TIMESYS is ignored
-        metadata = propertySetFromDict({
+        metadata = propertyListFromDict({
             "TIME-MID": data.date.toString(DateTime.TAI) + "Z",
             "TIMESYS": "TAI",
         })
@@ -311,7 +311,7 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
         # if both DATE-AVG and TIME-MID provided then use DATE-AVG
         # use the wrong time system for TIME-MID so if it is used, an error
         # will result
-        metadata = propertySetFromDict({
+        metadata = propertyListFromDict({
             "DATE-AVG": data.date.toString(DateTime.TAI),
             "TIMESYS": "TAI",
             "TIME-MID": data.date.toString(DateTime.TAI) + "Z",
@@ -319,75 +319,75 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
         visitInfo = afwImage.VisitInfo(metadata)
         self.assertEqual(visitInfo.getDate(), data.date)
 
-        metadata = propertySetFromDict({"MJD-AVG-UT1": data.ut1})
+        metadata = propertyListFromDict({"MJD-AVG-UT1": data.ut1})
         visitInfo = afwImage.VisitInfo(metadata)
         self.assertEqual(visitInfo.getUt1(), data.ut1)
 
-        metadata = propertySetFromDict({"AVG-ERA": data.era.asDegrees()})
+        metadata = propertyListFromDict({"AVG-ERA": data.era.asDegrees()})
         visitInfo = afwImage.VisitInfo(metadata)
         self.assertEqual(visitInfo.getEra(), data.era)
 
         for i, key in enumerate(("BORE-RA", "BORE-DEC")):
-            metadata = propertySetFromDict(
+            metadata = propertyListFromDict(
                 {key: data.boresightRaDec[i].asDegrees()})
             visitInfo = afwImage.VisitInfo(metadata)
             self.assertEqual(visitInfo.getBoresightRaDec()
                              [i], data.boresightRaDec[i])
 
         for i, key in enumerate(("BORE-AZ", "BORE-ALT")):
-            metadata = propertySetFromDict(
+            metadata = propertyListFromDict(
                 {key: data.boresightAzAlt[i].asDegrees()})
             visitInfo = afwImage.VisitInfo(metadata)
             self.assertEqual(visitInfo.getBoresightAzAlt()
                              [i], data.boresightAzAlt[i])
 
-        metadata = propertySetFromDict({"BORE-AIRMASS": data.boresightAirmass})
+        metadata = propertyListFromDict({"BORE-AIRMASS": data.boresightAirmass})
         visitInfo = afwImage.VisitInfo(metadata)
         self.assertEqual(visitInfo.getBoresightAirmass(),
                          data.boresightAirmass)
 
-        metadata = propertySetFromDict(
+        metadata = propertyListFromDict(
             {"BORE-ROTANG": data.boresightRotAngle.asDegrees()})
         visitInfo = afwImage.VisitInfo(metadata)
         self.assertEqual(visitInfo.getBoresightRotAngle(),
                          data.boresightRotAngle)
 
-        metadata = propertySetFromDict(
+        metadata = propertyListFromDict(
             {"ROTTYPE": RotTypeEnumNameDict[data.rotType]})
         visitInfo = afwImage.VisitInfo(metadata)
         self.assertEqual(visitInfo.getRotType(), data.rotType)
 
-        metadata = propertySetFromDict(
+        metadata = propertyListFromDict(
             {"OBS-LONG": data.observatory.getLongitude().asDegrees()})
         visitInfo = afwImage.VisitInfo(metadata)
         self.assertEqual(visitInfo.getObservatory().getLongitude(),
                          data.observatory.getLongitude())
 
-        metadata = propertySetFromDict(
+        metadata = propertyListFromDict(
             {"OBS-LAT": data.observatory.getLatitude().asDegrees()})
         visitInfo = afwImage.VisitInfo(metadata)
         self.assertEqual(visitInfo.getObservatory().getLatitude(),
                          data.observatory.getLatitude())
 
-        metadata = propertySetFromDict(
+        metadata = propertyListFromDict(
             {"OBS-ELEV": data.observatory.getElevation()})
         visitInfo = afwImage.VisitInfo(metadata)
         self.assertEqual(visitInfo.getObservatory().getElevation(),
                          data.observatory.getElevation())
 
-        metadata = propertySetFromDict(
+        metadata = propertyListFromDict(
             {"AIRTEMP": data.weather.getAirTemperature()})
         visitInfo = afwImage.VisitInfo(metadata)
         self.assertEqual(visitInfo.getWeather().getAirTemperature(),
                          data.weather.getAirTemperature())
 
-        metadata = propertySetFromDict(
+        metadata = propertyListFromDict(
             {"AIRPRESS": data.weather.getAirPressure()})
         visitInfo = afwImage.VisitInfo(metadata)
         self.assertEqual(visitInfo.getWeather().getAirPressure(),
                          data.weather.getAirPressure())
 
-        metadata = propertySetFromDict(
+        metadata = propertyListFromDict(
             {"HUMIDITY": data.weather.getHumidity()})
         visitInfo = afwImage.VisitInfo(metadata)
         self.assertEqual(visitInfo.getWeather().getHumidity(),
@@ -446,7 +446,7 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
     def testGoodRotTypes(self):
         """Test round trip of all valid rot types"""
         for rotType in RotTypeEnumNameDict:
-            metadata = propertySetFromDict(
+            metadata = propertyListFromDict(
                 {"ROTTYPE": RotTypeEnumNameDict[rotType]})
             visitInfo = afwImage.VisitInfo(metadata)
             self.assertEqual(visitInfo.getRotType(), rotType)
@@ -460,7 +460,7 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
             "SKY1",  # extra chars
             "HORIZONTAL",  # extra chars
         ):
-            metadata = propertySetFromDict({"ROTTYPE": badRotTypeName})
+            metadata = propertyListFromDict({"ROTTYPE": badRotTypeName})
             with self.assertRaises(lsst.pex.exceptions.RuntimeError):
                 afwImage.VisitInfo(metadata)
 

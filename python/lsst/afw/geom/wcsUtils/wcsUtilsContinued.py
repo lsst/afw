@@ -35,7 +35,7 @@ def getSipMatrixFromMetadata(metadata, name):
 
     Parameters
     ----------
-    metadata : `lsst.daf.base.PropertySet`
+    metadata : `lsst.daf.base.PropertyList`
         FITS metadata.
     name : `str`
         Name of TAN-SIP matrix (``"A"``, ``"B"``, ``"Ap"``, or ``"Bp"``).

@@ -30,7 +30,7 @@
 #include "boost/format.hpp"
 #include "boost/algorithm/string/trim.hpp"
 
-#include "lsst/daf/base/PropertySet.h"
+#include "lsst/daf/base/PropertyList.h"
 #include "lsst/daf/base/PropertyList.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/cameraGeom/Detector.h"
@@ -116,8 +116,8 @@ Exposure<ImageT, MaskT, VarianceT>::Exposure(fits::Fits &fitsfile, lsst::geom::B
 template <typename ImageT, typename MaskT, typename VarianceT>
 void Exposure<ImageT, MaskT, VarianceT>::_readFits(fits::Fits &fitsfile, lsst::geom::Box2I const &bbox,
                                                    ImageOrigin origin, bool conformMasks) {
-    std::shared_ptr<daf::base::PropertySet> metadata(new daf::base::PropertyList());
-    std::shared_ptr<daf::base::PropertySet> imageMetadata(new daf::base::PropertyList());
+    std::shared_ptr<daf::base::PropertyList> metadata(new daf::base::PropertyList());
+    std::shared_ptr<daf::base::PropertyList> imageMetadata(new daf::base::PropertyList());
     _maskedImage = MaskedImageT(fitsfile, metadata, bbox, origin, conformMasks, false, imageMetadata);
     _info->_readFits(fitsfile, metadata, imageMetadata);
 }

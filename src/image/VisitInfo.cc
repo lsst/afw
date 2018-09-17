@@ -57,38 +57,38 @@ namespace {
 auto const nan = std::numeric_limits<double>::quiet_NaN();
 
 /**
- * @internal Get a specified double from a PropertySet, or nan if not present
+ * @internal Get a specified double from a PropertyList, or nan if not present
  *
  * @param[in] metadata  metadata to get
  * @param[in] key  key name; the associated value must be of type double if the key exists
  * @returns value of metadata for the specified key, as a double,
  *   with a value of nan if the key is not present
  */
-double getDouble(daf::base::PropertySet const& metadata, std::string const& key) {
+double getDouble(daf::base::PropertyList const& metadata, std::string const& key) {
     return metadata.exists(key) ? metadata.getAsDouble(key) : nan;
 }
 
 /**
- * @internal Get a specified angle, as a float in degrees, from a PropertySet, or nan if not present
+ * @internal Get a specified angle, as a float in degrees, from a PropertyList, or nan if not present
  *
  * @param[in] metadata  metadata to get
  * @param[in] key  key name; the associated value is treated as an angle in degrees, if it exists
  * @returns value of metadata for the specified key, as an lsst::geom::Angle,
  *   with a value of nan if the key is not present
  */
-lsst::geom::Angle getAngle(daf::base::PropertySet const& metadata, std::string const& key) {
+lsst::geom::Angle getAngle(daf::base::PropertyList const& metadata, std::string const& key) {
     return getDouble(metadata, key) * lsst::geom::degrees;
 }
 
 /**
- * @internal Set a specified double in a PropertySet, if value is finite
+ * @internal Set a specified double in a PropertyList, if value is finite
  *
  * @param[in,out] metadata  metadata to set
  * @param[in] key  name of key to set
  * @param[in] value  value of key
  * @returns true if item set, false otherwise
  */
-bool setDouble(daf::base::PropertySet& metadata, std::string const& key, double value,
+bool setDouble(daf::base::PropertyList& metadata, std::string const& key, double value,
                std::string const& comment) {
     if (std::isfinite(value)) {
         metadata.set(key, value);
@@ -98,14 +98,14 @@ bool setDouble(daf::base::PropertySet& metadata, std::string const& key, double 
 }
 
 /**
- * @internal Set a specified angle in a PropertySet, in degrees, if angle is finite
+ * @internal Set a specified angle in a PropertyList, in degrees, if angle is finite
  *
  * @param[in,out] metadata  metadata to set
  * @param[in] key  name of key to set
  * @param[in] angle  value of key
  * @returns true if item set, false otherwise
  */
-bool setAngle(daf::base::PropertySet& metadata, std::string const& key, lsst::geom::Angle const& angle,
+bool setAngle(daf::base::PropertyList& metadata, std::string const& key, lsst::geom::Angle const& angle,
               std::string const& comment) {
     return setDouble(metadata, key, angle.asDegrees(), comment);
 }
@@ -263,7 +263,7 @@ VisitInfoFactory registration(getVisitInfoPersistenceName());
 
 namespace detail {
 
-int stripVisitInfoKeywords(daf::base::PropertySet& metadata) {
+int stripVisitInfoKeywords(daf::base::PropertyList& metadata) {
     int nstripped = 0;
 
     std::vector<std::string> keyList = {
@@ -313,7 +313,7 @@ void setVisitInfoMetadata(daf::base::PropertyList& metadata, VisitInfo const& vi
 
 }  // namespace detail
 
-VisitInfo::VisitInfo(daf::base::PropertySet const& metadata)
+VisitInfo::VisitInfo(daf::base::PropertyList const& metadata)
         : _exposureId(0),
           _exposureTime(nan),  // don't use getDouble because str values are also accepted
           _darkTime(getDouble(metadata, "DARKTIME")),

@@ -42,7 +42,7 @@ def imageReadFitsWithOptions(cls, source, options):
     source : `str`
         Fits file path from which to read image, mask, masked image
         or exposure.
-    options : `lsst.daf.base.PropertySet`
+    options : `lsst.daf.base.PropertyList`
         Read options:
 
         - llcX: bbox minimum x (int)

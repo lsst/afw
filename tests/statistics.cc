@@ -269,7 +269,7 @@ BOOST_AUTO_TEST_CASE(StatisticsTestImages,
 
             // get the image and header
             DecoratedImage dimg(img_path);
-            std::shared_ptr<lsst::daf::base::PropertySet> fitsHdr = dimg.getMetadata();  // the FITS header
+            std::shared_ptr<lsst::daf::base::PropertyList> fitsHdr = dimg.getMetadata();  // the FITS header
 
             // get the true values of the mean and stdev
             double const trueMean = fitsHdr->getAsDouble("MEANCOMP");

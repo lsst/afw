@@ -28,7 +28,7 @@
 
 #include "ndarray/pybind11.h"
 
-#include "lsst/daf/base/PropertySet.h"
+#include "lsst/daf/base/PropertyList.h"
 #include "lsst/afw/table/io/python.h"  // for addPersistableMethods
 #include "lsst/afw/image/Calib.h"
 
@@ -71,7 +71,7 @@ PYBIND11_MODULE(calib, mod) {
     /* Constructors */
     cls.def(py::init<>());
     cls.def(py::init<double>(), "fluxMag0"_a);
-    cls.def(py::init<std::shared_ptr<const daf::base::PropertySet>>(), "metadata"_a);
+    cls.def(py::init<std::shared_ptr<const daf::base::PropertyList>>(), "metadata"_a);
     cls.def(py::init<std::vector<std::shared_ptr<const Calib>> const &>(), "calibs"_a);
 
     table::io::python::addPersistableMethods<Calib>(cls);

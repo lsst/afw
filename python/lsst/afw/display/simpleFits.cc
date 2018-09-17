@@ -46,7 +46,7 @@ using namespace posix;
 #include "simpleFits.h"
 
 namespace image = lsst::afw::image;
-using lsst::daf::base::PropertySet;
+using lsst::daf::base::PropertyList;
 
 #define FITS_SIZE 2880
 
@@ -403,7 +403,7 @@ void writeBasicFits(int fd,                 // file descriptor to write to
         auto shift = lsst::geom::Extent2D(-data.getX0(), -data.getY0());
         auto newWcs = Wcs->copyAtShiftedPixelOrigin(shift);
 
-        std::shared_ptr<lsst::daf::base::PropertySet> metadata = newWcs->getFitsMetadata();
+        std::shared_ptr<lsst::daf::base::PropertyList> metadata = newWcs->getFitsMetadata();
 
         NameList paramNames = metadata->paramNames();
 

@@ -43,8 +43,8 @@ namespace image {
 
 namespace {
 
-// Return an int value from a PropertySet if it exists and remove it, or return 0.
-int popInt(daf::base::PropertySet& metadata, std::string const& name) {
+// Return an int value from a PropertyList if it exists and remove it, or return 0.
+int popInt(daf::base::PropertyList& metadata, std::string const& name) {
     int r = 0;
     if (metadata.exists(name)) {
         r = metadata.get<int>(name);
@@ -74,7 +74,7 @@ ExposureInfo::ExposureInfo(std::shared_ptr<geom::SkyWcs const> const& wcs,
                            std::shared_ptr<Calib const> const& calib,
                            std::shared_ptr<cameraGeom::Detector const> const& detector,
                            std::shared_ptr<geom::polygon::Polygon const> const& polygon, Filter const& filter,
-                           std::shared_ptr<daf::base::PropertySet> const& metadata,
+                           std::shared_ptr<daf::base::PropertyList> const& metadata,
                            std::shared_ptr<CoaddInputs> const& coaddInputs,
                            std::shared_ptr<ApCorrMap> const& apCorrMap,
                            std::shared_ptr<image::VisitInfo const> const& visitInfo,
@@ -86,7 +86,7 @@ ExposureInfo::ExposureInfo(std::shared_ptr<geom::SkyWcs const> const& wcs,
           _validPolygon(polygon),
           _filter(filter),
           _metadata(metadata ? metadata
-                             : std::shared_ptr<daf::base::PropertySet>(new daf::base::PropertyList())),
+                             : std::shared_ptr<daf::base::PropertyList>(new daf::base::PropertyList())),
           _coaddInputs(coaddInputs),
           _apCorrMap(_cloneApCorrMap(apCorrMap)),
           _visitInfo(visitInfo),
@@ -243,8 +243,8 @@ void ExposureInfo::_finishWriteFits(fits::Fits& fitsfile, FitsWriteData const& d
     data.archive.writeFits(fitsfile);
 }
 
-void ExposureInfo::_readFits(fits::Fits& fitsfile, std::shared_ptr<daf::base::PropertySet> metadata,
-                             std::shared_ptr<daf::base::PropertySet> imageMetadata) {
+void ExposureInfo::_readFits(fits::Fits& fitsfile, std::shared_ptr<daf::base::PropertyList> metadata,
+                             std::shared_ptr<daf::base::PropertyList> imageMetadata) {
     // Try to read WCS from image metadata, and if found, strip the keywords used
     try {
         _wcs = geom::makeSkyWcs(*imageMetadata, true);

@@ -31,7 +31,7 @@ import numpy as np
 import lsst.utils
 import lsst.utils.tests
 import lsst.pex.exceptions
-from lsst.daf.base import PropertySet
+from lsst.daf.base import PropertyList
 import lsst.geom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
@@ -316,7 +316,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
                                lsst.geom.Point2I(2079, 4609))
         imagePath = os.path.join(
             AfwdataDir, "CFHT", "D4", "cal-53535-i-797722_1.fits")
-        return afwImage.MaskedImageF(imagePath, PropertySet(), bbox)
+        return afwImage.MaskedImageF(imagePath, PropertyList(), bbox)
 
     @unittest.skipIf(AfwdataDir is None, "afwdata not setup")
     def testXY0(self):

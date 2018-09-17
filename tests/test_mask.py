@@ -254,7 +254,7 @@ class MaskTestCase(utilsTests.TestCase):
             mask.writeFits(tmpFile)
 
             # Read it back
-            md = lsst.daf.base.PropertySet()
+            md = lsst.daf.base.PropertyList()
             rmask = self.Mask(tmpFile, 0, md)
 
             self.assertMasksEqual(mask, rmask)
@@ -411,7 +411,7 @@ class OldMaskTestCase(unittest.TestCase):
         #
         # Demonstrate that we can extract a MaskPlaneDict into metadata
         #
-        metadata = lsst.daf.base.PropertySet()
+        metadata = lsst.daf.base.PropertyList()
 
         self.Mask.addMaskPlanesToMetadata(metadata)
         for (k, v) in self.Mask().getMaskPlaneDict().items():

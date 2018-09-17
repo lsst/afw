@@ -150,15 +150,15 @@ static void declareMask(py::module &mod, std::string const &suffix) {
             "bbox"_a, "origin"_a = PARENT, "deep"_a = false);
     cls.def(py::init<ndarray::Array<MaskPixelT, 2, 1> const &, bool, lsst::geom::Point2I const &>(), "array"_a,
             "deep"_a = false, "xy0"_a = lsst::geom::Point2I());
-    cls.def(py::init<std::string const &, int, std::shared_ptr<lsst::daf::base::PropertySet>,
+    cls.def(py::init<std::string const &, int, std::shared_ptr<lsst::daf::base::PropertyList>,
                      lsst::geom::Box2I const &, ImageOrigin, bool>(),
             "fileName"_a, "hdu"_a = fits::DEFAULT_HDU, "metadata"_a = nullptr, "bbox"_a = lsst::geom::Box2I(),
             "origin"_a = PARENT, "conformMasks"_a = false);
-    cls.def(py::init<fits::MemFileManager &, int, std::shared_ptr<lsst::daf::base::PropertySet>,
+    cls.def(py::init<fits::MemFileManager &, int, std::shared_ptr<lsst::daf::base::PropertyList>,
                      lsst::geom::Box2I const &, ImageOrigin, bool>(),
             "manager"_a, "hdu"_a = fits::DEFAULT_HDU, "metadata"_a = nullptr, "bbox"_a = lsst::geom::Box2I(),
             "origin"_a = PARENT, "conformMasks"_a = false);
-    cls.def(py::init<fits::Fits &, std::shared_ptr<lsst::daf::base::PropertySet>, lsst::geom::Box2I const &,
+    cls.def(py::init<fits::Fits &, std::shared_ptr<lsst::daf::base::PropertyList>, lsst::geom::Box2I const &,
                      ImageOrigin, bool>(),
             "fitsFile"_a, "metadata"_a = nullptr, "bbox"_a = lsst::geom::Box2I(), "origin"_a = PARENT,
             "conformMasks"_a = false);
@@ -177,34 +177,34 @@ static void declareMask(py::module &mod, std::string const &suffix) {
     /* Members */
     cls.def("swap", (void (Mask<MaskPixelT>::*)(Mask<MaskPixelT> &)) & Mask<MaskPixelT>::swap);
     cls.def("writeFits", (void (Mask<MaskPixelT>::*)(std::string const &,
-                                                     std::shared_ptr<lsst::daf::base::PropertySet const>,
+                                                     std::shared_ptr<lsst::daf::base::PropertyList const>,
                                                      std::string const &) const) &
                                  Mask<MaskPixelT>::writeFits,
-            "fileName"_a, "metadata"_a = std::shared_ptr<lsst::daf::base::PropertySet>(), "mode"_a = "w");
+            "fileName"_a, "metadata"_a = std::shared_ptr<lsst::daf::base::PropertyList>(), "mode"_a = "w");
     cls.def("writeFits", (void (Mask<MaskPixelT>::*)(fits::MemFileManager &,
-                                                     std::shared_ptr<lsst::daf::base::PropertySet const>,
+                                                     std::shared_ptr<lsst::daf::base::PropertyList const>,
                                                      std::string const &) const) &
                                  Mask<MaskPixelT>::writeFits,
-            "manager"_a, "metadata"_a = std::shared_ptr<lsst::daf::base::PropertySet>(), "mode"_a = "w");
+            "manager"_a, "metadata"_a = std::shared_ptr<lsst::daf::base::PropertyList>(), "mode"_a = "w");
     cls.def("writeFits", (void (Mask<MaskPixelT>::*)(
-                                 fits::Fits &, std::shared_ptr<lsst::daf::base::PropertySet const>) const) &
+                                 fits::Fits &, std::shared_ptr<lsst::daf::base::PropertyList const>) const) &
                                  Mask<MaskPixelT>::writeFits,
-            "fitsfile"_a, "metadata"_a = std::shared_ptr<lsst::daf::base::PropertySet const>());
+            "fitsfile"_a, "metadata"_a = std::shared_ptr<lsst::daf::base::PropertyList const>());
     cls.def("writeFits",
             (void (Mask<MaskPixelT>::*)(std::string const&, fits::ImageWriteOptions const&,
                                         std::string const&,
-                                        std::shared_ptr<daf::base::PropertySet const>) const)
+                                        std::shared_ptr<daf::base::PropertyList const>) const)
                 &Mask<MaskPixelT>::writeFits,
             "filename"_a, "options"_a, "mode"_a="w", "header"_a=std::shared_ptr<daf::base::PropertyList>());
     cls.def("writeFits",
             (void (Mask<MaskPixelT>::*)(fits::MemFileManager &, fits::ImageWriteOptions const&,
                                         std::string const&,
-                                        std::shared_ptr<daf::base::PropertySet const>) const)
+                                        std::shared_ptr<daf::base::PropertyList const>) const)
                 &Mask<MaskPixelT>::writeFits,
             "manager"_a, "options"_a, "mode"_a="w", "header"_a=std::shared_ptr<daf::base::PropertyList>());
     cls.def("writeFits",
             (void (Mask<MaskPixelT>::*)(fits::Fits &, fits::ImageWriteOptions const&,
-                                     std::shared_ptr<daf::base::PropertySet const>) const)
+                                     std::shared_ptr<daf::base::PropertyList const>) const)
                 &Mask<MaskPixelT>::writeFits,
             "fits"_a, "options"_a, "header"_a=std::shared_ptr<daf::base::PropertyList>());
     cls.def_static("readFits", (Mask<MaskPixelT>(*)(std::string const &, int))Mask<MaskPixelT>::readFits,
@@ -248,15 +248,15 @@ static PyImage<PixelT> declareImage(py::module &mod, const std::string &suffix) 
             "bbox"_a, "origin"_a = PARENT, "deep"_a = false);
     cls.def(py::init<ndarray::Array<PixelT, 2, 1> const &, bool, lsst::geom::Point2I const &>(), "array"_a,
             "deep"_a = false, "xy0"_a = lsst::geom::Point2I());
-    cls.def(py::init<std::string const &, int, std::shared_ptr<daf::base::PropertySet>, lsst::geom::Box2I const &,
+    cls.def(py::init<std::string const &, int, std::shared_ptr<daf::base::PropertyList>, lsst::geom::Box2I const &,
                      ImageOrigin>(),
             "fileName"_a, "hdu"_a = fits::DEFAULT_HDU, "metadata"_a = nullptr, "bbox"_a = lsst::geom::Box2I(),
             "origin"_a = PARENT);
-    cls.def(py::init<fits::MemFileManager &, int, std::shared_ptr<daf::base::PropertySet>,
+    cls.def(py::init<fits::MemFileManager &, int, std::shared_ptr<daf::base::PropertyList>,
                      lsst::geom::Box2I const &, ImageOrigin>(),
             "manager"_a, "hdu"_a = fits::DEFAULT_HDU, "metadata"_a = nullptr, "bbox"_a = lsst::geom::Box2I(),
             "origin"_a = PARENT);
-    cls.def(py::init<fits::Fits &, std::shared_ptr<daf::base::PropertySet>, lsst::geom::Box2I const &,
+    cls.def(py::init<fits::Fits &, std::shared_ptr<daf::base::PropertyList>, lsst::geom::Box2I const &,
                      ImageOrigin>(),
             "fitsFile"_a, "metadata"_a = nullptr, "bbox"_a = lsst::geom::Box2I(), "origin"_a = PARENT);
 
@@ -285,36 +285,36 @@ static PyImage<PixelT> declareImage(py::module &mod, const std::string &suffix) 
     cls.def("subset", &Image<PixelT>::subset, "bbox"_a, "origin"_a=PARENT);
 
     cls.def("writeFits",
-            (void (Image<PixelT>::*)(std::string const &, std::shared_ptr<daf::base::PropertySet const>,
+            (void (Image<PixelT>::*)(std::string const &, std::shared_ptr<daf::base::PropertyList const>,
                                      std::string const &) const) &
                     Image<PixelT>::writeFits,
-            "fileName"_a, "metadata"_a = std::shared_ptr<daf::base::PropertySet const>(), "mode"_a = "w");
+            "fileName"_a, "metadata"_a = std::shared_ptr<daf::base::PropertyList const>(), "mode"_a = "w");
     cls.def("writeFits",
-            (void (Image<PixelT>::*)(fits::MemFileManager &, std::shared_ptr<daf::base::PropertySet const>,
+            (void (Image<PixelT>::*)(fits::MemFileManager &, std::shared_ptr<daf::base::PropertyList const>,
                                      std::string const &) const) &
                     Image<PixelT>::writeFits,
-            "manager"_a, "metadata"_a = std::shared_ptr<daf::base::PropertySet const>(), "mode"_a = "w");
+            "manager"_a, "metadata"_a = std::shared_ptr<daf::base::PropertyList const>(), "mode"_a = "w");
     cls.def("writeFits",
-            (void (Image<PixelT>::*)(fits::Fits &, std::shared_ptr<daf::base::PropertySet const>) const) &
+            (void (Image<PixelT>::*)(fits::Fits &, std::shared_ptr<daf::base::PropertyList const>) const) &
                     Image<PixelT>::writeFits,
-            "fitsfile"_a, "metadata"_a = std::shared_ptr<daf::base::PropertySet const>());
+            "fitsfile"_a, "metadata"_a = std::shared_ptr<daf::base::PropertyList const>());
     cls.def("writeFits",
             (void (Image<PixelT>::*)(std::string const&, fits::ImageWriteOptions const&,
-                                     std::string const&, std::shared_ptr<daf::base::PropertySet const>,
+                                     std::string const&, std::shared_ptr<daf::base::PropertyList const>,
                                      std::shared_ptr<image::Mask<image::MaskPixel> const>) const)
                 &Image<PixelT>::writeFits,
             "filename"_a, "options"_a, "mode"_a="w", "header"_a=std::shared_ptr<daf::base::PropertyList>(),
             "mask"_a=std::shared_ptr<image::Mask<image::MaskPixel>>());
     cls.def("writeFits",
             (void (Image<PixelT>::*)(fits::MemFileManager &, fits::ImageWriteOptions const&,
-                                     std::string const&, std::shared_ptr<daf::base::PropertySet const>,
+                                     std::string const&, std::shared_ptr<daf::base::PropertyList const>,
                                      std::shared_ptr<image::Mask<image::MaskPixel> const>) const)
                 &Image<PixelT>::writeFits,
             "manager"_a, "options"_a, "mode"_a="w", "header"_a=std::shared_ptr<daf::base::PropertyList>(),
             "mask"_a=std::shared_ptr<image::Mask<image::MaskPixel>>());
     cls.def("writeFits",
             (void (Image<PixelT>::*)(fits::Fits &, fits::ImageWriteOptions const&,
-                                     std::shared_ptr<daf::base::PropertySet const>,
+                                     std::shared_ptr<daf::base::PropertyList const>,
                                      std::shared_ptr<image::Mask<image::MaskPixel> const>) const)
                 &Image<PixelT>::writeFits,
             "fits"_a, "options"_a, "header"_a=std::shared_ptr<daf::base::PropertyList>(),
@@ -350,12 +350,12 @@ static void declareDecoratedImage(py::module &mod, std::string const &suffix) {
     cls.def("getDimensions", &DecoratedImage<PixelT>::getDimensions);
     cls.def("swap", &DecoratedImage<PixelT>::swap);
     cls.def("writeFits",
-            py::overload_cast<std::string const &, std::shared_ptr<daf::base::PropertySet const>,
+            py::overload_cast<std::string const &, std::shared_ptr<daf::base::PropertyList const>,
                               std::string const &>(&DecoratedImage<PixelT>::writeFits, py::const_),
             "filename"_a, "metadata"_a = std::shared_ptr<daf::base::PropertyList>(), "mode"_a = "w");
     cls.def("writeFits",
             py::overload_cast<std::string const &, fits::ImageWriteOptions const &,
-                              std::shared_ptr<daf::base::PropertySet const>, std::string const &>(
+                              std::shared_ptr<daf::base::PropertyList const>, std::string const &>(
                     &DecoratedImage<PixelT>::writeFits, py::const_),
             "filename"_a, "options"_a, "metadata"_a = std::shared_ptr<daf::base::PropertyList>(),
             "mode"_a = "w");

@@ -43,7 +43,7 @@ namespace image {
 template <typename PixelT>
 void DecoratedImage<PixelT>::init() {
     // safer to initialize a smart pointer as a named variable
-    std::shared_ptr<daf::base::PropertySet> metadata(new daf::base::PropertyList);
+    std::shared_ptr<daf::base::PropertyList> metadata(new daf::base::PropertyList);
     setMetadata(metadata);
     _gain = 0;
 }
@@ -102,7 +102,7 @@ DecoratedImage<PixelT>::DecoratedImage(const std::string& fileName, const int hd
 
 template <typename PixelT>
 void DecoratedImage<PixelT>::writeFits(std::string const& fileName,
-                                       std::shared_ptr<daf::base::PropertySet const> metadata,
+                                       std::shared_ptr<daf::base::PropertyList const> metadata,
                                        std::string const& mode) const {
     fits::ImageWriteOptions const options;
     writeFits(fileName, options, metadata, mode);
@@ -110,9 +110,9 @@ void DecoratedImage<PixelT>::writeFits(std::string const& fileName,
 
 template <typename PixelT>
 void DecoratedImage<PixelT>::writeFits(std::string const& fileName, fits::ImageWriteOptions const& options,
-                                       std::shared_ptr<daf::base::PropertySet const> metadata_i,
+                                       std::shared_ptr<daf::base::PropertyList const> metadata_i,
                                        std::string const& mode) const {
-    std::shared_ptr<daf::base::PropertySet> metadata;
+    std::shared_ptr<daf::base::PropertyList> metadata;
 
     if (metadata_i) {
         metadata = getMetadata()->deepCopy();

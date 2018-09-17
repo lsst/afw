@@ -123,10 +123,10 @@ public:
     void setCalib(std::shared_ptr<Calib const> calib) { _calib = _cloneCalib(calib); }
 
     /// Return flexible metadata
-    std::shared_ptr<daf::base::PropertySet> getMetadata() const { return _metadata; }
+    std::shared_ptr<daf::base::PropertyList> getMetadata() const { return _metadata; }
 
     /// Set the flexible metadata
-    void setMetadata(std::shared_ptr<daf::base::PropertySet> metadata) { _metadata = metadata; }
+    void setMetadata(std::shared_ptr<daf::base::PropertyList> metadata) { _metadata = metadata; }
 
     /// Does this exposure have a Psf?
     bool hasPsf() const { return static_cast<bool>(_psf); }
@@ -200,7 +200,7 @@ public:
     /**
      *  Construct an ExposureInfo from its various components.
      *
-     *  If a null Calib and/or PropertySet pointer is passed (the default),
+     *  If a null Calib and/or PropertyList pointer is passed (the default),
      *  a new Calib and/or PropertyList will be created.  To set these pointers
      *  to null, you must explicitly call setCalib or setMetadata after construction.
      */
@@ -213,8 +213,7 @@ public:
             std::shared_ptr<geom::polygon::Polygon const> const& polygon =
                     std::shared_ptr<geom::polygon::Polygon const>(),
             Filter const& filter = Filter(),
-            std::shared_ptr<daf::base::PropertySet> const& metadata =
-                    std::shared_ptr<daf::base::PropertySet>(),
+            std::shared_ptr<daf::base::PropertyList> const& metadata = nullptr,
             std::shared_ptr<CoaddInputs> const& coaddInputs = std::shared_ptr<CoaddInputs>(),
             std::shared_ptr<ApCorrMap> const& apCorrMap = std::shared_ptr<ApCorrMap>(),
             std::shared_ptr<image::VisitInfo const> const& visitInfo =
@@ -293,8 +292,8 @@ private:
      *  only be called by the exposure constructor, which starts by default-constructing the
      *  ExposureInfo.
      */
-    void _readFits(fits::Fits& fitsfile, std::shared_ptr<daf::base::PropertySet> metadata,
-                   std::shared_ptr<daf::base::PropertySet> imageMetadata);
+    void _readFits(fits::Fits& fitsfile, std::shared_ptr<daf::base::PropertyList> metadata,
+                   std::shared_ptr<daf::base::PropertyList> imageMetadata);
 
     static std::shared_ptr<Calib> _cloneCalib(std::shared_ptr<Calib const> calib);
     static std::shared_ptr<ApCorrMap> _cloneApCorrMap(std::shared_ptr<ApCorrMap const> apCorrMap);
@@ -305,7 +304,7 @@ private:
     std::shared_ptr<cameraGeom::Detector const> _detector;
     std::shared_ptr<geom::polygon::Polygon const> _validPolygon;
     Filter _filter;
-    std::shared_ptr<daf::base::PropertySet> _metadata;
+    std::shared_ptr<daf::base::PropertyList> _metadata;
     std::shared_ptr<CoaddInputs> _coaddInputs;
     std::shared_ptr<ApCorrMap> _apCorrMap;
     std::shared_ptr<image::VisitInfo const> _visitInfo;

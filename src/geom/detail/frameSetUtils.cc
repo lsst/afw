@@ -38,7 +38,7 @@
 #include "lsst/afw/geom/detail/frameSetUtils.h"
 #include "lsst/afw/image/ImageBase.h"  // for wcsNameForXY0
 #include "lsst/daf/base/PropertyList.h"
-#include "lsst/daf/base/PropertySet.h"
+#include "lsst/daf/base/PropertyList.h"
 #include "lsst/pex/exceptions.h"
 
 namespace lsst {
@@ -80,7 +80,7 @@ void setMetadataFromFoundValue(daf::base::PropertyList& metadata, std::string co
 
 }  // namespace
 
-std::shared_ptr<ast::FrameSet> readFitsWcs(daf::base::PropertySet& metadata, bool strip) {
+std::shared_ptr<ast::FrameSet> readFitsWcs(daf::base::PropertyList& metadata, bool strip) {
     // Exclude WCS A keywords because LSST uses them to store XY0
     auto wcsANames = createTrivialWcsMetadata("A", lsst::geom::Point2I(0, 0))->names();
     std::set<std::string> excludeNames(wcsANames.begin(), wcsANames.end());
@@ -132,7 +132,7 @@ std::shared_ptr<ast::FrameSet> readFitsWcs(daf::base::PropertySet& metadata, boo
     return frameSet;
 }
 
-std::shared_ptr<ast::FrameDict> readLsstSkyWcs(daf::base::PropertySet& metadata, bool strip) {
+std::shared_ptr<ast::FrameDict> readLsstSkyWcs(daf::base::PropertyList& metadata, bool strip) {
     // Record CRPIX in GRID coordinates
     // so we can compute CRVAL after standardizing the SkyFrame to ICRS
     // (that standardization is why we don't simply save CRVAL now)

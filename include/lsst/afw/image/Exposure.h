@@ -234,8 +234,8 @@ public:
     /// Return the Exposure's filter
     Filter getFilter() const { return _info->getFilter(); }
     /// Return flexible metadata
-    std::shared_ptr<lsst::daf::base::PropertySet> getMetadata() const { return _info->getMetadata(); }
-    void setMetadata(std::shared_ptr<lsst::daf::base::PropertySet> metadata) { _info->setMetadata(metadata); }
+    std::shared_ptr<lsst::daf::base::PropertyList> getMetadata() const { return _info->getMetadata(); }
+    void setMetadata(std::shared_ptr<lsst::daf::base::PropertyList> metadata) { _info->setMetadata(metadata); }
 
     /// Return the Exposure's width
     int getWidth() const { return _maskedImage.getWidth(); }

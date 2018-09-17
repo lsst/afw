@@ -320,7 +320,7 @@ class DetailTestCase(lsst.utils.tests.TestCase):
             metadata.set(name, value)
         self.metadata = metadata
 
-    def testCreateTrivialWcsAsPropertySet(self):
+    def testCreateTrivialWcsAsPropertyList(self):
         wcsName = "Z"  # arbitrary
         xy0 = lsst.geom.Point2I(47, -200)  # arbitrary
         metadata = createTrivialWcsMetadata(wcsName=wcsName, xy0=xy0)

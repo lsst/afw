@@ -34,7 +34,7 @@
 
 #include "ndarray.h"
 #include "lsst/pex/exceptions.h"
-#include "lsst/daf/base/PropertySet.h"
+#include "lsst/daf/base/PropertyList.h"
 #include "lsst/afw/image/Calib.h"
 #include "lsst/afw/cameraGeom/Detector.h"
 #include "lsst/afw/table/io/OutputArchive.h"
@@ -129,7 +129,7 @@ Calib::Calib(std::vector<std::shared_ptr<Calib const>> const& calibs) : _fluxMag
     }
 }
 
-Calib::Calib(std::shared_ptr<lsst::daf::base::PropertySet const> metadata) {
+Calib::Calib(std::shared_ptr<lsst::daf::base::PropertyList const> metadata) {
     double fluxMag0 = 0.0, fluxMag0Err = 0.0;
 
     auto key = "FLUXMAG0";
@@ -157,7 +157,7 @@ Calib& Calib::operator=(Calib&&) noexcept = default;
 Calib::~Calib() noexcept = default;
 
 namespace detail {
-int stripCalibKeywords(std::shared_ptr<lsst::daf::base::PropertySet> metadata) {
+int stripCalibKeywords(std::shared_ptr<lsst::daf::base::PropertyList> metadata) {
     int nstripped = 0;
 
     auto key = "FLUXMAG0";

@@ -674,7 +674,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
             self.exposureCrWcs.writeFits(tmpFile)
             # This should read the first non-empty HDU (i.e. it skips the primary), but
             # goes back and reads it if it finds INHERIT=T.  That should let us read
-            # frazzle and the Wcs from the PropertySet returned by
+            # frazzle and the Wcs from the PropertyList returned by
             # testReadMetadata.
             md = readMetadata(tmpFile)
             wcs = afwGeom.makeSkyWcs(md, False)

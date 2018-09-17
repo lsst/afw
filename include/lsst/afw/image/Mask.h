@@ -37,7 +37,7 @@
 
 #include "lsst/base.h"
 #include "lsst/daf/base/Citizen.h"
-#include "lsst/daf/base/PropertySet.h"
+#include "lsst/daf/base/PropertyList.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image/ImageBase.h"
 #include "lsst/afw/image/LsstImageTypes.h"
@@ -160,8 +160,7 @@ public:
      *  on-disk version.
      */
     explicit Mask(std::string const& fileName, int hdu = fits::DEFAULT_HDU,
-                  std::shared_ptr<lsst::daf::base::PropertySet> metadata =
-                          std::shared_ptr<lsst::daf::base::PropertySet>(),
+                  std::shared_ptr<lsst::daf::base::PropertyList> metadata = nullptr,
                   lsst::geom::Box2I const& bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT,
                   bool conformMasks = false);
 
@@ -184,8 +183,7 @@ public:
      *  on-disk version.
      */
     explicit Mask(fits::MemFileManager& manager, int hdu = fits::DEFAULT_HDU,
-                  std::shared_ptr<lsst::daf::base::PropertySet> metadata =
-                          std::shared_ptr<lsst::daf::base::PropertySet>(),
+                  std::shared_ptr<lsst::daf::base::PropertyList> metadata = nullptr,
                   lsst::geom::Box2I const& bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT,
                   bool conformMasks = false);
 
@@ -205,8 +203,7 @@ public:
      *  on-disk version.
      */
     explicit Mask(fits::Fits& fitsfile,
-                  std::shared_ptr<lsst::daf::base::PropertySet> metadata =
-                          std::shared_ptr<lsst::daf::base::PropertySet>(),
+                  std::shared_ptr<lsst::daf::base::PropertyList> metadata = nullptr,
                   lsst::geom::Box2I const& bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT,
                   bool conformMasks = false);
 
@@ -348,8 +345,8 @@ public:
      *  @param[in] mode          "w"=Create a new file; "a"=Append a new HDU.
      */
     void writeFits(std::string const& fileName,
-                   std::shared_ptr<lsst::daf::base::PropertySet const> metadata =
-                           std::shared_ptr<lsst::daf::base::PropertySet>(),
+                   std::shared_ptr<lsst::daf::base::PropertyList const> metadata =
+                           std::shared_ptr<lsst::daf::base::PropertyList>(),
                    std::string const& mode = "w") const;
 
     /**
@@ -360,8 +357,8 @@ public:
      *  @param[in] mode          "w"=Create a new file; "a"=Append a new HDU.
      */
     void writeFits(fits::MemFileManager& manager,
-                   std::shared_ptr<lsst::daf::base::PropertySet const> metadata =
-                           std::shared_ptr<lsst::daf::base::PropertySet>(),
+                   std::shared_ptr<lsst::daf::base::PropertyList const> metadata =
+                           std::shared_ptr<lsst::daf::base::PropertyList>(),
                    std::string const& mode = "w") const;
 
     /**
@@ -370,8 +367,8 @@ public:
      *  @param[in] fitsfile      A FITS file already open to the desired HDU.
      *  @param[in] metadata      Additional values to write to the header (may be null).
      */
-    void writeFits(fits::Fits& fitsfile, std::shared_ptr<lsst::daf::base::PropertySet const> metadata =
-                                                 std::shared_ptr<lsst::daf::base::PropertySet const>()) const;
+    void writeFits(fits::Fits& fitsfile, std::shared_ptr<lsst::daf::base::PropertyList const> metadata =
+                                                 std::shared_ptr<lsst::daf::base::PropertyList const>()) const;
 
     /**
      *  Write a mask to a regular FITS file.
@@ -383,7 +380,7 @@ public:
      */
     void writeFits(std::string const& filename, fits::ImageWriteOptions const& options,
                    std::string const& mode = "w",
-                   std::shared_ptr<daf::base::PropertySet const> header = nullptr) const;
+                   std::shared_ptr<daf::base::PropertyList const> header = nullptr) const;
 
     /**
      *  Write a mask to a FITS RAM file.
@@ -395,7 +392,7 @@ public:
      */
     void writeFits(fits::MemFileManager& manager, fits::ImageWriteOptions const& options,
                    std::string const& mode = "w",
-                   std::shared_ptr<daf::base::PropertySet const> header = nullptr) const;
+                   std::shared_ptr<daf::base::PropertyList const> header = nullptr) const;
 
     /**
      *  Write a mask to an open FITS file object.
@@ -405,7 +402,7 @@ public:
      *  @param[in] header        Additional values to write to the header (may be null).
      */
     void writeFits(fits::Fits& fitsfile, fits::ImageWriteOptions const& options,
-                   std::shared_ptr<daf::base::PropertySet const> header = nullptr) const;
+                   std::shared_ptr<daf::base::PropertyList const> header = nullptr) const;
 
     /**
      *  Read a Mask from a regular FITS file.
@@ -446,12 +443,12 @@ public:
      */
     void setMaskPlaneValues(const int plane, const int x0, const int x1, const int y);
     /**
-     * Given a PropertySet that contains the MaskPlane assignments, setup the MaskPlanes.
+     * Given a PropertyList that contains the MaskPlane assignments, setup the MaskPlanes.
      *
      * @param metadata metadata from a Mask
      * @returns a dictionary of mask plane name: plane ID
      */
-    static MaskPlaneDict parseMaskPlaneMetadata(std::shared_ptr<lsst::daf::base::PropertySet const> metadata);
+    static MaskPlaneDict parseMaskPlaneMetadata(std::shared_ptr<lsst::daf::base::PropertyList const> metadata);
     //
     // Operations on the mask plane dictionary
     //
@@ -493,9 +490,9 @@ public:
     void printMaskPlanes() const;
 
     /**
-     * Given a PropertySet, replace any existing MaskPlane assignments with the current ones.
+     * Given a PropertyList, replace any existing MaskPlane assignments with the current ones.
      */
-    static void addMaskPlanesToMetadata(std::shared_ptr<lsst::daf::base::PropertySet>);
+    static void addMaskPlanesToMetadata(std::shared_ptr<lsst::daf::base::PropertyList>);
     //
     // This one isn't static, it fixes up a given Mask's planes
     /**

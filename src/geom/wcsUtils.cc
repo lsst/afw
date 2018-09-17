@@ -64,7 +64,7 @@ std::shared_ptr<daf::base::PropertyList> createTrivialWcsMetadata(std::string co
     return wcsMetaData;
 }
 
-void deleteBasicWcsMetadata(daf::base::PropertySet& metadata, std::string const& wcsName) {
+void deleteBasicWcsMetadata(daf::base::PropertyList& metadata, std::string const& wcsName) {
     std::vector<std::string> const names = {"CRPIX1", "CRPIX2", "CRVAL1", "CRVAL2", "CTYPE1",
                                             "CTYPE2", "CUNIT1", "CUNIT2", "CD1_1",  "CD1_2",
                                             "CD2_1",  "CD2_2",  "WCSAXES"};
@@ -75,7 +75,7 @@ void deleteBasicWcsMetadata(daf::base::PropertySet& metadata, std::string const&
     }
 }
 
-Eigen::Matrix2d getCdMatrixFromMetadata(daf::base::PropertySet& metadata) {
+Eigen::Matrix2d getCdMatrixFromMetadata(daf::base::PropertyList& metadata) {
     Eigen::Matrix2d matrix;
     bool found{false};
     for (int i = 0; i < 2; ++i) {
@@ -95,7 +95,7 @@ Eigen::Matrix2d getCdMatrixFromMetadata(daf::base::PropertySet& metadata) {
     return matrix;
 }
 
-lsst::geom::Point2I getImageXY0FromMetadata(daf::base::PropertySet& metadata, std::string const& wcsName,
+lsst::geom::Point2I getImageXY0FromMetadata(daf::base::PropertyList& metadata, std::string const& wcsName,
                                             bool strip) {
     int x0 = 0;  // Our value of X0
     int y0 = 0;  // Our value of Y0
@@ -113,7 +113,7 @@ lsst::geom::Point2I getImageXY0FromMetadata(daf::base::PropertySet& metadata, st
     return lsst::geom::Point2I(x0, y0);
 }
 
-Eigen::MatrixXd getSipMatrixFromMetadata(daf::base::PropertySet const& metadata, std::string const& name) {
+Eigen::MatrixXd getSipMatrixFromMetadata(daf::base::PropertyList const& metadata, std::string const& name) {
     std::string cardName = name + "_ORDER";
     if (!metadata.exists(cardName)) {
         throw LSST_EXCEPT(lsst::pex::exceptions::TypeError,
@@ -139,7 +139,7 @@ Eigen::MatrixXd getSipMatrixFromMetadata(daf::base::PropertySet const& metadata,
     return matrix;
 }
 
-bool hasSipMatrix(daf::base::PropertySet const& metadata, std::string const& name) {
+bool hasSipMatrix(daf::base::PropertyList const& metadata, std::string const& name) {
     std::string cardName = name + "_ORDER";
     if (!metadata.exists(cardName)) {
         return false;

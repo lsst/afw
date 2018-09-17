@@ -143,7 +143,7 @@ class ReadFitsTestCase(lsst.utils.tests.TestCase):
         """Test that we can read and write bools"""
         with lsst.utils.tests.getTempFilePath(".fits") as tmpFile:
             im = afwImage.ImageF(lsst.geom.ExtentI(10, 20))
-            md = dafBase.PropertySet()
+            md = dafBase.PropertyList()
             keys = {"BAD": False,
                     "GOOD": True,
                     }
@@ -208,7 +208,7 @@ class ReadFitsTestCase(lsst.utils.tests.TestCase):
             ):
                 with self.subTest(ImageClass=ImageClass, imageOrigin=imageOrigin):
                     fullImage = ImageClass(filepath)
-                    options = dafBase.PropertySet()
+                    options = dafBase.PropertyList()
                     options.set("llcX", bbox.getMinX())
                     options.set("llcY", bbox.getMinY())
                     options.set("width", bbox.getWidth())

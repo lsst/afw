@@ -29,7 +29,7 @@
 
 #include "lsst/utils/python.h"
 
-#include "lsst/daf/base/PropertySet.h"
+#include "lsst/daf/base/PropertyList.h"
 #include "lsst/afw/math/BoundedField.h"
 #include "lsst/afw/table/io/Persistable.h"
 #include "lsst/afw/table/io/python.h"  // for addPersistableMethods

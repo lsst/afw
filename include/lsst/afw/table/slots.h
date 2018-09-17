@@ -8,7 +8,7 @@ namespace lsst {
 
 namespace daf {
 namespace base {
-class PropertySet;
+class PropertyList;
 }
 }  // namespace daf
 

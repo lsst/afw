@@ -38,7 +38,7 @@
 #include <vector>
 #include <memory>
 #include "lsst/base.h"
-#include "lsst/daf/base/PropertySet.h"
+#include "lsst/daf/base/PropertyList.h"
 
 
 namespace lsst {
@@ -61,7 +61,7 @@ public:
      * @param force Allow this name to replace a previous one
      */
     explicit FilterProperty(std::string const& name,
-                            lsst::daf::base::PropertySet const& prop = lsst::daf::base::PropertySet(),
+                            daf::base::PropertyList const& prop = daf::base::PropertyList(),
                             bool force = false);
 
     FilterProperty(FilterProperty const&) = default;
@@ -155,12 +155,12 @@ public:
                     )
             : _id(id), _name(_lookup(id)) {}
     /**
-     * Create a Filter from a PropertySet (e.g. a FITS header)
+     * Create a Filter from a PropertyList (e.g. a FITS header)
      *
      * @param metadata Metadata to process (e.g. a IFITS header)
      * @param force Allow us to construct an unknown Filter
      */
-    explicit Filter(std::shared_ptr<lsst::daf::base::PropertySet const> metadata, bool const force = false);
+    explicit Filter(std::shared_ptr<lsst::daf::base::PropertyList const> metadata, bool const force = false);
 
     Filter(Filter const&) = default;
     Filter(Filter&&) noexcept = default;
@@ -262,7 +262,7 @@ namespace detail {
  * @param[in, out] metadata Metadata to be stripped
  * @return Number of keywords stripped
  */
-int stripFilterKeywords(std::shared_ptr<lsst::daf::base::PropertySet> metadata);
+int stripFilterKeywords(std::shared_ptr<lsst::daf::base::PropertyList> metadata);
 }  // namespace detail
 }  // namespace image
 }  // namespace afw

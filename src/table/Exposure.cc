@@ -3,7 +3,7 @@
 #include <typeinfo>
 #include <string>
 
-#include "lsst/daf/base/PropertySet.h"
+#include "lsst/daf/base/PropertyList.h"
 #include "lsst/daf/base/PropertyList.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/table/io/FitsWriter.h"
@@ -47,7 +47,7 @@ std::string const AP_CORR_MAP_FIELD_NAME = "apCorrMap";
 std::string const VALID_POLYGON_FIELD_NAME = "validPolygon";
 std::string const TRANSMISSION_CURVE_FIELD_NAME = "transmissionCurve";
 
-int getTableVersion(daf::base::PropertySet &metadata) {
+int getTableVersion(daf::base::PropertyList &metadata) {
     return metadata.exists(EXPOSURE_TABLE_VERSION_KEY) ? metadata.get<int>(EXPOSURE_TABLE_VERSION_KEY) : 1;
 }
 

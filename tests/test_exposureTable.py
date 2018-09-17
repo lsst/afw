@@ -37,7 +37,7 @@ import numpy as np
 
 import lsst.utils.tests
 import lsst.pex.exceptions
-from lsst.daf.base import DateTime, PropertySet
+from lsst.daf.base import DateTime, PropertyList
 import lsst.geom
 import lsst.afw.table
 from lsst.afw.coord import Observatory, Weather
@@ -57,7 +57,7 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
 
     @staticmethod
     def createWcs():
-        metadata = PropertySet()
+        metadata = PropertyList()
         metadata.set("SIMPLE", "T")
         metadata.set("BITPIX", -32)
         metadata.set("NAXIS", 2)

@@ -144,7 +144,7 @@ public:
      *
      * @throws lsst::pex::exceptions::TypeError if the metadata does not describe a celestial WCS.
      */
-    explicit SkyWcs(daf::base::PropertySet &metadata, bool strip = false);
+    explicit SkyWcs(daf::base::PropertyList &metadata, bool strip = false);
 
     /**
      * Construct a SkyWcs from an ast::FrameDict
@@ -506,7 +506,7 @@ std::shared_ptr<SkyWcs> makeModifiedWcs(TransformPoint2ToPoint2 const &pixelTran
  *
  * @throws lsst::pex::exceptions::TypeError if the metadata does not describe a celestial WCS.
  */
-std::shared_ptr<SkyWcs> makeSkyWcs(daf::base::PropertySet &metadata, bool strip = false);
+std::shared_ptr<SkyWcs> makeSkyWcs(daf::base::PropertyList &metadata, bool strip = false);
 
 /**
  * Construct a simple FITS SkyWcs with no distortion

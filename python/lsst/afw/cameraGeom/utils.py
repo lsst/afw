@@ -1053,7 +1053,7 @@ def makeFocalPlaneWcs(pixelSize, referencePixel):
         Wcs object for mapping between pixels and focal plane.
     """
 
-    md = dafBase.PropertySet()
+    md = dafBase.PropertyList()
     if referencePixel is None:
         referencePixel = lsst.geom.PointD(0, 0)
     for i in range(2):

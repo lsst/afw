@@ -65,9 +65,6 @@ class TableIoTestCase(lsst.utils.tests.TestCase):
         with lsst.utils.tests.getTempFilePath(".fits") as temp:
             cat.writeFits(temp)
             self.assertEqual(lsst.afw.table.Schema.readFits(temp), schema)
-            # Not testing Schema.fromFitsMetadata because afw.fits.readMetadata (which is the only
-            # python-accessible FITS header reader) returns a PropertySet, but we want a PropertyList
-            # and it doesn't up-convert easily.
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):

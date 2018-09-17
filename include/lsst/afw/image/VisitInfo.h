@@ -105,7 +105,7 @@ public:
               _observatory(observatory),
               _weather(weather){};
 
-    explicit VisitInfo(daf::base::PropertySet const &metadata);
+    explicit VisitInfo(daf::base::PropertyList const &metadata);
 
     ~VisitInfo() override = default;
 
@@ -223,7 +223,7 @@ void setVisitInfoMetadata(daf::base::PropertyList &metadata, VisitInfo const &vi
  *
  * @returns Number of keywords stripped
  */
-int stripVisitInfoKeywords(daf::base::PropertySet &metadata);
+int stripVisitInfoKeywords(daf::base::PropertyList &metadata);
 
 }  // namespace detail
 }  // namespace image

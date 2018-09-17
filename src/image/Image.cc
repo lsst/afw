@@ -375,7 +375,7 @@ Image<PixelT>& Image<PixelT>::operator=(Image&& rhs) {
 #ifndef DOXYGEN  // doc for this section has been moved to header
 
 template <typename PixelT>
-Image<PixelT>::Image(std::string const& fileName, int hdu, std::shared_ptr<daf::base::PropertySet> metadata,
+Image<PixelT>::Image(std::string const& fileName, int hdu, std::shared_ptr<daf::base::PropertyList> metadata,
                      lsst::geom::Box2I const& bbox, ImageOrigin origin)
         : ImageBase<PixelT>() {
     fits::Fits fitsfile(fileName, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
@@ -392,7 +392,7 @@ Image<PixelT>::Image(std::string const& fileName, int hdu, std::shared_ptr<daf::
 }
 template <typename PixelT>
 Image<PixelT>::Image(fits::MemFileManager& manager, int const hdu,
-                     std::shared_ptr<daf::base::PropertySet> metadata, lsst::geom::Box2I const& bbox,
+                     std::shared_ptr<daf::base::PropertyList> metadata, lsst::geom::Box2I const& bbox,
                      ImageOrigin const origin)
         : ImageBase<PixelT>() {
     fits::Fits fitsfile(manager, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
@@ -401,7 +401,7 @@ Image<PixelT>::Image(fits::MemFileManager& manager, int const hdu,
 }
 
 template <typename PixelT>
-Image<PixelT>::Image(fits::Fits& fitsfile, std::shared_ptr<daf::base::PropertySet> metadata,
+Image<PixelT>::Image(fits::Fits& fitsfile, std::shared_ptr<daf::base::PropertyList> metadata,
                      lsst::geom::Box2I const& bbox, ImageOrigin const origin)
         : ImageBase<PixelT>() {
     typedef boost::mpl::vector<unsigned char, unsigned short, short, int, unsigned int, float, double,
@@ -417,7 +417,7 @@ Image<PixelT>::Image(fits::Fits& fitsfile, std::shared_ptr<daf::base::PropertySe
 
 template <typename PixelT>
 void Image<PixelT>::writeFits(std::string const& fileName,
-                              std::shared_ptr<daf::base::PropertySet const> metadata_i,
+                              std::shared_ptr<daf::base::PropertyList const> metadata_i,
                               std::string const& mode) const {
     fits::Fits fitsfile(fileName, mode, fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
     writeFits(fitsfile, metadata_i);
@@ -425,7 +425,7 @@ void Image<PixelT>::writeFits(std::string const& fileName,
 
 template <typename PixelT>
 void Image<PixelT>::writeFits(fits::MemFileManager& manager,
-                              std::shared_ptr<daf::base::PropertySet const> metadata_i,
+                              std::shared_ptr<daf::base::PropertyList const> metadata_i,
                               std::string const& mode) const {
     fits::Fits fitsfile(manager, mode, fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
     writeFits(fitsfile, metadata_i);
@@ -433,13 +433,13 @@ void Image<PixelT>::writeFits(fits::MemFileManager& manager,
 
 template <typename PixelT>
 void Image<PixelT>::writeFits(fits::Fits& fitsfile,
-                              std::shared_ptr<daf::base::PropertySet const> metadata) const {
+                              std::shared_ptr<daf::base::PropertyList const> metadata) const {
     fitsfile.writeImage(*this, fits::ImageWriteOptions(*this), metadata);
 }
 
 template <typename PixelT>
 void Image<PixelT>::writeFits(std::string const& filename, fits::ImageWriteOptions const& options,
-                              std::string const& mode, std::shared_ptr<daf::base::PropertySet const> header,
+                              std::string const& mode, std::shared_ptr<daf::base::PropertyList const> header,
                               std::shared_ptr<Mask<MaskPixel> const> mask) const {
     fits::Fits fitsfile(filename, mode, fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
     writeFits(fitsfile, options, header, mask);
@@ -447,7 +447,7 @@ void Image<PixelT>::writeFits(std::string const& filename, fits::ImageWriteOptio
 
 template <typename PixelT>
 void Image<PixelT>::writeFits(fits::MemFileManager& manager, fits::ImageWriteOptions const& options,
-                              std::string const& mode, std::shared_ptr<daf::base::PropertySet const> header,
+                              std::string const& mode, std::shared_ptr<daf::base::PropertyList const> header,
                               std::shared_ptr<Mask<MaskPixel> const> mask) const {
     fits::Fits fitsfile(manager, mode, fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
     writeFits(fitsfile, options, header, mask);
@@ -455,7 +455,7 @@ void Image<PixelT>::writeFits(fits::MemFileManager& manager, fits::ImageWriteOpt
 
 template <typename PixelT>
 void Image<PixelT>::writeFits(fits::Fits& fitsfile, fits::ImageWriteOptions const& options,
-                              std::shared_ptr<daf::base::PropertySet const> header,
+                              std::shared_ptr<daf::base::PropertyList const> header,
                               std::shared_ptr<Mask<MaskPixel> const> mask) const {
     fitsfile.writeImage(*this, options, header, mask);
 }
@@ -708,7 +708,7 @@ Image<LhsPixelT>& operator/=(Image<LhsPixelT>& lhs, Image<RhsPixelT> const& rhs)
     return lhs;
 }
 
-lsst::geom::Box2I bboxFromMetadata(daf::base::PropertySet& metadata) {
+lsst::geom::Box2I bboxFromMetadata(daf::base::PropertyList& metadata) {
     lsst::geom::Extent2I dims;
     if (metadata.exists("ZNAXIS1") && metadata.exists("ZNAXIS2")) {
         dims = lsst::geom::Extent2I(metadata.getAsInt("ZNAXIS1"), metadata.getAsInt("ZNAXIS2"));

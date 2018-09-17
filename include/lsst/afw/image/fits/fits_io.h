@@ -39,7 +39,7 @@ namespace image {
 
 template <typename PixelT>
 inline void fits_read_array(fits::Fits& fitsfile, ndarray::Array<PixelT, 2, 2>& array,
-                            lsst::geom::Point2I& xy0, lsst::daf::base::PropertySet& metadata,
+                            lsst::geom::Point2I& xy0, lsst::daf::base::PropertyList& metadata,
                             lsst::geom::Box2I bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT) {
     fitsfile.checkCompressedImagePhu();
     if (!fitsfile.checkImageType<PixelT>()) {

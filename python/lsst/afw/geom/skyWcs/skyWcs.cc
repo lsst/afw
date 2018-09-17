@@ -57,7 +57,7 @@ PYBIND11_MODULE(skyWcs, mod) {
             (std::shared_ptr<SkyWcs>(*)(lsst::geom::Point2D const &, lsst::geom::SpherePoint const &,
                                         Eigen::Matrix2d const &, std::string const &))makeSkyWcs,
             "crpix"_a, "crval"_a, "cdMatrix"_a, "projection"_a = "TAN");
-    mod.def("makeSkyWcs", (std::shared_ptr<SkyWcs>(*)(daf::base::PropertySet &, bool))makeSkyWcs,
+    mod.def("makeSkyWcs", (std::shared_ptr<SkyWcs>(*)(daf::base::PropertyList &, bool))makeSkyWcs,
             "metadata"_a, "strip"_a = false);
     mod.def("makeSkyWcs",
             (std::shared_ptr<SkyWcs>(*)(TransformPoint2ToPoint2 const &, lsst::geom::Angle const &, bool,
@@ -81,7 +81,7 @@ PYBIND11_MODULE(skyWcs, mod) {
 
     py::class_<SkyWcs, std::shared_ptr<SkyWcs>> cls(mod, "SkyWcs");
 
-    cls.def(py::init<daf::base::PropertySet &, bool>(), "metadata"_a, "strip"_a = false);
+    cls.def(py::init<daf::base::PropertyList &, bool>(), "metadata"_a, "strip"_a = false);
     cls.def(py::init<ast::FrameDict const &>(), "frameDict"_a);
 
     cls.def("__eq__", &SkyWcs::operator==, py::is_operator());

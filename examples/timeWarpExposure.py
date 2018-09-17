@@ -97,7 +97,7 @@ def makeWcs(projName, destCtrInd, skyOffset, rotAng, scaleFac, srcWcs, srcCtrInd
     @param srcCtrInd: index of source pixel whose sky matches destCtrInd on new WCS
         typically the center of the source exposure
     """
-    ps = dafBase.PropertySet()
+    ps = dafBase.PropertyList()
     srcCtrPix = lsst.geom.Point2D(*[float(val) for val in srcCtrInd])
     destCtrFitsPix = lsst.geom.Point2D(*[ind + 1.0 for ind in destCtrInd])
     srcCtrFitsPix = lsst.geom.Point2D(*[ind + 1.0 for ind in srcCtrInd])

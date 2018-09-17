@@ -46,7 +46,7 @@
 
 namespace afwImage = lsst::afw::image;
 
-using lsst::daf::base::PropertySet;
+using lsst::daf::base::PropertyList;
 
 int main(int argc, char **argv) {
     typedef double Pixel;

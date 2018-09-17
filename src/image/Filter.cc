@@ -32,7 +32,7 @@
 #include "boost/format.hpp"
 #include "boost/algorithm/string/trim.hpp"
 #include "lsst/pex/exceptions.h"
-#include "lsst/daf/base/PropertySet.h"
+#include "lsst/daf/base/PropertyList.h"
 
 #include "lsst/afw/image/Filter.h"
 
@@ -44,7 +44,7 @@ namespace image {
 
 FilterProperty::PropertyMap* FilterProperty::_propertyMap = NULL;
 
-FilterProperty::FilterProperty(std::string const& name, lsst::daf::base::PropertySet const& prop, bool force)
+FilterProperty::FilterProperty(std::string const& name, lsst::daf::base::PropertyList const& prop, bool force)
         : _name(name), _lambdaEff(NAN), _lambdaMin(NAN), _lambdaMax(NAN) {
     if (prop.exists("lambdaEff")) {
         _lambdaEff = prop.getAsDouble("lambdaEff");
@@ -112,7 +112,7 @@ std::string const unknownFilter = "_unknown_";
 int const Filter::AUTO = -1;
 int const Filter::UNKNOWN = -1;
 
-Filter::Filter(std::shared_ptr<lsst::daf::base::PropertySet const> metadata, bool const force) {
+Filter::Filter(std::shared_ptr<lsst::daf::base::PropertyList const> metadata, bool const force) {
     std::string const key = "FILTER";
     if (metadata->exists(key)) {
         std::string filterName = boost::algorithm::trim_right_copy(metadata->getAsString(key));
@@ -122,7 +122,7 @@ Filter::Filter(std::shared_ptr<lsst::daf::base::PropertySet const> metadata, boo
 }
 
 namespace detail {
-int stripFilterKeywords(std::shared_ptr<lsst::daf::base::PropertySet> metadata) {
+int stripFilterKeywords(std::shared_ptr<lsst::daf::base::PropertyList> metadata) {
     int nstripped = 0;
 
     std::string key = "FILTER";
@@ -178,7 +178,7 @@ void Filter::_initRegistry() {
     _nameMap = new NameMap;
     _idMap = new IdMap;
 
-    define(FilterProperty(unknownFilter, daf::base::PropertySet(), true));
+    define(FilterProperty(unknownFilter, daf::base::PropertyList(), true));
 }
 
 int Filter::_id0 = Filter::UNKNOWN;

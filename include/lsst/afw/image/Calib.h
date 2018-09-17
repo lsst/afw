@@ -42,7 +42,7 @@
 namespace lsst {
 namespace daf {
 namespace base {
-class PropertySet;
+class PropertyList;
 }
 }  // namespace daf
 
@@ -113,7 +113,7 @@ public:
     /**
      * ctor
      */
-    explicit Calib(std::shared_ptr<lsst::daf::base::PropertySet const>);
+    explicit Calib(std::shared_ptr<lsst::daf::base::PropertyList const>);
 
     Calib(Calib const&) noexcept;
     Calib(Calib&&) noexcept;
@@ -227,7 +227,7 @@ namespace detail {
  * @param[in, out] metadata Metadata to be stripped
  * @returns Number of keywords stripped
  */
-int stripCalibKeywords(std::shared_ptr<lsst::daf::base::PropertySet> metadata);
+int stripCalibKeywords(std::shared_ptr<lsst::daf::base::PropertyList> metadata);
 }  // namespace detail
 }  // namespace image
 }  // namespace afw

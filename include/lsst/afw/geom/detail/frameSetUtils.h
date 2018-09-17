@@ -33,7 +33,6 @@
 #include "lsst/afw/geom/Endpoint.h"
 #include "lsst/afw/geom/Transform.h"
 #include "lsst/daf/base/PropertyList.h"
-#include "lsst/daf/base/PropertySet.h"
 
 namespace lsst {
 namespace afw {
@@ -60,7 +59,7 @@ The returned FrameSet will have an IWC (intermediate world coordinate system) fr
 
 @throws pex::exceptions::TypeError if the metadata does not contain a FITS-WCS
 */
-std::shared_ptr<ast::FrameSet> readFitsWcs(daf::base::PropertySet& metadata, bool strip = true);
+std::shared_ptr<ast::FrameSet> readFitsWcs(daf::base::PropertyList& metadata, bool strip = true);
 
 /**
 Read an LSST celestial WCS FrameDict from a FITS header.
@@ -95,7 +94,7 @@ All frames are instances of ast::Frame except the SKY frame. All have 2 axes.
 
 @throws lsst::pex::exceptions::TypeError if the metadata does not describe a celestial WCS.
 */
-std::shared_ptr<ast::FrameDict> readLsstSkyWcs(daf::base::PropertySet& metadata, bool strip = true);
+std::shared_ptr<ast::FrameDict> readLsstSkyWcs(daf::base::PropertyList& metadata, bool strip = true);
 
 /**
 Copy values from an AST FitsChan into a PropertyList

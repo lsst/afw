@@ -35,20 +35,20 @@
 
 #include "boost/format.hpp"
 #include "lsst/pex/exceptions.h"
-#include "lsst/daf/base/PropertySet.h"
+#include "lsst/daf/base/PropertyList.h"
 #include "lsst/daf/persistence/LogicalLocation.h"
 #include "lsst/afw/formatters/Utils.h"
 
 using std::int64_t;
 namespace ex = lsst::pex::exceptions;
-using lsst::daf::base::PropertySet;
+using lsst::daf::base::PropertyList;
 using lsst::daf::persistence::LogicalLocation;
 
 namespace lsst {
 namespace afw {
 namespace formatters {
 
-int extractSliceId(std::shared_ptr<PropertySet const> const& properties) {
+int extractSliceId(std::shared_ptr<PropertyList const> const& properties) {
     if (properties->isArray("sliceId")) {
         throw LSST_EXCEPT(ex::RuntimeError, "\"sliceId\" property has multiple values");
     }
@@ -65,7 +65,7 @@ int extractSliceId(std::shared_ptr<PropertySet const> const& properties) {
     return sliceId;
 }
 
-int extractVisitId(std::shared_ptr<PropertySet const> const& properties) {
+int extractVisitId(std::shared_ptr<PropertyList const> const& properties) {
     if (properties->isArray("visitId")) {
         throw LSST_EXCEPT(ex::RuntimeError, "\"visitId\" property has multiple values");
     }
@@ -76,7 +76,7 @@ int extractVisitId(std::shared_ptr<PropertySet const> const& properties) {
     return visitId;
 }
 
-int64_t extractFpaExposureId(std::shared_ptr<PropertySet const> const& properties) {
+int64_t extractFpaExposureId(std::shared_ptr<PropertyList const> const& properties) {
     if (properties->isArray("fpaExposureId")) {
         throw LSST_EXCEPT(ex::RuntimeError, "\"fpaExposureId\" property has multiple values");
     }
@@ -90,7 +90,7 @@ int64_t extractFpaExposureId(std::shared_ptr<PropertySet const> const& propertie
     return fpaExposureId;
 }
 
-int extractCcdId(std::shared_ptr<PropertySet const> const& properties) {
+int extractCcdId(std::shared_ptr<PropertyList const> const& properties) {
     if (properties->isArray("ccdId")) {
         throw LSST_EXCEPT(ex::RuntimeError, "\"ccdId\" property has multiple values");
     }
@@ -104,7 +104,7 @@ int extractCcdId(std::shared_ptr<PropertySet const> const& properties) {
     return static_cast<int>(ccdId);
 }
 
-int extractAmpId(std::shared_ptr<PropertySet const> const& properties) {
+int extractAmpId(std::shared_ptr<PropertyList const> const& properties) {
     if (properties->isArray("ampId")) {
         throw LSST_EXCEPT(ex::RuntimeError, "\"ampId\" property has multiple values");
     }
@@ -118,7 +118,7 @@ int extractAmpId(std::shared_ptr<PropertySet const> const& properties) {
     return (extractCcdId(properties) << 6) + ampId;
 }
 
-int64_t extractCcdExposureId(std::shared_ptr<PropertySet const> const& properties) {
+int64_t extractCcdExposureId(std::shared_ptr<PropertyList const> const& properties) {
     if (properties->isArray("ccdExposureId")) {
         throw LSST_EXCEPT(ex::RuntimeError, "\"ccdExposureId\" property has multiple values");
     }
@@ -129,7 +129,7 @@ int64_t extractCcdExposureId(std::shared_ptr<PropertySet const> const& propertie
     return ccdExposureId;
 }
 
-int64_t extractAmpExposureId(std::shared_ptr<PropertySet const> const& properties) {
+int64_t extractAmpExposureId(std::shared_ptr<PropertyList const> const& properties) {
     if (properties->isArray("ampExposureId")) {
         throw LSST_EXCEPT(ex::RuntimeError, "\"ampExposureId\" property has multiple values");
     }
@@ -140,9 +140,9 @@ int64_t extractAmpExposureId(std::shared_ptr<PropertySet const> const& propertie
     return ampExposureId;
 }
 
-std::string const getItemName(std::shared_ptr<PropertySet const> const& properties) {
+std::string const getItemName(std::shared_ptr<PropertyList const> const& properties) {
     if (!properties) {
-        throw LSST_EXCEPT(ex::InvalidParameterError, "Null std::shared_ptr<PropertySet>");
+        throw LSST_EXCEPT(ex::InvalidParameterError, "Null std::shared_ptr<PropertyList>");
     }
     if (properties->isArray("itemName")) {
         throw LSST_EXCEPT(ex::InvalidParameterError, "\"itemName\" property has multiple values");
@@ -150,14 +150,14 @@ std::string const getItemName(std::shared_ptr<PropertySet const> const& properti
     return properties->getAsString("itemName");
 }
 
-bool extractOptionalFlag(std::shared_ptr<PropertySet const> const& properties, std::string const& name) {
+bool extractOptionalFlag(std::shared_ptr<PropertyList const> const& properties, std::string const& name) {
     if (properties && properties->exists(name)) {
         return properties->getAsBool(name);
     }
     return false;
 }
 
-int countFitsHeaderCards(lsst::daf::base::PropertySet const& prop) { return prop.paramNames(false).size(); }
+int countFitsHeaderCards(lsst::daf::base::PropertyList const& prop) { return prop.paramNames(false).size(); }
 
 ndarray::Array<std::uint8_t, 1, 1> stringToBytes(std::string const& str) {
     auto nbytes = str.size() * sizeof(char) / sizeof(std::uint8_t);

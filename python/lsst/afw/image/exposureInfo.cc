@@ -22,7 +22,7 @@
 
 #include "pybind11/pybind11.h"
 
-#include "lsst/daf/base/PropertySet.h"
+#include "lsst/daf/base/PropertyList.h"
 #include "lsst/afw/cameraGeom/Detector.h"
 #include "lsst/afw/detection/Psf.h"
 #include "lsst/afw/geom/polygon/Polygon.h"
@@ -67,14 +67,14 @@ PYBIND11_MODULE(exposureInfo, mod) {
                      std::shared_ptr<Calib const> const &,
                      std::shared_ptr<cameraGeom::Detector const> const &,
                      std::shared_ptr<geom::polygon::Polygon const> const &, Filter const &,
-                     std::shared_ptr<daf::base::PropertySet> const &, std::shared_ptr<CoaddInputs> const &,
+                     std::shared_ptr<daf::base::PropertyList> const &, std::shared_ptr<CoaddInputs> const &,
                      std::shared_ptr<ApCorrMap> const &, std::shared_ptr<VisitInfo const> const &,
                      std::shared_ptr<TransmissionCurve const> const &>(),
             "wcs"_a = std::shared_ptr<geom::SkyWcs const>(), "psf"_a = std::shared_ptr<detection::Psf const>(),
             "calib"_a = std::shared_ptr<Calib const>(),
             "detector"_a = std::shared_ptr<cameraGeom::Detector const>(),
             "polygon"_a = std::shared_ptr<geom::polygon::Polygon const>(), "filter"_a = Filter(),
-            "metadata"_a = std::shared_ptr<daf::base::PropertySet>(),
+            "metadata"_a = std::shared_ptr<daf::base::PropertyList>(),
             "coaddInputs"_a = std::shared_ptr<CoaddInputs>(), "apCorrMap"_a = std::shared_ptr<ApCorrMap>(),
             "visitInfo"_a = std::shared_ptr<VisitInfo const>(),
             "transmissionCurve"_a = nullptr);

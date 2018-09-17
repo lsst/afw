@@ -24,7 +24,7 @@
 #include "pybind11/stl.h"
 
 #include <cmath>
-#include "lsst/daf/base/PropertySet.h"
+#include "lsst/daf/base/PropertyList.h"
 #include "lsst/afw/image/Filter.h"
 
 namespace py = pybind11;
@@ -48,9 +48,9 @@ PYBIND11_MODULE(filter, mod) {
     clsFilterProperty.def(py::init<std::string const &, double, double, double, bool>(),
                           "name"_a, "lambdaEff"_a, "lambdaMin"_a = NAN, "lambdaMax"_a = NAN,
                           "force"_a = false);
-    // note: metadata should be defaulted with "metadata"_a=daf::base::PropertySet()
+    // note: metadata should be defaulted with "metadata"_a=daf::base::PropertyList()
     // but that causes an error about copying when the Python extension is imported
-    clsFilterProperty.def(py::init<std::string const &, daf::base::PropertySet const &, bool>(), "name"_a,
+    clsFilterProperty.def(py::init<std::string const &, daf::base::PropertyList const &, bool>(), "name"_a,
                           "metadata"_a, "force"_a = false);
     clsFilterProperty.def(
             "__eq__", [](FilterProperty const &self, FilterProperty const &other) { return self == other; },
@@ -68,7 +68,7 @@ PYBIND11_MODULE(filter, mod) {
     PyFilter clsFilter(mod, "Filter");
     clsFilter.def(py::init<std::string const &, bool const>(), "name"_a, "force"_a = false);
     clsFilter.def(py::init<int>(), "id"_a = Filter::UNKNOWN);
-    clsFilter.def(py::init<std::shared_ptr<daf::base::PropertySet const>, bool const>(), "metadata"_a,
+    clsFilter.def(py::init<std::shared_ptr<daf::base::PropertyList const>, bool const>(), "metadata"_a,
                   "force"_a = false);
     clsFilter.def("__eq__", [](Filter const &self, Filter const &other) { return self == other; },
                   py::is_operator());
