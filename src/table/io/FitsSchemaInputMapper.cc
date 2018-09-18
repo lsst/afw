@@ -138,7 +138,8 @@ FitsSchemaInputMapper::FitsSchemaInputMapper(daf::base::PropertyList &metadata, 
         // slot definition to the AliasMap.
         static std::array<std::pair<std::string, std::string>, 7> oldSlotKeys = {
                 {std::make_pair("PSF_FLUX", "slot_PsfFlux"), std::make_pair("AP_FLUX", "slot_ApFlux"),
-                 std::make_pair("INST_FLUX", "slot_InstFlux"), std::make_pair("MODEL_FLUX", "slot_ModelFlux"),
+                 std::make_pair("INST_FLUX", "slot_GaussianFlux"),
+                 std::make_pair("MODEL_FLUX", "slot_ModelFlux"),
                  std::make_pair("CALIB_FLUX", "slot_CalibFlux"), std::make_pair("CENTROID", "slot_Centroid"),
                  std::make_pair("SHAPE", "slot_Shape")}};
         for (std::size_t i = 0; i < oldSlotKeys.size(); ++i) {

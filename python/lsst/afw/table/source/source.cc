@@ -64,24 +64,24 @@ PySourceRecord declareSourceRecord(py::module &mod) {
     cls.def("getParent", &SourceRecord::getParent);
     cls.def("setParent", &SourceRecord::setParent, "id"_a);
 
-    cls.def("getPsfFlux", &SourceRecord::getPsfFlux);
-    cls.def("getPsfFluxErr", &SourceRecord::getPsfFluxErr);
+    cls.def("getPsfInstFlux", &SourceRecord::getPsfInstFlux);
+    cls.def("getPsfInstFluxErr", &SourceRecord::getPsfInstFluxErr);
     cls.def("getPsfFluxFlag", &SourceRecord::getPsfFluxFlag);
 
-    cls.def("getModelFlux", &SourceRecord::getModelFlux);
-    cls.def("getModelFluxErr", &SourceRecord::getModelFluxErr);
+    cls.def("getModelInstFlux", &SourceRecord::getModelInstFlux);
+    cls.def("getModelInstFluxErr", &SourceRecord::getModelInstFluxErr);
     cls.def("getModelFluxFlag", &SourceRecord::getModelFluxFlag);
 
-    cls.def("getApFlux", &SourceRecord::getApFlux);
-    cls.def("getApFluxErr", &SourceRecord::getApFluxErr);
+    cls.def("getApInstFlux", &SourceRecord::getApInstFlux);
+    cls.def("getApInstFluxErr", &SourceRecord::getApInstFluxErr);
     cls.def("getApFluxFlag", &SourceRecord::getApFluxFlag);
 
-    cls.def("getInstFlux", &SourceRecord::getInstFlux);
-    cls.def("getInstFluxErr", &SourceRecord::getInstFluxErr);
-    cls.def("getInstFluxFlag", &SourceRecord::getInstFluxFlag);
+    cls.def("getGaussianInstFlux", &SourceRecord::getGaussianInstFlux);
+    cls.def("getGaussianInstFluxErr", &SourceRecord::getGaussianInstFluxErr);
+    cls.def("getGaussianFluxFlag", &SourceRecord::getGaussianFluxFlag);
 
-    cls.def("getCalibFlux", &SourceRecord::getCalibFlux);
-    cls.def("getCalibFluxErr", &SourceRecord::getCalibFluxErr);
+    cls.def("getCalibInstFlux", &SourceRecord::getCalibInstFlux);
+    cls.def("getCalibInstFluxErr", &SourceRecord::getCalibInstFluxErr);
     cls.def("getCalibFluxFlag", &SourceRecord::getCalibFluxFlag);
 
     cls.def("getCentroid", &SourceRecord::getCentroid);
@@ -134,8 +134,8 @@ PySourceTable declareSourceTable(py::module &mod) {
     cls.def("getApFluxSlot", &SourceTable::getApFluxSlot);
     cls.def("defineApFlux", &SourceTable::defineApFlux, "name"_a);
 
-    cls.def("getInstFluxSlot", &SourceTable::getInstFluxSlot);
-    cls.def("defineInstFlux", &SourceTable::defineInstFlux, "name"_a);
+    cls.def("getGaussianFluxSlot", &SourceTable::getGaussianFluxSlot);
+    cls.def("defineGaussianFlux", &SourceTable::defineGaussianFlux, "name"_a);
 
     cls.def("getCalibFluxSlot", &SourceTable::getCalibFluxSlot);
     cls.def("defineCalibFlux", &SourceTable::defineCalibFlux, "name"_a);
@@ -163,16 +163,16 @@ PySourceColumnView declareSourceColumnView(py::module &mod) {
     table::python::declareColumnView<SourceRecord>(mod, "Source", true);
     PySourceColumnView cls(mod, "SourceColumnView");
     using SourceColumnView = SourceColumnViewT<SourceRecord>;
-    cls.def("getPsfFlux", &SourceColumnView::getPsfFlux);
-    cls.def("getPsfFluxErr", &SourceColumnView::getPsfFluxErr);
-    cls.def("getApFlux", &SourceColumnView::getApFlux);
-    cls.def("getApFluxErr", &SourceColumnView::getApFluxErr);
-    cls.def("getModelFlux", &SourceColumnView::getModelFlux);
-    cls.def("getModelFluxErr", &SourceColumnView::getModelFluxErr);
-    cls.def("getInstFlux", &SourceColumnView::getInstFlux);
-    cls.def("getInstFluxErr", &SourceColumnView::getInstFluxErr);
-    cls.def("getCalibFlux", &SourceColumnView::getCalibFlux);
-    cls.def("getCalibFluxErr", &SourceColumnView::getCalibFluxErr);
+    cls.def("getPsfInstFlux", &SourceColumnView::getPsfInstFlux);
+    cls.def("getPsfInstFluxErr", &SourceColumnView::getPsfInstFluxErr);
+    cls.def("getApInstFlux", &SourceColumnView::getApInstFlux);
+    cls.def("getApInstFluxErr", &SourceColumnView::getApInstFluxErr);
+    cls.def("getModelInstFlux", &SourceColumnView::getModelInstFlux);
+    cls.def("getModelInstFluxErr", &SourceColumnView::getModelInstFluxErr);
+    cls.def("getGaussianInstFlux", &SourceColumnView::getGaussianInstFlux);
+    cls.def("getGaussianInstFluxErr", &SourceColumnView::getGaussianInstFluxErr);
+    cls.def("getCalibInstFlux", &SourceColumnView::getCalibInstFlux);
+    cls.def("getCalibInstFluxErr", &SourceColumnView::getCalibInstFluxErr);
     cls.def("getX", &SourceColumnView::getX);
     cls.def("getY", &SourceColumnView::getY);
     cls.def("getIxx", &SourceColumnView::getIxx);

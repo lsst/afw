@@ -101,46 +101,46 @@ public:
     //@}
 
     /// Get the value of the PsfFlux slot measurement.
-    FluxSlotDefinition::MeasValue getPsfFlux() const;
+    FluxSlotDefinition::MeasValue getPsfInstFlux() const;
 
     /// Get the uncertainty on the PsfFlux slot measurement.
-    FluxSlotDefinition::ErrValue getPsfFluxErr() const;
+    FluxSlotDefinition::ErrValue getPsfInstFluxErr() const;
 
     /// Return true if the measurement in the PsfFlux slot failed.
     bool getPsfFluxFlag() const;
 
     /// Get the value of the ModelFlux slot measurement.
-    FluxSlotDefinition::MeasValue getModelFlux() const;
+    FluxSlotDefinition::MeasValue getModelInstFlux() const;
 
     /// Get the uncertainty on the ModelFlux slot measurement.
-    FluxSlotDefinition::ErrValue getModelFluxErr() const;
+    FluxSlotDefinition::ErrValue getModelInstFluxErr() const;
 
     /// Return true if the measurement in the ModelFlux slot failed.
     bool getModelFluxFlag() const;
 
     /// Get the value of the ApFlux slot measurement.
-    FluxSlotDefinition::MeasValue getApFlux() const;
+    FluxSlotDefinition::MeasValue getApInstFlux() const;
 
     /// Get the uncertainty on the ApFlux slot measurement.
-    FluxSlotDefinition::ErrValue getApFluxErr() const;
+    FluxSlotDefinition::ErrValue getApInstFluxErr() const;
 
     /// Return true if the measurement in the ApFlux slot failed.
     bool getApFluxFlag() const;
 
-    /// Get the value of the InstFlux slot measurement.
-    FluxSlotDefinition::MeasValue getInstFlux() const;
+    /// Get the value of the GaussianFlux slot measurement.
+    FluxSlotDefinition::MeasValue getGaussianInstFlux() const;
 
-    /// Get the uncertainty on the InstFlux slot measurement.
-    FluxSlotDefinition::ErrValue getInstFluxErr() const;
+    /// Get the uncertainty on the GaussianFlux slot measurement.
+    FluxSlotDefinition::ErrValue getGaussianInstFluxErr() const;
 
-    /// Return true if the measurement in the InstFlux slot failed.
-    bool getInstFluxFlag() const;
+    /// Return true if the measurement in the GaussianFlux slot failed.
+    bool getGaussianFluxFlag() const;
 
     /// Get the value of the CalibFlux slot measurement.
-    FluxSlotDefinition::MeasValue getCalibFlux() const;
+    FluxSlotDefinition::MeasValue getCalibInstFlux() const;
 
     /// Get the uncertainty on the CalibFlux slot measurement.
-    FluxSlotDefinition::ErrValue getCalibFluxErr() const;
+    FluxSlotDefinition::ErrValue getCalibInstFluxErr() const;
 
     /// Return true if the measurement in the CalibFlux slot failed.
     bool getCalibFluxFlag() const;
@@ -321,17 +321,17 @@ public:
         getSchema().getAliasMap()->set(getApFluxSlot().getAlias(), name);
     }
 
-    FluxSlotDefinition const &getInstFluxSlot() const { return _slots.defInstFlux; }
+    FluxSlotDefinition const &getGaussianFluxSlot() const { return _slots.defGaussianFlux; }
 
     /**
-     *  Set the measurement used for the InstFlux slot.
+     *  Set the measurement used for the GaussianFlux slot.
      *
      *  The definitions for slots are actually managed by the Schema object, and its associated
-     *  AliasMap, so this simply sets the "slot_InstFlux" alias
+     *  AliasMap, so this simply sets the "slot_GaussianFlux" alias
      *  to point to the given field name prefix.  See FluxSlotDefinition for more information.
      */
-    void defineInstFlux(std::string const &name) {
-        getSchema().getAliasMap()->set(getInstFluxSlot().getAlias(), name);
+    void defineGaussianFlux(std::string const &name) {
+        getSchema().getAliasMap()->set(getGaussianFluxSlot().getAlias(), name);
     }
 
     FluxSlotDefinition const &getCalibFluxSlot() const { return _slots.defCalibFlux; }
@@ -501,47 +501,47 @@ public:
     // accessors *appear* to violate const-correctness.
 
     /// Get the value of the PsfFlux slot measurement.
-    ndarray::Array<double, 1> getPsfFlux() const {
+    ndarray::Array<double, 1> getPsfInstFlux() const {
         return this->operator[](this->getTable()->getPsfFluxSlot().getMeasKey());
     }
     /// Get the uncertainty on the PsfFlux slot measurement.
-    ndarray::Array<double, 1> getPsfFluxErr() const {
+    ndarray::Array<double, 1> getPsfInstFluxErr() const {
         return this->operator[](this->getTable()->getPsfFluxSlot().getErrKey());
     }
 
     /// Get the value of the ApFlux slot measurement.
-    ndarray::Array<double, 1> getApFlux() const {
+    ndarray::Array<double, 1> getApInstFlux() const {
         return this->operator[](this->getTable()->getApFluxSlot().getMeasKey());
     }
     /// Get the uncertainty on the ApFlux slot measurement.
-    ndarray::Array<double, 1> getApFluxErr() const {
+    ndarray::Array<double, 1> getApInstFluxErr() const {
         return this->operator[](this->getTable()->getApFluxSlot().getErrKey());
     }
 
     /// Get the value of the ModelFlux slot measurement.
-    ndarray::Array<double, 1> getModelFlux() const {
+    ndarray::Array<double, 1> getModelInstFlux() const {
         return this->operator[](this->getTable()->getModelFluxSlot().getMeasKey());
     }
     /// Get the uncertainty on the ModelFlux slot measurement.
-    ndarray::Array<double, 1> getModelFluxErr() const {
+    ndarray::Array<double, 1> getModelInstFluxErr() const {
         return this->operator[](this->getTable()->getModelFluxSlot().getErrKey());
     }
 
-    /// Get the value of the InstFlux slot measurement.
-    ndarray::Array<double, 1> getInstFlux() const {
-        return this->operator[](this->getTable()->getInstFluxSlot().getMeasKey());
+    /// Get the value of the GaussianFlux slot measurement.
+    ndarray::Array<double, 1> getGaussianInstFlux() const {
+        return this->operator[](this->getTable()->getGaussianFluxSlot().getMeasKey());
     }
-    /// Get the uncertainty on the InstFlux slot measurement.
-    ndarray::Array<double, 1> getInstFluxErr() const {
-        return this->operator[](this->getTable()->getInstFluxSlot().getErrKey());
+    /// Get the uncertainty on the GaussianFlux slot measurement.
+    ndarray::Array<double, 1> getGaussianInstFluxErr() const {
+        return this->operator[](this->getTable()->getGaussianFluxSlot().getErrKey());
     }
 
     /// Get the value of the CalibFlux slot measurement.
-    ndarray::Array<double, 1> getCalibFlux() const {
+    ndarray::Array<double, 1> getCalibInstFlux() const {
         return this->operator[](this->getTable()->getCalibFluxSlot().getMeasKey());
     }
     /// Get the uncertainty on the CalibFlux slot measurement.
-    ndarray::Array<double, 1> getCalibFluxErr() const {
+    ndarray::Array<double, 1> getCalibInstFluxErr() const {
         return this->operator[](this->getTable()->getCalibFluxSlot().getErrKey());
     }
 
@@ -581,11 +581,11 @@ protected:
 
 typedef SourceColumnViewT<SourceRecord> SourceColumnView;
 
-inline FluxSlotDefinition::MeasValue SourceRecord::getPsfFlux() const {
+inline FluxSlotDefinition::MeasValue SourceRecord::getPsfInstFlux() const {
     return this->get(getTable()->getPsfFluxSlot().getMeasKey());
 }
 
-inline FluxSlotDefinition::ErrValue SourceRecord::getPsfFluxErr() const {
+inline FluxSlotDefinition::ErrValue SourceRecord::getPsfInstFluxErr() const {
     return this->get(getTable()->getPsfFluxSlot().getErrKey());
 }
 
@@ -593,11 +593,11 @@ inline bool SourceRecord::getPsfFluxFlag() const {
     return this->get(getTable()->getPsfFluxSlot().getFlagKey());
 }
 
-inline FluxSlotDefinition::MeasValue SourceRecord::getModelFlux() const {
+inline FluxSlotDefinition::MeasValue SourceRecord::getModelInstFlux() const {
     return this->get(getTable()->getModelFluxSlot().getMeasKey());
 }
 
-inline FluxSlotDefinition::ErrValue SourceRecord::getModelFluxErr() const {
+inline FluxSlotDefinition::ErrValue SourceRecord::getModelInstFluxErr() const {
     return this->get(getTable()->getModelFluxSlot().getErrKey());
 }
 
@@ -605,11 +605,11 @@ inline bool SourceRecord::getModelFluxFlag() const {
     return this->get(getTable()->getModelFluxSlot().getFlagKey());
 }
 
-inline FluxSlotDefinition::MeasValue SourceRecord::getApFlux() const {
+inline FluxSlotDefinition::MeasValue SourceRecord::getApInstFlux() const {
     return this->get(getTable()->getApFluxSlot().getMeasKey());
 }
 
-inline FluxSlotDefinition::ErrValue SourceRecord::getApFluxErr() const {
+inline FluxSlotDefinition::ErrValue SourceRecord::getApInstFluxErr() const {
     return this->get(getTable()->getApFluxSlot().getErrKey());
 }
 
@@ -617,23 +617,23 @@ inline bool SourceRecord::getApFluxFlag() const {
     return this->get(getTable()->getApFluxSlot().getFlagKey());
 }
 
-inline FluxSlotDefinition::MeasValue SourceRecord::getInstFlux() const {
-    return this->get(getTable()->getInstFluxSlot().getMeasKey());
+inline FluxSlotDefinition::MeasValue SourceRecord::getGaussianInstFlux() const {
+    return this->get(getTable()->getGaussianFluxSlot().getMeasKey());
 }
 
-inline FluxSlotDefinition::ErrValue SourceRecord::getInstFluxErr() const {
-    return this->get(getTable()->getInstFluxSlot().getErrKey());
+inline FluxSlotDefinition::ErrValue SourceRecord::getGaussianInstFluxErr() const {
+    return this->get(getTable()->getGaussianFluxSlot().getErrKey());
 }
 
-inline bool SourceRecord::getInstFluxFlag() const {
-    return this->get(getTable()->getInstFluxSlot().getFlagKey());
+inline bool SourceRecord::getGaussianFluxFlag() const {
+    return this->get(getTable()->getGaussianFluxSlot().getFlagKey());
 }
 
-inline FluxSlotDefinition::MeasValue SourceRecord::getCalibFlux() const {
+inline FluxSlotDefinition::MeasValue SourceRecord::getCalibInstFlux() const {
     return this->get(getTable()->getCalibFluxSlot().getMeasKey());
 }
 
-inline FluxSlotDefinition::ErrValue SourceRecord::getCalibFluxErr() const {
+inline FluxSlotDefinition::ErrValue SourceRecord::getCalibInstFluxErr() const {
     return this->get(getTable()->getCalibFluxSlot().getErrKey());
 }
 

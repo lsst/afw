@@ -54,8 +54,8 @@ class TestGroupView(lsst.utils.tests.TestCase):
 
     def setUp(self):
         self.schema = afwTable.SourceTable.makeMinimalSchema()
-        self.schema.addField("flux_flux", type=np.float64)
-        self.schema.addField("flux_fluxErr", type=np.float64)
+        self.schema.addField("flux_instFlux", type=np.float64)
+        self.schema.addField("flux_instFluxErr", type=np.float64)
         self.schema.addField("flux_flag", type="Flag")
         self.table = afwTable.SourceTable.make(self.schema)
         self.table.definePsfFlux("flux")
