@@ -503,12 +503,11 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
     def testFitsReadVersion1Compatibility(self):
         """Test reading of catalogs with version 1 schema
 
-        Version 2 catalogs (the current version) provide aliases to
-        fields whose names end in Sigma: xErr -> xSigma for any x
+        Version 1 catalogs need to have added aliases from Sigma->Err and
+        from `_flux`->`_instFlux`.
         """
         cat = lsst.afw.table.SourceCatalog.readFits(
             os.path.join(testPath, "data", "sourceTable-v1.fits"))
-        self.assertEqual(cat.schema["a_fluxSigma"].asKey(), cat.schema["a_fluxErr"].asKey())
         self.assertEqual(
             cat.getCentroidSlot().getErrKey(),
             lsst.afw.table.CovarianceMatrix2fKey(
@@ -519,6 +518,20 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
             lsst.afw.table.CovarianceMatrix3fKey(
                 cat.schema["slot_Shape"],
                 ["xx", "yy", "xy"]))
+        # check the flux->instFlux conversion
+        self.assertEqual(cat.schema["a_flux"].asKey(), cat.schema["a_instFlux"].asKey())
+        self.assertEqual(cat.schema["a_fluxSigma"].asKey(), cat.schema["a_instFluxErr"].asKey())
+
+    def testFitsVersion2Compatibility(self):
+        """Test reading of catalogs with version 2 schema
+
+        Version 2 catalogs need to have added aliases from `_flux`->`_instFlux`.
+        """
+        cat = lsst.afw.table.SourceCatalog.readFits(
+            os.path.join(testPath, "data", "sourceTable-v2.fits"))
+        # check the flux->instFlux conversion
+        self.assertEqual(cat.schema["a_flux"].asKey(), cat.schema["a_instFlux"].asKey())
+        self.assertEqual(cat.schema["a_fluxErr"].asKey(), cat.schema["a_instFluxErr"].asKey())
 
     def testDM1083(self):
         schema = lsst.afw.table.SourceTable.makeMinimalSchema()
