@@ -154,7 +154,7 @@ ExposureInfo::FitsWriteData ExposureInfo::_startWriteFits(lsst::geom::Point2I co
     data.maskMetadata = data.imageMetadata;
     data.varianceMetadata = data.imageMetadata;
 
-    data.metadata->combine(getMetadata());
+    data.metadata->combine(*getMetadata());
 
     // In the future, we might not have exactly three image HDUs, but we always do right now,
     // so 0=primary, 1=image, 2=mask, 3=variance, 4+=archive
@@ -206,7 +206,7 @@ ExposureInfo::FitsWriteData ExposureInfo::_startWriteFits(lsst::geom::Point2I co
             // cannot represent this WCS as FITS-WCS; don't write its metadata
         }
         if (wcsMetadata) {
-            data.imageMetadata->combine(newWcs->getFitsMetadata(true));
+            data.imageMetadata->combine(*newWcs->getFitsMetadata(true));
         }
     }
 

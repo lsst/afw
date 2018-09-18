@@ -405,24 +405,22 @@ void writeBasicFits(int fd,                 // file descriptor to write to
 
         std::shared_ptr<lsst::daf::base::PropertyList> metadata = newWcs->getFitsMetadata();
 
-        NameList paramNames = metadata->paramNames();
-
-        for (NameList::const_iterator i = paramNames.begin(), end = paramNames.end(); i != end; ++i) {
-            if (*i == "SIMPLE" || *i == "BITPIX" || *i == "NAXIS" || *i == "NAXIS1" || *i == "NAXIS2" ||
-                *i == "XTENSION" || *i == "PCOUNT" || *i == "GCOUNT") {
+        for (auto const & k : metadata->names()) {
+            if (k == "SIMPLE" || k == "BITPIX" || k == "NAXIS" || k == "NAXIS1" || k == "NAXIS2" ||
+                k == "XTENSION" || k == "PCOUNT" || k == "GCOUNT") {
                 continue;
             }
-            std::type_info const &type = metadata->typeOf(*i);
+            std::type_info const &type = metadata->typeOf(k);
             if (type == typeid(bool)) {
-                cards.push_back(Card(*i, metadata->get<bool>(*i)));
+                cards.push_back(Card(k, metadata->get<bool>(k)));
             } else if (type == typeid(int)) {
-                cards.push_back(Card(*i, metadata->get<int>(*i)));
+                cards.push_back(Card(k, metadata->get<int>(k)));
             } else if (type == typeid(float)) {
-                cards.push_back(Card(*i, metadata->get<float>(*i)));
+                cards.push_back(Card(k, metadata->get<float>(k)));
             } else if (type == typeid(double)) {
-                cards.push_back(Card(*i, metadata->get<double>(*i)));
+                cards.push_back(Card(k, metadata->get<double>(k)));
             } else {
-                cards.push_back(Card(*i, metadata->get<std::string>(*i)));
+                cards.push_back(Card(k, metadata->get<std::string>(k)));
             }
         }
     }

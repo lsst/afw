@@ -201,8 +201,8 @@ std::shared_ptr<daf::base::PropertyList> makeTanSipMetadata(lsst::geom::Point2D 
                                                             Eigen::MatrixXd const& sipA,
                                                             Eigen::MatrixXd const& sipB) {
     auto metadata = makeSimpleWcsMetadata(crpix, crval, cdMatrix, "TAN-SIP");
-    metadata->combine(makeSipMatrixMetadata(sipA, "A"));
-    metadata->combine(makeSipMatrixMetadata(sipB, "B"));
+    metadata->combine(*makeSipMatrixMetadata(sipA, "A"));
+    metadata->combine(*makeSipMatrixMetadata(sipB, "B"));
     return metadata;
 }
 
@@ -211,8 +211,8 @@ std::shared_ptr<daf::base::PropertyList> makeTanSipMetadata(
         Eigen::Matrix2d const& cdMatrix, Eigen::MatrixXd const& sipA, Eigen::MatrixXd const& sipB,
         Eigen::MatrixXd const& sipAp, Eigen::MatrixXd const& sipBp) {
     auto metadata = makeTanSipMetadata(crpix, crval, cdMatrix, sipA, sipB);
-    metadata->combine(makeSipMatrixMetadata(sipAp, "AP"));
-    metadata->combine(makeSipMatrixMetadata(sipBp, "BP"));
+    metadata->combine(*makeSipMatrixMetadata(sipAp, "AP"));
+    metadata->combine(*makeSipMatrixMetadata(sipBp, "BP"));
     return metadata;
 }
 

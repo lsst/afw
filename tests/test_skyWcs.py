@@ -629,10 +629,10 @@ class MetadataWcsTestCase(SkyWcsBaseTestCase):
 
     def testBasics(self):
         skyWcs = makeSkyWcs(self.metadata, strip=False)
-        self.assertEqual(len(self.metadata.names(False)), 14)
+        self.assertEqual(len(self.metadata.names()), 14)
         self.checkWcs(skyWcs)
         makeSkyWcs(self.metadata, strip=True)
-        self.assertEqual(len(self.metadata.names(False)), 0)
+        self.assertEqual(len(self.metadata.names()), 0)
 
     def testNormalizationFk5(self):
         """Test that readLsstSkyWcs correctly normalizes FK5 1975 to ICRS

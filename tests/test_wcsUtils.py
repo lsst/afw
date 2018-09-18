@@ -334,7 +334,7 @@ class DetailTestCase(lsst.utils.tests.TestCase):
             ("CUNIT1", "PIXEL"),
             ("CUNIT2", "PIXEL"),
         )
-        self.assertEqual(len(metadata.names(True)), len(desiredNameValueList))
+        self.assertEqual(len(metadata.names()), len(desiredNameValueList))
         for name, value in desiredNameValueList:
             self.assertEqual(metadata.getScalar(name + wcsName), value)
 
@@ -348,15 +348,15 @@ class DetailTestCase(lsst.utils.tests.TestCase):
         metadata.set("WCSAXES%s" % (wcsName,), 2)
         # add a keyword that will not be deleted
         metadata.set("NAXIS1", 100)
-        self.assertEqual(len(metadata.names(True)), 14)
+        self.assertEqual(len(metadata.names()), 14)
 
         # deleting data for a different WCS will delete nothing
         deleteBasicWcsMetadata(metadata=metadata, wcsName="B")
-        self.assertEqual(len(metadata.names(True)), 14)
+        self.assertEqual(len(metadata.names()), 14)
 
         # deleting data for the right WCS deletes all but one keyword
         deleteBasicWcsMetadata(metadata=metadata, wcsName=wcsName)
-        self.assertEqual(len(metadata.names(True)), 1)
+        self.assertEqual(len(metadata.names()), 1)
         self.assertEqual(metadata.getScalar("NAXIS1"), 100)
 
         # try with a smattering of keywords (should silently ignore the missing ones)
@@ -365,7 +365,7 @@ class DetailTestCase(lsst.utils.tests.TestCase):
         metadata.set("CRPIX2%s" % (wcsName,), 5)
         metadata.set("CRVAL1%s" % (wcsName,), 55)
         deleteBasicWcsMetadata(metadata=metadata, wcsName=wcsName)
-        self.assertEqual(len(metadata.names(True)), 1)
+        self.assertEqual(len(metadata.names()), 1)
         self.assertEqual(metadata.getScalar("NAXIS1"), 100)
 
     def testGetImageXY0FromMetadata(self):
@@ -376,7 +376,7 @@ class DetailTestCase(lsst.utils.tests.TestCase):
         # reading the wrong wcsName should be treated as no data available
         xy0WrongWcsName = getImageXY0FromMetadata(metadata=metadata, wcsName="X", strip=True)
         self.assertEqual(xy0WrongWcsName, lsst.geom.Point2I(0, 0))
-        self.assertEqual(len(metadata.names(True)), 8)
+        self.assertEqual(len(metadata.names()), 8)
 
         # deleting one of the required keywords should be treated as no data available
         for namePrefixToRemove in ("CRPIX1", "CRPIX2", "CRVAL1", "CRVAL2"):
@@ -385,10 +385,10 @@ class DetailTestCase(lsst.utils.tests.TestCase):
             metadata.remove(nameToRemove)
             xy0MissingWcsKey = getImageXY0FromMetadata(metadata=metadata, wcsName=wcsName, strip=True)
             self.assertEqual(xy0MissingWcsKey, lsst.geom.Point2I(0, 0))
-            self.assertEqual(len(metadata.names(True)), 7)
+            self.assertEqual(len(metadata.names()), 7)
             # restore removed item
             metadata.set(nameToRemove, removedValue)
-            self.assertEqual(len(metadata.names(True)), 8)
+            self.assertEqual(len(metadata.names()), 8)
 
         # setting CRPIX1, 2 to something other than 1 should be treated as no data available
         for i in (1, 2):
@@ -396,20 +396,20 @@ class DetailTestCase(lsst.utils.tests.TestCase):
             metadata.set(nameToChange, 1.1)
             xy0WrongWcsName = getImageXY0FromMetadata(metadata=metadata, wcsName=wcsName, strip=True)
             self.assertEqual(xy0WrongWcsName, lsst.geom.Point2I(0, 0))
-            self.assertEqual(len(metadata.names(True)), 8)
+            self.assertEqual(len(metadata.names()), 8)
             # restore altered CRPIX value
             metadata.set(nameToChange, 1.0)
-            self.assertEqual(len(metadata.names(True)), 8)
+            self.assertEqual(len(metadata.names()), 8)
 
         # use the correct WCS name but don't strip
         xy0RightWcsName = getImageXY0FromMetadata(metadata, wcsName, strip=False)
         self.assertEqual(xy0RightWcsName, xy0)
-        self.assertEqual(len(metadata.names(True)), 8)
+        self.assertEqual(len(metadata.names()), 8)
 
         # use the correct WCS and strip usable metadata
         xy0RightWcsName = getImageXY0FromMetadata(metadata, wcsName, strip=True)
         self.assertEqual(xy0RightWcsName, xy0)
-        self.assertEqual(len(metadata.names(True)), 0)
+        self.assertEqual(len(metadata.names()), 0)
 
     def testGetSipMatrixFromMetadata(self):
         """Test getSipMatrixFromMetadata and makeSipMatrixMetadata
@@ -434,7 +434,7 @@ class DetailTestCase(lsst.utils.tests.TestCase):
                         self.assertEqual(sipMatrix[i, j], 0.0)
 
             metadata = makeSipMatrixMetadata(sipMatrix, name)
-            for name in metadata.names(False):
+            for name in metadata.names():
                 value = metadata.getScalar(name)
                 if (name.endswith("ORDER")):
                     self.assertEqual(width, value + 1)

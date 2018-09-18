@@ -115,7 +115,7 @@ public:
             }
 
             auto sipMetadata = getOldSipMetadata(*sipRecord);
-            metadata->combine(sipMetadata);
+            metadata->combine(*sipMetadata);
         }
         return std::make_shared<SkyWcs>(*metadata);
     }
@@ -235,9 +235,9 @@ std::shared_ptr<daf::base::PropertyList> getOldSipMetadata(table::BaseRecord con
     Eigen::Map<Eigen::MatrixXd const> mapBp((record)[kBp].getData(), nBp, nBp);
 
     auto metadata = makeSipMatrixMetadata(mapA, "A");
-    metadata->combine(makeSipMatrixMetadata(mapB, "B"));
-    metadata->combine(makeSipMatrixMetadata(mapAp, "AP"));
-    metadata->combine(makeSipMatrixMetadata(mapBp, "BP"));
+    metadata->combine(*makeSipMatrixMetadata(mapB, "B"));
+    metadata->combine(*makeSipMatrixMetadata(mapAp, "AP"));
+    metadata->combine(*makeSipMatrixMetadata(mapBp, "BP"));
     return metadata;
 }
 

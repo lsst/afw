@@ -604,11 +604,10 @@ void Mask<MaskPixelT>::addMaskPlanesToMetadata(std::shared_ptr<dafBase::Property
     }
 
     // First, clear existing MaskPlane metadata
-    typedef std::vector<std::string> NameList;
-    NameList paramNames = metadata->paramNames(false);
-    for (NameList::const_iterator i = paramNames.begin(); i != paramNames.end(); ++i) {
-        if (i->compare(0, maskPlanePrefix.size(), maskPlanePrefix) == 0) {
-            metadata->remove(*i);
+    auto const names = metadata->names();
+    for (auto const & name : names) {
+        if (name.compare(0, maskPlanePrefix.size(), maskPlanePrefix) == 0) {
+            metadata->remove(name);
         }
     }
 
@@ -631,16 +630,15 @@ typename Mask<MaskPixelT>::MaskPlaneDict Mask<MaskPixelT>::parseMaskPlaneMetadat
     MaskPlaneDict newDict;
 
     // First, clear existing MaskPlane metadata
-    typedef std::vector<std::string> NameList;
-    NameList paramNames = metadata->paramNames(false);
+    auto const names = metadata->names();
     int numPlanesUsed = 0;  // number of planes used
 
     // Iterate over childless properties with names starting with maskPlanePrefix
-    for (NameList::const_iterator i = paramNames.begin(); i != paramNames.end(); ++i) {
-        if (i->compare(0, maskPlanePrefix.size(), maskPlanePrefix) == 0) {
+    for (auto const & name : names) {
+        if (name.compare(0, maskPlanePrefix.size(), maskPlanePrefix) == 0) {
             // split off maskPlanePrefix to obtain plane name
-            std::string planeName = i->substr(maskPlanePrefix.size());
-            int const planeId = metadata->getAsInt(*i);
+            std::string planeName = name.substr(maskPlanePrefix.size());
+            int const planeId = metadata->getAsInt(name);
 
             MaskPlaneDict::const_iterator plane = newDict.find(planeName);
             if (plane != newDict.end() && planeId != plane->second) {

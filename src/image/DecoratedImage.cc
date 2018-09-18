@@ -116,7 +116,7 @@ void DecoratedImage<PixelT>::writeFits(std::string const& fileName, fits::ImageW
 
     if (metadata_i) {
         metadata = getMetadata()->deepCopy();
-        metadata->combine(metadata_i);
+        metadata->combine(*metadata_i);
     } else {
         metadata = getMetadata();
     }

@@ -63,7 +63,7 @@ inline void fits_read_array(fits::Fits& fitsfile, ndarray::Array<PixelT, 2, 2>& 
      */
     const int hdu = fitsfile.getHdu();
     std::shared_ptr<daf::base::PropertyList> header(readMetadata(fitsfile, true));
-    metadata.combine(header);
+    metadata.combine(*header);
     fitsfile.setHdu(hdu);
 
     // Origin of part of image to read

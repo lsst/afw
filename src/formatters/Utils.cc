@@ -157,7 +157,7 @@ bool extractOptionalFlag(std::shared_ptr<PropertyList const> const& properties, 
     return false;
 }
 
-int countFitsHeaderCards(lsst::daf::base::PropertyList const& prop) { return prop.paramNames(false).size(); }
+int countFitsHeaderCards(lsst::daf::base::PropertyList const& prop) { return prop.nameCount(); }
 
 ndarray::Array<std::uint8_t, 1, 1> stringToBytes(std::string const& str) {
     auto nbytes = str.size() * sizeof(char) / sizeof(std::uint8_t);

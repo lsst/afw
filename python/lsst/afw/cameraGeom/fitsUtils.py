@@ -15,7 +15,7 @@ def getByKey(metadata, key):
        @param[in] key       key to use for value lookup
        @returns value associated with key, None if key does not exist
     """
-    mdKeys = metadata.paramNames()
+    mdKeys = metadata.names()
     if key in mdKeys:
         return metadata.getScalar(key)
     else:
@@ -30,7 +30,7 @@ def setByKey(metadata, key, value, clobber):
        @param[in] value     value to assign in the metadata object
        @param[in] clobber   Clobber the value if the key already exisists?
     """
-    mdKeys = metadata.paramNames()
+    mdKeys = metadata.names()
     if key not in mdKeys or (key in mdKeys and clobber):
         metadata.set(key, value)
 

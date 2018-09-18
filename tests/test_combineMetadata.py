@@ -127,7 +127,7 @@ class CombineMetadataTestCase(lsst.utils.tests.TestCase):
         md2Copy = md2.deepCopy()
 
         result = combineMetadata(md1, md2)
-        expectedNames = ["int1", "float1", "string1"] + list(md2Names)
+        expectedNames = md1.getOrderedNames() + ["int2", "float2", "string2"]
         self.assertEqual(result.getOrderedNames(), expectedNames)
         md2NameSet = set(md2Names)
         for name in result.getOrderedNames():
