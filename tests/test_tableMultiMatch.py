@@ -54,8 +54,8 @@ class TestGroupView(lsst.utils.tests.TestCase):
 
     def setUp(self):
         self.schema = afwTable.SourceTable.makeMinimalSchema()
-        self.schema.addField("flux_flux", type=np.float64)
-        self.schema.addField("flux_fluxErr", type=np.float64)
+        self.schema.addField("flux_instFlux", type=np.float64)
+        self.schema.addField("flux_instFluxErr", type=np.float64)
         self.schema.addField("flux_flag", type="Flag")
         self.table = afwTable.SourceTable.make(self.schema)
         self.table.definePsfFlux("flux")
@@ -85,7 +85,7 @@ class TestGroupView(lsst.utils.tests.TestCase):
                 s.setId(objId)
                 s.setRa(ra * lsst.geom.degrees)
                 s.setDec(dec * lsst.geom.degrees)
-                s.set(self.table.getPsfFluxKey(), psfMags[band])
+                s.set(self.table.getPsfFluxSlot().getMeasKey(), psfMags[band])
 
         # Read catalalogue built from the template image
         # Read SDSS catalogue
@@ -110,7 +110,7 @@ class TestGroupView(lsst.utils.tests.TestCase):
                       ra * lsst.geom.degrees)
                 s.set(afwTable.SourceTable.getCoordKey().getDec(),
                       dec * lsst.geom.degrees)
-                s.set(self.table.getPsfFluxKey(), flux[0])
+                s.set(self.table.getPsfFluxSlot().getMeasKey(), flux[0])
 
         m = afwTable.MultiMatch(self.schema,
                                 dict(visit=np.int64),

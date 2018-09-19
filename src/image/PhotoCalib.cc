@@ -91,8 +91,8 @@ Measurement PhotoCalib::instFluxToMaggies(double instFlux, double instFluxErr) c
 Measurement PhotoCalib::instFluxToMaggies(afw::table::SourceRecord const &sourceRecord,
                                           std::string const &instFluxField) const {
     auto position = sourceRecord.getCentroid();
-    auto instFluxKey = sourceRecord.getSchema().find<double>(instFluxField + "_flux").key;
-    auto instFluxErrKey = sourceRecord.getSchema().find<double>(instFluxField + "_fluxErr").key;
+    auto instFluxKey = sourceRecord.getSchema().find<double>(instFluxField + "_instFlux").key;
+    auto instFluxErrKey = sourceRecord.getSchema().find<double>(instFluxField + "_instFluxErr").key;
     return instFluxToMaggies(sourceRecord.get(instFluxKey), sourceRecord.get(instFluxErrKey), position);
 }
 ndarray::Array<double, 2, 2> PhotoCalib::instFluxToMaggies(afw::table::SourceCatalog const &sourceCatalog,
@@ -105,10 +105,10 @@ ndarray::Array<double, 2, 2> PhotoCalib::instFluxToMaggies(afw::table::SourceCat
 
 void PhotoCalib::instFluxToMaggies(afw::table::SourceCatalog &sourceCatalog, std::string const &instFluxField,
                                    std::string const &outField) const {
-    auto instFluxKey = sourceCatalog.getSchema().find<double>(instFluxField + "_flux").key;
-    auto instFluxErrKey = sourceCatalog.getSchema().find<double>(instFluxField + "_fluxErr").key;
-    auto maggiesKey = sourceCatalog.getSchema().find<double>(outField + "_flux").key;
-    auto maggiesErrKey = sourceCatalog.getSchema().find<double>(outField + "_fluxErr").key;
+    auto instFluxKey = sourceCatalog.getSchema().find<double>(instFluxField + "_instFlux").key;
+    auto instFluxErrKey = sourceCatalog.getSchema().find<double>(instFluxField + "_instFluxErr").key;
+    auto maggiesKey = sourceCatalog.getSchema().find<double>(outField + "_instFlux").key;
+    auto maggiesErrKey = sourceCatalog.getSchema().find<double>(outField + "_instFluxErr").key;
     for (auto &record : sourceCatalog) {
         auto result =
                 instFluxToMaggies(record.get(instFluxKey), record.get(instFluxErrKey), record.getCentroid());
@@ -151,8 +151,8 @@ Measurement PhotoCalib::instFluxToMagnitude(double instFlux, double instFluxErr)
 Measurement PhotoCalib::instFluxToMagnitude(afw::table::SourceRecord const &sourceRecord,
                                             std::string const &instFluxField) const {
     auto position = sourceRecord.getCentroid();
-    auto instFluxKey = sourceRecord.getSchema().find<double>(instFluxField + "_flux").key;
-    auto instFluxErrKey = sourceRecord.getSchema().find<double>(instFluxField + "_fluxErr").key;
+    auto instFluxKey = sourceRecord.getSchema().find<double>(instFluxField + "_instFlux").key;
+    auto instFluxErrKey = sourceRecord.getSchema().find<double>(instFluxField + "_instFluxErr").key;
     return instFluxToMagnitude(sourceRecord.get(instFluxKey), sourceRecord.get(instFluxErrKey), position);
 }
 
@@ -166,8 +166,8 @@ ndarray::Array<double, 2, 2> PhotoCalib::instFluxToMagnitude(afw::table::SourceC
 
 void PhotoCalib::instFluxToMagnitude(afw::table::SourceCatalog &sourceCatalog,
                                      std::string const &instFluxField, std::string const &outField) const {
-    auto instFluxKey = sourceCatalog.getSchema().find<double>(instFluxField + "_flux").key;
-    auto instFluxErrKey = sourceCatalog.getSchema().find<double>(instFluxField + "_fluxErr").key;
+    auto instFluxKey = sourceCatalog.getSchema().find<double>(instFluxField + "_instFlux").key;
+    auto instFluxErrKey = sourceCatalog.getSchema().find<double>(instFluxField + "_instFluxErr").key;
     auto magKey = sourceCatalog.getSchema().find<double>(outField + "_mag").key;
     auto magErrKey = sourceCatalog.getSchema().find<double>(outField + "_magErr").key;
     for (auto &record : sourceCatalog) {
@@ -285,8 +285,8 @@ void PhotoCalib::instFluxToMaggiesArray(afw::table::SourceCatalog const &sourceC
                                         std::string const &instFluxField,
                                         ndarray::Array<double, 2, 2> result) const {
     double instFlux, instFluxErr, maggies, calibration;
-    auto instFluxKey = sourceCatalog.getSchema().find<double>(instFluxField + "_flux").key;
-    auto instFluxErrKey = sourceCatalog.getSchema().find<double>(instFluxField + "_fluxErr").key;
+    auto instFluxKey = sourceCatalog.getSchema().find<double>(instFluxField + "_instFlux").key;
+    auto instFluxErrKey = sourceCatalog.getSchema().find<double>(instFluxField + "_instFluxErr").key;
     auto iter = result.begin();
     for (auto const &rec : sourceCatalog) {
         instFlux = rec.get(instFluxKey);
@@ -306,8 +306,8 @@ void PhotoCalib::instFluxToMagnitudeArray(afw::table::SourceCatalog const &sourc
                                           std::string const &instFluxField,
                                           ndarray::Array<double, 2, 2> result) const {
     double instFlux, instFluxErr, calibration;
-    auto instFluxKey = sourceCatalog.getSchema().find<double>(instFluxField + "_flux").key;
-    auto instFluxErrKey = sourceCatalog.getSchema().find<double>(instFluxField + "_fluxErr").key;
+    auto instFluxKey = sourceCatalog.getSchema().find<double>(instFluxField + "_instFlux").key;
+    auto instFluxErrKey = sourceCatalog.getSchema().find<double>(instFluxField + "_instFluxErr").key;
     auto iter = result.begin();
     for (auto const &rec : sourceCatalog) {
         instFlux = rec.get(instFluxKey);

@@ -61,8 +61,8 @@ def makeWcs():
 class SourceTableTestCase(lsst.utils.tests.TestCase):
 
     def fillRecord(self, record):
-        record.set(self.fluxKey, np.random.randn())
-        record.set(self.fluxErrKey, np.random.randn())
+        record.set(self.instFluxKey, np.random.randn())
+        record.set(self.instFluxErrKey, np.random.randn())
         record.set(self.centroidKey,
                    lsst.geom.Point2D(*np.random.randn(2)))
         record.set(self.centroidErrKey, makeCov(2, np.float32))
@@ -73,11 +73,11 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         record.set(self.centroidFlagKey, np.random.randn() > 0)
         record.set(self.shapeFlagKey, np.random.randn() > 0)
 
-    def makeFlux(self, schema, prefix, uncertainty):
-        self.fluxKey = self.schema.addField(prefix+"_flux", type="D")
+    def makeInstFlux(self, schema, prefix, uncertainty):
+        self.instFluxKey = self.schema.addField(prefix+"_instFlux", type="D")
         if uncertainty:
-            self.fluxErrKey = self.schema.addField(
-                prefix+"_fluxErr", type="D")
+            self.instFluxErrKey = self.schema.addField(
+                prefix+"_instFluxErr", type="D")
         self.fluxFlagKey = self.schema.addField(prefix+"_flag", type="Flag")
 
     def makeCentroid(self, schema, prefix, uncertainty):
@@ -138,7 +138,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
     def setUp(self):
         np.random.seed(1)
         self.schema = lsst.afw.table.SourceTable.makeMinimalSchema()
-        self.makeFlux(self.schema, "a", 1)
+        self.makeInstFlux(self.schema, "a", 1)
         self.makeCentroid(self.schema, "b", 2)
         self.makeShape(self.schema, "c", 2)
         self.table = lsst.afw.table.SourceTable.make(self.schema)
@@ -169,8 +169,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
             record = catalog[0]
             # I'm using the keys from the non-persisted table.  They should work at least in the
             # current implementation
-            self.assertEqual(table.getPsfFluxDefinition(), "a")
-            self.assertEqual(record.get(self.fluxKey), record.getPsfFlux())
+            self.assertEqual(record.get(self.instFluxKey), record.getPsfInstFlux())
             self.assertEqual(record.get(self.fluxFlagKey),
                              record.getPsfFluxFlag())
             self.assertEqual(table.getCentroidDefinition(), "b")
@@ -189,9 +188,8 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.table.definePsfFlux("a")
         self.table.defineCentroid("b")
         self.table.defineShape("c")
-        self.assertEqual(self.table.getPsfFluxDefinition(), "a")
-        self.assertEqual(self.record.get(self.fluxKey),
-                         self.record.getPsfFlux())
+        self.assertEqual(self.record.get(self.instFluxKey),
+                         self.record.getPsfInstFlux())
         self.assertEqual(self.record.get(self.fluxFlagKey),
                          self.record.getPsfFluxFlag())
         self.assertEqual(self.table.getCentroidDefinition(), "b")
@@ -221,8 +219,8 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.table.definePsfFlux("a")
         self.table.defineCentroid("b")
         self.table.defineShape("c")
-        self.assertTrue((cols2["a_flux"] == cols2.getPsfFlux()).all())
-        self.assertTrue((cols2["a_fluxErr"] == cols2.getPsfFluxErr()).all())
+        self.assertTrue((cols2["a_instFlux"] == cols2.getPsfInstFlux()).all())
+        self.assertTrue((cols2["a_instFluxErr"] == cols2.getPsfInstFluxErr()).all())
         self.assertTrue((cols2["b_x"] == cols2.getX()).all())
         self.assertTrue((cols2["b_y"] == cols2.getY()).all())
         self.assertTrue((cols2["c_xx"] == cols2.getIxx()).all())

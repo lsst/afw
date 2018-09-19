@@ -74,8 +74,8 @@ def makeWcs():
 class SourceTableTestCase(lsst.utils.tests.TestCase):
 
     def fillRecord(self, record):
-        record.set(self.fluxKey, np.random.randn())
-        record.set(self.fluxErrKey, np.random.randn())
+        record.set(self.instFluxKey, np.random.randn())
+        record.set(self.instFluxErrKey, np.random.randn())
         record.set(self.centroidKey.getX(), np.random.randn())
         record.set(self.centroidKey.getY(), np.random.randn())
         record.set(self.xErrKey, np.random.randn())
@@ -93,8 +93,8 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
     def setUp(self):
         np.random.seed(1)
         self.schema = lsst.afw.table.SourceTable.makeMinimalSchema()
-        self.fluxKey = self.schema.addField("a_flux", type="D")
-        self.fluxErrKey = self.schema.addField("a_fluxErr", type="D")
+        self.instFluxKey = self.schema.addField("a_instFlux", type="D")
+        self.instFluxErrKey = self.schema.addField("a_instFluxErr", type="D")
         self.fluxFlagKey = self.schema.addField("a_flag", type="Flag")
 
         # the meas field is added using a functor key, but the error is added
@@ -127,9 +127,8 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         del self.catalog
 
     def checkCanonical(self):
-        self.assertEqual(self.table.getPsfFluxDefinition(), "a")
-        self.assertEqual(self.record.get(self.fluxKey),
-                         self.record.getPsfFlux())
+        self.assertEqual(self.record.get(self.instFluxKey),
+                         self.record.getPsfInstFlux())
         self.assertEqual(self.record.get(self.fluxFlagKey),
                          self.record.getPsfFluxFlag())
         self.assertEqual(self.table.getCentroidDefinition(), "b")
@@ -165,8 +164,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
             record = catalog[0]
             # I'm using the keys from the non-persisted table.  They should work at least in the
             # current implementation
-            self.assertEqual(table.getPsfFluxDefinition(), "a")
-            self.assertEqual(record.get(self.fluxKey), record.getPsfFlux())
+            self.assertEqual(record.get(self.instFluxKey), record.getPsfInstFlux())
             self.assertEqual(record.get(self.fluxFlagKey),
                              record.getPsfFluxFlag())
             self.assertEqual(table.getCentroidDefinition(), "b")
@@ -205,7 +203,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(len(self.catalog), len(new))
         for r1, r2 in zip(self.catalog, new):
             # Columns that are easy to test
-            for field in ("a_flux", "a_fluxErr", "id"):
+            for field in ("a_instFlux", "a_instFluxErr", "id"):
                 k1 = self.catalog.schema.find(field).getKey()
                 k2 = new.schema.find(field).getKey()
                 self.assertEqual(r1[k1], r2[k2])
@@ -253,8 +251,8 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.table.definePsfFlux("a")
         self.table.defineCentroid("b")
         self.table.defineShape("c")
-        self.assertFloatsEqual(cols2["a_flux"], cols2.getPsfFlux())
-        self.assertFloatsEqual(cols2["a_fluxErr"], cols2.getPsfFluxErr())
+        self.assertFloatsEqual(cols2["a_instFlux"], cols2.getPsfInstFlux())
+        self.assertFloatsEqual(cols2["a_instFluxErr"], cols2.getPsfInstFluxErr())
         self.assertFloatsEqual(cols2["b_x"], cols2.getX())
         self.assertFloatsEqual(cols2["b_y"], cols2.getY())
         self.assertFloatsEqual(cols2["c_xx"], cols2.getIxx())
@@ -266,13 +264,13 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.table.definePsfFlux("a")
         self.table.defineCentroid("b")
         self.table.defineShape("c")
-        self.assertFloatsEqual(self.catalog.columns["a_flux"],
-                               self.catalog["a_flux"])
-        self.assertFloatsEqual(self.catalog.columns[self.fluxKey],
-                               self.catalog.get(self.fluxKey))
-        self.assertFloatsEqual(self.catalog.columns.get(self.fluxKey),
-                               self.catalog.getPsfFlux())
-        self.assertEqual(self.fluxKey, self.catalog.getPsfFluxKey())
+        self.assertFloatsEqual(self.catalog.columns["a_instFlux"],
+                               self.catalog["a_instFlux"])
+        self.assertFloatsEqual(self.catalog.columns[self.instFluxKey],
+                               self.catalog.get(self.instFluxKey))
+        self.assertFloatsEqual(self.catalog.columns.get(self.instFluxKey),
+                               self.catalog.getPsfInstFlux())
+        self.assertEqual(self.instFluxKey, self.catalog.getPsfFluxSlot().getMeasKey())
         with self.assertRaises(AttributeError):
             self.catalog.foo()
 
@@ -438,7 +436,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
                 self.assertEqual(child.getId(), id)
 
         # Check detection of unsorted catalog
-        self.catalog.sort(self.fluxKey)
+        self.catalog.sort(self.instFluxKey)
         with self.assertRaises(AssertionError):
             self.catalog.getChildren(0)
         self.catalog.sort(parentKey)
@@ -449,7 +447,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
             os.path.join(testPath, "data/empty-v0.fits"))
         self.assertTrue(cat.getPsfFluxSlot().isValid())
         self.assertTrue(cat.getApFluxSlot().isValid())
-        self.assertTrue(cat.getInstFluxSlot().isValid())
+        self.assertTrue(cat.getGaussianFluxSlot().isValid())
         self.assertTrue(cat.getModelFluxSlot().isValid())
         self.assertTrue(cat.getCentroidSlot().isValid())
         self.assertTrue(cat.getShapeSlot().isValid())
@@ -457,7 +455,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
                          cat.schema.find("flux_psf").key)
         self.assertEqual(cat.getApFluxSlot().getMeasKey(),
                          cat.schema.find("flux_sinc").key)
-        self.assertEqual(cat.getInstFluxSlot().getMeasKey(),
+        self.assertEqual(cat.getGaussianFluxSlot().getMeasKey(),
                          cat.schema.find("flux_naive").key)
         self.assertEqual(cat.getModelFluxSlot().getMeasKey(),
                          cat.schema.find("cmodel_flux").key)
@@ -475,7 +473,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
                          cat.schema.find("flux_psf_err").key)
         self.assertEqual(cat.getApFluxSlot().getErrKey(),
                          cat.schema.find("flux_sinc_err").key)
-        self.assertEqual(cat.getInstFluxSlot().getErrKey(),
+        self.assertEqual(cat.getGaussianFluxSlot().getErrKey(),
                          cat.schema.find("flux_naive_err").key)
         self.assertEqual(cat.getModelFluxSlot().getErrKey(),
                          cat.schema.find("cmodel_flux_err").key)
@@ -493,7 +491,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
                          cat.schema.find("flux_psf_flags").key)
         self.assertEqual(cat.getApFluxSlot().getFlagKey(),
                          cat.schema.find("flux_sinc_flags").key)
-        self.assertEqual(cat.getInstFluxSlot().getFlagKey(),
+        self.assertEqual(cat.getGaussianFluxSlot().getFlagKey(),
                          cat.schema.find("flux_naive_flags").key)
         self.assertEqual(cat.getModelFluxSlot().getFlagKey(),
                          cat.schema.find("cmodel_flux_flags").key)
@@ -505,12 +503,11 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
     def testFitsReadVersion1Compatibility(self):
         """Test reading of catalogs with version 1 schema
 
-        Version 2 catalogs (the current version) provide aliases to
-        fields whose names end in Sigma: xErr -> xSigma for any x
+        Version 1 catalogs need to have added aliases from Sigma->Err and
+        from `_flux`->`_instFlux`.
         """
         cat = lsst.afw.table.SourceCatalog.readFits(
             os.path.join(testPath, "data", "sourceTable-v1.fits"))
-        self.assertEqual(cat.schema["a_fluxSigma"].asKey(), cat.schema["a_fluxErr"].asKey())
         self.assertEqual(
             cat.getCentroidSlot().getErrKey(),
             lsst.afw.table.CovarianceMatrix2fKey(
@@ -521,6 +518,20 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
             lsst.afw.table.CovarianceMatrix3fKey(
                 cat.schema["slot_Shape"],
                 ["xx", "yy", "xy"]))
+        # check the flux->instFlux conversion
+        self.assertEqual(cat.schema["a_flux"].asKey(), cat.schema["a_instFlux"].asKey())
+        self.assertEqual(cat.schema["a_fluxSigma"].asKey(), cat.schema["a_instFluxErr"].asKey())
+
+    def testFitsVersion2Compatibility(self):
+        """Test reading of catalogs with version 2 schema
+
+        Version 2 catalogs need to have added aliases from `_flux`->`_instFlux`.
+        """
+        cat = lsst.afw.table.SourceCatalog.readFits(
+            os.path.join(testPath, "data", "sourceTable-v2.fits"))
+        # check the flux->instFlux conversion
+        self.assertEqual(cat.schema["a_flux"].asKey(), cat.schema["a_instFlux"].asKey())
+        self.assertEqual(cat.schema["a_fluxErr"].asKey(), cat.schema["a_instFluxErr"].asKey())
 
     def testDM1083(self):
         schema = lsst.afw.table.SourceTable.makeMinimalSchema()
@@ -537,12 +548,12 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
     def testSlotUndefine(self):
         """Test that we can correctly define and undefine a slot after a SourceTable has been created"""
         schema = lsst.afw.table.SourceTable.makeMinimalSchema()
-        key = schema.addField("a_flux", type=np.float64, doc="flux field")
+        key = schema.addField("a_instFlux", type=np.float64, doc="flux field")
         table = lsst.afw.table.SourceTable.make(schema)
         table.definePsfFlux("a")
-        self.assertEqual(table.getPsfFluxKey(), key)
+        self.assertEqual(table.getPsfFluxSlot().getMeasKey(), key)
         table.schema.getAliasMap().erase("slot_PsfFlux")
-        self.assertFalse(table.getPsfFluxKey().isValid())
+        self.assertFalse(table.getPsfFluxSlot().isValid())
 
     def testOldFootprintPersistence(self):
         """Test that we can still read SourceCatalogs with (Heavy)Footprints saved by an older
@@ -590,52 +601,45 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         """Demonstrate that we can create & use the named Flux slot."""
         schema = lsst.afw.table.SourceTable.makeMinimalSchema()
         baseName = "afw_Test"
-        fluxKey = schema.addField("%s_flux" % (baseName,),
-                                  type=np.float64, doc="flux")
-        errKey = schema.addField("%s_fluxErr" % (baseName,),
+        instFluxKey = schema.addField("%s_instFlux" % (baseName,),
+                                      type=np.float64, doc="flux")
+        errKey = schema.addField("%s_instFluxErr" % (baseName,),
                                  type=np.float64, doc="flux uncertainty")
         flagKey = schema.addField("%s_flag" % (baseName,),
                                   type="Flag", doc="flux flag")
         table = lsst.afw.table.SourceTable.make(schema)
 
         # Initially, the slot is undefined.
-        # For some reason this doesn't work with a context manager for assertRaises
-        self.assertRaises(lsst.pex.exceptions.NotFoundError,
-                          getattr(table, "get%sDefinition" % (slotName,)))
+        self.assertFalse(getattr(table, "get%sSlot" % (slotName,))().isValid())
 
         # After definition, it maps to the keys defined above.
         getattr(table, "define%s" % (slotName,))(baseName)
-        self.assertEqual(getattr(table, "get%sDefinition" % (slotName,))(),
-                         baseName)
-        self.assertEqual(getattr(table, "get%sKey" % (slotName,))(),
-                         fluxKey)
-        self.assertEqual(getattr(table, "get%sErrKey" % (slotName,))(),
-                         errKey)
-        self.assertEqual(getattr(table, "get%sFlagKey" % (slotName,))(),
-                         flagKey)
+        self.assertTrue(getattr(table, "get%sSlot" % (slotName,))().isValid())
+        self.assertEqual(getattr(table, "get%sSlot" % (slotName,))().getMeasKey(), instFluxKey)
+        self.assertEqual(getattr(table, "get%sSlot" % (slotName,))().getErrKey(), errKey)
+        self.assertEqual(getattr(table, "get%sSlot" % (slotName,))().getFlagKey(), flagKey)
 
         # We should be able to retrieve arbitrary values set in records.
         record = table.makeRecord()
-        flux, err, flag = 10.0, 1.0, False
-        record.set(fluxKey, flux)
+        instFlux, err, flag = 10.0, 1.0, False
+        record.set(instFluxKey, instFlux)
         record.set(errKey, err)
         record.set(flagKey, flag)
-        self.assertEqual(getattr(record, "get%s" % (slotName,))(), flux)
-        self.assertEqual(getattr(record, "get%sErr" % (slotName,))(), err)
+        instFluxName = slotName.replace("Flux", "InstFlux")
+        self.assertEqual(getattr(record, "get%s" % (instFluxName,))(), instFlux)
+        self.assertEqual(getattr(record, "get%sErr" % (instFluxName,))(), err)
         self.assertEqual(getattr(record, "get%sFlag" % (slotName,))(), flag)
 
         # And we should be able to delete the slot, breaking the mapping.
         table.schema.getAliasMap().erase("slot_%s" % (slotName,))
-        self.assertNotEqual(getattr(table, "get%sKey" % (slotName,))(),
-                            fluxKey)
-        self.assertNotEqual(getattr(table, "get%sErrKey" % (slotName,))(),
-                            errKey)
-        self.assertNotEqual(getattr(table, "get%sFlagKey" % (slotName,))(),
-                            flagKey)
+        self.assertFalse(getattr(table, "get%sSlot" % (slotName,))().isValid())
+        self.assertNotEqual(getattr(table, "get%sSlot" % (slotName,))().getMeasKey(), instFluxKey)
+        self.assertNotEqual(getattr(table, "get%sSlot" % (slotName,))().getErrKey(), errKey)
+        self.assertNotEqual(getattr(table, "get%sSlot" % (slotName,))().getFlagKey(), flagKey)
 
     def testFluxSlots(self):
         """Check that all the expected flux slots are present & correct."""
-        for slotName in ["ApFlux", "CalibFlux", "InstFlux", "ModelFlux",
+        for slotName in ["ApFlux", "CalibFlux", "GaussianFlux", "ModelFlux",
                          "PsfFlux"]:
             self._testFluxSlot(slotName)
 
@@ -692,7 +696,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         select[1] = True
         self.assertEqual(nonContiguous[np.flip(select, 0)]["id"], self.catalog[select]["id"])
         # Extracting a number column
-        column = "a_flux"
+        column = "a_instFlux"
         array = nonContiguous[column]
         self.assertFloatsEqual(np.flip(array, 0), self.catalog[column])
         with self.assertRaises(ValueError):

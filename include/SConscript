@@ -1,3 +1,0 @@
-from lsst.sconsUtils import env, targets
-
-targets["include"] = env.M4("lsst/afw/table/Source.h", "lsst/afw/table/Source.h.m4")

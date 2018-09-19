@@ -138,7 +138,8 @@ FitsSchemaInputMapper::FitsSchemaInputMapper(daf::base::PropertyList &metadata, 
         // slot definition to the AliasMap.
         static std::array<std::pair<std::string, std::string>, 7> oldSlotKeys = {
                 {std::make_pair("PSF_FLUX", "slot_PsfFlux"), std::make_pair("AP_FLUX", "slot_ApFlux"),
-                 std::make_pair("INST_FLUX", "slot_InstFlux"), std::make_pair("MODEL_FLUX", "slot_ModelFlux"),
+                 std::make_pair("INST_FLUX", "slot_GaussianFlux"),
+                 std::make_pair("MODEL_FLUX", "slot_ModelFlux"),
                  std::make_pair("CALIB_FLUX", "slot_CalibFlux"), std::make_pair("CENTROID", "slot_Centroid"),
                  std::make_pair("SHAPE", "slot_Shape")}};
         for (std::size_t i = 0; i < oldSlotKeys.size(); ++i) {
@@ -736,12 +737,11 @@ Schema FitsSchemaInputMapper::finalize() {
                 // the same prefix, but AliasMap know hows to handle that no-op set.
                 aliases.set(prefix + "flags", prefix + "flag");
             } else if (iter->ttype.find("flux") != std::string::npos) {
-                // Create aliases that resolve "(.*)_flux" to "$1"
-                // and "(.*)_fluxErr" to "$1_err" if $1 contains the string "flux".
+                // Create an alias that resolves "X_instFlux" to "X" or "X_instFluxErr" to "X_err".
                 if (endswith(iter->ttype, "_err")) {
-                    aliases.set(replaceSuffix(iter->ttype, 4, "_fluxErr"), iter->ttype);
+                    aliases.set(replaceSuffix(iter->ttype, 4, "_instFluxErr"), iter->ttype);
                 } else {
-                    aliases.set(iter->ttype + "_flux", iter->ttype);
+                    aliases.set(iter->ttype + "_instFlux", iter->ttype);
                 }
             } else if (endswith(iter->ttype, "_err")) {
                 // Create aliases that resolve "(.*)_(.*)Err" and "(.*)_(.*)_(.*)_Cov" to
@@ -769,8 +769,33 @@ Schema FitsSchemaInputMapper::finalize() {
         // that should have been named Sigma. So provide aliases xErr -> xSigma
         AliasMap &aliases = *_impl->schema.getAliasMap();
         for (auto iter = _impl->asList().begin(); iter != _impl->asList().end(); ++iter) {
-            if (endswith(iter->ttype, "Sigma")) {
+            if (iter->ttype.find("flux") != std::string::npos) {
+                // Create an alias that resolves "X_instFlux" to "X_flux" or "X_instFluxErr" to "X_fluxSigma".
+                if (endswith(iter->ttype, "fluxSigma")) {
+                    // replace "fluxSigma"->"instFluxErr"
+                    aliases.set(replaceSuffix(iter->ttype, 9, "instFluxErr"), iter->ttype);
+                } else {
+                    // replace "flux"->"instFlux"
+                    aliases.set(replaceSuffix(iter->ttype, 4, "instFlux"), iter->ttype);
+                }
+            } else if (endswith(iter->ttype, "Sigma")) {
                 aliases.set(replaceSuffix(iter->ttype, 5, "Err"), iter->ttype);
+            }
+        }
+    }
+    if (_impl->version == 2) {
+        // Version 2 tables used _flux when we should use _instFlux (see RFC-322).
+        AliasMap &aliases = *_impl->schema.getAliasMap();
+        for (auto iter = _impl->asList().begin(); iter != _impl->asList().end(); ++iter) {
+            if (iter->ttype.find("flux") != std::string::npos) {
+                // Create an alias that resolves "X_instFlux" to "X_flux" or "X_instFluxErr" to "X_fluxErr".
+                if (endswith(iter->ttype, "fluxErr")) {
+                    // replace "fluxErr"->"instFluxErr"
+                    aliases.set(replaceSuffix(iter->ttype, 9, "instFluxErr"), iter->ttype);
+                } else {
+                    // replace "flux"->"instFlux"
+                    aliases.set(replaceSuffix(iter->ttype, 4, "instFlux"), iter->ttype);
+                }
             }
         }
     }

@@ -35,13 +35,13 @@ void FluxSlotDefinition::setKeys(std::string const &alias, Schema const &schema)
     _measKey = MeasKey();
     _errKey = ErrKey();
     _flagKey = Key<Flag>();
-    MeasFieldNameGetter helper(s["flux"], schema);
+    MeasFieldNameGetter helper(s["instFlux"], schema);
     if (!helper.defined) {
         return;
     }
     _measKey = helper.replaced;
     try {
-        _errKey = s["fluxErr"];
+        _errKey = s["instFluxErr"];
     } catch (pex::exceptions::NotFoundError &) {
     }
     try {
@@ -116,7 +116,7 @@ void ShapeSlotDefinition::setKeys(std::string const &alias, Schema const &schema
 void SlotSuite::handleAliasChange(std::string const &alias, Schema const &schema) {
     defPsfFlux.setKeys(alias, schema);
     defApFlux.setKeys(alias, schema);
-    defInstFlux.setKeys(alias, schema);
+    defGaussianFlux.setKeys(alias, schema);
     defModelFlux.setKeys(alias, schema);
     defCalibFlux.setKeys(alias, schema);
     defCentroid.setKeys(alias, schema);
@@ -126,14 +126,14 @@ void SlotSuite::handleAliasChange(std::string const &alias, Schema const &schema
 SlotSuite::SlotSuite(Schema const &schema)
         : defPsfFlux("PsfFlux"),
           defApFlux("ApFlux"),
-          defInstFlux("InstFlux"),
+          defGaussianFlux("GaussianFlux"),
           defModelFlux("ModelFlux"),
           defCalibFlux("CalibFlux"),
           defCentroid("Centroid"),
           defShape("Shape") {
     defPsfFlux.setKeys("", schema);
     defApFlux.setKeys("", schema);
-    defInstFlux.setKeys("", schema);
+    defGaussianFlux.setKeys("", schema);
     defModelFlux.setKeys("", schema);
     defCalibFlux.setKeys("", schema);
     defCentroid.setKeys("", schema);

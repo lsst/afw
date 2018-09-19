@@ -219,7 +219,7 @@ private:
 struct SlotSuite {
     FluxSlotDefinition defPsfFlux;
     FluxSlotDefinition defApFlux;
-    FluxSlotDefinition defInstFlux;
+    FluxSlotDefinition defGaussianFlux;
     FluxSlotDefinition defModelFlux;
     FluxSlotDefinition defCalibFlux;
     CentroidSlotDefinition defCentroid;

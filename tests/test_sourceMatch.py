@@ -53,8 +53,8 @@ class SourceMatchTestCase(lsst.utils.tests.TestCase):
 
     def setUp(self):
         schema = afwTable.SourceTable.makeMinimalSchema()
-        schema.addField("flux_flux", type=np.float64)
-        schema.addField("flux_fluxErr", type=np.float64)
+        schema.addField("flux_instFlux", type=np.float64)
+        schema.addField("flux_instFluxErr", type=np.float64)
         schema.addField("flux_flag", type="Flag")
         self.table = afwTable.SourceTable.make(schema)
         self.table.definePsfFlux("flux")
@@ -175,7 +175,7 @@ class SourceMatchTestCase(lsst.utils.tests.TestCase):
                 s.setId(objId)
                 s.setRa(ra * lsst.geom.degrees)
                 s.setDec(dec * lsst.geom.degrees)
-                s.set(self.table.getPsfFluxKey(), psfMags[band])
+                s.set(self.table.getPsfFluxSlot().getMeasKey(), psfMags[band])
 
         del ifd
 
@@ -205,7 +205,7 @@ class SourceMatchTestCase(lsst.utils.tests.TestCase):
                       ra * lsst.geom.degrees)
                 s.set(afwTable.SourceTable.getCoordKey().getDec(),
                       dec * lsst.geom.degrees)
-                s.set(self.table.getPsfFluxKey(), flux[0])
+                s.set(self.table.getPsfFluxSlot().getMeasKey(), flux[0])
 
         del ifd
 
@@ -224,7 +224,7 @@ class SourceMatchTestCase(lsst.utils.tests.TestCase):
                 s1 = mat[1]
                 d = mat[2]
                 print(s0.getRa(), s0.getDec(), s1.getRa(),
-                      s1.getDec(), s0.getPsfFlux(), s1.getPsfFlux())
+                      s1.getDec(), s0.getPsfInstFlux(), s1.getPsfInstFlux())
 
         # Actually do the match
         for s in sdssSecondary:
@@ -256,7 +256,7 @@ class SourceMatchTestCase(lsst.utils.tests.TestCase):
                 s1 = mat[1]
                 mat[2]
                 print(s0.getId(), s1.getId(), s0.getRa(), s0.getDec(), end=' ')
-                print(s1.getRa(), s1.getDec(), s0.getPsfFlux(), s1.getPsfFlux())
+                print(s1.getRa(), s1.getDec(), s0.getPsfInstFlux(), s1.getPsfInstFlux())
 
     def testMismatches(self):
         """ Chech that matchRaDec works as expected when using
