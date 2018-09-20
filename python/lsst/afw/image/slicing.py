@@ -256,14 +256,14 @@ def supportSlicing(cls):
         return cls(self, True)
     cls.clone = clone
 
-    def __getitem__(self, imageSlice):
+    def __getitem__(self, imageSlice):  # noqa: N807
         box, index, origin = translateSliceArgs(imageSlice, self.getBBox)
         if box is not None:
             return self.subset(box, origin=origin)
         return self._get(index, origin=origin)
     cls.__getitem__ = __getitem__
 
-    def __setitem__(self, imageSlice, rhs):
+    def __setitem__(self, imageSlice, rhs):  # noqa: N807
         box, index, origin = translateSliceArgs(imageSlice, self.getBBox)
         if box is not None:
             if self.assign(rhs, box, origin) is NotImplemented:
