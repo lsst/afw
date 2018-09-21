@@ -79,10 +79,6 @@ public:
     /// get telescope elevation (meters above reference spheroid)
     double getElevation() const noexcept { return _elevation; }
 
-    /// get telescope longitude as a dd:mm:ss.s string (positive values are E of Greenwich)
-    std::string getLongitudeStr() const;
-    /// get telescope latitude as a dd:mm:ss.s string
-    std::string getLatitudeStr() const;
     /// get string representation
     std::string toString() const;
 

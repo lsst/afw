@@ -36,7 +36,6 @@ PYBIND11_MODULE(observatory, mod) {
 
     /* Constructors */
     cls.def(py::init<lsst::geom::Angle const, lsst::geom::Angle const, double const>());
-    cls.def(py::init<std::string const, std::string const, double const>());
 
     /* Operators */
     cls.def("__eq__", [](Observatory const& self, Observatory const& other) { return self == other; },
@@ -50,8 +49,6 @@ PYBIND11_MODULE(observatory, mod) {
     cls.def("getLongitude", &Observatory::getLongitude);
     cls.def("getLatitude", &Observatory::getLatitude);
     cls.def("getElevation", &Observatory::getElevation);
-    cls.def("getLatitudeStr", &Observatory::getLatitudeStr);
-    cls.def("getLongitudeStr", &Observatory::getLongitudeStr);
     cls.def("setLongitude", &Observatory::setLongitude, "longitude"_a);
     cls.def("setLatitude", &Observatory::setLatitude, "latitude"_a);
     cls.def("setElevation", &Observatory::setElevation, "elevation"_a);
