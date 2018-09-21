@@ -22,15 +22,18 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
+#include <numeric>
+
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/BoundedField.h"
 #include "lsst/afw/table/io/Persistable.cc"
+#include "lsst/afw/image/ImageUtils.h"
 
 namespace lsst {
 namespace afw {
 
 template std::shared_ptr<math::BoundedField> table::io::PersistableFacade<math::BoundedField>::dynamicCast(
-        std::shared_ptr<table::io::Persistable> const&);
+        std::shared_ptr<table::io::Persistable> const &);
 
 namespace math {
 
@@ -56,8 +59,8 @@ namespace {
 // Of course, in C++11, we could replace all these with lambdas.
 
 struct Assign {
-    template <typename T>
-    void operator()(T &out, double a) const {
+    template <typename T, typename U>
+    void operator()(T &out, U a) const {
         out = a;
     }
 };
@@ -65,8 +68,8 @@ struct Assign {
 struct ScaledAdd {
     explicit ScaledAdd(double s) : scaleBy(s) {}
 
-    template <typename T>
-    void operator()(T &out, double a) const {
+    template <typename T, typename U>
+    void operator()(T &out, U a) const {
         out += scaleBy * a;
     }
 
@@ -74,20 +77,18 @@ struct ScaledAdd {
 };
 
 struct Multiply {
-    template <typename T>
-    void operator()(T &out, double a) const {
+    template <typename T, typename U>
+    void operator()(T &out, U a) const {
         out *= a;
     }
 };
 
 struct Divide {
-    template <typename T>
-    void operator()(T &out, double a) const {
+    template <typename T, typename U>
+    void operator()(T &out, U a) const {
         out /= a;
     }
 };
-
-namespace {
 
 // Helper class to do bilinear interpolation with no dynamic memory
 // allocation. This means we evaluate the function multiple times at some
@@ -217,8 +218,6 @@ private:
     double _z00, _z01, _z10, _z11;
 };
 
-}  // namespace
-
 template <typename T, typename F>
 void applyToImage(BoundedField const &field, image::Image<T> &img, F functor, bool overlapOnly, int xStep,
                   int yStep) {
@@ -234,11 +233,18 @@ void applyToImage(BoundedField const &field, image::Image<T> &img, F functor, bo
         Interpolator interpolator(&field, &region, xStep, yStep);
         interpolator.run(img, functor);
     } else {
-        for (int y = region.getBeginY(), yEnd = region.getEndY(); y < yEnd; ++y) {
-            auto rowIter = img.x_at(region.getBeginX() - img.getX0(), y - img.getY0());
-            for (int x = region.getBeginX(), xEnd = region.getEndX(); x < xEnd; ++x, ++rowIter) {
-                functor(*rowIter, field.evaluate(x, y));
-            }
+        // We iterate over rows as a significant optimization for AST-backed bounded fields
+        // (it's also slightly faster for other bounded fields, too).
+        auto subImage = img.subset(region);
+        auto size = region.getWidth();
+        ndarray::Array<double, 1> xx = ndarray::allocate(ndarray::makeVector(size));
+        ndarray::Array<double, 1> yy = ndarray::allocate(ndarray::makeVector(size));
+        // y gets incremented each outer loop, x is always xMin->xMax
+        std::iota(xx.begin(), xx.end(), region.getBeginX());
+        auto outRowIter = subImage.getArray().begin();
+        for (int y = region.getBeginY(); y < region.getEndY(); ++y, ++outRowIter) {
+            yy.deep() = y;  // don't need indexToPosition, as we're already working in the right box (region).
+            functor(*outRowIter, field.evaluate(xx, yy));
         }
     }
 }
