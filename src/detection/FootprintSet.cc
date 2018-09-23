@@ -62,7 +62,7 @@ namespace detection {
 namespace {
 /// Don't let doxygen see this block  @cond
 
-typedef std::uint64_t IdPixelT;  // Type of temporary Images used in merging Footprints
+typedef std::int64_t IdPixelT;  // Type of temporary Images used in merging Footprints
 
 struct Threshold_traits {};
 struct ThresholdLevel_traits : public Threshold_traits {  // Threshold is a single number
@@ -75,7 +75,7 @@ struct ThresholdBitmask_traits : public Threshold_traits {  // Threshold ORs wit
 template <typename PixelT>
 class setIdImage {
 public:
-    explicit setIdImage(std::uint64_t const id, bool overwriteId = false, long const idMask = 0x0)
+    explicit setIdImage(std::int64_t const id, bool overwriteId = false, long const idMask = 0x0)
             : _id(id),
               _idMask(idMask),
               _withSetReplace(false),
@@ -89,7 +89,7 @@ public:
         }
     }
 
-    setIdImage(std::uint64_t const id, std::set<std::uint64_t> *oldIds, bool overwriteId = false,
+    setIdImage(std::int64_t const id, std::set<std::int64_t> *oldIds, bool overwriteId = false,
                long const idMask = 0x0)
             : _id(id),
               _idMask(idMask),
@@ -119,12 +119,12 @@ public:
     }
 
 private:
-    std::uint64_t const _id;
+    std::int64_t const _id;
     long const _idMask;
     bool _withSetReplace;
     bool _overwriteId;
-    std::set<std::uint64_t> *_oldIds;
-    std::set<std::uint64_t>::const_iterator _pos;
+    std::set<std::int64_t> *_oldIds;
+    std::set<std::int64_t>::const_iterator _pos;
 };
 
 //
@@ -256,7 +256,7 @@ FootprintSet mergeFootprintSets(FootprintSet const &lhs,      // the FootprintSe
      * losing any peaks that it might contain.  We'll preserve the overwritten Ids in case we need to
      * get them back (n.b. Footprints that overlap, but both if which survive, will appear in this list)
      */
-    typedef std::map<int, std::set<std::uint64_t>> OldIdMap;
+    typedef std::map<int, std::set<std::int64_t>> OldIdMap;
     OldIdMap overwrittenIds;  // here's a map from id -> overwritten IDs
 
     auto grower = [&circular, &up, &down, &left, &right, &isotropic](
@@ -299,7 +299,7 @@ FootprintSet mergeFootprintSets(FootprintSet const &lhs,      // the FootprintSe
             foot = grower(foot, rLhs);
         }
 
-        std::set<std::uint64_t> overwritten;
+        std::set<std::int64_t> overwritten;
         foot->getSpans()
                 ->clippedTo(idImage->getBBox())
                 ->applyFunctor(setIdImage<IdPixelT>(id, &overwritten, true), *idImage);
@@ -309,7 +309,7 @@ FootprintSet mergeFootprintSets(FootprintSet const &lhs,      // the FootprintSe
         }
     }
 
-    assert(id <= std::size_t(1 << lhsIdNbit));
+    assert(id <= (1 << lhsIdNbit));
     id = (1 << lhsIdNbit);
     for (FootprintList::const_iterator ptr = rhsFootprints.begin(), end = rhsFootprints.end(); ptr != end;
          ++ptr, id += (1 << lhsIdNbit)) {
@@ -319,7 +319,7 @@ FootprintSet mergeFootprintSets(FootprintSet const &lhs,      // the FootprintSe
             foot = grower(foot, rRhs);
         }
 
-        std::set<std::uint64_t> overwritten;
+        std::set<std::int64_t> overwritten;
         foot->getSpans()
                 ->clippedTo(idImage->getBBox())
                 ->applyFunctor(setIdImage<IdPixelT>(id, &overwritten, true, lhsIdMask), *idImage);
@@ -349,22 +349,22 @@ FootprintSet mergeFootprintSets(FootprintSet const &lhs,      // the FootprintSe
         // find the (mangled) [lr]hsFootprint IDs that contribute to foot
         foot->getSpans()->applyFunctor(idFinder, *idImage);
 
-        std::set<std::uint64_t> lhsFootprintIndxs, rhsFootprintIndxs;  // indexes into [lr]hsFootprints
+        std::set<std::int64_t> lhsFootprintIndxs, rhsFootprintIndxs;  // indexes into [lr]hsFootprints
 
         for (std::set<IdPixelT>::iterator idptr = idFinder.getIds().begin(), idend = idFinder.getIds().end();
              idptr != idend; ++idptr) {
             unsigned int indx = *idptr;
             if ((indx & lhsIdMask) > 0) {
-                std::uint64_t i = (indx & lhsIdMask) - 1;
+                std::int64_t i = (indx & lhsIdMask) - 1;
                 lhsFootprintIndxs.insert(i);
                 /*
                  * Now allow for Footprints that vanished beneath this one
                  */
                 OldIdMap::iterator mapPtr = overwrittenIds.find(indx);
                 if (mapPtr != overwrittenIds.end()) {
-                    std::set<std::uint64_t> &overwritten = mapPtr->second;
+                    std::set<std::int64_t> &overwritten = mapPtr->second;
 
-                    for (std::set<std::uint64_t>::iterator ptr = overwritten.begin(), end = overwritten.end();
+                    for (std::set<std::int64_t>::iterator ptr = overwritten.begin(), end = overwritten.end();
                          ptr != end; ++ptr) {
                         lhsFootprintIndxs.insert((*ptr & lhsIdMask) - 1);
                     }
@@ -373,16 +373,16 @@ FootprintSet mergeFootprintSets(FootprintSet const &lhs,      // the FootprintSe
             indx >>= lhsIdNbit;
 
             if (indx > 0) {
-                std::uint64_t i = indx - 1;
+                std::int64_t i = indx - 1;
                 rhsFootprintIndxs.insert(i);
                 /*
                  * Now allow for Footprints that vanished beneath this one
                  */
                 OldIdMap::iterator mapPtr = overwrittenIds.find(indx);
                 if (mapPtr != overwrittenIds.end()) {
-                    std::set<std::uint64_t> &overwritten = mapPtr->second;
+                    std::set<std::int64_t> &overwritten = mapPtr->second;
 
-                    for (std::set<std::uint64_t>::iterator ptr = overwritten.begin(), end = overwritten.end();
+                    for (std::set<std::int64_t>::iterator ptr = overwritten.begin(), end = overwritten.end();
                          ptr != end; ++ptr) {
                         rhsFootprintIndxs.insert(*ptr - 1);
                     }
@@ -395,10 +395,10 @@ FootprintSet mergeFootprintSets(FootprintSet const &lhs,      // the FootprintSe
          */
         PeakCatalog &peaks = foot->getPeaks();
 
-        for (std::set<std::uint64_t>::iterator ptr = lhsFootprintIndxs.begin(), end = lhsFootprintIndxs.end();
+        for (std::set<std::int64_t>::iterator ptr = lhsFootprintIndxs.begin(), end = lhsFootprintIndxs.end();
              ptr != end; ++ptr) {
-            std::uint64_t i = *ptr;
-            assert(i < lhsFootprints.size());
+            std::int64_t i = *ptr;
+            assert(static_cast<std::size_t>(i) < lhsFootprints.size());
             PeakCatalog const &oldPeaks = lhsFootprints[i]->getPeaks();
 
             int const nold = peaks.size();
@@ -410,10 +410,10 @@ FootprintSet mergeFootprintSets(FootprintSet const &lhs,      // the FootprintSe
                                peaks.getInternal().end(), SortPeaks());
         }
 
-        for (std::set<std::uint64_t>::iterator ptr = rhsFootprintIndxs.begin(), end = rhsFootprintIndxs.end();
+        for (std::set<std::int64_t>::iterator ptr = rhsFootprintIndxs.begin(), end = rhsFootprintIndxs.end();
              ptr != end; ++ptr) {
-            std::uint64_t i = *ptr;
-            assert(i < rhsFootprints.size());
+            std::int64_t i = *ptr;
+            assert(static_cast<std::size_t>(i) < rhsFootprints.size());
             PeakCatalog const &oldPeaks = rhsFootprints[i]->getPeaks();
 
             int const nold = peaks.size();

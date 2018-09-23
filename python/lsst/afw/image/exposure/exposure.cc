@@ -151,7 +151,7 @@ PYBIND11_MODULE(exposure, mod) {
     auto clsExposureD = declareExposure<double>(mod, "D");
     declareExposure<int>(mod, "I");
     declareExposure<std::uint16_t>(mod, "U");
-    declareExposure<std::uint64_t>(mod, "L");
+    declareExposure<std::int64_t>(mod, "L");
 
     // Declare constructors for casting all exposure types to to float and double
     // (the only two types of casts that Python supports)
@@ -165,8 +165,8 @@ PYBIND11_MODULE(exposure, mod) {
     declareCastConstructor<std::uint16_t, float>(clsExposureF);
     declareCastConstructor<std::uint16_t, double>(clsExposureD);
 
-    declareCastConstructor<std::uint64_t, float>(clsExposureF);
-    declareCastConstructor<std::uint64_t, double>(clsExposureD);
+    declareCastConstructor<std::int64_t, float>(clsExposureF);
+    declareCastConstructor<std::int64_t, double>(clsExposureD);
 }
 }  // namespace
 }  // namespace image

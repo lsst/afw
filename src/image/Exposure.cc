@@ -258,7 +258,7 @@ template class Exposure<std::uint16_t>;
 template class Exposure<int>;
 template class Exposure<float>;
 template class Exposure<double>;
-template class Exposure<std::uint64_t>;
+template class Exposure<std::int64_t>;
 /// @endcond
 }  // namespace image
 }  // namespace afw

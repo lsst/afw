@@ -311,7 +311,7 @@ PYBIND11_MODULE(spanSet, mod) {
     declareMaskMethods<MaskPixel>(cls);
 
     declareImageTypes<std::uint16_t>(cls);
-    declareImageTypes<std::uint64_t>(cls);
+    declareImageTypes<std::int64_t>(cls);
     declareImageTypes<int>(cls);
     declareImageTypes<float>(cls);
     declareImageTypes<double>(cls);

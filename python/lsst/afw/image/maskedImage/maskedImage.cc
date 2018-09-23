@@ -229,7 +229,7 @@ PYBIND11_MODULE(maskedImage, mod) {
     auto clsMaskedImageD = declareMaskedImage<double>(mod, "D");
     auto clsMaskedImageI = declareMaskedImage<int>(mod, "I");
     auto clsMaskedImageU = declareMaskedImage<std::uint16_t>(mod, "U");
-    auto clsMaskedImageL = declareMaskedImage<std::uint64_t>(mod, "L");
+    auto clsMaskedImageL = declareMaskedImage<std::int64_t>(mod, "L");
 
     // Declare constructors for casting all exposure types to to float and double
     // (the only two types of casts that Python supports)
@@ -239,45 +239,45 @@ PYBIND11_MODULE(maskedImage, mod) {
     declareCastConstructor<double, float>(clsMaskedImageF);
     declareCastConstructor<std::uint16_t, float>(clsMaskedImageF);
     declareCastConstructor<std::uint16_t, double>(clsMaskedImageD);
-    declareCastConstructor<std::uint64_t, float>(clsMaskedImageF);
-    declareCastConstructor<std::uint64_t, double>(clsMaskedImageD);
+    declareCastConstructor<std::int64_t, float>(clsMaskedImageF);
+    declareCastConstructor<std::int64_t, double>(clsMaskedImageD);
 
     /* Module level */
     declareMakeMaskedImage<int>(mod);
     declareMakeMaskedImage<float>(mod);
     declareMakeMaskedImage<double>(mod);
     declareMakeMaskedImage<std::uint16_t>(mod);
-    declareMakeMaskedImage<std::uint64_t>(mod);
+    declareMakeMaskedImage<std::int64_t>(mod);
 
     declareImagesOverlap<int, int>(mod);
     declareImagesOverlap<int, float>(mod);
     declareImagesOverlap<int, double>(mod);
     declareImagesOverlap<int, std::uint16_t>(mod);
-    declareImagesOverlap<int, std::uint64_t>(mod);
+    declareImagesOverlap<int, std::int64_t>(mod);
 
     declareImagesOverlap<float, int>(mod);
     declareImagesOverlap<float, float>(mod);
     declareImagesOverlap<float, double>(mod);
     declareImagesOverlap<float, std::uint16_t>(mod);
-    declareImagesOverlap<float, std::uint64_t>(mod);
+    declareImagesOverlap<float, std::int64_t>(mod);
 
     declareImagesOverlap<double, int>(mod);
     declareImagesOverlap<double, float>(mod);
     declareImagesOverlap<double, double>(mod);
     declareImagesOverlap<double, std::uint16_t>(mod);
-    declareImagesOverlap<double, std::uint64_t>(mod);
+    declareImagesOverlap<double, std::int64_t>(mod);
 
     declareImagesOverlap<std::uint16_t, int>(mod);
     declareImagesOverlap<std::uint16_t, float>(mod);
     declareImagesOverlap<std::uint16_t, double>(mod);
     declareImagesOverlap<std::uint16_t, std::uint16_t>(mod);
-    declareImagesOverlap<std::uint16_t, std::uint64_t>(mod);
+    declareImagesOverlap<std::uint16_t, std::int64_t>(mod);
 
-    declareImagesOverlap<std::uint64_t, int>(mod);
-    declareImagesOverlap<std::uint64_t, float>(mod);
-    declareImagesOverlap<std::uint64_t, double>(mod);
-    declareImagesOverlap<std::uint64_t, std::uint16_t>(mod);
-    declareImagesOverlap<std::uint64_t, std::uint64_t>(mod);
+    declareImagesOverlap<std::int64_t, int>(mod);
+    declareImagesOverlap<std::int64_t, float>(mod);
+    declareImagesOverlap<std::int64_t, double>(mod);
+    declareImagesOverlap<std::int64_t, std::uint16_t>(mod);
+    declareImagesOverlap<std::int64_t, std::int64_t>(mod);
 }
 }
 }

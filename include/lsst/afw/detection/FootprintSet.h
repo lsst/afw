@@ -45,7 +45,7 @@ namespace detection {
  * including it within FootprintSet makes it difficult for SWIG to interpret
  * the type.
  */
-typedef std::uint64_t FootprintIdPixel;
+typedef std::int64_t FootprintIdPixel;
 
 /**
  * A set of Footprints, associated with a MaskedImage

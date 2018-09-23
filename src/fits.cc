@@ -318,10 +318,6 @@ struct FitsBitPix<std::int64_t> {
     static int const CONSTANT = LONGLONG_IMG;
 };
 template <>
-struct FitsBitPix<std::uint64_t> {
-    static int const CONSTANT = LONGLONG_IMG;
-};
-template <>
 struct FitsBitPix<float> {
     static int const CONSTANT = FLOAT_IMG;
 };
@@ -1694,7 +1690,7 @@ std::shared_ptr<daf::base::PropertySet> ImageWriteOptions::validate(daf::base::P
             float)(double)(lsst::geom::Angle)(std::complex<float>)(std::complex<double>)
 
 #define IMAGE_TYPES \
-    (unsigned char)(short)(unsigned short)(int)(unsigned int)(std::int64_t)(std::uint64_t)(float)(double)
+    (unsigned char)(short)(unsigned short)(int)(unsigned int)(std::int64_t)(float)(double)
 
 BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_KEY_OPS, _, KEY_TYPES)
 BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_TABLE_OPS, _, COLUMN_TYPES)

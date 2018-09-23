@@ -331,7 +331,7 @@ struct unknown_u {};
  */
 struct CheckBoost64 {
     typedef boost::mpl::if_<std::is_same<long long, std::int64_t>, long long, struct unknown>::type type;
-    typedef boost::mpl::if_<std::is_same<long long, std::int64_t>, unsigned long long, struct unknown_u>::type
+    typedef boost::mpl::if_<std::is_same<unsigned long long, std::uint64_t>, unsigned long long, struct unknown_u>::type
             type_u;
 };
 }  // namespace

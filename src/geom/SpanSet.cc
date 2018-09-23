@@ -1056,7 +1056,7 @@ void SpanSet::write(OutputArchiveHandle& handle) const {
     template std::shared_ptr<SpanSet> SpanSet::union_<T>(image::Mask<T> const& other, T bitmask) const;
 
 INSTANTIATE_IMAGE_TYPE(std::uint16_t);
-INSTANTIATE_IMAGE_TYPE(std::uint64_t);
+INSTANTIATE_IMAGE_TYPE(std::int64_t);
 INSTANTIATE_IMAGE_TYPE(int);
 INSTANTIATE_IMAGE_TYPE(float);
 INSTANTIATE_IMAGE_TYPE(double);

@@ -405,13 +405,13 @@ static void addGeneralizedCopyConstructors(PyClass &cls) {
     cls.def(py::init<Image<float> const &, const bool>(), "rhs"_a, "deep"_a = false);
     cls.def(py::init<Image<double> const &, const bool>(), "rhs"_a, "deep"_a = false);
     cls.def(py::init<Image<std::uint16_t> const &, const bool>(), "rhs"_a, "deep"_a = false);
-    cls.def(py::init<Image<std::uint64_t> const &, const bool>(), "rhs"_a, "deep"_a = false);
+    cls.def(py::init<Image<std::int64_t> const &, const bool>(), "rhs"_a, "deep"_a = false);
 
     cls.def("convertI", [](Image<PixelT> const &self) { return Image<int>(self, true); });
     cls.def("convertF", [](Image<PixelT> const &self) { return Image<float>(self, true); });
     cls.def("convertD", [](Image<PixelT> const &self) { return Image<double>(self, true); });
     cls.def("convertU", [](Image<PixelT> const &self) { return Image<std::uint16_t>(self, true); });
-    cls.def("convertL", [](Image<PixelT> const &self) { return Image<std::uint64_t>(self, true); });
+    cls.def("convertL", [](Image<PixelT> const &self) { return Image<std::int64_t>(self, true); });
 
     cls.def("convertFloat", [](Image<PixelT> const &self) { return Image<float>(self, true); });
     cls.def("convertDouble", [](Image<PixelT> const &self) { return Image<double>(self, true); });
@@ -429,7 +429,7 @@ PYBIND11_MODULE(image, mod) {
     declareImageBase<float>(mod, "F");
     declareImageBase<double>(mod, "D");
     declareImageBase<std::uint16_t>(mod, "U");
-    declareImageBase<std::uint64_t>(mod, "L");
+    declareImageBase<std::int64_t>(mod, "L");
 
     // Mask must be declared before Image because a mask is used as a default value in at least one method
     declareMask<MaskPixel>(mod, "X");
@@ -438,14 +438,14 @@ PYBIND11_MODULE(image, mod) {
     auto clsImageF = declareImage<float>(mod, "F");
     auto clsImageD = declareImage<double>(mod, "D");
     auto clsImageU = declareImage<std::uint16_t>(mod, "U");
-    auto clsImageL = declareImage<std::uint64_t>(mod, "L");
+    auto clsImageL = declareImage<std::int64_t>(mod, "L");
 
     // Add generalized copy constructors
     addGeneralizedCopyConstructors<int>(clsImageI);
     addGeneralizedCopyConstructors<float>(clsImageF);
     addGeneralizedCopyConstructors<double>(clsImageD);
     addGeneralizedCopyConstructors<std::uint16_t>(clsImageU);
-    addGeneralizedCopyConstructors<std::uint64_t>(clsImageL);
+    addGeneralizedCopyConstructors<std::int64_t>(clsImageL);
 
     // Add slice operators only for float and double
     addImageSliceOperators<float>(clsImageF);
@@ -455,7 +455,7 @@ PYBIND11_MODULE(image, mod) {
     declareDecoratedImage<float>(mod, "F");
     declareDecoratedImage<double>(mod, "D");
     declareDecoratedImage<std::uint16_t>(mod, "U");
-    declareDecoratedImage<std::uint64_t>(mod, "L");
+    declareDecoratedImage<std::int64_t>(mod, "L");
 
     // Declare constructors for casting all exposure types to to float and double
     // (the only two types of casts that Python supports)
@@ -469,8 +469,8 @@ PYBIND11_MODULE(image, mod) {
     declareCastConstructor<std::uint16_t, float>(clsImageF);
     declareCastConstructor<std::uint16_t, double>(clsImageD);
 
-    declareCastConstructor<std::uint64_t, float>(clsImageF);
-    declareCastConstructor<std::uint64_t, double>(clsImageD);
+    declareCastConstructor<std::int64_t, float>(clsImageF);
+    declareCastConstructor<std::int64_t, double>(clsImageD);
 
     // Note: wrap both the Image and MaskedImage versions of imagesOverlap in the MaskedImage wrapper,
     // as wrapping the Image version here results in it being invisible in lsst.afw.image

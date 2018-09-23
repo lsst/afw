@@ -63,7 +63,7 @@ PYBIND11_MODULE(pixel, mod) {
     declareSinglePixel<double>(mod, "SinglePixelD");
     declareSinglePixel<int>(mod, "SinglePixelI");
     declareSinglePixel<std::uint16_t>(mod, "SinglePixelU");
-    declareSinglePixel<std::uint64_t>(mod, "SinglePixelL");
+    declareSinglePixel<std::int64_t>(mod, "SinglePixelL");
 }
 }
 }

@@ -118,7 +118,7 @@ Threshold createThreshold(double const value, std::string const typeStr, bool co
     template double Threshold::getValue(image::TYPE<int> const&) const;            \
     template double Threshold::getValue(image::TYPE<float> const&) const;          \
     template double Threshold::getValue(image::TYPE<double> const&) const;         \
-    template double Threshold::getValue(image::TYPE<std::uint64_t> const&) const;
+    template double Threshold::getValue(image::TYPE<std::int64_t> const&) const;
 
 #ifndef DOXYGEN
 INSTANTIATE(Image);

@@ -65,18 +65,18 @@ PYBIND11_MODULE(imagePca, mod) {
     declareImagePca<Image<float>>(mod, "F");
     declareImagePca<Image<double>>(mod, "D");
     declareImagePca<Image<std::uint16_t>>(mod, "U");
-    declareImagePca<Image<std::uint64_t>>(mod, "L");
+    declareImagePca<Image<std::int64_t>>(mod, "L");
     declareImagePca<MaskedImage<int>>(mod, "MI");
     declareImagePca<MaskedImage<float>>(mod, "MF");
     declareImagePca<MaskedImage<double>>(mod, "MD");
     declareImagePca<MaskedImage<std::uint16_t>>(mod, "MU");
-    declareImagePca<MaskedImage<std::uint64_t>>(mod, "ML");
+    declareImagePca<MaskedImage<std::int64_t>>(mod, "ML");
 
     declareInnerProduct<Image<int>, Image<int>>(mod);
     declareInnerProduct<Image<float>, Image<float>>(mod);
     declareInnerProduct<Image<double>, Image<double>>(mod);
     declareInnerProduct<Image<std::uint16_t>, Image<std::uint16_t>>(mod);
-    declareInnerProduct<Image<std::uint64_t>, Image<std::uint64_t>>(mod);
+    declareInnerProduct<Image<std::int64_t>, Image<std::int64_t>>(mod);
 
     declareInnerProduct<Image<float>, Image<double>>(mod);
     declareInnerProduct<Image<double>, Image<float>>(mod);

@@ -744,7 +744,7 @@ bool imagesOverlap(ImageBase<T1> const& image1, ImageBase<T2> const& image2) {
     template Image<T>& operator OP_EQ(Image<T>& lhs, Image<int> const& rhs);           \
     template Image<T>& operator OP_EQ(Image<T>& lhs, Image<float> const& rhs);         \
     template Image<T>& operator OP_EQ(Image<T>& lhs, Image<double> const& rhs);        \
-    template Image<T>& operator OP_EQ(Image<T>& lhs, Image<std::uint64_t> const& rhs);
+    template Image<T>& operator OP_EQ(Image<T>& lhs, Image<std::int64_t> const& rhs);
 
 #define INSTANTIATE(T)           \
     template class ImageBase<T>; \
@@ -760,37 +760,37 @@ INSTANTIATE(std::uint16_t);
 INSTANTIATE(int);
 INSTANTIATE(float);
 INSTANTIATE(double);
-INSTANTIATE(std::uint64_t);
+INSTANTIATE(std::int64_t);
 
 INSTANTIATE2(std::uint16_t, std::uint16_t);
 INSTANTIATE2(std::uint16_t, int);
 INSTANTIATE2(std::uint16_t, float);
 INSTANTIATE2(std::uint16_t, double);
-INSTANTIATE2(std::uint16_t, std::uint64_t);
+INSTANTIATE2(std::uint16_t, std::int64_t);
 
 INSTANTIATE2(int, std::uint16_t);
 INSTANTIATE2(int, int);
 INSTANTIATE2(int, float);
 INSTANTIATE2(int, double);
-INSTANTIATE2(int, std::uint64_t);
+INSTANTIATE2(int, std::int64_t);
 
 INSTANTIATE2(float, std::uint16_t);
 INSTANTIATE2(float, int);
 INSTANTIATE2(float, float);
 INSTANTIATE2(float, double);
-INSTANTIATE2(float, std::uint64_t);
+INSTANTIATE2(float, std::int64_t);
 
 INSTANTIATE2(double, std::uint16_t);
 INSTANTIATE2(double, int);
 INSTANTIATE2(double, float);
 INSTANTIATE2(double, double);
-INSTANTIATE2(double, std::uint64_t);
+INSTANTIATE2(double, std::int64_t);
 
-INSTANTIATE2(std::uint64_t, std::uint16_t);
-INSTANTIATE2(std::uint64_t, int);
-INSTANTIATE2(std::uint64_t, float);
-INSTANTIATE2(std::uint64_t, double);
-INSTANTIATE2(std::uint64_t, std::uint64_t);
+INSTANTIATE2(std::int64_t, std::uint16_t);
+INSTANTIATE2(std::int64_t, int);
+INSTANTIATE2(std::int64_t, float);
+INSTANTIATE2(std::int64_t, double);
+INSTANTIATE2(std::int64_t, std::int64_t);
 
 /// @endcond
 }  // namespace image

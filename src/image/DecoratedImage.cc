@@ -131,7 +131,7 @@ template class DecoratedImage<std::uint16_t>;
 template class DecoratedImage<int>;
 template class DecoratedImage<float>;
 template class DecoratedImage<double>;
-template class DecoratedImage<std::uint64_t>;
+template class DecoratedImage<std::int64_t>;
 }  // namespace image
 }  // namespace afw
 }  // namespace lsst

@@ -38,8 +38,7 @@ class ImageIoTestCase(lsst.utils.tests.TestCase):
         super().assertImagesEqual(image, original)
 
     def setUp(self):
-        # ImageL (uint64) is not supported by FITS standard, needs special tests
-        self.IntegerImages = (afwImage.ImageU, afwImage.ImageI)
+        self.IntegerImages = (afwImage.ImageU, afwImage.ImageI, afwImage.ImageL)
         self.FloatImages = (afwImage.ImageF, afwImage.ImageD)
         self.bbox = Box2I(minimum=Point2I(3, 4), maximum=Point2I(9, 7))
 
@@ -91,14 +90,6 @@ class ImageIoTestCase(lsst.utils.tests.TestCase):
         for cls in self.IntegerImages:
             with self.subTest(cls=cls.__name__):
                 self.runRoundTripTest(cls, compression=dict(algorithm=ImageCompressionOptions.RICE))
-
-    def testUInt64(self):
-        """Test round-tripping uint64 images (ImageL).
-
-        uint64 is supported by a CFITSIO convention, not the FITS standard,
-        so we can't read them correctly with astropy or compression.
-        """
-        self.runRoundTripTest(afwImage.ImageL, checkAstropy=False)
 
     def testFloatUncompressed(self):
         """Test round-tripping floating-point images with no compression."""

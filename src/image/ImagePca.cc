@@ -473,7 +473,7 @@ double innerProduct(Image1T const& lhs, Image2T const& rhs, int border) {
     template double innerProduct(Image<U> const&, Image<T> const&, int);
 
 INSTANTIATE(std::uint16_t)
-INSTANTIATE(std::uint64_t)
+INSTANTIATE(std::int64_t)
 INSTANTIATE(int)
 INSTANTIATE(float)
 INSTANTIATE(double)

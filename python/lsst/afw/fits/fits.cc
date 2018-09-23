@@ -65,7 +65,7 @@ void declareImageCompression(py::module & mod) {
     cls.def(py::init<lsst::afw::image::Image<unsigned int> const&>());
     cls.def(py::init<lsst::afw::image::Image<float> const&>());
     cls.def(py::init<lsst::afw::image::Image<double> const&>());
-    cls.def(py::init<lsst::afw::image::Image<std::uint64_t> const&>());
+    cls.def(py::init<lsst::afw::image::Image<std::int64_t> const&>());
 
     cls.def(py::init<lsst::afw::image::Mask<unsigned char> const&>());
     cls.def(py::init<lsst::afw::image::Mask<unsigned short> const&>());
@@ -138,7 +138,7 @@ void declareImageWriteOptions(py::module & mod) {
 
     cls.def(py::init<lsst::afw::image::Image<std::uint16_t>>());
     cls.def(py::init<lsst::afw::image::Image<std::int32_t>>());
-    cls.def(py::init<lsst::afw::image::Image<std::uint64_t>>());
+    cls.def(py::init<lsst::afw::image::Image<std::int64_t>>());
     cls.def(py::init<lsst::afw::image::Image<float>>());
     cls.def(py::init<lsst::afw::image::Image<double>>());
 

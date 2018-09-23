@@ -52,7 +52,7 @@ void declareAll(py::module &mod) {
 
 PYBIND11_MODULE(_simpleFits, mod) {
     declareAll<image::Image<std::uint16_t>>(mod);
-    declareAll<image::Image<std::uint64_t>>(mod);
+    declareAll<image::Image<std::int64_t>>(mod);
     declareAll<image::Image<int>>(mod);
     declareAll<image::Image<float>>(mod);
     declareAll<image::Image<double>>(mod);

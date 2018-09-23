@@ -72,7 +72,7 @@ void declareTemplatedMembers(PyClass &cls) {
     declareMakeHeavy<float>(cls);
     declareMakeHeavy<double>(cls);
     declareMakeHeavy<std::uint16_t>(cls);
-    //    declareMakeHeavy<std::uint64_t>(cls);
+    //    declareMakeHeavy<std::int64_t>(cls);
     declareSetMask<image::MaskPixel>(cls);
 }
 }  // namespace
