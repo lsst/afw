@@ -28,7 +28,6 @@
 #include "boost/format.hpp"
 
 #include "lsst/geom/Angle.h"
-#include "lsst/afw/coord/Coord.h"
 #include "lsst/afw/coord/Observatory.h"
 
 namespace lsst {
@@ -38,11 +37,6 @@ namespace coord {
 Observatory::Observatory(lsst::geom::Angle const longitude, lsst::geom::Angle const latitude,
                          double const elevation)
         : _latitude(latitude), _longitude(longitude), _elevation(elevation) {}
-
-Observatory::Observatory(std::string const& longitude, std::string const& latitude, double const elevation)
-        : _latitude(dmsStringToAngle(latitude)),
-          _longitude(dmsStringToAngle(longitude)),
-          _elevation(elevation) {}
 
 Observatory::~Observatory() noexcept = default;
 
@@ -60,10 +54,6 @@ void Observatory::setLatitude(lsst::geom::Angle const latitude) { _latitude = la
 void Observatory::setLongitude(lsst::geom::Angle const longitude) { _longitude = longitude; }
 
 void Observatory::setElevation(double const elevation) { _elevation = elevation; }
-
-std::string Observatory::getLongitudeStr() const { return angleToDmsString(_longitude); }
-
-std::string Observatory::getLatitudeStr() const { return angleToDmsString(_latitude); }
 
 std::string Observatory::toString() const {
     return (boost::format("%gW, %gN  %g") % getLatitude().asDegrees() % getLongitude().asDegrees() %
