@@ -78,6 +78,11 @@ public:
 
         calib = std::make_shared<Calib>(metadata);
         detail::stripCalibKeywords(metadata);
+
+        // Strip MJD-OBS and DATE-OBS from metadata; those may be read by
+        // either SkyWcs or VisitInfo or both, so neither can strip them.
+        metadata->remove("MJD-OBS");
+        metadata->remove("DATE-OBS");
     }
 
     std::shared_ptr<daf::base::PropertyList> metadata;
