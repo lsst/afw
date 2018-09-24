@@ -20,7 +20,7 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-__all__ = ["MaskedImage"]
+__all__ = ["MaskedImage", "VariancePixel"]
 
 import numpy as np
 
@@ -29,6 +29,9 @@ from lsst.utils import TemplateMeta
 from ..image.fitsIoWithOptions import imageReadFitsWithOptions, exposureWriteFitsWithOptions
 from ..slicing import supportSlicing
 from .maskedImage import MaskedImageI, MaskedImageF, MaskedImageD, MaskedImageU, MaskedImageL
+
+
+VariancePixel = np.float32
 
 
 class MaskedImage(metaclass=TemplateMeta):
