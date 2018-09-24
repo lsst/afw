@@ -825,6 +825,9 @@ void MetadataIterationFunctor::operator()(std::string const &key, std::string co
     static boost::regex const intRegex("[+-]?[0-9]+");
     static boost::regex const doubleRegex("[+-]?([0-9]*\\.?[0-9]+|[0-9]+\\.?[0-9]*)([eE][+-]?[0-9]+)?");
     static boost::regex const fitsStringRegex("'(.*?) *'");
+    // regex for two-line comment added to all FITS headers by CFITSIO
+    static boost::regex const fitsDefinitionCommentRegex(
+        " *(FITS \\(Flexible Image Transport System\\)|and Astrophysics', volume 376, page 359).*");
     boost::smatch matchStrings;
 
     if (strip && isKeyIgnored(key)) {
@@ -857,7 +860,9 @@ void MetadataIterationFunctor::operator()(std::string const &key, std::string co
         } else {
             add(key, str, comment);
         }
-    } else if (key == "HISTORY" || key == "COMMENT") {
+    } else if (key == "HISTORY") {
+        add(key, comment, "");
+    } else if (key == "COMMENT" && !(strip && boost::regex_match(comment, fitsDefinitionCommentRegex))) {
         add(key, comment, "");
     } else if (value.empty()) {
         // do nothing for empty values
