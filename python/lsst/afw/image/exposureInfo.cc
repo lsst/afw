@@ -61,6 +61,10 @@ PYBIND11_MODULE(exposureInfo, mod) {
     PyExposureInfo cls(mod, "ExposureInfo");
 
     /* Member types and enums */
+    py::enum_<ImagePhotometricCalibrationType>(mod, "ImagePhotometricCalibrationType")
+        .value("NOTAPPLICABLE", ImagePhotometricCalibrationType::NOTAPPLICABLE)
+        .value("SURFACEBRIGHTNESS", ImagePhotometricCalibrationType::SURFACEBRIGHTNESS)
+        .value("FLUENCE", ImagePhotometricCalibrationType::FLUENCE);
 
     /* Constructors */
     cls.def(py::init<std::shared_ptr<geom::SkyWcs const> const &, std::shared_ptr<detection::Psf const> const &,
@@ -69,7 +73,8 @@ PYBIND11_MODULE(exposureInfo, mod) {
                      std::shared_ptr<geom::polygon::Polygon const> const &, Filter const &,
                      std::shared_ptr<daf::base::PropertySet> const &, std::shared_ptr<CoaddInputs> const &,
                      std::shared_ptr<ApCorrMap> const &, std::shared_ptr<VisitInfo const> const &,
-                     std::shared_ptr<TransmissionCurve const> const &>(),
+                     std::shared_ptr<TransmissionCurve const> const &,
+                     ImagePhotometricCalibrationType>(),
             "wcs"_a = std::shared_ptr<geom::SkyWcs const>(), "psf"_a = std::shared_ptr<detection::Psf const>(),
             "calib"_a = std::shared_ptr<Calib const>(),
             "detector"_a = std::shared_ptr<cameraGeom::Detector const>(),
@@ -77,7 +82,8 @@ PYBIND11_MODULE(exposureInfo, mod) {
             "metadata"_a = std::shared_ptr<daf::base::PropertySet>(),
             "coaddInputs"_a = std::shared_ptr<CoaddInputs>(), "apCorrMap"_a = std::shared_ptr<ApCorrMap>(),
             "visitInfo"_a = std::shared_ptr<VisitInfo const>(),
-            "transmissionCurve"_a = nullptr);
+            "transmissionCurve"_a = nullptr,
+            "imagePhotometricCalibrationType"_a = ImagePhotometricCalibrationType::NOTAPPLICABLE);
     cls.def(py::init<>());
     cls.def(py::init<ExposureInfo>(), "other"_a);
     cls.def(py::init<ExposureInfo, bool>(), "other"_a, "copyMetadata"_a);
@@ -149,6 +155,10 @@ PYBIND11_MODULE(exposureInfo, mod) {
     cls.def("hasTransmissionCurve", &ExposureInfo::hasTransmissionCurve);
     cls.def("getTransmissionCurve", &ExposureInfo::getTransmissionCurve);
     cls.def("setTransmissionCurve", &ExposureInfo::setTransmissionCurve, "transmissionCurve"_a);
+
+    cls.def("getImagePhotometricCalibrationType", &ExposureInfo::getImagePhotometricCalibrationType);
+    cls.def_property_readonly("isSurfaceBrightness", &ExposureInfo::getIsSurfaceBrightness);
+    cls.def_property_readonly("isFluence", &ExposureInfo::getIsFluence);
 }
 }
 }

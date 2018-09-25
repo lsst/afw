@@ -78,7 +78,8 @@ ExposureInfo::ExposureInfo(std::shared_ptr<geom::SkyWcs const> const& wcs,
                            std::shared_ptr<CoaddInputs> const& coaddInputs,
                            std::shared_ptr<ApCorrMap> const& apCorrMap,
                            std::shared_ptr<image::VisitInfo const> const& visitInfo,
-                           std::shared_ptr<TransmissionCurve const> const& transmissionCurve)
+                           std::shared_ptr<TransmissionCurve const> const& transmissionCurve,
+                           ImagePhotometricCalibrationType imagePhotometricCalibrationType)
         : _wcs(wcs),
           _psf(std::const_pointer_cast<detection::Psf>(psf)),
           _calib(calib ? _cloneCalib(calib) : std::shared_ptr<Calib>(new Calib())),
@@ -90,7 +91,8 @@ ExposureInfo::ExposureInfo(std::shared_ptr<geom::SkyWcs const> const& wcs,
           _coaddInputs(coaddInputs),
           _apCorrMap(_cloneApCorrMap(apCorrMap)),
           _visitInfo(visitInfo),
-          _transmissionCurve(transmissionCurve) {}
+          _transmissionCurve(transmissionCurve),
+          _imagePhotometricCalibrationType(imagePhotometricCalibrationType) {}
 
 ExposureInfo::ExposureInfo(ExposureInfo const& other)
         : _wcs(other._wcs),

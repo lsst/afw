@@ -62,6 +62,14 @@ class VisitInfo;
 class TransmissionCurve;
 
 /**
+ * The type of photometric calibration used to scale the image's pixels.
+ * A raw image has type notApplicable
+ * A naively flat-fielded calexp will have type surfaceBrightness
+ * A jointcal-calibrated calexp will have type fluence
+ */
+enum class ImagePhotometricCalibrationType { NOTAPPLICABLE, SURFACEBRIGHTNESS, FLUENCE };
+
+/**
  *  A collection of all the things that make an Exposure different from a MaskedImage
  *
  *  The constness semantics of the things held by ExposureInfo are admittedly a bit of a mess,
@@ -197,6 +205,16 @@ public:
     /// Set the exposure's transmission curve.
     void setTransmissionCurve(std::shared_ptr<TransmissionCurve const> tc) { _transmissionCurve = tc; }
 
+    /// Return the photometric calibration type of this exposure's maskedImage.
+    ImagePhotometricCalibrationType getImagePhotometricCalibrationType() {
+        return _imagePhotometricCalibrationType; }
+
+    /// Do the pixel values in this image represent surface brightness?
+    bool getIsSurfaceBrightness() { return _imagePhotometricCalibrationType == ImagePhotometricCalibrationType::SURFACEBRIGHTNESS; }
+
+    /// Do the pixel values in this image represent fluence?
+    bool getIsFluence() { return _imagePhotometricCalibrationType == ImagePhotometricCalibrationType::FLUENCE; }
+
     /**
      *  Construct an ExposureInfo from its various components.
      *
@@ -220,7 +238,8 @@ public:
             std::shared_ptr<image::VisitInfo const> const& visitInfo =
                     std::shared_ptr<image::VisitInfo const>(),
             std::shared_ptr<TransmissionCurve const> const& transmissionCurve =
-                    std::shared_ptr<TransmissionCurve>());
+                    std::shared_ptr<TransmissionCurve>(),
+            ImagePhotometricCalibrationType imagePhotometricCalibrationType = ImagePhotometricCalibrationType::NOTAPPLICABLE);
 
     /// Copy constructor; deep-copies all components except the metadata.
     ExposureInfo(ExposureInfo const& other);
@@ -310,6 +329,7 @@ private:
     std::shared_ptr<ApCorrMap> _apCorrMap;
     std::shared_ptr<image::VisitInfo const> _visitInfo;
     std::shared_ptr<TransmissionCurve const> _transmissionCurve;
+    ImagePhotometricCalibrationType _imagePhotometricCalibrationType;
 };
 }  // namespace image
 }  // namespace afw
