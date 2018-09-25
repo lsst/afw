@@ -168,7 +168,8 @@ std::string makeDTypeString() {
 } // anonymous
 
 template <typename T>
-ndarray::Array<T, 2, 2> ImageBaseFitsReader::readArray(lsst::geom::Box2I const & bbox, ImageOrigin origin) {
+ndarray::Array<T, 2, 2> ImageBaseFitsReader::readArray(lsst::geom::Box2I const & bbox, ImageOrigin origin,
+                                                       bool allowUnsafe) {
     checkFitsFile(_fitsFile);
     auto fullBBox = readBBox(origin);
     auto subBBox = bbox;
@@ -183,10 +184,11 @@ ndarray::Array<T, 2, 2> ImageBaseFitsReader::readArray(lsst::geom::Box2I const &
         );
     }
     fits::HduMoveGuard guard(*_fitsFile, _hdu);
-    if (!_fitsFile->checkImageType<T>()) {
+    if (!allowUnsafe & !_fitsFile->checkImageType<T>()) {
         throw LSST_FITS_EXCEPT(
             fits::FitsTypeError, *_fitsFile,
-            str(boost::format("Incompatible type for FITS image: on disk is %s (HDU %d), in-memory is %s.") %
+            str(boost::format("Incompatible type for FITS image: on disk is %s (HDU %d), in-memory is %s. "
+                              "Read with allowUnsafe=True to permit conversions that may overflow.") %
                 _fitsFile->getImageDType() % _hdu % makeDTypeString<T>())
         );
     }
@@ -201,7 +203,8 @@ ndarray::Array<T, 2, 2> ImageBaseFitsReader::readArray(lsst::geom::Box2I const &
 #define INSTANTIATE(T) \
     template ndarray::Array<T, 2, 2> ImageBaseFitsReader::readArray( \
         lsst::geom::Box2I const & bbox, \
-        ImageOrigin origin \
+        ImageOrigin origin, \
+        bool \
     )
 
 INSTANTIATE(std::uint16_t);

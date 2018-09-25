@@ -25,8 +25,9 @@
 namespace lsst { namespace afw { namespace image {
 
 template <typename PixelT>
-Mask<PixelT> MaskFitsReader::read(lsst::geom::Box2I const & bbox, ImageOrigin origin, bool conformMasks) {
-    Mask<PixelT> result(readArray<PixelT>(bbox, origin), false, readXY0(bbox, origin));
+Mask<PixelT> MaskFitsReader::read(lsst::geom::Box2I const & bbox, ImageOrigin origin, bool conformMasks,
+                                  bool allowUnsafe) {
+    Mask<PixelT> result(readArray<PixelT>(bbox, origin, allowUnsafe), false, readXY0(bbox, origin));
     auto metadata = readMetadata();
     // look for mask planes in the file
     detail::MaskPlaneDict fileMaskDict = Mask<PixelT>::parseMaskPlaneMetadata(metadata);
@@ -44,7 +45,7 @@ Mask<PixelT> MaskFitsReader::read(lsst::geom::Box2I const & bbox, ImageOrigin or
 }
 
 #define INSTANTIATE(T) \
-    template Mask<T> MaskFitsReader::read(lsst::geom::Box2I const &, ImageOrigin, bool)
+    template Mask<T> MaskFitsReader::read(lsst::geom::Box2I const &, ImageOrigin, bool, bool)
 
 INSTANTIATE(MaskPixel);
 

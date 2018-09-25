@@ -308,37 +308,44 @@ std::shared_ptr<ExposureInfo> ExposureFitsReader::readExposureInfo() {
 }
 
 template <typename ImagePixelT>
-Image<ImagePixelT> ExposureFitsReader::readImage(lsst::geom::Box2I const & bbox, ImageOrigin origin) {
-    return _maskedImageReader.readImage<ImagePixelT>(bbox, origin);
+Image<ImagePixelT> ExposureFitsReader::readImage(lsst::geom::Box2I const & bbox, ImageOrigin origin,
+                                                 bool allowUnsafe) {
+    return _maskedImageReader.readImage<ImagePixelT>(bbox, origin, allowUnsafe);
 }
 
 template <typename MaskPixelT>
 Mask<MaskPixelT> ExposureFitsReader::readMask(lsst::geom::Box2I const & bbox, ImageOrigin origin,
-                                              bool conformMasks) {
-    return _maskedImageReader.readMask<MaskPixelT>(bbox, origin, conformMasks);
+                                              bool conformMasks, bool allowUnsafe) {
+    return _maskedImageReader.readMask<MaskPixelT>(bbox, origin, conformMasks, allowUnsafe);
 }
 
 template <typename VariancePixelT>
-Image<VariancePixelT> ExposureFitsReader::readVariance(lsst::geom::Box2I const & bbox, ImageOrigin origin) {
-    return _maskedImageReader.readVariance<VariancePixelT>(bbox, origin);
+Image<VariancePixelT> ExposureFitsReader::readVariance(lsst::geom::Box2I const & bbox, ImageOrigin origin,
+                                                       bool allowUnsafe) {
+    return _maskedImageReader.readVariance<VariancePixelT>(bbox, origin, allowUnsafe);
 }
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> ExposureFitsReader::readMaskedImage(
     lsst::geom::Box2I const & bbox,
     ImageOrigin origin,
-    bool conformMasks
+    bool conformMasks,
+    bool allowUnsafe
 ) {
-    return _maskedImageReader.read<ImagePixelT, MaskPixelT, VariancePixelT>(bbox, origin, conformMasks, false);
+    return _maskedImageReader.read<ImagePixelT, MaskPixelT, VariancePixelT>(bbox, origin, conformMasks,
+                                                                            /* needAllHdus= */false,
+                                                                            allowUnsafe);
 }
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 Exposure<ImagePixelT, MaskPixelT, VariancePixelT> ExposureFitsReader::read(
     lsst::geom::Box2I const & bbox,
     ImageOrigin origin,
-    bool conformMasks
+    bool conformMasks,
+    bool allowUnsafe
 ) {
-    auto mi = readMaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>(bbox, origin, conformMasks);
+    auto mi = readMaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>(bbox, origin, conformMasks,
+                                                                       allowUnsafe);
     return Exposure<ImagePixelT, MaskPixelT, VariancePixelT>(mi, readExposureInfo());
 }
 
@@ -359,16 +366,16 @@ void ExposureFitsReader::_ensureReaders() {
     template Exposure<ImagePixelT, MaskPixel, VariancePixel> ExposureFitsReader::read( \
         lsst::geom::Box2I const &, \
         ImageOrigin, \
-        bool \
+        bool, bool \
     ); \
     template Image<ImagePixelT> ExposureFitsReader::readImage( \
         lsst::geom::Box2I const &, \
-        ImageOrigin \
+        ImageOrigin, bool \
     ); \
     template MaskedImage<ImagePixelT, MaskPixel, VariancePixel> ExposureFitsReader::readMaskedImage( \
         lsst::geom::Box2I const &, \
         ImageOrigin, \
-        bool \
+        bool, bool \
     )
 
 INSTANTIATE(std::uint16_t);
@@ -377,8 +384,8 @@ INSTANTIATE(float);
 INSTANTIATE(double);
 INSTANTIATE(std::uint64_t);
 
-template Mask<MaskPixel> ExposureFitsReader::readMask(lsst::geom::Box2I const &, ImageOrigin, bool);
-template Image<VariancePixel> ExposureFitsReader::readVariance(lsst::geom::Box2I const &, ImageOrigin);
+template Mask<MaskPixel> ExposureFitsReader::readMask(lsst::geom::Box2I const &, ImageOrigin, bool, bool);
+template Image<VariancePixel> ExposureFitsReader::readVariance(lsst::geom::Box2I const &, ImageOrigin, bool);
 
 
 }}} // lsst::afw::image

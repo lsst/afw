@@ -120,11 +120,14 @@ public:
      * @param  bbox   A bounding box used to defined a subimage, or an empty
      *                box (default) to read the whole image.
      * @param  origin Coordinate system convention for the given box.
+     * @param  allowUnsafe   Permit reading into the requested pixel type even
+     *                       when on-disk values may overflow or truncate.
      */
     template <typename T>
     ndarray::Array<T, 2, 2> readArray(
         lsst::geom::Box2I const & bbox,
-        ImageOrigin origin=PARENT
+        ImageOrigin origin=PARENT,
+        bool allowUnsafe=false
     );
 
     /**

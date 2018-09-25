@@ -86,10 +86,11 @@ MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
         lsst::geom::Box2I const& bbox, ImageOrigin origin, bool conformMasks, bool needAllHdus,
         std::shared_ptr<daf::base::PropertySet> imageMetadata,
         std::shared_ptr<daf::base::PropertySet> maskMetadata,
-        std::shared_ptr<daf::base::PropertySet> varianceMetadata)
+        std::shared_ptr<daf::base::PropertySet> varianceMetadata, bool allowUnsafe)
         : daf::base::Citizen(typeid(this)), _image(), _mask(), _variance() {
     MaskedImageFitsReader reader(fileName);
-    *this = reader.read<ImagePixelT, MaskPixelT, VariancePixelT>(bbox, origin, conformMasks, needAllHdus);
+    *this = reader.read<ImagePixelT, MaskPixelT, VariancePixelT>(bbox, origin, conformMasks, needAllHdus,
+                                                                 allowUnsafe);
     if (metadata) {
         metadata->combine(reader.readPrimaryMetadata());
     }
@@ -110,10 +111,12 @@ MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
         lsst::geom::Box2I const& bbox, ImageOrigin origin, bool conformMasks, bool needAllHdus,
         std::shared_ptr<daf::base::PropertySet> imageMetadata,
         std::shared_ptr<daf::base::PropertySet> maskMetadata,
-        std::shared_ptr<daf::base::PropertySet> varianceMetadata)
+        std::shared_ptr<daf::base::PropertySet> varianceMetadata,
+        bool allowUnsafe)
         : daf::base::Citizen(typeid(this)), _image(), _mask(), _variance() {
     MaskedImageFitsReader reader(manager);
-    *this = reader.read<ImagePixelT, MaskPixelT, VariancePixelT>(bbox, origin, conformMasks, needAllHdus);
+    *this = reader.read<ImagePixelT, MaskPixelT, VariancePixelT>(bbox, origin, conformMasks, needAllHdus,
+                                                                 allowUnsafe);
     if (metadata) {
         metadata->combine(reader.readPrimaryMetadata());
     }
@@ -134,10 +137,12 @@ MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
         ImageOrigin origin, bool conformMasks, bool needAllHdus,
         std::shared_ptr<daf::base::PropertySet> imageMetadata,
         std::shared_ptr<daf::base::PropertySet> maskMetadata,
-        std::shared_ptr<daf::base::PropertySet> varianceMetadata)
+        std::shared_ptr<daf::base::PropertySet> varianceMetadata,
+        bool allowUnsafe)
         : daf::base::Citizen(typeid(this)), _image(), _mask(), _variance() {
     MaskedImageFitsReader reader(&fitsFile);
-    *this = reader.read<ImagePixelT, MaskPixelT, VariancePixelT>(bbox, origin, conformMasks, needAllHdus);
+    *this = reader.read<ImagePixelT, MaskPixelT, VariancePixelT>(bbox, origin, conformMasks, needAllHdus,
+                                                                 allowUnsafe);
     if (metadata) {
         metadata->combine(reader.readPrimaryMetadata());
     }

@@ -148,6 +148,8 @@ public:
      * @param  bbox   A bounding box used to defined a subimage, or an empty
      *                box (default) to read the whole image.
      * @param  origin Coordinate system convention for the given box.
+     * @param  allowUnsafe   Permit reading into the requested pixel type even
+     *                       when on-disk values may overflow or truncate.
      *
      * In Python, this templated method is wrapped with an additional `dtype`
      * argument to provide the type to read.  This defaults to the type of the
@@ -155,7 +157,7 @@ public:
      */
     template <typename ImagePixelT>
     Image<ImagePixelT> readImage(lsst::geom::Box2I const & bbox=lsst::geom::Box2I(),
-                                 ImageOrigin origin=PARENT);
+                                 ImageOrigin origin=PARENT, bool allowUnsafe=false);
 
     /**
      * Read the mask plane.
@@ -165,6 +167,8 @@ public:
      * @param  origin        Coordinate system convention for the given box.
      * @param  conformMasks  If True, conform the global mask dict to match
      *                       this file.
+     * @param  allowUnsafe   Permit reading into the requested pixel type even
+     *                       when on-disk values may overflow or truncate.
      *
      * In Python, this templated method is wrapped with an additional `dtype`
      * argument to provide the type to read.  This defaults to the type of the
@@ -172,7 +176,7 @@ public:
      */
     template <typename MaskPixelT>
     Mask<MaskPixelT> readMask(lsst::geom::Box2I const & bbox=lsst::geom::Box2I(),
-                              ImageOrigin origin=PARENT, bool conformMasks=false);
+                              ImageOrigin origin=PARENT, bool conformMasks=false, bool allowUnsafe=false);
 
     /**
      * Read the variance plane.
@@ -180,6 +184,8 @@ public:
      * @param  bbox   A bounding box used to defined a subimage, or an empty
      *                box (default) to read the whole image.
      * @param  origin Coordinate system convention for the given box.
+     * @param  allowUnsafe   Permit reading into the requested pixel type even
+     *                       when on-disk values may overflow or truncate.
      *
      * In Python, this templated method is wrapped with an additional `dtype`
      * argument to provide the type to read.  This defaults to the type of the
@@ -187,7 +193,7 @@ public:
      */
     template <typename VariancePixelT>
     Image<VariancePixelT> readVariance(lsst::geom::Box2I const & bbox=lsst::geom::Box2I(),
-                                       ImageOrigin origin=PARENT);
+                                       ImageOrigin origin=PARENT, bool allowUnsafe=false);
 
     /**
      * Read the MaskedImage.
@@ -197,6 +203,8 @@ public:
      * @param  origin        Coordinate system convention for the given box.
      * @param  conformMasks  If True, conform the global mask dict to match
      *                       this file.
+     * @param  allowUnsafe   Permit reading into the requested pixel type even
+     *                       when on-disk values may overflow or truncate.
      *
      * In Python, this templated method is wrapped with an additional `dtype`
      * argument to provide the type to read (for the image plane).  This
@@ -205,7 +213,7 @@ public:
     template <typename ImagePixelT, typename MaskPixelT=MaskPixel, typename VariancePixelT=VariancePixel>
     MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> readMaskedImage(
         lsst::geom::Box2I const & bbox=lsst::geom::Box2I(), ImageOrigin origin=PARENT,
-        bool conformMasks=false
+        bool conformMasks=false, bool allowUnsafe=false
     );
 
     /**
@@ -216,6 +224,8 @@ public:
      * @param  origin        Coordinate system convention for the given box.
      * @param  conformMasks  If True, conform the global mask dict to match
      *                       this file.
+     * @param  allowUnsafe   Permit reading into the requested pixel type even
+     *                       when on-disk values may overflow or truncate.
      *
      * In Python, this templated method is wrapped with an additional `dtype`
      * argument to provide the type to read (for the image plane).  This
@@ -224,7 +234,7 @@ public:
     template <typename ImagePixelT, typename MaskPixelT=MaskPixel, typename VariancePixelT=VariancePixel>
     Exposure<ImagePixelT, MaskPixelT, VariancePixelT> read(
         lsst::geom::Box2I const & bbox=lsst::geom::Box2I(), ImageOrigin origin=PARENT,
-        bool conformMasks=false
+        bool conformMasks=false, bool allowUnsafe=false
     );
 
     /**

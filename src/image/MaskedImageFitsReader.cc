@@ -128,26 +128,27 @@ std::shared_ptr<daf::base::PropertyList> MaskedImageFitsReader::readVarianceMeta
 }
 
 template <typename ImagePixelT>
-Image<ImagePixelT> MaskedImageFitsReader::readImage(lsst::geom::Box2I const & bbox, ImageOrigin origin) {
-    return _imageReader.read<ImagePixelT>(bbox, origin);
+Image<ImagePixelT> MaskedImageFitsReader::readImage(lsst::geom::Box2I const & bbox, ImageOrigin origin,
+                                                    bool allowUnsafe) {
+    return _imageReader.read<ImagePixelT>(bbox, origin, allowUnsafe);
 }
 
 template <typename MaskPixelT>
 Mask<MaskPixelT> MaskedImageFitsReader::readMask(lsst::geom::Box2I const & bbox, ImageOrigin origin,
-                                                 bool conformMasks) {
-    return _maskReader.read<MaskPixelT>(bbox, origin, conformMasks);
+                                                 bool conformMasks, bool allowUnsafe) {
+    return _maskReader.read<MaskPixelT>(bbox, origin, conformMasks, allowUnsafe);
 }
 
 template <typename VariancePixelT>
 Image<VariancePixelT> MaskedImageFitsReader::readVariance(lsst::geom::Box2I const & bbox,
-                                                          ImageOrigin origin) {
-    return _varianceReader.read<VariancePixelT>(bbox, origin);
+                                                          ImageOrigin origin, bool allowUnsafe) {
+    return _varianceReader.read<VariancePixelT>(bbox, origin, allowUnsafe);
 }
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> MaskedImageFitsReader::read(
     lsst::geom::Box2I const & bbox, ImageOrigin origin,
-    bool conformMasks, bool needAllHdus
+    bool conformMasks, bool needAllHdus, bool allowUnsafe
 ) {
     // When reading a standard Masked Image, we expect four HDUs:
     // * The primary (HDU 0) is empty;
@@ -173,7 +174,8 @@ MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> MaskedImageFitsReader::read
         throw LSST_EXCEPT(fits::FitsError, "Cannot read all HDUs starting from non-default");
     }
 
-    auto image = std::make_shared<Image<ImagePixelT>>(_imageReader.read<ImagePixelT>(bbox, origin));
+    auto image = std::make_shared<Image<ImagePixelT>>(_imageReader.read<ImagePixelT>(bbox, origin,
+                                                                                     allowUnsafe));
     std::shared_ptr<Mask<MaskPixelT>> mask;
     std::shared_ptr<Image<VariancePixelT>> variance;
 
@@ -181,7 +183,7 @@ MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> MaskedImageFitsReader::read
     if (_imageReader.getHdu() == static_cast<int>(Hdu::Image)) {
         try {
             mask = std::make_shared<Mask<MaskPixelT>>(
-                _maskReader.read<MaskPixelT>(bbox, origin, conformMasks)
+                _maskReader.read<MaskPixelT>(bbox, origin, conformMasks, allowUnsafe)
             );
         } catch (fits::FitsError& e) {
             if (needAllHdus) {
@@ -194,7 +196,7 @@ MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> MaskedImageFitsReader::read
         }
         try {
             variance = std::make_shared<Image<VariancePixelT>>(
-                _varianceReader.read<VariancePixelT>(bbox, origin)
+                _varianceReader.read<VariancePixelT>(bbox, origin, allowUnsafe)
             );
         } catch (fits::FitsError& e) {
             if (needAllHdus) {
@@ -213,11 +215,12 @@ MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> MaskedImageFitsReader::read
     template MaskedImage<ImagePixelT, MaskPixel, VariancePixel> MaskedImageFitsReader::read( \
         lsst::geom::Box2I const &, \
         ImageOrigin, \
-        bool, bool \
+        bool, bool, bool \
     ); \
     template Image<ImagePixelT> MaskedImageFitsReader::readImage(\
         lsst::geom::Box2I const &, \
-        ImageOrigin \
+        ImageOrigin, \
+        bool \
     )
 
 INSTANTIATE(std::uint16_t);
@@ -226,7 +229,8 @@ INSTANTIATE(float);
 INSTANTIATE(double);
 INSTANTIATE(std::uint64_t);
 
-template Mask<MaskPixel> MaskedImageFitsReader::readMask(lsst::geom::Box2I const &, ImageOrigin, bool);
-template Image<VariancePixel> MaskedImageFitsReader::readVariance(lsst::geom::Box2I const &, ImageOrigin);
+template Mask<MaskPixel> MaskedImageFitsReader::readMask(lsst::geom::Box2I const &, ImageOrigin, bool, bool);
+template Image<VariancePixel> MaskedImageFitsReader::readVariance(lsst::geom::Box2I const &, ImageOrigin,
+                                                                  bool);
 
 }}} // lsst::afw::image

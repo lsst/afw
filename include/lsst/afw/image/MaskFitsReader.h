@@ -49,6 +49,8 @@ public:
      * @param  origin        Coordinate system convention for the given box.
      * @param  conformMasks  If True, conform the global mask dict to match
      *                       this file.
+     * @param  allowUnsafe   Permit reading into the requested pixel type even
+     *                       when on-disk values may overflow or truncate.
      *
      * In Python, this templated method is wrapped with an additional `dtype`
      * argument to provide the type to read.  This defaults to the type of the
@@ -56,7 +58,7 @@ public:
      */
     template <typename PixelT>
     Mask<PixelT> read(lsst::geom::Box2I const & bbox=lsst::geom::Box2I(), ImageOrigin origin=PARENT,
-                      bool conformMasks=false);
+                      bool conformMasks=false, bool allowUnsafe=false);
 
 };
 

@@ -47,13 +47,16 @@ public:
      * @param  bbox   A bounding box used to defined a subimage, or an empty
      *                box (default) to read the whole image.
      * @param  origin Coordinate system convention for the given box.
+     * @param  allowUnsafe   Permit reading into the requested pixel type even
+     *                       when on-disk values may overflow or truncate.
      *
      * In Python, this templated method is wrapped with an additional `dtype`
      * argument to provide the type to read.  This defaults to the type of the
      * on-disk image.
      */
     template <typename PixelT>
-    Image<PixelT> read(lsst::geom::Box2I const & bbox=lsst::geom::Box2I(), ImageOrigin origin=PARENT);
+    Image<PixelT> read(lsst::geom::Box2I const & bbox=lsst::geom::Box2I(), ImageOrigin origin=PARENT,
+                       bool allowUnsafe=false);
 
 };
 

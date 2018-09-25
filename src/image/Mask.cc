@@ -169,10 +169,10 @@ Mask<MaskPixelT>& Mask<MaskPixelT>::operator=(MaskPixelT const rhs) {
 
 template <typename MaskPixelT>
 Mask<MaskPixelT>::Mask(std::string const& fileName, int hdu, std::shared_ptr<daf::base::PropertySet> metadata,
-                       lsst::geom::Box2I const& bbox, ImageOrigin origin, bool conformMasks)
+                       lsst::geom::Box2I const& bbox, ImageOrigin origin, bool conformMasks, bool allowUnsafe)
         : ImageBase<MaskPixelT>(), _maskDict(detail::MaskDict::getDefault()) {
     MaskFitsReader reader(fileName, hdu);
-    *this = reader.read<MaskPixelT>(bbox, origin, conformMasks);
+    *this = reader.read<MaskPixelT>(bbox, origin, conformMasks, allowUnsafe);
     if (metadata) {
         metadata->combine(reader.readMetadata());
     }
@@ -181,10 +181,10 @@ Mask<MaskPixelT>::Mask(std::string const& fileName, int hdu, std::shared_ptr<daf
 template <typename MaskPixelT>
 Mask<MaskPixelT>::Mask(fits::MemFileManager& manager, int hdu,
                        std::shared_ptr<daf::base::PropertySet> metadata, lsst::geom::Box2I const& bbox,
-                       ImageOrigin origin, bool conformMasks)
+                       ImageOrigin origin, bool conformMasks, bool allowUnsafe)
         : ImageBase<MaskPixelT>(), _maskDict(detail::MaskDict::getDefault()) {
     MaskFitsReader reader(manager, hdu);
-    *this = reader.read<MaskPixelT>(bbox, origin, conformMasks);
+    *this = reader.read<MaskPixelT>(bbox, origin, conformMasks, allowUnsafe);
     if (metadata) {
         metadata->combine(reader.readMetadata());
     }
@@ -192,10 +192,11 @@ Mask<MaskPixelT>::Mask(fits::MemFileManager& manager, int hdu,
 
 template <typename MaskPixelT>
 Mask<MaskPixelT>::Mask(fits::Fits& fitsFile, std::shared_ptr<daf::base::PropertySet> metadata,
-                       lsst::geom::Box2I const& bbox, ImageOrigin const origin, bool const conformMasks)
+                       lsst::geom::Box2I const& bbox, ImageOrigin const origin, bool const conformMasks,
+                       bool allowUnsafe)
         : ImageBase<MaskPixelT>(), _maskDict(detail::MaskDict::getDefault()) {
     MaskFitsReader reader(&fitsFile);
-    *this = reader.read<MaskPixelT>(bbox, origin, conformMasks);
+    *this = reader.read<MaskPixelT>(bbox, origin, conformMasks, allowUnsafe);
     if (metadata) {
         metadata->combine(reader.readMetadata());
     }

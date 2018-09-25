@@ -93,26 +93,26 @@ Exposure<ImageT, MaskT, VarianceT>::Exposure(Exposure const &src, lsst::geom::Bo
 
 template <typename ImageT, typename MaskT, typename VarianceT>
 Exposure<ImageT, MaskT, VarianceT>::Exposure(std::string const &fileName, lsst::geom::Box2I const &bbox,
-                                             ImageOrigin origin, bool conformMasks)
+                                             ImageOrigin origin, bool conformMasks, bool allowUnsafe)
         : daf::base::Citizen(typeid(this)), _maskedImage(), _info(new ExposureInfo()) {
     ExposureFitsReader reader(fileName);
-    *this = reader.read<ImageT, MaskT, VarianceT>(bbox, origin, conformMasks);
+    *this = reader.read<ImageT, MaskT, VarianceT>(bbox, origin, conformMasks, allowUnsafe);
 }
 
 template <typename ImageT, typename MaskT, typename VarianceT>
 Exposure<ImageT, MaskT, VarianceT>::Exposure(fits::MemFileManager &manager, lsst::geom::Box2I const &bbox,
-                                             ImageOrigin origin, bool conformMasks)
+                                             ImageOrigin origin, bool conformMasks, bool allowUnsafe)
         : daf::base::Citizen(typeid(this)), _maskedImage(), _info(new ExposureInfo()) {
     ExposureFitsReader reader(manager);
-    *this = reader.read<ImageT, MaskT, VarianceT>(bbox, origin, conformMasks);
+    *this = reader.read<ImageT, MaskT, VarianceT>(bbox, origin, conformMasks, allowUnsafe);
 }
 
 template <typename ImageT, typename MaskT, typename VarianceT>
-Exposure<ImageT, MaskT, VarianceT>::Exposure(fits::Fits &fitsfile, lsst::geom::Box2I const &bbox,
-                                             ImageOrigin origin, bool conformMasks)
+Exposure<ImageT, MaskT, VarianceT>::Exposure(fits::Fits &fitsFile, lsst::geom::Box2I const &bbox,
+                                             ImageOrigin origin, bool conformMasks, bool allowUnsafe)
         : daf::base::Citizen(typeid(this)) {
     ExposureFitsReader reader(&fitsFile);
-    *this = reader.read<ImageT, MaskT, VarianceT>(bbox, origin, conformMasks);
+    *this = reader.read<ImageT, MaskT, VarianceT>(bbox, origin, conformMasks, allowUnsafe);
 }
 
 template <typename ImageT, typename MaskT, typename VarianceT>

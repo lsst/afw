@@ -24,12 +24,12 @@
 namespace lsst { namespace afw { namespace image {
 
 template <typename PixelT>
-Image<PixelT> ImageFitsReader::read(lsst::geom::Box2I const & bbox, ImageOrigin origin) {
-    return Image<PixelT>(readArray<PixelT>(bbox, origin), false, readXY0(bbox, origin));
+Image<PixelT> ImageFitsReader::read(lsst::geom::Box2I const & bbox, ImageOrigin origin, bool allowUnsafe) {
+    return Image<PixelT>(readArray<PixelT>(bbox, origin, allowUnsafe), false, readXY0(bbox, origin));
 }
 
 #define INSTANTIATE(T) \
-    template Image<T> ImageFitsReader::read(lsst::geom::Box2I const &, ImageOrigin)
+    template Image<T> ImageFitsReader::read(lsst::geom::Box2I const &, ImageOrigin, bool)
 
 INSTANTIATE(std::uint16_t);
 INSTANTIATE(int);

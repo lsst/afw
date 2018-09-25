@@ -330,6 +330,20 @@ struct FitsBitPix<double> {
     static int const CONSTANT = DOUBLE_IMG;
 };
 
+bool isFitsImageTypeSigned(int constant) {
+    switch (constant) {
+        case BYTE_IMG: return false;
+        case SHORT_IMG: return true;
+        case USHORT_IMG: return false;
+        case LONG_IMG: return true;
+        case ULONG_IMG: return false;
+        case LONGLONG_IMG: return true;
+        case FLOAT_IMG: return true;
+        case DOUBLE_IMG: return true;
+    }
+    throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, "Invalid constant.");
+}
+
 static bool allowImageCompression = true;
 
 int fitsTypeForBitpix(int bitpix) {
@@ -1319,21 +1333,27 @@ bool Fits::checkImageType() {
         if (imageType < 0) {
             return false;  // can't represent floating-point with integer
         }
-        return imageType <= FitsBitPix<T>::CONSTANT;  // can represent a small int by a larger int
+        if (std::numeric_limits<T>::is_signed) {
+            if (isFitsImageTypeSigned(imageType)) {
+                return FitsBitPix<T>::CONSTANT >= imageType;
+            } else {
+                // need extra bits to safely convert unsigned to signed
+                return FitsBitPix<T>::CONSTANT > imageType;
+            }
+        } else {
+            if (!isFitsImageTypeSigned(imageType)) {
+                return FitsBitPix<T>::CONSTANT >= imageType;
+            } else if (imageType == LONGLONG_IMG) {
+                // workaround for CFITSIO not recognizing uint64 as
+                // unsigned
+                return FitsBitPix<T>::CONSTANT >= imageType;
+            } else {
+                return false;
+            }
+        }
     }
-    if (std::is_same<T, double>::value) {
-        // Everything can be represented by double
-        return true;
-    }
-    assert((std::is_same<T, float>::value));  // Everything else has been dealt with
-    switch (imageType) {
-        case TLONGLONG:
-        case TDOUBLE:
-            // Not enough precision in 'float'
-            return false;
-        default:
-            return true;
-    }
+    // we allow all conversions to float and double, even if they lose precision
+    return true;
 }
 
 std::string Fits::getImageDType() {

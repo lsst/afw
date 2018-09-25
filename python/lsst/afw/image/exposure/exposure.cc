@@ -72,10 +72,12 @@ PyExposure<PixelT> declareExposure(py::module &mod, const std::string &suffix) {
     cls.def(py::init<MaskedImageT &, std::shared_ptr<geom::SkyWcs const>>(), "maskedImage"_a,
             "wcs"_a = std::shared_ptr<geom::SkyWcs const>());
     cls.def(py::init<MaskedImageT &, std::shared_ptr<ExposureInfo>>(), "maskedImage"_a, "exposureInfo"_a);
-    cls.def(py::init<std::string const &, lsst::geom::Box2I const &, ImageOrigin, bool>(), "fileName"_a,
-            "bbox"_a = lsst::geom::Box2I(), "origin"_a = PARENT, "conformMasks"_a = false);
-    cls.def(py::init<fits::MemFileManager &, lsst::geom::Box2I const &, ImageOrigin, bool>(), "manager"_a,
-            "bbox"_a = lsst::geom::Box2I(), "origin"_a = PARENT, "conformMasks"_a = false);
+    cls.def(py::init<std::string const &, lsst::geom::Box2I const &, ImageOrigin, bool, bool>(), "fileName"_a,
+            "bbox"_a = lsst::geom::Box2I(), "origin"_a = PARENT, "conformMasks"_a = false,
+            "allowUnsafe"_a=false);
+    cls.def(py::init<fits::MemFileManager &, lsst::geom::Box2I const &, ImageOrigin, bool, bool>(),
+            "manager"_a, "bbox"_a = lsst::geom::Box2I(), "origin"_a = PARENT, "conformMasks"_a = false,
+            "allowUnsafe"_a=false);
     cls.def(py::init<ExposureT const &, bool>(), "other"_a, "deep"_a = false);
     cls.def(py::init<ExposureT const &, lsst::geom::Box2I const &, ImageOrigin, bool>(), "other"_a, "bbox"_a,
             "origin"_a = PARENT, "deep"_a = false);

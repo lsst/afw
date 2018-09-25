@@ -137,12 +137,14 @@ class DisplayTestCase(unittest.TestCase):
         with afwDisplay.getDisplay("dummy", "virtualDevice") as dummy:
             for imageType in [afwImage.DecoratedImageF,
                               afwImage.ExposureF,
-                              afwImage.ImageU,
-                              afwImage.ImageI,
                               afwImage.ImageF,
                               afwImage.MaskedImageF,
                               ]:
                 im = imageType(self.fileName)
+                dummy.mtv(im)
+
+            for imageType in [afwImage.ImageU, afwImage.ImageI]:
+                im = imageType(self.fileName, hdu=2, allowUnsafe=True)
                 dummy.mtv(im)
 
             im = afwImage.Mask(self.fileName, hdu=2)

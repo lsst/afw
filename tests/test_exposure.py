@@ -543,7 +543,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
     def testCopyExposure(self):
         """Copy an Exposure (maybe changing type)"""
 
-        exposureU = afwImage.ExposureU(inFilePathSmall)
+        exposureU = afwImage.ExposureU(inFilePathSmall, allowUnsafe=True)
         exposureU.setWcs(self.wcs)
         exposureU.setDetector(self.detector)
         exposureU.setFilter(afwImage.Filter("g"))

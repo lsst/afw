@@ -375,10 +375,10 @@ Image<PixelT>& Image<PixelT>::operator=(Image&& rhs) {
 
 template <typename PixelT>
 Image<PixelT>::Image(std::string const& fileName, int hdu, std::shared_ptr<daf::base::PropertySet> metadata,
-                     lsst::geom::Box2I const& bbox, ImageOrigin origin)
+                     lsst::geom::Box2I const& bbox, ImageOrigin origin, bool allowUnsafe)
 {
     ImageFitsReader reader(fileName, hdu);
-    *this = reader.read<PixelT>(bbox, origin);
+    *this = reader.read<PixelT>(bbox, origin, allowUnsafe);
     if (metadata) {
         metadata->combine(reader.readMetadata());
     }
@@ -387,10 +387,10 @@ Image<PixelT>::Image(std::string const& fileName, int hdu, std::shared_ptr<daf::
 template <typename PixelT>
 Image<PixelT>::Image(fits::MemFileManager& manager, int const hdu,
                      std::shared_ptr<daf::base::PropertySet> metadata, lsst::geom::Box2I const& bbox,
-                     ImageOrigin const origin)
+                     ImageOrigin const origin, bool allowUnsafe)
 {
     ImageFitsReader reader(manager, hdu);
-    *this = reader.read<PixelT>(bbox, origin);
+    *this = reader.read<PixelT>(bbox, origin, allowUnsafe);
     if (metadata) {
         metadata->combine(reader.readMetadata());
     }
@@ -398,10 +398,10 @@ Image<PixelT>::Image(fits::MemFileManager& manager, int const hdu,
 
 template <typename PixelT>
 Image<PixelT>::Image(fits::Fits& fitsFile, std::shared_ptr<daf::base::PropertySet> metadata,
-                     lsst::geom::Box2I const& bbox, ImageOrigin const origin)
+                     lsst::geom::Box2I const& bbox, ImageOrigin const origin, bool allowUnsafe)
 {
     ImageFitsReader reader(&fitsFile);
-    *this = reader.read<PixelT>(bbox, origin);
+    *this = reader.read<PixelT>(bbox, origin, allowUnsafe);
     if (metadata) {
         metadata->combine(reader.readMetadata());
     }

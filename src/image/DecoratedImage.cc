@@ -92,10 +92,12 @@ void swap(DecoratedImage<PixelT>& a, DecoratedImage<PixelT>& b) {
 //
 template <typename PixelT>
 DecoratedImage<PixelT>::DecoratedImage(const std::string& fileName, const int hdu,
-                                       lsst::geom::Box2I const& bbox, ImageOrigin const origin)
+                                       lsst::geom::Box2I const& bbox, ImageOrigin const origin,
+                                       bool allowUnsafe)
         : daf::base::Citizen(typeid(this)) {
     init();
-    _image = std::shared_ptr<Image<PixelT>>(new Image<PixelT>(fileName, hdu, getMetadata(), bbox, origin));
+    _image = std::shared_ptr<Image<PixelT>>(new Image<PixelT>(fileName, hdu, getMetadata(), bbox, origin,
+                                                              allowUnsafe));
 }
 
 template <typename PixelT>
