@@ -207,13 +207,18 @@ public:
 
     /// Return the photometric calibration type of this exposure's maskedImage.
     ImagePhotometricCalibrationType getImagePhotometricCalibrationType() {
-        return _imagePhotometricCalibrationType; }
+        return _imagePhotometricCalibrationType;
+    }
 
     /// Do the pixel values in this image represent surface brightness?
-    bool getIsSurfaceBrightness() { return _imagePhotometricCalibrationType == ImagePhotometricCalibrationType::SURFACEBRIGHTNESS; }
+    bool getIsSurfaceBrightness() {
+        return _imagePhotometricCalibrationType == ImagePhotometricCalibrationType::SURFACEBRIGHTNESS;
+    }
 
     /// Do the pixel values in this image represent fluence?
-    bool getIsFluence() { return _imagePhotometricCalibrationType == ImagePhotometricCalibrationType::FLUENCE; }
+    bool getIsFluence() {
+        return _imagePhotometricCalibrationType == ImagePhotometricCalibrationType::FLUENCE;
+    }
 
     /**
      *  Construct an ExposureInfo from its various components.
@@ -239,7 +244,8 @@ public:
                     std::shared_ptr<image::VisitInfo const>(),
             std::shared_ptr<TransmissionCurve const> const& transmissionCurve =
                     std::shared_ptr<TransmissionCurve>(),
-            ImagePhotometricCalibrationType imagePhotometricCalibrationType = ImagePhotometricCalibrationType::NOTAPPLICABLE);
+            ImagePhotometricCalibrationType imagePhotometricCalibrationType =
+                    ImagePhotometricCalibrationType::NOTAPPLICABLE);
 
     /// Copy constructor; deep-copies all components except the metadata.
     ExposureInfo(ExposureInfo const& other);
