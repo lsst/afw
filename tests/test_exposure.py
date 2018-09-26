@@ -244,17 +244,6 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         self.assertFalse(exposure.hasWcs())
         self.assertFalse(exposure.hasPsf())
 
-    def testExposureInfoSetNone(self):
-        exposureInfo = afwImage.ExposureInfo()
-        exposureInfo.setDetector(None)
-        exposureInfo.setValidPolygon(None)
-        exposureInfo.setPsf(None)
-        exposureInfo.setWcs(None)
-        exposureInfo.setCalib(None)
-        exposureInfo.setCoaddInputs(None)
-        exposureInfo.setVisitInfo(None)
-        exposureInfo.setApCorrMap(None)
-
     def testSetExposureInfo(self):
         exposureInfo = afwImage.ExposureInfo()
         exposureInfo.setWcs(self.wcs)
