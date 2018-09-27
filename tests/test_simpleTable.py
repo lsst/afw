@@ -47,6 +47,10 @@ except NameError:
     display = False
 
 
+# Testing files live under this, in `data/`.
+testPath = os.path.abspath(os.path.dirname(__file__))
+
+
 def makeArray(size, dtype):
     return np.array(np.random.randn(size), dtype=dtype)
 
@@ -756,6 +760,16 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
                                      covValues["cov_p"], rtol=1E-6)
         self.assertFloatsAlmostEqual(record2.get(covMKey),
                                      covValues["cov_m"], rtol=1E-6)
+
+    def testFitsReadVersion1Compatibility(self):
+        """Test that v1 SimpleCatalogs read from FITS get correct aliases."""
+        filename = os.path.join(testPath, "data", "ps1-refcat-v1.fits")
+        catalog = lsst.afw.table.SimpleCatalog.readFits(filename)
+        self.assertIn('g_flux', catalog.schema)
+        self.assertNotIn('g_instFlux', catalog.schema)
+
+        self.assertIn('g_fluxErr', catalog.schema)
+        self.assertNotIn('g_instFluxErr', catalog.schema)
 
     def testDelete(self):
         schema = lsst.afw.table.Schema()

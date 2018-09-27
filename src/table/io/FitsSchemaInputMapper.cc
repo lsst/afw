@@ -81,6 +81,7 @@ public:
     Impl() : version(0), flagColumn(0), archiveHdu(-1) {}
 
     int version;
+    std::string type;
     int flagColumn;
     int archiveHdu;
     Schema schema;
@@ -99,6 +100,7 @@ FitsSchemaInputMapper::FitsSchemaInputMapper(daf::base::PropertyList &metadata, 
         _impl->version = lsst::afw::table::Schema::VERSION;
     }
     _impl->version = metadata.get("AFW_TABLE_VERSION", _impl->version);
+    _impl->type = metadata.get("AFW_TYPE", _impl->type);
     if (stripMetadata) {
         metadata.remove("AFW_TABLE_VERSION");
     }
@@ -769,7 +771,8 @@ Schema FitsSchemaInputMapper::finalize() {
         // that should have been named Sigma. So provide aliases xErr -> xSigma
         AliasMap &aliases = *_impl->schema.getAliasMap();
         for (auto iter = _impl->asList().begin(); iter != _impl->asList().end(); ++iter) {
-            if (iter->ttype.find("flux") != std::string::npos) {
+            // flux->instFlux only applies to SourceCatalogs.
+            if (_impl->type == "SOURCE" && iter->ttype.find("flux") != std::string::npos) {
                 // Create an alias that resolves "X_instFlux" to "X_flux" or "X_instFluxErr" to "X_fluxSigma".
                 if (endswith(iter->ttype, "fluxSigma")) {
                     // replace "fluxSigma"->"instFluxErr"
