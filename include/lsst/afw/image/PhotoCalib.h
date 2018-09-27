@@ -100,10 +100,16 @@ public:
      * @param[in]  calibrationErr  The error on the calibration.
      * @param[in]  bbox            The bounding box on which this PhotoCalib is valid. If not specified,
      *                             this PhotoCalib is valid at any point (i.e. an empty bbox).
+     * @param[in]  takesSurfaceBrightness Is this PhotoCalib defined on a surface brightness image (true), or
+     * a fluence image (false)?
      */
     explicit PhotoCalib(double calibrationMean, double calibrationErr = 0,
-                        lsst::geom::Box2I const &bbox = lsst::geom::Box2I())
-            : _calibrationMean(calibrationMean), _calibrationErr(calibrationErr), _isConstant(true) {
+                        lsst::geom::Box2I const &bbox = lsst::geom::Box2I(),
+                        bool takesSurfaceBrightness = true)
+            : _calibrationMean(calibrationMean),
+              _calibrationErr(calibrationErr),
+              _isConstant(true),
+              _takesSurfaceBrightness(takesSurfaceBrightness) {
         ndarray::Array<double, 2, 2> coeffs = ndarray::allocate(ndarray::makeVector(1, 1));
         coeffs[0][0] = calibrationMean;
         _calibration = std::make_shared<afw::math::ChebyshevBoundedField>(
@@ -116,11 +122,13 @@ public:
      * @param[in]  calibration    The spatially varying photometric calibration.
      * @param[in]  calibrationErr The error on the calibration.
      */
-    PhotoCalib(std::shared_ptr<afw::math::BoundedField> calibration, double calibrationErr = 0)
+    PhotoCalib(std::shared_ptr<afw::math::BoundedField> calibration, double calibrationErr = 0,
+               bool takesSurfaceBrightness = true)
             : _calibration(calibration),
               _calibrationMean(computeCalibrationMean(calibration)),
               _calibrationErr(calibrationErr),
-              _isConstant(false) {}
+              _isConstant(false),
+              _takesSurfaceBrightness(takesSurfaceBrightness) {}
 
     /**
      * Create a calibration with a pre-computed mean. Primarily for de-persistence.
@@ -131,11 +139,13 @@ public:
      * @param[in]  isConstant      Is this PhotoCalib spatially constant?
      */
     PhotoCalib(double calibrationMean, double calibrationErr,
-               std::shared_ptr<afw::math::BoundedField> calibration, bool isConstant)
+               std::shared_ptr<afw::math::BoundedField> calibration, bool isConstant,
+               bool takesSurfaceBrightness = true)
             : _calibration(calibration),
               _calibrationMean(calibrationMean),
               _calibrationErr(calibrationErr),
-              _isConstant(isConstant) {}
+              _isConstant(isConstant),
+              _takesSurfaceBrightness(takesSurfaceBrightness) {}
 
     /**
      * Convert instFlux in ADU to maggies at a point in the BoundedField.
@@ -390,6 +400,10 @@ public:
      */
     std::shared_ptr<afw::math::BoundedField> computeScalingTo(std::shared_ptr<PhotoCalib> other) const;
 
+    /// Is this PhotoCalib defined on a surface brightness image or a Fluence image?
+    bool takesSurfaceBrightness() { return _takesSurfaceBrightness; }
+    bool takesFluence() { return !_takesSurfaceBrightness; }
+
     /// Two PhotoCalibs are equal if their component bounded fields and calibrationErr are equal.
     bool operator==(PhotoCalib const &rhs) const;
 
@@ -418,6 +432,10 @@ private:
 
     // Is this spatially-constant? Used to short-circuit getting centroids.
     bool _isConstant;
+
+    // Does this exposure apply to a surface brightness image, or a fluence image?
+    // PhotoCalib always returns fluence.
+    bool _takesSurfaceBrightness;
 
     /// Returns the spatially-constant calibration (for setting _calibrationMean)
     double computeCalibrationMean(std::shared_ptr<afw::math::BoundedField> calibration) const;

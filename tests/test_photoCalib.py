@@ -346,6 +346,7 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
         photoCalib6 = lsst.afw.image.PhotoCalib(self.linearXCalibration)
         photoCalib7 = lsst.afw.image.PhotoCalib(self.calibration, 0.5)
         photoCalib8 = lsst.afw.image.PhotoCalib(self.constantCalibration, 0.5)
+        photoCalib9 = lsst.afw.image.PhotoCalib(self.constantCalibration, 0.5, takesSurfaceBrightness=False)
 
         constantCalibration = lsst.afw.math.ChebyshevBoundedField(self.bbox, np.array([[self.calibration]]))
         photoCalib9 = lsst.afw.image.PhotoCalib(constantCalibration, 0.5)
@@ -360,8 +361,27 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
         self.assertNotEqual(photoCalib1, photoCalib3)
         self.assertNotEqual(photoCalib3, photoCalib5)
         self.assertNotEqual(photoCalib1, photoCalib8)
+        self.assertNotEqual(photoCalib8, photoCalib9)
 
         self.assertFalse(photoCalib1 != photoCalib2)  # using assertFalse to directly test != operator
+
+    def testSurfaceBrightnessToFluence(self):
+        """Test the surfaceBrightnessToFluence property."""
+        photoCalib = lsst.afw.image.PhotoCalib(5)
+        self.assertTrue(photoCalib.takesSurfaceBrightness)
+        self.assertFalse(photoCalib.takesFluence)
+
+        photoCalib = lsst.afw.image.PhotoCalib(5, takesSurfaceBrightness=False)
+        self.assertFalse(photoCalib.takesSurfaceBrightness)
+        self.assertTrue(photoCalib.takesFluence)
+
+        photoCalib = lsst.afw.image.PhotoCalib(self.linearXCalibration)
+        self.assertTrue(photoCalib.takesSurfaceBrightness)
+        self.assertFalse(photoCalib.takesFluence)
+
+        photoCalib = lsst.afw.image.PhotoCalib(self.linearXCalibration, takesSurfaceBrightness=False)
+        self.assertFalse(photoCalib.takesSurfaceBrightness)
+        self.assertTrue(photoCalib.takesFluence)
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):

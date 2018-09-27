@@ -37,7 +37,7 @@ namespace lsst {
 namespace afw {
 
 template std::shared_ptr<image::PhotoCalib> table::io::PersistableFacade<image::PhotoCalib>::dynamicCast(
-        std::shared_ptr<table::io::Persistable> const&);
+        std::shared_ptr<table::io::Persistable> const &);
 
 namespace image {
 
@@ -194,7 +194,7 @@ std::shared_ptr<math::BoundedField> PhotoCalib::computeScalingTo(std::shared_ptr
 
 bool PhotoCalib::operator==(PhotoCalib const &rhs) const {
     return (_calibrationMean == rhs._calibrationMean && _calibrationErr == rhs._calibrationErr &&
-            (*_calibration) == *(rhs._calibration));
+            (*_calibration) == *(rhs._calibration) && _takesSurfaceBrightness == rhs._takesSurfaceBrightness);
 }
 
 double PhotoCalib::computeCalibrationMean(std::shared_ptr<afw::math::BoundedField> calibration) const {
@@ -206,7 +206,10 @@ std::ostream &operator<<(std::ostream &os, PhotoCalib const &photoCalib) {
         os << "spatially constant with ";
     else
         os << *(photoCalib._calibration) << " with ";
-    return os << "mean: " << photoCalib._calibrationMean << " err: " << photoCalib._calibrationErr;
+    os << "mean: " << photoCalib._calibrationMean << " err: " << photoCalib._calibrationErr;
+    os << " (defined on " << ((photoCalib.takesSurfaceBrightness()) ? "surface brightness" : "fluence")
+       << ")";
+    return os;
 }
 
 // ------------------- persistence -------------------

@@ -58,12 +58,13 @@ PYBIND11_MODULE(photoCalib, mod) {
 
     /* Constructors */
     cls.def(py::init<>());
-    cls.def(py::init<double, double, lsst::geom::Box2I>(), "instFluxMag0"_a, "instFluxMag0Err"_a = 0.0,
-            "bbox"_a = lsst::geom::Box2I());
-    cls.def(py::init<std::shared_ptr<afw::math::BoundedField>, double>(), "calibration"_a,
-            "instFluxMag0Err"_a = 0.0);
-    cls.def(py::init<double, double, std::shared_ptr<afw::math::BoundedField>, bool>(), "instFluxMag0"_a,
-            "instFluxMag0Err"_a, "calibration"_a, "isConstant"_a);
+    cls.def(py::init<double, double, lsst::geom::Box2I, bool>(), "instFluxMag0"_a, "instFluxMag0Err"_a = 0.0,
+            "bbox"_a = lsst::geom::Box2I(), "takesSurfaceBrightness"_a = true);
+    cls.def(py::init<std::shared_ptr<afw::math::BoundedField>, double, bool>(), "calibration"_a,
+            "instFluxMag0Err"_a = 0.0, "takesSurfaceBrightness"_a = true);
+    cls.def(py::init<double, double, std::shared_ptr<afw::math::BoundedField>, bool, bool>(),
+            "instFluxMag0"_a, "instFluxMag0Err"_a, "calibration"_a, "isConstant"_a,
+            "takesSurfaceBrightness"_a = true);
 
     table::io::python::addPersistableMethods<PhotoCalib>(cls);
 
@@ -143,6 +144,10 @@ PYBIND11_MODULE(photoCalib, mod) {
 
     cls.def("computeScaledCalibration", &PhotoCalib::computeScaledCalibration);
     cls.def("computeScalingTo", &PhotoCalib::computeScalingTo);
+
+    /* Properties */
+    cls.def_property_readonly("takesSurfaceBrightness", &PhotoCalib::takesSurfaceBrightness);
+    cls.def_property_readonly("takesFluence", &PhotoCalib::takesFluence);
 
     /* Operators */
     cls.def("__eq__", &PhotoCalib::operator==, py::is_operator());
