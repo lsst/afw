@@ -522,6 +522,14 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(cat.schema["a_flux"].asKey(), cat.schema["a_instFlux"].asKey())
         self.assertEqual(cat.schema["a_fluxSigma"].asKey(), cat.schema["a_instFluxErr"].asKey())
 
+    def testFitsReadVersion2CompatibilityRealSourceCatalog(self):
+        """DM-15891: some fields were getting aliases they shouldn't have."""
+        cat = lsst.afw.table.SourceCatalog.readFits(
+            os.path.join(testPath, "data", "sourceCatalog-hsc-v2.fits"))
+        self.assertNotIn('base_SdssShape_flux_xxinstFlux', cat.schema)
+        self.assertIn('base_SdssShape_instFlux_xx_Cov', cat.schema)
+        self.assertNotIn('base_Blendedness_abs_flux_cinstFlux', cat.schema)
+
     def testFitsVersion2Compatibility(self):
         """Test reading of catalogs with version 2 schema
 
