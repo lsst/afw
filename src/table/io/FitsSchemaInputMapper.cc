@@ -27,18 +27,6 @@ namespace io {
 
 namespace {
 
-bool hasInstFluxUnits(FitsSchemaItem const & item) {
-    // helper lambda to make reading the real logic easier
-    auto includes = [](std::string const & s, char const * target) {
-        return s.find(target) != std::string::npos;
-    };
-    if (!includes(item.ttype, "flux")) return false;
-    // transform units to lowercase.
-    std::string units(item.tunit);
-    std::transform(units.begin(), units.end(), units.begin(), [](char c) { return std::tolower(c); } );
-    return includes(units, "count") || includes(units, "dn") || includes (units, "adu");
-}
-
 // A quirk of Boost.MultiIndex (which we use for our container of FitsSchemaItems)
 // that you have to use a special functor (like this one) to set data members
 // in a container with set indices (because setting those values might require
@@ -724,9 +712,21 @@ bool endswith(std::string const &s, std::string const &suffix) {
     return s.size() >= suffix.size() && s.compare(s.size() - suffix.size(), suffix.size(), suffix) == 0;
 }
 
-// Replace the last n characters of a string with a new suffix string, returning the result as a new string
-std::string replaceSuffix(std::string const &s, std::size_t n, std::string const &suffix) {
-    return s.substr(0, s.size() - n) + suffix;
+bool hasInstFluxUnits(FitsSchemaItem const & item) {
+    // helper lambda to make reading the real logic easier
+    auto includes = [](std::string const & s, char const * target) {
+        return s.find(target) != std::string::npos;
+    };
+    if (!includes(item.ttype, "flux")) return false;
+    // transform units to lowercase.
+    std::string units(item.tunit);
+    std::transform(units.begin(), units.end(), units.begin(), [](char c) { return std::tolower(c); } );
+    return includes(units, "count") || includes(units, "dn") || includes (units, "adu");
+}
+
+// Replace 'from' with 'to' in 'full', returning the result.
+std::string replace(std::string full, std::string const & from, std::string const & to) {
+    return full.replace(full.find(from), from.size(), to);
 }
 
 }  // namespace
@@ -755,7 +755,7 @@ Schema FitsSchemaInputMapper::finalize() {
             } else if (hasInstFluxUnits(*iter)) {
                 // Create an alias that resolves "X_instFlux" to "X" or "X_instFluxErr" to "X_err".
                 if (endswith(iter->ttype, "_err")) {
-                    aliases.set(replaceSuffix(iter->ttype, 4, "_instFluxErr"), iter->ttype);
+                    aliases.set(replace(iter->ttype, "_err", "_instFluxErr"), iter->ttype);
                 } else {
                     aliases.set(iter->ttype + "_instFlux", iter->ttype);
                 }
@@ -766,52 +766,34 @@ Schema FitsSchemaInputMapper::finalize() {
                 // centroid and shape values themselves, as those will automatically be correct
                 // after the PointConversionReader and MomentsConversionReader do their work.
                 if (iter->tccls == "Covariance(Point)") {
-                    aliases.set(replaceSuffix(iter->ttype, 4, "_xErr"), iter->ttype + "_xErr");
-                    aliases.set(replaceSuffix(iter->ttype, 4, "_yErr"), iter->ttype + "_yErr");
-                    aliases.set(replaceSuffix(iter->ttype, 4, "_x_y_Cov"), iter->ttype + "_x_y_Cov");
+                    aliases.set(replace(iter->ttype, "_err", "_yErr"), iter->ttype + "_yErr");
+                    aliases.set(replace(iter->ttype, "_err", "_xErr"), iter->ttype + "_xErr");
+                    aliases.set(replace(iter->ttype, "_err", "_x_y_Cov"), iter->ttype + "_x_y_Cov");
                 } else if (iter->tccls == "Covariance(Moments)") {
-                    aliases.set(replaceSuffix(iter->ttype, 4, "_xxErr"), iter->ttype + "_xxErr");
-                    aliases.set(replaceSuffix(iter->ttype, 4, "_yyErr"), iter->ttype + "_yyErr");
-                    aliases.set(replaceSuffix(iter->ttype, 4, "_xyErr"), iter->ttype + "_xyErr");
-                    aliases.set(replaceSuffix(iter->ttype, 4, "_xx_yy_Cov"), iter->ttype + "_xx_yy_Cov");
-                    aliases.set(replaceSuffix(iter->ttype, 4, "_xx_xy_Cov"), iter->ttype + "_xx_xy_Cov");
-                    aliases.set(replaceSuffix(iter->ttype, 4, "_yy_xy_Cov"), iter->ttype + "_yy_xy_Cov");
+                    aliases.set(replace(iter->ttype, "_err", "_xxErr"), iter->ttype + "_xxErr");
+                    aliases.set(replace(iter->ttype, "_err", "_yyErr"), iter->ttype + "_yyErr");
+                    aliases.set(replace(iter->ttype, "_err", "_xyErr"), iter->ttype + "_xyErr");
+                    aliases.set(replace(iter->ttype, "_err", "_xx_yy_Cov"), iter->ttype + "_xx_yy_Cov");
+                    aliases.set(replace(iter->ttype, "_err", "_xx_xy_Cov"), iter->ttype + "_xx_xy_Cov");
+                    aliases.set(replace(iter->ttype, "_err", "_yy_xy_Cov"), iter->ttype + "_yy_xy_Cov");
                 }
             }
         }
-    }
-    if (_impl->version == 1) {
-        // Version 1 tables use Sigma when we should use Err (see RFC-333) and had no fields
-        // that should have been named Sigma. So provide aliases xErr -> xSigma
+    } else if (_impl->version < 3) {
+        // Version == 1 tables use Sigma when we should use Err (see RFC-333) and had no fields
+        // that should have been named Sigma. So provide aliases xErr -> xSigma.
+        // Version <= 2 tables used _flux when we should use _instFlux (see RFC-322).
         AliasMap &aliases = *_impl->schema.getAliasMap();
         for (auto iter = _impl->asList().begin(); iter != _impl->asList().end(); ++iter) {
-            if (hasInstFluxUnits(*iter)) {
-                // Create an alias that resolves "X_instFlux" to "X_flux" or "X_instFluxErr" to "X_fluxSigma".
-                if (endswith(iter->ttype, "fluxSigma")) {
-                    // replace "fluxSigma"->"instFluxErr"
-                    aliases.set(replaceSuffix(iter->ttype, 9, "instFluxErr"), iter->ttype);
-                } else {
-                    // replace "flux"->"instFlux"
-                    aliases.set(replaceSuffix(iter->ttype, 4, "instFlux"), iter->ttype);
-                }
-            } else if (endswith(iter->ttype, "Sigma")) {
-                aliases.set(replaceSuffix(iter->ttype, 5, "Err"), iter->ttype);
+            std::string name = iter->ttype;
+            if (_impl->version < 2 && endswith(name, "Sigma")) {
+                name = replace(std::move(name), "Sigma", "Err");
             }
-        }
-    }
-    if (_impl->version == 2) {
-        // Version 2 tables used _flux when we should use _instFlux (see RFC-322).
-        AliasMap &aliases = *_impl->schema.getAliasMap();
-        for (auto iter = _impl->asList().begin(); iter != _impl->asList().end(); ++iter) {
-            if (hasInstFluxUnits(*iter)) {
-                // Create an alias that resolves "X_instFlux" to "X_flux" or "X_instFluxErr" to "X_fluxErr".
-                if (endswith(iter->ttype, "fluxErr")) {
-                    // replace "fluxErr"->"instFluxErr"
-                    aliases.set(replaceSuffix(iter->ttype, 9, "instFluxErr"), iter->ttype);
-                } else {
-                    // replace "flux"->"instFlux"
-                    aliases.set(replaceSuffix(iter->ttype, 4, "instFlux"), iter->ttype);
-                }
+            if (_impl->version < 3 && hasInstFluxUnits(*iter)) {
+                name = replace(std::move(name), "flux", "instFlux");
+            }
+            if (name != iter->ttype) {
+                aliases.set(name, iter->ttype);
             }
         }
     }
