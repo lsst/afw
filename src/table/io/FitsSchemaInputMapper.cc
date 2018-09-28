@@ -5,6 +5,8 @@
 #include <cstdint>
 #include <cstdio>
 #include <string>
+#include <algorithm>
+#include <cctype>
 
 #include "boost/regex.hpp"
 #include "boost/multi_index_container.hpp"
@@ -24,6 +26,18 @@ namespace table {
 namespace io {
 
 namespace {
+
+bool hasInstFluxUnits(FitsSchemaItem const & item) {
+    // helper lambda to make reading the real logic easier
+    auto includes = [](std::string const & s, char const * target) {
+        return s.find(target) != std::string::npos;
+    };
+    if (!includes(item.ttype, "flux")) return false;
+    // transform units to lowercase.
+    std::string units(item.tunit);
+    std::transform(units.begin(), units.end(), units.begin(), [](char c) { return std::tolower(c); } );
+    return includes(units, "count") || includes(units, "dn") || includes (units, "adu");
+}
 
 // A quirk of Boost.MultiIndex (which we use for our container of FitsSchemaItems)
 // that you have to use a special functor (like this one) to set data members
@@ -738,7 +752,7 @@ Schema FitsSchemaInputMapper::finalize() {
                 // Of course, we'll try to recreate that alias every time we handle another flag field with
                 // the same prefix, but AliasMap know hows to handle that no-op set.
                 aliases.set(prefix + "flags", prefix + "flag");
-            } else if (iter->ttype.find("flux") != std::string::npos) {
+            } else if (hasInstFluxUnits(*iter)) {
                 // Create an alias that resolves "X_instFlux" to "X" or "X_instFluxErr" to "X_err".
                 if (endswith(iter->ttype, "_err")) {
                     aliases.set(replaceSuffix(iter->ttype, 4, "_instFluxErr"), iter->ttype);
@@ -771,8 +785,7 @@ Schema FitsSchemaInputMapper::finalize() {
         // that should have been named Sigma. So provide aliases xErr -> xSigma
         AliasMap &aliases = *_impl->schema.getAliasMap();
         for (auto iter = _impl->asList().begin(); iter != _impl->asList().end(); ++iter) {
-            // flux->instFlux only applies to SourceCatalogs.
-            if (_impl->type == "SOURCE" && iter->ttype.find("flux") != std::string::npos) {
+            if (hasInstFluxUnits(*iter)) {
                 // Create an alias that resolves "X_instFlux" to "X_flux" or "X_instFluxErr" to "X_fluxSigma".
                 if (endswith(iter->ttype, "fluxSigma")) {
                     // replace "fluxSigma"->"instFluxErr"
@@ -790,7 +803,7 @@ Schema FitsSchemaInputMapper::finalize() {
         // Version 2 tables used _flux when we should use _instFlux (see RFC-322).
         AliasMap &aliases = *_impl->schema.getAliasMap();
         for (auto iter = _impl->asList().begin(); iter != _impl->asList().end(); ++iter) {
-            if (iter->ttype.find("flux") != std::string::npos) {
+            if (hasInstFluxUnits(*iter)) {
                 // Create an alias that resolves "X_instFlux" to "X_flux" or "X_instFluxErr" to "X_fluxErr".
                 if (endswith(iter->ttype, "fluxErr")) {
                     // replace "fluxErr"->"instFluxErr"
