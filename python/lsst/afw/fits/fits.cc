@@ -43,8 +43,6 @@ using namespace pybind11::literals;
 void declareImageCompression(py::module & mod) {
     py::class_<ImageCompressionOptions> cls(mod, "ImageCompressionOptions");
 
-    py::module::import("lsst.pex.exceptions");
-
     py::enum_<ImageCompressionOptions::CompressionAlgorithm>(cls, "CompressionAlgorithm").
         value("NONE", ImageCompressionOptions::CompressionAlgorithm::NONE).
         value("GZIP", ImageCompressionOptions::CompressionAlgorithm::GZIP).
@@ -191,6 +189,8 @@ void declareFits(py::module & mod) {
 
 PYBIND11_MODULE(fits, mod) {
     py::class_<MemFileManager> clsMemFileManager(mod, "MemFileManager");
+
+    py::module::import("lsst.pex.exceptions");
 
     lsst::pex::exceptions::python::declareException<FitsError, lsst::pex::exceptions::IoError>(
             mod, "FitsError", "IoError");
