@@ -147,6 +147,23 @@ void declareMultiPlaneMethods(py::class_<Class, Args...> & cls) {
         "bbox"_a=lsst::geom::Box2I(), "origin"_a=PARENT, "allowUnsafe"_a=false, "dtype"_a=py::none()
     );
     cls.def(
+        "readImageArray",
+        [](Class & self, lsst::geom::Box2I const & bbox, ImageOrigin origin, bool allowUnsafe,
+           py::object dtype) {
+            if (dtype == py::none()) {
+                dtype = py::dtype(self.readImageDType());
+            }
+            return utils::python::TemplateInvoker::apply(
+                makeReadHelper([&](auto t) {
+                    return self.template readImageArray<decltype(t)>(bbox, origin, allowUnsafe);
+                }),
+                py::dtype(dtype),
+                utils::python::TemplateInvoker::Tag<std::uint16_t, int, float, double, std::uint64_t>()
+            );
+        },
+        "bbox"_a=lsst::geom::Box2I(), "origin"_a=PARENT, "allowUnsafe"_a=false, "dtype"_a=py::none()
+    );
+    cls.def(
         "readMask",
         [](Class & self, lsst::geom::Box2I const & bbox, ImageOrigin origin, bool conformMasks,
            bool allowUnsafe, py::object dtype) {
@@ -165,6 +182,23 @@ void declareMultiPlaneMethods(py::class_<Class, Args...> & cls) {
         "dtype"_a=py::none()
     );
     cls.def(
+        "readMaskArray",
+        [](Class & self, lsst::geom::Box2I const & bbox, ImageOrigin origin, bool allowUnsafe,
+           py::object dtype) {
+            if (dtype == py::none()) {
+                dtype = py::dtype(self.readMaskDType());
+            }
+            return utils::python::TemplateInvoker::apply(
+                makeReadHelper([&](auto t) {
+                    return self.template readMaskArray<decltype(t)>(bbox, origin, allowUnsafe);
+                }),
+                py::dtype(dtype),
+                utils::python::TemplateInvoker::Tag<MaskPixel>()
+            );
+        },
+        "bbox"_a=lsst::geom::Box2I(), "origin"_a=PARENT, "allowUnsafe"_a=false, "dtype"_a=py::none()
+    );
+    cls.def(
         "readVariance",
         [](Class & self, lsst::geom::Box2I const & bbox, ImageOrigin origin, bool allowUnsafe,
            py::object dtype) {
@@ -174,6 +208,23 @@ void declareMultiPlaneMethods(py::class_<Class, Args...> & cls) {
             return utils::python::TemplateInvoker::apply(
                 makeReadHelper([&](auto t) {
                     return self.template readVariance<decltype(t)>(bbox, origin, allowUnsafe);
+                }),
+                py::dtype(dtype),
+                utils::python::TemplateInvoker::Tag<VariancePixel>()
+            );
+        },
+        "bbox"_a=lsst::geom::Box2I(), "origin"_a=PARENT, "allowUnsafe"_a=false, "dtype"_a=py::none()
+    );
+    cls.def(
+        "readVarianceArray",
+        [](Class & self, lsst::geom::Box2I const & bbox, ImageOrigin origin, bool allowUnsafe,
+           py::object dtype) {
+            if (dtype == py::none()) {
+                dtype = py::dtype(self.readVarianceDType());
+            }
+            return utils::python::TemplateInvoker::apply(
+                makeReadHelper([&](auto t) {
+                    return self.template readVarianceArray<decltype(t)>(bbox, origin, allowUnsafe);
                 }),
                 py::dtype(dtype),
                 utils::python::TemplateInvoker::Tag<VariancePixel>()

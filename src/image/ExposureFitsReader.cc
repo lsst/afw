@@ -313,16 +313,37 @@ Image<ImagePixelT> ExposureFitsReader::readImage(lsst::geom::Box2I const & bbox,
     return _maskedImageReader.readImage<ImagePixelT>(bbox, origin, allowUnsafe);
 }
 
+template <typename ImagePixelT>
+ndarray::Array<ImagePixelT, 2, 2> ExposureFitsReader::readImageArray(lsst::geom::Box2I const & bbox,
+                                                                     ImageOrigin origin,
+                                                                     bool allowUnsafe) {
+    return _maskedImageReader.readImageArray<ImagePixelT>(bbox, origin, allowUnsafe);
+}
+
 template <typename MaskPixelT>
 Mask<MaskPixelT> ExposureFitsReader::readMask(lsst::geom::Box2I const & bbox, ImageOrigin origin,
                                               bool conformMasks, bool allowUnsafe) {
     return _maskedImageReader.readMask<MaskPixelT>(bbox, origin, conformMasks, allowUnsafe);
 }
 
+template <typename MaskPixelT>
+ndarray::Array<MaskPixelT, 2, 2> ExposureFitsReader::readMaskArray(lsst::geom::Box2I const & bbox,
+                                                                   ImageOrigin origin,
+                                                                   bool allowUnsafe) {
+    return _maskedImageReader.readMaskArray<MaskPixelT>(bbox, origin, allowUnsafe);
+}
+
 template <typename VariancePixelT>
 Image<VariancePixelT> ExposureFitsReader::readVariance(lsst::geom::Box2I const & bbox, ImageOrigin origin,
                                                        bool allowUnsafe) {
     return _maskedImageReader.readVariance<VariancePixelT>(bbox, origin, allowUnsafe);
+}
+
+template <typename VariancePixelT>
+ndarray::Array<VariancePixelT, 2, 2> ExposureFitsReader::readVarianceArray(lsst::geom::Box2I const & bbox,
+                                                                           ImageOrigin origin,
+                                                                           bool allowUnsafe) {
+    return _maskedImageReader.readVarianceArray<VariancePixelT>(bbox, origin, allowUnsafe);
 }
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
@@ -372,6 +393,11 @@ void ExposureFitsReader::_ensureReaders() {
         lsst::geom::Box2I const &, \
         ImageOrigin, bool \
     ); \
+    template ndarray::Array<ImagePixelT, 2, 2> ExposureFitsReader::readImageArray(\
+        lsst::geom::Box2I const &, \
+        ImageOrigin, \
+        bool \
+    ); \
     template MaskedImage<ImagePixelT, MaskPixel, VariancePixel> ExposureFitsReader::readMaskedImage( \
         lsst::geom::Box2I const &, \
         ImageOrigin, \
@@ -384,8 +410,29 @@ INSTANTIATE(float);
 INSTANTIATE(double);
 INSTANTIATE(std::uint64_t);
 
-template Mask<MaskPixel> ExposureFitsReader::readMask(lsst::geom::Box2I const &, ImageOrigin, bool, bool);
-template Image<VariancePixel> ExposureFitsReader::readVariance(lsst::geom::Box2I const &, ImageOrigin, bool);
+template Mask<MaskPixel> ExposureFitsReader::readMask(
+    lsst::geom::Box2I const &,
+    ImageOrigin,
+    bool,
+    bool
+);
+template ndarray::Array<MaskPixel, 2, 2> ExposureFitsReader::readMaskArray(
+    lsst::geom::Box2I const &,
+    ImageOrigin,
+    bool
+);
+
+template Image<VariancePixel> ExposureFitsReader::readVariance(
+    lsst::geom::Box2I const &,
+    ImageOrigin,
+    bool
+);
+template ndarray::Array<VariancePixel, 2, 2> ExposureFitsReader::readVarianceArray(
+    lsst::geom::Box2I const &,
+    ImageOrigin,
+    bool
+);
+
 
 
 }}} // lsst::afw::image

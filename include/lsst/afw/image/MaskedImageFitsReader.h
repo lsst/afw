@@ -119,6 +119,7 @@ public:
     std::shared_ptr<daf::base::PropertyList> readVarianceMetadata();
     ///@}
 
+    ///@{
     /**
      * Read the image plane.
      *
@@ -135,6 +136,10 @@ public:
     template <typename ImagePixelT>
     Image<ImagePixelT> readImage(lsst::geom::Box2I const & bbox=lsst::geom::Box2I(),
                                  ImageOrigin origin=PARENT, bool allowUnsafe=false);
+    template <typename ImagePixelT>
+    ndarray::Array<ImagePixelT, 2, 2> readImageArray(lsst::geom::Box2I const & bbox=lsst::geom::Box2I(),
+                                                     ImageOrigin origin=PARENT, bool allowUnsafe=false);
+    ///@}
 
     /**
      * Read the mask plane.
@@ -157,6 +162,24 @@ public:
                               bool allowUnsafe=false);
 
     /**
+     * Read the mask plane.
+     *
+     * @param  bbox          A bounding box used to defined a subimage, or an
+     *                       empty box (default) to read the whole image.
+     * @param  origin        Coordinate system convention for the given box.
+     * @param  allowUnsafe   Permit reading into the requested pixel type even
+     *                       when on-disk values may overflow or truncate.
+     *
+     * In Python, this templated method is wrapped with an additional `dtype`
+     * argument to provide the type to read.  This defaults to the type of the
+     * on-disk image.
+     */
+    template <typename MaskPixelT>
+    ndarray::Array<MaskPixelT, 2, 2> readMaskArray(lsst::geom::Box2I const & bbox=lsst::geom::Box2I(),
+                                                   ImageOrigin origin=PARENT, bool allowUnsafe=false);
+
+    ///@{
+    /**
      * Read the variance plane.
      *
      * @param  bbox   A bounding box used to defined a subimage, or an empty
@@ -172,6 +195,10 @@ public:
     template <typename VariancePixelT>
     Image<VariancePixelT> readVariance(lsst::geom::Box2I const & bbox=lsst::geom::Box2I(),
                                        ImageOrigin origin=PARENT, bool allowUnsafe=false);
+    template <typename VariancePixelT>
+    ndarray::Array<VariancePixelT, 2, 2> readVarianceArray(lsst::geom::Box2I const & bbox=lsst::geom::Box2I(),
+                                                           ImageOrigin origin=PARENT, bool allowUnsafe=false);
+    ///@}
 
     /**
      * Read the full MaskedImage.
