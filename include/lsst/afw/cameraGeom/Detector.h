@@ -138,7 +138,7 @@ public:
     lsst::geom::Extent2D getPixelSize() const { return _pixelSize; }
 
     /** Get the transform registry */
-    TransformMap const getTransformMap() const { return _transformMap; }
+    std::shared_ptr<TransformMap const> getTransformMap() const { return _transformMap; }
 
     /** Have we got crosstalk coefficients? */
     bool hasCrosstalk() const {
@@ -300,7 +300,7 @@ private:
     Orientation _orientation;               ///< position and orientation of detector in focal plane
     lsst::geom::Extent2D _pixelSize;        ///< pixel size (mm)
     CameraSys _nativeSys;                   ///< native coordinate system of this detector
-    TransformMap _transformMap;             ///< registry of coordinate transforms
+    std::shared_ptr<TransformMap const> _transformMap;   ///< registry of coordinate transforms
     CrosstalkMatrix _crosstalk;             ///< crosstalk coefficients
 };
 }  // namespace cameraGeom

@@ -112,17 +112,22 @@ std::unordered_map<CameraSys, int> makeTranslator(CameraSys const &reference, Ma
 
 lsst::afw::geom::Point2Endpoint TransformMap::_pointConverter;
 
+std::shared_ptr<TransformMap const> TransformMap::make(
+    CameraSys const & reference,
+    Transforms const & transforms
+) {
+    // can't use make_shared because constructor is private
+    return std::shared_ptr<TransformMap>(new TransformMap(reference, transforms));
+}
+
 TransformMap::TransformMap(
         CameraSys const &reference,
         std::unordered_map<CameraSys, std::shared_ptr<geom::TransformPoint2ToPoint2>> const &transforms)
         : _transforms(makeTransforms(reference, transforms)),
           _frameIds(makeTranslator(reference, transforms)) {}
 
-// TransformMap is immutable, so we can just copy the shared_ptr
-TransformMap::TransformMap(TransformMap const &other) = default;
-
 // All resources owned by value or by smart pointer
-TransformMap::~TransformMap() = default;
+TransformMap::~TransformMap() noexcept = default;
 
 lsst::geom::Point2D TransformMap::transform(lsst::geom::Point2D const &point, CameraSys const &fromSys,
                                             CameraSys const &toSys) const {

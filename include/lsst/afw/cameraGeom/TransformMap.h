@@ -24,8 +24,8 @@
 #define LSST_AFW_CAMERAGEOM_TRANSFORMMAP_H
 
 #include <vector>
-#include <map>
 #include <unordered_map>
+#include <memory>
 
 #include "boost/iterator/transform_iterator.hpp"
 #include "astshim/FrameSet.h"
@@ -51,19 +51,25 @@ namespace cameraGeom {
  * * Iteration over supported CameraSys using @ref begin and @ref end in C++
  *   and standard Python iteration in Python.
  *
+ * TransformMap is immutable and must always be held by shared_ptr; this is
+ * enforced by making all non-deleted constructors private.
+ *
  * @exceptsafe Unless otherwise specified, all methods guarantee only basic
  *             exception safety.
  */
 class TransformMap final {
 private:
+
     // Functor for boost::transform_iterator: given an entry in a std::map or unordered_map, return the key
     struct GetKey {
         CameraSys const &operator()(std::pair<const CameraSys, int> const &p) const { return p.first; };
     };
 
-public:
-    using Transforms = std::unordered_map<CameraSys, std::shared_ptr<geom::TransformPoint2ToPoint2>>;
     using CameraSysFrameIdMap = std::unordered_map<CameraSys, int>;
+
+public:
+
+    using Transforms = std::unordered_map<CameraSys, std::shared_ptr<geom::TransformPoint2ToPoint2>>;
     using CameraSysIterator = boost::transform_iterator<GetKey, CameraSysFrameIdMap::const_iterator>;
 
     /**
@@ -77,25 +83,22 @@ public:
      * @throws lsst::pex::exceptions::InvalidParameterError Thrown if `transforms` contains
      *         the `reference` camera system as a key, or if any Transform is not invertible.
      */
-    TransformMap(
-            CameraSys const &reference,
-            std::unordered_map<CameraSys, std::shared_ptr<geom::TransformPoint2ToPoint2>> const &transforms);
-
-    /**
-     * Create a TransformMap supporting the same Transforms.
-     *
-     * @param other  The map to copy.
-     */
-    TransformMap(TransformMap const &other);
+    static std::shared_ptr<TransformMap const> make(
+        CameraSys const &reference,
+        Transforms const &transforms
+    );
 
     ///@{
-    /// TransformMap is immutable.
+    /// TransformMap is immutable, so both moving and copying are prohibited.
+    /// It is also always held by shared_ptr, so there is no good reason to
+    /// copy it.
+    TransformMap(TransformMap const &other) = delete;
     TransformMap(TransformMap &&other) = delete;
     TransformMap &operator=(TransformMap const &) = delete;
     TransformMap &operator=(TransformMap &&) = delete;
     ///@}
 
-    ~TransformMap();
+    ~TransformMap() noexcept;
 
     /**
      * Convert a point from one camera coordinate system to another.
@@ -154,6 +157,12 @@ public:
     size_t size() const noexcept;
 
 private:
+
+    TransformMap(
+        CameraSys const &reference,
+        std::unordered_map<CameraSys, std::shared_ptr<geom::TransformPoint2ToPoint2>> const &transforms
+    );
+
     /**
      * The internal frame ID corresponding to a coordinate system.
      *
@@ -182,8 +191,7 @@ private:
     static lsst::afw::geom::Point2Endpoint _pointConverter;
 
     /// Stores information on all relationships between Transforms.
-    // May be shared between multiple copies of TransformMap, since TransformMap is immutable
-    std::shared_ptr<ast::FrameSet const> const _transforms;
+    std::unique_ptr<ast::FrameSet const> const _transforms;
 
     /**
      * Translates from LSST coordinate ID to AST frame ID.

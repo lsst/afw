@@ -42,7 +42,7 @@ Detector::Detector(std::string const &name, int id, DetectorType type, std::stri
           _orientation(orientation),
           _pixelSize(pixelSize),
           _nativeSys(CameraSys(PIXELS, name)),
-          _transformMap(_nativeSys, transforms),
+          _transformMap(TransformMap::make(_nativeSys, transforms)),
           _crosstalk(crosstalk) {
     _init();
 }
@@ -51,7 +51,7 @@ Detector::Detector(Detector const &) = default;
 
 std::vector<lsst::geom::Point2D> Detector::getCorners(CameraSys const &cameraSys) const {
     std::vector<lsst::geom::Point2D> nativeCorners = lsst::geom::Box2D(_bbox).getCorners();
-    auto nativeToCameraSys = _transformMap.getTransform(_nativeSys, cameraSys);
+    auto nativeToCameraSys = _transformMap->getTransform(_nativeSys, cameraSys);
     return nativeToCameraSys->applyForward(nativeCorners);
 }
 
@@ -88,7 +88,7 @@ std::shared_ptr<table::AmpInfoRecord const> Detector::_get(std::string const &na
     return ampIter->second;
 }
 
-bool Detector::hasTransform(CameraSys const &cameraSys) const { return _transformMap.contains(cameraSys); }
+bool Detector::hasTransform(CameraSys const &cameraSys) const { return _transformMap->contains(cameraSys); }
 
 bool Detector::hasTransform(CameraSysPrefix const &cameraSysPrefix) const {
     return hasTransform(makeCameraSys(cameraSysPrefix));
@@ -97,19 +97,19 @@ bool Detector::hasTransform(CameraSysPrefix const &cameraSysPrefix) const {
 template <typename FromSysT, typename ToSysT>
 std::shared_ptr<geom::TransformPoint2ToPoint2> Detector::getTransform(FromSysT const &fromSys,
                                                                       ToSysT const &toSys) const {
-    return _transformMap.getTransform(makeCameraSys(fromSys), makeCameraSys(toSys));
+    return _transformMap->getTransform(makeCameraSys(fromSys), makeCameraSys(toSys));
 }
 
 template <typename FromSysT, typename ToSysT>
 lsst::geom::Point2D Detector::transform(lsst::geom::Point2D const &point, FromSysT const &fromSys,
                                         ToSysT const &toSys) const {
-    return _transformMap.transform(point, makeCameraSys(fromSys), makeCameraSys(toSys));
+    return _transformMap->transform(point, makeCameraSys(fromSys), makeCameraSys(toSys));
 }
 
 template <typename FromSysT, typename ToSysT>
 std::vector<lsst::geom::Point2D> Detector::transform(std::vector<lsst::geom::Point2D> const &points,
                                                      FromSysT const &fromSys, ToSysT const &toSys) const {
-    return _transformMap.transform(points, makeCameraSys(fromSys), makeCameraSys(toSys));
+    return _transformMap->transform(points, makeCameraSys(fromSys), makeCameraSys(toSys));
 }
 
 void Detector::_init() {
@@ -124,7 +124,7 @@ void Detector::_init() {
     }
 
     // check detector name in CoordSys in transform registry
-    for (CameraSys sys : _transformMap) {
+    for (CameraSys const & sys : *_transformMap) {
         if (sys.hasDetectorName() && sys.getDetectorName() != _name) {
             std::ostringstream os;
             os << "Invalid transformMap: " << sys << " detector name != \"" << _name << "\"";

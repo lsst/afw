@@ -42,10 +42,16 @@ PYBIND11_MODULE(transformMap, mod) {
     /* Member types and enums */
 
     /* Constructors */
-    cls.def(pybind11::init<
-                    CameraSys const &,
-                    std::unordered_map<CameraSys, std::shared_ptr<geom::TransformPoint2ToPoint2>> const &>(),
-            "reference"_a, "transforms"_a);
+    cls.def(
+        py::init([](
+            CameraSys const &reference,
+            std::unordered_map<CameraSys, std::shared_ptr<geom::TransformPoint2ToPoint2>> const & transforms
+        ) {
+            // An apparent pybind11 bug: it's usually happy to cast away constness, but won't do it here.
+            return std::const_pointer_cast<TransformMap>(TransformMap::make(reference, transforms));
+        }),
+        "reference"_a, "transforms"_a
+    );
 
     /* Operators */
     cls.def("__len__", &TransformMap::size);
