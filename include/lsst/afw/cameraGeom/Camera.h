@@ -52,8 +52,10 @@ public:
      * @param[in] transformMap  a TransformMap that at least supports FOCAL_PLANE and FIELD_ANGLE coordinates
      * @param[in] pupilFactoryName name of a PupilFactory class for this camera
      */
-    Camera(std::string const &name, DetectorList const &detectorList,
-           std::shared_ptr<TransformMap> transformMap, std::string const &pupilFactoryName);
+    static std::shared_ptr<Camera> make(std::string const &name,
+                                        DetectorList const &detectorList,
+                                        std::shared_ptr<TransformMap> transformMap,
+                                        std::string const &pupilFactoryName);
 
     // Camera is immutable, so it cannot be moveable.  It is also always held
     // by shared_ptr, so there is no good reason to copy it.
@@ -144,6 +146,11 @@ public:
                                                CameraSys const &toSys) const;
 
 private:
+
+    Camera(std::string const &name,
+           DetectorList const &detectorList,
+           std::shared_ptr<TransformMap> transformMap,
+           std::string const &pupilFactoryName);
 
     std::string _name;
     std::shared_ptr<TransformMap const> _transformMap;

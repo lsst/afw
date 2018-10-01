@@ -25,6 +25,12 @@ namespace lsst {
 namespace afw {
 namespace cameraGeom {
 
+std::shared_ptr<DetectorCollection> DetectorCollection::make(List const & detectorList) {
+    // We can't use make_shared without jumping through messy hoops because
+    // the constructor is protected.
+    return std::shared_ptr<DetectorCollection>(new DetectorCollection(detectorList));
+}
+
 DetectorCollection::DetectorCollection(List const & detectorList) {
     for (auto const & detector : detectorList) {
         _nameDict[detector->getName()] = detector;

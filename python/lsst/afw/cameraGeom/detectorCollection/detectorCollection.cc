@@ -35,7 +35,10 @@ PYBIND11_MODULE(detectorCollection, mod){
 
     py::class_<DetectorCollection, std::shared_ptr<DetectorCollection>> cls(mod, "DetectorCollection");
 
-    cls.def(py::init<DetectorCollection::List const & >(), "list"_a);
+    cls.def(
+        py::init(&DetectorCollection::make),
+        "list"_a
+    );
     cls.def("getNameMap", &DetectorCollection::getNameMap);
     cls.def("getIdMap", &DetectorCollection::getIdMap);
     cls.def("getFpBBox", &DetectorCollection::getFpBBox);

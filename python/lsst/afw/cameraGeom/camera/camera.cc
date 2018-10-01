@@ -36,9 +36,7 @@ PYBIND11_MODULE(camera, mod){
 
     py::class_<Camera, DetectorCollection, std::shared_ptr<Camera>> cls(mod, "Camera");
 
-    cls.def(py::init<std::string const &, Camera::DetectorList const &,
-                     std::shared_ptr<TransformMap>, std::string const &>(),
-            "name"_a, "detectorList"_a, "transformMap"_a, "pupilFactoryName"_a);
+    cls.def(py::init(&Camera::make), "name"_a, "detectorList"_a, "transformMap"_a, "pupilFactoryName"_a);
     // Python-only constructor that takes a PupilFactory type object for
     // backwards compatibility.
     cls.def(
@@ -53,7 +51,7 @@ PYBIND11_MODULE(camera, mod){
                     pupilFactoryClass.attr("__module__"),
                     pupilFactoryClass.attr("__name__")
                 );
-                return std::make_shared<Camera>(name, detectorList, transformMap, pupilFactoryName);
+                return Camera::make(name, detectorList, transformMap, pupilFactoryName);
             }
         )
     );

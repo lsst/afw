@@ -61,6 +61,15 @@ std::shared_ptr<afw::geom::TransformPoint2ToPoint2> getTransformFromOneTransform
 
 } // anonymous
 
+std::shared_ptr<Camera> Camera::make(std::string const &name, DetectorList const &detectorList,
+                                     std::shared_ptr<TransformMap> transformMap,
+                                     std::string const &pupilFactoryName) {
+    // We can't use make_shared without jumping through messy hoops because
+    // the constructor is private.
+    return std::shared_ptr<Camera>(
+        new Camera(name, detectorList, std::move(transformMap), pupilFactoryName));
+}
+
 Camera::Camera(std::string const &name, DetectorList const &detectorList,
                std::shared_ptr<TransformMap> transformMap, std::string const &pupilFactoryName) :
     DetectorCollection(detectorList),

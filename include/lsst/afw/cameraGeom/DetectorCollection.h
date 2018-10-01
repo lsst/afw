@@ -34,15 +34,23 @@ namespace afw {
 namespace cameraGeom {
 
 /**
- * An immutable collection of Detectors that can be accessed by name or ID
+ * An immutable collection of Detectors that can be accessed by name or ID.
+ *
+ * DetectorCollection instances must always be held by shared_ptr to for
+ * enable_shared_from_this.  As a result the static `make` functions must
+ * be used to construct them in C++ (in Python, those functions are wrapped
+ * as regular constructors).
  */
-class DetectorCollection {
+class DetectorCollection : public std::enable_shared_from_this<DetectorCollection> {
 public:
     using NameMap = std::unordered_map<std::string, std::shared_ptr<Detector>>;
     using IdMap = std::unordered_map<int, std::shared_ptr<Detector>>;
     using List = std::vector<std::shared_ptr<Detector>>;
 
-    explicit DetectorCollection(List const & detectorList);
+    /**
+     * Construct a DetectorCollection from a list of detectors.
+     */
+    static std::shared_ptr<DetectorCollection> make(List const & detectorList);
 
     // DetectorCollection is immutable, so it cannot be moveable.  It is also
     // always held by shared_ptr, so there is no good reason to copy it.
@@ -107,6 +115,10 @@ public:
      * @return pointer to detector entry if the entry exists, else return the default value
      */
     std::shared_ptr<Detector> get(int id, std::shared_ptr<Detector> def=nullptr) const;
+
+protected:
+
+    explicit DetectorCollection(List const & detectorList);
 
 private:
     NameMap _nameDict;                //< map of detector names
