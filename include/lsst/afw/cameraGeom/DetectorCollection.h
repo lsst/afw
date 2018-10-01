@@ -44,10 +44,14 @@ public:
 
     explicit DetectorCollection(List const & detectorList);
 
-    DetectorCollection(DetectorCollection const &);
-    DetectorCollection(DetectorCollection &&) noexcept;
-    DetectorCollection & operator=(DetectorCollection const &);
-    DetectorCollection & operator=(DetectorCollection &&) noexcept;
+    // DetectorCollection is immutable, so it cannot be moveable.  It is also
+    // always held by shared_ptr, so there is no good reason to copy it.
+    DetectorCollection(DetectorCollection const &) = delete;
+    DetectorCollection(DetectorCollection &&) = delete;
+
+    // DetectorCollection is immutable, so it cannot be assignable.
+    DetectorCollection & operator=(DetectorCollection const &) = delete;
+    DetectorCollection & operator=(DetectorCollection &&) = delete;
 
     virtual ~DetectorCollection() noexcept;
 

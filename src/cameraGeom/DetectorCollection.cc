@@ -25,9 +25,6 @@ namespace lsst {
 namespace afw {
 namespace cameraGeom {
 
-/**
- * An immutable collection of Detectors that can be accessed by name or ID
- */
 DetectorCollection::DetectorCollection(List const & detectorList) {
     for (auto const & detector : detectorList) {
         _nameDict[detector->getName()] = detector;
@@ -45,14 +42,7 @@ DetectorCollection::DetectorCollection(List const & detectorList) {
     }
 }
 
-DetectorCollection::DetectorCollection(DetectorCollection const &) = default;
-DetectorCollection::DetectorCollection(DetectorCollection &&) noexcept = default;
-
-DetectorCollection & DetectorCollection::operator=(DetectorCollection const &) = default;
-DetectorCollection & DetectorCollection::operator=(DetectorCollection &&) noexcept = default;
-
 DetectorCollection::~DetectorCollection() noexcept = default;
-
 
 std::shared_ptr<Detector> DetectorCollection::operator[](std::string const & name) const {
     auto det = get(name);
@@ -61,6 +51,7 @@ std::shared_ptr<Detector> DetectorCollection::operator[](std::string const & nam
     }
     return det;
 }
+
 std::shared_ptr<Detector> DetectorCollection::operator[](int id) const {
     auto det = get(id);
     if (det == nullptr) {
@@ -77,6 +68,7 @@ std::shared_ptr<Detector> DetectorCollection::get(std::string const & name,
     }
     return i->second;
 }
+
 std::shared_ptr<Detector> DetectorCollection::get(int id, std::shared_ptr<Detector> def) const {
     auto i = _idDict.find(id);
     if (i == _idDict.end()) {

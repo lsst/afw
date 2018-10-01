@@ -61,7 +61,7 @@ PYBIND11_MODULE(detectorCollection, mod){
         }
     );
     cls.def(
-        "__contains__", 
+        "__contains__",
         [](DetectorCollection const & self, int id) {
             return self.get(id) != nullptr;
         }
