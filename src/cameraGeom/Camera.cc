@@ -26,6 +26,7 @@ namespace afw {
 namespace cameraGeom {
 
 namespace {
+
 // Set this as a function to ensure FOCAL_PLANE is defined before use.
 CameraSys const getNativeCameraSys() { return FOCAL_PLANE; }
 
@@ -68,12 +69,13 @@ Camera::Camera(std::string const &name, DetectorList const &detectorList,
 
 Camera::~Camera() noexcept = default;
 
-Camera::DetectorList Camera::findDetectors(lsst::geom::Point2D const &point, CameraSys const &cameraSys) const {
+Camera::DetectorList Camera::findDetectors(lsst::geom::Point2D const &point,
+                                           CameraSys const &cameraSys) const {
     auto transform = getTransformFromOneTransformMap(*this, cameraSys, getNativeCameraSys());
     auto nativePoint = transform->applyForward(point);
 
     DetectorList detectorList;
-    for (auto const &item: getIdMap()) {
+    for (auto const &item : getIdMap()) {
         auto detector = item.second;
         auto nativeToPixels = detector->getTransform(getNativeCameraSys(), PIXELS);
         auto pointPixels = nativeToPixels->applyForward(nativePoint);

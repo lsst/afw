@@ -55,16 +55,25 @@ public:
     Camera(std::string const &name, DetectorList const &detectorList,
            std::shared_ptr<TransformMap> transformMap, std::string const &pupilFactoryName);
 
+    // Camera is immutable, so it cannot be moveable.  It is also always held
+    // by shared_ptr, so there is no good reason to copy it.
     Camera(Camera const &) = delete;
     Camera(Camera &&) = delete;
 
+    // Camera is immutable, so it cannot be assignable.
     Camera & operator=(Camera const &) = delete;
     Camera & operator=(Camera &&) = delete;
 
     virtual ~Camera() noexcept;
 
+    /**
+     * Return the name of the camera
+     */
     std::string getName() const { return _name; }
 
+    /**
+     * Return the fully-qualified name of the Python class that provides this Camera's PupilFactory.
+     */
     std::string getPupilFactoryName() const { return _pupilFactoryName; }
 
     /**
@@ -85,7 +94,7 @@ public:
      *    which contain the corresponding point
      */
     std::vector<DetectorList> findDetectorsList(std::vector<lsst::geom::Point2D> const &pointList,
-                                   CameraSys const &cameraSys) const;
+                                                CameraSys const &cameraSys) const;
 
     /**
      * Get a transform from one CameraSys to another
