@@ -10,14 +10,11 @@ ccList = []
 spatialCellSrcList = ["spatialCellExample.cc", "testSpatialCell.cc"]
 for path in Glob("#examples/*.cc"):
     base, name = os.path.split(path.abspath)
-    if name.endswith("_wrap.cc"): continue
     if name in spatialCellSrcList:
         continue
     ccList.append(name)
 
-scripts.BasicSConscript.examples(
-    ccList=ccList, swigSrc={"testSpatialCellLib": ["testSpatialCell.cc"]}
-    )
+scripts.BasicSConscript.examples(ccList=ccList)
 
 targets["examples"].extend(
     env.Program(spatialCellSrcList, LIBS=env.getLibs("main"))
