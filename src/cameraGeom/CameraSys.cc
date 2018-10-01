@@ -20,6 +20,7 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
+#include "lsst/utils/hashCombine.h"
 #include "lsst/afw/cameraGeom/CameraSys.h"
 
 namespace lsst {
@@ -36,20 +37,11 @@ CameraSysPrefix const TAN_PIXELS = CameraSysPrefix("TanPixels");
 
 CameraSysPrefix const ACTUAL_PIXELS = CameraSysPrefix("ActualPixels");
 
-size_t CameraSysPrefix::hash() const noexcept {
-    // Java community algorithm; see Effective Java, Item 9 for rationale
-    size_t result = 42;
-    result = 31 * result + std::hash<std::string>()(_sysName);
-    return result;
-}
+size_t CameraSysPrefix::hash_value() const noexcept { return std::hash<std::string>()(_sysName); }
 
-size_t CameraSys::hash() const noexcept {
-    using std::hash;
-    // Java community algorithm; see Effective Java, Item 9 for rationale
-    size_t result = 43;
-    result = 31 * result + hash<std::string>()(_sysName);
-    result = 31 * result + hash<std::string>()(_detectorName);
-    return result;
+size_t CameraSys::hash_value() const noexcept {
+    // Completely arbitrary seed
+    return utils::hashCombine(43, _sysName, _detectorName);
 }
 
 std::ostream &operator<<(std::ostream &os, CameraSysPrefix const &camSysPrefix) {
