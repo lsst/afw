@@ -37,6 +37,34 @@ namespace cameraGeom {
 namespace {
 
 using PyTransformMap = py::class_<TransformMap, std::shared_ptr<TransformMap>>;
+using PyTransformMapBuilder = py::class_<TransformMap::Builder, std::shared_ptr<TransformMap::Builder>>;
+
+void declareTransformMapBuilder(PyTransformMap & parent) {
+    PyTransformMapBuilder cls(parent, "Builder");
+    cls.def(py::init<CameraSys const &>(), "reference"_a);
+    // connect overloads are wrapped with lambdas so we can return the Python
+    // self object directly instead of re-converting *this to Python.
+    cls.def("connect",
+            [](py::object self, CameraSys const & fromSys, CameraSys const & toSys,
+               std::shared_ptr<geom::TransformPoint2ToPoint2 const> transform) {
+                py::cast<TransformMap::Builder &>(self).connect(fromSys, toSys, std::move(transform));
+                return self;
+            },
+            "fromSys"_a, "toSys"_a, "transform"_a);
+    cls.def("connect",
+            [](py::object self, CameraSys const & fromSys, TransformMap::Transforms const & transforms) {
+                py::cast<TransformMap::Builder &>(self).connect(fromSys, transforms);
+                return self;
+            },
+            "fromSys"_a, "transforms"_a);
+    cls.def("connect",
+            [](py::object self, TransformMap::Transforms const & transforms) {
+                py::cast<TransformMap::Builder &>(self).connect(transforms);
+                return self;
+            },
+            "transforms"_a);
+    cls.def("build", &TransformMap::Builder::build);
+}
 
 void declareTransformMap(py::module & mod) {
     PyTransformMap cls(mod, "TransformMap");
@@ -74,6 +102,8 @@ void declareTransformMap(py::module & mod) {
         "pointList"_a, "fromSys"_a, "toSys"_a
     );
     cls.def("getTransform", &TransformMap::getTransform, "fromSys"_a, "toSys"_a);
+
+    declareTransformMapBuilder(cls);
 }
 
 PYBIND11_MODULE(transformMap, mod) {
