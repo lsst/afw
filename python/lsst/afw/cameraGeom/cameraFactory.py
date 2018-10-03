@@ -14,6 +14,69 @@ cameraSysList = [FIELD_ANGLE, FOCAL_PLANE, PIXELS, TAN_PIXELS, ACTUAL_PIXELS]
 cameraSysMap = dict((sys.getSysName(), sys) for sys in cameraSysList)
 
 
+def makeDetectorData(detectorConfig, ampInfoCatalog, focalPlaneToField):
+    """Build a dictionary of Detector constructor keyword arguments.
+
+    The returned dictionary can be passed as keyword arguments to the Detector
+    constructor, providing all required arguments.  However, using these
+    arguments directly constructs a Detector with knowledge of only the
+    coordinate systems that are *directly* mapped to its own PIXELS coordinate
+    system.  To construct Detectors with a shared TransformMap for the full
+    Camera, use makeCameraFromCatalogs or makeCameraFromPath instead of
+    calling this function or makeDetector directly.
+
+    Parameters
+    ----------
+    detectorConfig : `lsst.pex.config.Config`
+        Configuration for this detector.
+    ampInfoCatalog : `lsst.afw.table.AmpInfoCatalog`
+        amplifier information for this detector
+    focalPlaneToField : `lsst.afw.geom.TransformPoint2ToPoint2`
+        FOCAL_PLANE to FIELD_ANGLE Transform
+
+    Returns
+    -------
+    data : `dict`
+        Contains the following keys: name, id, type, serial, bbox, orientation,
+        pixelSize, transforms, ampInfoCatalog, and optionally crosstalk.
+        The transforms key is a dictionary whose values are Transforms that map
+        the Detector's PIXEL coordinate system to the CameraSys in the key.
+    """
+
+    data = dict(
+        name=detectorConfig.name,
+        id=detectorConfig.id,
+        type=DetectorType(detectorConfig.detectorType),
+        serial=detectorConfig.serial,
+        ampInfoCatalog=ampInfoCatalog,
+        orientation=makeOrientation(detectorConfig),
+        pixelSize=lsst.geom.Extent2D(detectorConfig.pixelSize_x, detectorConfig.pixelSize_y),
+        bbox=lsst.geom.Box2I(
+            minimum=lsst.geom.Point2I(detectorConfig.bbox_x0, detectorConfig.bbox_y0),
+            maximum=lsst.geom.Point2I(detectorConfig.bbox_x1, detectorConfig.bbox_y1),
+        ),
+    )
+
+    transforms = makeTransformDict(detectorConfig.transformDict.transforms)
+    transforms[FOCAL_PLANE] = data["orientation"].makePixelFpTransform(data["pixelSize"])
+
+    tanPixSys = CameraSys(TAN_PIXELS, detectorConfig.name)
+    transforms[tanPixSys] = makePixelToTanPixel(
+        bbox=data["bbox"],
+        orientation=data["orientation"],
+        focalPlaneToField=focalPlaneToField,
+        pixelSizeMm=data["pixelSize"],
+    )
+
+    data["transforms"] = transforms
+
+    crosstalk = detectorConfig.getCrosstalk(len(ampInfoCatalog))
+    if crosstalk is not None:
+        data["crosstalk"] = crosstalk
+
+    return data
+
+
 def makeDetector(detectorConfig, ampInfoCatalog, focalPlaneToField):
     """Make a Detector instance from a detector config and amp info catalog
 
@@ -31,38 +94,7 @@ def makeDetector(detectorConfig, ampInfoCatalog, focalPlaneToField):
     detector : `lsst.afw.cameraGeom.Detector`
         New Detector instance.
     """
-    orientation = makeOrientation(detectorConfig)
-    pixelSizeMm = lsst.geom.Extent2D(
-        detectorConfig.pixelSize_x, detectorConfig.pixelSize_y)
-    transforms = makeTransformDict(detectorConfig.transformDict.transforms)
-    transforms[FOCAL_PLANE] = orientation.makePixelFpTransform(pixelSizeMm)
-
-    llPoint = lsst.geom.Point2I(detectorConfig.bbox_x0, detectorConfig.bbox_y0)
-    urPoint = lsst.geom.Point2I(detectorConfig.bbox_x1, detectorConfig.bbox_y1)
-    bbox = lsst.geom.Box2I(llPoint, urPoint)
-
-    tanPixSys = CameraSys(TAN_PIXELS, detectorConfig.name)
-    transforms[tanPixSys] = makePixelToTanPixel(
-        bbox=bbox,
-        orientation=orientation,
-        focalPlaneToField=focalPlaneToField,
-        pixelSizeMm=pixelSizeMm,
-    )
-
-    data = dict(
-        name=detectorConfig.name,
-        id=detectorConfig.id,
-        type=DetectorType(detectorConfig.detectorType),
-        serial=detectorConfig.serial,
-        bbox=bbox,
-        ampInfoCatalog=ampInfoCatalog,
-        orientation=orientation,
-        pixelSize=pixelSizeMm,
-        transforms=transforms,
-    )
-    crosstalk = detectorConfig.getCrosstalk(len(ampInfoCatalog))
-    if crosstalk is not None:
-        data["crosstalk"] = crosstalk
+    data = makeDetectorData(detectorConfig, ampInfoCatalog, focalPlaneToField)
     return Detector(**data)
 
 
