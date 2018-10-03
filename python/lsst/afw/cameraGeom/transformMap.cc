@@ -34,18 +34,17 @@ using namespace py::literals;
 namespace lsst {
 namespace afw {
 namespace cameraGeom {
+namespace {
 
-PYBIND11_MODULE(transformMap, mod) {
-    /* Module level */
-    py::class_<TransformMap, std::shared_ptr<TransformMap>> cls(mod, "TransformMap");
+using PyTransformMap = py::class_<TransformMap, std::shared_ptr<TransformMap>>;
 
-    /* Member types and enums */
+void declareTransformMap(py::module & mod) {
+    PyTransformMap cls(mod, "TransformMap");
 
-    /* Constructors */
     cls.def(
         py::init([](
             CameraSys const &reference,
-            std::unordered_map<CameraSys, std::shared_ptr<geom::TransformPoint2ToPoint2>> const & transforms
+            TransformMap::Transforms const & transforms
         ) {
             // An apparent pybind11 bug: it's usually happy to cast away constness, but won't do it here.
             return std::const_pointer_cast<TransformMap>(TransformMap::make(reference, transforms));
@@ -53,26 +52,35 @@ PYBIND11_MODULE(transformMap, mod) {
         "reference"_a, "transforms"_a
     );
 
-    /* Operators */
     cls.def("__len__", &TransformMap::size);
     cls.def("__contains__", &TransformMap::contains);
-    cls.def("__iter__", [](const TransformMap &self) { return py::make_iterator(self.begin(), self.end()); },
+    cls.def("__iter__", [](TransformMap const &self) { return py::make_iterator(self.begin(), self.end()); },
             py::keep_alive<0, 1>()); /* Essential: keep object alive while iterator exists */
 
-    /* Members */
-    cls.def("transform",
-            (lsst::geom::Point2D(TransformMap::*)(lsst::geom::Point2D const &, CameraSys const &, CameraSys const &)
-                     const) &
-                    TransformMap::transform,
-            "point"_a, "fromSys"_a, "toSys"_a);
-    cls.def("transform",
-            (std::vector<lsst::geom::Point2D>(TransformMap::*)(std::vector<lsst::geom::Point2D> const &,
-                                                         CameraSys const &, CameraSys const &) const) &
-                    TransformMap::transform,
-            "pointList"_a, "fromSys"_a, "toSys"_a);
+    cls.def(
+        "transform",
+        py::overload_cast<lsst::geom::Point2D const &, CameraSys const &, CameraSys const &>(
+            &TransformMap::transform,
+            py::const_
+        ),
+        "point"_a, "fromSys"_a, "toSys"_a
+    );
+    cls.def(
+        "transform",
+        py::overload_cast<std::vector<lsst::geom::Point2D> const &, CameraSys const &, CameraSys const &>(
+            &TransformMap::transform,
+            py::const_
+        ),
+        "pointList"_a, "fromSys"_a, "toSys"_a
+    );
     cls.def("getTransform", &TransformMap::getTransform, "fromSys"_a, "toSys"_a);
 }
 
+PYBIND11_MODULE(transformMap, mod) {
+    declareTransformMap(mod);
+}
+
+}  // anonymous
 }  // namespace cameraGeom
 }  // namespace afw
 }  // namespace lsst
