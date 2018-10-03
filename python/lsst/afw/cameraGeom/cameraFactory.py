@@ -15,12 +15,21 @@ cameraSysMap = dict((sys.getSysName(), sys) for sys in cameraSysList)
 
 
 def makeDetector(detectorConfig, ampInfoCatalog, focalPlaneToField):
-    """!Make a Detector instance from a detector config and amp info catalog
+    """Make a Detector instance from a detector config and amp info catalog
 
-    @param detectorConfig  config for this detector (an lsst.pex.config.Config)
-    @param ampInfoCatalog  amplifier information for this detector (an lsst.afw.table.AmpInfoCatalog)
-    @param focalPlaneToField  FOCAL_PLANE to FIELD_ANGLE Transform
-    @return detector (an lsst.afw.cameraGeom.Detector)
+    Parameters
+    ----------
+    detectorConfig : `lsst.pex.config.Config`
+        Configuration for this detector.
+    ampInfoCatalog : `lsst.afw.table.AmpInfoCatalog`
+        amplifier information for this detector
+    focalPlaneToField : `lsst.afw.geom.TransformPoint2ToPoint2`
+        FOCAL_PLANE to FIELD_ANGLE Transform
+
+    Returns
+    -------
+    detector : `lsst.afw.cameraGeom.Detector`
+        New Detector instance.
     """
     orientation = makeOrientation(detectorConfig)
     pixelSizeMm = lsst.geom.Extent2D(
@@ -40,52 +49,60 @@ def makeDetector(detectorConfig, ampInfoCatalog, focalPlaneToField):
         pixelSizeMm=pixelSizeMm,
     )
 
-    args = [
-        detectorConfig.name,
-        detectorConfig.id,
-        DetectorType(detectorConfig.detectorType),
-        detectorConfig.serial,
-        bbox,
-        ampInfoCatalog,
-        orientation,
-        pixelSizeMm,
-        transforms,
-    ]
+    data = dict(
+        name=detectorConfig.name,
+        id=detectorConfig.id,
+        type=DetectorType(detectorConfig.detectorType),
+        serial=detectorConfig.serial,
+        bbox=bbox,
+        ampInfoCatalog=ampInfoCatalog,
+        orientation=orientation,
+        pixelSize=pixelSizeMm,
+        transforms=transforms,
+    )
     crosstalk = detectorConfig.getCrosstalk(len(ampInfoCatalog))
     if crosstalk is not None:
-        args.append(crosstalk)
-    return Detector(*args)
+        data["crosstalk"] = crosstalk
+    return Detector(**data)
 
 
 def copyDetector(detector, ampInfoCatalog=None):
-    """!Return a copy of a Detector
+    """Return a copy of a Detector with possibly-updated amplifier information.
 
-    @param detector        The Detector to clone
-    @param ampInfoCatalog  The ampInfoCatalog to use; default use original
+    No deep copies are made; the input transformDict is used unmodified
 
-    N.b. No deep copies are made;  the input transformDict is used unmodified
+    Parameters
+    ----------
+    detector : `lsst.afw.cameraGeom.Detector`
+        The Detector to clone
+    ampInfoCatalog  The ampInfoCatalog to use; default use original
+
+    Returns
+    -------
+    detector : `lsst.afw.cameraGeom.Detector`
+        New Detector instance.
     """
     if ampInfoCatalog is None:
         ampInfoCatalog = detector.getAmpInfoCatalog()
 
-    tm = detector.getTransformMap()
-    native = detector.getNativeCoordSys()
-    transformDict = dict()
-    for cs in tm:
-        if cs != native:
-            transformDict[cs] = tm.getTransform(native, cs)
-
     return Detector(detector.getName(), detector.getId(), detector.getType(),
                     detector.getSerial(), detector.getBBox(),
                     ampInfoCatalog, detector.getOrientation(), detector.getPixelSize(),
-                    transformDict, detector.getCrosstalk())
+                    detector.getTransformMap(), detector.getCrosstalk())
 
 
 def makeOrientation(detectorConfig):
-    """!Make an Orientation instance from a detector config
+    """Make an Orientation instance from a detector config
 
-    @param detectorConfig  config for this detector (an lsst.pex.config.Config)
-    @return orientation (an lsst.afw.cameraGeom.Orientation)
+    Parameters
+    ----------
+    detectorConfig : `lsst.pex.config.Config`
+        Configuration for this detector.
+
+    Returns
+    -------
+    orientation : `lsst.afw.cameraGeom.Orientation`
+        Location and rotation of the Detector.
     """
     offset = lsst.geom.Point2D(detectorConfig.offset_x, detectorConfig.offset_y)
     refPos = lsst.geom.Point2D(detectorConfig.refpos_x, detectorConfig.refpos_y)
@@ -96,11 +113,17 @@ def makeOrientation(detectorConfig):
 
 
 def makeTransformDict(transformConfigDict):
-    """!Make a dictionary of CameraSys: lsst.afw.geom.Transform from a config dict.
+    """Make a dictionary of CameraSys: lsst.afw.geom.Transform from a config dict.
 
-    @param transformConfigDict  an lsst.pex.config.ConfigDictField from an lsst.afw.geom.Transform
+    Parameters
+    ----------
+    transformConfigDict : value obtained from a `lsst.pex.config.ConfigDictField`
         registry; keys are camera system names.
-    @return a dict of CameraSys or CameraSysPrefix: lsst.afw.geom.Transform
+
+    Returns
+    -------
+    transforms : `dict`
+        A dict of CameraSys or CameraSysPrefix: lsst.afw.geom.Transform
     """
     resMap = dict()
     if transformConfigDict is not None:
@@ -112,16 +135,26 @@ def makeTransformDict(transformConfigDict):
 
 def makeCameraFromPath(cameraConfig, ampInfoPath, shortNameFunc,
                        pupilFactoryClass=PupilFactory):
-    """!Make a Camera instance from a directory of ampInfo files
+    """Make a Camera instance from a directory of ampInfo files
 
     The directory must contain one ampInfo fits file for each detector in cameraConfig.detectorList.
     The name of each ampInfo file must be shortNameFunc(fullDetectorName) + ".fits".
 
-    @param[in] cameraConfig  an instance of CameraConfig
-    @param[in] ampInfoPath  path to ampInfo data files
-    @param[in] shortNameFunc  a function that converts a long detector name to a short one
-    @param[in] pupilFactoryClass class to attach to camera; default afw.cameraGeom.PupilFactory
-    @return camera (an lsst.afw.cameraGeom.Camera)
+    Parameters
+    ----------
+    cameraConfig : `CameraConfig`
+        Config describing camera and its detectors.
+    ampInfoPath : `str`
+        Path to ampInfo data files.
+    shortNameFunc : callable
+        A function that converts a long detector name to a short one.
+    pupilFactoryClass : `type`, optional
+        Class to attach to camera; default is `lsst.afw.cameraGeom.PupilFactory`.
+
+    Returns
+    -------
+    camera : `lsst.afw.cameraGeom.Camera`
+        New Camera instance.
     """
     ampInfoCatDict = dict()
     for detectorConfig in cameraConfig.detectorList.values():
@@ -135,12 +168,21 @@ def makeCameraFromPath(cameraConfig, ampInfoPath, shortNameFunc,
 
 def makeCameraFromCatalogs(cameraConfig, ampInfoCatDict,
                            pupilFactoryClass=PupilFactory):
-    """!Construct a Camera instance from a dictionary of detector name: AmpInfoCatalog
+    """Construct a Camera instance from a dictionary of detector name: AmpInfoCatalog
 
-    @param[in] cameraConfig  an instance of CameraConfig
-    @param[in] ampInfoCatDict  a dictionary of detector name: AmpInfoCatalog
-    @param[in] pupilFactoryClass class to attach to camera; default afw.cameraGeom.PupilFactory
-    @return camera (an lsst.afw.cameraGeom.Camera)
+    Parameters
+    ----------
+    cameraConfig : `CameraConfig`
+        Config describing camera and its detectors.
+    ampInfoCatDict : `dict`
+        A dictionary of detector name: AmpInfoCatalog
+    pupilFactoryClass : `type`, optional
+        Class to attach to camera; `lsst.default afw.cameraGeom.PupilFactory`.
+
+    Returns
+    -------
+    camera : `lsst.afw.cameraGeom.Camera`
+        New Camera instance.
     """
     nativeSys = cameraSysMap[cameraConfig.transformDict.nativeSys]
     transformDict = makeTransformDict(cameraConfig.transformDict.transforms)
