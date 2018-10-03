@@ -92,6 +92,11 @@ PYBIND11_MODULE(detector, mod) {
                      TransformMap::Transforms const &, Detector::CrosstalkMatrix const &>(),
             "name"_a, "id"_a, "type"_a, "serial"_a, "bbox"_a, "ampInfoCatalog"_a, "orientation"_a,
             "pixelSize"_a, "transforms"_a, "crosstalk"_a = Detector::CrosstalkMatrix());
+    cls.def(py::init<std::string const &, int, DetectorType, std::string const &, lsst::geom::Box2I const &,
+                     table::AmpInfoCatalog const &, Orientation const &, lsst::geom::Extent2D const &,
+                     std::shared_ptr<TransformMap const>, Detector::CrosstalkMatrix const &>(),
+            "name"_a, "id"_a, "type"_a, "serial"_a, "bbox"_a, "ampInfoCatalog"_a, "orientation"_a,
+            "pixelSize"_a, "transformMap"_a, "crosstalk"_a = Detector::CrosstalkMatrix());
 
     /* Operators */
     cls.def("__getitem__",
