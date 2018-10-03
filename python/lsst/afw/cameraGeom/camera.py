@@ -86,7 +86,7 @@ class Camera(DetectorCollection):
         @return an lsst.afw.geom.TransformPoint2ToPoint2 that transforms from
             `fromSys` to `toSys` in the forward direction
 
-        @throws lsst.pex.exceptions.InvalidParameter if no transform is
+        @throws lsst.pex.exceptions.InvalidParameterError if no transform is
         available. This includes the case that fromSys specifies a known
         detector and toSys specifies any other detector (known or unknown)
         @throws KeyError if an unknown detector is specified
@@ -155,7 +155,7 @@ class Camera(DetectorCollection):
         @return an lsst.afw.geom.TransformPoint2ToPoint2 that transforms from
             `fromSys` to `toSys` in the forward direction
 
-        @throws lsst.pex.exceptions.InvalidParameter if no transform is
+        @throws lsst.pex.exceptions.InvalidParameterError if no transform is
         available.
         @throws KeyError if an unknown detector is specified
         """
