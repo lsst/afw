@@ -81,9 +81,8 @@ public:
      *                   to the specified camera system
      * @param crosstalk matrix of crosstalk coefficients
      *
-     * @throws lsst::pex::exceptions::InvalidParameterError if:
-     * - any amplifier names are not unique
-     * - any CamerSys in transformMap has a detector name other than "" or this detector's name
+     * @throws lsst::pex::exceptions::InvalidParameterError if any amplifier
+     *     names are not unique
      *
      * @warning
      * * The keys for the detector-specific coordinate systems in the transform registry
@@ -109,9 +108,8 @@ public:
      * @param transformMap coordinate systems and transforms between them
      * @param crosstalk matrix of crosstalk coefficients
      *
-     * @throws lsst::pex::exceptions::InvalidParameterError if:
-     * - any amplifier names are not unique
-     * - any CamerSys in transformMap has a detector name other than "" or this detector's name
+     * @throws lsst::pex::exceptions::InvalidParameterError if: any amplifier
+     *     names are not unique
      */
     explicit Detector(std::string const &name, int id, DetectorType type, std::string const &serial,
                       lsst::geom::Box2I const &bbox, lsst::afw::table::AmpInfoCatalog const &ampInfoCatalog,

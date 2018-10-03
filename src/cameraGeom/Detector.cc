@@ -63,15 +63,6 @@ Detector::Detector(std::string const &name, int id, DetectorType type, std::stri
                           "Invalid ampInfoCatalog: not all amplifier names are unique");
     }
 
-    // check detector name in CoordSys in transform registry
-    for (CameraSys const & sys : *_transformMap) {
-        if (sys.hasDetectorName() && sys.getDetectorName() != _name) {
-            std::ostringstream os;
-            os << "Invalid transformMap: " << sys << " detector name != \"" << _name << "\"";
-            throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
-        }
-    }
-
     // ensure crosstalk coefficients matrix is square
     if (hasCrosstalk()) {
         auto shape = _crosstalk.getShape();
