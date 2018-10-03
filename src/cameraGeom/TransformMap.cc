@@ -93,10 +93,10 @@ TransformMap::TransformMap(std::unique_ptr<ast::FrameSet> && transforms, CameraS
 TransformMap::Builder::Builder(CameraSys const & reference) : _reference(reference) {}
 
 TransformMap::Builder::Builder(Builder const &) = default;
-TransformMap::Builder::Builder(Builder &&) noexcept = default;
+TransformMap::Builder::Builder(Builder &&) = default;
 
 TransformMap::Builder & TransformMap::Builder::operator=(Builder const &) = default;
-TransformMap::Builder & TransformMap::Builder::operator=(Builder &&) noexcept = default;
+TransformMap::Builder & TransformMap::Builder::operator=(Builder &&) = default;
 
 TransformMap::Builder::~Builder() noexcept = default;
 

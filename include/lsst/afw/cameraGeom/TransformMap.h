@@ -220,9 +220,9 @@ public:
     ///@{
     /// Builders are copyable, movable, and assignable.
     Builder(Builder const &);
-    Builder(Builder &&) noexcept;
+    Builder(Builder &&);  // std::vector move construct is not noexcept until C++17
     Builder & operator=(Builder const &);
-    Builder & operator=(Builder &&) noexcept;
+    Builder & operator=(Builder &&);  // std::vector move assignment is not noexcept until C++17
     ///@}
 
     ~Builder() noexcept;
