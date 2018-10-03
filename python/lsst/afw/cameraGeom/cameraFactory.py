@@ -217,18 +217,64 @@ def makeCameraFromCatalogs(cameraConfig, ampInfoCatDict,
         New Camera instance.
     """
     nativeSys = cameraSysMap[cameraConfig.transformDict.nativeSys]
+
+    # nativeSys=FOCAL_PLANE seems to be assumed in various places in this file
+    # (e.g. the definition of TAN_PIXELS), despite CameraConfig providing the
+    # illusion that it's configurable.
+    # Note that we can't actually get rid of the nativeSys config option
+    # without breaking lots of on-disk camera configs.
+    assert nativeSys == FOCAL_PLANE, "Cameras with nativeSys != FOCAL_PLANE are not supported."
+
     transformDict = makeTransformDict(cameraConfig.transformDict.transforms)
     focalPlaneToField = transformDict[FIELD_ANGLE]
-    transformMap = TransformMap(nativeSys, transformDict)
+    transformMapBuilder = TransformMap.Builder(nativeSys)
+    transformMapBuilder.connect(transformDict)
 
-    detectorList = []
+    # First pass: build a list of all Detector ctor kwargs, minus the
+    # transformMap (which needs information from all Detectors).
+    detectorData = []
     for detectorConfig in cameraConfig.detectorList.values():
-        ampInfoCatalog = ampInfoCatDict[detectorConfig.name]
 
-        detectorList.append(makeDetector(
+        # Get kwargs that could be used to construct each Detector
+        # if we didn't care about giving each of them access to
+        # all of the transforms.
+        thisDetectorData = makeDetectorData(
             detectorConfig=detectorConfig,
-            ampInfoCatalog=ampInfoCatalog,
+            ampInfoCatalog=ampInfoCatDict[detectorConfig.name],
             focalPlaneToField=focalPlaneToField,
-        ))
+        )
+
+        # Pull the transforms dictionary out of the data dict; we'll replace
+        # it with a TransformMap argument later.
+        thisDetectorTransforms = thisDetectorData.pop("transforms")
+
+        # Save the rest of the Detector data dictionary for later
+        detectorData.append(thisDetectorData)
+
+        # For reasons I don't understand, some obs_ packages (e.g. HSC) set
+        # nativeSys to None for their detectors (which doesn't seem to be
+        # permitted by the config class!), but they really mean PIXELS. For
+        # backwards compatibility we use that as the default...
+        detectorNativeSysPrefix = cameraSysMap.get(detectorConfig.transformDict.nativeSys, PIXELS)
+
+        # ...well, actually, it seems that we've always assumed down in C++
+        # that the answer is always PIXELS without ever checking that it is.
+        # So let's assert that it is, since there are hints all over this file
+        # (e.g. the definition of TAN_PIXELS) that other parts of the codebase
+        # have regularly made that assumption as well.  Note that we can't
+        # actually get rid of the nativeSys config option without breaking
+        # lots of on-disk camera configs.
+        assert detectorNativeSysPrefix == PIXELS, "Detectors with nativeSys != PIXELS are not supported."
+        detectorNativeSys = CameraSys(detectorNativeSysPrefix, detectorConfig.name)
+
+        # Add this detector's transform dict to the shared TransformMapBuilder
+        transformMapBuilder.connect(detectorNativeSys, thisDetectorTransforms)
+
+    # Now that we've collected all of the Transforms, we can finally build the
+    # (immutable) TransformMap.
+    transformMap = transformMapBuilder.build()
+
+    # Second pass through the detectorConfigs: actually make Detector instances
+    detectorList = [Detector(transformMap=transformMap, **kw) for kw in detectorData]
 
     return Camera(cameraConfig.name, detectorList, transformMap, pupilFactoryClass)
