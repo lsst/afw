@@ -52,39 +52,6 @@ using PyMaskFitsReader = py::class_<MaskFitsReader, std::shared_ptr<MaskFitsRead
 using PyMaskedImageFitsReader = py::class_<MaskedImageFitsReader, std::shared_ptr<MaskedImageFitsReader>>;
 using PyExposureFitsReader = py::class_<ExposureFitsReader, std::shared_ptr<ExposureFitsReader>>;
 
-template <typename Function>
-struct ReadHelper {
-
-    template <typename T>
-    auto operator()(utils::python::TemplateInvoker::Tag<T>) {
-        // We transform the Tag argument passed by TemplateInvoker to a scalar
-        // value of type T (which happens to have a value of 0, but that
-        // doesn't matter).  That makes it easier for the universal lambdas
-        // that we use for the 'function' object here to extract the type
-        // requested via decltype.
-        // We can't have TemplateInvoker do that in general, because it might
-        // need to work on types for which passing a scalar value is expensive
-        // or hard to do generically.
-        return function(static_cast<T>(0));
-    }
-
-    [[noreturn]] py::object fail(py::dtype const & dtype) const {
-        PyErr_Format(
-            PyExc_TypeError,
-            "Pixel type %R not supported (you may need to pass a compatible dtype to convert).",
-            dtype.ptr()
-        );
-        throw py::error_already_set();
-    }
-
-    Function function;
-};
-
-template <typename Function>
-ReadHelper<Function> makeReadHelper(Function function) {
-    return ReadHelper<Function>{function};
-}
-
 // Declare attributes common to all FitsReaders.  Excludes constructors
 // because ExposureFitsReader's don't take an HDU argument.
 template <typename Class, typename ...Args>
@@ -111,10 +78,10 @@ void declareSinglePlaneMethods(py::class_<Class, Args...> & cls) {
             if (dtype == py::none()) {
                 dtype = py::dtype(self.readDType());
             }
-            return utils::python::TemplateInvoker::apply(
-                makeReadHelper([&](auto t) {
+            return utils::python::TemplateInvoker().apply(
+                [&](auto t) {
                     return self.template readArray<decltype(t)>(bbox, origin, allowUnsafe);
-                }),
+                },
                 py::dtype(dtype),
                 utils::python::TemplateInvoker::Tag<std::uint16_t, int, float, double, std::uint64_t>()
             );
@@ -136,10 +103,10 @@ void declareMultiPlaneMethods(py::class_<Class, Args...> & cls) {
             if (dtype == py::none()) {
                 dtype = py::dtype(self.readImageDType());
             }
-            return utils::python::TemplateInvoker::apply(
-                makeReadHelper([&](auto t) {
+            return utils::python::TemplateInvoker().apply(
+                [&](auto t) {
                     return self.template readImage<decltype(t)>(bbox, origin, allowUnsafe);
-                }),
+                },
                 py::dtype(dtype),
                 utils::python::TemplateInvoker::Tag<std::uint16_t, int, float, double, std::uint64_t>()
             );
@@ -153,10 +120,10 @@ void declareMultiPlaneMethods(py::class_<Class, Args...> & cls) {
             if (dtype == py::none()) {
                 dtype = py::dtype(self.readImageDType());
             }
-            return utils::python::TemplateInvoker::apply(
-                makeReadHelper([&](auto t) {
+            return utils::python::TemplateInvoker().apply(
+                [&](auto t) {
                     return self.template readImageArray<decltype(t)>(bbox, origin, allowUnsafe);
-                }),
+                },
                 py::dtype(dtype),
                 utils::python::TemplateInvoker::Tag<std::uint16_t, int, float, double, std::uint64_t>()
             );
@@ -170,10 +137,10 @@ void declareMultiPlaneMethods(py::class_<Class, Args...> & cls) {
             if (dtype == py::none()) {
                 dtype = py::dtype(self.readMaskDType());
             }
-            return utils::python::TemplateInvoker::apply(
-                makeReadHelper([&](auto t) {
+            return utils::python::TemplateInvoker().apply(
+                [&](auto t) {
                     return self.template readMask<decltype(t)>(bbox, origin, conformMasks, allowUnsafe);
-                }),
+                },
                 py::dtype(dtype),
                 utils::python::TemplateInvoker::Tag<MaskPixel>()
             );
@@ -188,10 +155,10 @@ void declareMultiPlaneMethods(py::class_<Class, Args...> & cls) {
             if (dtype == py::none()) {
                 dtype = py::dtype(self.readMaskDType());
             }
-            return utils::python::TemplateInvoker::apply(
-                makeReadHelper([&](auto t) {
+            return utils::python::TemplateInvoker().apply(
+                [&](auto t) {
                     return self.template readMaskArray<decltype(t)>(bbox, origin, allowUnsafe);
-                }),
+                },
                 py::dtype(dtype),
                 utils::python::TemplateInvoker::Tag<MaskPixel>()
             );
@@ -205,10 +172,10 @@ void declareMultiPlaneMethods(py::class_<Class, Args...> & cls) {
             if (dtype == py::none()) {
                 dtype = py::dtype(self.readVarianceDType());
             }
-            return utils::python::TemplateInvoker::apply(
-                makeReadHelper([&](auto t) {
+            return utils::python::TemplateInvoker().apply(
+                [&](auto t) {
                     return self.template readVariance<decltype(t)>(bbox, origin, allowUnsafe);
-                }),
+                },
                 py::dtype(dtype),
                 utils::python::TemplateInvoker::Tag<VariancePixel>()
             );
@@ -222,10 +189,10 @@ void declareMultiPlaneMethods(py::class_<Class, Args...> & cls) {
             if (dtype == py::none()) {
                 dtype = py::dtype(self.readVarianceDType());
             }
-            return utils::python::TemplateInvoker::apply(
-                makeReadHelper([&](auto t) {
+            return utils::python::TemplateInvoker().apply(
+                [&](auto t) {
                     return self.template readVarianceArray<decltype(t)>(bbox, origin, allowUnsafe);
-                }),
+                },
                 py::dtype(dtype),
                 utils::python::TemplateInvoker::Tag<VariancePixel>()
             );
@@ -245,10 +212,10 @@ void declareImageFitsReader(py::module & mod) {
             if (dtype == py::none()) {
                 dtype = py::dtype(self.readDType());
             }
-            return utils::python::TemplateInvoker::apply(
-                makeReadHelper([&](auto t) {
+            return utils::python::TemplateInvoker().apply(
+                [&](auto t) {
                     return self.read<decltype(t)>(bbox, origin, allowUnsafe);
-                }),
+                },
                 py::dtype(dtype),
                 utils::python::TemplateInvoker::Tag<std::uint16_t, int, float, double, std::uint64_t>()
             );
@@ -268,10 +235,10 @@ void declareMaskFitsReader(py::module & mod) {
             if (dtype == py::none()) {
                 dtype = py::dtype(self.readDType());
             }
-            return utils::python::TemplateInvoker::apply(
-                makeReadHelper([&](auto t) {
+            return utils::python::TemplateInvoker().apply(
+                [&](auto t) {
                     return self.read<decltype(t)>(bbox, origin, conformMasks, allowUnsafe);
-                }),
+                },
                 py::dtype(dtype),
                 utils::python::TemplateInvoker::Tag<MaskPixel>()
             );
@@ -299,10 +266,10 @@ void declareMaskedImageFitsReader(py::module & mod) {
             if (dtype == py::none()) {
                 dtype = py::dtype(self.readImageDType());
             }
-            return utils::python::TemplateInvoker::apply(
-                makeReadHelper([&](auto t) {
+            return utils::python::TemplateInvoker().apply(
+                [&](auto t) {
                     return self.read<decltype(t)>(bbox, origin, conformMasks, allowUnsafe);
-                }),
+                },
                 py::dtype(dtype),
                 utils::python::TemplateInvoker::Tag<std::uint16_t, int, float, double, std::uint64_t>()
             );
@@ -336,10 +303,10 @@ void declareExposureFitsReader(py::module & mod) {
             if (dtype == py::none()) {
                 dtype = py::dtype(self.readImageDType());
             }
-            return utils::python::TemplateInvoker::apply(
-                makeReadHelper([&](auto t) {
+            return utils::python::TemplateInvoker().apply(
+                [&](auto t) {
                     return self.readMaskedImage<decltype(t)>(bbox, origin, conformMasks, allowUnsafe);
-                }),
+                },
                 py::dtype(dtype),
                 utils::python::TemplateInvoker::Tag<std::uint16_t, int, float, double, std::uint64_t>()
             );
@@ -354,10 +321,10 @@ void declareExposureFitsReader(py::module & mod) {
             if (dtype == py::none()) {
                 dtype = py::dtype(self.readImageDType());
             }
-            return utils::python::TemplateInvoker::apply(
-                makeReadHelper([&](auto t) {
+            return utils::python::TemplateInvoker().apply(
+                [&](auto t) {
                     return self.read<decltype(t)>(bbox, origin, conformMasks, allowUnsafe);
-                }),
+                },
                 py::dtype(dtype),
                 utils::python::TemplateInvoker::Tag<std::uint16_t, int, float, double, std::uint64_t>()
             );
