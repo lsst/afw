@@ -27,7 +27,7 @@ import numpy as np
 import lsst.utils.tests
 import lsst.geom
 import lsst.afw.image
-import lsst.afw.image.utils
+import lsst.afw.image.testUtils
 import lsst.afw.math
 import lsst.daf.base
 import lsst.pex.exceptions
@@ -43,9 +43,23 @@ def computeMagnitudeErr(instFluxErr, instFlux, calibrationErr, calibration, flux
     return 2.5/np.log(10)*computeMaggiesErr(instFluxErr, instFlux, calibrationErr, calibration, flux) / flux
 
 
+def makeCalibratedMaskedImage(image, mask, variance, outImage, calibration, calibrationErr):
+    """Return a MaskedImage using outImage, mask, and a computed variance image."""
+    outErr = computeMaggiesErr(np.sqrt(variance),
+                               image,
+                               calibrationErr,
+                               calibration,
+                               outImage).astype(np.float32)  # variance plane must be 32bit
+    return lsst.afw.image.makeMaskedImageFromArrays(outImage,
+                                                    mask,
+                                                    outErr**2)
+
+
 class PhotoCalibTestCase(lsst.utils.tests.TestCase):
 
     def setUp(self):
+        np.random.seed(100)
+
         self.point0 = lsst.geom.Point2D(0, 0)
         self.pointXShift = lsst.geom.Point2D(-10, 0)
         self.pointYShift = lsst.geom.Point2D(0, -10)
@@ -362,6 +376,58 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
         self.assertNotEqual(photoCalib1, photoCalib8)
 
         self.assertFalse(photoCalib1 != photoCalib2)  # using assertFalse to directly test != operator
+
+    def setupImage(self):
+        dim = (5, 6)
+        npDim = (dim[1], dim[0])  # numpy and afw have a different x/y order
+        sigma = 10.0
+        image = np.random.normal(loc=1000.0, scale=sigma, size=npDim).astype(np.float32)
+        mask = np.zeros(npDim, dtype=np.int32)
+        variance = (np.random.normal(loc=0.0, scale=sigma, size=npDim).astype(np.float32))**2
+        maskedImage = lsst.afw.image.basicUtils.makeMaskedImageFromArrays(image, mask, variance)
+        maskedImage.mask[0, 0] = True  # set one mask bit to check propagation of mask bits.
+
+        return npDim, maskedImage, image, mask, variance
+
+    def testCalibrateImageConstant(self):
+        """Test a spatially-constant calibration."""
+        npDim, maskedImage, image, mask, variance = self.setupImage()
+        outImage = maskedImage.image.getArray()*self.calibration
+        expect = makeCalibratedMaskedImage(image, mask, variance, outImage,
+                                           self.calibration, self.calibrationErr)
+        photoCalib = lsst.afw.image.PhotoCalib(self.calibration, self.calibrationErr)
+        result = photoCalib.calibrateImage(maskedImage)
+        self.assertMaskedImagesAlmostEqual(expect, result)
+
+    def testCalibrateImageNonConstant(self):
+        """Test a spatially-varying calibration."""
+        npDim, maskedImage, image, mask, variance = self.setupImage()
+        xIndex, yIndex = np.indices(npDim, dtype=np.float64)
+        # y then x, as afw order and np order are flipped
+        calibration = self.linearXCalibration.evaluate(yIndex.flatten(), xIndex.flatten()).reshape(npDim)
+        outImage = maskedImage.image.getArray()*calibration  # element-wise product, not matrix product
+        expect = makeCalibratedMaskedImage(image, mask, variance, outImage, calibration, self.calibrationErr)
+
+        photoCalib = lsst.afw.image.PhotoCalib(self.linearXCalibration, self.calibrationErr)
+        result = photoCalib.calibrateImage(maskedImage)
+        self.assertMaskedImagesAlmostEqual(expect, result)
+
+    def testCalibrateImageNonConstantSubimage(self):
+        """Test a non-constant calibration on a sub-image, to ensure we're
+        handling xy0 correctly.
+        """
+        npDim, maskedImage, image, mask, variance = self.setupImage()
+        xIndex, yIndex = np.indices(npDim, dtype=np.float64)
+        calibration = self.linearXCalibration.evaluate(yIndex.flatten(), xIndex.flatten()).reshape(npDim)
+
+        outImage = maskedImage.image.getArray()*calibration  # element-wise product, not matrix product
+        expect = makeCalibratedMaskedImage(image, mask, variance, outImage, calibration, self.calibrationErr)
+
+        subBox = lsst.geom.Box2I(lsst.geom.Point2I(2, 4), lsst.geom.Point2I(4, 5))
+        subImage = maskedImage.subset(subBox)
+        photoCalib = lsst.afw.image.PhotoCalib(self.linearXCalibration, self.calibrationErr)
+        result = photoCalib.calibrateImage(subImage)
+        self.assertMaskedImagesAlmostEqual(expect.subset(subBox), result)
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):

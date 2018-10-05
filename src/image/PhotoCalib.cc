@@ -37,7 +37,7 @@ namespace lsst {
 namespace afw {
 
 template std::shared_ptr<image::PhotoCalib> table::io::PersistableFacade<image::PhotoCalib>::dynamicCast(
-        std::shared_ptr<table::io::Persistable> const&);
+        std::shared_ptr<table::io::Persistable> const &);
 
 namespace image {
 
@@ -53,6 +53,30 @@ double toMaggiesErr(double instFlux, double instFluxErr, double scale, double sc
     return maggies * hypot(instFluxErr / instFlux, scaleErr / scale);
 }
 
+/**
+ * Compute the variance of an array of fluxes, for calculations on MaskedImages.
+ *
+ * MaskedImage stores the variance instead of the standard deviation, so we can skip a sqrt().
+ * Usage in calibrateImage() is to compute maggies directly, so that the calibration scale is
+ * `maggies/instFlux` (and thus not passed as an argument).
+ *
+ * @param instFlux[in] The instrumental flux.
+ * @param instFluxVar[in] The variance of the instrumental fluxes.
+ * @param scaleErr[in] The error on the calibration scale.
+ * @param maggies[in] The physical fluxes calculated from the instrumental fluxes.
+ * @param out[out] The output array to fill with the variance values.
+ */
+void toMaggiesVariance(ndarray::Array<float const, 2, 1> const &instFlux,
+                       ndarray::Array<float const, 2, 1> const &instFluxVar, float scaleErr,
+                       ndarray::Array<float const, 2, 1> const &maggies, ndarray::Array<float, 2, 1> out) {
+    auto eigenMaggies = ndarray::asEigen<Eigen::ArrayXpr>(maggies);
+    auto eigenInstFluxVar = ndarray::asEigen<Eigen::ArrayXpr>(instFluxVar);
+    auto eigenInstFlux = ndarray::asEigen<Eigen::ArrayXpr>(instFlux);
+    auto eigenOut = ndarray::asEigen<Eigen::ArrayXpr>(out);
+    eigenOut = eigenMaggies.square() * (eigenInstFluxVar / eigenInstFlux.square() +
+                                        (scaleErr / eigenMaggies * eigenInstFlux).square());
+}
+
 double toMagnitudeErr(double instFlux, double instFluxErr, double scale, double scaleErr) {
     return 2.5 / log(10.0) * hypot(instFluxErr / instFlux, scaleErr / scale);
 }
@@ -62,10 +86,7 @@ double toMagnitudeErr(double instFlux, double instFluxErr, double scale, double 
 // ------------------- Conversions to Maggies -------------------
 
 double PhotoCalib::instFluxToMaggies(double instFlux, lsst::geom::Point<double, 2> const &point) const {
-    if (_isConstant)
-        return toMaggies(instFlux, _calibrationMean);
-    else
-        return toMaggies(instFlux, _calibration->evaluate(point));
+    return toMaggies(instFlux, evaluate(point));
 }
 
 double PhotoCalib::instFluxToMaggies(double instFlux) const { return toMaggies(instFlux, _calibrationMean); }
@@ -73,10 +94,7 @@ double PhotoCalib::instFluxToMaggies(double instFlux) const { return toMaggies(i
 Measurement PhotoCalib::instFluxToMaggies(double instFlux, double instFluxErr,
                                           lsst::geom::Point<double, 2> const &point) const {
     double calibration, err, maggies;
-    if (_isConstant)
-        calibration = _calibrationMean;
-    else
-        calibration = _calibration->evaluate(point);
+    calibration = evaluate(point);
     maggies = toMaggies(instFlux, calibration);
     err = toMaggiesErr(instFlux, instFluxErr, calibration, _calibrationErr, maggies);
     return Measurement(maggies, err);
@@ -120,10 +138,7 @@ void PhotoCalib::instFluxToMaggies(afw::table::SourceCatalog &sourceCatalog, std
 // ------------------- Conversions to Magnitudes -------------------
 
 double PhotoCalib::instFluxToMagnitude(double instFlux, lsst::geom::Point<double, 2> const &point) const {
-    if (_isConstant)
-        return toMagnitude(instFlux, _calibrationMean);
-    else
-        return toMagnitude(instFlux, _calibration->evaluate(point));
+    return toMagnitude(instFlux, evaluate(point));
 }
 
 double PhotoCalib::instFluxToMagnitude(double instFlux) const {
@@ -133,10 +148,7 @@ double PhotoCalib::instFluxToMagnitude(double instFlux) const {
 Measurement PhotoCalib::instFluxToMagnitude(double instFlux, double instFluxErr,
                                             lsst::geom::Point<double, 2> const &point) const {
     double calibration, err, magnitude;
-    if (_isConstant)
-        calibration = _calibrationMean;
-    else
-        calibration = _calibration->evaluate(point);
+    calibration = evaluate(point);
     magnitude = toMagnitude(instFlux, calibration);
     err = toMagnitudeErr(instFlux, instFluxErr, calibration, _calibrationErr);
     return Measurement(magnitude, err);
@@ -207,6 +219,21 @@ std::ostream &operator<<(std::ostream &os, PhotoCalib const &photoCalib) {
     else
         os << *(photoCalib._calibration) << " with ";
     return os << "mean: " << photoCalib._calibrationMean << " err: " << photoCalib._calibrationErr;
+}
+
+MaskedImage<float> PhotoCalib::calibrateImage(MaskedImage<float> const &maskedImage) const {
+    // Deep copy construct, as we're mutiplying in-place.
+    auto result = MaskedImage<float>(maskedImage, true);
+
+    if (_isConstant) {
+        *(result.getImage()) *= _calibrationMean;
+    } else {
+        _calibration->multiplyImage(*(result.getImage()), true);  // only in the overlap region
+    }
+    toMaggiesVariance(maskedImage.getImage()->getArray(), maskedImage.getVariance()->getArray(),
+                      _calibrationErr, result.getImage()->getArray(), result.getVariance()->getArray());
+
+    return result;
 }
 
 // ------------------- persistence -------------------
@@ -281,6 +308,13 @@ void PhotoCalib::write(OutputArchiveHandle &handle) const {
 
 // ------------------- private/protected helpers -------------------
 
+double PhotoCalib::evaluate(lsst::geom::Point<double, 2> const &point) const {
+    if (_isConstant)
+        return _calibrationMean;
+    else
+        return _calibration->evaluate(point);
+}
+
 void PhotoCalib::instFluxToMaggiesArray(afw::table::SourceCatalog const &sourceCatalog,
                                         std::string const &instFluxField,
                                         ndarray::Array<double, 2, 2> result) const {
@@ -291,10 +325,7 @@ void PhotoCalib::instFluxToMaggiesArray(afw::table::SourceCatalog const &sourceC
     for (auto const &rec : sourceCatalog) {
         instFlux = rec.get(instFluxKey);
         instFluxErr = rec.get(instFluxErrKey);
-        if (_isConstant)
-            calibration = _calibrationMean;
-        else
-            calibration = _calibration->evaluate(rec.getCentroid());
+        calibration = evaluate(rec.getCentroid());
         maggies = toMaggies(instFlux, calibration);
         (*iter)[0] = maggies;
         (*iter)[1] = toMaggiesErr(instFlux, instFluxErr, calibration, _calibrationErr, maggies);
@@ -312,15 +343,13 @@ void PhotoCalib::instFluxToMagnitudeArray(afw::table::SourceCatalog const &sourc
     for (auto const &rec : sourceCatalog) {
         instFlux = rec.get(instFluxKey);
         instFluxErr = rec.get(instFluxErrKey);
-        if (_isConstant)
-            calibration = _calibrationMean;
-        else
-            calibration = _calibration->evaluate(rec.getCentroid());
+        calibration = evaluate(rec.getCentroid());
         (*iter)[0] = toMagnitude(instFlux, calibration);
         (*iter)[1] = toMagnitudeErr(instFlux, instFluxErr, calibration, _calibrationErr);
         iter++;
     }
 }
+
 }  // namespace image
 }  // namespace afw
 }  // namespace lsst

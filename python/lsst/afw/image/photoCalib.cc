@@ -144,6 +144,8 @@ PYBIND11_MODULE(photoCalib, mod) {
     cls.def("computeScaledCalibration", &PhotoCalib::computeScaledCalibration);
     cls.def("computeScalingTo", &PhotoCalib::computeScalingTo);
 
+    cls.def("calibrateImage", &PhotoCalib::calibrateImage);
+
     /* Operators */
     cls.def("__eq__", &PhotoCalib::operator==, py::is_operator());
     cls.def("__ne__", &PhotoCalib::operator!=, py::is_operator());

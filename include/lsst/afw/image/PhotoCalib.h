@@ -35,6 +35,7 @@
 #include "lsst/geom/Box.h"
 #include "lsst/afw/table/Source.h"
 #include "lsst/afw/table/io/Persistable.h"
+#include "lsst/afw/image/MaskedImage.h"
 
 namespace lsst {
 namespace afw {
@@ -301,6 +302,17 @@ public:
                              std::string const &outField) const;
 
     /**
+     * Return a flux calibrated image, with pixel values in Maggies.
+     *
+     * Mask pixels are propogated directly from the input image.
+     *
+     * @param maskedImage The masked image to calibrate.
+     *
+     * @return The calibrated masked image.
+     */
+    MaskedImage<float> calibrateImage(MaskedImage<float> const &maskedImage) const;
+
+    /**
      * Convert AB magnitude to instFlux (ADU), using the mean instFlux/magnitude scaling factor.
      *
      * @param[in]  magnitude  The AB magnitude to convert.
@@ -419,6 +431,13 @@ private:
     // Is this spatially-constant? Used to short-circuit getting centroids.
     bool _isConstant;
 
+    /**
+     * Return the calibration evaluated at a point.
+     *
+     * Helper function to manage constant vs. non-constant PhotoCalibs
+     */
+    double evaluate(lsst::geom::Point<double, 2> const &point) const;
+
     /// Returns the spatially-constant calibration (for setting _calibrationMean)
     double computeCalibrationMean(std::shared_ptr<afw::math::BoundedField> calibration) const;
 
@@ -429,6 +448,7 @@ private:
                                   std::string const &instFluxField,
                                   ndarray::Array<double, 2, 2> result) const;
 };
+
 }  // namespace image
 }  // namespace afw
 }  // namespace lsst

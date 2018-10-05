@@ -55,6 +55,16 @@ CHEBYSHEV_T = [
 ]
 
 
+def multiply(image, field):
+    """Return the product of image and field() at each point in image."""
+    box = image.getBBox()
+    outImage = lsst.afw.image.ImageF(box)
+    for i in range(box.getMinX(), box.getMaxX()+1):
+        for j in range(box.getMinY(), box.getMaxY()+1):
+            outImage[i, j] = image[i, j] * field.evaluate(i, j)
+    return outImage
+
+
 class ChebyshevBoundedFieldTestCase(lsst.utils.tests.TestCase):
 
     def setUp(self):
@@ -82,6 +92,9 @@ class ChebyshevBoundedFieldTestCase(lsst.utils.tests.TestCase):
                         coefficients[indexX + indexY >
                                      max(orderX, orderY)] = 0.0
                     self.cases.append((ctrl, coefficients))
+
+        array = np.arange(self.bbox.getArea(), dtype=np.float32).reshape(self.bbox.getDimensions())
+        self.image = lsst.afw.image.ImageF(array)
 
     def tearDown(self):
         del self.bbox
@@ -135,6 +148,54 @@ class ChebyshevBoundedFieldTestCase(lsst.utils.tests.TestCase):
                                          rtol=factor*1E-13)
             self.assertFloatsEqual(
                 scaled.getCoefficients(), factor*field.getCoefficients())
+
+    def testMultiplyImage(self):
+        """Test Multiplying in place an image."""
+        _, coefficients = self.cases[-2]
+        field = lsst.afw.math.ChebyshevBoundedField(self.image.getBBox(), coefficients)
+        # multiplyImage() is in-place, so we have to make the expected result first.
+        expect = multiply(self.image, field)
+        field.multiplyImage(self.image)
+        self.assertImagesAlmostEqual(self.image, expect)
+
+    def testMultiplyImageRaisesUnequalBBox(self):
+        """Multiplying an image with a different bbox should raise"""
+        _, coefficients = self.cases[-2]
+        field = lsst.afw.math.ChebyshevBoundedField(self.image.getBBox(), coefficients)
+        subBox = lsst.geom.Box2I(lsst.geom.Point2I(0, 3), lsst.geom.Point2I(3, 4))
+        subImage = self.image.subset(subBox)
+        with(self.assertRaises(RuntimeError)):
+            field.multiplyImage(subImage)
+
+    def testMultiplyImageOverlapSubImage(self):
+        """Multiplying a subimage with overlapOnly=true should only modify
+        the subimage, when a subimage is passed in.
+        """
+        _, coefficients = self.cases[-2]
+        field = lsst.afw.math.ChebyshevBoundedField(self.image.getBBox(), coefficients)
+        subBox = lsst.geom.Box2I(lsst.geom.Point2I(0, 3), lsst.geom.Point2I(3, 4))
+        subImage = self.image.subset(subBox)
+        expect = self.image.clone()
+        expect[subBox] = multiply(subImage, field)
+        field.multiplyImage(subImage, overlapOnly=True)
+        self.assertImagesAlmostEqual(self.image, expect)
+
+    def testMultiplyImageOverlapSmallerBoundedField(self):
+        """Multiplying a subimage with overlapOnly=true should only modify
+        the subimage if the boundedField bbox is smaller than the image.
+
+        This is checking for a bug where the bounded field was writing outside
+        the overlap bbox.
+        """
+        _, coefficients = self.cases[-2]
+        subBox = lsst.geom.Box2I(lsst.geom.Point2I(0, 3), lsst.geom.Point2I(3, 4))
+        # The BF is only defined on the subBox, not the whole image bbox.
+        field = lsst.afw.math.ChebyshevBoundedField(subBox, coefficients)
+        subImage = self.image.subset(subBox)
+        expect = self.image.clone()
+        expect[subBox] = multiply(subImage, field)
+        field.multiplyImage(self.image, overlapOnly=True)
+        self.assertImagesAlmostEqual(self.image, expect)
 
     def _testIntegrateBox(self, bbox, coeffs, expect):
         field = lsst.afw.math.ChebyshevBoundedField(bbox, coeffs)
