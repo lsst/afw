@@ -76,16 +76,18 @@ PyMaskedImage<ImagePixelT> declareMaskedImage(py::module &mod, const std::string
             "planeDict"_a = typename MI::MaskPlaneDict());
     cls.def(py::init<std::string const &, std::shared_ptr<daf::base::PropertySet>, lsst::geom::Box2I const &,
                      ImageOrigin, bool, bool, std::shared_ptr<daf::base::PropertySet>,
-                     std::shared_ptr<daf::base::PropertySet>, std::shared_ptr<daf::base::PropertySet>>(),
+                     std::shared_ptr<daf::base::PropertySet>, std::shared_ptr<daf::base::PropertySet>,
+                     bool>(),
             "fileName"_a, "metadata"_a = nullptr, "bbox"_a = lsst::geom::Box2I(), "origin"_a = PARENT,
             "conformMasks"_a = false, "needAllHdus"_a = false, "imageMetadata"_a = nullptr,
-            "maskMetadata"_a = nullptr, "varianceMetadata"_a = nullptr);
+            "maskMetadata"_a = nullptr, "varianceMetadata"_a = nullptr, "allowUnsafe"_a=false);
     cls.def(py::init<fits::MemFileManager &, std::shared_ptr<daf::base::PropertySet>, lsst::geom::Box2I const &,
                      ImageOrigin, bool, bool, std::shared_ptr<daf::base::PropertySet>,
-                     std::shared_ptr<daf::base::PropertySet>, std::shared_ptr<daf::base::PropertySet>>(),
+                     std::shared_ptr<daf::base::PropertySet>, std::shared_ptr<daf::base::PropertySet>,
+                     bool>(),
             "manager"_a, "metadata"_a = nullptr, "bbox"_a = lsst::geom::Box2I(), "origin"_a = PARENT,
             "conformMasks"_a = false, "needAllHdus"_a = false, "imageMetadata"_a = nullptr,
-            "maskMetadata"_a = nullptr, "varianceMetadata"_a = nullptr);
+            "maskMetadata"_a = nullptr, "varianceMetadata"_a = nullptr, "allowUnsafe"_a=false);
     cls.def(py::init<MI const &, bool>(), "rhs"_a, "deep"_a = false);
     cls.def(py::init<MI const &, lsst::geom::Box2I const &, ImageOrigin, bool>(), "rhs"_a, "bbox"_a,
             "origin"_a = PARENT, "deep"_a = false);

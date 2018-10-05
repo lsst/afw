@@ -48,14 +48,7 @@
 #include "lsst/afw/image/Mask.h"
 #include "lsst/afw/image/LsstImageTypes.h"
 #include "lsst/afw/image/detail/MaskDict.h"
-
-//
-// for FITS code
-//
-#include "boost/mpl/vector.hpp"
-#include "boost/gil/gil_all.hpp"
-#include "lsst/afw/image/fits/fits_io.h"
-#include "lsst/afw/image/fits/fits_io_mpl.h"
+#include "lsst/afw/image/MaskFitsReader.h"
 
 namespace dafBase = lsst::daf::base;
 namespace pexExcept = lsst::pex::exceptions;
@@ -176,51 +169,37 @@ Mask<MaskPixelT>& Mask<MaskPixelT>::operator=(MaskPixelT const rhs) {
 
 template <typename MaskPixelT>
 Mask<MaskPixelT>::Mask(std::string const& fileName, int hdu, std::shared_ptr<daf::base::PropertySet> metadata,
-                       lsst::geom::Box2I const& bbox, ImageOrigin origin, bool conformMasks)
+                       lsst::geom::Box2I const& bbox, ImageOrigin origin, bool conformMasks, bool allowUnsafe)
         : ImageBase<MaskPixelT>(), _maskDict(detail::MaskDict::getDefault()) {
-    fits::Fits fitsfile(fileName, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
-    fitsfile.setHdu(hdu);
-    *this = Mask(fitsfile, metadata, bbox, origin, conformMasks);
+    MaskFitsReader reader(fileName, hdu);
+    *this = reader.read<MaskPixelT>(bbox, origin, conformMasks, allowUnsafe);
+    if (metadata) {
+        metadata->combine(reader.readMetadata());
+    }
 }
 
 template <typename MaskPixelT>
 Mask<MaskPixelT>::Mask(fits::MemFileManager& manager, int hdu,
                        std::shared_ptr<daf::base::PropertySet> metadata, lsst::geom::Box2I const& bbox,
-                       ImageOrigin origin, bool conformMasks)
+                       ImageOrigin origin, bool conformMasks, bool allowUnsafe)
         : ImageBase<MaskPixelT>(), _maskDict(detail::MaskDict::getDefault()) {
-    fits::Fits fitsfile(manager, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
-    fitsfile.setHdu(hdu);
-    *this = Mask(fitsfile, metadata, bbox, origin, conformMasks);
+    MaskFitsReader reader(manager, hdu);
+    *this = reader.read<MaskPixelT>(bbox, origin, conformMasks, allowUnsafe);
+    if (metadata) {
+        metadata->combine(reader.readMetadata());
+    }
 }
 
 template <typename MaskPixelT>
-Mask<MaskPixelT>::Mask(fits::Fits& fitsfile, std::shared_ptr<daf::base::PropertySet> metadata,
-                       lsst::geom::Box2I const& bbox, ImageOrigin const origin, bool const conformMasks)
+Mask<MaskPixelT>::Mask(fits::Fits& fitsFile, std::shared_ptr<daf::base::PropertySet> metadata,
+                       lsst::geom::Box2I const& bbox, ImageOrigin const origin, bool const conformMasks,
+                       bool allowUnsafe)
         : ImageBase<MaskPixelT>(), _maskDict(detail::MaskDict::getDefault()) {
-    // These are the permitted input file types
-    typedef boost::mpl::vector<unsigned char, unsigned short, short, std::int32_t> fits_mask_types;
-
-    if (!metadata) {
-        metadata = std::shared_ptr<daf::base::PropertySet>(new daf::base::PropertyList);
+    MaskFitsReader reader(&fitsFile);
+    *this = reader.read<MaskPixelT>(bbox, origin, conformMasks, allowUnsafe);
+    if (metadata) {
+        metadata->combine(reader.readMetadata());
     }
-
-    fits_read_image<fits_mask_types>(fitsfile, *this, *metadata, bbox, origin);
-
-    // look for mask planes in the file
-    MaskPlaneDict fileMaskDict = parseMaskPlaneMetadata(metadata);
-    std::shared_ptr<detail::MaskDict> fileMD = detail::MaskDict::copyOrGetDefault(fileMaskDict);
-
-    if (*fileMD == *detail::MaskDict::getDefault()) {  // file is already consistent with Mask
-        return;
-    }
-
-    if (conformMasks) {  // adopt the definitions in the file
-        detail::MaskDict::setDefault(fileMD);
-        _maskDict = fileMD;
-    }
-
-    conformMaskPlanes(fileMaskDict);  // convert planes defined by fileMaskDict to the order
-                                      // defined by Mask::_maskPlaneDict
 }
 
 template <typename MaskPixelT>

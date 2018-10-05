@@ -56,7 +56,7 @@ class CameraGeomTestCase(lsst.utils.tests.TestCase):
             [afwImage.ImageU(os.path.join(testPath, 'test_amp.fits.gz'))
              for i in range(8)]
         self.assemblyList[self.scCamWrapper.camera.getName()] =\
-            [afwImage.ImageU(os.path.join(testPath, 'test.fits.gz'))]
+            [afwImage.ImageU(os.path.join(testPath, 'test.fits.gz'), allowUnsafe=True)]
 
     def tearDown(self):
         del self.lsstCamWrapper
@@ -255,8 +255,9 @@ class CameraGeomTestCase(lsst.utils.tests.TestCase):
 
     def testAssembly(self):
         ccdNames = ('R:0,0 S:1,0', 'R:0,0 S:0,1')
-        compMap = {True: afwImage.ImageU(os.path.join(testPath, 'test_comp_trimmed.fits.gz')),
-                   False: afwImage.ImageU(os.path.join(testPath, 'test_comp.fits.gz'))}
+        compMap = {True: afwImage.ImageU(os.path.join(testPath, 'test_comp_trimmed.fits.gz'),
+                                         allowUnsafe=True),
+                   False: afwImage.ImageU(os.path.join(testPath, 'test_comp.fits.gz'), allowUnsafe=True)}
         for cw in self.cameraList:
             camera = cw.camera
             imList = self.assemblyList[camera.getName()]

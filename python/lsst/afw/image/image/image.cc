@@ -151,17 +151,17 @@ static void declareMask(py::module &mod, std::string const &suffix) {
     cls.def(py::init<ndarray::Array<MaskPixelT, 2, 1> const &, bool, lsst::geom::Point2I const &>(), "array"_a,
             "deep"_a = false, "xy0"_a = lsst::geom::Point2I());
     cls.def(py::init<std::string const &, int, std::shared_ptr<lsst::daf::base::PropertySet>,
-                     lsst::geom::Box2I const &, ImageOrigin, bool>(),
+                     lsst::geom::Box2I const &, ImageOrigin, bool, bool>(),
             "fileName"_a, "hdu"_a = fits::DEFAULT_HDU, "metadata"_a = nullptr, "bbox"_a = lsst::geom::Box2I(),
-            "origin"_a = PARENT, "conformMasks"_a = false);
+            "origin"_a = PARENT, "conformMasks"_a = false, "allowUnsafe"_a=false);
     cls.def(py::init<fits::MemFileManager &, int, std::shared_ptr<lsst::daf::base::PropertySet>,
-                     lsst::geom::Box2I const &, ImageOrigin, bool>(),
+                     lsst::geom::Box2I const &, ImageOrigin, bool, bool>(),
             "manager"_a, "hdu"_a = fits::DEFAULT_HDU, "metadata"_a = nullptr, "bbox"_a = lsst::geom::Box2I(),
-            "origin"_a = PARENT, "conformMasks"_a = false);
+            "origin"_a = PARENT, "conformMasks"_a = false, "allowUnsafe"_a=false);
     cls.def(py::init<fits::Fits &, std::shared_ptr<lsst::daf::base::PropertySet>, lsst::geom::Box2I const &,
-                     ImageOrigin, bool>(),
+                     ImageOrigin, bool, bool>(),
             "fitsFile"_a, "metadata"_a = nullptr, "bbox"_a = lsst::geom::Box2I(), "origin"_a = PARENT,
-            "conformMasks"_a = false);
+            "conformMasks"_a = false, "allowUnsafe"_a=false);
 
     /* Operators */
     cls.def("__ior__", [](Mask<MaskPixelT> &self, Mask<MaskPixelT> &other) { return self |= other; });
@@ -249,16 +249,17 @@ static PyImage<PixelT> declareImage(py::module &mod, const std::string &suffix) 
     cls.def(py::init<ndarray::Array<PixelT, 2, 1> const &, bool, lsst::geom::Point2I const &>(), "array"_a,
             "deep"_a = false, "xy0"_a = lsst::geom::Point2I());
     cls.def(py::init<std::string const &, int, std::shared_ptr<daf::base::PropertySet>, lsst::geom::Box2I const &,
-                     ImageOrigin>(),
+                     ImageOrigin, bool>(),
             "fileName"_a, "hdu"_a = fits::DEFAULT_HDU, "metadata"_a = nullptr, "bbox"_a = lsst::geom::Box2I(),
-            "origin"_a = PARENT);
+            "origin"_a = PARENT, "allowUnsafe"_a=false);
     cls.def(py::init<fits::MemFileManager &, int, std::shared_ptr<daf::base::PropertySet>,
-                     lsst::geom::Box2I const &, ImageOrigin>(),
+                     lsst::geom::Box2I const &, ImageOrigin, bool>(),
             "manager"_a, "hdu"_a = fits::DEFAULT_HDU, "metadata"_a = nullptr, "bbox"_a = lsst::geom::Box2I(),
-            "origin"_a = PARENT);
+            "origin"_a = PARENT, "allowUnsafe"_a=false);
     cls.def(py::init<fits::Fits &, std::shared_ptr<daf::base::PropertySet>, lsst::geom::Box2I const &,
-                     ImageOrigin>(),
-            "fitsFile"_a, "metadata"_a = nullptr, "bbox"_a = lsst::geom::Box2I(), "origin"_a = PARENT);
+                     ImageOrigin, bool>(),
+            "fitsFile"_a, "metadata"_a = nullptr, "bbox"_a = lsst::geom::Box2I(), "origin"_a = PARENT,
+            "allowUnsafe"_a=false);
 
     /* Operators */
     cls.def("__iadd__", [](Image<PixelT> &self, PixelT const &other) { return self += other; });
@@ -337,9 +338,9 @@ static void declareDecoratedImage(py::module &mod, std::string const &suffix) {
     cls.def(py::init<const lsst::geom::Box2I &>(), "bbox"_a);
     cls.def(py::init<std::shared_ptr<Image<PixelT>>>(), "rhs"_a);
     cls.def(py::init<DecoratedImage<PixelT> const &, const bool>(), "rhs"_a, "deep"_a = false);
-    cls.def(py::init<std::string const &, const int, lsst::geom::Box2I const &, ImageOrigin const>(),
+    cls.def(py::init<std::string const &, const int, lsst::geom::Box2I const &, ImageOrigin const, bool>(),
             "fileName"_a, "hdu"_a = fits::DEFAULT_HDU, "bbox"_a = lsst::geom::Box2I(),
-            "origin"_a = PARENT);
+            "origin"_a = PARENT, "allowUnsafe"_a=false);
 
     cls.def("getMetadata", &DecoratedImage<PixelT>::getMetadata);
     cls.def("setMetadata", &DecoratedImage<PixelT>::setMetadata);

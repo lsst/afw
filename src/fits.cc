@@ -330,6 +330,20 @@ struct FitsBitPix<double> {
     static int const CONSTANT = DOUBLE_IMG;
 };
 
+bool isFitsImageTypeSigned(int constant) {
+    switch (constant) {
+        case BYTE_IMG: return false;
+        case SHORT_IMG: return true;
+        case USHORT_IMG: return false;
+        case LONG_IMG: return true;
+        case ULONG_IMG: return false;
+        case LONGLONG_IMG: return true;
+        case FLOAT_IMG: return true;
+        case DOUBLE_IMG: return true;
+    }
+    throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, "Invalid constant.");
+}
+
 static bool allowImageCompression = true;
 
 int fitsTypeForBitpix(int bitpix) {
@@ -825,6 +839,9 @@ void MetadataIterationFunctor::operator()(std::string const &key, std::string co
     static boost::regex const intRegex("[+-]?[0-9]+");
     static boost::regex const doubleRegex("[+-]?([0-9]*\\.?[0-9]+|[0-9]+\\.?[0-9]*)([eE][+-]?[0-9]+)?");
     static boost::regex const fitsStringRegex("'(.*?) *'");
+    // regex for two-line comment added to all FITS headers by CFITSIO
+    static boost::regex const fitsDefinitionCommentRegex(
+        " *(FITS \\(Flexible Image Transport System\\)|and Astrophysics', volume 376, page 359).*");
     boost::smatch matchStrings;
 
     if (strip && isKeyIgnored(key)) {
@@ -857,7 +874,9 @@ void MetadataIterationFunctor::operator()(std::string const &key, std::string co
         } else {
             add(key, str, comment);
         }
-    } else if (key == "HISTORY" || key == "COMMENT") {
+    } else if (key == "HISTORY") {
+        add(key, comment, "");
+    } else if (key == "COMMENT" && !(strip && boost::regex_match(comment, fitsDefinitionCommentRegex))) {
         add(key, comment, "");
     } else if (value.empty()) {
         // do nothing for empty values
@@ -1314,21 +1333,56 @@ bool Fits::checkImageType() {
         if (imageType < 0) {
             return false;  // can't represent floating-point with integer
         }
-        return imageType <= FitsBitPix<T>::CONSTANT;  // can represent a small int by a larger int
+        if (std::numeric_limits<T>::is_signed) {
+            if (isFitsImageTypeSigned(imageType)) {
+                return FitsBitPix<T>::CONSTANT >= imageType;
+            } else {
+                // need extra bits to safely convert unsigned to signed
+                return FitsBitPix<T>::CONSTANT > imageType;
+            }
+        } else {
+            if (!isFitsImageTypeSigned(imageType)) {
+                return FitsBitPix<T>::CONSTANT >= imageType;
+            } else if (imageType == LONGLONG_IMG) {
+                // workaround for CFITSIO not recognizing uint64 as
+                // unsigned
+                return FitsBitPix<T>::CONSTANT >= imageType;
+            } else {
+                return false;
+            }
+        }
     }
-    if (std::is_same<T, double>::value) {
-        // Everything can be represented by double
-        return true;
+    // we allow all conversions to float and double, even if they lose precision
+    return true;
+}
+
+std::string Fits::getImageDType() {
+    int bitpix = 0;
+    fits_get_img_equivtype(reinterpret_cast<fitsfile *>(fptr), &bitpix, &status);
+    if (behavior & AUTO_CHECK) LSST_FITS_CHECK_STATUS(*this, "Getting image type");
+    // FITS' 'BITPIX' key is the number of bits in a pixel, but negative for
+    // floats.  But the above CFITSIO routine adds support for unsigned
+    // integers by checking BZERO for an offset as well.  So the 'bitpix' value
+    // we get back from that should be the raw value for signed integers and
+    // floats, but may be something else (still positive) for unsigned, and
+    // hence we'll compare to some FITSIO constants to be safe looking at
+    // integers.
+    if (bitpix < 0) {
+        return "float" + std::to_string(-bitpix);
     }
-    assert((std::is_same<T, float>::value));  // Everything else has been dealt with
-    switch (imageType) {
-        case TLONGLONG:
-        case TDOUBLE:
-            // Not enough precision in 'float'
-            return false;
-        default:
-            return true;
+    switch (bitpix) {
+        case BYTE_IMG: return "uint8";
+        case SBYTE_IMG: return "int8";
+        case SHORT_IMG: return "int16";
+        case USHORT_IMG: return "uint16";
+        case LONG_IMG: return "int32";
+        case ULONG_IMG: return "uint32";
+        case LONGLONG_IMG: return "int64";
     }
+    throw LSST_EXCEPT(
+        FitsError,
+        (boost::format("Unrecognized BITPIX value: %d") % bitpix).str()
+    );
 }
 
 ImageCompressionOptions Fits::getImageCompression() {
@@ -1509,7 +1563,8 @@ std::shared_ptr<daf::base::PropertyList> readMetadata(fits::Fits &fitsfile, bool
     auto metadata = std::make_shared<lsst::daf::base::PropertyList>();
     fitsfile.readMetadata(*metadata, strip);
     // if INHERIT=T, we want to also include header entries from the primary HDU
-    if (fitsfile.getHdu() != 0 && metadata->exists("INHERIT")) {
+    int oldHdu = fitsfile.getHdu();
+    if (oldHdu != 0 && metadata->exists("INHERIT")) {
         bool inherit = false;
         if (metadata->typeOf("INHERIT") == typeid(std::string)) {
             inherit = (metadata->get<std::string>("INHERIT") == "T");
@@ -1518,7 +1573,7 @@ std::shared_ptr<daf::base::PropertyList> readMetadata(fits::Fits &fitsfile, bool
         }
         if (strip) metadata->remove("INHERIT");
         if (inherit) {
-            fitsfile.setHdu(0);
+            HduMoveGuard guard(fitsfile, 0);
             // Combine the metadata from the primary HDU with the metadata from the specified HDU,
             // with non-comment values from the specified HDU superseding those in the primary HDU
             // and comments from the specified HDU appended to comments from the primary HDU
@@ -1534,36 +1589,32 @@ std::shared_ptr<daf::base::PropertyList> readMetadata(fits::Fits &fitsfile, bool
     return metadata;
 }
 
-namespace {
 
-// RAII for moving the HDU
-class HduMove {
-public:
-    HduMove() = delete;
-    HduMove(HduMove const &) = delete;
+HduMoveGuard::HduMoveGuard(Fits & fits, int hdu, bool relative) :
+    _fits(fits),
+    _oldHdu(_fits.getHdu()),
+    _enabled(true)
+{
+    _fits.setHdu(hdu, relative);
+}
 
-    HduMove(Fits &fits, int hdu) : _fits(fits), _enabled(true) { _fits.setHdu(hdu); }
-    ~HduMove() {
-        if (!_enabled) {
-            return;
-        }
-        int status = 0;
-        std::swap(status, _fits.status);
-        try {
-            _fits.setHdu(0);
-        } catch (...) {
-            LOGLS_WARN("afw.fits", makeErrorMessage(_fits.fptr, _fits.status, "Failed to move back to PHU"));
-        }
-        std::swap(status, _fits.status);
+HduMoveGuard::~HduMoveGuard() {
+    if (!_enabled) {
+        return;
     }
-    void disable() { _enabled = false; }
-
-private:
-    Fits &_fits;    // FITS file we're working on
-    bool _enabled;  // Move back to PHU on destruction?
-};
-
-}  // anonymous namespace
+    int status = 0;
+    std::swap(status, _fits.status);  // unset error indicator, but remember the old status
+    try {
+        _fits.setHdu(_oldHdu);
+    } catch (...) {
+        LOGL_WARN(
+            "afw.fits",
+            makeErrorMessage(_fits.fptr, _fits.status, "Failed to move back to HDU %d").c_str(),
+            _oldHdu
+        );
+    }
+    std::swap(status, _fits.status);  // reset the old status
+}
 
 bool Fits::checkCompressedImagePhu() {
     auto fits = reinterpret_cast<fitsfile *>(fptr);
@@ -1580,7 +1631,7 @@ bool Fits::checkCompressedImagePhu() {
         return false;
     }
     // Check first extension (and move back there when we're done if we're not compressed)
-    HduMove move{*this, 1};
+    HduMoveGuard move(*this, 1);
     bool isCompressed = fits_is_compressed_image(fits, &status);
     if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, "Checking compression");
@@ -1686,8 +1737,8 @@ std::shared_ptr<daf::base::PropertySet> ImageWriteOptions::validate(daf::base::P
             float)(double)(std::complex<float>)(std::complex<double>)(std::string)
 
 #define COLUMN_TYPES                                                                             \
-    (bool)(std::string)(std::uint8_t)(std::int16_t)(std::uint16_t)(std::int32_t)(std::uint32_t)( \
-            std::int64_t)(float)(double)(lsst::geom::Angle)(std::complex<float>)(std::complex<double>)
+    (bool)(std::string)(std::int8_t)(std::uint8_t)(std::int16_t)(std::uint16_t)(std::int32_t)(std::uint32_t) \
+            (std::int64_t)(float)(double)(lsst::geom::Angle)(std::complex<float>)(std::complex<double>)
 
 #define COLUMN_ARRAY_TYPES                                                                              \
     (bool)(char)(std::uint8_t)(std::int16_t)(std::uint16_t)(std::int32_t)(std::uint32_t)(std::int64_t)( \

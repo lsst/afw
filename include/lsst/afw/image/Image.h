@@ -139,11 +139,14 @@ public:
      *  @param[in]      bbox        If non-empty, read only the pixels within the bounding box.
      *  @param[in]      origin      Coordinate system of the bounding box; if PARENT, the bounding box
      *                              should take into account the xy0 saved with the image.
+     *  @param[in]      allowUnsafe Permit reading into the requested pixel type even
+     *                              when on-disk values may overflow or truncate.
      */
     explicit Image(std::string const& fileName, int hdu = fits::DEFAULT_HDU,
                    std::shared_ptr<lsst::daf::base::PropertySet> metadata =
                            std::shared_ptr<lsst::daf::base::PropertySet>(),
-                   lsst::geom::Box2I const& bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT);
+                   lsst::geom::Box2I const& bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT,
+                   bool allowUnsafe=false);
 
     /**
      *  Construct an Image by reading a FITS image in memory.
@@ -156,11 +159,14 @@ public:
      *  @param[in]      bbox        If non-empty, read only the pixels within the bounding box.
      *  @param[in]      origin      Coordinate system of the bounding box; if PARENT, the bounding box
      *                              should take into account the xy0 saved with the image.
+     *  @param[in]      allowUnsafe Permit reading into the requested pixel type even
+     *                              when on-disk values may overflow or truncate.
      */
     explicit Image(fits::MemFileManager& manager, int hdu = fits::DEFAULT_HDU,
                    std::shared_ptr<lsst::daf::base::PropertySet> metadata =
                            std::shared_ptr<lsst::daf::base::PropertySet>(),
-                   lsst::geom::Box2I const& bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT);
+                   lsst::geom::Box2I const& bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT,
+                   bool allowUnsafe=false);
 
     /**
      *  Construct an Image from an already-open FITS object.
@@ -170,11 +176,14 @@ public:
      *  @param[in]      bbox        If non-empty, read only the pixels within the bounding box.
      *  @param[in]      origin      Coordinate system of the bounding box; if PARENT, the bounding box
      *                              should take into account the xy0 saved with the image.
+     *  @param[in]      allowUnsafe Permit reading into the requested pixel type even
+     *                              when on-disk values may overflow or truncate.
      */
     explicit Image(fits::Fits& fitsfile,
                    std::shared_ptr<lsst::daf::base::PropertySet> metadata =
                            std::shared_ptr<lsst::daf::base::PropertySet>(),
-                   lsst::geom::Box2I const& bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT);
+                   lsst::geom::Box2I const& bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT,
+                   bool allowUnsafe=false);
 
     // generalised copy constructor
     template <typename OtherPixelT>
@@ -436,10 +445,12 @@ public:
      * @param hdu The HDU to read
      * @param bbox Only read these pixels
      * @param origin Coordinate system of the bbox
+     * @param allowUnsafe Permit reading into the requested pixel type even
+     *                    when on-disk values may overflow or truncate.
      */
     explicit DecoratedImage(std::string const& fileName, const int hdu = fits::DEFAULT_HDU,
                             lsst::geom::Box2I const& bbox = lsst::geom::Box2I(),
-                            ImageOrigin const origin = PARENT);
+                            ImageOrigin const origin = PARENT, bool allowUnsafe=false);
 
     /**
      * Assignment operator

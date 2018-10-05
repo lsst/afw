@@ -526,6 +526,11 @@ public:
     bool checkImageType();
 
     /**
+     *  Return the numpy dtype equivalent of the image pixel type (e.g. "uint16", "float64").
+     */
+    std::string getImageDType();
+
+    /**
      *  Read an array from a FITS image.
      *
      *  @param[out]  array    Array to be filled.  Must already be allocated to the desired shape.
@@ -703,6 +708,53 @@ std::shared_ptr<daf::base::PropertyList> readMetadata(fits::Fits& fitsfile, bool
 
 void setAllowImageCompression(bool allow);
 bool getAllowImageCompression();
+
+
+
+/**
+ *  RAII scoped guard for moving the HDU in a Fits object.
+ *
+ *  This class attempts to ensure that the HDU state of a `Fits` object is
+ *  restored when the guard class goes out of scope, even in the presence of
+ *  exceptions.  (In practice, resetting the HDU can only fail if the `Fits`
+ *  object has become sufficiently corrupted that it's no longer usable at
+ *  all).
+ */
+class HduMoveGuard {
+public:
+
+    HduMoveGuard() = delete;
+
+    HduMoveGuard(HduMoveGuard const &) = delete;
+    HduMoveGuard(HduMoveGuard &&) = delete;
+
+    HduMoveGuard & operator=(HduMoveGuard const &) = delete;
+    HduMoveGuard & operator=(HduMoveGuard &&) = delete;
+
+    /**
+     *  Create a guard object and set the HDU of the given Fits object at the
+     *  same time.
+     *
+     *  @param[in, out]  fits      FITS file pointer to manipulate.
+     *  @param[in]       hdu       HDU index moved to within the lifetime of
+     *                             the guard object (0 is primary).
+     *
+     *  @param[in]       relative  If True, interpret `hdu` as relative to the
+     *                             current HDU rather than an absolute index.
+     */
+    HduMoveGuard(Fits & fits, int hdu, bool relative=false);
+
+    ~HduMoveGuard();
+
+    /// Disable the guard, leaving the HDU at its current state at destruction.
+    void disable() { _enabled = false; }
+
+private:
+    Fits & _fits;
+    int _oldHdu;
+    bool _enabled;
+};
+
 
 }  // namespace fits
 }  // namespace afw

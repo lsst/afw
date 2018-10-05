@@ -642,6 +642,8 @@ public:
      *  @param[in,out]  imageMetadata      Metadata read from the image HDU header.
      *  @param[in,out]  maskMetadata       Metadata read from the mask HDU header.
      *  @param[in,out]  varianceMetadata   Metadata read from the variance HDU header.
+     *  @param[in]      allowUnsafe   Permit reading into the requested pixel type even
+     *                                when on-disk values may overflow or truncate.
      */
     explicit MaskedImage(
             std::string const& fileName,
@@ -651,7 +653,8 @@ public:
             std::shared_ptr<daf::base::PropertySet> imageMetadata = std::shared_ptr<daf::base::PropertySet>(),
             std::shared_ptr<daf::base::PropertySet> maskMetadata = std::shared_ptr<daf::base::PropertySet>(),
             std::shared_ptr<daf::base::PropertySet> varianceMetadata =
-                    std::shared_ptr<daf::base::PropertySet>());
+                    std::shared_ptr<daf::base::PropertySet>(),
+            bool allowUnsafe=false);
 
     /**
      *  Construct a MaskedImage by reading a FITS image in memory.
@@ -667,6 +670,8 @@ public:
      *  @param[in,out]  imageMetadata      Metadata read from the image HDU header.
      *  @param[in,out]  maskMetadata       Metadata read from the mask HDU header.
      *  @param[in,out]  varianceMetadata   Metadata read from the variance HDU header.
+     *  @param[in]      allowUnsafe   Permit reading into the requested pixel type even
+     *                                when on-disk values may overflow or truncate.
      */
     explicit MaskedImage(
             fits::MemFileManager& manager,
@@ -676,7 +681,8 @@ public:
             std::shared_ptr<daf::base::PropertySet> imageMetadata = std::shared_ptr<daf::base::PropertySet>(),
             std::shared_ptr<daf::base::PropertySet> maskMetadata = std::shared_ptr<daf::base::PropertySet>(),
             std::shared_ptr<daf::base::PropertySet> varianceMetadata =
-                    std::shared_ptr<daf::base::PropertySet>());
+                    std::shared_ptr<daf::base::PropertySet>(),
+            bool allowUnsafe=false);
 
     /**
      *  Construct a MaskedImage from an already-open FITS object.
@@ -692,6 +698,8 @@ public:
      *  @param[in,out]  imageMetadata      Metadata read from the image HDU header.
      *  @param[in,out]  maskMetadata       Metadata read from the mask HDU header.
      *  @param[in,out]  varianceMetadata   Metadata read from the variance HDU header.
+     *  @param[in]      allowUnsafe   Permit reading into the requested pixel type even
+     *                                when on-disk values may overflow or truncate.
      */
     explicit MaskedImage(
             fits::Fits& fitsfile,
@@ -701,7 +709,8 @@ public:
             std::shared_ptr<daf::base::PropertySet> imageMetadata = std::shared_ptr<daf::base::PropertySet>(),
             std::shared_ptr<daf::base::PropertySet> maskMetadata = std::shared_ptr<daf::base::PropertySet>(),
             std::shared_ptr<daf::base::PropertySet> varianceMetadata =
-                    std::shared_ptr<daf::base::PropertySet>());
+                    std::shared_ptr<daf::base::PropertySet>(),
+            bool allowUnsafe=false);
 
     /**
      * Copy constructor;  shallow, unless deep is true.

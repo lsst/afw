@@ -126,9 +126,11 @@ public:
      *  @param[in]      origin        Coordinate system of the bounding box; if PARENT, the bounding box
      *                                should take into account the xy0 saved with the image.
      *  @param[in]      conformMasks  If true, make Mask conform to the mask layout in the file.
+     *  @param[in]      allowUnsafe   Permit reading into the requested pixel type even
+     *                                when on-disk values may overflow or truncate.
      */
     explicit Exposure(std::string const& fileName, lsst::geom::Box2I const& bbox = lsst::geom::Box2I(),
-                      ImageOrigin origin = PARENT, bool conformMasks = false);
+                      ImageOrigin origin = PARENT, bool conformMasks = false, bool allowUnsafe=false);
 
     /**
      *  Construct an Exposure by reading a FITS image in memory.
@@ -138,9 +140,11 @@ public:
      *  @param[in]      origin        Coordinate system of the bounding box; if PARENT, the bounding box
      *                                should take into account the xy0 saved with the image.
      *  @param[in]      conformMasks  If true, make Mask conform to the mask layout in the file.
+     *  @param[in]      allowUnsafe   Permit reading into the requested pixel type even
+     *                                when on-disk values may overflow or truncate.
      */
     explicit Exposure(fits::MemFileManager& manager, lsst::geom::Box2I const& bbox = lsst::geom::Box2I(),
-                      ImageOrigin origin = PARENT, bool conformMasks = false);
+                      ImageOrigin origin = PARENT, bool conformMasks = false, bool allowUnsafe=false);
 
     /**
      *  Construct an Exposure from an already-open FITS object.
@@ -150,9 +154,11 @@ public:
      *  @param[in]      origin        Coordinate system of the bounding box; if PARENT, the bounding box
      *                                should take into account the xy0 saved with the image.
      *  @param[in]      conformMasks  If true, make Mask conform to the mask layout in the file.
+     *  @param[in]      allowUnsafe   Permit reading into the requested pixel type even
+     *                                when on-disk values may overflow or truncate.
      */
     explicit Exposure(fits::Fits& fitsfile, lsst::geom::Box2I const& bbox = lsst::geom::Box2I(),
-                      ImageOrigin origin = PARENT, bool conformMasks = false);
+                      ImageOrigin origin = PARENT, bool conformMasks = false, bool allowUnsafe=false);
 
     /** Copy an Exposure
      *

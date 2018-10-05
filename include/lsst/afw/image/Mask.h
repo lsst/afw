@@ -153,6 +153,8 @@ public:
      *  @param[in]      origin        Coordinate system of the bounding box; if PARENT, the bounding box
      *                                should take into account the xy0 saved with the image.
      *  @param[in]      conformMasks  If true, make Mask conform to the mask layout in the file.
+     *  @param[in]      allowUnsafe   Permit reading into the requested pixel type even
+     *                                when on-disk values may overflow or truncate.
      *
      *  The meaning of the bitplanes is given in the header.  If conformMasks is false (default),
      *  the bitvalues will be changed to match those in Mask's plane dictionary.  If it's true, the
@@ -163,7 +165,7 @@ public:
                   std::shared_ptr<lsst::daf::base::PropertySet> metadata =
                           std::shared_ptr<lsst::daf::base::PropertySet>(),
                   lsst::geom::Box2I const& bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT,
-                  bool conformMasks = false);
+                  bool conformMasks = false, bool allowUnsafe=false);
 
     /**
      *  Construct a Mask by reading a FITS image in memory.
@@ -177,6 +179,8 @@ public:
      *  @param[in]      origin        Coordinate system of the bounding box; if PARENT, the bounding box
      *                                should take into account the xy0 saved with the image.
      *  @param[in]      conformMasks  If true, make Mask conform to the mask layout in the file.
+     *  @param[in]      allowUnsafe   Permit reading into the requested pixel type even
+     *                                when on-disk values may overflow or truncate.
      *
      *  The meaning of the bitplanes is given in the header.  If conformMasks is false (default),
      *  the bitvalues will be changed to match those in Mask's plane dictionary.  If it's true, the
@@ -187,7 +191,7 @@ public:
                   std::shared_ptr<lsst::daf::base::PropertySet> metadata =
                           std::shared_ptr<lsst::daf::base::PropertySet>(),
                   lsst::geom::Box2I const& bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT,
-                  bool conformMasks = false);
+                  bool conformMasks = false, bool allowUnsafe=false);
 
     /**
      *  Construct a Mask from an already-open FITS object.
@@ -198,6 +202,8 @@ public:
      *  @param[in]      origin        Coordinate system of the bounding box; if PARENT, the bounding box
      *                                should take into account the xy0 saved with the image.
      *  @param[in]      conformMasks  If true, make Mask conform to the mask layout in the file.
+     *  @param[in]      allowUnsafe   Permit reading into the requested pixel type even
+     *                                when on-disk values may overflow or truncate.
      *
      *  The meaning of the bitplanes is given in the header.  If conformMasks is false (default),
      *  the bitvalues will be changed to match those in Mask's plane dictionary.  If it's true, the
@@ -208,7 +214,7 @@ public:
                   std::shared_ptr<lsst::daf::base::PropertySet> metadata =
                           std::shared_ptr<lsst::daf::base::PropertySet>(),
                   lsst::geom::Box2I const& bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT,
-                  bool conformMasks = false);
+                  bool conformMasks = false, bool allowUnsafe=false);
 
     // generalised copy constructor
     template <typename OtherPixelT>
@@ -515,6 +521,9 @@ public:
     void conformMaskPlanes(const MaskPlaneDict& masterPlaneDict);
 
 private:
+
+    friend class MaskFitsReader;
+
     std::shared_ptr<detail::MaskDict> _maskDict;  // our bitplane dictionary
 
     static std::shared_ptr<detail::MaskDict> _maskPlaneDict();

@@ -621,7 +621,7 @@ class DecoratedImageTestCase(lsst.utils.tests.TestCase):
         hdus["var"] = 3  # an F32 fits HDU
 
         # read as unsigned short
-        imgU = afwImage.DecoratedImageU(self.fileForMetadata, hdus["img"])
+        imgU = afwImage.DecoratedImageU(self.fileForMetadata, hdus["img"], allowUnsafe=True)
         # read as float
         imgF = afwImage.DecoratedImageF(self.fileForMetadata, hdus["img"])
 
