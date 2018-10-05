@@ -84,9 +84,12 @@ std::shared_ptr<ast::Mapping const> TransformMap::_getMapping(CameraSys const &f
 
 size_t TransformMap::size() const noexcept { return _frameIds.size(); }
 
-TransformMap::TransformMap(std::unique_ptr<ast::FrameSet> && transforms, CameraSysFrameIdMap && frameIds) :
+TransformMap::TransformMap(std::unique_ptr<ast::FrameSet> && transforms,
+                           CameraSysFrameIdMap && frameIds,
+                           std::vector<std::pair<int, int>> && canonicalConnections) :
     _transforms(std::move(transforms)),
-    _frameIds(std::move(frameIds))
+    _frameIds(std::move(frameIds)),
+    _canonicalConnections(std::move(canonicalConnections))
 {}
 
 
@@ -172,6 +175,7 @@ std::shared_ptr<TransformMap const> TransformMap::Builder::build() const {
 
     int nFrames = 0;  // tracks frameSet->getNFrame() to avoid those (expensive) calls
     CameraSysFrameIdMap frameIds;  // mapping from CameraSys to Frame ID (int)
+    std::vector<std::pair<int, int>> canonicalConnections;  // remembers the frame IDs we've connected
 
     // Local helper function that looks up the Frame ID for a CameraSys, with
     // results returned via boost::optional.
@@ -219,10 +223,12 @@ std::shared_ptr<TransformMap const> TransformMap::Builder::build() const {
                 throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, buffer.str());
             } else if (fromId) {  // We've already inserted fromSys (only)
                 frameSet->addFrame(*fromId, *c.transform->getMapping(), addFrameForSys(c.toSys));
+                canonicalConnections.emplace_back(*fromId, nFrames);
                 c.processed = true;
                 ++nProcessedThisPass;
             } else if (toId) {  // We've already inserted toSys (only)
                 frameSet->addFrame(*toId, *c.transform->inverted()->getMapping(), addFrameForSys(c.fromSys));
+                canonicalConnections.emplace_back(*toId, nFrames);
                 c.processed = true;
                 ++nProcessedThisPass;
             }
@@ -259,7 +265,9 @@ std::shared_ptr<TransformMap const> TransformMap::Builder::build() const {
 
     // Return the new TransformMap.
     // We can't use make_shared because TransformMap ctor is private.
-    return std::shared_ptr<TransformMap>(new TransformMap(std::move(frameSet), std::move(frameIds)));
+    return std::shared_ptr<TransformMap>(new TransformMap(std::move(frameSet),
+                                                          std::move(frameIds),
+                                                          std::move(canonicalConnections)));
 }
 
 

@@ -164,7 +164,9 @@ public:
 private:
 
     // Private ctor, only called by Builder::build().
-    TransformMap(std::unique_ptr<ast::FrameSet> && transforms, CameraSysFrameIdMap && frameIds);
+    TransformMap(std::unique_ptr<ast::FrameSet> && transforms,
+                 CameraSysFrameIdMap && frameIds,
+                 std::vector<std::pair<int, int>> && canonicalConnections);
 
     /**
      * The internal frame ID corresponding to a coordinate system.
@@ -202,6 +204,13 @@ private:
      * Must have exactly one mapping for each Frame in `transforms`.
      */
     CameraSysFrameIdMap const _frameIds;
+
+    /**
+     * Sequence of ordered (fromFrameId, toFrameId) pairs that were construct
+     * the TransformMap, so we can extract and save exactly those mappings
+     * when persisting the TransformMap.
+     */
+    std::vector<std::pair<int, int>> _canonicalConnections;
 };
 
 
