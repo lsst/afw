@@ -30,6 +30,7 @@
 #include "boost/iterator/transform_iterator.hpp"
 #include "astshim/FrameSet.h"
 
+#include "lsst/afw/table/io/Persistable.h"
 #include "lsst/afw/cameraGeom/CameraSys.h"
 #include "lsst/geom/Point.h"
 #include "lsst/afw/geom/Transform.h"
@@ -60,7 +61,7 @@ namespace cameraGeom {
  * @exceptsafe Unless otherwise specified, all methods guarantee only basic
  *             exception safety.
  */
-class TransformMap final {
+class TransformMap final : public table::io::PersistableFacade<TransformMap>, public table::io::Persistable {
 private:
 
     // Functor for boost::transform_iterator: given an entry in a std::map or unordered_map, return the key
@@ -161,9 +162,20 @@ public:
      */
     size_t size() const noexcept;
 
+
+    /**
+     * TransformMaps should always be Persistable.
+     */
+    bool isPersistable() const noexcept override { return true; }
+
 private:
 
-    // Private ctor, only called by Builder::build().
+    // Helper class used in persistence.
+    class Factory;
+
+    static Factory const registration;
+
+    // Private ctor, only called by Builder::build() and Factory.
     TransformMap(std::unique_ptr<ast::FrameSet> && transforms,
                  CameraSysFrameIdMap && frameIds,
                  std::vector<std::pair<int, int>> && canonicalConnections);
@@ -192,6 +204,13 @@ private:
      */
     std::shared_ptr<ast::Mapping const> _getMapping(CameraSys const &fromSys, CameraSys const &toSys) const;
 
+    std::string getPersistenceName() const override;
+
+    std::string getPythonModule() const override;
+
+    void write(OutputArchiveHandle& handle) const override;
+
+
     /// Allows conversions between LSST and AST data formats
     static lsst::afw::geom::Point2Endpoint _pointConverter;
 
@@ -210,7 +229,7 @@ private:
      * the TransformMap, so we can extract and save exactly those mappings
      * when persisting the TransformMap.
      */
-    std::vector<std::pair<int, int>> _canonicalConnections;
+    std::vector<std::pair<int, int>> const _canonicalConnections;
 };
 
 

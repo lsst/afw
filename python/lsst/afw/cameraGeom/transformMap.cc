@@ -25,6 +25,7 @@
 #include <vector>
 
 #include "lsst/geom/Point.h"
+#include "lsst/afw/table/io/python.h"
 #include "lsst/afw/cameraGeom/CameraSys.h"
 #include "lsst/afw/cameraGeom/TransformMap.h"
 
@@ -102,6 +103,8 @@ void declareTransformMap(py::module & mod) {
         "pointList"_a, "fromSys"_a, "toSys"_a
     );
     cls.def("getTransform", &TransformMap::getTransform, "fromSys"_a, "toSys"_a);
+
+    table::io::python::addPersistableMethods(cls);
 
     declareTransformMapBuilder(cls);
 }

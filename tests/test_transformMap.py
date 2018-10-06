@@ -107,6 +107,20 @@ class CameraTransformMapTestCase(lsst.utils.tests.TestCase):
         self.assertIn(self.nativeSys, self.transformMap)
         self.assertIn(cameraGeom.FIELD_ANGLE, self.transformMap)
 
+    def testPersistence(self):
+        """Test round-trip through FITS I/O.
+        """
+        with lsst.utils.tests.getTempFilePath(".fits") as filename:
+            self.transformMap.writeFits(filename)
+            transformMapOut = cameraGeom.TransformMap.readFits(filename)
+        self.assertEqual(list(self.transformMap), list(transformMapOut))  # compares the sets of CameraSys
+        for sysFrom in self.transformMap:
+            for sysTo in self.transformMap:
+                transformIn = self.transformMap.getTransform(sysFrom, sysTo)
+                transformOut = transformMapOut.getTransform(sysFrom, sysTo)
+                self.compare2DFunctions(transformIn.applyForward, transformOut.applyForward)
+                self.compare2DFunctions(transformIn.applyInverse, transformOut.applyInverse)
+
     def testIteration(self):
         """Test iteration, len and indexing
         """
