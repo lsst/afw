@@ -33,6 +33,7 @@ from lsst.afw.image import (Image, Mask, Exposure, LOCAL, PARENT, MaskPixel, Var
                             Filter, Calib, ApCorrMap, VisitInfo, TransmissionCurve, CoaddInputs)
 from lsst.afw.image.utils import defineFilter
 from lsst.afw.detection import GaussianPsf
+from lsst.afw.cameraGeom.testUtils import DetectorWrapper
 
 
 class FitsReaderTestCase(lsst.utils.tests.TestCase):
@@ -172,7 +173,7 @@ class FitsReaderTestCase(lsst.utils.tests.TestCase):
             Compatible image pixel types to try to read in.
         """
         reader = ExposureFitsReader(fileName)
-        self.assertEqual(exposureIn.getMetadata(), reader.readMetadata())
+        self.assertEqual(exposureIn.getMetadata().toDict(), reader.readMetadata().toDict())
         self.assertWcsAlmostEqualOverBBox(exposureIn.getWcs(), reader.readWcs(), self.bbox,
                                           maxDiffPix=0, maxDiffSky=0*degrees)
         self.assertEqual(exposureIn.getFilter(), reader.readFilter())
@@ -195,6 +196,7 @@ class FitsReaderTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(record.getValidPolygon(), reader.readValidPolygon())
         self.assertEqual(record.getApCorrMap(), reader.readApCorrMap())
         self.assertEqual(record.getCalib(), reader.readCalib())
+        self.assertEqual(record.getDetector(), reader.readDetector())
         self.checkMultiPlaneReader(
             reader, exposureIn, fileName, dtypesOut,
             compare=lambda a, b: self.assertMaskedImagesEqual(a.maskedImage, b.maskedImage)
@@ -216,6 +218,7 @@ class FitsReaderTestCase(lsst.utils.tests.TestCase):
         visitInfo = VisitInfo(exposureTime=5.0)
         transmissionCurve = TransmissionCurve.makeIdentity()
         coaddInputs = CoaddInputs(ExposureTable.makeMinimalSchema(), ExposureTable.makeMinimalSchema())
+        detector = DetectorWrapper().detector
         record = coaddInputs.ccds.addNew()
         record.setWcs(wcs)
         record.setCalib(calib)
@@ -224,6 +227,7 @@ class FitsReaderTestCase(lsst.utils.tests.TestCase):
         record.setApCorrMap(apCorrMap)
         record.setVisitInfo(visitInfo)
         record.setTransmissionCurve(transmissionCurve)
+        record.setDetector(detector)
         for n, dtypeIn in enumerate(self.dtypes):
             with self.subTest(dtypeIn=dtypeIn):
                 exposureIn = Exposure(self.bbox, dtype=dtypeIn)
@@ -241,6 +245,7 @@ class FitsReaderTestCase(lsst.utils.tests.TestCase):
                 exposureIn.getInfo().setVisitInfo(visitInfo)
                 exposureIn.getInfo().setTransmissionCurve(transmissionCurve)
                 exposureIn.getInfo().setCoaddInputs(coaddInputs)
+                exposureIn.setDetector(detector)
                 with lsst.utils.tests.getTempFilePath(".fits") as fileName:
                     exposureIn.writeFits(fileName)
                     self.checkMaskedImageFitsReader(exposureIn, fileName, self.dtypes[n:])

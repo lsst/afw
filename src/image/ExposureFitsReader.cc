@@ -24,6 +24,7 @@
 #include "lsst/afw/image/Calib.h"
 #include "lsst/afw/geom/polygon/Polygon.h"
 #include "lsst/afw/geom/SkyWcs.h"
+#include "lsst/afw/cameraGeom/Detector.h"
 #include "lsst/afw/image/ApCorrMap.h"
 #include "lsst/afw/detection/Psf.h"
 #include "lsst/afw/image/TransmissionCurve.h"
@@ -108,6 +109,7 @@ public:
         AP_CORR_MAP,
         VALID_POLYGON,
         TRANSMISSION_CURVE,
+        DETECTOR,
         N_ARCHIVE_COMPONENTS
     };
 
@@ -139,6 +141,7 @@ public:
         _ids[AP_CORR_MAP] = popInt("AP_CORR_MAP_ID");
         _ids[VALID_POLYGON] = popInt("VALID_POLYGON_ID");
         _ids[TRANSMISSION_CURVE] = popInt("TRANSMISSION_CURVE_ID");
+        _ids[DETECTOR] = popInt("DETECTOR_ID");
     }
 
     template <typename T>
@@ -256,6 +259,11 @@ std::shared_ptr<TransmissionCurve> ExposureFitsReader::readTransmissionCurve() {
     return _archiveReader->readComponent<TransmissionCurve>(_getFitsFile(), ArchiveReader::TRANSMISSION_CURVE);
 }
 
+std::shared_ptr<cameraGeom::Detector> ExposureFitsReader::readDetector() {
+    _ensureReaders();
+    return _archiveReader->readComponent<cameraGeom::Detector>(_getFitsFile(), ArchiveReader::DETECTOR);
+}
+
 std::shared_ptr<ExposureInfo> ExposureFitsReader::readExposureInfo() {
     auto result = std::make_shared<ExposureInfo>();
     result->setMetadata(readMetadata());
@@ -290,6 +298,11 @@ std::shared_ptr<ExposureInfo> ExposureFitsReader::readExposureInfo() {
         result->setTransmissionCurve(readTransmissionCurve());
     } catch (pex::exceptions::NotFoundError& err) {
         LOGLS_WARN(_log, "Could not read TransmissionCurve; setting to null: " << err.what());
+    }
+    try {
+        result->setDetector(readDetector());
+    } catch (pex::exceptions::NotFoundError& err) {
+        LOGLS_WARN(_log, "Could not read Detector; setting to null: " << err.what());
     }
     // In the case of WCS, we fall back to the metadata WCS if the one from
     // the archive can't be read.

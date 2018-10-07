@@ -38,6 +38,7 @@
 #include "lsst/afw/image/VisitInfo.h"
 #include "lsst/afw/image/ApCorrMap.h"
 #include "lsst/afw/image/TransmissionCurve.h"
+#include "lsst/afw/cameraGeom/Detector.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -295,6 +296,7 @@ void declareExposureFitsReader(py::module & mod) {
     cls.def("readCoaddInputs", &ExposureFitsReader::readCoaddInputs);
     cls.def("readVisitInfo", &ExposureFitsReader::readVisitInfo);
     cls.def("readTransmissionCurve", &ExposureFitsReader::readTransmissionCurve);
+    cls.def("readDetector", &ExposureFitsReader::readDetector);
     cls.def("readExposureInfo", &ExposureFitsReader::readExposureInfo);
     cls.def(
         "readMaskedImage",
