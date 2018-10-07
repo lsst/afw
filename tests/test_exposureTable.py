@@ -45,6 +45,7 @@ from lsst.afw.geom import arcseconds, degrees, radians, Point2D, Extent2D, Box2D
     makeSkyWcs, Polygon, SpherePoint
 import lsst.afw.image
 import lsst.afw.detection
+from lsst.afw.cameraGeom.testUtils import DetectorWrapper
 from testTableArchivesLib import DummyPsf
 
 try:
@@ -127,6 +128,7 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
         self.calib = lsst.afw.image.Calib()
         self.calib.setFluxMag0(56.0, 2.2)
         self.visitInfo = self.createVisitInfo()
+        self.detector = DetectorWrapper().detector
         record0 = self.cat.addNew()
         record0.setId(1)
         record0.set(self.ka, np.pi)
@@ -137,6 +139,7 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
         record0.setCalib(self.calib)
         record0.setVisitInfo(self.visitInfo)
         record0.setValidPolygon(None)
+        record0.setDetector(None)
         record1 = self.cat.addNew()
         record1.setId(2)
         record1.set(self.ka, 2.5)
@@ -144,6 +147,7 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
         record1.setWcs(self.wcs)
         record1.setBBox(self.bbox1)
         record1.setValidPolygon(self.makePolygon())
+        record1.setDetector(self.detector)
 
     def tearDown(self):
         del self.cat
@@ -151,6 +155,7 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
         del self.wcs
         del self.calib
         del self.visitInfo
+        del self.detector
 
     def testAccessors(self):
         record0 = self.cat[0]
@@ -169,6 +174,8 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
         self.assertIsNone(record1.getVisitInfo())
         self.assertEqual(record0.getValidPolygon(), None)
         self.assertEqual(record1.getValidPolygon(), self.makePolygon())
+        self.assertIsNone(record0.getDetector())
+        self.assertDetectorsEqual(record1.getDetector(), self.detector)
 
     def testPersistence(self):
         with lsst.utils.tests.getTempFilePath(".fits") as tmpFile:
@@ -187,6 +194,8 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
             self.assertEqual(self.cat[0].getVisitInfo(),
                              cat1[0].getVisitInfo())
             self.assertIsNone(cat1[1].getVisitInfo())
+            self.assertIsNone(cat1[0].getDetector())
+            self.assertDetectorsEqual(cat1[1].getDetector(), self.detector)
 
     def testGeometry(self):
         bigBox = lsst.geom.Box2D(lsst.geom.Box2I(self.bbox0))

@@ -35,6 +35,7 @@
 #include "lsst/afw/image/Calib.h"           // forward-declared by Exposure.h
 #include "lsst/afw/image/VisitInfo.h"       // forward-declared by Exposure.h
 #include "lsst/afw/image/TransmissionCurve.h" // forward-declared by Exposure.h
+#include "lsst/afw/cameraGeom/Detector.h"   // forward-declared by Exposure.h
 #include "lsst/afw/table/BaseRecord.h"
 #include "lsst/afw/table/BaseTable.h"
 #include "lsst/afw/table/Catalog.h"
@@ -97,6 +98,8 @@ PyExposureRecord declareExposureRecord(py::module &mod) {
     cls.def("setVisitInfo", &ExposureRecord::setVisitInfo, "visitInfo"_a);
     cls.def("getTransmissionCurve", &ExposureRecord::getTransmissionCurve);
     cls.def("setTransmissionCurve", &ExposureRecord::setTransmissionCurve, "transmissionCurve"_a);
+    cls.def("getDetector", &ExposureRecord::getDetector);
+    cls.def("setDetector", &ExposureRecord::setDetector, "detector"_a);
     return cls;
 }
 
