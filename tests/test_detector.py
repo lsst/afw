@@ -222,6 +222,16 @@ class DetectorTestCase(lsst.utils.tests.TestCase):
             self.assertNotEqual(amp.getRawXYOffset(), namp.getRawXYOffset())
             self.assertEqual(namp.getRawXYOffset()[0], i)
 
+    def testPersistence(self):
+        """Test round-tripping a Detector through FITS I/O.
+        """
+        dw = DetectorWrapper()
+        detectorIn = dw.detector
+        with lsst.utils.tests.getTempFilePath("*.fits") as filename:
+            detectorIn.writeFits(filename)
+            detectorOut = cameraGeom.Detector.readFits(filename)
+        self.assertDetectorsEqual(detectorIn, detectorOut)
+
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
     pass

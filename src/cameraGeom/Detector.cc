@@ -22,6 +22,11 @@
 
 #include <sstream>
 #include <utility>
+
+#include "lsst/afw/table/io/InputArchive.h"
+#include "lsst/afw/table/io/OutputArchive.h"
+#include "lsst/afw/table/io/CatalogVector.h"
+#include "lsst/afw/table/io/Persistable.cc"
 #include "lsst/afw/cameraGeom/Detector.h"
 
 namespace lsst {
@@ -143,6 +148,164 @@ std::vector<lsst::geom::Point2D> Detector::transform(std::vector<lsst::geom::Poi
     return _transformMap->transform(points, makeCameraSys(fromSys), makeCameraSys(toSys));
 }
 
+namespace {
+
+class PersistenceHelper {
+public:
+
+    static PersistenceHelper const & get() {
+        static PersistenceHelper const instance;
+        return instance;
+    }
+
+    table::Schema schema;
+    table::Key<std::string> name;
+    table::Key<int> id;
+    table::Key<int> type;
+    table::Key<std::string> serial;
+    table::Box2IKey bbox;
+    table::Point2DKey pixelSize;
+    table::Point2DKey fpPosition;
+    table::Point2DKey refPoint;
+    table::Key<lsst::geom::Angle> yaw;
+    table::Key<lsst::geom::Angle> pitch;
+    table::Key<lsst::geom::Angle> roll;
+    table::Key<int> transformMap;
+    table::Key<table::Array<float>> crosstalk;
+
+private:
+
+    PersistenceHelper() :
+        schema(),
+        name(schema.addField<std::string>("name", "Name of the detector", "", 0)),
+        id(schema.addField<int>("id", "Integer ID for the detector", "")),
+        type(schema.addField<int>("type", "Raw DetectorType enum value", "")),
+        serial(schema.addField<std::string>("serial", "Serial name of the detector", "", 0)),
+        bbox(table::Box2IKey::addFields(schema, "bbox", "Detector bounding box", "pixel")),
+        pixelSize(table::Point2DKey::addFields(schema, "pixelSize", "Physical pixel size", "mm")),
+        fpPosition(table::Point2DKey::addFields(schema, "fpPosition",
+                                                "Focal plane position of reference point", "mm")),
+        refPoint(table::Point2DKey::addFields(schema, "refPoint",
+                                              "Pixel position of reference point", "pixel")),
+        yaw(schema.addField<lsst::geom::Angle>("yaw", "Rotation about Z (X to Y), 1st rotation")),
+        pitch(schema.addField<lsst::geom::Angle>("pitch", "Rotation about Y' (Z'=Z to X'), 2nd rotation")),
+        roll(schema.addField<lsst::geom::Angle>("roll", "Rotation about X'' (Y''=Y' to Z''), 3rd rotation")),
+        transformMap(schema.addField<int>("transformMap", "Archive ID of TransformMap", "")),
+        crosstalk(schema.addField<table::Array<float>>("crosstalk", "Crosstalk matrix, flattened", "", 0))
+    {
+        schema.getCitizen().markPersistent();
+    }
+
+    PersistenceHelper(PersistenceHelper const &) = delete;
+    PersistenceHelper(PersistenceHelper &&) = delete;
+
+    PersistenceHelper & operator=(PersistenceHelper const &) = delete;
+    PersistenceHelper & operator=(PersistenceHelper &&) = delete;
+
+};
+
+
+class DetectorFactory : public table::io::PersistableFactory {
+public:
+
+    DetectorFactory() : PersistableFactory("Detector") {}
+
+    std::shared_ptr<table::io::Persistable> read(InputArchive const& archive,
+                                                 CatalogVector const& catalogs) const override {
+        auto const & keys = PersistenceHelper::get();
+
+        LSST_ARCHIVE_ASSERT(catalogs.size() == 2u);
+        LSST_ARCHIVE_ASSERT(catalogs.front().getSchema() == keys.schema);
+        LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
+        auto const & record = catalogs.front().front();
+
+        table::AmpInfoCatalog amps(catalogs.back().getSchema());
+        amps.reserve(catalogs.back().size());
+        // we can't use amps.assign or amps.insert here because those
+        // require the input record to be a subclass of the output record
+        // to permit shallow assignment while this case is the opposte
+        for (auto const & amp : catalogs.back()) {
+            amps.addNew()->assign(amp);
+        }
+
+        auto flattenedMatrix = record.get(keys.crosstalk);
+        ndarray::Array<float, 2, 2> crosstalk;
+        if (!flattenedMatrix.isEmpty()) {
+            crosstalk = ndarray::allocate(amps.size(), amps.size());
+            ndarray::flatten<1>(crosstalk) = flattenedMatrix;
+        }
+
+        return std::make_shared<Detector>(
+            record.get(keys.name),
+            record.get(keys.id),
+            static_cast<DetectorType>(record.get(keys.type)),
+            record.get(keys.serial),
+            record.get(keys.bbox),
+            amps,
+            Orientation(
+                record.get(keys.fpPosition),
+                record.get(keys.refPoint),
+                record.get(keys.yaw),
+                record.get(keys.pitch),
+                record.get(keys.roll)
+            ),
+            lsst::geom::Extent2D(record.get(keys.pixelSize)),
+            archive.get<TransformMap>(record.get(keys.transformMap)),
+            crosstalk
+        );
+    }
+
+};
+
+DetectorFactory const registration;
+
+} // anonymous
+
+std::string Detector::getPersistenceName() const {
+    return "Detector";
+}
+
+std::string Detector::getPythonModule() const {
+    return "lsst.afw.cameraGeom";
+}
+
+void Detector::write(OutputArchiveHandle& handle) const {
+    auto const & keys = PersistenceHelper::get();
+
+    auto cat = handle.makeCatalog(keys.schema);
+    auto record = cat.addNew();
+    record->set(keys.name, getName());
+    record->set(keys.id, getId());
+    record->set(keys.type, static_cast<int>(getType()));
+    record->set(keys.serial, getSerial());
+    record->set(keys.bbox, getBBox());
+    record->set(keys.pixelSize, lsst::geom::Point2D(getPixelSize()));
+    auto orientation = getOrientation();
+    record->set(keys.fpPosition, orientation.getFpPosition());
+    record->set(keys.refPoint, orientation.getReferencePoint());
+    record->set(keys.yaw, orientation.getYaw());
+    record->set(keys.pitch, orientation.getPitch());
+    record->set(keys.roll, orientation.getRoll());
+    record->set(keys.transformMap, handle.put(getTransformMap()));
+
+    auto flattenMatrix = [](ndarray::Array<float const, 2> const & matrix) {
+        // copy because the original isn't guaranteed to have
+        // row-major contiguous elements
+        ndarray::Array<float, 2, 2> copied = ndarray::copy(matrix);
+        // make a view to the copy
+        ndarray::Array<float, 1, 1> flattened = ndarray::flatten<1>(copied);
+        return flattened;
+    };
+
+    record->set(keys.crosstalk, flattenMatrix(getCrosstalk()));
+    handle.saveCatalog(cat);
+
+    auto amps = handle.makeCatalog(_ampInfoCatalog.getSchema());
+    amps.assign(_ampInfoCatalog.begin(), _ampInfoCatalog.end(), true);
+    handle.saveCatalog(amps);
+}
+
+
 //
 // Explicit instantiations
 //
@@ -160,5 +323,15 @@ INSTANTIATE(CameraSysPrefix, CameraSys);
 INSTANTIATE(CameraSysPrefix, CameraSysPrefix);
 
 }  // namespace cameraGeom
+
+namespace table {
+namespace io {
+
+template class PersistableFacade<cameraGeom::Detector>;
+
+}  // namespace io
+}  // namespace table
+
+
 }  // namespace afw
 }  // namespace lsst

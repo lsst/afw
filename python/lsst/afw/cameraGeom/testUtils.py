@@ -393,3 +393,23 @@ def assertTransformMapsEqual(self, map1, map2, **kwds):
             transform2 = map2.getTransform(sysFrom, sysTo)
             self.compare2DFunctions(transform1.applyForward, transform2.applyForward, **kwds)
             self.compare2DFunctions(transform1.applyInverse, transform2.applyInverse, **kwds)
+
+
+@inTestCase
+def assertDetectorsEqual(self, detector1, detector2, **kwds):
+    """Compare two Detectors.
+    """
+    self.assertEqual(detector1.getName(), detector2.getName())
+    self.assertEqual(detector1.getId(), detector2.getId())
+    self.assertEqual(detector1.getSerial(), detector2.getSerial())
+    self.assertEqual(detector1.getBBox(), detector2.getBBox())
+    self.assertEqual(detector1.getPixelSize(), detector2.getPixelSize())
+    orientationIn = detector1.getOrientation()
+    orientationOut = detector2.getOrientation()
+    self.assertEqual(orientationIn.getFpPosition(), orientationOut.getFpPosition())
+    self.assertEqual(orientationIn.getReferencePoint(), orientationOut.getReferencePoint())
+    self.assertEqual(orientationIn.getYaw(), orientationOut.getYaw())
+    self.assertEqual(orientationIn.getPitch(), orientationOut.getPitch())
+    self.assertEqual(orientationIn.getRoll(), orientationOut.getRoll())
+    self.assertFloatsEqual(detector1.getCrosstalk(), detector2.getCrosstalk())
+    self.assertTransformMapsEqual(detector1.getTransformMap(), detector2.getTransformMap(), **kwds)

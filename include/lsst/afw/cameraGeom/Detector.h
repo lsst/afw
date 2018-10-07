@@ -58,7 +58,7 @@ enum DetectorType {
  * for instance it is not possible to construct one from a non-const catalog,
  * so I don't know how to construct one.
  */
-class Detector final {
+class Detector final : public table::io::PersistableFacade<Detector>, public table::io::Persistable {
 public:
     typedef ndarray::Array<float const, 2> CrosstalkMatrix;
 
@@ -295,8 +295,17 @@ public:
     /// The "native" coordinate system of this detector.
     CameraSys getNativeCoordSys() const { return _nativeSys; }
 
+    /// Detectors are always peristable
+    bool isPersistable() const noexcept override { return true; }
+
 private:
     typedef std::unordered_map<std::string, table::AmpInfoCatalog::const_iterator> _AmpInfoMap;
+
+    std::string getPersistenceName() const override;
+
+    std::string getPythonModule() const override;
+
+    void write(OutputArchiveHandle& handle) const override;
 
     std::string _name;                      ///< name of detector's location in the camera
     int _id;                                ///< detector numeric ID
