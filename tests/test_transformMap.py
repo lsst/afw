@@ -29,6 +29,7 @@ import lsst.pex.exceptions
 import lsst.geom
 import lsst.afw.geom as afwGeom
 import lsst.afw.cameraGeom as cameraGeom
+import lsst.afw.cameraGeom.testUtils
 
 
 class TransformWrapper:
@@ -78,22 +79,6 @@ class CameraTransformMapTestCase(lsst.utils.tests.TestCase):
         self.fieldTransform = None
         self.transformMap = None
 
-    def compare2DFunctions(self, func1, func2, minVal=-10, maxVal=None,
-                           nVal=5):
-        """Compare two functions(Point2D) -> Point2D over a range of values
-        """
-        if maxVal is None:
-            maxVal = -minVal
-        dVal = (maxVal - minVal) / (nVal - 1)
-        for xInd in range(nVal):
-            x = minVal + (xInd * dVal)
-            for yInd in range(nVal):
-                y = minVal + (yInd * dVal)
-                fromPoint = lsst.geom.Point2D(x, y)
-                res1 = func1(fromPoint)
-                res2 = func2(fromPoint)
-                self.assertPairsAlmostEqual(res1, res2)
-
     def testBasics(self):
         """Test basic attributes
         """
@@ -113,13 +98,7 @@ class CameraTransformMapTestCase(lsst.utils.tests.TestCase):
         with lsst.utils.tests.getTempFilePath(".fits") as filename:
             self.transformMap.writeFits(filename)
             transformMapOut = cameraGeom.TransformMap.readFits(filename)
-        self.assertEqual(list(self.transformMap), list(transformMapOut))  # compares the sets of CameraSys
-        for sysFrom in self.transformMap:
-            for sysTo in self.transformMap:
-                transformIn = self.transformMap.getTransform(sysFrom, sysTo)
-                transformOut = transformMapOut.getTransform(sysFrom, sysTo)
-                self.compare2DFunctions(transformIn.applyForward, transformOut.applyForward)
-                self.compare2DFunctions(transformIn.applyInverse, transformOut.applyInverse)
+        self.assertTransformMapsEqual(self.transformMap, transformMapOut)
 
     def testIteration(self):
         """Test iteration, len and indexing
