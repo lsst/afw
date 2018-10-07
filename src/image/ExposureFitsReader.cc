@@ -83,6 +83,11 @@ public:
         // either SkyWcs or VisitInfo or both, so neither can strip them.
         metadata->remove("MJD-OBS");
         metadata->remove("DATE-OBS");
+
+        // Strip DETSER, DETNAME; these are added when writing an Exposure
+        // with a Detector
+        metadata->remove("DETNAME");
+        metadata->remove("DETSER");
     }
 
     std::shared_ptr<daf::base::PropertyList> metadata;
