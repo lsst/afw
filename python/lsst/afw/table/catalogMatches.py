@@ -1,9 +1,10 @@
+# This file is part of afw.
 #
-# LSST Data Management System
-# Copyright 2008-2016 AURA/LSST.
-#
-# This product includes software developed by the
-# LSST Project (http://www.lsst.org/).
+# Developed for the LSST Data Management System.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org).
+# See the COPYRIGHT file at the top-level directory of this distribution
+# for details of code ownership.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,13 +16,11 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
-# You should have received a copy of the LSST License Statement and
-# the GNU General Public License along with this program.  If not,
-# see <https://www.lsstcorp.org/LegalNotices/>.
-#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 __all__ = ["makeMergedSchema", "copyIntoCatalog",
-           "matchesToCatalog", "matchesFromCatalog"]
+           "matchesToCatalog", "matchesFromCatalog", "copyAliasMapWithPrefix"]
 
 import os.path
 
@@ -108,7 +107,8 @@ def matchesToCatalog(matches, matchMeta):
     @param[in] matchMeta  metadata for matches (must have .add attribute)
 
     @return  lsst.afw.table.BaseCatalog of matches (with ref_ and src_ prefix identifiers
-             for referece and source entries, respectively)
+             for referece and source entries, respectively, including alias maps
+             from reference and source catalogs)
     """
     if len(matches) == 0:
         raise RuntimeError("No matches provided.")
@@ -119,6 +119,10 @@ def matchesToCatalog(matches, matchMeta):
     mergedSchema = makeMergedSchema(refSchema, Schema(), targetPrefix="ref_")
     mergedSchema = makeMergedSchema(
         srcSchema, mergedSchema, targetPrefix="src_")
+
+    mergedSchema = copyAliasMapWithPrefix(refSchema, mergedSchema, prefix="ref_")
+    mergedSchema = copyAliasMapWithPrefix(srcSchema, mergedSchema, prefix="src_")
+
     distKey = mergedSchema.addField(
         "distance", type=np.float64, doc="Distance between ref and src")
 
@@ -170,3 +174,37 @@ def matchesFromCatalog(catalog, sourceSlotConfig=None):
         matches.append(ReferenceMatch(ref, src, cat[distKey]))
 
     return matches
+
+
+def copyAliasMapWithPrefix(inSchema, outSchema, prefix=""):
+    """Copy an alias map from one schema into another
+
+    This copies the alias map of one schema into another, optionally
+    prepending a prefix to both the "from" and "to" names of the alias
+    (the example use case here is for the "match" catalog created by
+    `lsst.meas.astrom.denormalizeMatches` where prefixes "src_" and
+    "ref_" are added to the source and reference field entries,
+    respectively).
+
+    Parameters
+    ----------
+    inSchema : `lsst.afw.table.Schema`
+       The input schema whose `lsst.afw.table.AliasMap` is to be
+       copied to ``outSchema``.
+    outSchema : `lsst.afw.table.Schema`
+       The output schema into which the `lsst.afw.table.AliasMap`
+       from ``inSchema`` is to be copied (modified in place).
+    prefix : `str`, optional
+       An optional prefix to add to both the "from" and "to" names
+       of the alias (default is an empty string).
+
+    Returns
+    -------
+    outSchema : `lsst.afw.table.Schema`
+       The output schema with the alias mappings from `inSchema`
+       added.
+    """
+    for k, v in inSchema.getAliasMap().items():
+        outSchema.getAliasMap().set(prefix + k, prefix + v)
+
+    return outSchema
