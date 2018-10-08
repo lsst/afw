@@ -40,7 +40,7 @@ namespace cameraGeom {
  * Camera.getTransform returns a transform between camera coordinate systems.
  * Camera.findDetectors finds all detectors overlapping a specified point.
  */
-class Camera : public DetectorCollection {
+class Camera : public table::io::PersistableFacade<Camera>, public DetectorCollection {
 public:
     using DetectorList = DetectorCollection::List;
 
@@ -144,18 +144,34 @@ public:
                                                CameraSys const &fromSys,
                                                CameraSys const &toSys) const;
 
+    /**
+     * Cameras are always persistable.
+     */
+    bool isPersistable() const noexcept override {
+        return true;
+    }
+
+protected:
+
+    Camera(table::io::InputArchive const & archive, table::io::CatalogVector const & catalogs);
+
+    void write(OutputArchiveHandle& handle) const override;
+
 private:
+
+    class Factory;
+
+    std::string getPersistenceName() const override;
+
+    // getPythonModule implementation inherited from DetectorCollection.
 
     std::string _name;
     std::shared_ptr<TransformMap const> _transformMap;
     std::string _pupilFactoryName;
-
-
 };
 
 } // namespace cameraGeom
 } // namespace afw
 } // namespace lsst
-
 
 #endif // LSST_AFW_CAMERAGEOM_CAMERA_H

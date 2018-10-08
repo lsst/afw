@@ -31,7 +31,7 @@ import lsst.geom
 import lsst.afw.image as afwImage
 import lsst.afw.display.ds9 as ds9
 from lsst.afw.cameraGeom import PIXELS, FIELD_ANGLE, FOCAL_PLANE, CameraSys, CameraSysPrefix, \
-    Camera, Detector, assembleAmplifierImage, assembleAmplifierRawImage
+    Camera, Detector, assembleAmplifierImage, assembleAmplifierRawImage, DetectorCollection
 import lsst.afw.cameraGeom.testUtils as testUtils
 import lsst.afw.cameraGeom.utils as cameraGeomUtils
 
@@ -338,6 +338,16 @@ class CameraGeomTestCase(lsst.utils.tests.TestCase):
                 collectionIn.writeFits(filename)
                 collectionOut = DetectorCollection.readFits(filename)
             self.assertDetectorCollectionsEqual(collectionIn, collectionOut)
+
+    def testCameraPersistence(self):
+        """Test that we can round-trip a Camera through FITS I/O.
+        """
+        for wrapper in self.cameraList:
+            cameraIn = wrapper.camera
+            with lsst.utils.tests.getTempFilePath(".fits") as filename:
+                cameraIn.writeFits(filename)
+                cameraOut = Camera.readFits(filename)
+            self.assertCamerasEqual(cameraIn, cameraOut)
 
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):

@@ -19,6 +19,10 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include "lsst/afw/table/io/Persistable.cc"
+#include "lsst/afw/table/io/CatalogVector.h"
+#include "lsst/afw/table/io/InputArchive.h"
+#include "lsst/afw/table/io/OutputArchive.h"
 #include "lsst/afw/cameraGeom/Camera.h"
 
 namespace lsst {
@@ -143,7 +147,104 @@ std::vector<lsst::geom::Point2D> Camera::transform(std::vector<lsst::geom::Point
     return transform->applyForward(points);
 }
 
+
+namespace {
+
+class PersistenceHelper {
+public:
+
+    static PersistenceHelper const & get() {
+        static PersistenceHelper const instance;
+        return instance;
+    }
+
+    table::Schema schema;
+    table::Key<std::string> name;
+    table::Key<std::string> pupilFactoryName;
+    table::Key<int> transformMap;
+
+private:
+
+    PersistenceHelper() :
+        schema(),
+        name(schema.addField<std::string>("name", "Camera name", "", 0)),
+        pupilFactoryName(schema.addField<std::string>("pupilFactoryName",
+                                                      "Fully-qualified name of a Python PupilFactory class",
+                                                      "", 0)),
+        transformMap(schema.addField<int>("transformMap", "archive ID for Camera's TransformMap"))
+    {
+        schema.getCitizen().markPersistent();
+    }
+
+    PersistenceHelper(PersistenceHelper const &) = delete;
+    PersistenceHelper(PersistenceHelper &&) = delete;
+
+    PersistenceHelper & operator=(PersistenceHelper const &) = delete;
+    PersistenceHelper & operator=(PersistenceHelper &&) = delete;
+
+};
+
+} // anonymous
+
+
+class Camera::Factory : public table::io::PersistableFactory {
+public:
+
+    Factory() : table::io::PersistableFactory("Camera") {}
+
+    std::shared_ptr<Persistable> read(InputArchive const& archive,
+                                      CatalogVector const& catalogs) const override {
+         // can't use make_shared because ctor is protected
+        return std::shared_ptr<Camera>(new Camera(archive, catalogs));
+    }
+
+    static Factory const registration;
+
+};
+
+Camera::Factory const Camera::Factory::registration;
+
+
+Camera::Camera(table::io::InputArchive const & archive, table::io::CatalogVector const & catalogs) :
+    DetectorCollection(archive, catalogs)
+    // deferred initalization for data members is not ideal, but better than
+    // trying to initialize them before validating the archive
+{
+    auto const & keys = PersistenceHelper::get();
+    LSST_ARCHIVE_ASSERT(catalogs.size() >= 2u);
+    auto const & cat = catalogs[1];
+    LSST_ARCHIVE_ASSERT(cat.getSchema() == keys.schema);
+    LSST_ARCHIVE_ASSERT(cat.size() == 1u);
+    auto const & record = cat.front();
+    _name = record.get(keys.name);
+    _pupilFactoryName = record.get(keys.pupilFactoryName);
+    _transformMap = archive.get<TransformMap>(record.get(keys.transformMap));
+}
+
+
+std::string Camera::getPersistenceName() const { return "Camera"; }
+
+void Camera::write(OutputArchiveHandle& handle) const {
+    DetectorCollection::write(handle);
+    auto const & keys = PersistenceHelper::get();
+    auto cat = handle.makeCatalog(keys.schema);
+    auto record = cat.addNew();
+    record->set(keys.name, getName());
+    record->set(keys.pupilFactoryName, getPupilFactoryName());
+    record->set(keys.transformMap, handle.put(getTransformMap()));
+    handle.saveCatalog(cat);
+}
+
 } // namespace cameraGeom
+
+namespace table {
+namespace io {
+
+template class PersistableFacade<cameraGeom::Camera>;
+
+} // namespace io
+} // namespace table
+
 } // namespace afw
 } // namespace lsst
 

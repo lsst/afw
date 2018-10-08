@@ -21,6 +21,7 @@
 
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
+#include "lsst/afw/table/io/python.h"
 #include "lsst/afw/cameraGeom/Camera.h"
 
 namespace py = pybind11;
@@ -116,6 +117,8 @@ PYBIND11_MODULE(camera, mod){
         },
         "points"_a, "fromSys"_a, "toSys"_a
     );
+
+    table::io::python::addPersistableMethods(cls);
 }
 
 } // cameraGeom
