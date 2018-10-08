@@ -19,6 +19,10 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include "lsst/afw/table/io/Persistable.cc"
+#include "lsst/afw/table/io/CatalogVector.h"
+#include "lsst/afw/table/io/InputArchive.h"
+#include "lsst/afw/table/io/OutputArchive.h"
 #include "lsst/afw/cameraGeom/DetectorCollection.h"
 
 namespace lsst {
@@ -77,9 +81,104 @@ std::shared_ptr<Detector> DetectorCollection::get(int id, std::shared_ptr<Detect
     return i->second;
 }
 
+namespace {
+
+class PersistenceHelper {
+public:
+
+    static PersistenceHelper const & get() {
+        static PersistenceHelper const instance;
+        return instance;
+    }
+
+    table::Schema schema;
+    table::Key<int> detector;
+
+    DetectorCollection::List makeDetectorList(
+        table::io::InputArchive const & archive,
+        table::io::CatalogVector const & catalogs
+    ) const {
+        LSST_ARCHIVE_ASSERT(catalogs.size() >= 1u);
+        LSST_ARCHIVE_ASSERT(catalogs.front().getSchema() == schema);
+        DetectorCollection::List result;
+        result.reserve(catalogs.front().size());
+        for (auto const & record : catalogs.front()) {
+            int archiveId = record.get(detector);
+            result.push_back(archive.get<Detector>(archiveId));
+        }
+        return result;
+    }
+
+private:
+
+    PersistenceHelper() :
+        schema(),
+        detector(schema.addField<int>("detector", "archive ID of Detector in a DetectorCollection"))
+    {
+        schema.getCitizen().markPersistent();
+    }
+
+    PersistenceHelper(PersistenceHelper const &) = delete;
+    PersistenceHelper(PersistenceHelper &&) = delete;
+
+    PersistenceHelper & operator=(PersistenceHelper const &) = delete;
+    PersistenceHelper & operator=(PersistenceHelper &&) = delete;
+
+};
+
+} // anonymous
+
+
+class DetectorCollection::Factory : public table::io::PersistableFactory {
+public:
+
+    Factory() : table::io::PersistableFactory("DetectorCollection") {}
+
+    std::shared_ptr<Persistable> read(InputArchive const& archive,
+                                      CatalogVector const& catalogs) const override {
+        // can't use make_shared because ctor is protected
+        return std::shared_ptr<DetectorCollection>(new DetectorCollection(archive, catalogs));
+    }
+
+    static Factory const registration;
+};
+
+DetectorCollection::Factory const DetectorCollection::Factory::registration;
+
+
+DetectorCollection::DetectorCollection(
+    table::io::InputArchive const & archive,
+    table::io::CatalogVector const & catalogs
+) : DetectorCollection(PersistenceHelper::get().makeDetectorList(archive, catalogs))
+{}
+
+std::string DetectorCollection::getPersistenceName() const {
+    return "DetectorCollection";
+}
+
+std::string DetectorCollection::getPythonModule() const {
+    return "lsst.afw.cameraGeom";
+}
+
+void DetectorCollection::write(OutputArchiveHandle& handle) const {
+    auto const & keys = PersistenceHelper::get();
+    auto cat = handle.makeCatalog(keys.schema);
+    for (auto const & pair : getIdMap()) {
+        auto record = cat.addNew();
+        record->set(keys.detector, handle.put(pair.second));
+    }
+    handle.saveCatalog(cat);
+}
+
 } // namespace cameraGeom
+
+namespace table {
+namespace io {
+
+template class PersistableFacade<cameraGeom::DetectorCollection>;
+
+} // namespace io
+} // namespace table
+
 } // namespace afw
 } // namespace lsst
-
-
-

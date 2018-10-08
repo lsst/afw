@@ -327,6 +327,18 @@ class CameraGeomTestCase(lsst.utils.tests.TestCase):
             with self.assertRaises(KeyError):
                 camera.transform(point, FOCAL_PLANE, CameraSys("pixels", "invalid"))
 
+    def testDetectorCollectionPersistence(self):
+        """Test that we can round-trip a DetectorCollection through FITS I/O.
+        """
+        for wrapper in self.cameraList:
+            camera = wrapper.camera
+            detectors = list(camera)
+            collectionIn = DetectorCollection(detectors)
+            with lsst.utils.tests.getTempFilePath(".fits") as filename:
+                collectionIn.writeFits(filename)
+                collectionOut = DetectorCollection.readFits(filename)
+            self.assertDetectorCollectionsEqual(collectionIn, collectionOut)
+
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass

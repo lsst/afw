@@ -21,6 +21,8 @@
 
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
+
+#include "lsst/afw/table/io/python.h"
 #include "lsst/afw/cameraGeom/DetectorCollection.h"
 
 namespace py = pybind11;
@@ -66,6 +68,8 @@ PYBIND11_MODULE(detectorCollection, mod){
             return self.get(id) != nullptr;
         }
     );
+
+    table::io::python::addPersistableMethods(cls);
 }
 } // cameraGeom
 } // afw

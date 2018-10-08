@@ -27,6 +27,7 @@
 #include <memory>
 
 #include "lsst/geom/Box.h"
+#include "lsst/afw/table/io/Persistable.h"
 #include "lsst/afw/cameraGeom/Detector.h"
 
 namespace lsst {
@@ -36,7 +37,8 @@ namespace cameraGeom {
 /**
  * An immutable collection of Detectors that can be accessed by name or ID
  */
-class DetectorCollection {
+class DetectorCollection : public table::io::PersistableFacade<DetectorCollection>,
+                           public table::io::Persistable {
 public:
     using NameMap = std::unordered_map<std::string, std::shared_ptr<Detector>>;
     using IdMap = std::unordered_map<int, std::shared_ptr<Detector>>;
@@ -108,7 +110,25 @@ public:
      */
     std::shared_ptr<Detector> get(int id, std::shared_ptr<Detector> def=nullptr) const;
 
+    /// DetectorCollections are always persistable.
+    bool isPersistable() const noexcept override {
+        return true;
+    }
+
+protected:
+
+    DetectorCollection(table::io::InputArchive const & archive, table::io::CatalogVector const & catalogs);
+
+    std::string getPersistenceName() const override;
+
+    std::string getPythonModule() const override;
+
+    void write(OutputArchiveHandle& handle) const override;
+
 private:
+
+    class Factory;
+
     NameMap _nameDict;                //< map of detector names
     IdMap _idDict;                    //< map of detector ids
     lsst::geom::Box2D _fpBBox;        //< bounding box of collection
