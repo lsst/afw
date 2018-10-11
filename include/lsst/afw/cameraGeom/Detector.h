@@ -88,11 +88,11 @@ public:
      * * The keys for the detector-specific coordinate systems in the transform registry
      *   must include the detector name (even though this is redundant).
      */
-    explicit Detector(std::string const &name, int id, DetectorType type, std::string const &serial,
-                      lsst::geom::Box2I const &bbox, lsst::afw::table::AmpInfoCatalog const &ampInfoCatalog,
-                      Orientation const &orientation, lsst::geom::Extent2D const &pixelSize,
-                      TransformMap::Transforms const &transforms,
-                      CrosstalkMatrix const &crosstalk = CrosstalkMatrix());
+    Detector(std::string const &name, int id, DetectorType type, std::string const &serial,
+             lsst::geom::Box2I const &bbox, lsst::afw::table::AmpInfoCatalog const &ampInfoCatalog,
+             Orientation const &orientation, lsst::geom::Extent2D const &pixelSize,
+             TransformMap::Transforms const &transforms,
+             CrosstalkMatrix const &crosstalk = CrosstalkMatrix());
 
     /**
      * Make a Detector
@@ -111,11 +111,11 @@ public:
      * @throws lsst::pex::exceptions::InvalidParameterError if: any amplifier
      *     names are not unique
      */
-    explicit Detector(std::string const &name, int id, DetectorType type, std::string const &serial,
-                      lsst::geom::Box2I const &bbox, lsst::afw::table::AmpInfoCatalog const &ampInfoCatalog,
-                      Orientation const &orientation, lsst::geom::Extent2D const &pixelSize,
-                      std::shared_ptr<TransformMap const> transformMap,
-                      CrosstalkMatrix const &crosstalk = CrosstalkMatrix());
+    Detector(std::string const &name, int id, DetectorType type, std::string const &serial,
+             lsst::geom::Box2I const &bbox, lsst::afw::table::AmpInfoCatalog const &ampInfoCatalog,
+             Orientation const &orientation, lsst::geom::Extent2D const &pixelSize,
+             std::shared_ptr<TransformMap const> transformMap,
+             CrosstalkMatrix const &crosstalk = CrosstalkMatrix());
 
     ~Detector() = default;
 
