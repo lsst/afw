@@ -80,8 +80,6 @@ Detector::Detector(std::string const &name, int id, DetectorType type, std::stri
     }
 }
 
-Detector::Detector(Detector const &) = default;
-
 std::vector<lsst::geom::Point2D> Detector::getCorners(CameraSys const &cameraSys) const {
     std::vector<lsst::geom::Point2D> nativeCorners = lsst::geom::Box2D(_bbox).getCorners();
     auto nativeToCameraSys = _transformMap->getTransform(_nativeSys, cameraSys);

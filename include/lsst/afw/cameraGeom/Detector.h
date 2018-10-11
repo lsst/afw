@@ -119,7 +119,7 @@ public:
 
     ~Detector() = default;
 
-    Detector(Detector const &);
+    Detector(Detector const &) = delete;
     Detector(Detector &&) = delete;
     Detector &operator=(Detector const &) = delete;
     Detector &operator=(Detector &&) = delete;
