@@ -530,6 +530,30 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.assertIn('base_SdssShape_instFlux_xx_Cov', cat.schema)
         self.assertNotIn('base_Blendedness_abs_flux_cinstFlux', cat.schema)
 
+    def testFitsReadVersion2CompatibilityRealCoaddMeasCatalog(self):
+        """DM-16068: some fields were not getting aliases they should have
+
+        In particular, the alias setting relies on flux fields having their
+        units set properly.  Prior to a resolution of DM-16068, the units
+        were not getting set for several CModel flux fields and one deblender
+        field (deblend_psfFlux), and thus were not getting the
+        `_flux`->`_instFlux` aliases set.
+
+        NOTE: this test will (is meant to) fail on the read until DM-16068 is
+              resolved.  The error is:
+
+              lsst::pex::exceptions::NotFoundError: 'Field or subfield with
+              name 'modelfit_CModel_instFlux' not found with type 'D'.'
+        """
+        cat = lsst.afw.table.SourceCatalog.readFits(
+            os.path.join(testPath, "data", "deepCoadd_meas_HSC_v2.fits"))
+        self.assertIn('modelfit_CModel_instFlux', cat.schema)
+        self.assertIn('modelfit_CModel_instFluxErr', cat.schema)
+        self.assertIn('modelfit_CModel_instFlux_inner', cat.schema)
+        self.assertIn('modelfit_CModel_dev_instFlux_inner', cat.schema)
+        self.assertIn('modelfit_CModel_exp_instFlux_inner', cat.schema)
+        self.assertIn('modelfit_CModel_initial_instFlux_inner', cat.schema)
+
     def testFitsVersion2Compatibility(self):
         """Test reading of catalogs with version 2 schema
 
