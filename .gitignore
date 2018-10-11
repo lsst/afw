@@ -139,7 +139,9 @@ tests/statistics
 tests/statisticsSpeed
 tests/testLib.py
 tests/test_cameraSys
+tests/test_coord
 tests/test_endpoint
+tests/test_polygon
 tests/test_spherePoint
 tests/test_transform
 tests/test_trapezoidalPacker
@@ -161,6 +163,7 @@ tests/ramFitsIO_fpC-005902-r6-0677_sub.fits_imageRamOut.fit
 tests/test_simpleTable
 tests/test_distortion
 tests/test_schema
+tests/test_span
 tests/test_fitsTables
 tests/test_tableAliases
 testTable.fits

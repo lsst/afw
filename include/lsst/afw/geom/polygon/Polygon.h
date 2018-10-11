@@ -136,6 +136,9 @@ public:
     bool operator==(Polygon const& other) const;
     bool operator!=(Polygon const& other) const { return !(*this == other); }
 
+    /// Return a hash of this object.
+    std::size_t hash_value() const noexcept;
+
     /// Returns whether the polygon contains the point
     bool contains(Point const& point) const;
 
@@ -270,5 +273,14 @@ std::ostream& operator<<(std::ostream& os, Polygon const& poly);
 }  // namespace geom
 }  // namespace afw
 }  // namespace lsst
+
+namespace std {
+template <>
+struct hash<lsst::afw::geom::polygon::Polygon> {
+    using argument_type = lsst::afw::geom::polygon::Polygon;
+    using result_type = size_t;
+    size_t operator()(argument_type const& obj) const noexcept { return obj.hash_value(); }
+};
+}  // namespace std
 
 #endif

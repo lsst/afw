@@ -28,6 +28,7 @@
 #include <iostream>
 
 #include "lsst/base.h"
+#include "lsst/utils/hashCombine.h"
 #include "lsst/geom.h"
 #include "lsst/afw/geom/SpanPixelIterator.h"
 
@@ -112,6 +113,12 @@ public:
     }
     bool operator!=(Span const& other) const noexcept { return !(*this == other); }
 
+    /// Return a hash of this object.
+    std::size_t hash_value() const noexcept {
+        // Completely arbitrary seed
+        return utils::hashCombine(42, getY(), getMinX(), getMaxX());
+    }
+
     /* Required to make Span "LessThanComparable" so they can be used
      * in sorting, binary search, etc.
      * http://www.sgi.com/tech/stl/LessThanComparable.html
@@ -128,5 +135,14 @@ private:
 }  // namespace geom
 }  // namespace afw
 }  // namespace lsst
+
+namespace std {
+template <>
+struct hash<lsst::afw::geom::Span> {
+    using argument_type = lsst::afw::geom::Span;
+    using result_type = size_t;
+    result_type operator()(argument_type const& obj) const noexcept { return obj.hash_value(); }
+};
+}  // namespace std
 
 #endif  // LSST_AFW_GEOM_Span_h_INCLUDED

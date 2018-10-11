@@ -24,6 +24,7 @@
 
 #include <sstream>
 
+#include "lsst/utils/hashCombine.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/coord/Weather.h"
 
@@ -39,6 +40,11 @@ Weather::Weather(double airTemperature, double airPressure, double humidity)
 bool Weather::operator==(Weather const& other) const noexcept {
     return (_airTemperature == other.getAirTemperature() && _airPressure == other.getAirPressure() &&
             _humidity == other.getHumidity());
+}
+
+std::size_t Weather::hash_value() const noexcept {
+    // Completely arbitrary seed
+    return utils::hashCombine(17, _airTemperature, _airPressure, _humidity);
 }
 
 void Weather::validate() const {
