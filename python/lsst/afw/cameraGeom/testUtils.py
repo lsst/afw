@@ -389,10 +389,11 @@ def assertTransformMapsEqual(self, map1, map2, **kwds):
     self.assertEqual(list(map1), list(map2))  # compares the sets of CameraSys
     for sysFrom in map1:
         for sysTo in map1:
-            transform1 = map1.getTransform(sysFrom, sysTo)
-            transform2 = map2.getTransform(sysFrom, sysTo)
-            self.compare2DFunctions(transform1.applyForward, transform2.applyForward, **kwds)
-            self.compare2DFunctions(transform1.applyInverse, transform2.applyInverse, **kwds)
+            with self.subTest(sysFrom=sysFrom, sysTo=sysTo):
+                transform1 = map1.getTransform(sysFrom, sysTo)
+                transform2 = map2.getTransform(sysFrom, sysTo)
+                self.compare2DFunctions(transform1.applyForward, transform2.applyForward, **kwds)
+                self.compare2DFunctions(transform1.applyInverse, transform2.applyInverse, **kwds)
 
 
 @inTestCase
