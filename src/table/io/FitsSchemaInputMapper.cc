@@ -718,6 +718,11 @@ bool isInstFlux(FitsSchemaItem const & item) {
         return s.find(target) != std::string::npos;
     };
     if (!includes(item.ttype, "flux")) return false;
+    if (includes(item.ttype, "modelfit_CModel") && item.tunit.empty()) {
+        // CModel flux fields were written with no units prior to DM-16068,
+        // but should have been "count".
+        return true;
+    }
     // transform units to lowercase.
     std::string units(item.tunit);
     std::transform(units.begin(), units.end(), units.begin(), [](char c) { return std::tolower(c); } );
