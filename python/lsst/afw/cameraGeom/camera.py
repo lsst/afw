@@ -19,6 +19,7 @@
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
+from lsst.pex.exceptions import InvalidParameterError
 import lsst.geom
 from .cameraGeomLib import FOCAL_PLANE, PIXELS
 from .detectorCollection import DetectorCollection
@@ -86,7 +87,7 @@ class Camera(DetectorCollection):
         @return an lsst.afw.geom.TransformPoint2ToPoint2 that transforms from
             `fromSys` to `toSys` in the forward direction
 
-        @throws lsst.pex.exceptions.InvalidParameter if no transform is
+        @throws lsst.pex.exceptions.InvalidParameterError if no transform is
         available. This includes the case that fromSys specifies a known
         detector and toSys specifies any other detector (known or unknown)
         @throws KeyError if an unknown detector is specified
@@ -155,10 +156,19 @@ class Camera(DetectorCollection):
         @return an lsst.afw.geom.TransformPoint2ToPoint2 that transforms from
             `fromSys` to `toSys` in the forward direction
 
-        @throws lsst.pex.exceptions.InvalidParameter if no transform is
+        @throws lsst.pex.exceptions.InvalidParameterError if no transform is
         available.
         @throws KeyError if an unknown detector is specified
         """
+        # Cameras built via makeCameraFromConfig or makeCameraFromPath
+        # should now have all coordinate systems available in their
+        # transformMap.
+        try:
+            return self.getTransformMap().getTransform(fromSys, toSys)
+        except InvalidParameterError:
+            pass
+        # Camera must have been constructed an in an unusual way (which we
+        # still support for backwards compatibility).
         # All transform maps should know about the native coordinate system
         fromSysToNative = self._getTransformFromOneTransformMap(fromSys, self._nativeCameraSys)
         nativeToToSys = self._getTransformFromOneTransformMap(self._nativeCameraSys, toSys)

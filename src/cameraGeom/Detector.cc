@@ -31,28 +31,58 @@ namespace cameraGeom {
 Detector::Detector(std::string const &name, int id, DetectorType type, std::string const &serial,
                    lsst::geom::Box2I const &bbox, table::AmpInfoCatalog const &ampInfoCatalog,
                    Orientation const &orientation, lsst::geom::Extent2D const &pixelSize,
-                   TransformMap::Transforms const &transforms, CrosstalkMatrix const &crosstalk)
-        : _name(name),
-          _id(id),
-          _type(type),
-          _serial(serial),
-          _bbox(bbox),
-          _ampInfoCatalog(ampInfoCatalog),
-          _ampNameIterMap(),
-          _orientation(orientation),
-          _pixelSize(pixelSize),
-          _nativeSys(CameraSys(PIXELS, name)),
-          _transformMap(_nativeSys, transforms),
-          _crosstalk(crosstalk) {
-    _init();
-}
+                   TransformMap::Transforms const &transforms, CrosstalkMatrix const &crosstalk) :
+    Detector(name, id, type, serial, bbox, ampInfoCatalog, orientation, pixelSize,
+             TransformMap::make(CameraSys(PIXELS, name), transforms),
+             crosstalk)
+{}
 
-Detector::Detector(Detector const &) = default;
-Detector::Detector(Detector &&) = default;
+Detector::Detector(std::string const &name, int id, DetectorType type, std::string const &serial,
+                   lsst::geom::Box2I const &bbox, table::AmpInfoCatalog const &ampInfoCatalog,
+                   Orientation const &orientation, lsst::geom::Extent2D const &pixelSize,
+                   std::shared_ptr<TransformMap const> transformMap, CrosstalkMatrix const &crosstalk) :
+    _name(name),
+    _id(id),
+    _type(type),
+    _serial(serial),
+    _bbox(bbox),
+    _ampInfoCatalog(ampInfoCatalog),
+    _ampNameIterMap(),
+    _orientation(orientation),
+    _pixelSize(pixelSize),
+    _nativeSys(CameraSys(PIXELS, name)),
+    _transformMap(std::move(transformMap)),
+    _crosstalk(crosstalk)
+{
+    // make _ampNameIterMap
+    for (auto ampIter = _ampInfoCatalog.begin(); ampIter != _ampInfoCatalog.end(); ++ampIter) {
+        _ampNameIterMap.insert(std::make_pair(ampIter->getName(), ampIter));
+    }
+    if (_ampNameIterMap.size() != _ampInfoCatalog.size()) {
+        throw LSST_EXCEPT(pexExcept::InvalidParameterError,
+                          "Invalid ampInfoCatalog: not all amplifier names are unique");
+    }
+
+    // ensure crosstalk coefficients matrix is square
+    if (hasCrosstalk()) {
+        auto shape = _crosstalk.getShape();
+        assert(shape.size() == 2);  // we've declared this as a 2D array
+        if (shape[0] != shape[1]) {
+            std::ostringstream os;
+            os << "Non-square crosstalk matrix: " << _crosstalk << " for detector \"" << _name << "\"";
+            throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
+        }
+        if (shape[0] != _ampInfoCatalog.size()) {
+            std::ostringstream os;
+            os << "Wrong size crosstalk matrix: " << _crosstalk << " for detector \"" << _name << "\"";
+            throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
+        }
+    }
+}
 
 std::vector<lsst::geom::Point2D> Detector::getCorners(CameraSys const &cameraSys) const {
     std::vector<lsst::geom::Point2D> nativeCorners = lsst::geom::Box2D(_bbox).getCorners();
-    auto nativeToCameraSys = _transformMap.getTransform(_nativeSys, cameraSys);
+    auto nativeToCameraSys = _transformMap->getTransform(_nativeSys, cameraSys);
     return nativeToCameraSys->applyForward(nativeCorners);
 }
 
@@ -89,7 +119,7 @@ std::shared_ptr<table::AmpInfoRecord const> Detector::_get(std::string const &na
     return ampIter->second;
 }
 
-bool Detector::hasTransform(CameraSys const &cameraSys) const { return _transformMap.contains(cameraSys); }
+bool Detector::hasTransform(CameraSys const &cameraSys) const { return _transformMap->contains(cameraSys); }
 
 bool Detector::hasTransform(CameraSysPrefix const &cameraSysPrefix) const {
     return hasTransform(makeCameraSys(cameraSysPrefix));
@@ -98,56 +128,19 @@ bool Detector::hasTransform(CameraSysPrefix const &cameraSysPrefix) const {
 template <typename FromSysT, typename ToSysT>
 std::shared_ptr<geom::TransformPoint2ToPoint2> Detector::getTransform(FromSysT const &fromSys,
                                                                       ToSysT const &toSys) const {
-    return _transformMap.getTransform(makeCameraSys(fromSys), makeCameraSys(toSys));
+    return _transformMap->getTransform(makeCameraSys(fromSys), makeCameraSys(toSys));
 }
 
 template <typename FromSysT, typename ToSysT>
 lsst::geom::Point2D Detector::transform(lsst::geom::Point2D const &point, FromSysT const &fromSys,
                                         ToSysT const &toSys) const {
-    return _transformMap.transform(point, makeCameraSys(fromSys), makeCameraSys(toSys));
+    return _transformMap->transform(point, makeCameraSys(fromSys), makeCameraSys(toSys));
 }
 
 template <typename FromSysT, typename ToSysT>
 std::vector<lsst::geom::Point2D> Detector::transform(std::vector<lsst::geom::Point2D> const &points,
                                                      FromSysT const &fromSys, ToSysT const &toSys) const {
-    return _transformMap.transform(points, makeCameraSys(fromSys), makeCameraSys(toSys));
-}
-
-void Detector::_init() {
-    // make _ampNameIterMap
-    for (table::AmpInfoCatalog::const_iterator ampIter = _ampInfoCatalog.begin();
-         ampIter != _ampInfoCatalog.end(); ++ampIter) {
-        _ampNameIterMap.insert(std::make_pair(ampIter->getName(), ampIter));
-    }
-    if (_ampNameIterMap.size() != _ampInfoCatalog.size()) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterError,
-                          "Invalid ampInfoCatalog: not all amplifier names are unique");
-    }
-
-    // check detector name in CoordSys in transform registry
-    for (CameraSys sys : _transformMap) {
-        if (sys.hasDetectorName() && sys.getDetectorName() != _name) {
-            std::ostringstream os;
-            os << "Invalid transformMap: " << sys << " detector name != \"" << _name << "\"";
-            throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
-        }
-    }
-
-    // ensure crosstalk coefficients matrix is square
-    if (hasCrosstalk()) {
-        auto shape = _crosstalk.getShape();
-        assert(shape.size() == 2);  // we've declared this as a 2D array
-        if (shape[0] != shape[1]) {
-            std::ostringstream os;
-            os << "Non-square crosstalk matrix: " << _crosstalk << " for detector \"" << _name << "\"";
-            throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
-        }
-        if (shape[0] != _ampInfoCatalog.size()) {
-            std::ostringstream os;
-            os << "Wrong size crosstalk matrix: " << _crosstalk << " for detector \"" << _name << "\"";
-            throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
-        }
-    }
+    return _transformMap->transform(points, makeCameraSys(fromSys), makeCameraSys(toSys));
 }
 
 //

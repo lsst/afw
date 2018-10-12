@@ -24,6 +24,9 @@
 #include <memory>
 #include <sstream>
 #include <type_traits>
+#include <set>
+
+#include "boost/optional.hpp"
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/cameraGeom/TransformMap.h"
@@ -32,100 +35,17 @@ namespace lsst {
 namespace afw {
 namespace cameraGeom {
 
-namespace {
-
-/*
- * Make a FrameSet from a map of camera system: transform
- *
- * @tparam Map Any type satisfying the STL map API and mapping CameraSys to
- *             shared_ptr<geom::TransformPoint2ToPoint2>.
- *
- * @param reference  Coordinate system from which each Transform in `transforms` converts.
- * @param transforms  A map whose keys are camera coordinate systems, and whose values
- *                    point to Transforms that convert from `reference` to the corresponding key.
- *                    All Transforms must be invertible.
- * @return an ast::FrameSet containing one ast::Frame(2) for `reference` and an ast::Frame(2)
- *      for each Transform in `transforms`, connected by suitable mappings.
- *
- * @throws lsst::pex::exceptions::InvalidParameterError Thrown if `transforms` contains
- *         the `reference` camera system as a key, or if any Transform is not invertible.
- */
-template <class Map>
-std::unique_ptr<ast::FrameSet> makeTransforms(CameraSys const &reference, Map const &transforms) {
-    ast::Frame rootFrame(2, "Ident=" + reference.getSysName());
-    auto result = std::unique_ptr<ast::FrameSet>(new ast::FrameSet(rootFrame));
-
-    for (auto const &keyValue : transforms) {
-        CameraSys const key = keyValue.first;
-        std::shared_ptr<geom::TransformPoint2ToPoint2> const value = keyValue.second;
-
-        if (key == reference) {
-            std::ostringstream buffer;
-            buffer << "Cannot specify a Transform from " << reference << " to itself.";
-            throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, buffer.str());
-        }
-        if (!value->hasForward()) {
-            std::ostringstream buffer;
-            buffer << *value << " from " << key << " has no forward transform.";
-            throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, buffer.str());
-        }
-        if (!value->hasInverse()) {
-            std::ostringstream buffer;
-            buffer << *value << " from " << key << " has no inverse transform.";
-            throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, buffer.str());
-        }
-
-        auto toFrame = ast::Frame(2, "Ident=" + key.getSysName());
-        result->addFrame(ast::FrameSet::BASE, *(value->getMapping()), toFrame);
-    }
-    return result;
+std::shared_ptr<TransformMap const> TransformMap::make(
+    CameraSys const & reference,
+    Transforms const & transforms
+) {
+    return Builder(reference).connect(transforms).build();
 }
-
-/*
- * Make a map of camera system: frame number for a FrameSet constructed by makeTransforms.
- *
- * @tparam Map Any type satisfying the STL map API and mapping CameraSys to
- *             shared_ptr<geom::TransformPoint2ToPoint2>.
- *
- * @param reference  Coordinate system from which each Transform in `transforms` converts.
- * @param transforms  A map whose keys are camera coordinate systems, and whose values
- *                    point to Transforms that convert from `reference` to the corresponding key.
- *                    All Transforms must be invertible.
- * @return a map from `reference` and each key in `transforms` to the corresponding frame number
- *         in the ast::FrameSet returned by `makeTransforms(reference, transforms)`.
- *
- * @warning Does not perform input validation.
- */
-template <class Map>
-std::unordered_map<CameraSys, int> makeTranslator(CameraSys const &reference, Map const &transforms) {
-    std::unordered_map<CameraSys, int> result({std::make_pair(reference, 1)});
-    int nFrames = 1;
-
-    for (auto const &keyValue : transforms) {
-        CameraSys const key = keyValue.first;
-        result.emplace(key, ++nFrames);
-    }
-    return result;
-}
-
-}  // namespace
 
 lsst::afw::geom::Point2Endpoint TransformMap::_pointConverter;
 
-TransformMap::TransformMap(
-        CameraSys const &reference,
-        std::unordered_map<CameraSys, std::shared_ptr<geom::TransformPoint2ToPoint2>> const &transforms)
-        : _transforms(makeTransforms(reference, transforms)),
-          _frameIds(makeTranslator(reference, transforms)) {}
-
-// TransformMap is immutable, so we can just copy the shared_ptr
-TransformMap::TransformMap(TransformMap const &other) = default;
-
-// Cannot do any move optimizations without breaking immutability
-TransformMap::TransformMap(TransformMap const &&other) : TransformMap(other) {}
-
 // All resources owned by value or by smart pointer
-TransformMap::~TransformMap() = default;
+TransformMap::~TransformMap() noexcept = default;
 
 lsst::geom::Point2D TransformMap::transform(lsst::geom::Point2D const &point, CameraSys const &fromSys,
                                             CameraSys const &toSys) const {
@@ -163,6 +83,186 @@ std::shared_ptr<ast::Mapping const> TransformMap::_getMapping(CameraSys const &f
 }
 
 size_t TransformMap::size() const noexcept { return _frameIds.size(); }
+
+TransformMap::TransformMap(std::unique_ptr<ast::FrameSet> && transforms, CameraSysFrameIdMap && frameIds) :
+    _transforms(std::move(transforms)),
+    _frameIds(std::move(frameIds))
+{}
+
+
+TransformMap::Builder::Builder(CameraSys const & reference) : _reference(reference) {}
+
+TransformMap::Builder::Builder(Builder const &) = default;
+TransformMap::Builder::Builder(Builder &&) = default;
+
+TransformMap::Builder & TransformMap::Builder::operator=(Builder const &) = default;
+TransformMap::Builder & TransformMap::Builder::operator=(Builder &&) = default;
+
+TransformMap::Builder::~Builder() noexcept = default;
+
+TransformMap::Builder & TransformMap::Builder::connect(
+    CameraSys const & fromSys,
+    CameraSys const & toSys,
+    std::shared_ptr<geom::TransformPoint2ToPoint2 const> transform
+) {
+    if (fromSys == toSys) {
+        std::ostringstream buffer;
+        buffer << "Identity connection detected for " << fromSys << ".";
+        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, buffer.str());
+    }
+    if (!transform->hasForward()) {
+        std::ostringstream buffer;
+        buffer << "Connection from " << fromSys << " to "
+               << toSys << " has no forward transform.";
+        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, buffer.str());
+    }
+    if (!transform->hasInverse()) {
+        std::ostringstream buffer;
+        buffer << "Connection from " << fromSys << " to "
+               << toSys << " has no inverse transform.";
+        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, buffer.str());
+    }
+    _connections.push_back(Connection{false, std::move(transform), fromSys, toSys});
+    return *this;
+}
+
+
+TransformMap::Builder & TransformMap::Builder::connect(
+    CameraSys const & fromSys,
+    Transforms const & transforms
+) {
+    Builder other(_reference);  // temporary for strong exception safety
+    for (auto const & item : transforms) {
+        other.connect(fromSys, item.first, item.second);
+    }
+    _connections.insert(_connections.end(), other._connections.begin(), other._connections.end());
+    return *this;
+}
+
+
+namespace {
+
+/*
+ * RAII object that just executes a functor in its destructor.
+ */
+template <typename Callable>
+class OnScopeExit {
+public:
+
+    explicit OnScopeExit(Callable callable) : _callable(std::move(callable)) {}
+
+    ~OnScopeExit() noexcept(noexcept(std::declval<Callable>())) {  // noexcept iff "_callable()"" is
+        _callable();
+    }
+
+private:
+    Callable _callable;
+};
+
+// Factory function for OnScopeExit.
+template <typename Callable>
+OnScopeExit<Callable> onScopeExit(Callable callable) {
+    return OnScopeExit<Callable>(std::move(callable));
+}
+
+} // anonymous
+
+
+std::shared_ptr<TransformMap const> TransformMap::Builder::build() const {
+
+    int nFrames = 0;  // tracks frameSet->getNFrame() to avoid those (expensive) calls
+    CameraSysFrameIdMap frameIds;  // mapping from CameraSys to Frame ID (int)
+
+    // Local helper function that looks up the Frame ID for a CameraSys, with
+    // results returned via boost::optional.
+    auto findFrameIdForSys = [&frameIds](CameraSys const & sys) -> boost::optional<int> {
+        auto iter = frameIds.find(sys);
+        if (iter != frameIds.end()) {
+            return boost::optional<int>(iter->second);
+        } else {
+            return boost::none;
+        }
+    };
+
+    // Local helper function that creates a Frame, updates the nFrames counter,
+    // and adds an entry to the frameIds map.  Returns the new Frame.
+    // Should always be called in concert with an update to frameSet.
+    auto addFrameForSys = [&frameIds, &nFrames](CameraSys const & sys) mutable -> ast::Frame {
+        frameIds.emplace(sys, ++nFrames);
+        return ast::Frame(2, "Ident=" + sys.getSysName());
+    };
+
+    // FrameSet that manages all transforms; should always be updated in
+    // concert with a call to addFrameForSys.
+    auto frameSet = std::make_unique<ast::FrameSet>(addFrameForSys(_reference));
+
+    // RAII: make sure all 'processed' fields are reset, no matter how we exit
+    auto guard = onScopeExit(
+        [this]() noexcept {
+            for (auto const & c : _connections) { c.processed = false; }
+        }
+    );
+
+    std::size_t nProcessedTotal = 0;
+    while (nProcessedTotal != _connections.size()) {
+
+        // Loop over all connections, only inserting those that are connected
+        // to already-inserted connections.
+        std::size_t nProcessedThisPass = 0;
+        for (auto const & c : _connections) {
+            if (c.processed) continue;
+            auto fromId = findFrameIdForSys(c.fromSys);
+            auto toId = findFrameIdForSys(c.toSys);
+            if (fromId && toId) {  // We've already inserted both fromSys and toSys. That's a problem.
+                std::ostringstream buffer;
+                buffer << "Duplicate connection from " << c.fromSys << " to " << c.toSys << ".";
+                throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, buffer.str());
+            } else if (fromId) {  // We've already inserted fromSys (only)
+                frameSet->addFrame(*fromId, *c.transform->getMapping(), addFrameForSys(c.toSys));
+                c.processed = true;
+                ++nProcessedThisPass;
+            } else if (toId) {  // We've already inserted toSys (only)
+                frameSet->addFrame(*toId, *c.transform->inverted()->getMapping(), addFrameForSys(c.fromSys));
+                c.processed = true;
+                ++nProcessedThisPass;
+            }
+            // If we haven't inserted either yet, just continue; hopefully
+            // we'll have inserted one in a future pass.
+        }
+
+        if (nProcessedThisPass == 0u) {  // We're not making progress, so we must have orphans
+            // Use std::set to compile the list of orphaned coordinate systems
+            // for a friendlier (unique, predictably-ordered) error message.
+            std::set<CameraSys> orphaned;
+            for (auto const & c : _connections) {
+                if (!c.processed) {
+                    orphaned.insert(c.fromSys);
+                    orphaned.insert(c.toSys);
+                }
+            }
+            std::ostringstream buffer;
+            auto o = orphaned.begin();
+            buffer << "Orphaned coordinate system(s) found: " << *o;
+            for (++o; o != orphaned.end(); ++o) {
+                buffer << ", " << *o;
+            }
+            buffer << ".";
+            throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, buffer.str());
+        }
+
+        nProcessedTotal += nProcessedThisPass;
+    }
+
+    // We've maintained our own counter for frame IDs for performance and
+    // convenience reasons, but it had better match AST's internal counter.
+    assert(frameSet->getNFrame() == nFrames);
+
+    // Return the new TransformMap.
+    // We can't use make_shared because TransformMap ctor is private.
+    return std::shared_ptr<TransformMap>(new TransformMap(std::move(frameSet), std::move(frameIds)));
+}
+
+
 }  // namespace cameraGeom
 }  // namespace afw
 }  // namespace lsst

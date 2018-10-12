@@ -83,13 +83,6 @@ class DetectorTestCase(lsst.utils.tests.TestCase):
         with self.assertRaises(lsst.pex.exceptions.Exception):
             DetectorWrapper(modFunc=duplicateAmpName)
 
-        def addBadCameraSys(dw):
-            """Add an invalid camera system"""
-            dw.transMap[cameraGeom.CameraSys("foo", "wrong detector")] = \
-                lsst.afw.geom.makeIdentityTransform()
-        with self.assertRaises(lsst.pex.exceptions.Exception):
-            DetectorWrapper(modFunc=addBadCameraSys)
-
         # These break in the pybind layer
         for crosstalk in ([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0],  # 1D and not numpy
                           np.array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]),  # 1D, wrong numpy type
@@ -119,14 +112,6 @@ class DetectorTestCase(lsst.utils.tests.TestCase):
             # test pix to pix
             pixPoint2 = dw.detector.transform(pixPoint, cameraGeom.PIXELS, cameraGeom.PIXELS)
             self.assertPairsAlmostEqual(pixPoint, pixPoint2)
-
-        # make sure you cannot transform to or from a different detector
-        otherCamSys = cameraGeom.CameraSys(cameraGeom.PIXELS, "other detector")
-        for goodSys in (cameraGeom.PIXELS, cameraGeom.FOCAL_PLANE):
-            with self.assertRaises(lsst.pex.exceptions.Exception):
-                dw.detector.transform(pixPoint, goodSys, otherCamSys)
-            with self.assertRaises(lsst.pex.exceptions.Exception):
-                dw.detector.transform(pixPoint, otherCamSys, goodSys)
 
     def testIteration(self):
         """Test iteration over amplifiers and __getitem__

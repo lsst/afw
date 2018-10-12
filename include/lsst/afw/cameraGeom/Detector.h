@@ -81,24 +81,46 @@ public:
      *                   to the specified camera system
      * @param crosstalk matrix of crosstalk coefficients
      *
-     * @throws lsst::pex::exceptions::InvalidParameterError if:
-     * - any amplifier names are not unique
-     * - any CamerSys in transformMap has a detector name other than "" or this detector's name
+     * @throws lsst::pex::exceptions::InvalidParameterError if any amplifier
+     *     names are not unique
      *
      * @warning
      * * The keys for the detector-specific coordinate systems in the transform registry
      *   must include the detector name (even though this is redundant).
      */
-    explicit Detector(std::string const &name, int id, DetectorType type, std::string const &serial,
-                      lsst::geom::Box2I const &bbox, lsst::afw::table::AmpInfoCatalog const &ampInfoCatalog,
-                      Orientation const &orientation, lsst::geom::Extent2D const &pixelSize,
-                      TransformMap::Transforms const &transforms,
-                      CrosstalkMatrix const &crosstalk = CrosstalkMatrix());
+    Detector(std::string const &name, int id, DetectorType type, std::string const &serial,
+             lsst::geom::Box2I const &bbox, lsst::afw::table::AmpInfoCatalog const &ampInfoCatalog,
+             Orientation const &orientation, lsst::geom::Extent2D const &pixelSize,
+             TransformMap::Transforms const &transforms,
+             CrosstalkMatrix const &crosstalk = CrosstalkMatrix());
+
+    /**
+     * Make a Detector
+     *
+     * @param name name of detector's location in the camera
+     * @param id detector integer ID; used as keys in some tables
+     * @param type type of detector
+     * @param serial serial "number" that identifies the physical detector
+     * @param bbox bounding box
+     * @param ampInfoCatalog catalog of amplifier information
+     * @param orientation detector position and orientation in focal plane
+     * @param pixelSize pixel size (mm)
+     * @param transformMap coordinate systems and transforms between them
+     * @param crosstalk matrix of crosstalk coefficients
+     *
+     * @throws lsst::pex::exceptions::InvalidParameterError if: any amplifier
+     *     names are not unique
+     */
+    Detector(std::string const &name, int id, DetectorType type, std::string const &serial,
+             lsst::geom::Box2I const &bbox, lsst::afw::table::AmpInfoCatalog const &ampInfoCatalog,
+             Orientation const &orientation, lsst::geom::Extent2D const &pixelSize,
+             std::shared_ptr<TransformMap const> transformMap,
+             CrosstalkMatrix const &crosstalk = CrosstalkMatrix());
 
     ~Detector() = default;
 
-    Detector(Detector const &);
-    Detector(Detector &&);
+    Detector(Detector const &) = delete;
+    Detector(Detector &&) = delete;
     Detector &operator=(Detector const &) = delete;
     Detector &operator=(Detector &&) = delete;
 
@@ -138,7 +160,7 @@ public:
     lsst::geom::Extent2D getPixelSize() const { return _pixelSize; }
 
     /** Get the transform registry */
-    TransformMap const getTransformMap() const { return _transformMap; }
+    std::shared_ptr<TransformMap const> getTransformMap() const { return _transformMap; }
 
     /** Have we got crosstalk coefficients? */
     bool hasCrosstalk() const {
@@ -278,17 +300,6 @@ public:
 
 private:
     typedef std::unordered_map<std::string, table::AmpInfoCatalog::const_iterator> _AmpInfoMap;
-    /**
-     * Finish constructing this object
-     *
-     * Set _ampNameIterMap from _ampInfoCatalog
-     * Check detector name in the CoordSys in the transform registry
-     *
-     * @throws lsst::pex::exceptions::InvalidParameterError if:
-     * - any amplifier names are not unique
-     * - any CamerSys in transformMap has a detector name other than "" or this detector's name
-     */
-    void _init();
 
     std::string _name;                      ///< name of detector's location in the camera
     int _id;                                ///< detector numeric ID
@@ -300,7 +311,7 @@ private:
     Orientation _orientation;               ///< position and orientation of detector in focal plane
     lsst::geom::Extent2D _pixelSize;        ///< pixel size (mm)
     CameraSys _nativeSys;                   ///< native coordinate system of this detector
-    TransformMap _transformMap;             ///< registry of coordinate transforms
+    std::shared_ptr<TransformMap const> _transformMap;   ///< registry of coordinate transforms
     CrosstalkMatrix _crosstalk;             ///< crosstalk coefficients
 };
 }  // namespace cameraGeom
