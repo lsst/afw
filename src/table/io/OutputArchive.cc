@@ -3,6 +3,7 @@
 #include <typeinfo>
 #include <vector>
 #include <map>
+#include <memory>
 
 #include "boost/format.hpp"
 
@@ -22,7 +23,10 @@ namespace {
 
 ArchiveIndexSchema const &indexKeys = ArchiveIndexSchema::get();
 
-typedef std::map<void const *, int> Map;
+// we don't need sorting, but you can't use weak_ptrs as keys in an
+// unordered_map
+using Map = std::map<std::weak_ptr<Persistable const>, int,
+                     std::owner_less<std::weak_ptr<Persistable const>>>;
 
 typedef Map::value_type MapItem;
 
@@ -103,17 +107,26 @@ public:
     int put(Persistable const *obj, std::shared_ptr<Impl> const &self, bool permissive) {
         if (!obj) return 0;
         if (permissive && !obj->isPersistable()) return 0;
+        int const currentId = _nextId;
+        ++_nextId;
+        OutputArchiveHandle handle(currentId, obj->getPersistenceName(), obj->getPythonModule(), self);
+        obj->write(handle);
+        return currentId;
+    }
+
+    int put(std::shared_ptr<Persistable const> obj, std::shared_ptr<Impl> const &self, bool permissive) {
+        if (!obj) return 0;
+        if (permissive && !obj->isPersistable()) return 0;
         MapItem item(obj, _nextId);
         std::pair<Map::iterator, bool> r = _map.insert(item);
         if (r.second) {
-            ++_nextId;
-            OutputArchiveHandle handle(r.first->second, obj->getPersistenceName(), obj->getPythonModule(),
-                                       self);
-            obj->write(handle);
+            // We've never seen this object before.  Save it.
+            return put(obj.get(), self, permissive);
+        } else {
+            // We had already saved this object, and insert returned an iterator
+            // to the ID we used before; return that.
+            return r.first->second;
         }
-        assert(r.first->first == obj);
-        // either way we return the ID of the object in the archive
-        return r.first->second;
     }
 
     void writeFits(fits::Fits &fitsfile) {
@@ -164,6 +177,14 @@ int OutputArchive::put(Persistable const *obj, bool permissive) {
     return _impl->put(obj, _impl, permissive);
 }
 
+int OutputArchive::put(std::shared_ptr<Persistable const> obj, bool permissive) {
+    if (!_impl.unique()) {  // copy on write
+        std::shared_ptr<Impl> tmp(new Impl(*_impl));
+        _impl.swap(tmp);
+    }
+    return _impl->put(std::move(obj), _impl, permissive);
+}
+
 BaseCatalog const &OutputArchive::getIndexCatalog() const { return _impl->_index; }
 
 BaseCatalog const &OutputArchive::getCatalog(int n) const {
@@ -196,6 +217,12 @@ int OutputArchiveHandle::put(Persistable const *obj, bool permissive) {
     // Handle doesn't worry about copy-on-write, because Handles should only exist
     // while an OutputArchive::put() call is active.
     return _impl->put(obj, _impl, permissive);
+}
+
+int OutputArchiveHandle::put(std::shared_ptr<Persistable const> obj, bool permissive) {
+    // Handle doesn't worry about copy-on-write, because Handles should only exist
+    // while an OutputArchive::put() call is active.
+    return _impl->put(std::move(obj), _impl, permissive);
 }
 
 OutputArchiveHandle::OutputArchiveHandle(int id, std::string const &name, std::string const &module,
