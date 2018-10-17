@@ -29,6 +29,8 @@
  * @ingroup afw
  */
 
+#include "boost/format.hpp"
+
 #include "lsst/afw/math/BoundedField.h"
 #include "lsst/afw/math/ChebyshevBoundedField.h"
 #include "lsst/geom/Point.h"
@@ -36,6 +38,7 @@
 #include "lsst/afw/table/Source.h"
 #include "lsst/afw/table/io/Persistable.h"
 #include "lsst/afw/image/MaskedImage.h"
+#include "lsst/pex/exceptions/Exception.h"
 
 namespace lsst {
 namespace afw {
@@ -47,6 +50,23 @@ struct Measurement {
     double const value;
     double const err;
 };
+
+/**
+ * Raise lsst::pex::exceptions::InvalidParameterError if value is not >=0.
+ *
+ * Used for checking the calibration mean/error in the constructor.
+ *
+ * @param value Value that should be positive.
+ * @param name Text to prepend to error message.
+ *
+ * @throws lsst::pex::exceptions::InvalidParameterError if value < 0
+ */
+inline void assertNonNegative(double value, std::string const &name) {
+    if (value < 0) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
+                          (boost::format("%s must be positive: %.3g") % name % value).str());
+    }
+}
 
 /**
  * @class PhotoCalib
@@ -97,14 +117,16 @@ public:
     /**
      * Create a non-spatially-varying calibration.
      *
-     * @param[in]  calibrationMean The spatially-constant calibration.
-     * @param[in]  calibrationErr  The error on the calibration.
+     * @param[in]  calibrationMean The spatially-constant calibration (must be non-negative).
+     * @param[in]  calibrationErr  The error on the calibration (must be non-negative).
      * @param[in]  bbox            The bounding box on which this PhotoCalib is valid. If not specified,
      *                             this PhotoCalib is valid at any point (i.e. an empty bbox).
      */
     explicit PhotoCalib(double calibrationMean, double calibrationErr = 0,
                         lsst::geom::Box2I const &bbox = lsst::geom::Box2I())
             : _calibrationMean(calibrationMean), _calibrationErr(calibrationErr), _isConstant(true) {
+        assertNonNegative(_calibrationMean, "Calibration mean");
+        assertNonNegative(_calibrationErr, "Calibration error");
         ndarray::Array<double, 2, 2> coeffs = ndarray::allocate(ndarray::makeVector(1, 1));
         coeffs[0][0] = calibrationMean;
         _calibration = std::make_shared<afw::math::ChebyshevBoundedField>(
@@ -114,21 +136,24 @@ public:
     /**
      * Create a spatially-varying calibration.
      *
-     * @param[in]  calibration    The spatially varying photometric calibration.
-     * @param[in]  calibrationErr The error on the calibration.
+     * @param[in]  calibration    The spatially varying photometric calibration (must have non-negative mean).
+     * @param[in]  calibrationErr The error on the calibration (must be non-negative).
      */
     PhotoCalib(std::shared_ptr<afw::math::BoundedField> calibration, double calibrationErr = 0)
             : _calibration(calibration),
               _calibrationMean(computeCalibrationMean(calibration)),
               _calibrationErr(calibrationErr),
-              _isConstant(false) {}
+              _isConstant(false) {
+        assertNonNegative(_calibrationMean, "Calibration (computed via BoundedField.mean()) mean");
+        assertNonNegative(_calibrationErr, "Calibration error");
+    }
 
     /**
      * Create a calibration with a pre-computed mean. Primarily for de-persistence.
      *
-     * @param[in]  calibrationMean The mean of the calibration() over its bounding box.
+     * @param[in]  calibrationMean The mean of the calibration() over its bounding box (must be non-negative).
+     * @param[in]  calibrationErr  The error on the calibration (must be non-negative).
      * @param[in]  calibration     The spatially varying photometric calibration.
-     * @param[in]  calibrationErr  The error on the calibration.
      * @param[in]  isConstant      Is this PhotoCalib spatially constant?
      */
     PhotoCalib(double calibrationMean, double calibrationErr,
@@ -136,7 +161,10 @@ public:
             : _calibration(calibration),
               _calibrationMean(calibrationMean),
               _calibrationErr(calibrationErr),
-              _isConstant(isConstant) {}
+              _isConstant(isConstant) {
+        assertNonNegative(_calibrationMean, "Calibration mean");
+        assertNonNegative(_calibrationErr, "Calibration error");
+    }
 
     /**
      * Convert instFlux in ADU to maggies at a point in the BoundedField.
