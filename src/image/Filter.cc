@@ -83,6 +83,8 @@ bool FilterProperty::operator==(FilterProperty const& rhs) const noexcept {
     return (_lambdaEff == rhs._lambdaEff);
 }
 
+std::size_t FilterProperty::hash_value() const noexcept { return std::hash<double>()(_lambdaEff); };
+
 void FilterProperty::_initRegistry() {
     if (_propertyMap) {
         delete _propertyMap;
@@ -167,6 +169,8 @@ std::vector<std::string> Filter::getNames() {
 }
 
 bool Filter::operator==(Filter const& rhs) const noexcept { return _id != UNKNOWN && _id == rhs._id; }
+
+std::size_t Filter::hash_value() const noexcept { return std::hash<int>()(_id); }
 
 void Filter::_initRegistry() {
     _id0 = UNKNOWN;

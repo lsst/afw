@@ -99,6 +99,8 @@ public:
                     ) const noexcept {
         return !(*this == rhs);
     }
+    /// Return a hash of this object.
+    std::size_t hash_value() const noexcept;
     /**
      * Clear all definitions
      */
@@ -173,6 +175,9 @@ public:
      */
     bool operator==(Filter const& rhs) const noexcept;
     bool operator!=(Filter const& rhs) const noexcept { return !(*this == rhs); }
+
+    /// Return a hash of this object.
+    std::size_t hash_value() const noexcept;
 
     /**
      * Return a Filter's integral id
@@ -267,5 +272,21 @@ int stripFilterKeywords(std::shared_ptr<lsst::daf::base::PropertySet> metadata);
 }  // namespace image
 }  // namespace afw
 }  // namespace lsst
+
+namespace std {
+template <>
+struct hash<lsst::afw::image::FilterProperty> {
+    using argument_type = lsst::afw::image::FilterProperty;
+    using result_type = size_t;
+    size_t operator()(argument_type const& obj) const noexcept { return obj.hash_value(); }
+};
+
+template <>
+struct hash<lsst::afw::image::Filter> {
+    using argument_type = lsst::afw::image::Filter;
+    using result_type = size_t;
+    size_t operator()(argument_type const& obj) const noexcept { return obj.hash_value(); }
+};
+}  // namespace std
 
 #endif  // LSST_AFW_IMAGE_FILTER_H

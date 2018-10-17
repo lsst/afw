@@ -33,6 +33,7 @@
 #include "boost/algorithm/string/trim.hpp"
 
 #include "ndarray.h"
+#include "lsst/utils/hashCombine.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/daf/base/PropertySet.h"
 #include "lsst/afw/image/Calib.h"
@@ -178,6 +179,11 @@ int stripCalibKeywords(std::shared_ptr<lsst::daf::base::PropertySet> metadata) {
 
 bool Calib::operator==(Calib const& rhs) const noexcept {
     return _fluxMag0 == rhs._fluxMag0 && _fluxMag0Err == rhs._fluxMag0Err;
+}
+
+std::size_t Calib::hash_value() const noexcept {
+    // Completely arbitrary seed
+    return utils::hashCombine(17, _fluxMag0, _fluxMag0Err);
 }
 
 void Calib::setFluxMag0(double fluxMag0, double fluxMag0Err) {

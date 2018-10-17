@@ -28,6 +28,8 @@
 #include <iostream>
 #include <type_traits>
 
+#include "lsst/utils/hashCombine.h"
+
 namespace lsst {
 namespace afw {
 namespace image {
@@ -231,6 +233,14 @@ public:
     template <typename T1>
     friend bool operator!=(Pixel const& lhs, T1 const& rhs) {
         return !(lhs == rhs);
+    }
+
+    /// Return a hash of this object.
+    std::size_t hash_value() const noexcept {
+        // Completely arbitrary seed
+        // Convert to double to avoid inconsistently hashing equal numbers of different types
+        return utils::hashCombine(17, static_cast<double>(image()), static_cast<double>(mask()),
+                                  static_cast<double>(variance()));
     }
 
     //
@@ -652,4 +662,33 @@ std::ostream& operator<<(std::ostream& os, BinaryExpr<ExprT1, ExprT2, BinOp, Mas
 }  // namespace image
 }  // namespace afw
 }  // namespace lsst
+
+namespace std {
+template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+struct hash<lsst::afw::image::pixel::Pixel<ImagePixelT, MaskPixelT, VariancePixelT>> {
+    using argument_type = lsst::afw::image::pixel::Pixel<ImagePixelT, MaskPixelT, VariancePixelT>;
+    using result_type = size_t;
+    size_t operator()(argument_type const& obj) const noexcept { return obj.hash_value(); }
+};
+
+/*
+ * SinglePixel is an awkward case because Pixel == SinglePixel is a valid comparison
+ * but SinglePixel == SinglePixel is not.
+ * Give SinglePixel a hash consistent with Pixel's, just in case somebody tries something funny.
+ */
+template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+struct hash<lsst::afw::image::pixel::SinglePixel<ImagePixelT, MaskPixelT, VariancePixelT>> {
+    using argument_type = lsst::afw::image::pixel::SinglePixel<ImagePixelT, MaskPixelT, VariancePixelT>;
+    using result_type = size_t;
+    size_t operator()(argument_type const& obj) const noexcept {
+        // Don't want to define SinglePixel::hash_value when SinglePixel::operator== doesn't exist
+        using EquivalentPixel = lsst::afw::image::pixel::Pixel<ImagePixelT, MaskPixelT, VariancePixelT>;
+        // Work around Pixel needing references to external data
+        ImagePixelT image = obj.image();
+        MaskPixelT mask = obj.mask();
+        VariancePixelT variance = obj.variance();
+        return EquivalentPixel(image, mask, variance).hash_value();
+    }
+};
+}  // namespace std
 #endif
