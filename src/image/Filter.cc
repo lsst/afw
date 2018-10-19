@@ -32,6 +32,7 @@
 #include "boost/format.hpp"
 #include "boost/algorithm/string/trim.hpp"
 #include "lsst/pex/exceptions.h"
+#include "lsst/daf/base/PropertySet.h"
 
 #include "lsst/afw/image/Filter.h"
 
@@ -53,20 +54,6 @@ FilterProperty::FilterProperty(std::string const& name, lsst::daf::base::Propert
     }
     if (prop.exists("lambdaMax")) {
         _lambdaMax = prop.getAsDouble("lambdaMax");
-    }
-    _insert(force);
-}
-
-FilterProperty::FilterProperty(std::string const& name, lsst::pex::policy::Policy const& pol, bool force)
-        : _name(name), _lambdaEff(-1) {
-    if (pol.exists("lambdaEff")) {
-        _lambdaEff = pol.getDouble("lambdaEff");
-    }
-    if (pol.exists("lambdaMin")) {
-        _lambdaMin = pol.getDouble("lambdaMin");
-    }
-    if (pol.exists("lambdaMax")) {
-        _lambdaMax = pol.getDouble("lambdaMax");
     }
     _insert(force);
 }
@@ -191,7 +178,7 @@ void Filter::_initRegistry() {
     _nameMap = new NameMap;
     _idMap = new IdMap;
 
-    define(FilterProperty(unknownFilter, lsst::pex::policy::Policy(), true));
+    define(FilterProperty(unknownFilter, daf::base::PropertySet(), true));
 }
 
 int Filter::_id0 = Filter::UNKNOWN;

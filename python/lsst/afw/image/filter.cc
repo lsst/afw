@@ -25,7 +25,6 @@
 
 #include <cmath>
 #include "lsst/daf/base/PropertySet.h"
-#include "lsst/pex/policy/Policy.h"
 #include "lsst/afw/image/Filter.h"
 
 namespace py = pybind11;
@@ -42,7 +41,6 @@ using PyFilter = py::class_<Filter, std::shared_ptr<Filter>>;
 
 PYBIND11_MODULE(filter, mod) {
     py::module::import("lsst.daf.base");
-    py::module::import("lsst.pex.policy");
 
     mod.def("stripFilterKeywords", &detail::stripFilterKeywords, "metadata"_a);
 
@@ -54,8 +52,6 @@ PYBIND11_MODULE(filter, mod) {
     // but that causes an error about copying when the Python extension is imported
     clsFilterProperty.def(py::init<std::string const &, daf::base::PropertySet const &, bool>(), "name"_a,
                           "metadata"_a, "force"_a = false);
-    clsFilterProperty.def(py::init<std::string const &, pex::policy::Policy const &, bool>(), "name"_a,
-                          "policy"_a, "force"_a = false);
     clsFilterProperty.def(
             "__eq__", [](FilterProperty const &self, FilterProperty const &other) { return self == other; },
             py::is_operator());

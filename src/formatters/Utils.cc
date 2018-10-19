@@ -35,7 +35,6 @@
 
 #include "boost/format.hpp"
 #include "lsst/pex/exceptions.h"
-#include "lsst/pex/policy/Policy.h"
 #include "lsst/daf/base/PropertySet.h"
 #include "lsst/daf/persistence/LogicalLocation.h"
 #include "lsst/afw/formatters/Utils.h"
@@ -43,7 +42,6 @@
 using std::int64_t;
 namespace ex = lsst::pex::exceptions;
 using lsst::daf::base::PropertySet;
-using lsst::pex::policy::Policy;
 using lsst::daf::persistence::LogicalLocation;
 
 namespace lsst {
@@ -157,33 +155,6 @@ bool extractOptionalFlag(std::shared_ptr<PropertySet const> const& properties, s
         return properties->getAsBool(name);
     }
     return false;
-}
-
-std::string const getTableName(std::shared_ptr<Policy const> const& policy,
-                               std::shared_ptr<PropertySet const> const& properties) {
-    std::string itemName(getItemName(properties));
-    return LogicalLocation(policy->getString(itemName + ".tableNamePattern"), properties).locString();
-}
-
-std::vector<std::string> getAllSliceTableNames(std::shared_ptr<Policy const> const& policy,
-                                               std::shared_ptr<PropertySet const> const& properties) {
-    std::string itemName(getItemName(properties));
-    std::string pattern(policy->getString(itemName + ".tableNamePattern"));
-    int numSlices = 1;
-    if (properties->exists(itemName + ".numSlices")) {
-        numSlices = properties->getAsInt(itemName + ".numSlices");
-    }
-    if (numSlices <= 0) {
-        throw LSST_EXCEPT(ex::RuntimeError, itemName + " \".numSlices\" property value must be positive");
-    }
-    std::vector<std::string> names;
-    names.reserve(numSlices);
-    std::shared_ptr<PropertySet> props = properties->deepCopy();
-    for (int i = 0; i < numSlices; ++i) {
-        props->set("sliceId", i);
-        names.push_back(LogicalLocation(pattern, props).locString());
-    }
-    return names;
 }
 
 int countFitsHeaderCards(lsst::daf::base::PropertySet const& prop) { return prop.paramNames(false).size(); }

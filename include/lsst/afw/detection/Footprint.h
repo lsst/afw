@@ -30,7 +30,6 @@
 #include <memory>
 #include "ndarray.h"
 #include "lsst/base.h"
-#include "lsst/pex/policy/Policy.h"
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/detection/Peak.h"
 #include "lsst/afw/geom/Span.h"

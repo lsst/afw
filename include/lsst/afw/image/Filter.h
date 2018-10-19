@@ -38,15 +38,10 @@
 #include <vector>
 #include <memory>
 #include "lsst/base.h"
-#include "lsst/pex/policy/Policy.h"
+#include "lsst/daf/base/PropertySet.h"
+
 
 namespace lsst {
-namespace daf {
-namespace base {
-class PropertySet;
-}
-}  // namespace daf
-
 namespace afw {
 namespace image {
 
@@ -67,15 +62,6 @@ public:
      */
     explicit FilterProperty(std::string const& name,
                             lsst::daf::base::PropertySet const& prop = lsst::daf::base::PropertySet(),
-                            bool force = false);
-    /**
-     * Create a new FilterProperty, setting values from a Policy
-     *
-     * @param name name of filter
-     * @param pol values describing the Filter
-     * @param force Allow this name to replace a previous one
-     */
-    explicit FilterProperty(std::string const& name, lsst::pex::policy::Policy const& pol,
                             bool force = false);
 
     FilterProperty(FilterProperty const&) = default;
