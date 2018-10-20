@@ -414,3 +414,22 @@ def assertDetectorsEqual(self, detector1, detector2, **kwds):
     self.assertEqual(orientationIn.getRoll(), orientationOut.getRoll())
     self.assertFloatsEqual(detector1.getCrosstalk(), detector2.getCrosstalk())
     self.assertTransformMapsEqual(detector1.getTransformMap(), detector2.getTransformMap(), **kwds)
+
+
+@inTestCase
+def assertDetectorCollectionsEqual(self, collection1, collection2, **kwds):
+    """Compare two DetectorCollections.
+    """
+    self.assertCountEqual(list(collection1.getNameIter()), list(collection2.getNameIter()))
+    for k in collection1.getNameIter():
+        self.assertDetectorsEqual(collection1[k], collection2[k], **kwds)
+
+
+@inTestCase
+def assertCamerasEqual(self, camera1, camera2, **kwds):
+    """Compare two Camers.
+    """
+    self.assertDetectorCollectionsEqual(camera1, camera2, **kwds)
+    self.assertTransformMapsEqual(camera1.getTransformMap(), camera2.getTransformMap())
+    self.assertEqual(camera1.getName(), camera2.getName())
+    self.assertEqual(camera1.getPupilFactoryName(), camera2.getPupilFactoryName())

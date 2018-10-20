@@ -14,18 +14,18 @@ of known bad pixels in each detector. The cameraGeom package supports operations
  assemble an entire image (see ip_isr AssembleCcdTask for that) but includes functions in
  \ref assembleImage "assembleImage" that do much of the work.
 - Transform 2-d points between various \ref afwCameraGeomCoordSys "camera coordinate systems",
-  using \ref camera.Camera.transform "Camera.transform". This can be used as part of generating a
+  using \ref Camera::transform "Camera.transform". This can be used as part of generating a
   \ref geom::SkyWcs "WCS" or to examine the effects of optical distortion.
 - Create a graphic showing the layout of detectors on the focal plane, using utils.plotFocalPlane.
 - Display a mosaic image that combines all detector images, using utils.showMosaic.
 
-Data for constructing a \ref cameraGeom.camera.Camera "Camera" comes from the appropriate observatory-specific
+Data for constructing a Camera comes from the appropriate observatory-specific
 obs_ package. For example obs_lsstSim contains data for the LSST camera simulator, obs_sdss contains
 data for the SDSS imager, and obs_subaru contains data for both Suprime-Cam and Hyper Suprime-Cam (HSC).
 
 \section afwCameraGeomUtils Camera Geometry Utilities
 
-There are a few utilities available for visualizing and debugging \ref cameraGeom.camera.Camera objects.  Examples of
+There are a few utilities available for visualizing and debugging Camera objects.  Examples of
 available utility methods are: display a particular amp, display an assembled sensor, display a
 the full camera modaic, plot the sensor boundaries with a grid of test points in
 \ref afwCameraGeomFOCAL_PLANE "FOCAL_PLANE" coordinates.  An example of how to use the utilities
@@ -91,16 +91,16 @@ The file examples/cameraGeomExample.py shows some basic usage of the cameraGeom 
 The cameraGeom package contains the following important objects; unless otherwise noted, all are available
 in both C++ and Python:
 
-### Camera (Python only)
+### Camera
 
-\ref cameraGeom.camera.Camera "Camera" is a collection of \ref Detector "Detectors".
+Camera is a collection of \ref Detector "Detectors".
 
-\ref cameraGeom.camera.Camera "Camera" also supports coordinate transformation between all
+Camera also supports coordinate transformation between all
 \ref afwCameraGeomCoordSys "camera coordinate systems".
 
 ### Detector
 
-\ref cameraGeom::Detector "Detector" contains information about a given imaging detector (typically a CCD),
+Detector contains information about a given imaging detector (typically a CCD),
 including its position and orientation in the focal plane and information about amplifiers (such as
 the image region, overscan and readout corner). Amplifier data is stored as records in an
 \ref table::AmpInfoTable "amp info table", and Detector acts as a collection of
@@ -110,7 +110,7 @@ Detector also supports transformation between \ref afwCameraGeomFOCAL_PLANE "foc
 \ref afwCameraGeomPIXELS "pixels", and (if a suitable transform has been provided)
 \ref afwCameraGeomACTUAL_PIXELS "actual pixels" coordinates.
 However Detector does *not* support \ref afwCameraGeomFIELD_ANGLE "FIELD_ANGLE" coordinates;
-use a \ref cameraGeom.camera.Camera "Camera" for that.
+use a Camera for that.
 
 ### CameraSys and CameraSysPrefix
 
@@ -136,8 +136,8 @@ to \ref afwCameraGeomFOCAL_PLANE "FOCAL_PLANE" system using a \ref cameraGeom::D
 
     focalPlanePoints = Detector.transform(pixelPoints, PIXELS, FOCAL_PLANE)
 
-\ref cameraGeom.camera.Camera "Camera" methods always require a \ref cameraGeom::CameraSys "CameraSys";
-a \ref cameraGeom::CameraSysPrefix "CameraSysPrefix" is not acceptable because the camera does not know
+Camera methods always require a CameraSys;
+a CameraSysPrefix is not acceptable because the camera does not know
 which detector to use. For example to transform a list of points from \ref afwCameraGeomPIXELS "PIXELS"
 on a specific detector to \ref afwCameraGeomFIELD_ANGLE "FIELD_ANGLE":
 
@@ -148,9 +148,9 @@ on a specific detector to \ref afwCameraGeomFIELD_ANGLE "FIELD_ANGLE":
 TransformMap is a collection of \ref geom::TransformPoint2ToPoint2 "Transforms"
 from one \ref afwCameraGeomCoordSys "camera coordinate system" to another.
 
-\ref cameraGeom.camera.Camera "Camera" and \ref cameraGeom::Detector "Detector" both contain TransformMaps.
-The transform map in \ref cameraGeom.camera.Camera "Camera" does not support detector-based coordinate
-systems (e.g. PIXELS), but Camera.getTransform and Camera.transform do support detector-based coordinate
+Camera and Detector both contain TransformMaps.
+The transform map in Camera does not support detector-based coordinate
+systems (e.g. PIXELS), but Camera::getTransform and Camera::transform do support detector-based coordinate
 systems (since the camera contains information about the detectors).
  */
 

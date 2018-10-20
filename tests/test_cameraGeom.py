@@ -31,7 +31,7 @@ import lsst.geom
 import lsst.afw.image as afwImage
 import lsst.afw.display.ds9 as ds9
 from lsst.afw.cameraGeom import PIXELS, FIELD_ANGLE, FOCAL_PLANE, CameraSys, CameraSysPrefix, \
-    Camera, Detector, assembleAmplifierImage, assembleAmplifierRawImage
+    Camera, Detector, assembleAmplifierImage, assembleAmplifierRawImage, DetectorCollection
 import lsst.afw.cameraGeom.testUtils as testUtils
 import lsst.afw.cameraGeom.utils as cameraGeomUtils
 
@@ -77,6 +77,8 @@ class CameraGeomTestCase(lsst.utils.tests.TestCase):
                 self.assertIsInstance(det, Detector)
                 self.assertEqual(
                     cw.ampInfoDict[det.getName()]['namps'], len(det))
+            idList = [det.getId() for det in cw.camera]
+            self.assertEqual(idList, sorted(idList))
 
     def testCameraSysRepr(self):
         """Test CameraSys.__repr__ and CameraSysPrefix.__repr__
@@ -326,6 +328,28 @@ class CameraGeomTestCase(lsst.utils.tests.TestCase):
                 camera.getTransform(FOCAL_PLANE, CameraSys("pixels", "invalid"))
             with self.assertRaises(KeyError):
                 camera.transform(point, FOCAL_PLANE, CameraSys("pixels", "invalid"))
+
+    def testDetectorCollectionPersistence(self):
+        """Test that we can round-trip a DetectorCollection through FITS I/O.
+        """
+        for wrapper in self.cameraList:
+            camera = wrapper.camera
+            detectors = list(camera)
+            collectionIn = DetectorCollection(detectors)
+            with lsst.utils.tests.getTempFilePath(".fits") as filename:
+                collectionIn.writeFits(filename)
+                collectionOut = DetectorCollection.readFits(filename)
+            self.assertDetectorCollectionsEqual(collectionIn, collectionOut)
+
+    def testCameraPersistence(self):
+        """Test that we can round-trip a Camera through FITS I/O.
+        """
+        for wrapper in self.cameraList:
+            cameraIn = wrapper.camera
+            with lsst.utils.tests.getTempFilePath(".fits") as filename:
+                cameraIn.writeFits(filename)
+                cameraOut = Camera.readFits(filename)
+            self.assertCamerasEqual(cameraIn, cameraOut)
 
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
