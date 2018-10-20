@@ -32,6 +32,7 @@
 #include "lsst/afw/cameraGeom/Orientation.h"
 #include "lsst/geom.h"
 #include "lsst/afw/table/AmpInfo.h"
+#include "lsst/afw/table/io/python.h"
 #include "lsst/afw/cameraGeom/Detector.h"
 #include "lsst/afw/cameraGeom/TransformMap.h"
 
@@ -126,6 +127,8 @@ PYBIND11_MODULE(detector, mod) {
     declare2SysMethods<CameraSys, CameraSysPrefix>(cls);
     declare2SysMethods<CameraSysPrefix, CameraSys>(cls);
     declare2SysMethods<CameraSysPrefix, CameraSysPrefix>(cls);
+
+    table::io::python::addPersistableMethods(cls);
 }
 }  // namespace cameraGeom
 }  // namespace afw

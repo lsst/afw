@@ -6,6 +6,7 @@ import lsst.utils
 import lsst.geom
 import lsst.afw.geom as afwGeom
 import lsst.afw.table as afwTable
+from lsst.utils.tests import inTestCase
 from .cameraGeomLib import PIXELS, TAN_PIXELS, FIELD_ANGLE, FOCAL_PLANE, SCIENCE, ACTUAL_PIXELS, \
     CameraSys, Detector, Orientation
 from .cameraConfig import DetectorConfig, CameraConfig
@@ -361,3 +362,55 @@ class CameraWrapper:
         tmc.transforms = {FIELD_ANGLE.getSysName(): tConfig}
         camConfig.transformDict = tmc
         return camConfig, ampCatalogDict
+
+
+@inTestCase
+def compare2DFunctions(self, func1, func2, minVal=-10, maxVal=None, nVal=5):
+    """Compare two Point2D(Point2D) functions by evaluating them over a
+    range of values.
+    """
+    if maxVal is None:
+        maxVal = -minVal
+    dVal = (maxVal - minVal) / (nVal - 1)
+    for xInd in range(nVal):
+        x = minVal + (xInd * dVal)
+        for yInd in range(nVal):
+            y = minVal + (yInd * dVal)
+            fromPoint = lsst.geom.Point2D(x, y)
+            res1 = func1(fromPoint)
+            res2 = func2(fromPoint)
+            self.assertPairsAlmostEqual(res1, res2)
+
+
+@inTestCase
+def assertTransformMapsEqual(self, map1, map2, **kwds):
+    """Compare two TransformMaps.
+    """
+    self.assertEqual(list(map1), list(map2))  # compares the sets of CameraSys
+    for sysFrom in map1:
+        for sysTo in map1:
+            with self.subTest(sysFrom=sysFrom, sysTo=sysTo):
+                transform1 = map1.getTransform(sysFrom, sysTo)
+                transform2 = map2.getTransform(sysFrom, sysTo)
+                self.compare2DFunctions(transform1.applyForward, transform2.applyForward, **kwds)
+                self.compare2DFunctions(transform1.applyInverse, transform2.applyInverse, **kwds)
+
+
+@inTestCase
+def assertDetectorsEqual(self, detector1, detector2, **kwds):
+    """Compare two Detectors.
+    """
+    self.assertEqual(detector1.getName(), detector2.getName())
+    self.assertEqual(detector1.getId(), detector2.getId())
+    self.assertEqual(detector1.getSerial(), detector2.getSerial())
+    self.assertEqual(detector1.getBBox(), detector2.getBBox())
+    self.assertEqual(detector1.getPixelSize(), detector2.getPixelSize())
+    orientationIn = detector1.getOrientation()
+    orientationOut = detector2.getOrientation()
+    self.assertEqual(orientationIn.getFpPosition(), orientationOut.getFpPosition())
+    self.assertEqual(orientationIn.getReferencePoint(), orientationOut.getReferencePoint())
+    self.assertEqual(orientationIn.getYaw(), orientationOut.getYaw())
+    self.assertEqual(orientationIn.getPitch(), orientationOut.getPitch())
+    self.assertEqual(orientationIn.getRoll(), orientationOut.getRoll())
+    self.assertFloatsEqual(detector1.getCrosstalk(), detector2.getCrosstalk())
+    self.assertTransformMapsEqual(detector1.getTransformMap(), detector2.getTransformMap(), **kwds)

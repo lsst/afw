@@ -57,11 +57,8 @@ enum DetectorType {
  * (a catalog with const records) but I don't think const catalogs really work yet;
  * for instance it is not possible to construct one from a non-const catalog,
  * so I don't know how to construct one.
- *
- * @note code definitions use lsst::afw::table:: instead of table:: because the latter confused swig
- * when I tried it. This is a known issue: ticket #2461.
  */
-class Detector final {
+class Detector final : public table::io::PersistableFacade<Detector>, public table::io::Persistable {
 public:
     typedef ndarray::Array<float const, 2> CrosstalkMatrix;
 
@@ -151,7 +148,7 @@ public:
     lsst::geom::Point2D getCenter(CameraSysPrefix const &cameraSysPrefix) const;
 
     /** Get the amplifier information catalog */
-    lsst::afw::table::AmpInfoCatalog const getAmpInfoCatalog() const { return _ampInfoCatalog; }
+    table::AmpInfoCatalog const getAmpInfoCatalog() const { return _ampInfoCatalog; }
 
     /** Get detector's orientation in the focal plane */
     Orientation const getOrientation() const { return _orientation; }
@@ -171,24 +168,24 @@ public:
     CrosstalkMatrix const getCrosstalk() const { return _crosstalk; }
 
     /** Get iterator to beginning of amplifier list */
-    lsst::afw::table::AmpInfoCatalog::const_iterator begin() const { return _ampInfoCatalog.begin(); }
+    table::AmpInfoCatalog::const_iterator begin() const { return _ampInfoCatalog.begin(); }
 
     /** Get iterator to end of amplifier list */
-    lsst::afw::table::AmpInfoCatalog::const_iterator end() const { return _ampInfoCatalog.end(); }
+    table::AmpInfoCatalog::const_iterator end() const { return _ampInfoCatalog.end(); }
 
     /**
      * Get the amplifier specified by index
      *
      * @throws std::out_of_range if index is out of range
      */
-    lsst::afw::table::AmpInfoRecord const &operator[](size_t i) const { return _ampInfoCatalog.at(i); }
+    table::AmpInfoRecord const &operator[](size_t i) const { return _ampInfoCatalog.at(i); }
 
     /**
      * Get the amplifier specified by name
      *
      * @throws lsst::pex::exceptions::InvalidParameterError if no such amplifier
      */
-    lsst::afw::table::AmpInfoRecord const &operator[](std::string const &name) const;
+    table::AmpInfoRecord const &operator[](std::string const &name) const;
 
     /**
      * Get the amplifier specified by index, returning a shared pointer to an AmpInfo record
@@ -202,7 +199,7 @@ public:
      *
      * @throws std::out_of_range if index is out of range
      */
-    std::shared_ptr<lsst::afw::table::AmpInfoRecord const> _get(int i) const;
+    std::shared_ptr<table::AmpInfoRecord const> _get(int i) const;
 
     /**
      * Get the amplifier specified by name, returning a shared pointer to an AmpInfo record
@@ -214,7 +211,7 @@ public:
      *
      * @throws std::out_of_range if index is out of range
      */
-    std::shared_ptr<lsst::afw::table::AmpInfoRecord const> _get(std::string const &name) const;
+    std::shared_ptr<table::AmpInfoRecord const> _get(std::string const &name) const;
 
     /**
      * Get the number of amplifiers. Renamed to `__len__` in Python.
@@ -298,8 +295,17 @@ public:
     /// The "native" coordinate system of this detector.
     CameraSys getNativeCoordSys() const { return _nativeSys; }
 
+    /// Detectors are always peristable
+    bool isPersistable() const noexcept override { return true; }
+
 private:
     typedef std::unordered_map<std::string, table::AmpInfoCatalog::const_iterator> _AmpInfoMap;
+
+    std::string getPersistenceName() const override;
+
+    std::string getPythonModule() const override;
+
+    void write(OutputArchiveHandle& handle) const override;
 
     std::string _name;                      ///< name of detector's location in the camera
     int _id;                                ///< detector numeric ID

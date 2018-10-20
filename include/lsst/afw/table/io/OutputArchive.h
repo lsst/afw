@@ -49,24 +49,26 @@ public:
     // (trivial) destructor must be defined in the source for pimpl idiom.
     ~OutputArchive();
 
-    //@{
+    ///@{
     /**
-     *  @brief Save an object to the archive and return a unique ID that can be used
-     *         to retrieve it from an InputArchive.
+     *  @brief Save an object to the archive and return a unique ID that can
+     *         be used to retrieve it from an InputArchive.
      *
-     *  If permissive is true and obj->isPersistable() is false, the object will not
-     *  be saved but 0 will be returned instead of throwing an exception.
+     *  If permissive is true and obj->isPersistable() is false, the object
+     *  will not be saved but 0 will be returned instead of throwing an
+     *  exception.
      *
-     *  If the given pointer has already been saved, it will not be written again
-     *  and the same ID will be returned as the first time it was saved.
+     *  If the given pointer is null, the returned ID is always 0, which may
+     *  be used to retrieve null pointers from an InputArchive.
      *
-     *  If the given pointer is null, the returned ID is always 0, which may be used
-     *  to retrieve null pointers from an InputArchive.
+     *  It is expected that the `shared_ptr` form will usually be used, as
+     *  Persistables are typically held by `shared_ptr`.  We also provide a
+     *  const reference overload for temporaries as well as a const raw
+     *  pointer overload for temporaries that may be null.
      *
-     *  It is expected that the `shared_ptr` form will usually be used, as Persistables
-     *  are typically held by `shared_ptr`.  But we expose the lower-level raw-pointer form
-     *  so users aren't forced to clone objects before persisting them if they don't
-     *  already have a `shared_ptr`.
+     *  If the shared_ptr form is used and the given pointer has already been
+     *  saved, it will not be written again and the same ID will be returned as
+     *  the first time it was saved.
      *
      *  @exceptsafe Provides no exception safety for the archive itself - if
      *              the object being saved (or any nested object) throws an
@@ -75,11 +77,10 @@ public:
      *              modified during persistence, even when exceptions are
      *              thrown.
      */
-    int put(Persistable const* obj, bool permissive = false);
-    int put(std::shared_ptr<Persistable const> obj, bool permissive = false) {
-        return put(obj.get(), permissive);
-    }
-    //@}
+    int put(std::shared_ptr<Persistable const> obj, bool permissive = false);
+    int put(Persistable const * obj, bool permissive = false);
+    int put(Persistable const & obj, bool permissive = false) { return put(&obj, permissive); }
+    ///@}
 
     /**
      *  @brief Return the index catalog that specifies where objects are stored in the
@@ -138,13 +139,12 @@ public:
      */
     void saveCatalog(BaseCatalog const& catalog);
 
-    //@{
+    ///@{
     /// @copydoc OutputArchive::put(Persistable const*, bool)
     int put(Persistable const* obj, bool permissive = false);
-    int put(std::shared_ptr<Persistable const> obj, bool permissive = false) {
-        return put(obj.get(), permissive);
-    }
-    //@}
+    int put(std::shared_ptr<Persistable const> obj, bool permissive = false);
+    int put(Persistable const & obj, bool permissive = false) { return put(&obj, permissive); }
+    ///@}
 
     ~OutputArchiveHandle();
 

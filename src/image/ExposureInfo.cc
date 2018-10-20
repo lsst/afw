@@ -174,6 +174,10 @@ ExposureInfo::FitsWriteData ExposureInfo::_startWriteFits(lsst::geom::Point2I co
         data.metadata->set("TRANSMISSION_CURVE_ID", transmissionCurveId,
                            "archive ID for the Exposure's transmission curve");
     }
+    if (hasDetector() && getDetector()->isPersistable()) {
+        int detectorId = data.archive.put(getDetector());
+        data.metadata->set("DETECTOR_ID", detectorId, "archive ID for the Exposure's Detector");
+    }
 
     // LSST convention is that Wcs is in pixel coordinates (i.e relative to bottom left
     // corner of parent image, if any). The Wcs/Fits convention is that the Wcs is in

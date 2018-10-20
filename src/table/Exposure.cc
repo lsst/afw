@@ -18,6 +18,7 @@
 #include "lsst/afw/geom/polygon/Polygon.h"
 #include "lsst/afw/image/VisitInfo.h"
 #include "lsst/afw/image/TransmissionCurve.h"
+#include "lsst/afw/cameraGeom/Detector.h"
 
 namespace lsst {
 namespace afw {
@@ -33,7 +34,7 @@ namespace table {
 
 namespace {
 
-int const EXPOSURE_TABLE_CURRENT_VERSION = 3;                   // current version of ExposureTable
+int const EXPOSURE_TABLE_CURRENT_VERSION = 4;                   // current version of ExposureTable
 std::string const EXPOSURE_TABLE_VERSION_KEY = "EXPTABLE_VER";  // FITS header key for ExposureTable version
 
 // Field names used to store the archive IDs of different components (used in
@@ -46,6 +47,7 @@ std::string const VISIT_INFO_FIELD_NAME = "visitInfo";
 std::string const AP_CORR_MAP_FIELD_NAME = "apCorrMap";
 std::string const VALID_POLYGON_FIELD_NAME = "validPolygon";
 std::string const TRANSMISSION_CURVE_FIELD_NAME = "transmissionCurve";
+std::string const DETECTOR_FIELD_NAME = "detector";
 
 int getTableVersion(daf::base::PropertySet &metadata) {
     return metadata.exists(EXPOSURE_TABLE_VERSION_KEY) ? metadata.get<int>(EXPOSURE_TABLE_VERSION_KEY) : 1;
@@ -65,6 +67,7 @@ struct PersistenceHelper {
     Key<int> validPolygon;
     Key<int> visitInfo;
     Key<int> transmissionCurve;
+    Key<int> detector;
 
     // Create a SchemaMapper that maps an ExposureRecord to a BaseRecord with IDs for Wcs, Psf, etc.
     SchemaMapper makeWriteMapper(Schema const &inputSchema) const {
@@ -96,6 +99,7 @@ struct PersistenceHelper {
         output.set(validPolygon, archive.put(input.getValidPolygon(), permissive));
         output.set(visitInfo, archive.put(input.getVisitInfo(), permissive));
         output.set(transmissionCurve, archive.put(input.getTransmissionCurve(), permissive));
+        output.set(detector, archive.put(input.getDetector(), permissive));
     }
 
     // Read psf, wcs, etc. from an archive to an ExposureRecord
@@ -123,6 +127,9 @@ struct PersistenceHelper {
         if (transmissionCurve.isValid()) {
             output.setTransmissionCurve(archive.get<image::TransmissionCurve>(input.get(transmissionCurve)));
         }
+        if (detector.isValid()) {
+            output.setDetector(archive.get<cameraGeom::Detector>(input.get(detector)));
+        }
     }
 
     // No copying
@@ -143,7 +150,8 @@ struct PersistenceHelper {
               validPolygon(schema.addField<int>(VALID_POLYGON_FIELD_NAME, "archive ID for Polygon object")),
               visitInfo(schema.addField<int>(VISIT_INFO_FIELD_NAME, "archive ID for VisitInfo object")),
               transmissionCurve(schema.addField<int>(TRANSMISSION_CURVE_FIELD_NAME,
-                                                     "archive ID for TransmissionCurve object")) {}
+                                                     "archive ID for TransmissionCurve object")),
+              detector(schema.addField<int>(DETECTOR_FIELD_NAME, "archive ID for Detector object")) {}
 
     // Add a field to this->schema, saving its key in 'key', if and only if 'name' is a field in 'oldSchema'
     void addIfPresent(Schema const &oldSchema, Key<int> &key, std::string const &name) {
@@ -163,6 +171,7 @@ struct PersistenceHelper {
         addIfPresent(oldSchema, validPolygon, VALID_POLYGON_FIELD_NAME);
         addIfPresent(oldSchema, visitInfo, VISIT_INFO_FIELD_NAME);
         addIfPresent(oldSchema, transmissionCurve, TRANSMISSION_CURVE_FIELD_NAME);
+        addIfPresent(oldSchema, detector, DETECTOR_FIELD_NAME);
         assert(oldSchema.contains(schema));
     }
 };
@@ -294,6 +303,10 @@ public:
                                           &ExposureRecord::setTransmissionCurve>::setup("transmissionCurve",
                                                                                         mapper);
         }
+        if (tableVersion > 3) {
+            PersistableObjectColumnReader<cameraGeom::Detector,
+                                          &ExposureRecord::setDetector>::setup("detector", mapper);
+        }
         std::shared_ptr<ExposureTable> table = ExposureTable::make(mapper.finalize());
         table->setMetadata(metadata);
         return table;
@@ -358,6 +371,7 @@ void ExposureRecord::_assign(BaseRecord const &other) {
         _validPolygon = s._validPolygon;
         _visitInfo = s._visitInfo;
         _transmissionCurve = s._transmissionCurve;
+        _detector = s._detector;
     } catch (std::bad_cast &) {
     }
 }

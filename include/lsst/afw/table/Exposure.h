@@ -54,6 +54,10 @@ class Polygon;
 }
 }  // namespace geom
 
+namespace cameraGeom {
+class Detector;
+} // namespace cameraGeom
+
 namespace table {
 
 class ExposureRecord;
@@ -140,6 +144,13 @@ public:
     void setTransmissionCurve(std::shared_ptr<image::TransmissionCurve const> transmissionCurve) {
         _transmissionCurve = std::move(transmissionCurve);
     }
+
+    std::shared_ptr<cameraGeom::Detector const> getDetector() const {
+        return _detector;
+    }
+    void setDetector(std::shared_ptr<cameraGeom::Detector const> detector) {
+        _detector = std::move(detector);
+    }
     //@}
 
     ExposureRecord(ExposureRecord const&) = delete;
@@ -163,6 +174,7 @@ private:
     std::shared_ptr<geom::polygon::Polygon const> _validPolygon;
     std::shared_ptr<image::VisitInfo const> _visitInfo;
     std::shared_ptr<image::TransmissionCurve const> _transmissionCurve;
+    std::shared_ptr<cameraGeom::Detector const> _detector;
 };
 
 /**

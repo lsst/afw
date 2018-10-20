@@ -139,6 +139,9 @@ public:
     /// Read the Exposure's transmission curve.
     std::shared_ptr<TransmissionCurve> readTransmissionCurve();
 
+    /// Read the Exposure's detector.
+    std::shared_ptr<cameraGeom::Detector> readDetector();
+
     /// Read the ExposureInfo containing all non-image components.
     std::shared_ptr<ExposureInfo> readExposureInfo();
 

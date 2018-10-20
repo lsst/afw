@@ -212,8 +212,8 @@ public:
         Key<int> k1 = schema.addField<int>("var1", "doc for var1");
         Key<int> k2 = schema.addField<int>("var2", "doc for var2");
         Key<int> k3 = schema.addField<int>("var3", "doc for var3");
-        int id2 = handle.put(var2.get());
-        int id3 = handle.put(var3.get());
+        int id2 = handle.put(var2);
+        int id3 = handle.put(var3);
         BaseCatalog catalog = handle.makeCatalog(schema);
         std::shared_ptr<BaseRecord> record = catalog.addNew();
         record->set(k1, var1);
@@ -295,7 +295,7 @@ std::vector<ndarray::Vector<std::shared_ptr<Comparable>, M>> roundtripAndCompare
     ndarray::Vector<int, M> inputIds;
     OutputArchive outArchive;
     for (int i = 0; i < M; ++i) {
-        inputIds[i] = outArchive.put(inputs[i].get());
+        inputIds[i] = outArchive.put(inputs[i]);
     }
 
     BOOST_CHECK_EQUAL(outArchive.countCatalogs(), N + 1);
