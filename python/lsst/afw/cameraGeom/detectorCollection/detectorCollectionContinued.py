@@ -31,7 +31,7 @@ class DetectorCollection:
     """
 
     def __iter__(self):
-        for k, v in self.getNameMap().items():
+        for k, v in sorted(self.getIdMap().items()):
             yield v
 
     def __getitem__(self, key):

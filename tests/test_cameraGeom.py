@@ -77,6 +77,8 @@ class CameraGeomTestCase(lsst.utils.tests.TestCase):
                 self.assertIsInstance(det, Detector)
                 self.assertEqual(
                     cw.ampInfoDict[det.getName()]['namps'], len(det))
+            idList = [det.getId() for det in cw.camera]
+            self.assertEqual(idList, sorted(idList))
 
     def testCameraSysRepr(self):
         """Test CameraSys.__repr__ and CameraSysPrefix.__repr__

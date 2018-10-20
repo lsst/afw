@@ -41,7 +41,7 @@ class DetectorCollection : public table::io::PersistableFacade<DetectorCollectio
                            public table::io::Persistable {
 public:
     using NameMap = std::unordered_map<std::string, std::shared_ptr<Detector>>;
-    using IdMap = std::unordered_map<int, std::shared_ptr<Detector>>;
+    using IdMap = std::map<int, std::shared_ptr<Detector>>;
     using List = std::vector<std::shared_ptr<Detector>>;
 
     explicit DetectorCollection(List const & detectorList);
