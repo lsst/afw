@@ -40,6 +40,12 @@ class Mask(metaclass=TemplateMeta):
         from lsst.afw.fits import reduceToFits
         return reduceToFits(self)
 
+    def __str__(self):
+        return "{}, bbox={}, maskPlaneDict={}".format(self.array, self.getBBox(), self.getMaskPlaneDict())
+
+    def __repr__(self):
+        return "{}.{}={}".format(self.__module__, self.__class__.__name__, str(self))
+
     readFitsWithOptions = classmethod(imageReadFitsWithOptions)
 
     writeFitsWithOptions = imageWriteFitsWithOptions

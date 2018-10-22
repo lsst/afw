@@ -37,6 +37,12 @@ class Image(metaclass=TemplateMeta):
         from lsst.afw.fits import reduceToFits
         return reduceToFits(self)
 
+    def __str__(self):
+        return "{}, bbox={}".format(self.array, self.getBBox())
+
+    def __repr__(self):
+        return "{}.{}={}".format(self.__module__, self.__class__.__name__, str(self))
+
     readFitsWithOptions = classmethod(imageReadFitsWithOptions)
 
     writeFitsWithOptions = imageWriteFitsWithOptions

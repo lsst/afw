@@ -299,20 +299,16 @@ public:
     //@}
 
     /// Return a reference to a single pixel (with no bounds check).
-    PixelReference get(lsst::geom::Point2I const & index, ImageOrigin origin);
+    PixelReference get(lsst::geom::Point2I const& index, ImageOrigin origin);
 
     /// Return a const reference to a single pixel (with no bounds check).
-    PixelConstReference get(lsst::geom::Point2I const & index, ImageOrigin origin) const;
+    PixelConstReference get(lsst::geom::Point2I const& index, ImageOrigin origin) const;
 
     /// Return a reference to a single pixel in PARENT coordinates (with no bounds check).
-    PixelReference operator[](lsst::geom::Point2I const & index) {
-        return get(index, PARENT);
-    }
+    PixelReference operator[](lsst::geom::Point2I const& index) { return get(index, PARENT); }
 
     /// Return a reference to a single pixel in PARENT coordinates (with no bounds check).
-    PixelConstReference operator[](lsst::geom::Point2I const & index) const {
-        return get(index, PARENT);
-    }
+    PixelConstReference operator[](lsst::geom::Point2I const& index) const { return get(index, PARENT); }
 
     /// Return the number of columns in the %image
     int getWidth() const { return _gilView.width(); }

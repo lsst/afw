@@ -338,6 +338,19 @@ class MaskTestCase(utilsTests.TestCase):
         self.assertEqual(self.Mask.interpret(allBits),
                          ",".join(sorted(planes.keys())))
 
+    def testString(self):
+        mask = afwImage.Mask(100, 100)
+        # numpy defaults to threshold=1000 for collapsing array output
+        self.assertIn("...", str(mask))
+        self.assertIn("bbox=%s"%str(mask.getBBox()), str(mask))
+        self.assertIn("maskPlaneDict=%s"%str(mask.getMaskPlaneDict()), str(mask))
+
+        # for small arrays, numpy's representation prints the whole array
+        smallMask = afwImage.Mask(2, 2)
+        self.assertIn("[[0 0]\n [0 0]]", str(smallMask))
+
+        self.assertIn("MaskX=", repr(mask))
+
 
 class OldMaskTestCase(unittest.TestCase):
     """A test case for Mask (based on Mask_1.cc); these are taken over from the DC2 fw tests

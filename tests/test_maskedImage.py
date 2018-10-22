@@ -812,6 +812,17 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
         # actually, can't convert (img, msk, var) to scalar
         self.assertRaises(TypeError, float, im[0, 0])
 
+    def testString(self):
+        image = afwImage.MaskedImageF(100, 100)
+        self.assertIn("image=", str(image))
+        self.assertIn("mask=", str(image))
+        self.assertIn("variance=", str(image))
+        self.assertIn("...", str(image))
+        self.assertIn("bbox=%s"%str(image.getBBox()), str(image))
+        self.assertIn("maskPlaneDict=%s"%str(image.mask.getMaskPlaneDict()), str(image))
+
+        self.assertIn("MaskedImageF=(", repr(image))
+
 
 def printImg(img):
     print("%4s " % "", end=' ')

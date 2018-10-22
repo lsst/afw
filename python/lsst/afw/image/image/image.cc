@@ -46,8 +46,7 @@ template <typename PixelT>
 using PyImage = py::class_<Image<PixelT>, std::shared_ptr<Image<PixelT>>, ImageBase<PixelT>>;
 
 template <typename PixelT>
-using PyDecoratedImage =
-        py::class_<DecoratedImage<PixelT>, std::shared_ptr<DecoratedImage<PixelT>>>;
+using PyDecoratedImage = py::class_<DecoratedImage<PixelT>, std::shared_ptr<DecoratedImage<PixelT>>>;
 
 template <typename MaskPixelT>
 using PyMask = py::class_<Mask<MaskPixelT>, std::shared_ptr<Mask<MaskPixelT>>, ImageBase<MaskPixelT>>;
@@ -73,12 +72,13 @@ static void declareImageBase(py::module &mod, std::string const &suffix) {
 
     cls.def(py::init<lsst::geom::Extent2I const &>(), "dimensions"_a = lsst::geom::Extent2I());
     cls.def(py::init<ImageBase<PixelT> const &, bool>(), "src"_a, "deep"_a = false);
-    cls.def(py::init<ImageBase<PixelT> const &, lsst::geom::Box2I const &, ImageOrigin, bool>(), "src"_a, "bbox"_a,
-            "origin"_a = PARENT, "deep"_a = false);
+    cls.def(py::init<ImageBase<PixelT> const &, lsst::geom::Box2I const &, ImageOrigin, bool>(), "src"_a,
+            "bbox"_a, "origin"_a = PARENT, "deep"_a = false);
     cls.def(py::init<Array const &, bool, lsst::geom::Point2I const &>(), "array"_a, "deep"_a = false,
             "xy0"_a = lsst::geom::Point2I());
 
-    cls.def("assign", &ImageBase<PixelT>::assign, "rhs"_a, "bbox"_a = lsst::geom::Box2I(), "origin"_a = PARENT,
+    cls.def("assign", &ImageBase<PixelT>::assign, "rhs"_a, "bbox"_a = lsst::geom::Box2I(),
+            "origin"_a = PARENT,
             py::is_operator());  // py::is_operator is a workaround for code in slicing.py
                                  // that expects NotImplemented to be returned on failure.
     cls.def("getWidth", &ImageBase<PixelT>::getWidth);
@@ -89,17 +89,14 @@ static void declareImageBase(py::module &mod, std::string const &suffix) {
     cls.def("positionToIndex", &ImageBase<PixelT>::positionToIndex, "position"_a, "xOrY"_a);
     cls.def("indexToPosition", &ImageBase<PixelT>::indexToPosition, "index"_a, "xOrY"_a);
     cls.def("getDimensions", &ImageBase<PixelT>::getDimensions);
-    cls.def("getArray", (Array (ImageBase<PixelT>::*)()) & ImageBase<PixelT>::getArray);
-    cls.def_property(
-        "array",
-        (Array (ImageBase<PixelT>::*)()) & ImageBase<PixelT>::getArray,
-        [](ImageBase<PixelT> & self, ndarray::Array<PixelT const,2,0> const & array) {
-            // Avoid self-assignment, which is invoked when a Python in-place operator is used.
-            if (array.shallow() != self.getArray().shallow()) {
-                self.getArray().deep() = array;
-            }
-        }
-    );
+    cls.def("getArray", (Array(ImageBase<PixelT>::*)()) & ImageBase<PixelT>::getArray);
+    cls.def_property("array", (Array(ImageBase<PixelT>::*)()) & ImageBase<PixelT>::getArray,
+                     [](ImageBase<PixelT> &self, ndarray::Array<PixelT const, 2, 0> const &array) {
+                         // Avoid self-assignment, which is invoked when a Python in-place operator is used.
+                         if (array.shallow() != self.getArray().shallow()) {
+                             self.getArray().deep() = array;
+                         }
+                     });
     cls.def("setXY0", (void (ImageBase<PixelT>::*)(lsst::geom::Point2I const)) & ImageBase<PixelT>::setXY0,
             "xy0"_a);
     cls.def("setXY0", (void (ImageBase<PixelT>::*)(int const, int const)) & ImageBase<PixelT>::setXY0, "x0"_a,
@@ -107,22 +104,18 @@ static void declareImageBase(py::module &mod, std::string const &suffix) {
     cls.def("getBBox", &ImageBase<PixelT>::getBBox, "origin"_a = PARENT);
 
     cls.def("set", [](ImageBase<PixelT> &img, PixelT val) { img = val; });
-    cls.def(
-        "_set",
-        [](ImageBase<PixelT> &img, geom::Point2I const & index, PixelT val, ImageOrigin origin) {
-            python::checkBounds(index, img.getBBox(origin));
-            img.get(index, origin) = val;
-        },
-        "index"_a, "value"_a, "origin"_a
-    );
-    cls.def(
-        "_get",
-        [](ImageBase<PixelT> &img, geom::Point2I const & index, ImageOrigin origin) {
-            python::checkBounds(index, img.getBBox(origin));
-            return img.get(index, origin);
-        },
-        "index"_a, "origin"_a
-    );
+    cls.def("_set",
+            [](ImageBase<PixelT> &img, geom::Point2I const &index, PixelT val, ImageOrigin origin) {
+                python::checkBounds(index, img.getBBox(origin));
+                img.get(index, origin) = val;
+            },
+            "index"_a, "value"_a, "origin"_a);
+    cls.def("_get",
+            [](ImageBase<PixelT> &img, geom::Point2I const &index, ImageOrigin origin) {
+                python::checkBounds(index, img.getBBox(origin));
+                return img.get(index, origin);
+            },
+            "index"_a, "origin"_a);
 }
 
 template <typename MaskPixelT>
@@ -137,31 +130,34 @@ static void declareMask(py::module &mod, std::string const &suffix) {
             "width"_a, "height"_a, "initialValue"_a,
             "planeDefs"_a = typename Mask<MaskPixelT>::MaskPlaneDict());
     cls.def(py::init<lsst::geom::Extent2I const &, typename Mask<MaskPixelT>::MaskPlaneDict const &>(),
-            "dimensions"_a = lsst::geom::Extent2I(), "planeDefs"_a = typename Mask<MaskPixelT>::MaskPlaneDict());
-    cls.def(py::init<lsst::geom::Extent2I const &, MaskPixelT, typename Mask<MaskPixelT>::MaskPlaneDict const &>(),
+            "dimensions"_a = lsst::geom::Extent2I(),
+            "planeDefs"_a = typename Mask<MaskPixelT>::MaskPlaneDict());
+    cls.def(py::init<lsst::geom::Extent2I const &, MaskPixelT,
+                     typename Mask<MaskPixelT>::MaskPlaneDict const &>(),
             "dimensions"_a = lsst::geom::Extent2I(), "initialValue"_a,
             "planeDefs"_a = typename Mask<MaskPixelT>::MaskPlaneDict());
     cls.def(py::init<lsst::geom::Box2I const &, typename Mask<MaskPixelT>::MaskPlaneDict const &>(), "bbox"_a,
             "planeDefs"_a = typename Mask<MaskPixelT>::MaskPlaneDict());
-    cls.def(py::init<lsst::geom::Box2I const &, MaskPixelT, typename Mask<MaskPixelT>::MaskPlaneDict const &>(),
+    cls.def(py::init<lsst::geom::Box2I const &, MaskPixelT,
+                     typename Mask<MaskPixelT>::MaskPlaneDict const &>(),
             "bbox"_a, "initialValue"_a, "planeDefs"_a = typename Mask<MaskPixelT>::MaskPlaneDict());
     cls.def(py::init<const Mask<MaskPixelT> &, const bool>(), "src"_a, "deep"_a = false);
-    cls.def(py::init<const Mask<MaskPixelT> &, const lsst::geom::Box2I &, ImageOrigin const, const bool>(), "src"_a,
-            "bbox"_a, "origin"_a = PARENT, "deep"_a = false);
-    cls.def(py::init<ndarray::Array<MaskPixelT, 2, 1> const &, bool, lsst::geom::Point2I const &>(), "array"_a,
-            "deep"_a = false, "xy0"_a = lsst::geom::Point2I());
+    cls.def(py::init<const Mask<MaskPixelT> &, const lsst::geom::Box2I &, ImageOrigin const, const bool>(),
+            "src"_a, "bbox"_a, "origin"_a = PARENT, "deep"_a = false);
+    cls.def(py::init<ndarray::Array<MaskPixelT, 2, 1> const &, bool, lsst::geom::Point2I const &>(),
+            "array"_a, "deep"_a = false, "xy0"_a = lsst::geom::Point2I());
     cls.def(py::init<std::string const &, int, std::shared_ptr<lsst::daf::base::PropertySet>,
                      lsst::geom::Box2I const &, ImageOrigin, bool, bool>(),
             "fileName"_a, "hdu"_a = fits::DEFAULT_HDU, "metadata"_a = nullptr, "bbox"_a = lsst::geom::Box2I(),
-            "origin"_a = PARENT, "conformMasks"_a = false, "allowUnsafe"_a=false);
+            "origin"_a = PARENT, "conformMasks"_a = false, "allowUnsafe"_a = false);
     cls.def(py::init<fits::MemFileManager &, int, std::shared_ptr<lsst::daf::base::PropertySet>,
                      lsst::geom::Box2I const &, ImageOrigin, bool, bool>(),
             "manager"_a, "hdu"_a = fits::DEFAULT_HDU, "metadata"_a = nullptr, "bbox"_a = lsst::geom::Box2I(),
-            "origin"_a = PARENT, "conformMasks"_a = false, "allowUnsafe"_a=false);
+            "origin"_a = PARENT, "conformMasks"_a = false, "allowUnsafe"_a = false);
     cls.def(py::init<fits::Fits &, std::shared_ptr<lsst::daf::base::PropertySet>, lsst::geom::Box2I const &,
                      ImageOrigin, bool, bool>(),
             "fitsFile"_a, "metadata"_a = nullptr, "bbox"_a = lsst::geom::Box2I(), "origin"_a = PARENT,
-            "conformMasks"_a = false, "allowUnsafe"_a=false);
+            "conformMasks"_a = false, "allowUnsafe"_a = false);
 
     /* Operators */
     cls.def("__ior__", [](Mask<MaskPixelT> &self, Mask<MaskPixelT> &other) { return self |= other; });
@@ -176,43 +172,48 @@ static void declareMask(py::module &mod, std::string const &suffix) {
 
     /* Members */
     cls.def("swap", (void (Mask<MaskPixelT>::*)(Mask<MaskPixelT> &)) & Mask<MaskPixelT>::swap);
-    cls.def("writeFits", (void (Mask<MaskPixelT>::*)(std::string const &,
-                                                     std::shared_ptr<lsst::daf::base::PropertySet const>,
-                                                     std::string const &) const) &
-                                 Mask<MaskPixelT>::writeFits,
+    cls.def("writeFits",
+            (void (Mask<MaskPixelT>::*)(std::string const &,
+                                        std::shared_ptr<lsst::daf::base::PropertySet const>,
+                                        std::string const &) const) &
+                    Mask<MaskPixelT>::writeFits,
             "fileName"_a, "metadata"_a = std::shared_ptr<lsst::daf::base::PropertySet>(), "mode"_a = "w");
-    cls.def("writeFits", (void (Mask<MaskPixelT>::*)(fits::MemFileManager &,
-                                                     std::shared_ptr<lsst::daf::base::PropertySet const>,
-                                                     std::string const &) const) &
-                                 Mask<MaskPixelT>::writeFits,
+    cls.def("writeFits",
+            (void (Mask<MaskPixelT>::*)(fits::MemFileManager &,
+                                        std::shared_ptr<lsst::daf::base::PropertySet const>,
+                                        std::string const &) const) &
+                    Mask<MaskPixelT>::writeFits,
             "manager"_a, "metadata"_a = std::shared_ptr<lsst::daf::base::PropertySet>(), "mode"_a = "w");
-    cls.def("writeFits", (void (Mask<MaskPixelT>::*)(
-                                 fits::Fits &, std::shared_ptr<lsst::daf::base::PropertySet const>) const) &
-                                 Mask<MaskPixelT>::writeFits,
+    cls.def("writeFits",
+            (void (Mask<MaskPixelT>::*)(fits::Fits &, std::shared_ptr<lsst::daf::base::PropertySet const>)
+                     const) &
+                    Mask<MaskPixelT>::writeFits,
             "fitsfile"_a, "metadata"_a = std::shared_ptr<lsst::daf::base::PropertySet const>());
     cls.def("writeFits",
-            (void (Mask<MaskPixelT>::*)(std::string const&, fits::ImageWriteOptions const&,
-                                        std::string const&,
-                                        std::shared_ptr<daf::base::PropertySet const>) const)
-                &Mask<MaskPixelT>::writeFits,
-            "filename"_a, "options"_a, "mode"_a="w", "header"_a=std::shared_ptr<daf::base::PropertyList>());
+            (void (Mask<MaskPixelT>::*)(std::string const &, fits::ImageWriteOptions const &,
+                                        std::string const &, std::shared_ptr<daf::base::PropertySet const>)
+                     const) &
+                    Mask<MaskPixelT>::writeFits,
+            "filename"_a, "options"_a, "mode"_a = "w",
+            "header"_a = std::shared_ptr<daf::base::PropertyList>());
     cls.def("writeFits",
-            (void (Mask<MaskPixelT>::*)(fits::MemFileManager &, fits::ImageWriteOptions const&,
-                                        std::string const&,
-                                        std::shared_ptr<daf::base::PropertySet const>) const)
-                &Mask<MaskPixelT>::writeFits,
-            "manager"_a, "options"_a, "mode"_a="w", "header"_a=std::shared_ptr<daf::base::PropertyList>());
+            (void (Mask<MaskPixelT>::*)(fits::MemFileManager &, fits::ImageWriteOptions const &,
+                                        std::string const &, std::shared_ptr<daf::base::PropertySet const>)
+                     const) &
+                    Mask<MaskPixelT>::writeFits,
+            "manager"_a, "options"_a, "mode"_a = "w",
+            "header"_a = std::shared_ptr<daf::base::PropertyList>());
     cls.def("writeFits",
-            (void (Mask<MaskPixelT>::*)(fits::Fits &, fits::ImageWriteOptions const&,
-                                     std::shared_ptr<daf::base::PropertySet const>) const)
-                &Mask<MaskPixelT>::writeFits,
-            "fits"_a, "options"_a, "header"_a=std::shared_ptr<daf::base::PropertyList>());
+            (void (Mask<MaskPixelT>::*)(fits::Fits &, fits::ImageWriteOptions const &,
+                                        std::shared_ptr<daf::base::PropertySet const>) const) &
+                    Mask<MaskPixelT>::writeFits,
+            "fits"_a, "options"_a, "header"_a = std::shared_ptr<daf::base::PropertyList>());
     cls.def_static("readFits", (Mask<MaskPixelT>(*)(std::string const &, int))Mask<MaskPixelT>::readFits,
                    "filename"_a, "hdu"_a = fits::DEFAULT_HDU);
     cls.def_static("readFits", (Mask<MaskPixelT>(*)(fits::MemFileManager &, int))Mask<MaskPixelT>::readFits,
                    "manager"_a, "hdu"_a = fits::DEFAULT_HDU);
     cls.def_static("interpret", Mask<MaskPixelT>::interpret);
-    cls.def("subset", &Mask<MaskPixelT>::subset, "bbox"_a, "origin"_a=PARENT);
+    cls.def("subset", &Mask<MaskPixelT>::subset, "bbox"_a, "origin"_a = PARENT);
     cls.def("getAsString", &Mask<MaskPixelT>::getAsString);
     cls.def("clearAllMaskPlanes", &Mask<MaskPixelT>::clearAllMaskPlanes);
     cls.def("clearMaskPlane", &Mask<MaskPixelT>::clearMaskPlane);
@@ -244,22 +245,22 @@ static PyImage<PixelT> declareImage(py::module &mod, const std::string &suffix) 
     cls.def(py::init<lsst::geom::Extent2I const &, PixelT>(), "dimensions"_a = lsst::geom::Extent2I(),
             "initialValue"_a = 0);
     cls.def(py::init<lsst::geom::Box2I const &, PixelT>(), "bbox"_a, "initialValue"_a = 0);
-    cls.def(py::init<Image<PixelT> const &, lsst::geom::Box2I const &, ImageOrigin const, const bool>(), "rhs"_a,
-            "bbox"_a, "origin"_a = PARENT, "deep"_a = false);
+    cls.def(py::init<Image<PixelT> const &, lsst::geom::Box2I const &, ImageOrigin const, const bool>(),
+            "rhs"_a, "bbox"_a, "origin"_a = PARENT, "deep"_a = false);
     cls.def(py::init<ndarray::Array<PixelT, 2, 1> const &, bool, lsst::geom::Point2I const &>(), "array"_a,
             "deep"_a = false, "xy0"_a = lsst::geom::Point2I());
-    cls.def(py::init<std::string const &, int, std::shared_ptr<daf::base::PropertySet>, lsst::geom::Box2I const &,
-                     ImageOrigin, bool>(),
+    cls.def(py::init<std::string const &, int, std::shared_ptr<daf::base::PropertySet>,
+                     lsst::geom::Box2I const &, ImageOrigin, bool>(),
             "fileName"_a, "hdu"_a = fits::DEFAULT_HDU, "metadata"_a = nullptr, "bbox"_a = lsst::geom::Box2I(),
-            "origin"_a = PARENT, "allowUnsafe"_a=false);
+            "origin"_a = PARENT, "allowUnsafe"_a = false);
     cls.def(py::init<fits::MemFileManager &, int, std::shared_ptr<daf::base::PropertySet>,
                      lsst::geom::Box2I const &, ImageOrigin, bool>(),
             "manager"_a, "hdu"_a = fits::DEFAULT_HDU, "metadata"_a = nullptr, "bbox"_a = lsst::geom::Box2I(),
-            "origin"_a = PARENT, "allowUnsafe"_a=false);
+            "origin"_a = PARENT, "allowUnsafe"_a = false);
     cls.def(py::init<fits::Fits &, std::shared_ptr<daf::base::PropertySet>, lsst::geom::Box2I const &,
                      ImageOrigin, bool>(),
             "fitsFile"_a, "metadata"_a = nullptr, "bbox"_a = lsst::geom::Box2I(), "origin"_a = PARENT,
-            "allowUnsafe"_a=false);
+            "allowUnsafe"_a = false);
 
     /* Operators */
     cls.def("__iadd__", [](Image<PixelT> &self, PixelT const &other) { return self += other; });
@@ -283,7 +284,7 @@ static PyImage<PixelT> declareImage(py::module &mod, const std::string &suffix) 
     cls.def("scaledMultiplies", &Image<PixelT>::scaledMultiplies);
     cls.def("scaledDivides", &Image<PixelT>::scaledDivides);
 
-    cls.def("subset", &Image<PixelT>::subset, "bbox"_a, "origin"_a=PARENT);
+    cls.def("subset", &Image<PixelT>::subset, "bbox"_a, "origin"_a = PARENT);
 
     cls.def("writeFits",
             (void (Image<PixelT>::*)(std::string const &, std::shared_ptr<daf::base::PropertySet const>,
@@ -300,26 +301,27 @@ static PyImage<PixelT> declareImage(py::module &mod, const std::string &suffix) 
                     Image<PixelT>::writeFits,
             "fitsfile"_a, "metadata"_a = std::shared_ptr<daf::base::PropertySet const>());
     cls.def("writeFits",
-            (void (Image<PixelT>::*)(std::string const&, fits::ImageWriteOptions const&,
-                                     std::string const&, std::shared_ptr<daf::base::PropertySet const>,
-                                     std::shared_ptr<image::Mask<image::MaskPixel> const>) const)
-                &Image<PixelT>::writeFits,
-            "filename"_a, "options"_a, "mode"_a="w", "header"_a=std::shared_ptr<daf::base::PropertyList>(),
-            "mask"_a=std::shared_ptr<image::Mask<image::MaskPixel>>());
+            (void (Image<PixelT>::*)(std::string const &, fits::ImageWriteOptions const &,
+                                     std::string const &, std::shared_ptr<daf::base::PropertySet const>,
+                                     std::shared_ptr<image::Mask<image::MaskPixel> const>) const) &
+                    Image<PixelT>::writeFits,
+            "filename"_a, "options"_a, "mode"_a = "w",
+            "header"_a = std::shared_ptr<daf::base::PropertyList>(),
+            "mask"_a = std::shared_ptr<image::Mask<image::MaskPixel>>());
     cls.def("writeFits",
-            (void (Image<PixelT>::*)(fits::MemFileManager &, fits::ImageWriteOptions const&,
-                                     std::string const&, std::shared_ptr<daf::base::PropertySet const>,
-                                     std::shared_ptr<image::Mask<image::MaskPixel> const>) const)
-                &Image<PixelT>::writeFits,
-            "manager"_a, "options"_a, "mode"_a="w", "header"_a=std::shared_ptr<daf::base::PropertyList>(),
-            "mask"_a=std::shared_ptr<image::Mask<image::MaskPixel>>());
+            (void (Image<PixelT>::*)(fits::MemFileManager &, fits::ImageWriteOptions const &,
+                                     std::string const &, std::shared_ptr<daf::base::PropertySet const>,
+                                     std::shared_ptr<image::Mask<image::MaskPixel> const>) const) &
+                    Image<PixelT>::writeFits,
+            "manager"_a, "options"_a, "mode"_a = "w", "header"_a = std::shared_ptr<daf::base::PropertyList>(),
+            "mask"_a = std::shared_ptr<image::Mask<image::MaskPixel>>());
     cls.def("writeFits",
-            (void (Image<PixelT>::*)(fits::Fits &, fits::ImageWriteOptions const&,
+            (void (Image<PixelT>::*)(fits::Fits &, fits::ImageWriteOptions const &,
                                      std::shared_ptr<daf::base::PropertySet const>,
-                                     std::shared_ptr<image::Mask<image::MaskPixel> const>) const)
-                &Image<PixelT>::writeFits,
-            "fits"_a, "options"_a, "header"_a=std::shared_ptr<daf::base::PropertyList>(),
-            "mask"_a=std::shared_ptr<image::Mask<image::MaskPixel>>());
+                                     std::shared_ptr<image::Mask<image::MaskPixel> const>) const) &
+                    Image<PixelT>::writeFits,
+            "fits"_a, "options"_a, "header"_a = std::shared_ptr<daf::base::PropertyList>(),
+            "mask"_a = std::shared_ptr<image::Mask<image::MaskPixel>>());
 
     cls.def_static("readFits", (Image<PixelT>(*)(std::string const &, int))Image<PixelT>::readFits,
                    "filename"_a, "hdu"_a = fits::DEFAULT_HDU);
@@ -339,8 +341,8 @@ static void declareDecoratedImage(py::module &mod, std::string const &suffix) {
     cls.def(py::init<std::shared_ptr<Image<PixelT>>>(), "rhs"_a);
     cls.def(py::init<DecoratedImage<PixelT> const &, const bool>(), "rhs"_a, "deep"_a = false);
     cls.def(py::init<std::string const &, const int, lsst::geom::Box2I const &, ImageOrigin const, bool>(),
-            "fileName"_a, "hdu"_a = fits::DEFAULT_HDU, "bbox"_a = lsst::geom::Box2I(),
-            "origin"_a = PARENT, "allowUnsafe"_a=false);
+            "fileName"_a, "hdu"_a = fits::DEFAULT_HDU, "bbox"_a = lsst::geom::Box2I(), "origin"_a = PARENT,
+            "allowUnsafe"_a = false);
 
     cls.def("getMetadata", &DecoratedImage<PixelT>::getMetadata);
     cls.def("setMetadata", &DecoratedImage<PixelT>::setMetadata);
@@ -478,7 +480,7 @@ PYBIND11_MODULE(image, mod) {
 
     mod.def("bboxFromMetadata", &bboxFromMetadata);
 }
-}
-}
-}
-}  // namespace lsst::afw::image::<anonymous>
+}  // namespace
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst

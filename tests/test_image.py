@@ -567,6 +567,23 @@ class ImageTestCase(lsst.utils.tests.TestCase):
         im2[0, 0] += 10
         self.assertNotEqual(float(im[0, 0]), float(im2[0, 0]))
 
+    def testString(self):
+        imageF = afwImage.ImageF(100, 100)
+        imageDSmall = afwImage.ImageD(2, 2)
+        imageISmall = afwImage.ImageI(2, 2)
+        imageU = afwImage.ImageU(100, 100)
+
+        # numpy defaults to threshold=1000 for collapsing array output
+        self.assertIn("...", str(imageF))
+        self.assertIn("bbox=%s" % str(imageF.getBBox()), str(imageF))
+
+        # for small arrays, numpy's representation prints the whole array
+        self.assertIn("[[0. 0.]\n [0. 0.]]", str(imageDSmall))
+        self.assertIn("[[0 0]\n [0 0]]", str(imageISmall))
+
+        self.assertIn("ImageF=", repr(imageF))
+        self.assertIn("ImageU=", repr(imageU))
+
 
 class DecoratedImageTestCase(lsst.utils.tests.TestCase):
     """A test case for DecoratedImage"""
