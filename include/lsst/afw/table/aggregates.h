@@ -253,12 +253,6 @@ private:
     Key<lsst::geom::Angle> _dec;
 };
 
-//@{
-/// Compare CoordKeys for equality using the constituent Keys
-bool operator==(CoordKey const& lhs, CoordKey const& rhs);
-bool operator!=(CoordKey const& lhs, CoordKey const& rhs);
-//@}
-
 /// Enum used to set units for geometric FunctorKeys
 enum class CoordinateType { PIXEL, CELESTIAL };
 
