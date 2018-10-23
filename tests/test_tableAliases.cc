@@ -7,6 +7,7 @@
 
 #include <memory>
 
+#include "lsst/utils/tests.h"
 #include "lsst/afw/table/AliasMap.h"
 #include "lsst/afw/table/Schema.h"
 #include "lsst/afw/table/BaseTable.h"
@@ -80,4 +81,21 @@ BOOST_AUTO_TEST_CASE(aliasMapLinks) {
 
     // If the link isn't broken, this will segfault.
     aliases->set("d", "a");
+}
+
+BOOST_AUTO_TEST_CASE(Hash) {
+    lsst::utils::assertValidHash<lsst::afw::table::AliasMap>();
+
+    lsst::afw::table::AliasMap map1, map2;
+    lsst::afw::table::Schema schema;
+    schema.addField<int>("a", "doc for a");
+
+    map1.set("b", "a");
+    map2.set("b", "a");
+    schema.getAliasMap()->set("b", "a");
+    std::shared_ptr<TestTable> table = TestTable::make(schema);
+    lsst::afw::table::AliasMap map3 = *(table->getSchema().getAliasMap());
+
+    lsst::utils::assertHashesEqual(map1, map2);
+    lsst::utils::assertHashesEqual(map2, map3);
 }

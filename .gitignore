@@ -141,7 +141,9 @@ tests/testLib.py
 tests/test_cameraSys
 tests/test_coord
 tests/test_endpoint
+tests/test_functorKeys
 tests/test_imageHash
+tests/test_key
 tests/test_polygon
 tests/test_spherePoint
 tests/test_transform

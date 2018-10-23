@@ -21,6 +21,11 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
+#include <algorithm>
+#include <vector>
+
+#include "lsst/utils/hashCombine.h"
+
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/table/AliasMap.h"
 #include "lsst/afw/table/BaseTable.h"
@@ -90,6 +95,16 @@ bool AliasMap::erase(std::string const& alias) {
 }
 
 bool AliasMap::operator==(AliasMap const& other) const { return _internal == other._internal; }
+
+std::size_t AliasMap::hash_value() const noexcept {
+    // Warning: this algorithm will be invalid if _internal is replaced by an unsorted map
+    // Completely arbitrary seed
+    std::size_t result = 42;
+    for (auto entry : _internal) {
+        result = utils::hashCombine(result, entry.first, entry.second);
+    }
+    return result;
+}
 
 bool AliasMap::contains(AliasMap const& other) const {
     return std::includes(begin(), end(), other.begin(), other.end());

@@ -2,6 +2,8 @@
 #ifndef AFW_TABLE_Key_h_INCLUDED
 #define AFW_TABLE_Key_h_INCLUDED
 
+#include "lsst/utils/hashCombine.h"
+
 #include "lsst/afw/table/FieldBase.h"
 #include "lsst/afw/table/Flag.h"
 #include "lsst/afw/table/KeyBase.h"
@@ -75,6 +77,12 @@ public:
     bool operator!=(Key const& other) const noexcept { return !this->operator==(other); }
     //@}
 
+    /// Return a hash of this object.
+    std::size_t hash_value() const noexcept {
+        // Completely arbitrary seed
+        return utils::hashCombine(17, _offset, this->getElementCount());
+    }
+
     /// Return the offset (in bytes) of this field within a record.
     int getOffset() const noexcept { return _offset; }
 
@@ -119,5 +127,14 @@ private:
 }  // namespace table
 }  // namespace afw
 }  // namespace lsst
+
+namespace std {
+template <typename T>
+struct hash<lsst::afw::table::Key<T>> {
+    using argument_type = lsst::afw::table::Key<T>;
+    using result_type = size_t;
+    size_t operator()(argument_type const& obj) const noexcept { return obj.hash_value(); }
+};
+}  // namespace std
 
 #endif  // !AFW_TABLE_Key_h_INCLUDED
