@@ -241,7 +241,7 @@ class ChebyshevBoundedFieldTestCase(lsst.utils.tests.TestCase):
                                (4.0/3.0)*coeffs[2, 0] - (4.0/3.0)*coeffs[0, 2])
 
     def testIntegrateBox(self):
-        """Test integrating over an "interesting" box.
+        r"""Test integrating over an "interesting" box.
 
         The values of these integrals were checked in Mathematica. The code
         block below can be pasted into Mathematica to re-do those calculations.
