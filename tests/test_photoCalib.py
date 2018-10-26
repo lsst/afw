@@ -429,6 +429,30 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
         result = photoCalib.calibrateImage(subImage)
         self.assertMaskedImagesAlmostEqual(expect.subset(subBox), result)
 
+    def testNonPositiveMeans(self):
+        # no negative calibrations
+        with(self.assertRaises(lsst.pex.exceptions.InvalidParameterError)):
+            lsst.afw.image.PhotoCalib(-1.0)
+        # no negative errors
+        with(self.assertRaises(lsst.pex.exceptions.InvalidParameterError)):
+            lsst.afw.image.PhotoCalib(1.0, -1.0)
+
+        # no negative calibration mean when computed from the bounded field
+        negativeCalibration = lsst.afw.math.ChebyshevBoundedField(self.bbox,
+                                                                  np.array([[-self.calibration]]))
+        with(self.assertRaises(lsst.pex.exceptions.InvalidParameterError)):
+            lsst.afw.image.PhotoCalib(negativeCalibration)
+        # no negative calibration error
+        with(self.assertRaises(lsst.pex.exceptions.InvalidParameterError)):
+            lsst.afw.image.PhotoCalib(self.constantCalibration, -1.0)
+
+        # no negative explicit calibration mean
+        with(self.assertRaises(lsst.pex.exceptions.InvalidParameterError)):
+            lsst.afw.image.PhotoCalib(-1.0, 0, self.constantCalibration, True)
+        # no negative calibration error
+        with(self.assertRaises(lsst.pex.exceptions.InvalidParameterError)):
+            lsst.afw.image.PhotoCalib(1.0, -1.0, self.constantCalibration, True)
+
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
     pass
