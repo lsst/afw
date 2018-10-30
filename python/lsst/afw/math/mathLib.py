@@ -14,6 +14,7 @@ from .detail.spline import *
 from .chebyshevBoundedField import *
 from .chebyshevBoundedFieldConfig import ChebyshevBoundedFieldConfig
 from .transformBoundedField import *
+from .pixelScaleBoundedField import *
 from .leastSquares import *
 from .random import *
 from .convolveImage import *
