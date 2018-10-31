@@ -133,13 +133,18 @@ PYBIND11_MODULE(photoCalib, mod) {
                     PhotoCalib::instFluxToMagnitude,
             "sourceCatalog"_a, "instFluxField"_a, "outField"_a);
 
+    /* from magnitude. */
+    cls.def("magnitudeToInstFlux",
+            py::overload_cast<double, lsst::geom::Point<double, 2> const &>(&PhotoCalib::magnitudeToInstFlux,
+                                                                            py::const_),
+            "instFlux"_a, "point"_a);
+    cls.def("magnitudeToInstFlux", py::overload_cast<double>(&PhotoCalib::magnitudeToInstFlux, py::const_),
+            "instFlux"_a);
+
     /* utilities */
     cls.def("getCalibrationMean", &PhotoCalib::getCalibrationMean);
     cls.def("getCalibrationErr", &PhotoCalib::getCalibrationErr);
     cls.def("getInstFluxMag0", &PhotoCalib::getInstFluxMag0);
-
-    cls.def("magnitudeToInstFlux", (double (PhotoCalib::*)(double) const) & PhotoCalib::magnitudeToInstFlux,
-            "magnitude"_a);
 
     cls.def("computeScaledCalibration", &PhotoCalib::computeScaledCalibration);
     cls.def("computeScalingTo", &PhotoCalib::computeScalingTo);
