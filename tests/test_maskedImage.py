@@ -817,7 +817,9 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
         self.assertIn("image=", str(image))
         self.assertIn("mask=", str(image))
         self.assertIn("variance=", str(image))
-        self.assertIn("...", str(image))
+        self.assertIn(str(np.zeros((100, 100), dtype=image.image.dtype)), str(image))
+        self.assertIn(str(np.zeros((100, 100), dtype=image.mask.dtype)), str(image))
+        self.assertIn(str(np.zeros((100, 100), dtype=image.variance.dtype)), str(image))
         self.assertIn("bbox=%s"%str(image.getBBox()), str(image))
         self.assertIn("maskPlaneDict=%s"%str(image.mask.getMaskPlaneDict()), str(image))
 

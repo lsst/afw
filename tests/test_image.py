@@ -573,13 +573,13 @@ class ImageTestCase(lsst.utils.tests.TestCase):
         imageISmall = afwImage.ImageI(2, 2)
         imageU = afwImage.ImageU(100, 100)
 
-        # numpy defaults to threshold=1000 for collapsing array output
-        self.assertIn("...", str(imageF))
+        # NumPy's string representation varies depending on the size of the
+        # array; we test both large and small.
+        self.assertIn(str(np.zeros((100, 100), dtype=imageF.dtype)), str(imageF))
         self.assertIn("bbox=%s" % str(imageF.getBBox()), str(imageF))
 
-        # for small arrays, numpy's representation prints the whole array
-        self.assertIn("[[0. 0.]\n [0. 0.]]", str(imageDSmall))
-        self.assertIn("[[0 0]\n [0 0]]", str(imageISmall))
+        self.assertIn(str(np.zeros((2, 2), dtype=imageDSmall.dtype)), str(imageDSmall))
+        self.assertIn(str(np.zeros((2, 2), dtype=imageISmall.dtype)), str(imageISmall))
 
         self.assertIn("ImageF=", repr(imageF))
         self.assertIn("ImageU=", repr(imageU))
