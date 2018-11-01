@@ -340,14 +340,12 @@ class MaskTestCase(utilsTests.TestCase):
 
     def testString(self):
         mask = afwImage.Mask(100, 100)
-        # numpy defaults to threshold=1000 for collapsing array output
-        self.assertIn("...", str(mask))
+        self.assertIn(str(np.zeros((100, 100), dtype=mask.dtype)), str(mask))
         self.assertIn("bbox=%s"%str(mask.getBBox()), str(mask))
         self.assertIn("maskPlaneDict=%s"%str(mask.getMaskPlaneDict()), str(mask))
 
-        # for small arrays, numpy's representation prints the whole array
         smallMask = afwImage.Mask(2, 2)
-        self.assertIn("[[0 0]\n [0 0]]", str(smallMask))
+        self.assertIn(str(np.zeros((2, 2), dtype=mask.dtype)), str(smallMask))
 
         self.assertIn("MaskX=", repr(mask))
 
