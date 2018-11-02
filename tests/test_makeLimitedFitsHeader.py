@@ -21,6 +21,7 @@
 #
 
 import unittest
+import numpy as np
 
 import lsst.utils.tests
 from lsst.daf.base import PropertyList
@@ -28,6 +29,45 @@ from lsst.afw.fits import makeLimitedFitsHeader
 
 
 class MakeLimitedFitsHeaderTestCase(lsst.utils.tests.TestCase):
+
+    def assertHeadersEqual(self, header, expectedHeader, rtol=np.finfo(np.float64).resolution):
+        """Compare 80 characters at a time
+
+        Floating point values are extracted from the FITS card and compared
+        as floating point numbers rather than as strings.
+
+        Parameters
+        ----------
+        header : `str`
+            FITS-style header string calculated by the test.
+        expectedHeader : `str`
+            Reference header string.
+        rtol = `float`, optional
+            Tolerance to use for floating point comparisons.  This parameters
+            is passed directly to `~lsst.utils.tests.assertFloatsAlmostEqual`.
+            The default is for double precision comparison.
+        """
+        self.assertEqual(len(header), len(expectedHeader),
+                         msg="Compare header lengths")
+        start = 0
+        while start < len(header):
+            end = start + 80
+            # Strip trailing whitespace to make the diff clearer
+            this = header[start:end].rstrip()
+            expected = expectedHeader[start:end].rstrip()
+            with self.subTest(this=this, expected=expected):
+                # For floating point numbers compare as numbers
+                # rather than strings
+                if "'" not in expected and ("." in expected or "E" in expected):
+                    nchars = 10
+                    self.assertEqual(this[:nchars], expected[:nchars],
+                                     msg=f"Compare first {nchars} characters of '{this}'"
+                                     f" with expected '{expected}'")
+                    self.assertFloatsAlmostEqual(float(this[9:]), float(expected[9:]),
+                                                 rtol=rtol)
+                else:
+                    self.assertEqual(this, expected)
+            start += 80
 
     def checkExcludeNames(self, metadata, expectedLines):
         """Check that makeLimitedFitsHeader properly excludes specified names
@@ -42,7 +82,7 @@ class MakeLimitedFitsHeaderTestCase(lsst.utils.tests.TestCase):
             header = makeLimitedFitsHeader(metadata, excludeNames=excludeNames)
             expectedHeader = "".join("%-80s" % val for val in expectedLines
                                      if val[0:8].strip() not in excludeNames)
-            self.assertEqual(header, expectedHeader)
+            self.assertHeadersEqual(header, expectedHeader)
 
     def testBasics(self):
         """Check basic formatting and skipping bad values
@@ -51,7 +91,11 @@ class MakeLimitedFitsHeaderTestCase(lsst.utils.tests.TestCase):
         dataList = [
             ("ABOOL", True),
             ("AFLOAT", 1.2e25),
+            ("AFLOAT2", 1.0e30),
             ("ANINT", -5),
+            ("AFLOATZ", 0.0),  # ensure a float stays a float
+            ("INTFLOAT", -5.0),
+            ("LONGFLT", 0.0089626337538440005),
             ("LONGNAME1", 1),  # name is longer than 8 characters; skip it
             ("LONGSTR", "skip this item because the formatted value "
                 "is too long: longer than 80 characters "),
@@ -63,16 +107,42 @@ class MakeLimitedFitsHeaderTestCase(lsst.utils.tests.TestCase):
         header = makeLimitedFitsHeader(metadata)
 
         expectedLines = [  # without padding to 80 chars
-            "ABOOL   = 1",
+            "ABOOL   = T",
             "AFLOAT  =              1.2E+25",
+            "AFLOAT2 =                1E+30",
             "ANINT   =                   -5",
+            "AFLOATZ =                    0.0",
+            "INTFLOAT=                   -5.0",
+            "LONGFLT = 0.0089626337538440005",
             "ASTRING1= 'value for string'",
         ]
         expectedHeader = "".join("%-80s" % val for val in expectedLines)
 
-        self.assertEqual(header, expectedHeader)
+        self.assertHeadersEqual(header, expectedHeader)
 
         self.checkExcludeNames(metadata, expectedLines)
+
+    def testSinglePrecision(self):
+        """Check that single precision floats do work"""
+        metadata = PropertyList()
+
+        # Numeric form of single precision floats need smaller precision
+        metadata.setFloat("SINGLE", 3.14159)
+        metadata.setFloat("SINGLEI", 5.0)
+        metadata.setFloat("SINGLEE", -5.9e20)
+        metadata.setFloat("EXP", -5e10)
+
+        header = makeLimitedFitsHeader(metadata)
+
+        expectedLines = [  # without padding to 80 chars
+            "SINGLE  =              3.14159",
+            "SINGLEI =                  5.0",
+            "SINGLEE =             -5.9E+20",
+            "EXP     =               -5E+10",
+        ]
+        expectedHeader = "".join("%-80s" % val for val in expectedLines)
+
+        self.assertHeadersEqual(header, expectedHeader, rtol=np.finfo(np.float32).resolution)
 
     def testArrayValues(self):
         """Check that only the final value is used from an array
@@ -92,14 +162,14 @@ class MakeLimitedFitsHeaderTestCase(lsst.utils.tests.TestCase):
         header = makeLimitedFitsHeader(metadata)
 
         expectedLines = [  # without padding to 80 chars
-            "ABOOL   = 0",
+            "ABOOL   = F",
             "AFLOAT  =                 -5.6",
             "ANINT   =                 1052",
             "ASTRING1= 'more'",
         ]
         expectedHeader = "".join("%-80s" % val for val in expectedLines)
 
-        self.assertEqual(header, expectedHeader)
+        self.assertHeadersEqual(header, expectedHeader)
 
         self.checkExcludeNames(metadata, expectedLines)
 
