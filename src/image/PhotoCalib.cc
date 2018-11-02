@@ -49,6 +49,8 @@ double toMaggies(double instFlux, double scale) { return instFlux * scale; }
 
 double toMagnitude(double instFlux, double scale) { return -2.5 * log10(instFlux * scale); }
 
+double fromMagnitude(double magnitude, double scale) { return pow(10, magnitude / -2.5) / scale; }
+
 double toMaggiesErr(double instFlux, double instFluxErr, double scale, double scaleErr, double maggies) {
     return maggies * hypot(instFluxErr / instFlux, scaleErr / scale);
 }
@@ -193,7 +195,11 @@ void PhotoCalib::instFluxToMagnitude(afw::table::SourceCatalog &sourceCatalog,
 // ------------------- other utility methods -------------------
 
 double PhotoCalib::magnitudeToInstFlux(double magnitude) const {
-    return pow(10, magnitude / -2.5) / _calibrationMean;
+    return fromMagnitude(magnitude, _calibrationMean);
+}
+
+double PhotoCalib::magnitudeToInstFlux(double magnitude, lsst::geom::Point<double, 2> const &point) const {
+    return fromMagnitude(magnitude, evaluate(point));
 }
 
 std::shared_ptr<math::BoundedField> PhotoCalib::computeScaledCalibration() const {

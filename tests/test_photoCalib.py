@@ -187,6 +187,13 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
         self.assertFloatsAlmostEqual(self.instFlux, photoCalib.magnitudeToInstFlux(0))
         self.assertFloatsAlmostEqual(self.instFlux*1e-9, photoCalib.magnitudeToInstFlux(22.5))
 
+        # test round-tripping
+        mag = photoCalib.instFluxToMagnitude(self.instFlux, self.pointXShift)
+        self.assertFloatsAlmostEqual(self.instFlux, photoCalib.magnitudeToInstFlux(mag, self.pointXShift))
+        mag = photoCalib.instFluxToMagnitude(self.instFlux*1e-9, self.pointXShift)
+        self.assertFloatsAlmostEqual(self.instFlux*1e-9,
+                                     photoCalib.magnitudeToInstFlux(mag, self.pointXShift))
+
     def _testSourceCatalog(self, photoCalib, catalog, expectMaggies, expectMag):
         """Test passing in a sourceCatalog."""
 

@@ -341,12 +341,19 @@ public:
     MaskedImage<float> calibrateImage(MaskedImage<float> const &maskedImage) const;
 
     /**
-     * Convert AB magnitude to instFlux (ADU), using the mean instFlux/magnitude scaling factor.
+     * Convert AB magnitude to instFlux (ADU).
+     *
+     * If passed point, use the exact calculation at that point, otherwise, use the mean scaling factor.
+     *
+     * Useful for inserting fake sources into an image.
      *
      * @param[in]  magnitude  The AB magnitude to convert.
+     * @param[in]  point      The position that magnitude is to be converted at.
      *
      * @returns    Source instFlux in ADU.
      */
+    double magnitudeToInstFlux(double magnitude, lsst::geom::Point<double, 2> const &point) const;
+    /// @overload magnitudeToInstFlux(double, lsst::geom::Point<double, 2> const &) const;
     double magnitudeToInstFlux(double magnitude) const;
 
     /**
