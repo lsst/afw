@@ -60,7 +60,7 @@ std::string makeLimitedFitsHeaderImpl(std::vector<std::string> const &paramNames
         out = (boost::format("%-8s= ") % name).str();
 
         if (type == typeid(bool)) {
-            out += metadata.get<bool>(name) ? "1" : "0";
+            out += metadata.get<bool>(name) ? "T" : "F";
         } else if (type == typeid(std::uint8_t)) {
             out += (boost::format("%20d") % static_cast<int>(metadata.get<std::uint8_t>(name))).str();
         } else if (type == typeid(int)) {
