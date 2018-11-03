@@ -96,9 +96,8 @@ std::shared_ptr<ast::FrameSet> readFitsWcs(daf::base::PropertySet& metadata, boo
         metadata.remove("RADECSYS");
     }
 
-    std::string hdr = fits::makeLimitedFitsHeader(metadata, excludeNames);
-    ast::StringStream stream(hdr);
-    ast::FitsChan channel(stream, "Encoding=FITS-WCS, IWC=1, SipReplace=0");
+    auto channel = getFitsChanFromPropertyList(metadata, excludeNames,
+                                               "Encoding=FITS-WCS, IWC=1, SipReplace=0, ReportLevel=3");
     auto const initialNames = strip ? setFromVector(channel.getAllCardNames()) : std::set<std::string>();
     std::shared_ptr<ast::Object> obj;
     try {
@@ -106,6 +105,7 @@ std::shared_ptr<ast::FrameSet> readFitsWcs(daf::base::PropertySet& metadata, boo
     } catch (std::runtime_error) {
         throw LSST_EXCEPT(pex::exceptions::TypeError, "The metadata does not describe an AST object");
     }
+
     auto frameSet = std::dynamic_pointer_cast<ast::FrameSet>(obj);
     if (!frameSet) {
         throw LSST_EXCEPT(pex::exceptions::TypeError,
@@ -305,6 +305,57 @@ std::shared_ptr<daf::base::PropertyList> getPropertyListFromFitsChan(ast::FitsCh
         }
     }
     return metadata;
+}
+
+ast::FitsChan getFitsChanFromPropertyList(daf::base::PropertySet& metadata,
+                                          std::set<std::string> const& excludeNames,
+                                          std::string options) {
+    // Create FitsChan to receive each of the parameters
+    auto stream = ast::StringStream("");
+    auto fc = ast::FitsChan(stream, options);
+
+    // Get the parameter names (in order if necessary)
+    daf::base::PropertyList const *pl = dynamic_cast<daf::base::PropertyList const *>(&metadata);
+    std::vector<std::string> allParamNames;
+    if (pl) {
+        allParamNames = pl->getOrderedNames();
+    } else {
+        allParamNames = metadata.paramNames(false);
+    }
+
+    // Loop over the names and add them to the FitsChan if not excluded
+    for (auto const &fullName : allParamNames) {
+        if (excludeNames.count(fullName) == 0) {
+            std::size_t lastPeriod = fullName.rfind(char('.'));
+            auto name = (lastPeriod == std::string::npos) ? fullName : fullName.substr(lastPeriod + 1);
+            std::type_info const &type = metadata.typeOf(name);
+
+            if (name.size() > 8) {
+                continue;  // The name is too long for a FITS keyword; skip this item
+            }
+
+            if (type == typeid(bool)) {
+                fc.setFitsL(name, metadata.get<bool>(name));
+            } else if (type == typeid(std::uint8_t)) {
+                fc.setFitsI(name, static_cast<int>(metadata.get<std::uint8_t>(name)));
+            } else if (type == typeid(int)) {
+                fc.setFitsI(name, metadata.get<int>(name));
+            } else if (type == typeid(double)) {
+                fc.setFitsF(name, metadata.get<double>(name));
+            } else if (type == typeid(float)) {
+                fc.setFitsF(name, static_cast<double>(metadata.get<float>(name)));
+            } else if (type == typeid(std::string)) {
+                std::string str = metadata.get<std::string>(name);
+                // No support for long strings yet so skip those
+                if (str.size() <= 68) {
+                    fc.setFitsS(name, metadata.get<std::string>(name));
+                }
+            }
+        }
+    }
+    // Rewind the channel
+    fc.setCard(0);
+    return fc;
 }
 
 }  // namespace detail
