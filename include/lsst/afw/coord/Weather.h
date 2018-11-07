@@ -57,6 +57,9 @@ public:
     bool operator==(Weather const &other) const noexcept;
     bool operator!=(Weather const &other) const noexcept { return !(*this == other); }
 
+    /// Return a hash of this object
+    std::size_t hash_value() const noexcept;
+
     /// get outside air temperature (C)
     double getAirTemperature() const noexcept { return _airTemperature; };
 
@@ -83,5 +86,14 @@ std::ostream &operator<<(std::ostream &os, Weather const &weath);
 }  // namespace coord
 }  // namespace afw
 }  // namespace lsst
+
+namespace std {
+template <>
+struct hash<lsst::afw::coord::Weather> {
+    using argument_type = lsst::afw::coord::Weather;
+    using result_type = size_t;
+    size_t operator()(argument_type const &obj) const noexcept { return obj.hash_value(); }
+};
+}  // namespace std
 
 #endif  // !LSST_AFW_COORD_WEATHER_H_INCLUDED

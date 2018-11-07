@@ -112,6 +112,9 @@ public:
     bool operator!=(AliasMap const& other) const { return !(other == *this); }
     //@}
 
+    /// Return a hash of this object.
+    std::size_t hash_value() const noexcept;
+
     /// Return true if all aliases in this are also in other (with the same targets).
     bool contains(AliasMap const& other) const;
 
@@ -133,5 +136,14 @@ private:
 }  // namespace table
 }  // namespace afw
 }  // namespace lsst
+
+namespace std {
+template <>
+struct hash<lsst::afw::table::AliasMap> {
+    using argument_type = lsst::afw::table::AliasMap;
+    using result_type = size_t;
+    size_t operator()(argument_type const& obj) const noexcept { return obj.hash_value(); }
+};
+}  // namespace std
 
 #endif  // !AFW_TABLE_AliasMap_h_INCLUDED

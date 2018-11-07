@@ -2,6 +2,7 @@
 #include <algorithm>
 
 #include "boost/geometry/geometry.hpp"
+#include <boost/container_hash/hash.hpp>
 #include <memory>
 
 #include "lsst/pex/exceptions.h"
@@ -339,6 +340,13 @@ std::vector<LsstPoint>::const_iterator Polygon::end() const {
 
 bool Polygon::operator==(Polygon const& other) const {
     return boost::geometry::equals(_impl->poly, other._impl->poly);
+}
+
+std::size_t Polygon::hash_value() const noexcept {
+    // boost::hash allows hash functions to throw, but the container hashes throw
+    // only if the element [geom::Point] has a throwing hash
+    static boost::hash<BoostPolygon::ring_type> polygonHash;
+    return polygonHash(_impl->poly.outer());
 }
 
 bool Polygon::contains(LsstPoint const& point) const { return boost::geometry::within(point, _impl->poly); }

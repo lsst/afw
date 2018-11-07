@@ -198,6 +198,9 @@ public:
     bool operator==(Calib const& rhs) const noexcept;
     bool operator!=(Calib const& rhs) const noexcept { return !(*this == rhs); }
 
+    /// Return a hash of this object.
+    std::size_t hash_value() const noexcept;
+
     Calib& operator*=(double const scale);
     Calib& operator/=(double const scale) {
         (*this) *= 1.0 / scale;
@@ -232,5 +235,14 @@ int stripCalibKeywords(std::shared_ptr<lsst::daf::base::PropertySet> metadata);
 }  // namespace image
 }  // namespace afw
 }  // namespace lsst
+
+namespace std {
+template <>
+struct hash<lsst::afw::image::Calib> {
+    using argument_type = lsst::afw::image::Calib;
+    using result_type = size_t;
+    size_t operator()(argument_type const& obj) const noexcept { return obj.hash_value(); }
+};
+}  // namespace std
 
 #endif  // LSST_AFW_IMAGE_CALIB_H

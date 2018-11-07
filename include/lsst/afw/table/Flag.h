@@ -4,6 +4,8 @@
 
 #include <cstdint>
 
+#include "lsst/utils/hashCombine.h"
+
 #include "lsst/afw/table/misc.h"
 #include "lsst/afw/table/FieldBase.h"
 #include "lsst/afw/table/KeyBase.h"
@@ -114,6 +116,12 @@ public:
     bool operator!=(Key const &other) const { return !this->operator==(other); }
     //@}
 
+    /// Return a hash of this object.
+    std::size_t hash_value() const noexcept {
+        // Completely arbitrary seed
+        return utils::hashCombine(17, _offset, _bit);
+    }
+
     /// Return the offset in bytes of the integer element that holds this field's bit.
     int getOffset() const { return _offset; }
 
@@ -175,5 +183,14 @@ private:
 }  // namespace table
 }  // namespace afw
 }  // namespace lsst
+
+namespace std {
+template <>
+struct hash<lsst::afw::table::Key<lsst::afw::table::Flag>> {
+    using argument_type = lsst::afw::table::Key<lsst::afw::table::Flag>;
+    using result_type = size_t;
+    size_t operator()(argument_type const &obj) const noexcept { return obj.hash_value(); }
+};
+}  // namespace std
 
 #endif  // !LSST_AFW_TABLE_Flag_h_INCLUDED

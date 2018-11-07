@@ -71,7 +71,7 @@ public:
      *
      * @note Workhorse for std::hash<CameraSysPrefix>.
      */
-    size_t hash() const noexcept;
+    std::size_t hash_value() const noexcept;
 
 private:
     std::string _sysName;  ///< coordinate system name
@@ -145,7 +145,7 @@ public:
      *
      * @note Workhorse for std::hash<CameraSys>.
      */
-    size_t hash() const noexcept;
+    size_t hash_value() const noexcept;
 
 private:
     std::string _sysName;       ///< coordinate system name
@@ -211,12 +211,18 @@ std::ostream &operator<<(std::ostream &os, CameraSys const &cameraSys);
 namespace std {
 template <>
 struct hash<lsst::afw::cameraGeom::CameraSysPrefix> {
-    size_t operator()(lsst::afw::cameraGeom::CameraSysPrefix const &obj) const noexcept { return obj.hash(); }
+    using argument_type = lsst::afw::cameraGeom::CameraSysPrefix;
+    using result_type = size_t;
+    size_t operator()(lsst::afw::cameraGeom::CameraSysPrefix const &obj) const noexcept {
+        return obj.hash_value();
+    }
 };
 
 template <>
 struct hash<lsst::afw::cameraGeom::CameraSys> {
-    size_t operator()(lsst::afw::cameraGeom::CameraSys const &obj) const noexcept { return obj.hash(); }
+    using argument_type = lsst::afw::cameraGeom::CameraSys;
+    using result_type = size_t;
+    size_t operator()(lsst::afw::cameraGeom::CameraSys const &obj) const noexcept { return obj.hash_value(); }
 };
 }  // namespace std
 

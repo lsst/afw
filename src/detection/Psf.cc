@@ -5,7 +5,6 @@
 #include <memory>
 
 #include "lsst/utils/Cache.h"
-#include "lsst/utils/hashCombine.h"
 #include "lsst/afw/detection/Psf.h"
 #include "lsst/afw/math/offsetImage.h"
 #include "lsst/afw/table/io/Persistable.cc"
@@ -48,12 +47,13 @@ namespace std {
 
 // Template specialisation for hashing PsfCacheKey
 //
-// We currently ignore the color.
+// We currently ignore the color, consistent with operator==.
 template <>
 struct hash<lsst::afw::detection::detail::PsfCacheKey> {
-    std::size_t operator()(lsst::afw::detection::detail::PsfCacheKey const &key) const {
-        std::size_t seed = 0;
-        return lsst::utils::hashCombine(seed, key.position.getX(), key.position.getY());
+    using argument_type = lsst::afw::detection::detail::PsfCacheKey;
+    using result_type = std::size_t;
+    std::size_t operator()(lsst::afw::detection::detail::PsfCacheKey const &key) const noexcept {
+        return std::hash<lsst::geom::Point2D>()(key.position);
     }
 };
 

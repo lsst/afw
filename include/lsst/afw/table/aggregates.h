@@ -23,6 +23,8 @@
 #ifndef AFW_TABLE_aggregates_h_INCLUDED
 #define AFW_TABLE_aggregates_h_INCLUDED
 
+#include "lsst/utils/hashCombine.h"
+
 #include "lsst/afw/table/FunctorKey.h"
 #include "lsst/afw/table/Schema.h"
 #include "lsst/geom.h"
@@ -92,6 +94,12 @@ public:
     bool operator!=(PointKey<T> const& other) const noexcept { return !(*this == other); }
     //@}
 
+    /// Return a hash of this object.
+    std::size_t hash_value() const noexcept {
+        // Completely arbitrary seed
+        return utils::hashCombine(17, _x, _y);
+    }
+
     /// Return True if both the x and y Keys are valid.
     bool isValid() const noexcept { return _x.isValid() && _y.isValid(); }
 
@@ -157,6 +165,12 @@ public:
     BoxKey& operator=(BoxKey const&) noexcept = default;
     BoxKey& operator=(BoxKey&&) noexcept = default;
     ~BoxKey() noexcept override = default;
+
+    /// Return a hash of this object.
+    std::size_t hash_value() const noexcept {
+        // Completely arbitrary seed
+        return utils::hashCombine(17, _min, _max);
+    }
 
     /// Get a Point from the given record
     Box get(BaseRecord const& record) const override;
@@ -240,6 +254,12 @@ public:
     bool operator!=(CoordKey const& other) const noexcept { return !(*this == other); }
     //@}
 
+    /// Return a hash of this object.
+    std::size_t hash_value() const noexcept {
+        // Completely arbitrary seed
+        return utils::hashCombine(17, _ra, _dec);
+    }
+
     bool isValid() const noexcept { return _ra.isValid() && _dec.isValid(); }
 
     //@{
@@ -252,12 +272,6 @@ private:
     Key<lsst::geom::Angle> _ra;
     Key<lsst::geom::Angle> _dec;
 };
-
-//@{
-/// Compare CoordKeys for equality using the constituent Keys
-bool operator==(CoordKey const& lhs, CoordKey const& rhs);
-bool operator!=(CoordKey const& lhs, CoordKey const& rhs);
-//@}
 
 /// Enum used to set units for geometric FunctorKeys
 enum class CoordinateType { PIXEL, CELESTIAL };
@@ -317,6 +331,12 @@ public:
     }
     bool operator!=(QuadrupoleKey const& other) const noexcept { return !(*this == other); }
     //@}
+
+    /// Return a hash of this object.
+    std::size_t hash_value() const noexcept {
+        // Completely arbitrary seed
+        return utils::hashCombine(17, _ixx, _iyy, _ixy);
+    }
 
     /// Return True if all the constituent Keys are valid.
     bool isValid() const noexcept { return _ixx.isValid() && _iyy.isValid() && _ixy.isValid(); }
@@ -387,6 +407,12 @@ public:
     }
     bool operator!=(EllipseKey const& other) const noexcept { return !(*this == other); }
     //@}
+
+    /// Return a hash of this object.
+    std::size_t hash_value() const noexcept {
+        // Completely arbitrary seed
+        return utils::hashCombine(17, _qKey, _pKey);
+    }
 
     /// Return True if all the constituent Keys are valid.
     bool isValid() const noexcept { return _qKey.isValid() && _pKey.isValid(); }
@@ -511,6 +537,9 @@ public:
     bool operator!=(CovarianceMatrixKey const& other) const noexcept { return !(*this == other); }
     //@}
 
+    /// Return a hash of this object.
+    std::size_t hash_value() const noexcept;
+
 private:
     ErrKeyArray _err;
     CovarianceKeyArray _cov;
@@ -518,5 +547,49 @@ private:
 }  // namespace table
 }  // namespace afw
 }  // namespace lsst
+
+namespace std {
+template <typename T>
+struct hash<lsst::afw::table::PointKey<T>> {
+    using argument_type = lsst::afw::table::PointKey<T>;
+    using result_type = size_t;
+    size_t operator()(argument_type const& obj) const noexcept { return obj.hash_value(); }
+};
+
+template <typename T>
+struct hash<lsst::afw::table::BoxKey<T>> {
+    using argument_type = lsst::afw::table::BoxKey<T>;
+    using result_type = size_t;
+    size_t operator()(argument_type const& obj) const noexcept { return obj.hash_value(); }
+};
+
+template <>
+struct hash<lsst::afw::table::CoordKey> {
+    using argument_type = lsst::afw::table::CoordKey;
+    using result_type = size_t;
+    size_t operator()(argument_type const& obj) const noexcept { return obj.hash_value(); }
+};
+
+template <>
+struct hash<lsst::afw::table::QuadrupoleKey> {
+    using argument_type = lsst::afw::table::QuadrupoleKey;
+    using result_type = size_t;
+    size_t operator()(argument_type const& obj) const noexcept { return obj.hash_value(); }
+};
+
+template <>
+struct hash<lsst::afw::table::EllipseKey> {
+    using argument_type = lsst::afw::table::EllipseKey;
+    using result_type = size_t;
+    size_t operator()(argument_type const& obj) const noexcept { return obj.hash_value(); }
+};
+
+template <typename T, int N>
+struct hash<lsst::afw::table::CovarianceMatrixKey<T, N>> {
+    using argument_type = lsst::afw::table::CovarianceMatrixKey<T, N>;
+    using result_type = size_t;
+    size_t operator()(argument_type const& obj) const noexcept { return obj.hash_value(); }
+};
+}  // namespace std
 
 #endif  // !AFW_TABLE_aggregates_h_INCLUDED

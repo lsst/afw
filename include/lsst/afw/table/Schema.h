@@ -226,6 +226,9 @@ public:
     bool operator!=(Schema const& other) const { return !this->operator==(other); }
     //@}
 
+    /// Return a hash of this object.
+    std::size_t hash_value() const noexcept;
+
     /**
      *  Do a detailed equality comparison of two schemas.
      *
@@ -457,5 +460,14 @@ inline SubSchema Schema::operator[](std::string const& name) const {
 }  // namespace table
 }  // namespace afw
 }  // namespace lsst
+
+namespace std {
+template <>
+struct hash<lsst::afw::table::Schema> {
+    using argument_type = lsst::afw::table::Schema;
+    using result_type = size_t;
+    size_t operator()(argument_type const& obj) const noexcept { return obj.hash_value(); }
+};
+}  // namespace std
 
 #endif  // !AFW_TABLE_Schema_h_INCLUDED

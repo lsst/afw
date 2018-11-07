@@ -117,6 +117,9 @@ public:
     bool operator==(VisitInfo const &other) const;
     bool operator!=(VisitInfo const &other) const { return !(*this == other); };
 
+    /// Return a hash of this object.
+    std::size_t hash_value() const noexcept;
+
     /// get exposure ID
     table::RecordId getExposureId() const { return _exposureId; }
 
@@ -229,5 +232,14 @@ int stripVisitInfoKeywords(daf::base::PropertySet &metadata);
 }  // namespace image
 }  // namespace afw
 }  // namespace lsst
+
+namespace std {
+template <>
+struct hash<lsst::afw::image::VisitInfo> {
+    using argument_type = lsst::afw::image::VisitInfo;
+    using result_type = size_t;
+    size_t operator()(argument_type const &obj) const noexcept { return obj.hash_value(); }
+};
+}  // namespace std
 
 #endif  // !LSST_AFW_IMAGE_VISITINFO_H_INCLUDED

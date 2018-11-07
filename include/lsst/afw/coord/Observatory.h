@@ -29,6 +29,8 @@
  */
 
 #include <iostream>
+
+#include "lsst/utils/hashCombine.h"
 #include "lsst/geom/Angle.h"
 
 namespace lsst {
@@ -90,6 +92,12 @@ public:
     }
     bool operator!=(Observatory const& rhs) const noexcept { return !(*this == rhs); }
 
+    /// Return a hash of this object
+    std::size_t hash_value() const noexcept {
+        // Completely arbitrary seed
+        return utils::hashCombine(17, _latitude.wrapCtr(), _longitude.wrapCtr(), _elevation);
+    }
+
 private:
     lsst::geom::Angle _latitude;
     lsst::geom::Angle _longitude;
@@ -106,5 +114,14 @@ std::ostream& operator<<(std::ostream& os, Observatory const& obs);
 }  // namespace coord
 }  // namespace afw
 }  // namespace lsst
+
+namespace std {
+template <>
+struct hash<lsst::afw::coord::Observatory> {
+    using argument_type = lsst::afw::coord::Observatory;
+    using result_type = size_t;
+    size_t operator()(argument_type const& obj) const noexcept { return obj.hash_value(); }
+};
+}  // namespace std
 
 #endif

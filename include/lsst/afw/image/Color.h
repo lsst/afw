@@ -53,6 +53,9 @@ public:
     bool operator!=(Color const &other) const noexcept { return !operator==(other); }
     //@}
 
+    /// Return a hash of this object.
+    std::size_t hash_value() const noexcept { return isIndeterminate() ? 42 : std::hash<double>()(_g_r); }
+
     /** Return the effective wavelength for this object in the given filter
      */
     double getLambdaEff(Filter const &  ///< The filter in question
@@ -66,5 +69,14 @@ private:
 }  // namespace image
 }  // namespace afw
 }  // namespace lsst
+
+namespace std {
+template <>
+struct hash<lsst::afw::image::Color> {
+    using argument_type = lsst::afw::image::Color;
+    using result_type = size_t;
+    size_t operator()(argument_type const &obj) const noexcept { return obj.hash_value(); }
+};
+}  // namespace std
 
 #endif

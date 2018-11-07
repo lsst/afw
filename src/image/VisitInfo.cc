@@ -27,6 +27,7 @@
 
 #include "boost/algorithm/string/trim.hpp"
 
+#include "lsst/utils/hashCombine.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/geom/Angle.h"
 #include "lsst/geom/SpherePoint.h"
@@ -387,6 +388,13 @@ bool VisitInfo::operator==(VisitInfo const& other) const {
            _boresightAzAlt == other.getBoresightAzAlt() && _boresightAirmass == other.getBoresightAirmass() &&
            _boresightRotAngle == other.getBoresightRotAngle() && _rotType == other.getRotType() &&
            _observatory == other.getObservatory() && _weather == other.getWeather();
+}
+
+std::size_t VisitInfo::hash_value() const noexcept {
+    // Completely arbitrary seed
+    return utils::hashCombine(17, _exposureId, _exposureTime, _darkTime, _date, _ut1, _era, _boresightRaDec,
+                              _boresightAzAlt, _boresightAirmass, _boresightRotAngle, _rotType, _observatory,
+                              _weather);
 }
 
 std::string VisitInfo::getPersistenceName() const { return getVisitInfoPersistenceName(); }

@@ -23,6 +23,8 @@
 #ifndef AFW_TABLE_arrays_h_INCLUDED
 #define AFW_TABLE_arrays_h_INCLUDED
 
+#include "lsst/utils/hashCombine.h"
+
 #include "lsst/afw/table/FunctorKey.h"
 #include "lsst/afw/table/Schema.h"
 
@@ -125,6 +127,12 @@ public:
     bool operator!=(ArrayKey<T> const& other) const noexcept { return !operator==(other); }
     //@}
 
+    /// Return a hash of this object.
+    std::size_t hash_value() const noexcept {
+        // Completely arbitrary seed
+        return utils::hashCombine(17, _begin, _size);
+    }
+
     /// Return True if the FunctorKey contains valid scalar keys.
     bool isValid() const noexcept { return _begin.isValid(); }
 
@@ -143,5 +151,14 @@ private:
 }  // namespace table
 }  // namespace afw
 }  // namespace lsst
+
+namespace std {
+template <typename T>
+struct hash<lsst::afw::table::ArrayKey<T>> {
+    using argument_type = lsst::afw::table::ArrayKey<T>;
+    using result_type = size_t;
+    size_t operator()(argument_type const& obj) const noexcept { return obj.hash_value(); }
+};
+}  // namespace std
 
 #endif  // !AFW_TABLE_arrays_h_INCLUDED
