@@ -60,16 +60,16 @@ std::string makeLimitedFitsHeaderImpl(std::vector<std::string> const &paramNames
         out = (boost::format("%-8s= ") % name).str();
 
         if (type == typeid(bool)) {
-            out += metadata.get<bool>(name) ? "1" : "0";
+            out += metadata.get<bool>(name) ? "T" : "F";
         } else if (type == typeid(std::uint8_t)) {
             out += (boost::format("%20d") % static_cast<int>(metadata.get<std::uint8_t>(name))).str();
         } else if (type == typeid(int)) {
             out += (boost::format("%20d") % metadata.get<int>(name)).str();
         } else if (type == typeid(double)) {
             // use G because FITS wants uppercase E for exponents
-            out += (boost::format("%20.15G") % metadata.get<double>(name)).str();
+            out += (boost::format("%#20.17G") % metadata.get<double>(name)).str();
         } else if (type == typeid(float)) {
-            out += (boost::format("%20.15G") % metadata.get<float>(name)).str();
+            out += (boost::format("%#20.15G") % metadata.get<float>(name)).str();
         } else if (type == typeid(std::string)) {
             out += "'" + metadata.get<std::string>(name) + "'";
             if (out.size() > 80) {

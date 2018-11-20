@@ -107,6 +107,20 @@ Copy values from an AST FitsChan into a PropertyList
 */
 std::shared_ptr<daf::base::PropertyList> getPropertyListFromFitsChan(ast::FitsChan& fitsChan);
 
+/**
+Construct AST FitsChan from PropertyList
+
+@param[in] metadata  Metadata to transfer; if this is a PropertyList then the order of items is preserved.
+@param[in] excludeNames  Names of entries to exclude from the returned header string.
+@param[in] options  Options string to pass to ast::FitsChan constructor.
+
+@return an ast::FitsChan representing this PropertyList
+
+*/
+ast::FitsChan getFitsChanFromPropertyList(daf::base::PropertySet& metadata,
+                                          std::set<std::string> const& excludeNames = {},
+                                          std::string options = "");
+
 }  // namespace detail
 }  // namespace geom
 }  // namespace afw
