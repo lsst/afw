@@ -489,6 +489,27 @@ class MultibandMask(MultibandImageBase):
         """
         Mask[MaskPixel].removeMaskPlane(name)
 
+    def removeAndClearMaskPlane(self, name, removeFromDefault=False):
+        """Remove and clear a mask from the mask plane
+
+        Clear all pixels of the specified mask and remove the plane from the
+        mask plane dictionary.  Also optionally remove the plane from the
+        default dictionary.
+
+        Parameters
+        ----------
+        name : `str`
+           Name of the mask plane to remove
+        removeFromDefault : `bool`, optional
+           Whether to remove the mask plane from the default dictionary.
+           Default is `False`.
+        """
+        # Clear all masks in MultibandMask but leave in default dict for now
+        for single in self.singles:
+            single.removeAndClearMaskPlane(name, removeFromDefault=False)
+        # Now remove from default dict according to removeFromDefault
+        self._refMask.removeAndClearMaskPlane(name, removeFromDefault)
+
     def clearAllMaskPlanes(self):
         """Clear all the pixels
         """
