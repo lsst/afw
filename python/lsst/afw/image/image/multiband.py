@@ -38,19 +38,19 @@ class MultibandPixel(MultibandBase):
 
     Parameters
     ----------
-    singles: `sequence`
-        Either a list of single band objects or an array of values.
-    filters: `list`
-        List of filter names. If `singles` is an `OrderedDict` or
-        a `MultibandPixel` then this argument is ignored,
-        otherwise it is required.
-    position: `Point2I`
-        Location of the pixel in the parent image.
-        Unlike other objects that inherit from `MultibandBase`,
-        `MultibandPixel` objects don't have a full `Box2I`
-        bounding box, since they only contain a single pixel,
-        so the bounding box cannot be inherited from the
-        list of `singles`.
+    singles : `sequence`
+       Either a list of single band objects or an array of values.
+    filters : `list`
+       List of filter names. If `singles` is an `OrderedDict` or
+       a `MultibandPixel` then this argument is ignored,
+       otherwise it is required.
+    position : `Point2I`
+       Location of the pixel in the parent image.
+       Unlike other objects that inherit from `MultibandBase`,
+       `MultibandPixel` objects don't have a full `Box2I`
+       bounding box, since they only contain a single pixel,
+       so the bounding box cannot be inherited from the
+       list of `singles`.
     """
     def __init__(self, filters, singles, position):
         if any([arg is None for arg in [singles, filters, position]]):
@@ -138,20 +138,20 @@ class MultibandImageBase(MultibandBase):
 
     Parameters
     ----------
-    filters: `list`
-        List of filter names.
-    array: 3D numpy array
-        Array (filters, y, x) of multiband data.
-        If this is used to initialize a `MultibandImage`,
-        either `bbox` or `singles` is also required.
-    singleType: `type`
-        Type of the single band object (eg. `Image`, `Mask`) to
-        convert the array into a tuple of single band objects
-        that point to the image array.
-    bbox: `Box2I`
-        Location of the array in a larger single band image.
-        If `bbox` is `None` then the bounding box is initialized
-        at the origin.
+    filters : `list`
+       List of filter names.
+    array : 3D numpy array
+       Array (filters, y, x) of multiband data.
+       If this is used to initialize a `MultibandImage`,
+       either `bbox` or `singles` is also required.
+    singleType : `type`
+       Type of the single band object (eg. `Image`, `Mask`) to
+       convert the array into a tuple of single band objects
+       that point to the image array.
+    bbox : `Box2I`
+       Location of the array in a larger single band image.
+       If `bbox` is `None` then the bounding box is initialized
+       at the origin.
     """
     def __init__(self, filters, array, singleType, bbox=None):
         # Create the single band objects from the array
@@ -176,8 +176,8 @@ class MultibandImageBase(MultibandBase):
 
         Returns
         -------
-        self._array: array
-            The resulting 3D data cube with shape (filters, y, x).
+        self._array : array
+           The resulting 3D data cube with shape (filters, y, x).
         """
         return self._array
 
@@ -192,8 +192,8 @@ class MultibandImageBase(MultibandBase):
 
         Parameters
         ----------
-        deep: `bool`
-            Whether or not to make a deep copy
+        deep : `bool`
+           Whether or not to make a deep copy
         """
         if deep:
             array = np.copy(self.array)
@@ -281,11 +281,11 @@ def makeImageFromSingles(cls, filters, singles):
 
     Parameters
     ----------
-    filters: `list`
-        List of filter names.
-    singles: `list`
-        A list of single band objects.
-        If `array` is not `None`, then `singles` is ignored
+    filters : `list`
+       List of filter names.
+    singles : `list`
+       A list of single band objects.
+       If `array` is not `None`, then `singles` is ignored
     """
     array = np.array([image.array for image in singles], dtype=singles[0].array.dtype)
     if not np.all([image.getBBox() == singles[0].getBBox() for image in singles[1:]]):
@@ -299,21 +299,21 @@ def makeImageFromKwargs(cls, filters, filterKwargs, singleType=ImageF, **kwargs)
 
     Parameters
     ----------
-    filters: `list`
-        List of filter names.
-    singleType: class
-        Class of the single band objects.
-        This is ignored unless `singles` and `array`
-        are both `None`, in which case it is required.
-    filterKwargs: `dict`
-        Keyword arguments to initialize a new instance of an inherited class
-        that are different for each filter.
-        The keys are the names of the arguments and the values
-        should also be dictionaries, with filter names as keys
-        and the value of the argument for a given filter as values.
-    kwargs: `dict`
-        Keyword arguments to initialize a new instance of an
-        inherited class that are the same in all bands.
+    filters : `list`
+       List of filter names.
+    singleType : class
+       Class of the single band objects.
+       This is ignored unless `singles` and `array`
+       are both `None`, in which case it is required.
+    filterKwargs : `dict`
+       Keyword arguments to initialize a new instance of an inherited class
+       that are different for each filter.
+       The keys are the names of the arguments and the values
+       should also be dictionaries, with filter names as keys
+       and the value of the argument for a given filter as values.
+    kwargs : `dict`
+       Keyword arguments to initialize a new instance of an
+       inherited class that are the same in all bands.
     """
     # Attempt to load a set of images
     singles = []
@@ -394,13 +394,13 @@ class MultibandMask(MultibandImageBase):
 
         Parameters
         ----------
-        key: `str`
-            Name of the key in the `MaskPlaneDict`
+        key : `str`
+           Name of the key in the `MaskPlaneDict`
 
         Returns
         -------
-        bit: `int`
-            Bit number for mask `key`
+        bit : `int`
+           Bit number for mask `key`
         """
         return self._refMask.getMaskPlaneDict()[key]
 
@@ -418,19 +418,19 @@ class MultibandMask(MultibandImageBase):
 
         Parameters
         ----------
-        names: `str` or list of `str`
-            Name of the key in the `MaskPlaneDict` or a list of keys.
-            If multiple keys are used, the value returned is the integer
-            value of the number with all of the bit values in `names`.
+        names : `str` or list of `str`
+           Name of the key in the `MaskPlaneDict` or a list of keys.
+           If multiple keys are used, the value returned is the integer
+           value of the number with all of the bit values in `names`.
 
-            For example if `MaskPlaneDict("CR")=3` and
-            `MaskPlaneDict("NO_DATA)=8`, then
-            `getPlaneBitMask(("CR", "NO_DATA"))=264`
+           For example if `MaskPlaneDict("CR")=3` and
+           `MaskPlaneDict("NO_DATA)=8`, then
+           `getPlaneBitMask(("CR", "NO_DATA"))=264`
 
         Returns
         -------
-        bit value: `int`
-            Bit value for all of the combined bits described by `names`.
+        bit value : `int`
+           Bit value for all of the combined bits described by `names`.
         """
         return self._refMask.getPlaneBitMask(names)
 
@@ -467,13 +467,13 @@ class MultibandMask(MultibandImageBase):
 
         Parameters
         ----------
-        name: `str`
-            Name of the new mask plane
+        name : `str`
+           Name of the new mask plane
 
         Returns
         -------
-        index: `int`
-            Bit value of the mask in the mask plane.
+        index : `int`
+           Bit value of the mask in the mask plane.
         """
         idx = Mask[MaskPixel].addMaskPlane(name)
         return idx
@@ -484,8 +484,8 @@ class MultibandMask(MultibandImageBase):
 
         Parameters
         ----------
-        name: `str`
-            Name of the mask plane to remove
+        name : `str`
+           Name of the mask plane to remove
         """
         Mask[MaskPixel].removeMaskPlaneDict()
 
@@ -539,21 +539,21 @@ class MultibandTripleBase(MultibandBase):
 
     Parameters
     ----------
-    filters: `list`
-        List of filter names. If `singles` is an `OrderedDict`
-        then this argument is ignored, otherwise it is required.
-    image: `list` or `MultibandImage`
-        List of `Image` objects that represent the image in each band or
-        a `MultibandImage`.
-        Ignored if `singles` is not `None`.
-    mask: `list` or `MultibandMask`
-        List of `Mask` objects that represent the mask in each bandor
-        a `MultibandMask`.
-        Ignored if `singles` is not `None`.
-    variance: `list` or `MultibandImage`
-        List of `Image` objects that represent the variance in each bandor
-        a `MultibandImage`.
-        Ignored if `singles` is not `None`.
+    filters : `list`
+       List of filter names. If `singles` is an `OrderedDict`
+       then this argument is ignored, otherwise it is required.
+    image : `list` or `MultibandImage`
+       List of `Image` objects that represent the image in each band or
+       a `MultibandImage`.
+       Ignored if `singles` is not `None`.
+    mask : `list` or `MultibandMask`
+       List of `Mask` objects that represent the mask in each bandor
+       a `MultibandMask`.
+       Ignored if `singles` is not `None`.
+    variance : `list` or `MultibandImage`
+       List of `Image` objects that represent the variance in each bandor
+       a `MultibandImage`.
+       Ignored if `singles` is not `None`.
     """
     def __init__(self, filters, image, mask, variance):
         self._filters = tuple(filters)
@@ -578,8 +578,8 @@ class MultibandTripleBase(MultibandBase):
         must all have their bounding boxes updated.
         Parameters
         ----------
-        xy0: `Point2I`
-            New minimum bounds of the bounding box
+        xy0 : `Point2I`
+           New minimum bounds of the bounding box
         """
         super().setXY0(xy0)
         self.image.setXY0(xy0)
@@ -597,13 +597,13 @@ class MultibandTripleBase(MultibandBase):
 
         Parameters
         ----------
-        xy0: `Point2I`
-            New minimum bounds of the bounding box
+        xy0 : `Point2I`
+           New minimum bounds of the bounding box
 
         Returns
         -------
-        result: `MultibandBase`
-            A copy of the object, shifted to `xy0`.
+        result : `MultibandBase`
+           A copy of the object, shifted to `xy0`.
         """
         raise NotImplementedError("shiftedTo not implemented until DM-10781")
         result = self.clone(False)
@@ -701,11 +701,11 @@ def tripleFromSingles(cls, filters, singles, **kwargs):
 
     Parameters
     ----------
-    filters: `list`
-        List of filter names.
-    singles: `list`
-        A list of single band objects.
-        If `array` is not `None`, then `singles` is ignored
+    filters : `list`
+       List of filter names.
+    singles : `list`
+       A list of single band objects.
+       If `array` is not `None`, then `singles` is ignored
     """
     if not np.all([single.getBBox() == singles[0].getBBox() for single in singles[1:]]):
         raise ValueError("Single band images did not all have the same bounding box")
@@ -720,17 +720,17 @@ def tripleFromArrays(cls, filters, image, mask, variance, bbox=None):
 
     Parameters
     ----------
-    filters: `list`
-        List of filter names.
-    image: array
-        Array of image values
-    mask: array
-        Array of mask values
-    variance: array
-        Array of variance values
-    bbox: `Box2I`
-        Location of the array in a larger single band image.
-        This argument is ignored if `singles` is not `None`.
+    filters : `list`
+       List of filter names.
+    image : array
+       Array of image values
+    mask : array
+       Array of mask values
+    variance : array
+       Array of variance values
+    bbox : `Box2I`
+       Location of the array in a larger single band image.
+       This argument is ignored if `singles` is not `None`.
     """
     if bbox is None:
         bbox = Box2I(Point2I(0, 0), Extent2I(image.shape[1], image.shape[0]))
@@ -751,21 +751,21 @@ def makeTripleFromKwargs(cls, filters, filterKwargs, singleType, **kwargs):
 
     Parameters
     ----------
-    filters: `list`
-        List of filter names.
-    singleType: `class`
-        Class of the single band objects.
-        This is ignored unless `singles` and `array`
-        are both `None`, in which case it is required.
-    filterKwargs: `dict`
-        Keyword arguments to initialize a new instance of an inherited class
-        that are different for each filter.
-        The keys are the names of the arguments and the values
-        should also be dictionaries, with filter names as keys
-        and the value of the argument for a given filter as values.
-    kwargs: `dict`
-        Keyword arguments to initialize a new instance of an inherited
-        class that are the same in all bands.
+    filters : `list`
+       List of filter names.
+    singleType : `class`
+       Class of the single band objects.
+       This is ignored unless `singles` and `array`
+       are both `None`, in which case it is required.
+    filterKwargs : `dict`
+       Keyword arguments to initialize a new instance of an inherited class
+       that are different for each filter.
+       The keys are the names of the arguments and the values
+       should also be dictionaries, with filter names as keys
+       and the value of the argument for a given filter as values.
+    kwargs : `dict`
+       Keyword arguments to initialize a new instance of an inherited
+       class that are the same in all bands.
     """
     # Attempt to load a set of images
     singles = []
@@ -821,19 +821,19 @@ class MultibandMaskedImage(MultibandTripleBase):
 
         Parameters
         ----------
-        image: `MultibandImage`
-            `MultibandImage` object that represent the image in each band.
-        mask: `MultibandMask`
-            `MultibandMask` object that represent the mask in each band.
-        variance: `MultibandImage`
-            `MultibandImage` object that represent the variance in each band.
+        image : `MultibandImage`
+           `MultibandImage` object that represent the image in each band.
+        mask : `MultibandMask`
+           `MultibandMask` object that represent the mask in each band.
+        variance : `MultibandImage`
+           `MultibandImage` object that represent the variance in each band.
 
         Returns
         -------
-        singles: `tuple`
-            Tuple of `MaskedImage` objects for each band,
-            where the `image`, `mask`, and `variance` of each `single`
-            point to the multiband objects.
+        singles : `tuple`
+           Tuple of `MaskedImage` objects for each band,
+           where the `image`, `mask`, and `variance` of each `single`
+           point to the multiband objects.
         """
         singles = []
         if image is None:
