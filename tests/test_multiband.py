@@ -325,6 +325,20 @@ class MultibandMaskTestCase(lsst.utils.tests.TestCase):
         for k in sorted(planes.keys()):
             self.assertEqual(planes[k], self.mMask1.getMaskPlane(k))
 
+    def testRemoveMaskPlane(self):
+        mMask = self.mMask1
+        # Add mask plane FOO and make sure it got added properly
+        mMask.addMaskPlane("FOO")
+        self.assertIn("FOO", mMask.getMaskPlaneDict())
+        self.assertIn("FOO", Mask().getMaskPlaneDict())
+        # Remove plane FOO, noting that removeMaskPlane removes it from the
+        # default, but each instance remembers the version of the mask
+        # dictionary that was current when it was created, so it will still
+        # be in the mMask dict.
+        mMask.removeMaskPlane("FOO")
+        self.assertIn("FOO", mMask.getMaskPlaneDict())
+        self.assertNotIn("FOO", Mask().getMaskPlaneDict())
+
     def testFilterSlicing(self):
         _testImageFilterSlicing(self, self.mMask1, Mask, self.bbox, self.values1[0])
 

@@ -487,7 +487,7 @@ class MultibandMask(MultibandImageBase):
         name : `str`
            Name of the mask plane to remove
         """
-        Mask[MaskPixel].removeMaskPlaneDict()
+        Mask[MaskPixel].removeMaskPlane(name)
 
     def clearAllMaskPlanes(self):
         """Clear all the pixels
