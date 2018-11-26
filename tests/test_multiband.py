@@ -325,6 +325,42 @@ class MultibandMaskTestCase(lsst.utils.tests.TestCase):
         for k in sorted(planes.keys()):
             self.assertEqual(planes[k], self.mMask1.getMaskPlane(k))
 
+    def testRemoveMaskPlane(self):
+        mMask = self.mMask1
+        # Add mask plane FOO and make sure it got added properly
+        mMask.addMaskPlane("FOO")
+        self.assertIn("FOO", mMask.getMaskPlaneDict())
+        self.assertIn("FOO", Mask().getMaskPlaneDict())
+        # Remove plane FOO, noting that removeMaskPlane removes it from the
+        # default, but each instance remembers the version of the mask
+        # dictionary that was current when it was created, so it will still
+        # be in the mMask dict.
+        mMask.removeMaskPlane("FOO")
+        self.assertIn("FOO", mMask.getMaskPlaneDict())
+        self.assertNotIn("FOO", Mask().getMaskPlaneDict())
+
+    def testRemoveAndClearMaskPlane(self):
+        mMask = self.mMask1
+        # Add mask plane FOO and test clearing it without removing plane from
+        # default dict
+        mMask.addMaskPlane("FOO")
+        mMask.removeAndClearMaskPlane("FOO")
+        self.assertNotIn("FOO", mMask.getMaskPlaneDict())
+        self.assertIn("FOO", Mask().getMaskPlaneDict())
+        # Now also remove it from default dict
+        mMask.addMaskPlane("FOO")
+        mMask.removeAndClearMaskPlane("FOO", removeFromDefault=True)
+        self.assertNotIn("FOO", mMask.getMaskPlaneDict())
+        self.assertNotIn("FOO", Mask().getMaskPlaneDict())
+        # Now remove and clear the EDGE mask plane and make sure all of the planes
+        # in the MultibandMask (i.e. the "singles") got updated accordingly
+        mMask.removeAndClearMaskPlane("EDGE", removeFromDefault=True)
+        self.assertNotIn("EDGE", mMask.getMaskPlaneDict())
+        self.assertNotIn("EDGE", Mask().getMaskPlaneDict())
+        # Assert that all mask planes were updated (i.e. having EDGE removed)
+        self.assertTrue(np.all([s.array == self.values1[n] & ~self.EDGE for
+                                n, s in enumerate(mMask.singles)]))
+
     def testFilterSlicing(self):
         _testImageFilterSlicing(self, self.mMask1, Mask, self.bbox, self.values1[0])
 
