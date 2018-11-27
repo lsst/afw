@@ -792,6 +792,26 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         with self.assertRaises(IndexError):
             del catalog[50]
 
+    def testTicketDM5855(self):
+        """Catalogs should raise AttributeError when non-existent members
+        are requested.
+        There was a bug where attempting to access a non-existent member on a
+        non-contiguous catalog would raise an implicitly chained
+        ``RuntimeError("not contiguous in memory")``.
+        """
+        schema = lsst.afw.table.SimpleTable.makeMinimalSchema()
+        catalog = lsst.afw.table.SimpleCatalog(schema)
+        catalog.addNew()
+        catalog.addNew()
+        catalog.addNew()
+        # this test is to ensure the current behavior is unchanged
+        with self.assertRaises(AttributeError):
+            catalog.thisIsNotAClassMember()
+        # this test is of the broken behavior
+        del catalog[1]
+        with self.assertRaises(AttributeError):
+            catalog.thisIsNotAClassMember()
+
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
     pass
