@@ -229,7 +229,8 @@ std::ostream &operator<<(std::ostream &os, PhotoCalib const &photoCalib) {
     return os << "mean: " << photoCalib._calibrationMean << " err: " << photoCalib._calibrationErr;
 }
 
-MaskedImage<float> PhotoCalib::calibrateImage(MaskedImage<float> const &maskedImage) const {
+MaskedImage<float> PhotoCalib::calibrateImage(MaskedImage<float> const &maskedImage,
+                                              bool includeScaleUncertainty) const {
     // Deep copy construct, as we're mutiplying in-place.
     auto result = MaskedImage<float>(maskedImage, true);
 
@@ -238,8 +239,13 @@ MaskedImage<float> PhotoCalib::calibrateImage(MaskedImage<float> const &maskedIm
     } else {
         _calibration->multiplyImage(*(result.getImage()), true);  // only in the overlap region
     }
-    toMaggiesVariance(maskedImage.getImage()->getArray(), maskedImage.getVariance()->getArray(),
-                      _calibrationErr, result.getImage()->getArray(), result.getVariance()->getArray());
+    if (includeScaleUncertainty) {
+        toMaggiesVariance(maskedImage.getImage()->getArray(), maskedImage.getVariance()->getArray(),
+                          _calibrationErr, result.getImage()->getArray(), result.getVariance()->getArray());
+    } else {
+        toMaggiesVariance(maskedImage.getImage()->getArray(), maskedImage.getVariance()->getArray(), 0,
+                          result.getImage()->getArray(), result.getVariance()->getArray());
+    }
 
     return result;
 }
