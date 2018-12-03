@@ -449,7 +449,7 @@ class ButlerImage(FakeImageDataSource):
 
         return im
 
-    def getCcdImage(self, ccd, imageFactory=afwImage.ImageF, binSize=1):
+    def getCcdImage(self, ccd, imageFactory=afwImage.ImageF, binSize=1, asMaskedImage=False):
         """Return an image of the specified ccd, and also the (possibly updated) ccd"""
 
         log = lsst.log.Log.getLogger("afw.cameraGeom.utils.ButlerImage")
@@ -477,7 +477,10 @@ class ButlerImage(FakeImageDataSource):
                     break
 
             if im:
-                im = im.getMaskedImage().getImage()
+                if asMaskedImage:
+                    im = im.getMaskedImage()
+                else:
+                    im = im.getMaskedImage().getImage()
             else:
                 if self.verbose:
                     print("Reading %s: %s" % (ccd.getId(), err))  # lost by jupyterLab
