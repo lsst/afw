@@ -67,37 +67,37 @@ PYBIND11_MODULE(photoCalib, mod) {
 
     table::io::python::addPersistableMethods<PhotoCalib>(cls);
 
-    /* Members - maggies */
-    cls.def("instFluxToMaggies",
+    /* Members - nanojansky */
+    cls.def("instFluxToNanojansky",
             (double (PhotoCalib::*)(double, lsst::geom::Point<double, 2> const &) const) &
-                    PhotoCalib::instFluxToMaggies,
+                    PhotoCalib::instFluxToNanojansky,
             "instFlux"_a, "point"_a);
-    cls.def("instFluxToMaggies", (double (PhotoCalib::*)(double) const) & PhotoCalib::instFluxToMaggies,
+    cls.def("instFluxToNanojansky", (double (PhotoCalib::*)(double) const) & PhotoCalib::instFluxToNanojansky,
             "instFlux"_a);
 
-    cls.def("instFluxToMaggies",
+    cls.def("instFluxToNanojansky",
             (Measurement(PhotoCalib::*)(double, double, lsst::geom::Point<double, 2> const &) const) &
-                    PhotoCalib::instFluxToMaggies,
+                    PhotoCalib::instFluxToNanojansky,
             "instFlux"_a, "instFluxErr"_a, "point"_a);
-    cls.def("instFluxToMaggies",
-            (Measurement(PhotoCalib::*)(double, double) const) & PhotoCalib::instFluxToMaggies, "instFlux"_a,
-            "instFluxErr"_a);
+    cls.def("instFluxToNanojansky",
+            (Measurement(PhotoCalib::*)(double, double) const) & PhotoCalib::instFluxToNanojansky,
+            "instFlux"_a, "instFluxErr"_a);
 
-    cls.def("instFluxToMaggies",
+    cls.def("instFluxToNanojansky",
             (Measurement(PhotoCalib::*)(afw::table::SourceRecord const &, std::string const &) const) &
-                    PhotoCalib::instFluxToMaggies,
+                    PhotoCalib::instFluxToNanojansky,
             "sourceRecord"_a, "instFluxField"_a);
 
-    cls.def("instFluxToMaggies",
+    cls.def("instFluxToNanojansky",
             (ndarray::Array<double, 2, 2>(PhotoCalib::*)(afw::table::SourceCatalog const &,
                                                          std::string const &) const) &
-                    PhotoCalib::instFluxToMaggies,
+                    PhotoCalib::instFluxToNanojansky,
             "sourceCatalog"_a, "instFluxField"_a);
 
-    cls.def("instFluxToMaggies",
+    cls.def("instFluxToNanojansky",
             (void (PhotoCalib::*)(afw::table::SourceCatalog &, std::string const &, std::string const &)
                      const) &
-                    PhotoCalib::instFluxToMaggies,
+                    PhotoCalib::instFluxToNanojansky,
             "sourceCatalog"_a, "instFluxField"_a, "outField"_a);
 
     /* Members - magnitudes */

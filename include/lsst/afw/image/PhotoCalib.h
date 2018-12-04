@@ -74,30 +74,37 @@ inline void assertNonNegative(double value, std::string const &name) {
  * @brief The photometric calibration of an exposure.
  *
  * A PhotoCalib is a BoundedField (a function with a specified domain) that converts from post-ISR
- * counts-on-chip (ADU) to flux and magnitude. It is defined in terms of "maggies", which are a linear
- * unit defined in SDSS (definition given in nanomaggies):
- *     http://www.sdss.org/dr12/algorithms/magnitudes/#nmgy
+ * counts-on-chip (ADU) to flux and magnitude. It is defined such that a calibration of 1 means one count
+ * is equal to one nanojansky (nJy, 10^-35 W/m^2/Hz in SI units). The nJy was chosen because it represents
+ * a linear flux unit with values in a convenient range (e.g. LSST's single image depth of 24.5 is 575 nJy).
+ * See more detailed discussion in: https://pstn-001.lsst.io/
  *
  * PhotoCalib is immutable.
  *
- * The spatially varying flux calibration has units of maggies/ADU, and is defined such that,
+ * The spatially varying flux calibration has units of nJy/ADU, and is defined such that,
  * at a position (x,y) in the domain of the boundedField calibration and for a given measured source instFlux:
  * @f[
- *     instFlux*calibration(x,y) = flux [maggies]
+ *     instFlux*calibration(x,y) = flux [nJy]
  * @f]
  * while the errors (constant on the domain) are defined as:
  * @f[
- *     sqrt((instFluxErr/instFlux)^2 + (calibrationErr/calibration)^2)*flux = fluxErr [maggies]
+ *     sqrt((instFluxErr/instFlux)^2 + (calibrationErr/calibration)^2)*flux = fluxErr [nJy]
  * @f]
  * This implies that the conversions from instFlux and instFlux error to magnitude and magnitude error
  * are as follows:
  * @f[
- *     -2.5*log_{10}(instFlux*calibration(x,y)) = magnitude
+ *     -2.5*log_{10}(instFlux*calibration(x,y)*1e-9/referenceFlux) = magnitude
+ * @f]
+ *
+ * where referenceFlux is the AB Magnitude reference flux from Oke & Gunn 1983 (first equation),
+ * @f[
+ *     referenceFlux = 1e23 * 10^(48.6/-2.5)
  * @f]
  * and
  * @f[
  *     2.5/log(10)*sqrt((instFluxErr/instFlux)^2 + (calibrationErr/calibration)^2) = magnitudeErr
  * @f]
+ * Note that this is independent of referenceFlux.
  */
 class PhotoCalib : public table::io::PersistableFacade<PhotoCalib>, public table::io::Persistable {
 public:
@@ -167,22 +174,22 @@ public:
     }
 
     /**
-     * Convert instFlux in ADU to maggies at a point in the BoundedField.
+     * Convert instFlux in ADU to nJy at a point in the BoundedField.
      *
      * If passed point, use the exact calculation at that point, otherwise, use the mean scaling factor.
      *
      * @param[in]  instFlux The source instFlux in ADU.
      * @param[in]  point    The point that instFlux is measured at.
      *
-     * @returns    The flux in maggies.
+     * @returns    The flux in nJy.
      */
-    double instFluxToMaggies(double instFlux, lsst::geom::Point<double, 2> const &point) const;
+    double instFluxToNanojansky(double instFlux, lsst::geom::Point<double, 2> const &point) const;
 
-    /// @overload instFluxToMaggies(double, lsst::geom::Point<double, 2> const &) const;
-    double instFluxToMaggies(double instFlux) const;
+    /// @overload instFluxToNanojansky(double, lsst::geom::Point<double, 2> const &) const;
+    double instFluxToNanojansky(double instFlux) const;
 
     /**
-     * Convert instFlux and error in instFlux (ADU) to maggies and maggies error.
+     * Convert instFlux and error in instFlux (ADU) to nJy and nJy error.
      *
      * If passed point, use the exact calculation at that point, otherwise, use the mean scaling factor.
      *
@@ -190,17 +197,17 @@ public:
      * @param[in]  instFluxErr  The instFlux error.
      * @param[in]  point        The point that instFlux is measured at.
      *
-     * @returns    The flux in maggies and error.
+     * @returns    The flux in nJy and error.
      */
-    Measurement instFluxToMaggies(double instFlux, double instFluxErr,
-                                  lsst::geom::Point<double, 2> const &point) const;
+    Measurement instFluxToNanojansky(double instFlux, double instFluxErr,
+                                     lsst::geom::Point<double, 2> const &point) const;
 
-    /// @overload Measurement instFluxToMaggies(double, double, lsst::geom::Point<double, 2> const &) const
-    Measurement instFluxToMaggies(double instFlux, double instFluxErr) const;
+    /// @overload Measurement instFluxToNanojansky(double, double, lsst::geom::Point<double, 2> const &) const
+    Measurement instFluxToNanojansky(double instFlux, double instFluxErr) const;
 
     /**
      * Convert `sourceRecord[instFluxField_instFlux]` (ADU) at location
-     * `(sourceRecord.get("x"), sourceRecord.get("y"))` (pixels) to maggies and maggie error.
+     * `(sourceRecord.get("x"), sourceRecord.get("y"))` (pixels) to nJy and magnitude error.
      *
      * @param[in]  sourceRecord  The source record to get instFlux and position from.
      * @param[in]  instFluxField The instFlux field: Keys of the form "*_instFlux" and "*_instFluxErr" must
@@ -208,14 +215,14 @@ public:
      *                           For example: instFluxField = "PsfFlux" -> "PsfFlux_instFlux",
      * "PsfFlux_instFluxErr"
      *
-     * @returns    The flux in maggies and error for this source.
+     * @returns    The flux in nJy and error for this source.
      */
-    Measurement instFluxToMaggies(const afw::table::SourceRecord &sourceRecord,
-                                  std::string const &instFluxField) const;
+    Measurement instFluxToNanojansky(const afw::table::SourceRecord &sourceRecord,
+                                     std::string const &instFluxField) const;
 
     /**
      * Convert `sourceCatalog[instFluxField_instFlux]` (ADU) at locations
-     * `(sourceCatalog.get("x"), sourceCatalog.get("y"))` (pixels) to maggies.
+     * `(sourceCatalog.get("x"), sourceCatalog.get("y"))` (pixels) to nJy.
      *
      * @param[in]  sourceCatalog  The source catalog to get instFlux and position from.
      * @param[in]  instFluxField  The instFlux field: Keys of the form "*_instFlux" and "*_instFluxErr" must
@@ -223,14 +230,14 @@ public:
      *                            For example: instFluxField = "PsfFlux" -> "PsfFlux_instFlux",
      * "PsfFlux_instFluxErr"
      *
-     * @returns    The flux in maggies and error for this source.
+     * @returns    The flux in nJy and error for this source.
      */
-    ndarray::Array<double, 2, 2> instFluxToMaggies(afw::table::SourceCatalog const &sourceCatalog,
-                                                   std::string const &instFluxField) const;
+    ndarray::Array<double, 2, 2> instFluxToNanojansky(afw::table::SourceCatalog const &sourceCatalog,
+                                                      std::string const &instFluxField) const;
 
     /**
      * Convert `sourceCatalog[instFluxField_instFlux]` (ADU) at locations
-     * `(sourceCatalog.get("x"), sourceCatalog.get("y"))` (pixels) to maggies
+     * `(sourceCatalog.get("x"), sourceCatalog.get("y"))` (pixels) to nJy
      * and write the results back to `sourceCatalog[outField_mag]`.
      *
      * @param[in]  sourceCatalog  The source catalog to get instFlux and position from.
@@ -238,13 +245,13 @@ public:
      * exist.
      *                            For example: instFluxField = "PsfFlux" -> "PsfFlux_instFlux",
      * "PsfFlux_instFluxErr"
-     * @param[in]  outField       The field to write the maggies and maggie errors to.
+     * @param[in]  outField       The field to write the nJy and magnitude errors to.
      *                            Keys of the form "*_instFlux" and "*_instFluxErr" must exist in the schema.
      *
      * @warning Not implemented yet: See DM-10155.
      */
-    void instFluxToMaggies(afw::table::SourceCatalog &sourceCatalog, std::string const &instFluxField,
-                           std::string const &outField) const;
+    void instFluxToNanojansky(afw::table::SourceCatalog &sourceCatalog, std::string const &instFluxField,
+                              std::string const &outField) const;
 
     /**
      * Convert instFlux in ADU to AB magnitude.
@@ -330,7 +337,7 @@ public:
                              std::string const &outField) const;
 
     /**
-     * Return a flux calibrated image, with pixel values in Maggies.
+     * Return a flux calibrated image, with pixel values in nJy.
      *
      * Mask pixels are propogated directly from the input image.
      *
@@ -363,8 +370,7 @@ public:
      *
      * This value is defined, for instFlux at (x,y), such that:
      * @f[
-     *   instFlux*computeScaledCalibration()(x,y)*getCalibrationMean() = instFluxToMaggies(instFlux,
-     * (x,y))
+     *   instFlux*computeScaledCalibration()(x,y)*getCalibrationMean() = instFluxToNanojansky(instFlux, (x,y))
      * @f]
      *
      * @see PhotoCalib::computeScaledCalibration(), getCalibrationErr(), getInstFluxMag0()
@@ -378,7 +384,7 @@ public:
      *
      * This value is defined such that for some instFluxErr, instFlux, and flux:
      * @f[
-     *     sqrt((instFluxErr/instFlux)^2 + (calibrationErr/calibration(x,y))^2)*flux = fluxErr (in maggies)
+     *     sqrt((instFluxErr/instFlux)^2 + (calibrationErr/calibration(x,y))^2)*flux = fluxErr [nJy]
      * @f]
      *
      * @see PhotoCalib::computeScaledCalibration(), getCalibrationMean()
@@ -392,7 +398,7 @@ public:
      *
      * This value is defined, for instFlux at (x,y), such that:
      * @f[
-     *   instFlux*computeScaledCalibration()(x,y)/getInstFluxMag0() = instFluxToMaggies(instFlux, (x,y))
+     *   instFlux*computeScaledCalibration()(x,y)/getInstFluxMag0() = instFluxToNanojansky(instFlux, (x,y))
      * @f]
      *
      * @see PhotoCalib::computeScaledCalibration(), getCalibrationMean()
@@ -406,7 +412,7 @@ public:
      *
      * This value is defined, for instFlux at (x,y), such that:
      * @f[
-     *   instFlux*computeScaledCalibration()(x,y)*getCalibrationMean() = instFluxToMaggies(instFlux,
+     *   instFlux*computeScaledCalibration()(x,y)*getCalibrationMean() = instFluxToNanojansky(instFlux,
      * (x,y))
      * @f]
      *
@@ -428,7 +434,7 @@ public:
      *   - return = BoundedField returned by this method
      * the return value from this method is defined as:
      * @f[
-     *   this.instFluxToMaggies(c, (x,y))*return(x, y) = other.instFluxToMaggies(c, (x,y))
+     *   this.instFluxToNanojansky(c, (x,y))*return(x, y) = other.instFluxToNanojansky(c, (x,y))
      * @f]
      *
      * @param[in]  other  The PhotoCalib to scale to.
@@ -479,8 +485,9 @@ private:
     double computeCalibrationMean(std::shared_ptr<afw::math::BoundedField> calibration) const;
 
     /// Helpers for converting arrays of instFlux
-    void instFluxToMaggiesArray(afw::table::SourceCatalog const &sourceCatalog,
-                                std::string const &instFluxField, ndarray::Array<double, 2, 2> result) const;
+    void instFluxToNanojanskyArray(afw::table::SourceCatalog const &sourceCatalog,
+                                   std::string const &instFluxField,
+                                   ndarray::Array<double, 2, 2> result) const;
     void instFluxToMagnitudeArray(afw::table::SourceCatalog const &sourceCatalog,
                                   std::string const &instFluxField,
                                   ndarray::Array<double, 2, 2> result) const;

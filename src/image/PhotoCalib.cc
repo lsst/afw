@@ -47,38 +47,44 @@ namespace {
 
 int const SERIALIZATION_VERSION = 0;
 
-double toMaggies(double instFlux, double scale) { return instFlux * scale; }
+// The Oke & Gunn (1983) AB magnitude reference flux, in nJy.
+const double _referenceFlux = 1e23 * std::pow(10, (48.6 / -2.5)) * 1e9;
 
-double toMagnitude(double instFlux, double scale) { return -2.5 * log10(instFlux * scale); }
+double toNanojansky(double instFlux, double scale) { return instFlux * scale; }
 
-double fromMagnitude(double magnitude, double scale) { return pow(10, magnitude / -2.5) / scale; }
+double toMagnitude(double instFlux, double scale) { return -2.5 * log10(instFlux * scale / _referenceFlux); }
 
-double toMaggiesErr(double instFlux, double instFluxErr, double scale, double scaleErr, double maggies) {
-    return maggies * hypot(instFluxErr / instFlux, scaleErr / scale);
+double fromMagnitudeToInstFlux(double magnitude, double scale) {
+    return pow(10, magnitude / -2.5) / scale * _referenceFlux;
+}
+
+double toNanojanskyErr(double instFlux, double instFluxErr, double scale, double scaleErr,
+                       double nanojansky) {
+    return nanojansky * hypot(instFluxErr / instFlux, scaleErr / scale);
 }
 
 /**
  * Compute the variance of an array of fluxes, for calculations on MaskedImages.
  *
  * MaskedImage stores the variance instead of the standard deviation, so we can skip a sqrt().
- * Usage in calibrateImage() is to compute maggies directly, so that the calibration scale is
- * `maggies/instFlux` (and thus not passed as an argument).
+ * Usage in calibrateImage() is to compute flux (nJy) directly, so that the calibration scale is
+ * implictly `flux/instFlux` (and thus not passed as an argument).
  *
  * @param instFlux[in] The instrumental flux.
  * @param instFluxVar[in] The variance of the instrumental fluxes.
  * @param scaleErr[in] The error on the calibration scale.
- * @param maggies[in] The physical fluxes calculated from the instrumental fluxes.
+ * @param flux[in] The physical fluxes calculated from the instrumental fluxes.
  * @param out[out] The output array to fill with the variance values.
  */
-void toMaggiesVariance(ndarray::Array<float const, 2, 1> const &instFlux,
-                       ndarray::Array<float const, 2, 1> const &instFluxVar, float scaleErr,
-                       ndarray::Array<float const, 2, 1> const &maggies, ndarray::Array<float, 2, 1> out) {
-    auto eigenMaggies = ndarray::asEigen<Eigen::ArrayXpr>(maggies);
+void toNanojanskyVariance(ndarray::Array<float const, 2, 1> const &instFlux,
+                          ndarray::Array<float const, 2, 1> const &instFluxVar, float scaleErr,
+                          ndarray::Array<float const, 2, 1> const &flux, ndarray::Array<float, 2, 1> out) {
+    auto eigenFlux = ndarray::asEigen<Eigen::ArrayXpr>(flux);
     auto eigenInstFluxVar = ndarray::asEigen<Eigen::ArrayXpr>(instFluxVar);
     auto eigenInstFlux = ndarray::asEigen<Eigen::ArrayXpr>(instFlux);
     auto eigenOut = ndarray::asEigen<Eigen::ArrayXpr>(out);
-    eigenOut = eigenMaggies.square() * (eigenInstFluxVar / eigenInstFlux.square() +
-                                        (scaleErr / eigenMaggies * eigenInstFlux).square());
+    eigenOut = eigenFlux.square() *
+               (eigenInstFluxVar / eigenInstFlux.square() + (scaleErr / eigenFlux * eigenInstFlux).square());
 }
 
 double toMagnitudeErr(double instFlux, double instFluxErr, double scale, double scaleErr) {
@@ -87,55 +93,57 @@ double toMagnitudeErr(double instFlux, double instFluxErr, double scale, double 
 
 }  // anonymous namespace
 
-// ------------------- Conversions to Maggies -------------------
+// ------------------- Conversions to nanojansky -------------------
 
-double PhotoCalib::instFluxToMaggies(double instFlux, lsst::geom::Point<double, 2> const &point) const {
-    return toMaggies(instFlux, evaluate(point));
+double PhotoCalib::instFluxToNanojansky(double instFlux, lsst::geom::Point<double, 2> const &point) const {
+    return toNanojansky(instFlux, evaluate(point));
 }
 
-double PhotoCalib::instFluxToMaggies(double instFlux) const { return toMaggies(instFlux, _calibrationMean); }
+double PhotoCalib::instFluxToNanojansky(double instFlux) const {
+    return toNanojansky(instFlux, _calibrationMean);
+}
 
-Measurement PhotoCalib::instFluxToMaggies(double instFlux, double instFluxErr,
-                                          lsst::geom::Point<double, 2> const &point) const {
-    double calibration, err, maggies;
+Measurement PhotoCalib::instFluxToNanojansky(double instFlux, double instFluxErr,
+                                             lsst::geom::Point<double, 2> const &point) const {
+    double calibration, err, nanojansky;
     calibration = evaluate(point);
-    maggies = toMaggies(instFlux, calibration);
-    err = toMaggiesErr(instFlux, instFluxErr, calibration, _calibrationErr, maggies);
-    return Measurement(maggies, err);
+    nanojansky = toNanojansky(instFlux, calibration);
+    err = toNanojanskyErr(instFlux, instFluxErr, calibration, _calibrationErr, nanojansky);
+    return Measurement(nanojansky, err);
 }
 
-Measurement PhotoCalib::instFluxToMaggies(double instFlux, double instFluxErr) const {
-    double maggies = toMaggies(instFlux, _calibrationMean);
-    double err = toMaggiesErr(instFlux, instFluxErr, _calibrationMean, _calibrationErr, maggies);
-    return Measurement(maggies, err);
+Measurement PhotoCalib::instFluxToNanojansky(double instFlux, double instFluxErr) const {
+    double nanojansky = toNanojansky(instFlux, _calibrationMean);
+    double err = toNanojanskyErr(instFlux, instFluxErr, _calibrationMean, _calibrationErr, nanojansky);
+    return Measurement(nanojansky, err);
 }
 
-Measurement PhotoCalib::instFluxToMaggies(afw::table::SourceRecord const &sourceRecord,
-                                          std::string const &instFluxField) const {
+Measurement PhotoCalib::instFluxToNanojansky(afw::table::SourceRecord const &sourceRecord,
+                                             std::string const &instFluxField) const {
     auto position = sourceRecord.getCentroid();
     auto instFluxKey = sourceRecord.getSchema().find<double>(instFluxField + "_instFlux").key;
     auto instFluxErrKey = sourceRecord.getSchema().find<double>(instFluxField + "_instFluxErr").key;
-    return instFluxToMaggies(sourceRecord.get(instFluxKey), sourceRecord.get(instFluxErrKey), position);
+    return instFluxToNanojansky(sourceRecord.get(instFluxKey), sourceRecord.get(instFluxErrKey), position);
 }
-ndarray::Array<double, 2, 2> PhotoCalib::instFluxToMaggies(afw::table::SourceCatalog const &sourceCatalog,
-                                                           std::string const &instFluxField) const {
+ndarray::Array<double, 2, 2> PhotoCalib::instFluxToNanojansky(afw::table::SourceCatalog const &sourceCatalog,
+                                                              std::string const &instFluxField) const {
     ndarray::Array<double, 2, 2> result =
             ndarray::allocate(ndarray::makeVector(int(sourceCatalog.size()), 2));
-    instFluxToMaggiesArray(sourceCatalog, instFluxField, result);
+    instFluxToNanojanskyArray(sourceCatalog, instFluxField, result);
     return result;
 }
 
-void PhotoCalib::instFluxToMaggies(afw::table::SourceCatalog &sourceCatalog, std::string const &instFluxField,
-                                   std::string const &outField) const {
+void PhotoCalib::instFluxToNanojansky(afw::table::SourceCatalog &sourceCatalog,
+                                      std::string const &instFluxField, std::string const &outField) const {
     auto instFluxKey = sourceCatalog.getSchema().find<double>(instFluxField + "_instFlux").key;
     auto instFluxErrKey = sourceCatalog.getSchema().find<double>(instFluxField + "_instFluxErr").key;
-    auto maggiesKey = sourceCatalog.getSchema().find<double>(outField + "_instFlux").key;
-    auto maggiesErrKey = sourceCatalog.getSchema().find<double>(outField + "_instFluxErr").key;
+    auto nanojanskyKey = sourceCatalog.getSchema().find<double>(outField + "_instFlux").key;
+    auto nanojanskyErrKey = sourceCatalog.getSchema().find<double>(outField + "_instFluxErr").key;
     for (auto &record : sourceCatalog) {
-        auto result =
-                instFluxToMaggies(record.get(instFluxKey), record.get(instFluxErrKey), record.getCentroid());
-        record.set(maggiesKey, result.value);
-        record.set(maggiesErrKey, result.err);
+        auto result = instFluxToNanojansky(record.get(instFluxKey), record.get(instFluxErrKey),
+                                           record.getCentroid());
+        record.set(nanojanskyKey, result.value);
+        record.set(nanojanskyErrKey, result.err);
     }
 }
 
@@ -197,11 +205,11 @@ void PhotoCalib::instFluxToMagnitude(afw::table::SourceCatalog &sourceCatalog,
 // ------------------- other utility methods -------------------
 
 double PhotoCalib::magnitudeToInstFlux(double magnitude) const {
-    return fromMagnitude(magnitude, _calibrationMean);
+    return fromMagnitudeToInstFlux(magnitude, _calibrationMean);
 }
 
 double PhotoCalib::magnitudeToInstFlux(double magnitude, lsst::geom::Point<double, 2> const &point) const {
-    return fromMagnitude(magnitude, evaluate(point));
+    return fromMagnitudeToInstFlux(magnitude, evaluate(point));
 }
 
 std::shared_ptr<math::BoundedField> PhotoCalib::computeScaledCalibration() const {
@@ -240,11 +248,12 @@ MaskedImage<float> PhotoCalib::calibrateImage(MaskedImage<float> const &maskedIm
         _calibration->multiplyImage(*(result.getImage()), true);  // only in the overlap region
     }
     if (includeScaleUncertainty) {
-        toMaggiesVariance(maskedImage.getImage()->getArray(), maskedImage.getVariance()->getArray(),
-                          _calibrationErr, result.getImage()->getArray(), result.getVariance()->getArray());
+        toNanojanskyVariance(maskedImage.getImage()->getArray(), maskedImage.getVariance()->getArray(),
+                             _calibrationErr, result.getImage()->getArray(),
+                             result.getVariance()->getArray());
     } else {
-        toMaggiesVariance(maskedImage.getImage()->getArray(), maskedImage.getVariance()->getArray(), 0,
-                          result.getImage()->getArray(), result.getVariance()->getArray());
+        toNanojanskyVariance(maskedImage.getImage()->getArray(), maskedImage.getVariance()->getArray(), 0,
+                             result.getImage()->getArray(), result.getVariance()->getArray());
     }
 
     return result;
@@ -350,10 +359,10 @@ double PhotoCalib::evaluate(lsst::geom::Point<double, 2> const &point) const {
         return _calibration->evaluate(point);
 }
 
-void PhotoCalib::instFluxToMaggiesArray(afw::table::SourceCatalog const &sourceCatalog,
-                                        std::string const &instFluxField,
-                                        ndarray::Array<double, 2, 2> result) const {
-    double instFlux, instFluxErr, maggies, calibration;
+void PhotoCalib::instFluxToNanojanskyArray(afw::table::SourceCatalog const &sourceCatalog,
+                                           std::string const &instFluxField,
+                                           ndarray::Array<double, 2, 2> result) const {
+    double instFlux, instFluxErr, nanojansky, calibration;
     auto instFluxKey = sourceCatalog.getSchema().find<double>(instFluxField + "_instFlux").key;
     auto instFluxErrKey = sourceCatalog.getSchema().find<double>(instFluxField + "_instFluxErr").key;
     auto iter = result.begin();
@@ -361,9 +370,9 @@ void PhotoCalib::instFluxToMaggiesArray(afw::table::SourceCatalog const &sourceC
         instFlux = rec.get(instFluxKey);
         instFluxErr = rec.get(instFluxErrKey);
         calibration = evaluate(rec.getCentroid());
-        maggies = toMaggies(instFlux, calibration);
-        (*iter)[0] = maggies;
-        (*iter)[1] = toMaggiesErr(instFlux, instFluxErr, calibration, _calibrationErr, maggies);
+        nanojansky = toNanojansky(instFlux, calibration);
+        (*iter)[0] = nanojansky;
+        (*iter)[1] = toNanojanskyErr(instFlux, instFluxErr, calibration, _calibrationErr, nanojansky);
         iter++;
     }
 }
