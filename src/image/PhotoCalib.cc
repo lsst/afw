@@ -60,7 +60,7 @@ double fromMagnitudeToInstFlux(double magnitude, double scale) {
 
 double toNanojanskyErr(double instFlux, double instFluxErr, double scale, double scaleErr,
                        double nanojansky) {
-    return nanojansky * hypot(instFluxErr / instFlux, scaleErr / scale);
+    return std::abs(nanojansky) * hypot(instFluxErr / instFlux, scaleErr / scale);
 }
 
 /**

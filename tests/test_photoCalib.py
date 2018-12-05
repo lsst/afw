@@ -566,6 +566,15 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
         with(self.assertRaises(lsst.pex.exceptions.InvalidParameterError)):
             lsst.afw.image.PhotoCalib(1.0, -1.0, self.constantCalibration, True)
 
+    def testPositiveErrors(self):
+        """The errors should always be positive, regardless of whether the
+        input flux is negative (as can happen in difference imaging).
+        This tests and fixes tickets/DM-16696.
+        """
+        photoCalib = lsst.afw.image.PhotoCalib(self.calibration)
+        result = photoCalib.instFluxToNanojansky(-100, 10)
+        self.assertGreater(result.error, 0)
+
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
     pass
