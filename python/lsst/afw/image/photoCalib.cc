@@ -46,9 +46,9 @@ namespace {
 void declareMeasurement(py::module &mod) {
     py::class_<Measurement, std::shared_ptr<Measurement>> cls(mod, "Measurement");
 
-    cls.def(py::init<double, double>(), "value"_a, "err"_a);
+    cls.def(py::init<double, double>(), "value"_a, "error"_a);
     cls.def_readonly("value", &Measurement::value);
-    cls.def_readonly("err", &Measurement::err);
+    cls.def_readonly("error", &Measurement::error);
 }
 
 PYBIND11_MODULE(photoCalib, mod) {

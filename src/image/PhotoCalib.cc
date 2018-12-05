@@ -105,17 +105,17 @@ double PhotoCalib::instFluxToNanojansky(double instFlux) const {
 
 Measurement PhotoCalib::instFluxToNanojansky(double instFlux, double instFluxErr,
                                              lsst::geom::Point<double, 2> const &point) const {
-    double calibration, err, nanojansky;
+    double calibration, error, nanojansky;
     calibration = evaluate(point);
     nanojansky = toNanojansky(instFlux, calibration);
-    err = toNanojanskyErr(instFlux, instFluxErr, calibration, _calibrationErr, nanojansky);
-    return Measurement(nanojansky, err);
+    error = toNanojanskyErr(instFlux, instFluxErr, calibration, _calibrationErr, nanojansky);
+    return Measurement(nanojansky, error);
 }
 
 Measurement PhotoCalib::instFluxToNanojansky(double instFlux, double instFluxErr) const {
     double nanojansky = toNanojansky(instFlux, _calibrationMean);
-    double err = toNanojanskyErr(instFlux, instFluxErr, _calibrationMean, _calibrationErr, nanojansky);
-    return Measurement(nanojansky, err);
+    double error = toNanojanskyErr(instFlux, instFluxErr, _calibrationMean, _calibrationErr, nanojansky);
+    return Measurement(nanojansky, error);
 }
 
 Measurement PhotoCalib::instFluxToNanojansky(afw::table::SourceRecord const &sourceRecord,
@@ -143,7 +143,7 @@ void PhotoCalib::instFluxToNanojansky(afw::table::SourceCatalog &sourceCatalog,
         auto result = instFluxToNanojansky(record.get(instFluxKey), record.get(instFluxErrKey),
                                            record.getCentroid());
         record.set(nanojanskyKey, result.value);
-        record.set(nanojanskyErrKey, result.err);
+        record.set(nanojanskyErrKey, result.error);
     }
 }
 
@@ -159,17 +159,17 @@ double PhotoCalib::instFluxToMagnitude(double instFlux) const {
 
 Measurement PhotoCalib::instFluxToMagnitude(double instFlux, double instFluxErr,
                                             lsst::geom::Point<double, 2> const &point) const {
-    double calibration, err, magnitude;
+    double calibration, error, magnitude;
     calibration = evaluate(point);
     magnitude = toMagnitude(instFlux, calibration);
-    err = toMagnitudeErr(instFlux, instFluxErr, calibration, _calibrationErr);
-    return Measurement(magnitude, err);
+    error = toMagnitudeErr(instFlux, instFluxErr, calibration, _calibrationErr);
+    return Measurement(magnitude, error);
 }
 
 Measurement PhotoCalib::instFluxToMagnitude(double instFlux, double instFluxErr) const {
     double magnitude = toMagnitude(instFlux, _calibrationMean);
-    double err = toMagnitudeErr(instFlux, instFluxErr, _calibrationMean, _calibrationErr);
-    return Measurement(magnitude, err);
+    double error = toMagnitudeErr(instFlux, instFluxErr, _calibrationMean, _calibrationErr);
+    return Measurement(magnitude, error);
 }
 
 Measurement PhotoCalib::instFluxToMagnitude(afw::table::SourceRecord const &sourceRecord,
@@ -198,7 +198,7 @@ void PhotoCalib::instFluxToMagnitude(afw::table::SourceCatalog &sourceCatalog,
         auto result = instFluxToMagnitude(record.get(instFluxKey), record.get(instFluxErrKey),
                                           record.getCentroid());
         record.set(magKey, result.value);
-        record.set(magErrKey, result.err);
+        record.set(magErrKey, result.error);
     }
 }
 
@@ -234,7 +234,7 @@ std::ostream &operator<<(std::ostream &os, PhotoCalib const &photoCalib) {
         os << "spatially constant with ";
     else
         os << *(photoCalib._calibration) << " with ";
-    return os << "mean: " << photoCalib._calibrationMean << " err: " << photoCalib._calibrationErr;
+    return os << "mean: " << photoCalib._calibrationMean << " error: " << photoCalib._calibrationErr;
 }
 
 MaskedImage<float> PhotoCalib::calibrateImage(MaskedImage<float> const &maskedImage,

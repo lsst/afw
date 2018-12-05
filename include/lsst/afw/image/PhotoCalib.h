@@ -46,9 +46,9 @@ namespace image {
 
 /// A value and its error.
 struct Measurement {
-    Measurement(double value, double err) : value(value), err(err) {}
+    Measurement(double value, double error) : value(value), error(error) {}
     double const value;
-    double const err;
+    double const error;
 };
 
 /**
