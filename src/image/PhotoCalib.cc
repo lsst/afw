@@ -32,6 +32,7 @@
 #include "lsst/pex/exceptions.h"
 #include "ndarray.h"
 #include "lsst/afw/table/io/Persistable.cc"
+#include "lsst/utils/Magnitude.h"
 
 namespace lsst {
 namespace afw {
@@ -47,15 +48,12 @@ namespace {
 
 int const SERIALIZATION_VERSION = 0;
 
-// The Oke & Gunn (1983) AB magnitude reference flux, in nJy.
-const double _referenceFlux = 1e23 * std::pow(10, (48.6 / -2.5)) * 1e9;
-
 double toNanojansky(double instFlux, double scale) { return instFlux * scale; }
 
-double toMagnitude(double instFlux, double scale) { return -2.5 * log10(instFlux * scale / _referenceFlux); }
+double toMagnitude(double instFlux, double scale) { return utils::nanojanskyToABMagnitude(instFlux * scale); }
 
 double fromMagnitudeToInstFlux(double magnitude, double scale) {
-    return pow(10, magnitude / -2.5) / scale * _referenceFlux;
+    return utils::ABMagnitudeToNanojansky(magnitude) / scale;
 }
 
 double toNanojanskyErr(double instFlux, double instFluxErr, double scale, double scaleErr,
