@@ -105,13 +105,17 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
         self.schema = lsst.afw.table.SourceTable.makeMinimalSchema()
         self.instFluxKeyName = "SomeFlux"
         lsst.afw.table.Point2DKey.addFields(self.schema, "centroid", "centroid", "pixels")
-        self.instFluxKey = self.schema.addField(
-            self.instFluxKeyName+"_instFlux", type="D", doc="post-ISR instFlux")
-        self.instFluxErrKey = self.schema.addField(self.instFluxKeyName+"_instFluxErr", type="D",
-                                                   doc="post-ISR instFlux stddev")
-        self.magnitudeKey = self.schema.addField(self.instFluxKeyName+"_mag", type="D", doc="magnitude")
-        self.magnitudeErrKey = self.schema.addField(self.instFluxKeyName+"_magErr", type="D",
-                                                    doc="magnitude stddev")
+        self.schema.addField(self.instFluxKeyName+"_instFlux", type="D", doc="post-ISR instrumental Flux")
+        self.schema.addField(self.instFluxKeyName+"_instFluxErr", type="D",
+                             doc="post-ISR instrumental flux stddev")
+        self.schema.addField(self.instFluxKeyName+"_flux", type="D",
+                             doc="calibrated flux (nJy)")
+        self.schema.addField(self.instFluxKeyName+"_fluxErr", type="D",
+                             doc="calibrated flux stddev (nJy)")
+        self.schema.addField(self.instFluxKeyName+"_mag", type="D",
+                             doc="calibrated magnitude")
+        self.schema.addField(self.instFluxKeyName+"_magErr", type="D",
+                             doc="calibrated magnitude stddev")
         self.table = lsst.afw.table.SourceTable.make(self.schema)
         self.table.defineCentroid('centroid')
         self.catalog = lsst.afw.table.SourceCatalog(self.table)
@@ -258,19 +262,15 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
         self.assertFloatsAlmostEqual(catalog[self.instFluxKeyName+'_mag'], expectMag[:, 0])
         self.assertFloatsAlmostEqual(catalog[self.instFluxKeyName+'_magErr'], expectMag[:, 1])
 
-        # !!!!!!!!!!!!!!!!!!!!!!!!
-        # NOTE: I can fix this now that DM-10302 is done!
-        # !!!!!!!!!!!!!!!!!!!!!!!!!
-        # TODO: have to save the values and restore them, until DM-10302 is implemented.
+        # modify the catalog in-place
+        # The original instFluxes shouldn't change: save them to test that.
         origFlux = catalog[self.instFluxKeyName+'_instFlux'].copy()
         origFluxErr = catalog[self.instFluxKeyName+'_instFluxErr'].copy()
         photoCalib.instFluxToNanojansky(catalog, self.instFluxKeyName, self.instFluxKeyName)
-        self.assertFloatsAlmostEqual(catalog[self.instFluxKeyName+'_instFlux'], expectNanojansky[:, 0])
-        self.assertFloatsAlmostEqual(catalog[self.instFluxKeyName+'_instFluxErr'], expectNanojansky[:, 1])
-        # TODO: restore values, until DM-10302 is implemented.
-        for record, f, fErr in zip(catalog, origFlux, origFluxErr):
-            record.set(self.instFluxKeyName+'_instFlux', f)
-            record.set(self.instFluxKeyName+'_instFluxErr', fErr)
+        self.assertFloatsAlmostEqual(catalog[self.instFluxKeyName+'_fluxErr'], expectNanojansky[:, 1])
+        self.assertFloatsAlmostEqual(catalog[self.instFluxKeyName+'_flux'], expectNanojansky[:, 0])
+        self.assertFloatsAlmostEqual(catalog[self.instFluxKeyName+'_instFlux'], origFlux)
+        self.assertFloatsAlmostEqual(catalog[self.instFluxKeyName+'_instFluxErr'], origFluxErr)
 
     def testNonVarying(self):
         """Test constructing with a constant calibration factor."""

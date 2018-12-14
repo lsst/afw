@@ -135,8 +135,8 @@ void PhotoCalib::instFluxToNanojansky(afw::table::SourceCatalog &sourceCatalog,
                                       std::string const &instFluxField, std::string const &outField) const {
     auto instFluxKey = sourceCatalog.getSchema().find<double>(instFluxField + "_instFlux").key;
     auto instFluxErrKey = sourceCatalog.getSchema().find<double>(instFluxField + "_instFluxErr").key;
-    auto nanojanskyKey = sourceCatalog.getSchema().find<double>(outField + "_instFlux").key;
-    auto nanojanskyErrKey = sourceCatalog.getSchema().find<double>(outField + "_instFluxErr").key;
+    auto nanojanskyKey = sourceCatalog.getSchema().find<double>(outField + "_flux").key;
+    auto nanojanskyErrKey = sourceCatalog.getSchema().find<double>(outField + "_fluxErr").key;
     for (auto &record : sourceCatalog) {
         auto result = instFluxToNanojansky(record.get(instFluxKey), record.get(instFluxErrKey),
                                            record.getCentroid());
