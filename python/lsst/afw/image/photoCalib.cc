@@ -58,12 +58,12 @@ PYBIND11_MODULE(photoCalib, mod) {
 
     /* Constructors */
     cls.def(py::init<>());
-    cls.def(py::init<double, double, lsst::geom::Box2I>(), "instFluxMag0"_a, "instFluxMag0Err"_a = 0.0,
+    cls.def(py::init<double, double, lsst::geom::Box2I>(), "calibrationMean"_a, "calibrationErr"_a = 0.0,
             "bbox"_a = lsst::geom::Box2I());
     cls.def(py::init<std::shared_ptr<afw::math::BoundedField>, double>(), "calibration"_a,
-            "instFluxMag0Err"_a = 0.0);
-    cls.def(py::init<double, double, std::shared_ptr<afw::math::BoundedField>, bool>(), "instFluxMag0"_a,
-            "instFluxMag0Err"_a, "calibration"_a, "isConstant"_a);
+            "calibrationErr"_a = 0.0);
+    cls.def(py::init<double, double, std::shared_ptr<afw::math::BoundedField>, bool>(), "calibrationMean"_a,
+            "calibrationErr"_a, "calibration"_a, "isConstant"_a);
 
     table::io::python::addPersistableMethods<PhotoCalib>(cls);
 
