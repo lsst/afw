@@ -150,7 +150,7 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
         """
         # test that the constructor set the calibrationMean and err correctly
         self.assertEqual(self.calibration, photoCalib.getCalibrationMean())
-        self.assertEqual(self.calibration, 1.0/photoCalib.getInstFluxMag0())
+        self.assertEqual(photoCalib.instFluxToMagnitude(photoCalib.getInstFluxAtZeroMagnitude()), 0)
         self.assertEqual(calibrationErr, photoCalib.getCalibrationErr())
 
         # test with a "trivial" flux

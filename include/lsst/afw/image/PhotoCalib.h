@@ -39,6 +39,7 @@
 #include "lsst/afw/table/io/Persistable.h"
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/pex/exceptions/Exception.h"
+#include "lsst/utils/Magnitude.h"
 
 namespace lsst {
 namespace afw {
@@ -360,14 +361,14 @@ public:
     double magnitudeToInstFlux(double magnitude) const;
 
     /**
-     * Get the mean photometric calibration (equal to 1 / getInstFluxMag0()).
+     * Get the mean photometric calibration.
      *
      * This value is defined, for instFlux at (x,y), such that:
      * @f[
      *   instFlux*computeScaledCalibration()(x,y)*getCalibrationMean() = instFluxToNanojansky(instFlux, (x,y))
      * @f]
      *
-     * @see PhotoCalib::computeScaledCalibration(), getCalibrationErr(), getInstFluxMag0()
+     * @see PhotoCalib::computeScaledCalibration(), getCalibrationErr(), getInstFluxAtZeroMagnitude()
      *
      * @returns     The spatial mean of this calibration.
      */
@@ -388,18 +389,18 @@ public:
     double getCalibrationErr() const { return _calibrationErr; }
 
     /**
-     * Get the magnitude zero point (equal to 1 / mean(calibration)).
+     * Get the magnitude zero point (the instrumental flux corresponding to 0 magnitude).
      *
-     * This value is defined, for instFlux at (x,y), such that:
+     * This value is defined such that:
      * @f[
-     *   instFlux*computeScaledCalibration()(x,y)/getInstFluxMag0() = instFluxToNanojansky(instFlux, (x,y))
+     *   instFluxToMagnitude(getInstFluxAtZeroMagnitude()) == 0
      * @f]
      *
      * @see PhotoCalib::computeScaledCalibration(), getCalibrationMean()
      *
      * @returns     The instFlux magnitude zero point.
      */
-    double getInstFluxMag0() const { return 1.0 / _calibrationMean; }
+    double getInstFluxAtZeroMagnitude() const { return utils::referenceFlux / _calibrationMean; }
 
     /**
      * Calculates the spatially-variable calibration, normalized by the mean in the valid domain.
