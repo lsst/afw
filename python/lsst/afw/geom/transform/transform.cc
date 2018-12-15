@@ -89,10 +89,12 @@ void declareTransform(py::module &mod) {
     // will not affect the contained Mapping (since Python ignores constness)
     cls.def("getMapping", [](Class const &self) { return self.getMapping()->copy(); });
 
-    cls.def("applyForward", (ToArray(Class::*)(FromArray const &) const) & Class::applyForward, "array"_a);
-    cls.def("applyForward", (ToPoint(Class::*)(FromPoint const &) const) & Class::applyForward, "point"_a);
-    cls.def("applyInverse", (FromArray(Class::*)(ToArray const &) const) & Class::applyInverse, "array"_a);
-    cls.def("applyInverse", (FromPoint(Class::*)(ToPoint const &) const) & Class::applyInverse, "point"_a);
+    cls.def("applyForward", py::overload_cast<FromArray const &>(&Class::applyForward, py::const_),
+            "array"_a);
+    cls.def("applyForward", py::overload_cast<FromPoint const &>(&Class::applyForward, py::const_),
+            "point"_a);
+    cls.def("applyInverse", py::overload_cast<ToArray const &>(&Class::applyInverse, py::const_), "array"_a);
+    cls.def("applyInverse", py::overload_cast<ToPoint const &>(&Class::applyInverse, py::const_), "point"_a);
     cls.def("inverted", &Class::inverted);
     /* Need some extra handling of ndarray return type in Python to prevent dimensions
      * of length 1 from being deleted */
