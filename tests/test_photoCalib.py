@@ -20,6 +20,7 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
+import os.path
 import unittest
 
 import numpy as np
@@ -357,6 +358,25 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
 
         photoCalib = lsst.afw.image.PhotoCalib(self.linearXCalibration, self.calibrationErr)
         self._testPersistence(photoCalib)
+
+    def testPersistenceVersions(self):
+        """Test that different versions are handled appropriately."""
+        # the values that were persisted in this photoCalib
+        mean = 123
+        err = 45
+        dataDir = os.path.join(os.path.split(__file__)[0], "data")
+
+        # implicit version 0
+        filePath = os.path.join(dataDir, "photoCalib-noversion.fits")
+        photoCalib = lsst.afw.image.PhotoCalib.readFits(filePath)
+        self.assertEqual(photoCalib.getCalibrationMean(), mean)
+        self.assertEqual(photoCalib.getCalibrationErr(), err)
+
+        # explicit version 0
+        filePath = os.path.join(dataDir, "photoCalib-version0.fits")
+        photoCalib = lsst.afw.image.PhotoCalib.readFits(filePath)
+        self.assertEqual(photoCalib.getCalibrationMean(), mean)
+        self.assertEqual(photoCalib.getCalibrationErr(), err)
 
     def testCalibEquality(self):
         photoCalib1 = lsst.afw.image.PhotoCalib(self.linearXCalibration, 0.5)
