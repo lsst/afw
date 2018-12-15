@@ -167,20 +167,15 @@ public:
      */
     FromArray applyInverse(ToArray const &array) const;
 
-    //@{
     /**
      * The inverse of this Transform.
      *
      * @returns a Transform whose `applyForward` is equivalent to this Transform's
      *          `applyInverse`, and vice versa.
      *
-     * @deprecated `getInverse` is deprecated in favor of `inverted`
-     *
      * @exceptsafe Provides basic exception safety.
      */
     std::shared_ptr<Transform<ToEndpoint, FromEndpoint>> inverted() const;
-    std::shared_ptr<Transform<ToEndpoint, FromEndpoint>> getInverse() const { return inverted(); };
-    //@}
 
     /**
      * The Jacobian matrix of this Transform.
