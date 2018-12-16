@@ -45,6 +45,8 @@ namespace image {
 
 namespace {
 
+int const SERIALIZATION_VERSION = 0;
+
 double toMaggies(double instFlux, double scale) { return instFlux * scale; }
 
 double toMagnitude(double instFlux, double scale) { return -2.5 * log10(instFlux * scale); }
@@ -253,6 +255,7 @@ public:
     table::Key<double> calibrationErr;
     table::Key<table::Flag> isConstant;
     table::Key<int> field;
+    table::Key<int> version;
 
     // No copying
     PhotoCalibSchema(PhotoCalibSchema const &) = delete;
@@ -274,7 +277,8 @@ private:
               calibrationErr(
                       schema.addField<double>("calibrationErr", "1-sigma error on calibrationMean", "count")),
               isConstant(schema.addField<table::Flag>("isConstant", "Is this spatially-constant?")),
-              field(schema.addField<int>("field", "archive ID of the BoundedField object")) {
+              field(schema.addField<int>("field", "archive ID of the BoundedField object")),
+              version(schema.addField<int>("version", "version of this PhotoCalib")) {
         schema.getCitizen().markPersistent();
     }
 };
@@ -285,12 +289,30 @@ public:
     read(InputArchive const &archive, CatalogVector const &catalogs) const override {
         table::BaseRecord const &record = catalogs.front().front();
         PhotoCalibSchema const &keys = PhotoCalibSchema::get();
+        int version = getVersion(record);
+        if (version != 0) {
+            throw(pex::exceptions::TypeError("Unsupported version: " + std::to_string(version)));
+        }
         return std::make_shared<PhotoCalib>(record.get(keys.calibrationMean), record.get(keys.calibrationErr),
                                             archive.get<afw::math::BoundedField>(record.get(keys.field)),
                                             record.get(keys.isConstant));
     }
 
     PhotoCalibFactory(std::string const &name) : afw::table::io::PersistableFactory(name) {}
+
+protected:
+    int getVersion(table::BaseRecord const &record) const {
+        int version = -1;
+        try {
+            std::string versionName = "version";
+            auto versionKey = record.getSchema().find<int>(versionName);
+            version = record.get(versionKey.key);
+        } catch (const pex::exceptions::NotFoundError &) {
+            // un-versioned files are version 0
+            version = 0;
+        }
+        return version;
+    }
 };
 
 std::string getPhotoCalibPersistenceName() { return "PhotoCalib"; }
@@ -309,6 +331,7 @@ void PhotoCalib::write(OutputArchiveHandle &handle) const {
     record->set(keys.calibrationErr, _calibrationErr);
     record->set(keys.isConstant, _isConstant);
     record->set(keys.field, handle.put(_calibration));
+    record->set(keys.version, SERIALIZATION_VERSION);
     handle.saveCatalog(catalog);
 }
 
