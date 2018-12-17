@@ -893,8 +893,6 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
     def checkInverted(self, fromName, toName):
         """Test Transform<fromName>To<toName>.inverted
 
-        and the deprecated old name getInverse
-
         Parameters
         ----------
         fromName, toName : `str`
@@ -943,9 +941,6 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
         self.checkInverseTransformation(transform, inverse, msg=msg)
         self.checkInverseTransformation(inverse, inverseInverse, msg=msg)
         self.checkTransformation(inverseInverse, mapping, msg=msg)
-
-        inverse2 = transform.getInverse()
-        self.assertEqual(inverse.getMapping(), inverse2.getMapping())
 
     def checkGetJacobian(self, fromName, toName):
         """Test Transform<fromName>To<toName>.getJacobian
