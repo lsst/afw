@@ -38,14 +38,23 @@ from lsst.utils import getPackageDir
 
 
 def makeMapper(sourceSchema, targetSchema, sourcePrefix=None, targetPrefix=None):
-    """Create a SchemaMapper between the input source and target schemas
+    """Create a SchemaMapper between the input source and target schemas.
 
-    @param[in]  sourceSchema  input source schema that fields will be mapped from
-    @param[in]  targetSchema  target schema that fields will be mapped to
-    @param[in]  sourcePrefix  if set, only those keys with that prefix will be mapped
-    @param[in]  targetPrefix  if set, prepend it to the mapped (target) key name
+    Parameters
+    ----------
+    sourceSchema : :py:class:`lsst.afw.table.Schema`
+        Input source schema that fields will be mapped from.
+    targetSchema : :py:class:`lsst.afw.table.Schema`
+        Target schema that fields will be mapped to.
+    sourcePrefix : `str`, optional
+        If set, only those keys with that prefix will be mapped.
+    targetPrefix : `str`, optional
+        If set, prepend it to the mapped (target) key name.
 
-    @return     SchemaMapper between source and target schemas
+    Returns
+    -------
+    SchemaMapper : :py:class:`lsst.afw.table.SchemaMapper`
+        Mapping between source and target schemas.
     """
     m = SchemaMapper(sourceSchema, targetSchema)
     for key, field in sourceSchema:
@@ -60,25 +69,47 @@ def makeMapper(sourceSchema, targetSchema, sourcePrefix=None, targetPrefix=None)
 
 
 def makeMergedSchema(sourceSchema, targetSchema, sourcePrefix=None, targetPrefix=None):
-    """Return a schema that is a deep copy of a mapping between source and target schemas
-    @param[in]  sourceSchema  input source schema that fields will be mapped from
-    @param[in]  targetSchema  target schema that fields will be mapped to
-    @param[in]  sourcePrefix  if set, only those keys with that prefix will be mapped
-    @param[in]  targetPrefix  if set, prepend it to the mapped (target) key name
+    """Return a schema that is a deep copy of a mapping between source and target schemas.
 
-    @return     schema        schema that is the result of the mapping between source and target schemas
+    Parameters
+    ----------
+    sourceSchema : :py:class:`lsst.afw.table.Schema`
+        Input source schema that fields will be mapped from.
+    targetSchema : :py:class:`lsst.afw.atable.Schema`
+        Target schema that fields will be mapped to.
+    sourcePrefix : `str`, optional
+        If set, only those keys with that prefix will be mapped.
+    targetPrefix : `str`, optional
+        If set, prepend it to the mapped (target) key name.
+
+    Returns
+    -------
+    schema : :py:class:`lsst.afw.table.Schema`
+        Schema that is the result of the mapping between source and target schemas.
     """
     return makeMapper(sourceSchema, targetSchema, sourcePrefix, targetPrefix).getOutputSchema()
 
 
 def copyIntoCatalog(catalog, target, sourceSchema=None, sourcePrefix=None, targetPrefix=None):
-    """Copy entries from one Catalog into another
+    """Copy entries from one Catalog into another.
 
-    @param[in]     catalog       source catalog to be copied from
-    @param[in/out] target        target catalog to be copied to (edited in place)
-    @param[in]     souceSchema   schema of source catalog (optional)
-    @param[in]     sourcePrefix  if set, only those keys with that prefix will be copied
-    @param[in]     targetPrefix  if set, prepend it to the copied (target) key name
+    Parameters
+    ----------
+    catalog : :py:class:`lsst.afw.table.base.Catalog`
+        Source catalog to be copied from.
+    target : :py:class:`lsst.afw.table.base.Catalog`
+        Target catalog to be copied to (edited in place).
+    sourceSchema : :py:class:`lsst.afw.table.Schema`, optional
+        Schema of source catalog.
+    sourcePrefix : `str`, optional
+        If set, only those keys with that prefix will be copied.
+    targetPrefix : `str`, optional
+        If set, prepend it to the copied (target) key name
+
+    Returns
+    -------
+    target : :py:class:`lsst.afw.table.base.Catalog`
+        Target catalog that is edited in place.
     """
     if sourceSchema is None:
         sourceSchema = catalog.schema
@@ -98,17 +129,25 @@ def copyIntoCatalog(catalog, target, sourceSchema=None, sourcePrefix=None, targe
 
 
 def matchesToCatalog(matches, matchMeta):
-    """Denormalise matches into a Catalog of "unpacked matches"
+    """Denormalise matches into a Catalog of "unpacked matches".
 
-    @param[in] matches    unpacked matches, i.e. a list of Match objects whose schema
-                          has "first" and "second" attributes which, resepectively, contain the
-                          reference and source catalog entries, and a "distance" field (the
-                          measured distance between the reference and source objects)
-    @param[in] matchMeta  metadata for matches (must have .add attribute)
+    Parameters
+    ----------
+    matches : `~lsst.afw.table.match.SimpleMatch`
+        Unpacked matches, i.e. a list of Match objects whose schema
+        has "first" and "second" attributes which, resepectively,
+        contain the reference and source catalog entries, and a
+        "distance" field (the measured distance between the reference
+        and source objects).
+    matchMeta : `~lsst.daf.base.PropertySet`
+        Metadata for matches (must have .add attribute).
 
-    @return  lsst.afw.table.BaseCatalog of matches (with ref_ and src_ prefix identifiers
-             for referece and source entries, respectively, including alias maps
-             from reference and source catalogs)
+    Returns
+    -------
+    mergedCatalog : :py:class:`lsst.afw.table.BaseCatalog`
+        Catalog of matches (with ref_ and src_ prefix identifiers for
+        referece and source entries, respectively, including alias
+        maps from reference and source catalogs)
     """
     if len(matches) == 0:
         raise RuntimeError("No matches provided.")
@@ -146,14 +185,21 @@ def matchesToCatalog(matches, matchMeta):
 
 
 def matchesFromCatalog(catalog, sourceSlotConfig=None):
-    """Generate a list of ReferenceMatches from a Catalog of "unpacked matches"
+    """Generate a list of ReferenceMatches from a Catalog of "unpacked matches".
 
-    @param[in] catalog           catalog of matches.  Must have schema where reference entries are
-                                 prefixed with "ref_" and source entries are prefixed with "src_"
-    @param[in] sourceSlotConfig  an lsst.meas.base.baseMeasurement.SourceSlotConfig configuration
-                                 for source slots (optional)
+    Parameters
+    ----------
+    catalog : :py:class:`lsst.afw.table.BaseCatalog`
+        Catalog of matches.  Must have schema where reference entries
+        are prefixed with "ref_" and source entries are prefixed with
+        "src_".
+    sourceSlotConfig : `lsst.meas.base.baseMeasurement.SourceSlotConfig`, optional
+        Configuration for source slots.
 
-    @returns   lsst.afw.table.ReferenceMatch of matches
+    Returns
+    -------
+    matches : :py:class:`lsst.afw.table.ReferenceMatch`
+        List of matches.
     """
     refSchema = makeMergedSchema(
         catalog.schema, SimpleTable.makeMinimalSchema(), sourcePrefix="ref_")
@@ -177,7 +223,7 @@ def matchesFromCatalog(catalog, sourceSlotConfig=None):
 
 
 def copyAliasMapWithPrefix(inSchema, outSchema, prefix=""):
-    """Copy an alias map from one schema into another
+    """Copy an alias map from one schema into another.
 
     This copies the alias map of one schema into another, optionally
     prepending a prefix to both the "from" and "to" names of the alias

@@ -1,9 +1,10 @@
+# This file is part of afw.
 #
-# LSST Data Management System
-# Copyright 2016 AURA/LSST.
-#
-# This product includes software developed by the
-# LSST Project (http://www.lsst.org/).
+# Developed for the LSST Data Management System.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org).
+# See the COPYRIGHT file at the top-level directory of this distribution
+# for details of code ownership.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,10 +16,8 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
-# You should have received a copy of the LSST License Statement and
-# the GNU General Public License along with this program.  If not,
-# see <https://www.lsstcorp.org/LegalNotices/>.
-#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import lsst.utils.tests
 import difflib
@@ -30,6 +29,16 @@ __all__ = ["assertSchemasEqual", "diffSchemas", "joinWords"]
 def joinWords(items):
     """Join a sequence of words into a comma-separated, 'and'-finalized
     string with correct English syntax.
+
+    Parameters
+    ----------
+    items : Array of `str`
+        Sequence to be joined.
+
+    Returns
+    -------
+    result : `str`
+         Correct English Oxford-comma terminated string.
     """
     if len(items) == 1:
         result = items[0]
@@ -89,6 +98,18 @@ def assertSchemasEqual(testCase, schema1, schema2, flags=Schema.IDENTICAL):
 
     Generates a message from the difference between the schemas; see
     :py:func:`diffSchemas` for more information.
+
+    Parameters
+    ----------
+    testCase :
+        Comparison test case that should fail is schemas differ.
+    schema1 : :py:class:`lsst.afw.table.Schema`
+        First input schema.
+    schema2 : :py:class:`lsst.afw.table.Schema`
+        Second input schema.
+    flags : `int`
+        A bitwise OR of :py:class:`lsst.afw.table.Schema.ComparisonFlags`
+        indicating which features of schema items to compare.
     """
     msg = diffSchemas(schema1, schema2, flags=flags)
     if msg:
