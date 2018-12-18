@@ -20,9 +20,14 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-##
-# @file
-# @brief Support for talking to image displays from python
+__all__ = [
+    "WHITE", "BLACK", "RED", "GREEN", "BLUE", "CYAN", "MAGENTA", "YELLOW", "ORANGE", "IGNORE",
+    "Display", "Event", "noop_callback", "h_callback",
+    "setDefaultBackend", "getDefaultBackend",
+    "setDefaultFrame", "getDefaultFrame", "incrDefaultFrame",
+    "setDefaultMaskTransparency", "setDefaultMaskPlaneColor",
+    "getDisplay", "delAllDisplays",
+]
 
 import re
 import sys
@@ -33,17 +38,8 @@ import lsst.log
 
 logger = lsst.log.Log.getLogger("afw.display.interface")
 
-__all__ = (
-    "WHITE", "BLACK", "RED", "GREEN", "BLUE", "CYAN", "MAGENTA", "YELLOW", "ORANGE", "IGNORE",
-    "Display", "Event", "noop_callback", "h_callback",
-    "setDefaultBackend", "getDefaultBackend",
-    "setDefaultFrame", "getDefaultFrame", "incrDefaultFrame",
-    "setDefaultMaskTransparency", "setDefaultMaskPlaneColor",
-    "getDisplay", "delAllDisplays",
-)
-
 #
-# Symbolic names for mask/line colours.  N.b. ds9 supports any X11 colour for masks
+# Symbolic names for mask/line colors.  N.b. ds9 supports any X11 color for masks
 #
 WHITE = "white"
 BLACK = "black"
@@ -58,19 +54,31 @@ IGNORE = "ignore"
 
 
 def _makeDisplayImpl(display, backend, *args, **kwargs):
-    """!Return the DisplayImpl for the named backend
+    """Return the ``DisplayImpl`` for the named backend
 
-    @param display Name of device.  Should be importable, either absolutely or relative to lsst.display
-    @param backend The desired backend
-    @param args   Arguments passed to DisplayImpl.__init__
-    @param kwargs Keywords arguments passed to DisplayImpl.__init__
+    Parameters
+    ----------
+    display : `str`
+        Name of device. Should be importable, either absolutely or relative to lsst.display
+    backend : `str`
+        The desired backend
+    *args
+        Arguments passed to DisplayImpl.__init__
+    *kwargs
+        Keywords arguments passed to DisplayImpl.__init__
 
+    Examples
+    --------
     E.g.
+    .. code-block:: py
+
          import lsst.afw.display as afwDisplay
          display = afwDisplay.Display(display=1, backend="ds9")
      would call
+    .. code-block:: py
+
          _makeDisplayImpl(..., "ds9", 1)
-    and import the ds9 implementation of DisplayImpl from lsst.display.ds9
+    and import the ds9 implementation of ``DisplayImpl`` from `lsst.display.ds9`
     """
     _disp = None
     exc = None
@@ -108,6 +116,19 @@ def _makeDisplayImpl(display, backend, *args, **kwargs):
 
 
 class Display:
+    """Create an object able to display images and overplot glyphs
+
+    Parameters
+    ----------
+    frame
+        An identifier for the display
+    backend : `str`
+        The backend to use (defaults to value set by setDefaultBackend())
+    *args
+        Arguments to pass to the backend
+    **kwargs
+        Arguments to pass to the backend
+    """
     _displays = {}
     _defaultBackend = None
     _defaultFrame = 0
@@ -129,13 +150,6 @@ class Display:
     _defaultImageColormap = "gray"
 
     def __init__(self, frame=None, backend=None, *args, **kwargs):
-        """!Create an object able to display images and overplot glyphs
-
-        @param frame An identifier for the display
-        @param backend The backend to use (defaults to value set by setDefaultBackend())
-        @param args Arguments to pass to the backend
-        @param kwargs Arguments to pass to the backend
-        """
         if frame is None:
             frame = getDefaultFrame()
 
@@ -183,26 +197,30 @@ class Display:
         Display._displays[frame] = self
 
     def __enter__(self):
-        """!Support for python's with statement"""
+        """Support for python's with statement
+        """
         return self
 
     def __exit__(self, *args):
-        """!Support for python's with statement"""
+        """Support for python's with statement
+        """
         self.close()
 
     def __del__(self):
         self.close()
 
     def __getattr__(self, name):
-        """Return the attribute of self._impl, or ._impl if it is requested
+        """Return the attribute of ``self._impl``, or ``._impl`` if it is requested
+
         Parameters:
         -----------
-            name : string
-                name of the attribute requested
+        name : `str`
+            name of the attribute requested
+
         Returns:
         --------
-            attribute : object
-                the attribute of self._impl for the requested name
+        attribute : `object`
+            the attribute of self._impl for the requested name
         """
 
         if name == '_impl':
@@ -228,7 +246,8 @@ class Display:
 
     @property
     def verbose(self):
-        """!The backend's verbosity"""
+        """The backend's verbosity
+        """
         return self._impl.verbose
 
     @verbose.setter
@@ -258,17 +277,20 @@ class Display:
 
     @staticmethod
     def setDefaultFrame(frame=0):
-        """Set the default frame for display"""
+        """Set the default frame for display
+        """
         Display._defaultFrame = frame
 
     @staticmethod
     def getDefaultFrame():
-        """Get the default frame for display"""
+        """Get the default frame for display
+        """
         return Display._defaultFrame
 
     @staticmethod
     def incrDefaultFrame():
-        """Increment the default frame for display"""
+        """Increment the default frame for display
+        """
         Display._defaultFrame += 1
         return Display._defaultFrame
 
@@ -281,11 +303,15 @@ class Display:
 
     @staticmethod
     def setDefaultMaskPlaneColor(name=None, color=None):
-        """!Set the default mapping from mask plane names to colours
-        @param name name of mask plane, or a dict mapping names to colours
-        @param color Desired color, or None if name is a dict
+        """Set the default mapping from mask plane names to colors
 
-        If name is None, use the hard-coded default dictionary
+        Parameters
+        ----------
+        name : `str` or `dict`
+            name of mask plane, or a dict mapping names to colors
+            If name is `None`, use the hard-coded default dictionary
+        color
+            Desired color, or `None` if name is a dict
         """
 
         if name is None:
@@ -297,26 +323,38 @@ class Display:
                 setDefaultMaskPlaneColor(k, v)
             return
         #
-        # Set the individual colour values
+        # Set the individual color values
         #
         Display._defaultMaskPlaneColor[name] = color
 
     @staticmethod
     def setDefaultImageColormap(cmap):
-        """!Set the default colourmap for images
-        @param cmap Name of colourmap, as interpreted by the backend
+        """Set the default colormap for images
 
-        The only colourmaps that all backends are required to honour
+        Parameters
+        ----------
+        cmap : `str`
+            Name of colormap, as interpreted by the backend
+
+        Notes
+        -----
+        The only colormaps that all backends are required to honor
         (if they pay any attention to setImageColormap) are "gray" and "grey"
         """
 
         Display._defaultImageColormap = cmap
 
     def setImageColormap(self, cmap):
-        """!Set the colourmap to use for images
-        @param cmap Name of colourmap, as interpreted by the backend
+        """Set the colormap to use for images
 
-        The only colourmaps that all backends are required to honour
+         Parameters
+        ----------
+        cmap : `str`
+            Name of colormap, as interpreted by the backend
+
+        Notes
+        -----
+        The only colormaps that all backends are required to honor
         (if they pay any attention to setImageColormap) are "gray" and "grey"
         """
 
@@ -324,15 +362,24 @@ class Display:
 
     @staticmethod
     def getDisplay(frame=None, backend=None, create=True, verbose=False, *args, **kwargs):
-        """!Return the Display indexed by frame, creating it if needs be
+        """Return a specific `Display`, creating it if need be
 
-        @param frame The desired frame (None => use defaultFrame (see setDefaultFrame))
-        @param backend  create the specified frame using this backend (or the default if None) \
-        if it doesn't already exist.  If backend == "", it's an error to specify a non-existent frame
-        @param create create the display if it doesn't already exist.
-        @param verbose Allow backend to be chatty
-        @param args arguments passed to Display constructor
-        @param kwargs keyword arguments passed to Display constructor
+        Parameters
+        ----------
+        frame
+            The desired frame (`None` => use defaultFrame (see `~Display.setDefaultFrame`))
+        backend : `str`
+            create the specified frame using this backend (or the default if
+            `None`) if it doesn't already exist. If ``backend == ""``, it's an
+            error to specify a non-existent ``frame``.
+        create : `bool`
+            create the display if it doesn't already exist.
+        verbose : `bool`
+            Allow backend to be chatty
+        *args
+            arguments passed to `Display` constructor
+        **kwargs
+            keyword arguments passed to `Display` constructor
         """
 
         if frame is None:
@@ -350,21 +397,28 @@ class Display:
 
     @staticmethod
     def delAllDisplays():
-        """!Delete and close all known display
+        """Delete and close all known displays
         """
         for disp in list(Display._displays.values()):
             disp.close()
         Display._displays = {}
 
     def maskColorGenerator(self, omitBW=True):
-        """!A generator for "standard" colours
+        """A generator for "standard" colors
 
-        @param omitBW  Don't include Black and White
+        Parameters
+        ----------
+        omitBW : `bool`
+            Don't include `BLACK` and `WHITE`
 
-        e.g.
-        colorGenerator = interface.maskColorGenerator(omitBW=True)
-        for p in planeList:
-            print p, next(colorGenerator)
+        Examples
+        --------
+
+        .. code-block:: py
+
+           colorGenerator = interface.maskColorGenerator(omitBW=True)
+           for p in planeList:
+               print p, next(colorGenerator)
         """
         _maskColors = [WHITE, BLACK, RED, GREEN,
                        BLUE, CYAN, MAGENTA, YELLOW, ORANGE]
@@ -379,19 +433,22 @@ class Display:
             yield color
 
     def setMaskPlaneColor(self, name, color=None):
-        """!Request that mask plane name be displayed as color
+        """Request that mask plane name be displayed as color
 
-        @param name Name of mask plane or a dictionary of name -> colourName
-        @param color The name of the colour to use (must be None if name is a dict)
+        Parameters
+        ----------
+        name : `str` or `dict`
+            Name of mask plane or a dictionary of name -> colorName
+        color : `str`
+            The name of the color to use (must be `None` if ``name`` is a `dict`)
 
-        Colours may be specified as any X11-compliant string (e.g. <tt>"orchid"</tt>), or by one
-        of the following constants defined in @c afwDisplay: @c BLACK, @c WHITE, @c RED, @c BLUE,
-        @c GREEN, @c CYAN, @c MAGENTA, @c YELLOW.
+            Colors may be specified as any X11-compliant string (e.g. `"orchid"`), or by one
+            of the following constants in `lsst.afw.display` : `BLACK`, `WHITE`, `RED`, `BLUE`,
+            `GREEN`, `CYAN`, `MAGENTA`, `YELLOW`.
 
-        If the colour is "ignore" (or @c IGNORE) then that mask plane is not displayed
+            If the color is "ignore" (or `IGNORE`) then that mask plane is not displayed
 
-        The advantage of using the symbolic names is that the python interpreter can detect typos.
-
+            The advantage of using the symbolic names is that the python interpreter can detect typos.
         """
 
         if isinstance(name, dict):
@@ -403,9 +460,12 @@ class Display:
         self._maskPlaneColors[name] = color
 
     def getMaskPlaneColor(self, name=None):
-        """!Return the colour associated with the specified mask plane name
+        """Return the color associated with the specified mask plane name
 
-        @param name  Desired mask plane;  if None, return entire dict
+        Parameters
+        ----------
+        name : `str`
+            Desired mask plane; if `None`, return entire dict
         """
 
         if name is None:
@@ -414,7 +474,8 @@ class Display:
             return self._maskPlaneColors.get(name)
 
     def setMaskTransparency(self, transparency=None, name=None):
-        """!Specify display's mask transparency (percent); or None to not set it when loading masks"""
+        """Specify display's mask transparency (percent); or `None` to not set it when loading masks
+        """
 
         if isinstance(transparency, dict):
             assert name is None
@@ -434,17 +495,25 @@ class Display:
             self._impl._setMaskTransparency(transparency, name)
 
     def getMaskTransparency(self, name=None):
-        """!Return the current display's mask transparency"""
+        """Return the current display's mask transparency
+        """
 
         return self._impl._getMaskTransparency(name)
 
     def show(self):
-        """!Uniconify and Raise display.  N.b. throws an exception if frame doesn't exit"""
+        """Uniconify and Raise display.
+
+        Notes
+        -----
+        Throws an exception if frame doesn't exit
+        """
         return self._impl._show()
 
     def mtv(self, data, title="", wcs=None):
-        """!Display an Image or Mask on a DISPLAY display
+        """Display an `~lsst.afw.image.Image` or `~lsst.afw.image.Mask` on a display
 
+        Notes
+        -----
         Historical note: the name "mtv" comes from Jim Gunn's forth imageprocessing
         system, Mirella (named after Mirella Freni); The "m" stands for Mirella.
         """
@@ -487,7 +556,8 @@ class Display:
     #
 
     class _Buffering:
-        """A class intended to be used with python's with statement"""
+        """A class intended to be used with python's with statement
+        """
 
         def __init__(self, _impl):
             self._impl = _impl
@@ -501,38 +571,63 @@ class Display:
 
     def Buffering(self):
         """Return a class intended to be used with python's with statement
-    E.g.
-        with display.Buffering():
-            display.dot("+", xc, yc)
+
+        Examples
+        --------
+        .. code-block:: py
+
+           with display.Buffering():
+               display.dot("+", xc, yc)
         """
         return self._Buffering(self._impl)
 
     def flush(self):
-        """!Flush the buffers"""
+        """Flush the buffers
+        """
         self._impl._flush()
 
     def erase(self):
-        """!Erase the specified DISPLAY frame
+        """Erase the specified display frame
         """
         self._impl._erase()
 
     def dot(self, symb, c, r, size=2, ctype=None, origin=afwImage.PARENT, *args, **kwargs):
-        """!Draw a symbol onto the specified DISPLAY frame at (col,row) = (c,r)
-        [0-based coordinates]
+        """Draw a symbol onto the specified display frame
 
-        Possible values are:
-            +                Draw a +
-            x                Draw an x
-            *                Draw a *
-            o                Draw a circle
-            @:Mxx,Mxy,Myy    Draw an ellipse with moments (Mxx, Mxy, Myy) (argument size is ignored)
-            An object derived from afwGeom.ellipses.BaseCore Draw the ellipse (argument size is ignored)
-    Any other value is interpreted as a string to be drawn. Strings obey the fontFamily (which may be
-    extended with other characteristics, e.g. "times bold italic".  Text will be drawn rotated by
-    textAngle (textAngle is ignored otherwise).
+        Parameters
+        ----------
+        symb
+            Possible values are:
 
-    N.b. objects derived from BaseCore include Axes and Quadrupole.
-    """
+                ``"+"``
+                    Draw a +
+                ``"x"``
+                    Draw an x
+                ``"*"``
+                    Draw a *
+                ``"o"``
+                    Draw a circle
+                ``"@:Mxx,Mxy,Myy"``
+                    Draw an ellipse with moments (Mxx, Mxy, Myy) (argument size is ignored)
+                `lsst.afw.geom.ellipses.BaseCore`
+                    Draw the ellipse (argument size is ignored). N.b. objects
+                    derived from `~lsst.afw.geom.ellipses.BaseCore` include
+                    `~lsst.afw.geom.ellipses.Axes` and `~lsst.afw.geom.ellipses.Quadrupole`.
+                Any other value
+                    Interpreted as a string to be drawn.
+        c, r
+            The column and row where the symbol is drawn [0-based coordinates]
+        size : `int`
+            Size of symbol, in pixels
+        ctype : `str`
+            The desired color, either e.g. `lsst.afw.display.RED` or a color name known to X11
+        origin : `lsst.afw.image.ImageOrigin`
+            Coordinate system for the given positions.
+        *args
+            Extra arguments to backend
+        **kwargs
+            Extra keyword arguments to backend
+        """
         if isinstance(symb, int):
             symb = "%d" % (symb)
 
@@ -556,12 +651,23 @@ class Display:
         self._impl._dot(symb, c, r, size, ctype, **kwargs)
 
     def line(self, points, origin=afwImage.PARENT, symbs=False, ctype=None, size=0.5):
-        """!Draw a set of symbols or connect the points, a list of (col,row)
-    If symbs is True, draw points at the specified points using the desired symbol,
-    otherwise connect the dots.  Ctype is the name of a colour (e.g. 'red')
+        """Draw a set of symbols or connect points
 
-    If symbs supports indexing (which includes a string -- caveat emptor) the
-    elements are used to label the points
+        Parameters
+        ----------
+        points : `list`
+            a list of (col, row)
+        origin : `lsst.afw.image.ImageOrigin`
+            Coordinate system for the given positions.
+        symbs : `bool` or sequence
+            If ``symbs`` is `True`, draw points at the specified points using the desired symbol,
+            otherwise connect the dots.
+
+            If ``symbs`` supports indexing (which includes a string -- caveat emptor) the
+            elements are used to label the points
+        ctype : `str`
+            ``ctype`` is the name of a color (e.g. 'red')
+        size : `float`
         """
         if symbs:
             try:
@@ -586,13 +692,22 @@ class Display:
     #
 
     def scale(self, algorithm, min, max=None, unit=None, *args, **kwargs):
-        """!Set the range of the scaling from DN in the image to the image display
-        @param algorithm Desired scaling (e.g. "linear" or "asinh")
-        @param min Minimum value, or "minmax" or "zscale"
-        @param max Maximum value (must be None for minmax|zscale)
-        @param unit Units for min and max (e.g. Percent, Absolute, Sigma; None if min==minmax|zscale)
-        @param *args Optional arguments
-        @param **kwargs Optional keyword arguments
+        """Set the range of the scaling from DN in the image to the image display
+
+        Parameters
+        ----------
+        algorithm : `str`
+            Desired scaling (e.g. "linear" or "asinh")
+        min
+            Minimum value, or "minmax" or "zscale"
+        max
+            Maximum value (must be `None` for minmax|zscale)
+        unit
+            Units for min and max (e.g. Percent, Absolute, Sigma; `None` if min==minmax|zscale)
+        *args
+            Optional arguments to the backend
+        **kwargs
+            Optional keyword arguments to the backend
         """
         if min in ("minmax", "zscale"):
             assert max is None, "You may not specify \"%s\" and max" % min
@@ -606,7 +721,8 @@ class Display:
     #
 
     def zoom(self, zoomfac=None, colc=None, rowc=None, origin=afwImage.PARENT):
-        """!Zoom frame by specified amount, optionally panning also"""
+        """Zoom frame by specified amount, optionally panning also
+        """
 
         if (rowc and colc is None) or (colc and rowc is None):
             raise RuntimeError(
@@ -627,13 +743,26 @@ class Display:
             self._impl._zoom(zoomfac)
 
     def pan(self, colc=None, rowc=None, origin=afwImage.PARENT):
-        """!Pan to (rowc, colc); see also zoom"""
+        """Pan to a location
+
+        Parameters
+        ----------
+        colc, rowc
+            the coordinates to pan to
+        origin : `lsst.afw.image.ImageOrigin`
+            Coordinate system for the given positions.
+
+        See also
+        --------
+        Display.zoom
+        """
 
         self.zoom(None, colc, rowc, origin)
 
     def interact(self):
-        """!Enter an interactive loop, listening for key presses in display and firing callbacks.
-            Exit with q, @c CR, @c ESC, or any other callback function that returns a ``True`` value.
+        """Enter an interactive loop, listening for key presses in display and firing callbacks.
+
+        Exit with ``q``, ``CR``, ``ESC``, or any other callback function that returns a `True` value.
         """
         interactFinished = False
 
@@ -653,7 +782,20 @@ class Display:
                         "Display._callbacks['{0}']({0},{1},{2}) failed: {3}".format(k, x, y, e))
 
     def setCallback(self, k, func=None, noRaise=False):
-        """!Set the callback for key k to be func, returning the old callback
+        """Set the callback for a key
+
+        Parameters
+        ----------
+        k
+            The key to assign the callback to
+        func : callable
+            The callback assigned to ``k``
+        noRaise : `bool`
+
+        Returns
+        -------
+        oldFunc : callable
+            The callback previously assigned to ``k``.
         """
 
         if k in "f":
@@ -670,8 +812,12 @@ class Display:
         return ofunc
 
     def getActiveCallbackKeys(self, onlyActive=True):
-        """!Return all callback keys
-    @param onlyActive  If true only return keys that do something
+        """Return all callback keys
+
+        Parameters
+        ----------
+        onlyActive : `bool`
+            If `True` only return keys that do something
         """
 
         return sorted([k for k, func in self._callbacks.items() if
@@ -683,7 +829,8 @@ class Display:
 
 
 class Event:
-    """!A class to handle events such as key presses in image display windows"""
+    """A class to handle events such as key presses in image display windows
+    """
 
     def __init__(self, k, x=float('nan'), y=float('nan')):
         self.k = k
@@ -698,7 +845,14 @@ class Event:
 
 
 def noop_callback(k, x, y):
-    """!Callback function: arguments key, x, y"""
+    """Callback function
+
+    Parameters
+    ----------
+    key
+    x
+    y
+    """
     return False
 
 
@@ -726,12 +880,14 @@ def setDefaultFrame(frame=0):
 
 
 def getDefaultFrame():
-    """Get the default frame for display"""
+    """Get the default frame for display
+    """
     return Display.getDefaultFrame()
 
 
 def incrDefaultFrame():
-    """Increment the default frame for display"""
+    """Increment the default frame for display
+    """
     return Display.incrDefaultFrame()
 
 
@@ -740,34 +896,49 @@ def setDefaultMaskTransparency(maskPlaneTransparency={}):
 
 
 def setDefaultMaskPlaneColor(name=None, color=None):
-    """!Set the default mapping from mask plane names to colours
-    @param name name of mask plane, or a dict mapping names to colours
-    @param color Desired color, or None if name is a dict
+    """Set the default mapping from mask plane names to colors
 
-    If name is None, use the hard-coded default dictionary
+    Parameters
+    ----------
+    name : `str` or `dict`
+        name of mask plane, or a dict mapping names to colors.
+        If ``name`` is `None`, use the hard-coded default dictionary
+    color : `str`
+        Desired color, or `None` if ``name`` is a dict
     """
 
     return Display.setDefaultMaskPlaneColor(name, color)
 
 
 def getDisplay(frame=None, backend=None, create=True, verbose=False, *args, **kwargs):
-    """!Return the Display indexed by frame, creating it if needs be
+    """Return a specific `Display`, creating it if need be
 
-    See Display.getDisplay
+    Parameters
+    ----------
+    frame
+        The desired frame (`None` => use defaultFrame (see `setDefaultFrame`))
+    backend : `str`
+        Create the specified frame using this backend (or the default if
+        `None`) if it doesn't already exist. If ``backend == ""``, it's an
+        error to specify a non-existent ``frame``.
+    create : `bool`
+        Create the display if it doesn't already exist.
+    verbose : `bool`
+        Allow backend to be chatty
+    *args
+        arguments passed to `Display` constructor
+    **kwargs
+        keyword arguments passed to `Display` constructor
 
-    @param frame The desired frame (None => use defaultFrame (see setDefaultFrame))
-    @param backend  create the specified frame using this backend (or the default if None) \
-    if it doesn't already exist.  If backend == "", it's an error to specify a non-existent frame
-    @param create create the display if it doesn't already exist.
-    @param verbose Allow backend to be chatty
-    @param args arguments passed to Display constructor
-    @param kwargs keyword arguments passed to Display constructor
+    See also
+    --------
+    Display.getDisplay
     """
 
     return Display.getDisplay(frame, backend, create, verbose, *args, **kwargs)
 
 
 def delAllDisplays():
-    """!Delete and close all known display
+    """Delete and close all known displays
     """
     return Display.delAllDisplays()

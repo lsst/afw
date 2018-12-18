@@ -20,32 +20,46 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-##
-# @file
-# @brief Convert the display primitives into lists of ds9 region commands
-##
-# See e.g. http://ds9.si.edu/doc/ref/region.html
-
 import math
 import re
 import lsst.afw.geom as afwGeom
 
 
 def dot(symb, c, r, size, ctype=None, fontFamily="helvetica", textAngle=None):
-    """Draw a symbol onto the specified DS9 frame at (col,row) = (c,r) [0-based coordinates]
-Possible values are:
-        +                Draw a +
-        x                Draw an x
-        *                Draw a *
-        o                Draw a circle
-        @:Mxx,Mxy,Myy    Draw an ellipse with moments (Mxx, Mxy, Myy) (argument size is ignored)
-        An object derived from afwGeom.ellipses.BaseCore Draw the ellipse (argument size is ignored)
-Any other value is interpreted as a string to be drawn. Strings obey the fontFamily (which may be extended
-with other characteristics, e.g. "times bold italic".  Text will be drawn rotated by textAngle (textAngle is
-ignored otherwise).
+    """Draw a symbol onto the specified DS9 frame.
 
-N.b. objects derived from BaseCore include Axes and Quadrupole.
-"""
+    Parameters
+    ----------
+    symb
+        Possible values are:
+
+            ``"+"``
+                Draw a +
+            ``"x"``
+                Draw an x
+            ``"*"``
+                Draw a *
+            ``"o"``
+                Draw a circle
+            ``"@:Mxx,Mxy,Myy"``
+                Draw an ellipse with moments (Mxx, Mxy, Myy) (argument size is ignored)
+            `lsst.afw.geom.ellipses.BaseCore`
+                Draw the ellipse (argument size is ignored). N.b. objects
+                derived from `~lsst.afw.geom.ellipses.BaseCore` include
+                `~lsst.afw.geom.ellipses.Axes` and `~lsst.afw.geom.ellipses.Quadrupole`.
+            Any other value
+                Interpreted as a string to be drawn. Strings obey the ``fontFamily``
+                (which may be extended with other characteristics, e.g. "times
+                bold italic".  Text will be drawn rotated by ``textAngle``
+                (textAngle is ignored otherwise).
+    c, r
+        Zero-based coordinates at which to draw the symbol
+    size
+    ctype : `str`
+        the name of the desired color (e.g. 'red', 'orchid')
+    fontFamily
+    textAngle
+    """
     if ctype is None:
         color = ""                       # the default
     else:
@@ -107,9 +121,14 @@ N.b. objects derived from BaseCore include Axes and Quadrupole.
 
 
 def drawLines(points, ctype=None):
-    """!Draw a line by connecting the points
-    @param points a list of (col,row)
-    @param ctype the name of the desired colour (e.g. 'red', 'orchid')
+    """Draw a line by connecting the points
+
+    Parameters
+    ----------
+    points : `list` of `tuple` of `float`
+        a list of (col,row)
+    ctype : `str`
+        the name of the desired color (e.g. 'red', 'orchid')
     """
 
     if ctype is None:  # default

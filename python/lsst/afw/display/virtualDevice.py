@@ -20,17 +20,18 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-##
-# @file
-# @brief A dummy image display
-
 
 class DisplayImpl:
+    """Back-end for display objects.
+
+    Parameters
+    ----------
+    display
+        The display object that we're providing the implementation for
+    verbose : `bool`
+        be chatty?
+    """
     def __init__(self, display, verbose=False):
-        """! Initialise the display
-        @param display The display object that we're providing the implementation for
-        @param verbose be chatty?
-        """
         self.display = display
         self.verbose = verbose
 
@@ -38,48 +39,68 @@ class DisplayImpl:
         self._close()
 
     def _close(self):
-        """!Close the display, cleaning up any allocated resources"""
+        """Close the display, cleaning up any allocated resources
+        """
         if hasattr(self, "verbose") and self.verbose and hasattr(self, "display"):
             print("virtual[%s]._close()" % (self.frame))
 
     def _buffer(self, enable=True):
-        """!Enable or disable buffering of writes to the display
-        @param enable  True or False, as appropriate
+        """Enable or disable buffering of writes to the display
+
+        Parameters
+        ----------
+        enable : `bool`
+            `True` or `False`, as appropriate
         """
         if self.verbose:
             print("virtual[%s]._buffer(%s)" % (self.frame, enable))
 
     def _dot(self, symb, c, r, size, ctype, *args, **kwargs):
-        """!Draw symbol a symbol at (c, r)
-        @param symb The desired symbol.  See dot() for details
-        @param c (x) column position
-        @param r (y) row position
-        @param size  Size of symbol, in pixels
-        @param ctype The desired colour, either e.g. afw.display.RED or a colour name known to X11
-        @param args  Extra arguments
-        @param kwargs Extra keyword arguments
+        """Draw a symbol at (c, r)
+
+        Parameters
+        ----------
+        symb
+            The desired symbol. See `dot` for details
+        c : `float`
+            (x) column position
+        r : `float`
+            (y) row position
+        size : `int`
+            Size of symbol, in pixels
+        ctype : `str`
+            The desired color, either e.g. `lsst.afw.display.RED` or a color name known to X11
+        *args
+            Extra arguments to backend
+        **kwargs
+            Extra keyword arguments to backend
         """
         if self.verbose:
             print("virtual[%s]._dot('%s', %.2f, %.2f, size=%g, ctype=%s, %s, %s)" %
                   (self.frame, symb, c, r, size, ctype, args, kwargs))
 
     def _drawLines(self, points, ctype):
-        """!Draw line defined by the list points
-        @param points A list of 0-indexed positions [(x, y), (x, y), ...]
-        @param ctype The desired colour, either e.g. afw.display.RED or a colour name known to X11
+        """Draw line defined by the list points
+
+        Parameters
+        ----------
+        points : `list` of `tuple` of `float`
+            A list of 0-indexed positions [(x, y), (x, y), ...]
+        ctype : `str`
+            The desired color, either e.g. `lsst.afw.display.RED` or a color name known to X11
         """
         if self.verbose:
             print("virtual[%s]._drawLines(%s, ctype=%s)" %
                   (self.frame, points, ctype))
 
     def _erase(self):
-        """!Erase all glyphs drawn on display
+        """Erase all glyphs drawn on display
         """
         if self.verbose:
             print("virtual[%s]._erase()" % (self.frame))
 
     def _flush(self):
-        """!Flush any I/O buffers
+        """Flush any I/O buffers
         """
         if self.verbose:
             print("virtual[%s]._flush()" % self.frame)
@@ -107,10 +128,17 @@ class DisplayImpl:
 
     def _mtv(self, image, wcs=None, mask=None, title=""):
         """Display an image and maybe a mask overlay on a display
-        @param image afwImage.Image to display
-        @param mask afwImage.Mask to display
-        @param wcs A Wcs to associate with data
-        @param title Name to display with the data
+
+        Parameters
+        ----------
+        image : `lsst.afw.image.Image`
+            `~lsst.afw.image.Image` to display
+        mask : `lsst.afw.image.Mask`
+            `~lsst.afw.image.Mask` to display
+        wcs : `lsst.afw.geom.SkyWcs`
+            A Wcs to associate with data
+        title : `str`
+            Name to display with the data
         """
         if self.verbose:
             print("virtual[%s]._mtv(image=%s, mask=%s, wcs=%s, title=\"%s\")" %
@@ -118,30 +146,47 @@ class DisplayImpl:
                    "Mask" if mask else None, "Wcs" if wcs else None, title))
 
     def _setImageColormap(self, cmap):
-        """Set the desired colourmap
+        """Set the desired colormap
 
-        @param the name of a colourmap (e.g. "gray") or a backend-specific object
+        Parameters
+        ----------
+        cmap : `str`
+            the name of a colormap (e.g. "gray") or a backend-specific object
         """
         if self.verbose:
             print("virtual[%s]._setImageColormap(cmap=\"%s\")" % (self.frame, cmap))
 
     def _setMaskTransparency(self, transparency, maskplane):
         """Set the transparency of a maskplane
-        @param transparency The desired transparency, in the range [0, 100]
-        @param maskplane The maskplane to set (None: all)
+
+        Parameters
+        ----------
+        transparency : `float`
+            The desired transparency, in the range [0, 100]
+        maskplane
+            The maskplane to set (None: all)
         """
         if self.verbose:
             print("virtual[%s]._setMaskTransparency(%g, maskplane=\"%s\")" %
                   (self.frame, transparency, maskplane))
 
-    def _scale(self, algorithm, min, max, unit=None, *args, **kwargs):
+    def _scale(self, algorithm, min, max, *args, unit=None, **kwargs):
         """Set the scaling from DN to displayed pixels
-        @param algorithm Scaling algorithm (e.g. linear)
-        @param min  The minimum value of the stretch (or "zscale" or "minmax")
-        @param max  The maximum value of the stretch
-        @param unit Units for min and max (e.g. Percent, Absolute, Sigma)
-        @param *args Optional arguments
-        @param **kwargs Optional keyword arguments
+
+        Parameters
+        ----------
+        algorithm
+            Scaling algorithm (e.g. linear)
+        min
+            The minimum value of the stretch (or "zscale" or "minmax")
+        max
+            The maximum value of the stretch
+        unit
+            Units for min and max (e.g. Percent, Absolute, Sigma)
+        *args
+            Optional arguments to the backend
+        **kwargs
+            Optional keyword arguments to the backend
         """
         if self.verbose:
             print("virtual[%s]._scale(%s, %s, %s, %s, %s, %s)" % (self.frame, algorithm,
@@ -154,16 +199,25 @@ class DisplayImpl:
             print("virtual[%s]._show()" % self.frame)
 
     def _pan(self, r, c):
-        """Pan to (colc, rowc)
-        @param c Desired column (x) position
-        @param r Desired row (y) position
+        """Pan to a row and column
+
+        Parameters
+        ----------
+        c : `float`
+            Desired column (x) position
+        r : `float`
+            Desired row (y) position
         """
         if self.verbose:
             print("virtual[%s]._pan(%.2f, %.2f)" % (self.frame, r, c))
 
     def _zoom(self, zoomfac):
         """Set the zoom
-        @param zoomfac  Zoom factor to use
+
+        Parameters
+        ----------
+        zoomfac : `float`
+            Zoom factor to use
         """
         if self.verbose:
             print("virtual[%s]._zoom(%g)" % (self.frame, zoomfac))
