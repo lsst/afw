@@ -33,13 +33,16 @@ __all__ = (
 
 
 def _getDisplayFromDisplayOrFrame(display, frame=None):
-    """!Return an afwDisplay.Display given either a display or a frame ID.
+    """Return an `lsst.afw.display.Display` given either a display or a frame ID.
 
+    Notes
+    -----
     If the two arguments are consistent, return the desired display; if they are not,
-    raise a RuntimeError exception.
+    raise a `RuntimeError` exception.
 
-    If the desired display is None, return None;
-    if (display, frame) == ("deferToFrame", None), return the default display"""
+    If the desired display is `None`, return `None`;
+    if ``(display, frame) == ("deferToFrame", None)``, return the default display
+    """
 
     # import locally to allow this file to be imported by __init__
     import lsst.afw.display as afwDisplay
@@ -66,39 +69,53 @@ def _getDisplayFromDisplayOrFrame(display, frame=None):
 
 
 class Mosaic:
-    """A class to handle mosaics of one or more identically-sized images (or Masks or MaskedImages)
-    E.g.
-    m = Mosaic()
-    m.setGutter(5)
-    m.setBackground(10)
-    m.setMode("square")                     # the default; other options are "x" or "y"
+    """A class to handle mosaics of one or more identically-sized images
+    (or `~lsst.afw.image.Mask` or `~lsst.afw.image.MaskedImage`)
 
-    mosaic = m.makeMosaic(im1, im2, im3)    # build the mosaic
-    display = afwDisplay.getDisplay()
-    display.mtv(mosaic)                         # display it
-    m.drawLabels(["Label 1", "Label 2", "Label 3"], display) # label the panels
+    Notes
+    -----
+    Note that this mosaic is a patchwork of the input images;  if you want to
+    make a mosaic of a set images of the sky, you probably want to use the coadd code
 
-    # alternative way to build a mosaic
-    images = [im1, im2, im3]
-    labels = ["Label 1", "Label 2", "Label 3"]
+    Examples
+    --------
 
-    mosaic = m.makeMosaic(images)
-    display.mtv(mosaic)
-    m.drawLabels(labels, display)
+    .. code-block:: py
 
-    # Yet another way to build a mosaic (no need to build the images/labels lists)
-    for i in range(len(images)):
-        m.append(images[i], labels[i])
-    # You may optionally include a colour, e.g. afwDisplay.YELLOW, as a third argument
+       m = Mosaic()
+       m.setGutter(5)
+       m.setBackground(10)
+       m.setMode("square")                     # the default; other options are "x" or "y"
 
-    mosaic = m.makeMosaic()
-    display.mtv(mosaic)
-    m.drawLabels(display=display)
+       mosaic = m.makeMosaic(im1, im2, im3)    # build the mosaic
+       display = afwDisplay.getDisplay()
+       display.mtv(mosaic)                         # display it
+       m.drawLabels(["Label 1", "Label 2", "Label 3"], display) # label the panels
+
+       # alternative way to build a mosaic
+       images = [im1, im2, im3]
+       labels = ["Label 1", "Label 2", "Label 3"]
+
+       mosaic = m.makeMosaic(images)
+       display.mtv(mosaic)
+       m.drawLabels(labels, display)
+
+       # Yet another way to build a mosaic (no need to build the images/labels lists)
+       for i in range(len(images)):
+           m.append(images[i], labels[i])
+       # You may optionally include a colour, e.g. afwDisplay.YELLOW, as a third argument
+
+       mosaic = m.makeMosaic()
+       display.mtv(mosaic)
+       m.drawLabels(display=display)
 
     Or simply:
-    mosaic = m.makeMosaic(display=display)
 
-    You can return the (ix, iy)th (or nth) bounding box (in pixels) with getBBox()
+    .. code-block:: py
+
+       mosaic = m.makeMosaic(display=display)
+
+    You can return the (ix, iy)th (or nth) bounding box (in pixels) with `getBBox()`
     """
 
     def __init__(self, gutter=3, background=0, mode="square"):
@@ -117,9 +134,15 @@ class Mosaic:
 
     def append(self, image, label=None, ctype=None):
         """Add an image to the list of images to be mosaiced
-        Set may be cleared with Mosaic.reset()
 
-        Returns the index of this image (may be passed to getBBox())
+        Returns
+        -------
+        index
+            the index of this image (may be passed to `getBBox()`)
+
+        Notes
+        -----
+        Set may be cleared with ``Mosaic.reset()``
         """
         if not self.xsize:
             self.xsize = image.getWidth()
@@ -132,11 +155,9 @@ class Mosaic:
 
     def makeMosaic(self, images=None, display="deferToFrame", mode=None,
                    background=None, title="", frame=None):
-        """Return a mosaic of all the images provided; if none are specified,
-        use the list accumulated with Mosaic.append().
+        """Return a mosaic of all the images provided.
 
-        Note that this mosaic is a patchwork of the input images;  if you want to
-        make a mosaic of a set images of the sky, you probably want to use the coadd code
+        If none are specified, use the list accumulated with `Mosaic.append()`.
 
         If display or frame (deprecated) is specified, display the mosaic
         """
@@ -233,19 +254,30 @@ class Mosaic:
         return mosaic
 
     def setGutter(self, gutter):
-        """Set the number of pixels between panels in a mosaic"""
+        """Set the number of pixels between panels in a mosaic
+        """
         self.gutter = gutter
 
     def setBackground(self, background):
-        """Set the value in the gutters"""
+        """Set the value in the gutters
+        """
         self.background = background
 
     def setMode(self, mode):
-        """Set mosaicing mode.  Valid options:
-           square       Make mosaic as square as possible
-           x            Make mosaic one image high
-           y            Make mosaic one image wide
-    """
+        """Set mosaicing mode.
+
+        Parameters
+        ----------
+        mode : {"square", "x", "y"}
+            Valid options:
+
+            square
+                Make mosaic as square as possible
+            x
+                Make mosaic one image high
+            y
+                Make mosaic one image wide
+        """
 
         if mode not in ("square", "x", "y"):
             raise RuntimeError("Unknown mosaicing mode: %s" % mode)
@@ -253,7 +285,16 @@ class Mosaic:
         self.mode = mode
 
     def getBBox(self, ix, iy=None):
-        """Get the BBox for the nth or (ix, iy)the panel"""
+        """Get the BBox for a panel
+
+        Parameters
+        ----------
+        ix : `int`
+            If ``iy`` is not `None`, this is the x coordinate of the panel.
+            If ``iy`` is `None`, this is the number of the panel.
+        iy : `int`, optional
+            The y coordinate of the panel.
+        """
 
         if iy is None:
             ix, iy = ix % self.nx, ix//self.nx
@@ -262,8 +303,12 @@ class Mosaic:
                                lsst.geom.ExtentI(self.xsize, self.ysize))
 
     def drawLabels(self, labels=None, display="deferToFrame", frame=None):
-        """Draw the list labels at the corners of each panel.  If labels is None, use the ones
-        specified by Mosaic.append()"""
+        """Draw the list labels at the corners of each panel.
+
+        Notes
+        -----
+        If labels is None, use the ones specified by ``Mosaic.append()``
+        """
 
         if not labels:
             labels = self.labels
@@ -296,15 +341,28 @@ class Mosaic:
 
     @property
     def nImage(self):
-        """Number of images"""
+        """Number of images
+        """
         return len(self.images)
 
 
 def drawBBox(bbox, borderWidth=0.0, origin=None, display="deferToFrame", ctype=None, bin=1, frame=None):
-    """Draw an afwImage::BBox on a display frame with the specified ctype.  Include an extra borderWidth pixels
-If origin is present, it's Added to the BBox
+    """Draw a bounding box on a display frame with the specified ctype.
 
-All BBox coordinates are divided by bin, as is right and proper for overlaying on a binned image
+    Parameters
+    ----------
+    bbox : `lsst.geom.Box2I` or `lsst.geom.Box2D`
+        The box to draw
+    borderWidth : `float`
+        Include this many pixels
+    origin
+        If specified, the box is shifted by ``origin``
+    display : `str`
+    ctype : `str`
+        The desired color, either e.g. `lsst.afw.display.RED` or a color name known to X11
+    bin : `int`
+        All BBox coordinates are divided by bin, as is right and proper for overlaying on a binned image
+    frame
     """
     x0, y0 = bbox.getMinX(), bbox.getMinY()
     x1, y1 = bbox.getMaxX(), bbox.getMaxY()
@@ -332,12 +390,31 @@ All BBox coordinates are divided by bin, as is right and proper for overlaying o
 
 def drawFootprint(foot, borderWidth=0.5, origin=None, XY0=None, frame=None, ctype=None, bin=1,
                   peaks=False, symb="+", size=0.4, ctypePeak=None, display="deferToFrame"):
-    """Draw an afwDetection::Footprint on a display frame with the specified ctype.  Include an extra borderWidth
-pixels If origin is present, it's Added to the Footprint; if XY0 is present is Subtracted from the Footprint
+    """Draw an `lsst.afw.detection.Footprint` on a display frame with the specified ctype.
 
-If peaks is True, also show the object's Peaks using the specified symbol and size and ctypePeak
-
-All Footprint coordinates are divided by bin, as is right and proper for overlaying on a binned image
+    Parameters
+    ----------
+    foot : `lsst.afw.detection.Footprint`
+    borderWidth : `float`
+        Include an extra borderWidth pixels
+    origin
+        If ``origin`` is present, it's arithmetically added to the Footprint
+    XY0
+        if ``XY0`` is present is subtracted from the Footprint
+    frame
+    ctype : `str`
+        The desired color, either e.g. `lsst.afw.display.RED` or a color name known to X11
+    bin : `int`
+        All Footprint coordinates are divided by bin, as is right and proper
+        for overlaying on a binned image
+    peaks : `bool`
+        If peaks is `True`, also show the object's Peaks using the specified
+        ``symb`` and ``size`` and ``ctypePeak``
+    symb : `str`
+    size : `float`
+    ctypePeak : `str`
+        The desired color for peaks, either e.g. `lsst.afw.display.RED` or a color name known to X11
+    display : `str`
     """
 
     if XY0:
@@ -382,11 +459,11 @@ All Footprint coordinates are divided by bin, as is right and proper for overlay
 
 
 def drawCoaddInputs(exposure, frame=None, ctype=None, bin=1, display="deferToFrame"):
-    """Draw the bounding boxes of input exposures to a coadd on a display frame with the specified ctype,
-    assuming display.mtv() has already been called on the given exposure on this frame.
+    """Draw the bounding boxes of input exposures to a coadd on a display
+    frame with the specified ctype, assuming ``display.mtv()`` has already been
+    called on the given exposure on this frame.
 
-
-    All coordinates are divided by bin, as is right and proper for overlaying on a binned image
+    All coordinates are divided by ``bin``, as is right and proper for overlaying on a binned image
     """
     coaddWcs = exposure.getWcs()
     catalog = exposure.getInfo().getCoaddInputs().ccds

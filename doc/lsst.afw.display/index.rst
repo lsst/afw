@@ -11,4 +11,6 @@ lsst.afw.display
 Python API reference
 ====================
 
-.. .. automodapi:: lsst.afw.display
+.. automodapi:: lsst.afw.display
+   :no-inheritance-diagram:
+

@@ -20,11 +20,6 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-##
-# @file
-# @brief Support for talking to ds9 from python
-# @deprecated  New code should use lsst.afw.display and set the backend to ds9
-
 import lsst.afw.display
 import lsst.afw.image as afwImage
 from .interface import getDisplay as _getDisplay, getDefaultBackend, setDefaultBackend
