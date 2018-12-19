@@ -11,4 +11,6 @@ lsst.afw.formatters
 Python API reference
 ====================
 
-.. .. automodapi:: lsst.afw.formatters
+.. automodapi:: lsst.afw.formatters
+   :no-main-docstr:
+   :no-inheritance-diagram:
