@@ -25,7 +25,7 @@ from astropy.units import cds
 import numpy as np
 
 import lsst.geom
-from lsst.afw.coord import Weather
+from lsst.afw.coord.weather import Weather
 
 __all__ = ["refraction", "differentialRefraction"]
 
@@ -37,8 +37,6 @@ deltaRefractScale = 1.0E8
 def refraction(wavelength, elevation, observatory, weather=None):
     """Calculate overall refraction under atmospheric and observing conditions.
 
-    The calculation is taken from Stone 1996
-    "An Accurate Method for Computing Atmospheric Refraction"
     Parameters
     ----------
     wavelength : `float`
@@ -55,9 +53,19 @@ def refraction(wavelength, elevation, observatory, weather=None):
 
     Returns
     -------
-    `lsst.geom.Angle`
+    refraction : `lsst.geom.Angle`
         The angular refraction for light of the given wavelength,
         under the given observing conditions.
+
+    Notes
+    -----
+    The calculation is taken from [1]_.
+
+    References
+    ----------
+    .. [1] R. C. Stone, "An Accurate Method for Computing Atmospheric
+       Refraction," Publications of the Astronomical Society of the Pacific,
+       vol. 108, p. 1051, 1996.
     """
     if wavelength < 230.2:
         raise ValueError("Refraction calculation is valid for wavelengths between 230.2 and 2058.6 nm.")
@@ -105,8 +113,8 @@ def differentialRefraction(wavelength, wavelengthRef, elevation, observatory, we
 
     Returns
     -------
-    `lsst.geom.Angle`
-        The refraction at `wavelength` - the refraction at `wavelengthRef`.
+    differentialRefraction : `lsst.geom.Angle`
+        The refraction at `wavelength` minus the refraction at `wavelengthRef`.
     """
     refractionStart = refraction(wavelength, elevation, observatory, weather=weather)
     refractionEnd = refraction(wavelengthRef, elevation, observatory, weather=weather)
@@ -115,12 +123,6 @@ def differentialRefraction(wavelength, wavelengthRef, elevation, observatory, we
 
 def deltaN(wavelength, weather):
     """Calculate the differential refractive index of air.
-
-    The differential refractive index is the difference of
-    the refractive index from 1., multiplied by 1E8 to simplify
-    the notation and equations. Calculated as (n_air - 1)*10^8
-
-    This replicates equation 14 of Stone 1996
 
     Parameters
     ----------
@@ -132,9 +134,23 @@ def deltaN(wavelength, weather):
 
     Returns
     -------
-    `float`
+    deltaN : `float`
         The difference of the refractive index of air from 1.,
         calculated as (n_air - 1)*10^8
+
+    Notes
+    -----
+    The differential refractive index is the difference of
+    the refractive index from 1., multiplied by 1E8 to simplify
+    the notation and equations. Calculated as (n_air - 1)*10^8
+
+    This replicates equation 14 of [1]_
+
+    References
+    ----------
+    .. [1] R. C. Stone, "An Accurate Method for Computing Atmospheric
+       Refraction," Publications of the Astronomical Society of the Pacific,
+       vol. 108, p. 1051, 1996.
     """
     waveNum = 1E3/wavelength  # want wave number in units 1/micron
     dryAirTerm = 2371.34 + (683939.7/(130. - waveNum**2.)) + (4547.3/(38.9 - waveNum**2.))
@@ -146,8 +162,6 @@ def deltaN(wavelength, weather):
 def densityFactorDry(weather):
     """Calculate dry air pressure term to refractive index calculation.
 
-    This replicates equation 15 of Stone 1996
-
     Parameters
     ----------
     weather : `lsst.afw.coord.Weather`
@@ -156,9 +170,19 @@ def densityFactorDry(weather):
 
     Returns
     -------
-    `float`
+    densityFactor : `float`
         Returns the relative density of dry air
         at the given pressure and temperature.
+
+    Notes
+    -----
+    This replicates equation 15 of [1]_
+
+    References
+    ----------
+    .. [1] R. C. Stone, "An Accurate Method for Computing Atmospheric
+       Refraction," Publications of the Astronomical Society of the Pacific,
+       vol. 108, p. 1051, 1996.
     """
     temperature = extractTemperature(weather, useKelvin=True)
     waterVaporPressure = humidityToPressure(weather)
@@ -173,8 +197,6 @@ def densityFactorDry(weather):
 def densityFactorWater(weather):
     """Calculate water vapor pressure term to refractive index calculation.
 
-    This replicates equation 16 of Stone 1996
-
     Parameters
     ----------
     weather : `lsst.afw.coord.Weather`
@@ -183,9 +205,19 @@ def densityFactorWater(weather):
 
     Returns
     -------
-    `float`
+    densityFactor : `float`
         Returns the relative density of water vapor
         at the given pressure and temperature.
+
+    Notes
+    -----
+    This replicates equation 16 of [1]_
+
+    References
+    ----------
+    .. [1] R. C. Stone, "An Accurate Method for Computing Atmospheric
+       Refraction," Publications of the Astronomical Society of the Pacific,
+       vol. 108, p. 1051, 1996.
     """
     temperature = extractTemperature(weather, useKelvin=True)
     waterVaporPressure = humidityToPressure(weather)
@@ -202,8 +234,6 @@ def densityFactorWater(weather):
 def humidityToPressure(weather):
     """Convert humidity and temperature to water vapor pressure.
 
-    This replicates equations 18 & 20 of Stone 1996
-
     Parameters
     ----------
     weather : `lsst.afw.coord.Weather`
@@ -212,9 +242,19 @@ def humidityToPressure(weather):
 
     Returns
     -------
-    `astropy.units.Quantity`
+    pressure : `astropy.units.Quantity`
         The water vapor pressure in Pascals
         calculated from the given humidity and temperature.
+
+    Notes
+    -----
+    This replicates equations 18 & 20 of [1]_
+
+    References
+    ----------
+    .. [1] R. C. Stone, "An Accurate Method for Computing Atmospheric
+       Refraction," Publications of the Astronomical Society of the Pacific,
+       vol. 108, p. 1051, 1996.
     """
     humidity = weather.getHumidity()
     x = np.log(humidity/100.0)
@@ -243,7 +283,7 @@ def extractTemperature(weather, useKelvin=False):
 
     Returns
     -------
-    `astropy.units.Quantity`
+    temperature : `astropy.units.Quantity`
         The temperature in Celsius, unless `useKelvin` is set.
     """
     temperature = weather.getAirTemperature()*units.Celsius
@@ -265,7 +305,7 @@ def defaultWeather(altitude):
 
     Returns
     -------
-    `lsst.afw.coord.Weather`
+    default : `lsst.afw.coord.Weather`
         Updated Weather class with any `nan` values replaced by defaults.
     """
     if isinstance(altitude, units.quantity.Quantity):

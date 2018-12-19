@@ -22,4 +22,5 @@
 import lsst.afw.geom
 
 from .observatory import *
+from .refraction import *
 from .weather import *
