@@ -11,4 +11,6 @@ lsst.afw.coord
 Python API reference
 ====================
 
-.. .. automodapi:: lsst.afw.coord
+.. automodapi:: lsst.afw.coord
+   :no-main-docstr:
+   :no-inheritance-diagram:
