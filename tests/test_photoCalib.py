@@ -434,14 +434,18 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
         err = 45
         dataDir = os.path.join(os.path.split(__file__)[0], "data")
 
-        # implicit version 0
+        # implicit version 0 should raise (no longer compatible)
         filePath = os.path.join(dataDir, "photoCalib-noversion.fits")
-        photoCalib = lsst.afw.image.PhotoCalib.readFits(filePath)
-        self.assertEqual(photoCalib.getCalibrationMean(), mean)
-        self.assertEqual(photoCalib.getCalibrationErr(), err)
+        with self.assertRaises(RuntimeError):
+            photoCalib = lsst.afw.image.PhotoCalib.readFits(filePath)
 
-        # explicit version 0
+        # explicit version 0 should raise (no longer compatible)
         filePath = os.path.join(dataDir, "photoCalib-version0.fits")
+        with self.assertRaises(RuntimeError):
+            photoCalib = lsst.afw.image.PhotoCalib.readFits(filePath)
+
+        # explicit version 1
+        filePath = os.path.join(dataDir, "photoCalib-version1.fits")
         photoCalib = lsst.afw.image.PhotoCalib.readFits(filePath)
         self.assertEqual(photoCalib.getCalibrationMean(), mean)
         self.assertEqual(photoCalib.getCalibrationErr(), err)

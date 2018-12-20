@@ -46,7 +46,7 @@ namespace image {
 
 namespace {
 
-int const SERIALIZATION_VERSION = 0;
+int const SERIALIZATION_VERSION = 1;
 
 double toNanojansky(double instFlux, double scale) { return instFlux * scale; }
 
@@ -304,8 +304,9 @@ public:
         table::BaseRecord const &record = catalogs.front().front();
         PhotoCalibSchema const &keys = PhotoCalibSchema::get();
         int version = getVersion(record);
-        if (version != 0) {
-            throw(pex::exceptions::TypeError("Unsupported version: " + std::to_string(version)));
+        if (version < 1) {
+            throw(pex::exceptions::RuntimeError("Unsupported version (version 0 was defined in maggies): " +
+                                                std::to_string(version)));
         }
         return std::make_shared<PhotoCalib>(record.get(keys.calibrationMean), record.get(keys.calibrationErr),
                                             archive.get<afw::math::BoundedField>(record.get(keys.field)),
