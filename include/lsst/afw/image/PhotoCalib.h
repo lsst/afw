@@ -208,7 +208,7 @@ public:
 
     /**
      * Convert `sourceRecord[instFluxField_instFlux]` (ADU) at location
-     * `(sourceRecord.get("x"), sourceRecord.get("y"))` (pixels) to nJy and magnitude error.
+     * `(sourceRecord.get("x"), sourceRecord.get("y"))` (pixels) to flux and flux error (in nJy).
      *
      * @param[in]  sourceRecord  The source record to get instFlux and position from.
      * @param[in]  instFluxField The instFlux field: Keys of the form "*_instFlux" and "*_instFluxErr" must

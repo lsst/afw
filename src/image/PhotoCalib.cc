@@ -52,7 +52,8 @@ double toNanojansky(double instFlux, double scale) { return instFlux * scale; }
 
 double toMagnitude(double instFlux, double scale) { return utils::nanojanskyToABMagnitude(instFlux * scale); }
 
-double fromMagnitudeToInstFlux(double magnitude, double scale) {
+double toInstFluxFromMagnitude(double magnitude, double scale) {
+    // Note: flux[nJy] / scale = instFlux[counts]
     return utils::ABMagnitudeToNanojansky(magnitude) / scale;
 }
 
@@ -203,11 +204,11 @@ void PhotoCalib::instFluxToMagnitude(afw::table::SourceCatalog &sourceCatalog,
 // ------------------- other utility methods -------------------
 
 double PhotoCalib::magnitudeToInstFlux(double magnitude) const {
-    return fromMagnitudeToInstFlux(magnitude, _calibrationMean);
+    return toInstFluxFromMagnitude(magnitude, _calibrationMean);
 }
 
 double PhotoCalib::magnitudeToInstFlux(double magnitude, lsst::geom::Point<double, 2> const &point) const {
-    return fromMagnitudeToInstFlux(magnitude, evaluate(point));
+    return toInstFluxFromMagnitude(magnitude, evaluate(point));
 }
 
 std::shared_ptr<math::BoundedField> PhotoCalib::computeScaledCalibration() const {
