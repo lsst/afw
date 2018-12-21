@@ -24,7 +24,7 @@
 Support for displaying cameraGeom objects.
 """
 
-__all__ = ['prepareWcsData', 'makeImageFromAmp', 'calcRawCcdBBox', 'makeImageFromCcd',
+__all__ = ['prepareWcsData', 'plotFocalPlane', 'makeImageFromAmp', 'calcRawCcdBBox', 'makeImageFromCcd',
            'FakeImageDataSource', 'ButlerImage', 'rawCallback', 'overlayCcdBoxes',
            'showAmp', 'showCcd', 'getCcdInCamBBoxList', 'getCameraImageBBox',
            'makeImageFromCamera', 'showCamera', 'makeFocalPlaneWcs', 'findAmp']
@@ -102,7 +102,7 @@ def plotFocalPlane(camera, fieldSizeDeg_x=0, fieldSizeDeg_y=None, dx=0.1, dy=0.1
         Spacing of sample points in x in degrees
     dy : `float`
         Spacing of sample points in y in degrees
-    figsize : `tuple` containing two `float`s
+    figsize : `tuple` containing two `float`
         Matplotlib style tuple indicating the size of the figure in inches
     useIds : `bool`
         Label detectors by name, not id?
@@ -521,8 +521,8 @@ def rawCallback(im, ccd=None, imageSource=None,
     """A callback function that may or may not subtract bias/correct gain/trim
     a raw image.
 
-    Paramters
-    ---------
+    Parameters
+    ----------
     im : `lsst.afw.image.Image` or `lsst.afw.image.MaskedImage` or `lsst.afw.image.Exposure`
        An image of a chip, ready to be binned and maybe rotated.
     ccd : `lsst.afw.cameraGeom.Detector` or None

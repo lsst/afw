@@ -6,7 +6,8 @@ from .transformConfig import TransformMapConfig
 
 
 class DetectorConfig(pexConfig.Config):
-    """!A configuration that represents (and can be used to construct) a Detector
+    """A configuration that represents (and can be used to construct) a
+    Detector.
     """
     transformDict = pexConfig.ConfigField(
         "Dictionary of camera transforms keyed on the transform type.", TransformMapConfig)
@@ -62,7 +63,7 @@ class DetectorConfig(pexConfig.Config):
 
 
 class CameraConfig(pexConfig.Config):
-    """!A configuration that represents (and can be used to construct) a Camera
+    """A configuration that represents (and can be used to construct) a Camera.
     """
     detectorList = pexConfig.ConfigDictField(
         "List of detector configs", keytype=int, itemtype=DetectorConfig)

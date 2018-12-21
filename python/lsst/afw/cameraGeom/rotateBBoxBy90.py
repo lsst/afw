@@ -28,14 +28,26 @@ import lsst.geom
 
 
 def rotateBBoxBy90(bbox, n90, dimensions):
-    """!Rotate a bounding box by an integer multiple of 90 degrees
+    """Rotate a bounding box by an integer multiple of 90 degrees.
 
-    @todo document dimensions better; what does it specify?
+    Parameters
+    ----------
+    bbox : `lsst.geom.Box2I`
+        Bounding box to rotate.
+    n90 : `int`
+        Number of quarter rotations to perform
+    dimensions : `tuple` of `int`
+        Dimensions of the parent grid.
 
-    @param bbox  bbox to rotate
-    @param n90  number of quarter rotations to perform
-    @param dimensions  dimensions of the parent grid
-    @return rotated bounding box
+    Returns
+    -------
+    newBbox : `lsst.geom.Box`
+        Rotated bounding box.
+
+    Notes
+    -----
+    **TODO:**
+        document dimensions better; what does it specify?
     """
     while n90 < 0:
         n90 += 4

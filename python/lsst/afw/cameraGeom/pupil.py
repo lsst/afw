@@ -26,40 +26,43 @@ import numpy as np
 
 
 class Pupil:
-    """!Pupil obscuration function.
+    """Pupil obscuration function.
+
+    Parameters
+    ----------
+    illuminated : `numpy.ndarray`, (Nx, Ny)
+        2D numpy array indicating which parts of the pupil plane are
+        illuminated.
+    size : `float`
+        Size of pupil plane array in meters. Note that this may be larger
+        than the actual diameter of the illuminated pupil to accommodate
+        zero-padding.
+    scale : `float`
+        Sampling interval of pupil plane array in meters.
     """
 
     def __init__(self, illuminated, size, scale):
-        """!Construct a Pupil
-
-        @param[in] illuminated  2D numpy array indicating which parts of
-                                the pupil plane are illuminated.
-        @param[in] size         Size of pupil plane array in meters.  Note
-                                that this may be larger than the actual
-                                diameter of the illuminated pupil to
-                                accommodate zero-padding.
-        @param[in] scale        Sampling interval of pupil plane array in
-                                meters.
-        """
         self.illuminated = illuminated
         self.size = size
         self.scale = scale
 
 
 class PupilFactory:
-    """!Pupil obscuration function factory for use with Fourier optics.
+    """Pupil obscuration function factory for use with Fourier optics.
+
+    Parameters
+    ----------
+    visitInfo : `lsst.afw.image.VisitInfo`
+        Visit information for a particular exposure.
+    pupilSize : `float`
+        Size in meters of constructed Pupil array.
+        Note that this may be larger than the actual diameter of the
+        illuminated pupil to accommodate zero-padding.
+    npix : `int`
+        Constructed Pupils will be npix x npix.
     """
 
     def __init__(self, visitInfo, pupilSize, npix):
-        """!Construct a PupilFactory.
-
-        @param[in] visitInfo  VisitInfo object for a particular exposure.
-        @param[in] pupilSize  Size in meters of constructed Pupil array.
-                              Note that this may be larger than the actual
-                              diameter of the illuminated pupil to
-                              accommodate zero-padding.
-        @param[in] npix       Constructed Pupils will be npix x npix.
-        """
         self.visitInfo = visitInfo
         self.pupilSize = pupilSize
         self.npix = npix
@@ -68,10 +71,17 @@ class PupilFactory:
         self.u, self.v = np.meshgrid(u, u)
 
     def getPupil(self, point):
-        """!Calculate a Pupil at a given point in the focal plane.
+        """Calculate a Pupil at a given point in the focal plane.
 
-        @param point  Point2D indicating focal plane coordinates.
-        @returns      Pupil
+        Parameters
+        ----------
+        point : `lsst.geom.Point2D`
+          The focal plane coordinates.
+
+        Returns
+        -------
+        pupil : `Pupil`
+            The Pupil at ``point``.
         """
         raise NotImplementedError(
             "PupilFactory not implemented for this camera")
@@ -81,10 +91,19 @@ class PupilFactory:
         """Compute the right-angle distance between the points given by `p0`
         and the line that passes through `p1` and `p2`.
 
-        @param[in] p0  2-tuple of numpy arrays (x,y coords)
-        @param[in] p1  2-tuple of scalars (x,y coords)
-        @param[in] p2  2-tuple of scalars (x,y coords)
-        @returns       numpy array of distances; shape congruent to p0[0]
+        Parameters
+        ----------
+        p0 : `tuple` of `numpy.ndarray`
+            2-tuple of numpy arrays (x, y focal plane coordinates)
+        p1 : ``pair`` of `float`
+            x,y focal plane coordinates
+        p2 : ``pair`` of `float`
+            x,y focal plane coordinates
+
+        Returns
+        -------
+        distances : `numpy.ndarray`
+            Numpy array of distances; shape congruent to p0[0].
         """
         x0, y0 = p0
         x1, y1 = p1
@@ -96,7 +115,10 @@ class PupilFactory:
     def _fullPupil(self):
         """Make a fully-illuminated Pupil.
 
-        @returns Pupil
+        Returns
+        -------
+        pupil : `Pupil`
+            The illuminated pupil.
         """
         illuminated = np.ones(self.u.shape, dtype=np.bool)
         return Pupil(illuminated, self.pupilSize, self.pupilScale)
@@ -104,9 +126,14 @@ class PupilFactory:
     def _cutCircleInterior(self, pupil, p0, r):
         """Cut out the interior of a circular region from a Pupil.
 
-        @param[in,out] pupil  Pupil to modify in place
-        @param[in] p0         2-tuple indicating region center
-        @param[in] r          Circular region radius
+        Parameters
+        ----------
+        pupil : `Pupil`
+            Pupil to modify in place.
+        p0 : `pair`` of `float`
+            2-tuple indicating region center.
+        r : `float`
+            Circular region radius.
         """
         r2 = (self.u - p0[0])**2 + (self.v - p0[1])**2
         pupil.illuminated[r2 < r**2] = False
@@ -114,9 +141,14 @@ class PupilFactory:
     def _cutCircleExterior(self, pupil, p0, r):
         """Cut out the exterior of a circular region from a Pupil.
 
-        @param[in,out] pupil  Pupil to modify in place
-        @param[in] p0     2-tuple indicating region center
-        @param[in] r      Circular region radius
+        Parameters
+        ----------
+        pupil : `Pupil`
+            Pupil to modify in place
+        p0 : `pair`` of `float`
+            2-tuple indicating region center.
+        r : `float`
+            Circular region radius.
         """
         r2 = (self.u - p0[0])**2 + (self.v - p0[1])**2
         pupil.illuminated[r2 > r**2] = False
@@ -124,10 +156,16 @@ class PupilFactory:
     def _cutRay(self, pupil, p0, angle, thickness):
         """Cut out a ray from a Pupil.
 
-        @param[in,out] pupil  Pupil to modify in place
-        @param[in] p0         2-tuple indicating ray starting point
-        @param[in] angle      Ray angle measured CCW from +x.
-        @param[in] thickness  Thickness of cutout
+        Parameters
+        ----------
+        pupil : `Pupil`
+            Pupil to modify in place.
+        p0 : `pair`` of `float`
+            2-tuple indicating ray starting point.
+        angle : `pair` of `float`
+            Ray angle measured CCW from +x.
+        thickness : `float`
+            Thickness of cutout.
         """
         angleRad = angle.asRadians()
         # the 1 is arbitrary, just need something to define another point on
@@ -141,7 +179,10 @@ class PupilFactory:
     def _centerPupil(self, pupil):
         """Center the illuminated portion of the pupil in array.
 
-        @param[in,out] pupil  Pupil to modify in place
+        Parameters
+        ----------
+        pupil : `Pupil`
+            Pupil to modify in place
         """
         def center(arr, axis):
             smash = np.sum(arr, axis=axis)

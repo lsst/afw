@@ -27,16 +27,28 @@ import lsst.afw.geom
 
 
 def makePixelToTanPixel(bbox, orientation, focalPlaneToField, pixelSizeMm):
-    """!Make a Transform whose forward direction converts PIXELS to TAN_PIXELS for one detector
+    """Make a Transform whose forward direction converts PIXELS to TAN_PIXELS
+    for one detector.
 
-    PIXELS and TAN_PIXELS are defined in @ref afwCameraGeomCoordSys in doc/cameraGeom.dox
+    PIXELS and TAN_PIXELS are defined in @ref afwCameraGeomCoordSys in
+    doc/cameraGeom.dox
 
-    @param[in] bbox  detector bounding box (an lsst.geom.Box2I)
-    @param[in] orientation  orientation of detector in focal plane (an lsst.afw.cameraGeom.Orientation)
-    @param[in] focalPlaneToField  an lsst.afw.geom.Transform that converts from focal plane (mm)
-        to field angle coordinates (radians) in the forward direction
-    @param[in] pixelSizeMm  size of the pixel in mm in X and Y (an lsst.geom.Extent2D)
-    @return a TransformPoint2ToPoint2 whose forward direction converts PIXELS to TAN_PIXELS
+    Parameters
+    ----------
+    bbox : `lsst.geom.Box2I`
+        Detector bounding box.
+    orientation : `lsst.afw.cameraGeom.Orientation`
+        Orientation of detector in focal plane.
+    focalPlaneToField : `lsst.afw.geom.TransformPoint2ToPoint2`
+        A transform that converts from focal plane (mm) to field angle
+        coordinates (radians) in the forward direction.
+    pixelSizeMm : `lsst.geom.Extent2D`
+        Size of the pixel in mm in X and Y.
+
+    Returns
+    -------
+    transform : `lsst.afw.geom.TransformPoint2ToPoint2`
+        A transform whose forward direction converts PIXELS to TAN_PIXELS.
     """
     pixelToFocalPlane = orientation.makePixelFpTransform(pixelSizeMm)
     pixelToField = pixelToFocalPlane.then(focalPlaneToField)
