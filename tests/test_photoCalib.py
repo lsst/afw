@@ -56,6 +56,21 @@ def makeCalibratedMaskedImage(image, mask, variance, outImage, calibration, cali
                                                     outErr**2)
 
 
+def makeCalibratedMaskedImageNoCalibrationError(image, mask, variance, outImage):
+    """Return a MaskedImage using outImage, mask, and a computed variance image.
+
+    Ignores the contributions from the uncertainty in the calibration.
+    """
+    outErr = computeMaggiesErr(np.sqrt(variance),
+                               image,
+                               0,
+                               1,
+                               outImage).astype(np.float32)  # variance plane must be 32bit
+    return lsst.afw.image.makeMaskedImageFromArrays(outImage,
+                                                    mask,
+                                                    outErr**2)
+
+
 class PhotoCalibTestCase(lsst.utils.tests.TestCase):
 
     def setUp(self):
@@ -426,6 +441,11 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
         result = photoCalib.calibrateImage(maskedImage)
         self.assertMaskedImagesAlmostEqual(expect, result)
 
+        # same test, but without using the calibration error
+        expect = makeCalibratedMaskedImageNoCalibrationError(image, mask, variance, outImage)
+        result = photoCalib.calibrateImage(maskedImage, includeScaleUncertainty=False)
+        self.assertMaskedImagesAlmostEqual(expect, result)
+
     def testCalibrateImageNonConstant(self):
         """Test a spatially-varying calibration."""
         npDim, maskedImage, image, mask, variance = self.setupImage()
@@ -437,6 +457,11 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
 
         photoCalib = lsst.afw.image.PhotoCalib(self.linearXCalibration, self.calibrationErr)
         result = photoCalib.calibrateImage(maskedImage)
+        self.assertMaskedImagesAlmostEqual(expect, result)
+
+        # same test, but without using the calibration error
+        expect = makeCalibratedMaskedImageNoCalibrationError(image, mask, variance, outImage)
+        result = photoCalib.calibrateImage(maskedImage, includeScaleUncertainty=False)
         self.assertMaskedImagesAlmostEqual(expect, result)
 
     def testCalibrateImageNonConstantSubimage(self):
@@ -455,6 +480,11 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
         photoCalib = lsst.afw.image.PhotoCalib(self.linearXCalibration, self.calibrationErr)
         result = photoCalib.calibrateImage(subImage)
         self.assertMaskedImagesAlmostEqual(expect.subset(subBox), result)
+
+        # same test, but without using the calibration error
+        expect = makeCalibratedMaskedImageNoCalibrationError(image, mask, variance, outImage)
+        result = photoCalib.calibrateImage(maskedImage, includeScaleUncertainty=False)
+        self.assertMaskedImagesAlmostEqual(expect, result)
 
     def testNonPositiveMeans(self):
         # no negative calibrations

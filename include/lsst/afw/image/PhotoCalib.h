@@ -335,10 +335,12 @@ public:
      * Mask pixels are propogated directly from the input image.
      *
      * @param maskedImage The masked image to calibrate.
+     * @param includeScaleUncertainty Include the uncertainty on the calibration in the resulting variance?
      *
      * @return The calibrated masked image.
      */
-    MaskedImage<float> calibrateImage(MaskedImage<float> const &maskedImage) const;
+    MaskedImage<float> calibrateImage(MaskedImage<float> const &maskedImage,
+                                      bool includeScaleUncertainty = true) const;
 
     /**
      * Convert AB magnitude to instFlux (ADU).
