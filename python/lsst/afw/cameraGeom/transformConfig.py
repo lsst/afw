@@ -1,3 +1,5 @@
+__all__ = ['TransformMapConfig']
+
 import lsst.pex.config as pexConfig
 from lsst.afw.geom import TransformConfig
 

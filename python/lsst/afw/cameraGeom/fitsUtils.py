@@ -1,3 +1,6 @@
+__all__ = ['getByKey', 'setByKey', 'HeaderMap', 'HeaderAmpMap',
+           'HeaderDetectorMap', 'DetectorBuilder']
+
 import re
 import warnings
 

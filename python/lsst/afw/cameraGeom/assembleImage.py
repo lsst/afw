@@ -19,11 +19,12 @@
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
+
+__all__ = ['assembleAmplifierImage', 'assembleAmplifierRawImage',
+           'makeUpdatedDetector']
+
 import lsst.geom
 from . import copyDetector
-
-__ALL__ = ['assembleAmplifierImage', 'assembleAmplifierRawImage',
-           'updateAmpGeometryForAssembledCcd']
 
 # dict of doFlip: slice
 _SliceDict = {

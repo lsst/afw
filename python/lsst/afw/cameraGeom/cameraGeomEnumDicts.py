@@ -19,6 +19,9 @@
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
+
+__all__ = ['DetectorTypeValNameDict', 'DetectorTypeNameValDict']
+
 from . import cameraGeomLib
 
 DetectorTypeValNameDict = {

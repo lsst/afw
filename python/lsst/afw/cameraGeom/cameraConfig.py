@@ -1,8 +1,8 @@
+__all__ = ["CameraConfig", "DetectorConfig"]
+
 import numpy as np
 import lsst.pex.config as pexConfig
 from .transformConfig import TransformMapConfig
-
-__all__ = ["CameraConfig", "DetectorConfig"]
 
 
 class DetectorConfig(pexConfig.Config):

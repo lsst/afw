@@ -19,11 +19,12 @@
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
+
+__all__ = ["rotateBBoxBy90"]
+
 import numpy
 
 import lsst.geom
-
-__all__ = ["rotateBBoxBy90"]
 
 
 def rotateBBoxBy90(bbox, n90, dimensions):

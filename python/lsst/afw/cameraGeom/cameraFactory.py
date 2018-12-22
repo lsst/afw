@@ -1,3 +1,6 @@
+__all__ = ["makeCameraFromPath", "makeCameraFromCatalogs",
+           "makeDetector", "copyDetector"]
+
 import os.path
 import lsst.geom
 from lsst.afw.table import AmpInfoCatalog
@@ -6,9 +9,6 @@ from .cameraGeomLib import FOCAL_PLANE, FIELD_ANGLE, PIXELS, TAN_PIXELS, ACTUAL_
 from .camera import Camera
 from .makePixelToTanPixel import makePixelToTanPixel
 from .pupil import PupilFactory
-
-__all__ = ["makeCameraFromPath", "makeCameraFromCatalogs",
-           "makeDetector", "copyDetector"]
 
 cameraSysList = [FIELD_ANGLE, FOCAL_PLANE, PIXELS, TAN_PIXELS, ACTUAL_PIXELS]
 cameraSysMap = dict((sys.getSysName(), sys) for sys in cameraSysList)

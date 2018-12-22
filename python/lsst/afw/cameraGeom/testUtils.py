@@ -1,3 +1,5 @@
+__all__ = ["DetectorWrapper", "CameraWrapper"]
+
 import os
 
 import numpy as np
@@ -13,8 +15,6 @@ from .cameraConfig import DetectorConfig, CameraConfig
 from .cameraFactory import makeCameraFromCatalogs
 from .makePixelToTanPixel import makePixelToTanPixel
 from .transformConfig import TransformMapConfig
-
-__all__ = ["DetectorWrapper", "CameraWrapper"]
 
 
 class DetectorWrapper:

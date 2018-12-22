@@ -19,10 +19,11 @@
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
-import lsst.geom
-import lsst.afw.geom
 
 __all__ = ["makePixelToTanPixel"]
+
+import lsst.geom
+import lsst.afw.geom
 
 
 def makePixelToTanPixel(bbox, orientation, focalPlaneToField, pixelSizeMm):
