@@ -46,9 +46,9 @@ namespace {
 void declareMeasurement(py::module &mod) {
     py::class_<Measurement, std::shared_ptr<Measurement>> cls(mod, "Measurement");
 
-    cls.def(py::init<double, double>(), "value"_a, "err"_a);
+    cls.def(py::init<double, double>(), "value"_a, "error"_a);
     cls.def_readonly("value", &Measurement::value);
-    cls.def_readonly("err", &Measurement::err);
+    cls.def_readonly("error", &Measurement::error);
 }
 
 PYBIND11_MODULE(photoCalib, mod) {
@@ -58,46 +58,46 @@ PYBIND11_MODULE(photoCalib, mod) {
 
     /* Constructors */
     cls.def(py::init<>());
-    cls.def(py::init<double, double, lsst::geom::Box2I>(), "instFluxMag0"_a, "instFluxMag0Err"_a = 0.0,
+    cls.def(py::init<double, double, lsst::geom::Box2I>(), "calibrationMean"_a, "calibrationErr"_a = 0.0,
             "bbox"_a = lsst::geom::Box2I());
     cls.def(py::init<std::shared_ptr<afw::math::BoundedField>, double>(), "calibration"_a,
-            "instFluxMag0Err"_a = 0.0);
-    cls.def(py::init<double, double, std::shared_ptr<afw::math::BoundedField>, bool>(), "instFluxMag0"_a,
-            "instFluxMag0Err"_a, "calibration"_a, "isConstant"_a);
+            "calibrationErr"_a = 0.0);
+    cls.def(py::init<double, double, std::shared_ptr<afw::math::BoundedField>, bool>(), "calibrationMean"_a,
+            "calibrationErr"_a, "calibration"_a, "isConstant"_a);
 
     table::io::python::addPersistableMethods<PhotoCalib>(cls);
 
-    /* Members - maggies */
-    cls.def("instFluxToMaggies",
+    /* Members - nanojansky */
+    cls.def("instFluxToNanojansky",
             (double (PhotoCalib::*)(double, lsst::geom::Point<double, 2> const &) const) &
-                    PhotoCalib::instFluxToMaggies,
+                    PhotoCalib::instFluxToNanojansky,
             "instFlux"_a, "point"_a);
-    cls.def("instFluxToMaggies", (double (PhotoCalib::*)(double) const) & PhotoCalib::instFluxToMaggies,
+    cls.def("instFluxToNanojansky", (double (PhotoCalib::*)(double) const) & PhotoCalib::instFluxToNanojansky,
             "instFlux"_a);
 
-    cls.def("instFluxToMaggies",
+    cls.def("instFluxToNanojansky",
             (Measurement(PhotoCalib::*)(double, double, lsst::geom::Point<double, 2> const &) const) &
-                    PhotoCalib::instFluxToMaggies,
+                    PhotoCalib::instFluxToNanojansky,
             "instFlux"_a, "instFluxErr"_a, "point"_a);
-    cls.def("instFluxToMaggies",
-            (Measurement(PhotoCalib::*)(double, double) const) & PhotoCalib::instFluxToMaggies, "instFlux"_a,
-            "instFluxErr"_a);
+    cls.def("instFluxToNanojansky",
+            (Measurement(PhotoCalib::*)(double, double) const) & PhotoCalib::instFluxToNanojansky,
+            "instFlux"_a, "instFluxErr"_a);
 
-    cls.def("instFluxToMaggies",
+    cls.def("instFluxToNanojansky",
             (Measurement(PhotoCalib::*)(afw::table::SourceRecord const &, std::string const &) const) &
-                    PhotoCalib::instFluxToMaggies,
+                    PhotoCalib::instFluxToNanojansky,
             "sourceRecord"_a, "instFluxField"_a);
 
-    cls.def("instFluxToMaggies",
+    cls.def("instFluxToNanojansky",
             (ndarray::Array<double, 2, 2>(PhotoCalib::*)(afw::table::SourceCatalog const &,
                                                          std::string const &) const) &
-                    PhotoCalib::instFluxToMaggies,
+                    PhotoCalib::instFluxToNanojansky,
             "sourceCatalog"_a, "instFluxField"_a);
 
-    cls.def("instFluxToMaggies",
+    cls.def("instFluxToNanojansky",
             (void (PhotoCalib::*)(afw::table::SourceCatalog &, std::string const &, std::string const &)
                      const) &
-                    PhotoCalib::instFluxToMaggies,
+                    PhotoCalib::instFluxToNanojansky,
             "sourceCatalog"_a, "instFluxField"_a, "outField"_a);
 
     /* Members - magnitudes */
@@ -144,7 +144,7 @@ PYBIND11_MODULE(photoCalib, mod) {
     /* utilities */
     cls.def("getCalibrationMean", &PhotoCalib::getCalibrationMean);
     cls.def("getCalibrationErr", &PhotoCalib::getCalibrationErr);
-    cls.def("getInstFluxMag0", &PhotoCalib::getInstFluxMag0);
+    cls.def("getInstFluxAtZeroMagnitude", &PhotoCalib::getInstFluxAtZeroMagnitude);
 
     cls.def("computeScaledCalibration", &PhotoCalib::computeScaledCalibration);
     cls.def("computeScalingTo", &PhotoCalib::computeScalingTo);
