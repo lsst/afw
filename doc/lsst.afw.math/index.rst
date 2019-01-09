@@ -4,11 +4,13 @@
 lsst.afw.math
 #############
 
-.. Paragraph that describes what this Python module does and links to related modules and frameworks.
-
-.. Add subsections with toctree to individual topic pages.
+Application Framework math code including Function, minimize, Kernel and convolve
 
 Python API reference
 ====================
 
-.. .. automodapi:: lsst.afw.math
+.. automodapi:: lsst.afw.math
+   :no-main-docstr:
+   :skip: Persistable
+
+.. lsst.afw.table.io.Persistable is lifted into lsst.afw.math.mathLib for reasons unknown

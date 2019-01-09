@@ -19,6 +19,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+__all__ = ["BackgroundList"]
+
 import os
 import lsst.daf.base as dafBase
 import lsst.geom
@@ -28,10 +30,18 @@ from . import mathLib as afwMath
 
 
 class BackgroundList:
-    """A list-like class to contain a list of (afwMath.Background, interpStyle, undersampleStyle) tuples
+    """A list-like class to contain a list of (`lsst.afw.math.Background`,
+    `lsst.afw.math.Interpolate.Style`, `~lsst.afw.math.UndersampleStyle`)
+    tuples.
 
-In deference to the deprecated-but-not-yet-removed Background.getImage() API, we also accept a single
-afwMath.Background and extract the interpStyle and undersampleStyle from the as-used values
+    Parameters
+    ----------
+    *args : `tuple` or `~lsst.afw.math.Background`
+        A sequence of arguments, each of which becomes an element of the list.
+        In deference to the deprecated-but-not-yet-removed
+        `~lsst.afw.math.Background.getImageF()` API, we also accept a single
+        `lsst.afw.math.Background` and extract the ``interpStyle`` and
+        ``undersampleStyle`` from the as-used values.
     """
 
     def __init__(self, *args):
@@ -40,7 +50,13 @@ afwMath.Background and extract the interpStyle and undersampleStyle from the as-
             self.append(a)
 
     def __getitem__(self, *args):
-        """Return an item"""
+        """Return an item
+
+        Parameters
+        ----------
+        *args
+            Any valid list index.
+        """
         #
         # Set any previously-unknown Styles (they are set by bkgd.getImage())
         #
@@ -91,11 +107,15 @@ afwMath.Background and extract the interpStyle and undersampleStyle from the as-
         return BackgroundList(*self)
 
     def writeFits(self, fileName, flags=0):
-        """Save our list of Backgrounds to a file
-        @param fileName         FITS file to write
-        @param flags            Flags to control details of writing; currently unused,
-                                but present for consistency with
-                                afw.table.BaseCatalog.writeFits.
+        """Save our list of Backgrounds to a file.
+
+        Parameters
+        -----------
+        fileName : `str`
+            FITS file to write
+        flags : `int`
+            Flags to control details of writing; currently unused, but present
+            for consistency with `lsst.afw.table.BaseCatalog.writeFits`.
         """
 
         for i, bkgd in enumerate(self):
@@ -123,14 +143,21 @@ afwMath.Background and extract the interpStyle and undersampleStyle from the as-
 
     @staticmethod
     def readFits(fileName, hdu=0, flags=0):
-        """Read a our list of Backgrounds from a file
-        @param fileName         FITS file to read
-        @param hdu              First Header/Data Unit to attempt to read from
-        @param flags            Flags to control details of reading; currently unused,
-                                but present for consistency with
-                                afw.table.BaseCatalog.readFits.
+        """Read our list of Backgrounds from a file.
 
-        See also getImage()
+        Parameters
+        ----------
+        fileName : `str`
+            FITS file to read
+        hdu : `int`
+            First Header/Data Unit to attempt to read from
+        flags : `int`
+            Flags to control details of reading; currently unused, but present
+            for consistency with `lsst.afw.table.BaseCatalog.readFits`.
+
+        See Also
+        --------
+        getImage()
         """
         if not isinstance(fileName, MemFileManager) and not os.path.exists(fileName):
             raise RuntimeError("File not found: %s" % fileName)
@@ -203,9 +230,8 @@ afwMath.Background and extract the interpStyle and undersampleStyle from the as-
         return self
 
     def getImage(self):
-        """
-        Compute and return a full-resolution image from our list of
-        (Background, interpStyle, undersampleStyle)
+        """Compute and return a full-resolution image from our list of
+        (Background, interpStyle, undersampleStyle).
         """
 
         bkgdImage = None

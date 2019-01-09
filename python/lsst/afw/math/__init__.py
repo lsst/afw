@@ -20,8 +20,6 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-"""Application Framework math code including Function, minimize, Kernel and convolve
-"""
 from .mathLib import *
 from .backgroundList import *
 from .warper import *

@@ -19,24 +19,32 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+__all__ = ["Warper", "WarperConfig"]
+
 import lsst.pex.config as pexConfig
 import lsst.geom
 import lsst.afw.image as afwImage
 from . import mathLib
 
-__all__ = ["Warper", "WarperConfig"]
-
 
 def computeWarpedBBox(destWcs, srcBBox, srcWcs):
-    """Compute the bounding box of a warped image
+    """Compute the bounding box of a warped image.
 
     The bounding box includes all warped pixels and it may be a bit oversize.
 
-    @param destWcs: WCS of warped exposure, an lsst.afw.geom.SkyWcs
-    @param srcBBox: parent bounding box of unwarped image
-    @param srcWcs: WCS of unwarped image, an lsst.afw.geom.SkyWcs
+    Parameters
+    ----------
+    destWcs : `lsst.afw.geom.SkyWcs`
+        WCS of warped exposure
+    srcBBox : `lsst.geom.Box2I`
+        parent bounding box of unwarped image
+    srcWcs : `lsst.afw.geom.SkyWcs`
+        WCS of unwarped image
 
-    @return destBBox: bounding box of warped exposure
+    Returns
+    -------
+    destBBox: `lsst.geom.Box2I`
+        bounding box of warped exposure
     """
     srcPosBox = lsst.geom.Box2D(srcBBox)
     destPosBox = lsst.geom.Box2D()
@@ -66,7 +74,7 @@ class WarperConfig(pexConfig.Config):
     )
     maskWarpingKernelName = pexConfig.ChoiceField(
         dtype=str,
-        doc="Warping kernel for mask (use warpingKernelName if '')",
+        doc="Warping kernel for mask (use ``warpingKernelName`` if '')",
         default="bilinear",
         allowed={
             "": "use the regular warping kernel for the mask plane, as well as the image and variance planes",
@@ -78,12 +86,12 @@ class WarperConfig(pexConfig.Config):
     )
     interpLength = pexConfig.Field(
         dtype=int,
-        doc="interpLength argument to lsst.afw.math.warpExposure",
+        doc="``interpLength`` argument to `lsst.afw.math.warpExposure`",
         default=_DefaultInterpLength,
     )
     cacheSize = pexConfig.Field(
         dtype=int,
-        doc="cacheSize argument to lsst.afw.math.SeparableKernel.computeCache",
+        doc="``cacheSize`` argument to `lsst.afw.math.SeparableKernel.computeCache`",
         default=_DefaultCacheSize,
     )
     growFullMask = pexConfig.Field(
@@ -94,7 +102,21 @@ class WarperConfig(pexConfig.Config):
 
 
 class Warper:
-    """Warp images
+    """Warp images.
+
+    Parameters
+    ----------
+    warpingKernelName : `str`
+        see `WarperConfig.warpingKernelName`
+    interpLength : `int`, optional
+        ``interpLength`` argument to `lsst.afw.math.warpExposure`
+    cacheSize : `int`, optional
+        size of computeCache
+    maskWarpingKernelName : `str`, optional
+        name of mask warping kernel (if ``""`` then use ``warpingKernelName``);
+        see `WarperConfig.maskWarpingKernelName`
+    growFullMask : `int`, optional
+        mask bits to grow to full width of image/variance kernel
     """
     ConfigClass = WarperConfig
 
@@ -104,23 +126,17 @@ class Warper:
                  cacheSize=_DefaultCacheSize,
                  maskWarpingKernelName="",
                  growFullMask=afwImage.Mask.getPlaneBitMask("EDGE"),):
-        """Create a Warper
-
-        Inputs:
-        - warpingKernelName: argument to lsst.afw.math.makeWarpingKernel
-        - interpLength: interpLength argument to lsst.afw.warpExposure
-        - cacheSize: size of computeCache
-        - maskWarpingKernelName: name of mask warping kernel (if "" then use warpingKernelName);
-            an argument to lsst.afw.math.makeWarpingKernel
-        """
         self._warpingControl = mathLib.WarpingControl(
             warpingKernelName, maskWarpingKernelName, cacheSize, interpLength, growFullMask)
 
     @classmethod
     def fromConfig(cls, config):
-        """Create a Warper from a config
+        """Create a Warper from a config.
 
-        @param config: an instance of Warper.ConfigClass
+        Parameters
+        ----------
+        config : `WarperConfig`
+            The config to initialize the Warper with.
         """
         return cls(
             warpingKernelName=config.warpingKernelName,
@@ -131,34 +147,47 @@ class Warper:
         )
 
     def getWarpingKernel(self):
-        """Get the warping kernel"""
+        """Get the warping kernel.
+        """
         return self._warpingControl.getWarpingKernel()
 
     def getMaskWarpingKernel(self):
-        """Get the mask warping kernel"""
+        """Get the mask warping kernel.
+        """
         return self._warpingControl.getMaskWarpingKernel()
 
     def warpExposure(self, destWcs, srcExposure, border=0, maxBBox=None, destBBox=None):
-        """Warp an exposure
+        """Warp an exposure.
 
-        @param destWcs: WCS of warped exposure, an lsst.afw.geom.SkyWcs
-        @param srcExposure: exposure to warp
-        @param border: grow bbox of warped exposure by this amount in all directions (int pixels);
-            if negative then the bbox is shrunk;
-            border is applied before maxBBox;
-            ignored if destBBox is not None
-        @param maxBBox: maximum allowed parent bbox of warped exposure (an lsst.geom.Box2I or None);
-            if None then the warped exposure will be just big enough to contain all warped pixels;
-            if provided then the warped exposure may be smaller, and so missing some warped pixels;
-            ignored if destBBox is not None
-        @param destBBox: exact parent bbox of warped exposure (an lsst.geom.Box2I or None);
-            if None then border and maxBBox are used to determine the bbox,
-            otherwise border and maxBBox are ignored
+        Parameters
+        -----------
+        destWcs : `lsst.afw.geom.SkyWcs`
+            WCS of warped exposure
+        srcExposure
+            exposure to warp
+        border : `int`, optional
+            grow bbox of warped exposure by this amount in all directions
+            (in pixels); if negative then the bbox is shrunk; border is applied
+            before ``maxBBox``; ignored if ``destBBox`` is not `None`
+        maxBBox : `lsst.geom.Box2I`, optional
+            maximum allowed parent bbox of warped exposure; if `None` then the
+            warped exposure will be just big enough to contain all warped pixels;
+            if provided then the warped exposure may be smaller, and so
+            missing some warped pixels; ignored if ``destBBox`` is not `None`
+        destBBox : `lsst.geom.Box2I`, optional
+            exact parent bbox of warped exposure; if `None` then ``border`` and
+            ``maxBBox`` are used to determine the bbox, otherwise ``border``
+            and ``maxBBox`` are ignored
 
-        @return destExposure: warped exposure (of same type as srcExposure)
+        Returns
+        -------
+        destExposure : same type as ``srcExposure``
+            warped exposure
 
-        @note: calls mathLib.warpExposure insted of self.warpImage because the former
-        copies attributes such as Calib, and that should be done in one place
+        Notes
+        -----
+        calls `lsst.afw.math.warpExposure` insted of `~Warper.warpImage` because the former
+        copies attributes such as ``Calib``, and that should be done in one place
         """
         destBBox = self._computeDestBBox(
             destWcs=destWcs,
@@ -173,24 +202,34 @@ class Warper:
         return destExposure
 
     def warpImage(self, destWcs, srcImage, srcWcs, border=0, maxBBox=None, destBBox=None):
-        """Warp an image or masked image
+        """Warp an image or masked image.
 
-        @param destWcs: WCS of warped image, an lsst.afw.geom.SkyWcs
-        @param srcImage: image or masked image to warp
-        @param srcWcs: WCS of image, an lsst.afw.geom.SkyWcs
-        @param border: grow bbox of warped image by this amount in all directions (int pixels);
-            if negative then the bbox is shrunk;
-            border is applied before maxBBox;
-            ignored if destBBox is not None
-        @param maxBBox: maximum allowed parent bbox of warped image (an lsst.geom.Box2I or None);
-            if None then the warped image will be just big enough to contain all warped pixels;
-            if provided then the warped image may be smaller, and so missing some warped pixels;
-            ignored if destBBox is not None
-        @param destBBox: exact parent bbox of warped image (an lsst.geom.Box2I or None);
-            if None then border and maxBBox are used to determine the bbox,
-            otherwise border and maxBBox are ignored
+        Parameters
+        ----------
+        destWcs : `lsst.afw.geom.SkyWcs`
+            WCS of warped image
+        srcImage
+            image or masked image to warp
+        srcWcs : `lsst.afw.geom.SkyWcs`
+            WCS of image
+        border : `int`, optional
+            grow bbox of warped image by this amount in all directions
+            (in pixels); if negative then the bbox is shrunk; border is applied
+            before ``maxBBox``; ignored if ``destBBox`` is not `None`
+        maxBBox : `lsst.geom.Box2I`, optional
+            maximum allowed parent bbox of warped image; if `None` then the
+            warped image will be just big enough to contain all warped pixels;
+            if provided then the warped image may be smaller, and so
+            missing some warped pixels; ignored if ``destBBox`` is not `None`
+        destBBox : `lsst.geom.Box2I`, optional
+            exact parent bbox of warped image; if `None` then ``border`` and
+            ``maxBBox`` are used to determine the bbox, otherwise ``border``
+            and ``maxBBox`` are ignored
 
-        @return destImage: warped image or masked image (of same type as srcImage)
+        Returns
+        -------
+        destImage : same type as ``srcExposure``
+            warped image or masked image
         """
         destBBox = self._computeDestBBox(
             destWcs=destWcs,
@@ -206,22 +245,29 @@ class Warper:
         return destImage
 
     def _computeDestBBox(self, destWcs, srcImage, srcWcs, border, maxBBox, destBBox):
-        """Process destBBox argument for warpImage and warpExposure
+        """Process destBBox argument for warpImage and warpExposure.
 
-        @param destWcs: WCS of warped image, an lsst.afw.geom.SkyWcs
-        @param srcImage: image or masked image to warp
-        @param srcWcs: WCS of image, an lsst.afw.geom.SkyWcs
-        @param border: grow bbox of warped image by this amount in all directions (int pixels);
-            if negative then the bbox is shrunk;
-            border is applied before maxBBox;
-            ignored if destBBox is not None
-        @param maxBBox: maximum allowed parent bbox of warped image (an lsst.geom.Box2I or None);
-            if None then the warped image will be just big enough to contain all warped pixels;
-            if provided then the warped image may be smaller, and so missing some warped pixels;
-            ignored if destBBox is not None
-        @param destBBox: exact parent bbox of warped image (an lsst.geom.Box2I or None);
-            if None then border and maxBBox are used to determine the bbox,
-            otherwise border and maxBBox are ignored
+        Parameters
+        ----------
+        destWcs : `lsst.afw.geom.SkyWcs`
+            WCS of warped image
+        srcImage
+            image or masked image to warp
+        srcWcs : `lsst.afw.geom.SkyWcs`
+            WCS of image
+        border : `int`, optional
+            grow bbox of warped image by this amount in all directions
+            (in pixels); if negative then the bbox is shrunk; border is applied
+            before ``maxBBox``; ignored if ``destBBox`` is not `None`
+        maxBBox : `lsst.geom.Box2I`, optional
+            maximum allowed parent bbox of warped image; if `None` then the
+            warped image will be just big enough to contain all warped pixels;
+            if provided then the warped image may be smaller, and so
+            missing some warped pixels; ignored if ``destBBox`` is not `None`
+        destBBox : `lsst.geom.Box2I`, optional
+            exact parent bbox of warped image; if `None` then ``border`` and
+            ``maxBBox`` are used to determine the bbox, otherwise ``border``
+            and ``maxBBox`` are ignored
         """
         if destBBox is None:  # warning: == None fails due to Box2I.__eq__
             destBBox = computeWarpedBBox(
