@@ -12,7 +12,7 @@ Key features:
 
 * Function objects `FunctionF` and `FunctionD`
 * `Statistics`
-* `Background` estimation of images. Annotated examples are available for Background Estimation.
+* `Background` estimation of images.
 * `Interpolate`
 * `Kernel`
 * Optimization of functions is handled by `minimize()`
@@ -27,6 +27,9 @@ Using lsst.afw.math
 
 .. toctree::
    :maxdepth: 1
+
+   Background-example
+   Statistics-example
 
 .. _lsst.afw.math-contributing:
 
