@@ -18,7 +18,7 @@ Key features:
 * Optimization of functions is handled by `minimize()`
 * Convolution of images is handled by `convolve()`
 * Warping of images is handled by `warpImage()`
-* Manipulating spatially-distributed sets of objects (e.g. PSF candidates); an annotated example is available as SpatialCellSetExample
+* Manipulating spatially-distributed sets of objects (e.g. PSF candidates)
 
 .. _lsst.afw.math-using:
 
@@ -29,6 +29,7 @@ Using lsst.afw.math
    :maxdepth: 1
 
    Background-example
+   SpatialCellSet-example
    Statistics-example
 
 .. _lsst.afw.math-contributing:
