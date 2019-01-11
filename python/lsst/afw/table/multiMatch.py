@@ -1,4 +1,4 @@
-import collections
+import collections.abc
 
 import numpy
 
@@ -133,7 +133,7 @@ class MultiMatch:
         return result
 
 
-class GroupView(collections.Mapping):
+class GroupView(collections.abc.Mapping):
     """A mapping (i.e. dict-like object) that provides convenient operations on the concatenated
     catalogs returned by a MultiMatch object.
 
