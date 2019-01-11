@@ -751,9 +751,9 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         for value in truthList:
             fpSource.addPeak(*value)
         scaleFactor = 2
-        linTrans = lsst.geom.LinearTransform(np.matrix([[scaleFactor, 0],
-                                                        [0, scaleFactor]],
-                                                       dtype=float))
+        linTrans = lsst.geom.LinearTransform(np.array([[scaleFactor, 0],
+                                                       [0, scaleFactor]],
+                                                      dtype=float))
         linTransFootprint = fpSource.transform(linTrans, fpSource.getBBox(),
                                                False)
         for peak, truth in zip(linTransFootprint.peaks, truthList):
