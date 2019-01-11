@@ -1,9 +1,11 @@
 #
-# LSST Data Management System
-# Copyright 2008-2017 LSST Corporation.
+# This file is part of afw.
 #
-# This product includes software developed by the
-# LSST Project (http://www.lsst.org/).
+# Developed for the LSST Data Management System.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org).
+# See the COPYRIGHT file at the top-level directory of this distribution
+# for details of code ownership.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,9 +17,8 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
-# You should have received a copy of the LSST License Statement and
-# the GNU General Public License along with this program.  If not,
-# see <http://www.lsstcorp.org/LegalNotices/>.
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 
 """
@@ -750,9 +751,9 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         for value in truthList:
             fpSource.addPeak(*value)
         scaleFactor = 2
-        linTrans = lsst.geom.LinearTransform(np.matrix([[scaleFactor, 0],
-                                                        [0, scaleFactor]],
-                                                       dtype=float))
+        linTrans = lsst.geom.LinearTransform(np.array([[scaleFactor, 0],
+                                                       [0, scaleFactor]],
+                                                      dtype=float))
         linTransFootprint = fpSource.transform(linTrans, fpSource.getBBox(),
                                                False)
         for peak, truth in zip(linTransFootprint.peaks, truthList):

@@ -218,7 +218,7 @@ class MultibandImageBase(MultibandBase):
                 allSlices[-2] = sy
             if sx is not None:
                 allSlices[-1] = sx
-            array = self._array[allSlices]
+            array = self._array[tuple(allSlices)]
 
             # Return a scalar or MultibandPixel
             # if the image indices are integers
