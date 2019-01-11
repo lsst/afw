@@ -49,13 +49,14 @@ class Polygon:
         return self.contains(point)
 
     def display(self, xy0=None, frame=1, ctype=None):
-        """Display polygon on existing frame in ds9"""
+        """Display polygon on existing frame"""
         import lsst.geom
-        import lsst.afw.display.ds9 as ds9
+        import lsst.afw.display as afwDisplay
         xy0 = lsst.geom.Extent2D(0, 0) if xy0 is None else lsst.geom.Extent2D(xy0)
-        with ds9.Buffering():
+        disp = afwDisplay.Display(frame=frame)
+        with disp.Buffering():
             for p1, p2 in self.getEdges():
-                ds9.line((p1 - xy0, p2 - xy0), frame=frame, ctype=ctype)
+                disp.line((p1 - xy0, p2 - xy0), ctype=ctype)
 
     def plot(self, axes=None, **kwargs):
         """Plot polygon with matplotlib

@@ -38,11 +38,6 @@ import lsst.pex.exceptions
 import lsst.geom
 import lsst.afw.table
 
-try:
-    type(display)
-except NameError:
-    display = False
-
 
 class SchemaTestCase(unittest.TestCase):
 

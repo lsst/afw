@@ -35,11 +35,6 @@ import lsst.afw.geom
 import lsst.afw.image
 import lsst.afw.detection
 
-try:
-    type(display)
-except NameError:
-    display = False
-
 
 def makeArray(size, dtype):
     return np.array(np.random.randn(*size), dtype=dtype)

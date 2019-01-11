@@ -19,7 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-"""Application Framework code to display images on ds9
+"""Application Framework code to display images.
 """
 from .interface import *
 from .utils import Mosaic

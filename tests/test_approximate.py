@@ -24,13 +24,14 @@ import unittest
 import numpy as np
 
 import lsst.utils.tests
-import lsst.afw.display.ds9 as ds9
+import lsst.afw.display as afwDisplay
 import lsst.geom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.pex.exceptions as pexExcept
 
-# Set to True to display things in ds9.
+afwDisplay.setDefaultMaskTransparency(75)
+# Set to True to display things
 display = False
 
 
@@ -65,7 +66,7 @@ class ApproximateTestCase(lsst.utils.tests.TestCase):
         ramp[ramp.getWidth()//2, ramp.getHeight()//2, afwImage.LOCAL] = (0, 0x1, np.nan)
 
         if display:
-            ds9.mtv(ramp, title="Input", frame=0)
+            afwDisplay.Display(frame=0).mtv(ramp, title=self._testMethodName + ": Input")
         # Here's the range that the approximation should be valid (and also the
         # bbox of the image returned by getImage)
         bbox = lsst.geom.BoxI(lsst.geom.PointI(0, 0),
@@ -81,11 +82,12 @@ class ApproximateTestCase(lsst.utils.tests.TestCase):
                                  approx.getMaskedImage().getImage(),
                                  ]):
             if i == 0 and display:
-                ds9.mtv(aim, title="interpolated", frame=1)
-                with ds9.Buffering():
+                disp = afwDisplay.Display(frame=1)
+                disp.mtv(aim, title=self._testMethodName + ": Interpolated")
+                with disp.Buffering():
                     for x in xVec:
                         for y in yVec:
-                            ds9.dot('+', x, y, size=0.4, frame=1)
+                            disp.dot('+', x, y, size=0.4)
 
             for x, y in aim.getBBox().getCorners():
                 self.assertEqual(
@@ -119,7 +121,7 @@ class ApproximateTestCase(lsst.utils.tests.TestCase):
         ramp, rampCoeffs = self.makeRamp()[0:2]
 
         if display:
-            ds9.mtv(ramp, title="Input", frame=0)
+            afwDisplay.Display(frame=0).mtv(ramp, title=self._testMethodName + ": Input")
         # Here's the range that the approximation should be valid (and also the
         # bbox of the image returned by getImage)
         bkgd = afwMath.makeBackground(ramp, afwMath.BackgroundControl(10, 10))
@@ -138,7 +140,7 @@ class ApproximateTestCase(lsst.utils.tests.TestCase):
                                          order - 1 if order > 1 else -1),
                                      ]):
                 if display and (i == 0 and order == 1):
-                    ds9.mtv(aim, title="Interpolated", frame=1)
+                    afwDisplay.Display(frame=1).mtv(aim, title=self._testMethodName + ": Interpolated")
 
                 for x, y in aim.getBBox().getCorners():
                     val = np.mean(aim.getArray()) if order == 0 else \

@@ -37,11 +37,6 @@ import lsst.geom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 
-try:
-    type(display)
-except NameError:
-    display = False
-
 
 class StatisticsTestCase(unittest.TestCase):
 

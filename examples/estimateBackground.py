@@ -27,12 +27,14 @@ import os
 import lsst.utils
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
-import lsst.afw.display.ds9 as ds9
+import lsst.afw.display as afwDisplay
 
 try:
     display
 except NameError:
     display = not False
+
+afwDisplay.setDefaultMaskTransparency(75)
 
 ################################################
 
@@ -78,7 +80,7 @@ def complexBackground(image):
     bkgd = afwMath.makeBackground(image, bctrl)
 
     statsImage = bkgd.getStatsImage()
-    ds9.mtv(statsImage.getVariance())
+    afwDisplay.Display(frame=3).mtv(statsImage.getVariance(), title="statsImage Variance")
 
     return bkgd
 
@@ -87,15 +89,15 @@ def main():
     image = getImage()
 
     if display:
-        ds9.mtv(image, frame=0)
+        afwDisplay.Display(frame=0).mtv(image, title="Image")
 
     bkgd = simpleBackground(image)
     image = getImage()
     bkgd = complexBackground(image)
 
     if display:
-        ds9.mtv(image, frame=1)
-        ds9.mtv(bkgd.getStatsImage(), frame=2)
+        afwDisplay.Display(frame=1).mtv(image, title="image")
+        afwDisplay.Display(frame=2).mtv(bkgd.getStatsImage(), title="background")
 
     order = 2
     actrl = afwMath.ApproximateControl(

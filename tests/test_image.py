@@ -45,7 +45,7 @@ import lsst.geom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 from lsst.afw.fits import readMetadata
-import lsst.afw.display.ds9 as ds9
+import lsst.afw.display as afwDisplay
 import lsst.pex.exceptions as pexExcept
 
 try:
@@ -508,7 +508,7 @@ class ImageTestCase(lsst.utils.tests.TestCase):
         im[50:54, 100:104] = im[2:6, 8:12, afwImage.LOCAL]
 
         if display:
-            ds9.mtv(im)
+            afwDisplay.Display(frame=1).mtv(im, title="testImageSlicesOrigin")
 
         self.assertEqual(im[0, 6, afwImage.LOCAL], 0)
         self.assertEqual(im[6, 17, afwImage.LOCAL], 0)
@@ -529,7 +529,7 @@ class ImageTestCase(lsst.utils.tests.TestCase):
         im[bbox] = -1
 
         if display:
-            ds9.mtv(im)
+            afwDisplay.Display(frame=0).mtv(im, title="testImageSliceFromBox")
 
         self.assertEqual(im[0, 6], 0)
         self.assertEqual(im[1, 6], -1)
@@ -543,7 +543,7 @@ class ImageTestCase(lsst.utils.tests.TestCase):
         im[bbox] = -1
 
         if display:
-            ds9.mtv(im)
+            afwDisplay.Display(frame=2).mtv(im, title="testImageSliceFromBoxOrigin")
 
         self.assertEqual(im[0, 6, afwImage.LOCAL], 0)
         self.assertEqual(im[1, 6, afwImage.LOCAL], -1)
@@ -738,8 +738,8 @@ class DecoratedImageTestCase(lsst.utils.tests.TestCase):
         subImageF = subImage.convertFloat()
 
         if display:
-            ds9.mtv(subImage, frame=0, title="subImage")
-            ds9.mtv(subImageF, frame=1, title="converted subImage")
+            afwDisplay.Display(frame=0).mtv(subImage, title="subImage")
+            afwDisplay.Display(frame=1).mtv(subImageF, title="converted subImage")
 
         self.assertEqual(subImage[1, 1, afwImage.LOCAL], subImageF[1, 1, afwImage.LOCAL])
 

@@ -40,8 +40,10 @@ import lsst.pex.exceptions
 import lsst.geom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
-import lsst.afw.display.ds9 as ds9
+import lsst.afw.display as afwDisplay
 import lsst.pex.exceptions as pexExcept
+
+afwDisplay.setDefaultMaskTransparency(75)
 
 try:
     afwdataDir = lsst.utils.getPackageDir("afwdata")
@@ -161,8 +163,8 @@ class StatisticsTestCase(lsst.utils.tests.TestCase):
                 sim += 1
 
             if display:
-                ds9.mtv(image, frame=0)
-                ds9.mtv(image2, frame=1)
+                afwDisplay.Display(frame=0).mtv(image, "Image 1")
+                afwDisplay.Display(frame=1).mtv(image2, "Image 2 (var inc by 1/4)")
 
             stats = afwMath.makeStatistics(image2,
                                            afwMath.NPOINT | afwMath.STDEV | afwMath.MEAN | afwMath.ERRORS)

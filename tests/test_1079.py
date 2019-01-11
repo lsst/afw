@@ -34,12 +34,12 @@ import lsst.afw.image as afwImage
 from lsst.afw.fits import readMetadata
 import lsst.utils.tests
 import lsst.pex.exceptions
-import lsst.afw.display.ds9 as ds9
+import lsst.afw.display as afwDisplay
 
 try:
-    type(verbose)
+    type(display)
 except NameError:
-    verbose = 0
+    display = False
 
 
 class SavingSubImagesTest(unittest.TestCase):
@@ -134,9 +134,9 @@ class SavingSubImagesTest(unittest.TestCase):
 
             xy0 = subImg.getMaskedImage().getXY0()
 
-            if False:
-                ds9.mtv(self.parent, frame=0)
-                ds9.mtv(subImg, frame=1)
+            if display:
+                afwDisplay.Display(frame=0).mtv(self.parent, title=self._testMethodName + ": parent")
+                afwDisplay.Display(frame=1).mtv(subImg, title=self._testMethodName + ": subImg")
 
             for p in self.testPositions:
                 subP = p - lsst.geom.Extent2D(llc[0], llc[1])  # pixel in subImg

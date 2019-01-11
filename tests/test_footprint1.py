@@ -44,8 +44,7 @@ import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.detection as afwDetect
 import lsst.afw.detection.utils as afwDetectUtils
-import lsst.afw.display.ds9 as ds9
-import lsst.afw.display.utils as displayUtils
+import lsst.afw.display as afwDisplay
 
 try:
     type(display)
@@ -275,7 +274,7 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
             idImage = afwImage.ImageU(w, h)
             idImage.set(0)
             foot.insertIntoImage(idImage, foot.getId(), bbox)
-            ds9.mtv(idImage, frame=2)
+            afwDisplay.Display(frame=2).mtv(idImage, title=self._testMethodName + " image")
 
     def testGetBBox(self):
         """Check that Footprint.getBBox() returns a copy"""
@@ -308,7 +307,7 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         foot.spans.setImage(idImage, foot.getId())
 
         if False:
-            ds9.mtv(idImage, frame=2)
+            afwDisplay.Display(frame=2).mtv(idImage, title=self._testMethodName + " image")
 
     def testFootprintFromEllipse(self):
         """Create an elliptical Footprint"""
@@ -329,15 +328,16 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         foot.spans.setImage(idImage, foot.getId())
 
         if display:
-            ds9.mtv(idImage, frame=2)
-            displayUtils.drawFootprint(foot, frame=2)
+            disp = afwDisplay.Display(frame=2)
+            disp.mtv(idImage, title=self._testMethodName + " image")
+            afwDisplay.utils.drawFootprint(foot, frame=2)
             shape = foot.getShape()
             shape.scale(2)              # <r^2> = 1/2 for a disk
-            ds9.dot(shape, *cen, frame=2, ctype=ds9.RED)
+            disp.dot(shape, *cen, ctype=afwDisplay.RED)
 
             shape = foot.getShape()
             shape.scale(2)              # <r^2> = 1/2 for a disk
-            ds9.dot(shape, *cen, frame=2, ctype=ds9.MAGENTA)
+            disp.dot(shape, *cen, ctype=afwDisplay.MAGENTA)
 
         axes = afwGeom.ellipses.Axes(foot.getShape())
         axes.scale(2)                   # <r^2> = 1/2 for a disk
@@ -488,7 +488,7 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
             for i, foot in enumerate([initial, shrunk]):
                 print(foot.getArea())
                 foot.spans.setImage(idImage, i+1)
-            ds9.mtv(idImage)
+            afwDisplay.Display(frame=1).mtv(idImage, title=self._testMethodName + " image")
 
     def testShrinkEightVertical(self):
         # Test a "vertical" figure of 8.
@@ -556,8 +556,8 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
                     i += 1
 
                 metricImage = afwImage.ImageF("foo.fits")
-                ds9.mtv(metricImage, frame=1)
-                ds9.mtv(idImage)
+                afwDisplay.Display(frame=1).mtv(metricImage, title=self._testMethodName + ": Metric image")
+                afwDisplay.Display(frame=0).mtv(idImage, title=self._testMethodName + " image")
 
             # check bbox2
             self.assertEqual(bbox2.getMinX(), x0 - ngrow)
@@ -583,7 +583,8 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
 
         foot.spans.setImage(idImage, 1)
         if display:
-            ds9.mtv(idImage)
+            disp = afwDisplay.Display(frame=1)
+            disp.mtv(idImage, title=self._testMethodName + " image")
 
         idImageFromBBox = idImage.Factory(idImage, True)
         idImageFromBBox.set(0)
@@ -602,8 +603,7 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
                 x1 += 0.5
                 y1 += 0.5
 
-                ds9.line([(x0, y0), (x1, y0), (x1, y1), (x0, y1), (x0, y0)],
-                         ctype=ds9.RED)
+                disp.line([(x0, y0), (x1, y0), (x1, y1), (x0, y1), (x0, y0)], ctype=afwDisplay.RED)
 
         idImageFromBBox -= idImage      # should be blank
         stats = afwMath.makeStatistics(idImageFromBBox, afwMath.MAX)
@@ -650,7 +650,7 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
             obj.insert(im)
 
         if False and display:
-            ds9.mtv(mi, frame=0)
+            afwDisplay.Display(frame=0).mtv(mi, title=self._testMethodName + " image")
 
         ds = afwDetect.FootprintSet(mi, afwDetect.Threshold(15))
 
@@ -667,7 +667,7 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(mi.getImage()[3, 6, afwImage.LOCAL], 5)
 
         if display:
-            ds9.mtv(mi, frame=1)
+            afwDisplay.Display(frame=1).mtv(mi, title=self._testMethodName + " image")
         #
         # Check Footprint.contains() while we are about it
         #
@@ -1074,7 +1074,7 @@ class FootprintSetTestCase(unittest.TestCase):
             obj.insert(im)
 
         if False and display:
-            ds9.mtv(im, frame=0)
+            afwDisplay.Display(frame=0).mtv(im, title=self._testMethodName + " image")
 
     def tearDown(self):
         del self.ms
@@ -1128,7 +1128,7 @@ class FootprintSetTestCase(unittest.TestCase):
         objects = ds.getFootprints()
 
         if display:
-            ds9.mtv(self.ms, frame=1)
+            afwDisplay.Display(frame=1).mtv(self.ms, title=self._testMethodName + " image")
 
         mask = self.ms.getMask()
         for i in range(len(objects)):
@@ -1149,7 +1149,7 @@ class FootprintSetTestCase(unittest.TestCase):
             foot.spans.setImage(idImage, foot.getId())
 
         if False:
-            ds9.mtv(idImage, frame=2)
+            afwDisplay.Display(frame=2).mtv(idImage, title=self._testMethodName + " image")
 
         for i in range(len(objects)):
             for sp in objects[i].getSpans():
@@ -1164,7 +1164,7 @@ class FootprintSetTestCase(unittest.TestCase):
 
         idImage = ds.insertIntoImage(True)
         if display:
-            ds9.mtv(idImage, frame=2)
+            afwDisplay.Display(frame=2).mtv(idImage, title=self._testMethodName + " image")
 
         for i in range(len(objects)):
             for sp in objects[i].getSpans():
@@ -1195,8 +1195,8 @@ class FootprintSetTestCase(unittest.TestCase):
             i += 1
 
         if display:
-            ds9.mtv(self.ms, frame=0)
-            ds9.mtv(idImage, frame=1)
+            afwDisplay.Display(frame=0).mtv(self.ms, title=self._testMethodName + " self.ms")
+            afwDisplay.Display(frame=1).mtv(idImage, title=self._testMethodName + " image")
 
     def testFootprintPeaks(self):
         """Test that we can extract the peaks from a Footprint"""
@@ -1227,7 +1227,7 @@ class MaskFootprintSetTestCase(unittest.TestCase):
             obj.insert(self.mim.getMask())
 
         if display:
-            ds9.mtv(self.mim, frame=0)
+            afwDisplay.Display(frame=0).mtv(self.mim, title=self._testMethodName + " self.mim")
 
     def tearDown(self):
         del self.mim
@@ -1241,7 +1241,7 @@ class MaskFootprintSetTestCase(unittest.TestCase):
         objects = ds.getFootprints()
 
         if 0 and display:
-            ds9.mtv(self.mim, frame=0)
+            afwDisplay.Display(frame=0).mtv(self.mim, title=self._testMethodName + " self.mim")
 
         self.assertEqual(len(objects),
                          len([o for o in self.objects if (o.val & level)]))
@@ -1281,7 +1281,7 @@ class NaNFootprintSetTestCase(unittest.TestCase):
         im[9, 6, afwImage.LOCAL] = self.NaN
 
         if False and display:
-            ds9.mtv(im, frame=0)
+            afwDisplay.Display(frame=0).mtv(im, title=self._testMethodName + " image")
 
     def tearDown(self):
         del self.ms
@@ -1293,7 +1293,7 @@ class NaNFootprintSetTestCase(unittest.TestCase):
         objects = ds.getFootprints()
 
         if display:
-            ds9.mtv(self.ms, frame=0)
+            afwDisplay.Display(frame=0).mtv(self.ms, title=self._testMethodName + " self.ms")
 
         self.assertEqual(len(objects), len(self.objects))
         for i in range(len(objects)):

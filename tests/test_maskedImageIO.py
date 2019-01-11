@@ -45,7 +45,7 @@ import lsst.daf.base as dafBase
 import lsst.geom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
-import lsst.afw.display.ds9 as ds9
+import lsst.afw.display as afwDisplay
 import lsst.pex.exceptions as pexEx
 
 try:
@@ -55,6 +55,7 @@ except pexEx.NotFoundError:
 
 try:
     type(display)
+    afwDisplay.setDefaultMaskTransparency(75)
 except NameError:
     display = False
 
@@ -105,7 +106,7 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
         mask = self.mi.getMask()
 
         if display:
-            ds9.mtv(self.mi)
+            afwDisplay.Display(frame=0).mtv(self.mi, title="Image")
 
         self.assertEqual(image[32, 1, afwImage.LOCAL], 3728)
         self.assertEqual(mask[0, 0, afwImage.LOCAL], 2)  # == BAD

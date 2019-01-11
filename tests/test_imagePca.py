@@ -40,8 +40,7 @@ import lsst.utils.tests
 import lsst.pex.exceptions as pexExcept
 import lsst.geom
 import lsst.afw.image as afwImage
-import lsst.afw.display.utils as displayUtils
-import lsst.afw.display.ds9 as ds9
+import lsst.afw.display as afwDisplay
 
 try:
     type(display)
@@ -147,8 +146,8 @@ class ImagePcaTestCase(lsst.utils.tests.TestCase):
             bases.append(im)
 
         if display:
-            mos = displayUtils.Mosaic(background=-10)
-            ds9.mtv(mos.makeMosaic(bases), title="Basis functions", frame=1)
+            mos = afwDisplay.utils.Mosaic(background=-10)
+            afwDisplay.Display(frame=1).mtv(mos.makeMosaic(bases), title="Basis functions")
 
         inputs = []
         for i in range(numInputs):
@@ -161,8 +160,8 @@ class ImagePcaTestCase(lsst.utils.tests.TestCase):
             self.ImageSet.addImage(im, 1.0)
 
         if display:
-            mos = displayUtils.Mosaic(background=-10)
-            ds9.mtv(mos.makeMosaic(inputs), title="Inputs", frame=2)
+            mos = afwDisplay.utils.Mosaic(background=-10)
+            afwDisplay.Display(frame=2).mtv(mos.makeMosaic(inputs), title="Inputs")
 
         self.ImageSet.analyze()
 
@@ -171,8 +170,8 @@ class ImagePcaTestCase(lsst.utils.tests.TestCase):
             eImages.append(img)
 
         if display:
-            mos = displayUtils.Mosaic(background=-10)
-            ds9.mtv(mos.makeMosaic(eImages), title="Eigenimages", frame=3)
+            mos = afwDisplay.utils.Mosaic(background=-10)
+            afwDisplay.Display(frame=3).mtv(mos.makeMosaic(eImages), title="EigenImages")
 
         self.assertEqual(len(eImages), numInputs)
 
@@ -206,8 +205,8 @@ class ImagePcaTestCase(lsst.utils.tests.TestCase):
             eImages.append(img)
 
         if display:
-            mos = displayUtils.Mosaic(background=-10)
-            ds9.mtv(mos.makeMosaic(eImages), frame=1)
+            mos = afwDisplay.utils.Mosaic(background=-10)
+            afwDisplay.Display(frame=0).mtv(mos.makeMosaic(eImages), title="testPcaNaN")
 
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):

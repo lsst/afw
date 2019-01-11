@@ -32,13 +32,13 @@ import lsst.geom
 import lsst.afw.image as afwImage
 import lsst.afw.fits as afwFits
 import lsst.utils.tests
-import lsst.afw.display.ds9 as ds9
+import lsst.afw.display as afwDisplay
 import lsst.pex.exceptions as pexExcept
 
 try:
-    type(verbose)
+    type(display)
 except NameError:
-    verbose = 0
+    display = 0
 
 try:
     dataDir = os.path.join(lsst.utils.getPackageDir("afwdata"), "data")
@@ -69,8 +69,8 @@ class ReadFitsTestCase(lsst.utils.tests.TestCase):
         """Test reading S16 image"""
         im = afwImage.ImageD(os.path.join(dataDir, "871034p_1_img.fits"))
 
-        if False:
-            ds9.mtv(im)
+        if display:
+            afwDisplay.Display(frame=1).mtv(im)
 
         col, row, val = 32, 1, 62
         self.assertEqual(im[col, row, afwImage.LOCAL], val)

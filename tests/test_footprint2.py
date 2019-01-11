@@ -36,8 +36,9 @@ import lsst.geom
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
 import lsst.afw.detection as afwDetect
-import lsst.afw.display.ds9 as ds9
+import lsst.afw.display as afwDisplay
 
+afwDisplay.setDefaultMaskTransparency(75)
 try:
     type(display)
 except NameError:
@@ -98,7 +99,7 @@ class FootprintSetTestCase(unittest.TestCase):
             obj.insert(self.im)
 
         if False and display:
-            ds9.mtv(self.im, frame=0)
+            afwDisplay.Display(frame=0).mtv(self.im, title=self._testMethodName + " image")
 
     def tearDown(self):
         del self.im
@@ -141,7 +142,7 @@ class FootprintSetTestCase(unittest.TestCase):
             foot.spans.setImage(idImage, foot.getId())
 
         if False:
-            ds9.mtv(idImage, frame=2)
+            afwDisplay.Display(frame=2).mtv(idImage, title=self._testMethodName + " image")
 
         for i in range(len(objects)):
             for sp in objects[i].getSpans():
@@ -156,7 +157,7 @@ class FootprintSetTestCase(unittest.TestCase):
 
         idImage = ds.insertIntoImage(True)
         if display:
-            ds9.mtv(idImage, frame=2)
+            afwDisplay.Display(frame=2).mtv(idImage, title=self._testMethodName + " image")
 
         for i in range(len(objects)):
             for sp in objects[i].getSpans():
@@ -188,8 +189,7 @@ class FootprintSetTestCase(unittest.TestCase):
             i += 1
 
         if display:
-            ds9.mtv(self.im, frame=0)
-            ds9.mtv(idImage, frame=1)
+            afwDisplay.Display(frame=1).mtv(idImage, title=self._testMethodName + " image")
 
     def testGrow(self):
         """Grow footprints using the FootprintSet constructor"""
@@ -246,7 +246,7 @@ class FootprintSetTestCase(unittest.TestCase):
                 im.getMask(), grown.getFootprints(), 0x10)
 
             if display:
-                ds9.mtv(im)
+                afwDisplay.Display(frame=3).mtv(im, title=self._testMethodName + " image")
 
             foot = grown.getFootprints()[0]
 
@@ -284,7 +284,7 @@ class FootprintSetTestCase(unittest.TestCase):
                 im.getMask(), grown.getFootprints(), 0x10)
 
             if display:
-                ds9.mtv(im)
+                afwDisplay.Display(frame=3).mtv(im, title=self._testMethodName + " image")
 
             foot = grown.getFootprints()[0]
             nextra = 0
@@ -313,7 +313,7 @@ class FootprintSetTestCase(unittest.TestCase):
                 im.getMask(), grown.getFootprints(), 0x10)
 
             if display:
-                ds9.mtv(im)
+                afwDisplay.Display(frame=2).mtv(im, title=self._testMethodName + " image")
 
             foot = grown.getFootprints()[0]
             nextra = 0
@@ -353,7 +353,7 @@ class FootprintSetTestCase(unittest.TestCase):
                 im.getMask(), grown.getFootprints(), 0x10)
 
             if display:
-                ds9.mtv(im)
+                afwDisplay.Display(frame=1).mtv(im, title=self._testMethodName + " image")
 
             self.assertEqual(len(grown.getFootprints()), 1)
             foot = grown.getFootprints()[0]
@@ -378,7 +378,7 @@ class FootprintSetTestCase(unittest.TestCase):
         afwDetect.setMaskFromFootprintList(im.getMask(), objects, 0x10)
 
         if display:
-            ds9.mtv(im)
+            afwDisplay.Display(frame=2).mtv(im, title=self._testMethodName + " image")
 
         self.assertEqual(len(objects), 1)
 
@@ -417,7 +417,7 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
                 self.im.getImage()[x, y, afwImage.LOCAL] = I
 
         if False and display:
-            ds9.mtv(self.im, frame=0)
+            afwDisplay.Display(frame=0).mtv(self.im, title=self._testMethodName + " image")
 
     def setUp(self):
         self.im, self.fs = None, None
@@ -469,18 +469,17 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
                          sum([len(f.getPeaks()) for f in feet]))
 
         if display:
-            ds9.mtv(self.im, frame=frame)
+            disp = afwDisplay.Display(frame=frame)
+            disp.mtv(self.im, title=self._testMethodName + " image")
 
-            with ds9.Buffering():
+            with disp.Buffering():
                 for i, foot in enumerate(feet):
                     for p in foot.getPeaks():
-                        ds9.dot("+", p.getIx(), p.getIy(),
-                                size=0.4, frame=frame)
+                        disp.dot("+", p.getIx(), p.getIy(), size=0.4)
 
                     if i < len(self.peaks):
                         for trueX, trueY, peakVal in self.peaks[i]:
-                            ds9.dot("x", trueX, trueY, size=0.4,
-                                    ctype=ds9.RED, frame=frame)
+                            disp.dot("x", trueX, trueY, size=0.4, ctype=afwDisplay.RED)
 
         for i, foot in enumerate(feet):
             npeak = None
@@ -618,18 +617,17 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
         if display:
             frame = 0
 
-            ds9.mtv(self.im, frame=frame)
+            disp = afwDisplay.Display(frame=frame)
+            disp.mtv(self.im, title=self._testMethodName + " image")
 
-            with ds9.Buffering():
+            with disp.Buffering():
                 for i, foot in enumerate(self.fs.getFootprints()):
                     for p in foot.getPeaks():
-                        ds9.dot("+", p.getIx(), p.getIy(),
-                                size=0.4, frame=frame)
+                        disp.dot("+", p.getIx(), p.getIy(), size=0.4)
 
                     if i < len(self.peaks):
                         for trueX, trueY in self.peaks[i]:
-                            ds9.dot("x", trueX, trueY, size=0.4,
-                                    ctype=ds9.RED, frame=frame)
+                            disp.dot("x", trueX, trueY, size=0.4, ctype=afwDisplay.RED)
 
         self.assertEqual(len(self.fs.getFootprints()), 1)
         self.assertEqual(len(self.fs.getFootprints()[

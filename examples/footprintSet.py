@@ -26,7 +26,9 @@ Examples of using Footprints
 import lsst.geom
 import lsst.afw.image as afwImage
 import lsst.afw.detection as afwDetect
-import lsst.afw.display.ds9 as ds9
+import lsst.afw.display as afwDisplay
+
+afwDisplay.setDefaultMaskTransparency(75)
 
 
 def showPeaks(im=None, fs=None, frame=0):
@@ -34,15 +36,15 @@ def showPeaks(im=None, fs=None, frame=0):
     if frame is None:
         return
 
+    disp = afwDisplay.Display(frame=frame)
     if im:
-        ds9.mtv(im, frame=frame)
+        disp.mtv(im, title="Image and peaks")
 
     if fs:
-        with ds9.Buffering():           # turn on buffering of ds9's slow "region" writes
+        with disp.Buffering():           # turn on buffering of display's slow "region" writes
             for foot in fs.getFootprints():
                 for p in foot.getPeaks():
-                    ds9.dot("+", p.getIx(), p.getIy(), size=0.4,
-                            ctype=ds9.RED, frame=frame)
+                    disp.dot("+", p.getIx(), p.getIy(), size=0.4, ctype=afwDisplay.RED)
 
 
 def run(frame=6):
@@ -91,7 +93,8 @@ def run(frame=6):
         msk, fs2.getFootprints(), msk.getPlaneBitMask("DETECTED_NEGATIVE"))
 
     if frame is not None:
-        ds9.mtv(msk, isMask=True, frame=frame)
+        frame += 1
+        afwDisplay.Display(frame=frame).mtv(msk, title="Image Mask")
     #
     # Merge the positive and negative detections, growing both sets by 1 pixel
     #
@@ -103,9 +106,10 @@ def run(frame=6):
         msk, fs.getFootprints(), msk.getPlaneBitMask("EDGE"))
 
     if frame is not None:
-        ds9.mtv(msk, isMask=True, frame=frame)
+        frame += 1
+        afwDisplay.Display(frame=frame).mtv(msk, title="Grown Mask")
 
-    showPeaks(fs=fs, frame=frame)
+    showPeaks(fs=fs, frame=frame + 1)
 
 
 if __name__ == "__main__":

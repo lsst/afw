@@ -40,11 +40,6 @@ import lsst.afw.table
 import lsst.afw.fits
 import lsst.afw.detection
 
-try:
-    type(display)
-except NameError:
-    display = False
-
 
 def makeGaussianImage(bbox, sigma, xc=0.0, yc=0.0):
     image = lsst.afw.image.ImageD(bbox)

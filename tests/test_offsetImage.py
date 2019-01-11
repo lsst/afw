@@ -37,7 +37,7 @@ import lsst.utils.tests
 import lsst.geom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
-import lsst.afw.display.ds9 as ds9
+import lsst.afw.display as afwDisplay
 
 try:
     type(display)
@@ -76,11 +76,13 @@ class OffsetImageTestCase(unittest.TestCase):
 
         if False and display:
             frame = 0
-            ds9.mtv(self.inImage, frame=frame)
-            ds9.pan(50, 50, frame=frame)
-            ds9.dot("+", 50, 50, frame=frame)
+            disp = afwDisplay.Display(frame=frame)
+            disp.mtv(self.inImage, title="Image for Integer Offset Test")
+            disp.pan(50, 50)
+            disp.dot("+", 50, 50)
 
         for algorithm in ("lanczos5", "bilinear", "nearest"):
+            frame = 1
             for delta in [-0.49, 0.51]:
                 for dx, dy in [(2, 3), (-2, 3), (-2, -3), (2, -3)]:
                     outImage = afwMath.offsetImage(
@@ -88,10 +90,11 @@ class OffsetImageTestCase(unittest.TestCase):
 
                     if False and display:
                         frame += 1
-                        ds9.mtv(outImage, frame=frame)
-                        ds9.pan(50, 50, frame=frame)
-                        ds9.dot("+", 50 + dx + delta - outImage.getX0(), 50 + dy + delta - outImage.getY0(),
-                                frame=frame)
+                        disp = afwDisplay.Display(frame=frame)
+                        disp.mtv(outImage, title=algorithm + ": offset image (dx, dy) = (%d, %d)" % (dx, dy))
+
+                        disp.pan(50, 50)
+                        disp.dot("+", 50 + dx + delta - outImage.getX0(), 50 + dy + delta - outImage.getY0())
 
     def calcGaussian(self, im, x, y, amp, sigma1):
         """Insert a Gaussian into the image centered at (x, y)"""
@@ -138,12 +141,13 @@ class OffsetImageTestCase(unittest.TestCase):
                     im = afwMath.offsetImage(unshiftedIm, dx, dy, algorithm)
 
                     if display:
-                        ds9.mtv(im, frame=0)
+                        afwDisplay.Display(frame=0).mtv(im, title=algorithm + ": image")
 
                     im -= refIm
 
                     if display:
-                        ds9.mtv(im, frame=1)
+                        afwDisplay.Display(frame=1).mtv(im, title=algorithm +
+                                                        ": diff image (dx, dy) = (%f, %f)" % (dx, dy))
 
                     imArr = im.getArray()
                     imGoodVals = np.ma.array(
@@ -209,7 +213,7 @@ class TransformImageTestCase(unittest.TestCase):
                                (3, 0, 19)]:
             outImage = afwMath.rotateImageBy90(self.inImage, nQuarter)
             if display:
-                ds9.mtv(outImage, frame=nQuarter, title="out %d" % nQuarter)
+                afwDisplay.Display(frame=nQuarter).mtv(outImage, title="out %d" % nQuarter)
             self.assertEqual(self.inImage[0, 0, afwImage.LOCAL], outImage[x, y, afwImage.LOCAL])
 
     def testFlip(self):
@@ -222,8 +226,7 @@ class TransformImageTestCase(unittest.TestCase):
                                      (False, False, 0, 0)]:
             outImage = afwMath.flipImage(self.inImage, flipLR, flipTB)
             if display:
-                ds9.mtv(outImage, frame=frame, title="%s %s" %
-                        (flipLR, flipTB))
+                afwDisplay.Display(frame=frame).mtv(outImage, title="%s %s" % (flipLR, flipTB))
                 frame += 1
             self.assertEqual(self.inImage[0, 0, afwImage.LOCAL], outImage[x, y, afwImage.LOCAL])
 
@@ -284,8 +287,8 @@ class BinImageTestCase(unittest.TestCase):
         outImage = afwMath.binImage(inImage, binX, binY)
 
         if display:
-            ds9.mtv(inImage, frame=2, title="unbinned")
-            ds9.mtv(outImage, frame=3, title="binned %dx%d" % (binX, binY))
+            afwDisplay.Display(frame=2).mtv(inImage, title="unbinned")
+            afwDisplay.Display(frame=3).mtv(outImage, title="binned %dx%d" % (binX, binY))
 
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):

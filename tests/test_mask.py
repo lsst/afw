@@ -39,7 +39,8 @@ import lsst.pex.exceptions as pexExcept
 import lsst.daf.base
 import lsst.geom
 import lsst.afw.image as afwImage
-import lsst.afw.display.ds9 as ds9
+import lsst.afw.display as afwDisplay
+import lsst.afw.display.ds9 as ds9  # noqa for some reason images don't display without both imports
 
 try:
     type(display)
@@ -50,6 +51,8 @@ try:
     afwdataDir = lsst.utils.getPackageDir("afwdata")
 except pexExcept.NotFoundError:
     afwdataDir = None
+
+afwDisplay.setDefaultMaskTransparency(75)
 
 
 def showMaskDict(d=None, msg=None):
@@ -301,26 +304,26 @@ class MaskTestCase(utilsTests.TestCase):
 
     def testImageSlices(self):
         """Test image slicing, which generate sub-images using Box2I under the covers"""
-        im = afwImage.Mask(10, 20)
-        im[-3:, -2:, afwImage.LOCAL] = 0x4
-        im[4, 10] = 0x2
-        sim = im[1:4, 6:10]
-        sim[:] = 0x8
-        im[0:4, 0:4] = im[2:6, 8:12]
+        mask = afwImage.Mask(10, 20)
+        mask[-3:, -2:, afwImage.LOCAL] = 0x4
+        mask[4, 10] = 0x2
+        smask = mask[1:4, 6:10]
+        smask[:] = 0x8
+        mask[0:4, 0:4] = mask[2:6, 8:12]
 
         if display:
-            ds9.mtv(im)
+            afwDisplay.Display(frame=0).mtv(mask, title="testImageSlices")
 
-        self.assertEqual(im[0, 6], 0)
-        self.assertEqual(im[6, 17], 0)
-        self.assertEqual(im[7, 18], 0x4)
-        self.assertEqual(im[9, 19], 0x4)
-        self.assertEqual(im[1, 6], 0x8)
-        self.assertEqual(im[3, 9], 0x8)
-        self.assertEqual(im[4, 10], 0x2)
-        self.assertEqual(im[4, 9], 0)
-        self.assertEqual(im[2, 2], 0x2)
-        self.assertEqual(im[0, 0], 0x8)
+        self.assertEqual(mask[0, 6], 0)
+        self.assertEqual(mask[6, 17], 0)
+        self.assertEqual(mask[7, 18], 0x4)
+        self.assertEqual(mask[9, 19], 0x4)
+        self.assertEqual(mask[1, 6], 0x8)
+        self.assertEqual(mask[3, 9], 0x8)
+        self.assertEqual(mask[4, 10], 0x2)
+        self.assertEqual(mask[4, 9], 0)
+        self.assertEqual(mask[2, 2], 0x2)
+        self.assertEqual(mask[0, 0], 0x8)
 
     def testInterpret(self):
         """Interpretation of Mask values"""
@@ -592,10 +595,7 @@ class OldMaskTestCase(unittest.TestCase):
         testMask3.setMaskPlaneValues(p2, 0, 5, 1)
 
         if display:
-            im = afwImage.ImageF(testMask3.getDimensions())
-            # bug in ds9's Mask display; needs an Image first
-            ds9.mtv(im)
-            ds9.mtv(testMask3)
+            afwDisplay.Display(frame=1).mtv(testMask3, title="testConformMaskPlanes2")
 
         self.assertEqual(testMask3[0, 0], testMask3.getPlaneBitMask(name1))
         self.assertEqual(testMask3[0, 1], testMask3.getPlaneBitMask(name2))
@@ -608,8 +608,7 @@ class OldMaskTestCase(unittest.TestCase):
         self.assertEqual(self.testMask[0, 0], 0)
 
         if display:
-            ds9.mtv(im, frame=1)
-            ds9.mtv(testMask3, frame=1)
+            afwDisplay.Display(frame=2).mtv(testMask3, title="testConformMaskPlanes2 (cleared and re-added)")
 
         self.assertNotEqual(testMask3[0, 0],
                             testMask3.getPlaneBitMask(name1))
@@ -622,8 +621,7 @@ class OldMaskTestCase(unittest.TestCase):
         self.assertEqual(testMask3[0, 1], testMask3.getPlaneBitMask(name2))
 
         if display:
-            ds9.mtv(im, frame=2)
-            ds9.mtv(testMask3, frame=2)
+            afwDisplay.Display(frame=3).mtv(testMask3, title="testConformMaskPlanes2 (conform with oldDict)")
 
         self.testMask |= testMask3
 

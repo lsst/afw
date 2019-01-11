@@ -43,10 +43,10 @@ import lsst.pex.exceptions as pexExcept
 from test_kernel import makeDeltaFunctionKernelList, makeGaussianKernelList
 from lsst.log import Log
 
-import lsst.afw.display.ds9 as ds9
-import lsst.afw.display.utils as displayUtils
+import lsst.afw.display as afwDisplay
 
 Log.getLogger("afw.image.Mask").setLevel(Log.INFO)
+afwDisplay.setDefaultMaskTransparency(75)
 
 try:
     display
@@ -258,8 +258,9 @@ class ConvolveTestCase(lsst.utils.tests.TestCase):
                          self.maskedImage, kernel, convControl)
 
         if display and False:
-            ds9.mtv(displayUtils.Mosaic().makeMosaic([
-                self.maskedImage, refMaskedImage, self.cnvMaskedImage]), frame=0)
+            afwDisplay.Display(frame=0).mtv(afwDisplay.utils.Mosaic().makeMosaic([
+                self.maskedImage, refMaskedImage, self.cnvMaskedImage]),
+                title=self._testMethodName + " mosaic")
             if False:
                 for (x, y) in ((0, 0), (1, 0), (0, 1), (50, 50)):
                     print("Mask(%d,%d) 0x%x 0x%x" % (x, y, refMaskedImage.getMask()[x, y, afwImage.LOCAL],
@@ -536,7 +537,7 @@ class ConvolveTestCase(lsst.utils.tests.TestCase):
                         if display and False:
                             kim = afwImage.ImageD(kWidth, kHeight)
                             kernel.computeImage(kim, False)
-                            ds9.mtv(kim, frame=1)
+                            afwDisplay.Display(frame=1).mtv(kim, title=self._testMethodName + " image")
 
                         self.runStdTest(
                             kernel, kernelDescr="Delta Function Kernel")

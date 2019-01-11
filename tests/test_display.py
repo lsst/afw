@@ -58,7 +58,7 @@ class DisplayTestCase(unittest.TestCase):
         dirName = os.path.split(__file__)[0]
         self.fileName = os.path.join(
             dirName, "data", "HSC-0908120-056-small.fits")
-        self.display0 = afwDisplay.getDisplay(frame=0, verbose=True)
+        self.display0 = afwDisplay.Display(frame=0, verbose=True)
 
     def testMtv(self):
         """Test basic image display"""
@@ -72,7 +72,7 @@ class DisplayTestCase(unittest.TestCase):
 
     def testWith(self):
         """Test using displays with with statement"""
-        with afwDisplay.getDisplay(0) as disp:
+        with afwDisplay.Display(0) as disp:
             self.assertIsNotNone(disp)
 
     def testTwoDisplays(self):
@@ -95,7 +95,7 @@ class DisplayTestCase(unittest.TestCase):
         self.display0.pan(205, 180)
         self.display0.zoom(4)
 
-        afwDisplay.getDisplay(1).zoom(4, 205, 180)
+        afwDisplay.Display(1).zoom(4, 205, 180)
 
     def testStackingOrder(self):
         """ Un-iconise and raise the display to the top of the stacking order if appropriate"""
@@ -133,7 +133,7 @@ class DisplayTestCase(unittest.TestCase):
 
     def testImageTypes(self):
         """Check that we can display a range of types of image"""
-        with afwDisplay.getDisplay("dummy", "virtualDevice") as dummy:
+        with afwDisplay.Display("dummy", "virtualDevice") as dummy:
             for imageType in [afwImage.DecoratedImageF,
                               afwImage.ExposureF,
                               afwImage.ImageF,

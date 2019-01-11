@@ -28,7 +28,7 @@ import lsst.utils.tests
 import lsst.pex.exceptions as pexExcept
 import lsst.geom
 import lsst.afw.image as afwImage
-import lsst.afw.display.ds9 as ds9
+import lsst.afw.display as afwDisplay
 from lsst.afw.cameraGeom import PIXELS, FIELD_ANGLE, FOCAL_PLANE, CameraSys, CameraSysPrefix, \
     Camera, Detector, assembleAmplifierImage, assembleAmplifierRawImage, DetectorCollection
 import lsst.afw.cameraGeom.testUtils as testUtils
@@ -283,25 +283,21 @@ class CameraGeomTestCase(lsst.utils.tests.TestCase):
     def testCameraGeomUtils(self):
         for cw in self.cameraList:
             camera = cw.camera
-            cameraGeomUtils.showCamera(
-                camera, referenceDetectorName=camera[0].getName())
-            ds9.incrDefaultFrame()
-            for det in (camera[0], camera[1]):
-                cameraGeomUtils.showCcd(
-                    det, isTrimmed=True, inCameraCoords=False)
-                ds9.incrDefaultFrame()
-                cameraGeomUtils.showCcd(
-                    det, isTrimmed=True, inCameraCoords=True)
-                ds9.incrDefaultFrame()
-                cameraGeomUtils.showCcd(
-                    det, isTrimmed=False, inCameraCoords=False)
-                ds9.incrDefaultFrame()
-                cameraGeomUtils.showCcd(
-                    det, isTrimmed=False, inCameraCoords=True)
-                ds9.incrDefaultFrame()
+            disp = afwDisplay.Display()
+            cameraGeomUtils.showCamera(camera, display=disp)
+            disp.incrDefaultFrame()
+            for det in (camera[10], camera[20]):
+                cameraGeomUtils.showCcd(det, inCameraCoords=False)
+                disp.incrDefaultFrame()
+                cameraGeomUtils.showCcd(det, inCameraCoords=True)
+                disp.incrDefaultFrame()
+                cameraGeomUtils.showCcd(det, inCameraCoords=False)
+                disp.incrDefaultFrame()
+                cameraGeomUtils.showCcd(det, inCameraCoords=True)
+                disp.incrDefaultFrame()
                 for amp in det:
-                    cameraGeomUtils.showAmp(amp)
-                    ds9.incrDefaultFrame()
+                    cameraGeomUtils.showAmp(amp, display=disp, imageFactory=afwImage.ImageF)
+                    disp.incrDefaultFrame()
 
     def testCameraRaises(self):
         for cw in self.cameraList:

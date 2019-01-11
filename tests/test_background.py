@@ -34,12 +34,13 @@ from lsst.daf.base import PropertySet
 import lsst.geom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
-import lsst.afw.display.ds9 as ds9
+import lsst.afw.display as afwDisplay
 import lsst.pex.exceptions as pexExcept
 
-# Set to True to display debug messages and images in ds9.
+# Set to True to display debug messages and images
 debugMode = False
 
+afwDisplay.setDefaultMaskTransparency(75)
 try:
     AfwdataDir = lsst.utils.getPackageDir("afwdata")
 except pexExcept.NotFoundError:
@@ -176,18 +177,19 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         for interp in ("CONSTANT", "LINEAR", "NATURAL_SPLINE", "AKIMA_SPLINE"):
             diff = backobj.getImageF(interp)
             if debugMode:
-                ds9.mtv(diff, frame=frame)
+                afwDisplay.Display(frame=frame).mtv(diff, title=self._testMethodName + " diff")
                 frame += 1
             diff -= rampimg
             if debugMode:
                 print(interp, diff.getArray().mean(), diff.getArray().std())
             if debugMode:
-                ds9.mtv(diff, frame=frame)
+                afwDisplay.Display(frame=frame).mtv(diff, title=self._testMethodName + " diff-ramping")
                 frame += 1
         if debugMode:
-            ds9.mtv(rampimg, frame=frame)
+            afwDisplay.Display(frame=frame).mtv(rampimg, title=self._testMethodName + " ramping")
             frame += 1
-            ds9.mtv(backobj.getStatsImage(), frame=frame)
+            afwDisplay.Display(frame=frame).mtv(backobj.getStatsImage(),
+                                                title=self._testMethodName + " bkgd StatsImage")
             frame += 1
 
         xpixels = [0, nx//2, nx - 1]
@@ -301,13 +303,13 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         backobj = afwMath.makeBackground(mi.getImage(), bctrl)
 
         if debugMode:
-            ds9.mtv(mi, frame=0)
+            afwDisplay.Display(frame=0).mtv(mi, title=self._testMethodName + " image")
 
         im = mi.getImage()
         im -= backobj.getImageF()
 
         if debugMode:
-            ds9.mtv(mi, frame=1)
+            afwDisplay.Display(frame=1).mtv(mi, title=self._testMethodName + " image-back")
 
     def getCfhtImage(self):
         """Get a portion of a CFHT image as a MaskedImageF"""
@@ -386,19 +388,20 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         backobj = afwMath.makeBackground(mi.getImage(), bctrl)
 
         if debugMode:
-            ds9.mtv(mi, frame=0)
+            afwDisplay.Display(frame=0).mtv(mi, title=self._testMethodName + " image")
 
         im = mi.getImage()
         im -= backobj.getImageF("AKIMA_SPLINE")
 
         if debugMode:
-            ds9.mtv(mi, frame=1)
+            afwDisplay.Display(frame=1).mtv(mi, title=self._testMethodName + " image-back")
 
         statsImage = backobj.getStatsImage()
 
         if debugMode:
-            ds9.mtv(statsImage, frame=2)
-            ds9.mtv(statsImage.getVariance(), frame=3)
+            afwDisplay.Display(frame=2).mtv(statsImage, title=self._testMethodName + " bkgd StatsImage")
+            afwDisplay.Display(frame=3).mtv(statsImage.getVariance(),
+                                            title=self._testMethodName + " bkgd Variance")
 
     def testUndersample(self):
         """Test how the program handles nx,ny being too small for requested interp style."""
@@ -504,8 +507,8 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         bkgd = afwMath.makeBackground(image, bctrl)
         bkgdImage = bkgd.getImageF("NATURAL_SPLINE", "THROW_EXCEPTION")
         if debugMode:
-            ds9.mtv(image)
-            ds9.mtv(bkgdImage, frame=1)
+            afwDisplay.Display(frame=0).mtv(image, title=self._testMethodName + " image")
+            afwDisplay.Display(frame=1).mtv(bkgdImage, title=self._testMethodName + " bkgdImage")
 
         self.assertFalse(np.isnan(bkgdImage[0, 0, afwImage.LOCAL]))
 
@@ -535,8 +538,9 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
 
         bkgd = afwMath.makeBackground(image, bctrl)
         if debugMode:
-            ds9.mtv(image)
-            ds9.mtv(bkgd.getStatsImage(), frame=1)
+            afwDisplay.Display(frame=0).mtv(image, title=self._testMethodName + " image")
+            afwDisplay.Display(frame=1).mtv(bkgd.getStatsImage(),
+                                            title=self._testMethodName + " bkgd StatsImage")
         # Should throw if we don't permit REDUCE_INTERP_ORDER
         self.assertRaises(lsst.pex.exceptions.OutOfRangeError,
                           bkgd.getImageF, afwMath.Interpolate.NATURAL_SPLINE)
@@ -547,7 +551,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
             afwMath.Interpolate.NATURAL_SPLINE, afwMath.REDUCE_INTERP_ORDER)
 
         if debugMode:
-            ds9.mtv(bkgdImage, frame=2)
+            afwDisplay.Display(frame=2).mtv(bkgdImage, title=self._testMethodName + " bkgdImage")
 
         image -= bkgdImage
         self.assertEqual(afwMath.makeStatistics(image, afwMath.MEAN).getValue(),
@@ -564,7 +568,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         mi.mask[0:400, :] |= badBits
 
         if debugMode:
-            ds9.mtv(mi, frame=0)
+            afwDisplay.Display(frame=0).mtv(mi, title=self._testMethodName + " image")
 
         sctrl = afwMath.StatisticsControl()
         sctrl.setAndMask(badBits)
@@ -574,7 +578,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         bkgd = afwMath.makeBackground(mi, bctrl)
         statsImage = bkgd.getStatsImage()
         if debugMode:
-            ds9.mtv(statsImage, frame=1)
+            afwDisplay.Display(frame=1).mtv(statsImage, title=self._testMethodName + " bkgd StatsImage")
 
         # the test is that this doesn't fail if the bug (#2297) is fixed
         bkgdImage = bkgd.getImageF(
@@ -582,7 +586,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(
             np.mean(bkgdImage[0:100, 0:100].array), initialValue)
         if debugMode:
-            ds9.mtv(bkgdImage, frame=2)
+            afwDisplay.Display(frame=2).mtv(bkgdImage, title=self._testMethodName + " bkgdImage")
         # Check that we can fix the NaNs in the statsImage
         sim = statsImage.getImage().getArray()
         sim[np.isnan(sim)] = initialValue  # replace NaN by initialValue
@@ -604,7 +608,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         mi.mask[0:400, :] |= badBits
 
         if debugMode:
-            ds9.mtv(mi, frame=0)
+            afwDisplay.Display(frame=0).mtv(mi, title=self._testMethodName + " image")
 
         sctrl = afwMath.StatisticsControl()
         sctrl.setAndMask(badBits)
@@ -614,7 +618,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         bkgd = afwMath.makeBackground(mi, bctrl)
         statsImage = bkgd.getStatsImage()
         if debugMode:
-            ds9.mtv(statsImage, frame=1)
+            afwDisplay.Display(frame=1).mtv(statsImage, title=self._testMethodName + " bkgd StatsImage")
 
         # the test is that this doesn't fail if the bug (#2297) is fixed
         for frame, interpStyle in enumerate([afwMath.Interpolate.CONSTANT, afwMath.Interpolate.LINEAR,
@@ -625,7 +629,8 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
             self.assertEqual(
                 np.mean(bkgdImage[0:100, 0:100].array), initialValue)
             if debugMode:
-                ds9.mtv(bkgdImage, frame=frame)
+                afwDisplay.Display(frame=frame).mtv(bkgdImage, title=self._testMethodName + " bkgdImage: " +
+                                                    interpStyle.__str__())
 
     def testBadImage(self):
         """Test that an entirely bad image doesn't cause an absolute failure"""

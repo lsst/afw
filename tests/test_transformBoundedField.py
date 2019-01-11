@@ -42,10 +42,6 @@ import lsst.afw.geom
 import lsst.afw.image
 from lsst.afw.math import TransformBoundedField
 
-try:
-    type(display)
-except NameError:
-    display = False
 
 CHEBYSHEV_T = [
     lambda x: x**0,

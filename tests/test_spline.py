@@ -34,11 +34,6 @@ import unittest
 import lsst.utils.tests
 import lsst.afw.math as afwMath
 
-try:
-    type(display)
-except NameError:
-    display = False
-
 
 class SplineTestCase(unittest.TestCase):
     """A test case for Image"""

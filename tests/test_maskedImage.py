@@ -42,12 +42,13 @@ import lsst.daf.base
 import lsst.geom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
-import lsst.afw.display.ds9 as ds9
+import lsst.afw.display as afwDisplay
 
 try:
     type(display)
 except NameError:
     display = False
+afwDisplay.setDefaultMaskTransparency(75)
 
 
 def makeRampImage(width, height, imgClass=afwImage.MaskedImageF):
@@ -731,7 +732,7 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
             mimage2 = mimage.Factory(mimage)
 
             if display:
-                ds9.mtv(mimage2)
+                afwDisplay.Display(frame=0).mtv(mimage2, title="testSubimages3")
 
             self.checkImgPatch3(mimage2, deep)
 
@@ -789,7 +790,7 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
         im[0:4, 0:4] = im[2:6, 8:12]
 
         if display:
-            ds9.mtv(im)
+            afwDisplay.Display(frame=1).mtv(im, title="testImageSlices")
 
         self.assertEqual(im[0, 6, afwImage.LOCAL], (0, 0x0, 0))
         self.assertEqual(im[6, 17, afwImage.LOCAL], (0, 0x0, 0))
