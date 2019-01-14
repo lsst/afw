@@ -57,8 +57,8 @@ def makeCov(size, dtype):
 
 
 def makeWcs():
-    crval = lsst.geom.SpherePoint(1.606631 * lsst.geom.degrees,
-                                  5.090329 * lsst.geom.degrees)
+    crval = lsst.geom.SpherePoint(1.606631*lsst.geom.degrees,
+                                  5.090329*lsst.geom.degrees)
     crpix = lsst.geom.Point2D(2036.0, 2000.0)
     cdMatrix = np.array([5.399452e-5, -1.30770e-5, 1.30770e-5, 5.399452e-5])
     cdMatrix.shape = (2, 2)
@@ -159,8 +159,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
             # I'm using the keys from the non-persisted table.  They should work at least in the
             # current implementation
             self.assertEqual(record.get(self.instFluxKey), record.getPsfInstFlux())
-            self.assertEqual(record.get(self.fluxFlagKey),
-                             record.getPsfFluxFlag())
+            self.assertEqual(record.get(self.fluxFlagKey), record.getPsfFluxFlag())
             self.assertEqual(table.getCentroidDefinition(), "b")
             centroid = self.centroidKey.get(self.record)
             self.assertEqual(centroid, record.getCentroid())
@@ -228,8 +227,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(self.catalog.table, catalog2.table)
         self.assertNotEqual(self.catalog.table, catalog3.table)
         self.assertNotEqual(self.catalog.table, catalog3.table)
-        for r, r1, r2, r3, r4 in \
-                zip(self.catalog, catalog1, catalog2, catalog3, catalog4):
+        for r, r1, r2, r3, r4 in zip(self.catalog, catalog1, catalog2, catalog3, catalog4):
             self.assertEqual(r, r1)
             self.assertEqual(r, r2)
             self.assertNotEqual(r, r3)
@@ -326,8 +324,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
 
         for i, src in enumerate(self.catalog):
             if src != src2:
-                spanSet = lsst.afw.geom.SpanSet.fromShape(
-                    1+i*2).shiftedBy(50, 50)
+                spanSet = lsst.afw.geom.SpanSet.fromShape(1 + i*2).shiftedBy(50, 50)
                 src.setFootprint(lsst.afw.detection.Footprint(spanSet))
 
         # insert this HeavyFootprint into an otherwise blank image (for comparing the results)
@@ -353,18 +350,14 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
             if False:
                 # Write out before-n-after FITS images
                 for MI in [mim, mim2, mim3]:
-                    f, fn2 = tempfile.mkstemp(prefix='testHeavyFootprint-',
-                                              suffix='.fits')
+                    f, fn2 = tempfile.mkstemp(prefix='testHeavyFootprint-', suffix='.fits')
                     os.close(f)
                     MI.writeFits(fn2)
                     print('wrote', fn2)
 
-            self.assertFloatsEqual(mim2.getImage().getArray(),
-                                   mim3.getImage().getArray())
-            self.assertFloatsEqual(mim2.getMask().getArray(),
-                                   mim3.getMask().getArray())
-            self.assertFloatsEqual(mim2.getVariance().getArray(),
-                                   mim3.getVariance().getArray())
+            self.assertFloatsEqual(mim2.getImage().getArray(), mim3.getImage().getArray())
+            self.assertFloatsEqual(mim2.getMask().getArray(), mim3.getMask().getArray())
+            self.assertFloatsEqual(mim2.getVariance().getArray(), mim3.getVariance().getArray())
 
             im3 = mim3.getImage()
             ma3 = mim3.getMask()
@@ -444,8 +437,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.catalog.getChildren(0)  # Just care this succeeds
 
     def testFitsReadVersion0Compatibility(self):
-        cat = lsst.afw.table.SourceCatalog.readFits(
-            os.path.join(testPath, "data/empty-v0.fits"))
+        cat = lsst.afw.table.SourceCatalog.readFits(os.path.join(testPath, "data/empty-v0.fits"))
         self.assertTrue(cat.getPsfFluxSlot().isValid())
         self.assertTrue(cat.getApFluxSlot().isValid())
         self.assertTrue(cat.getGaussianFluxSlot().isValid())
@@ -480,14 +472,10 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
                          cat.schema.find("cmodel_flux_err").key)
         self.assertEqual(
             cat.getCentroidSlot().getErrKey(),
-            lsst.afw.table.CovarianceMatrix2fKey(
-                cat.schema["centroid_sdss_err"],
-                ["x", "y"]))
+            lsst.afw.table.CovarianceMatrix2fKey(cat.schema["centroid_sdss_err"], ["x", "y"]))
         self.assertEqual(
             cat.getShapeSlot().getErrKey(),
-            lsst.afw.table.CovarianceMatrix3fKey(
-                cat.schema["shape_hsm_moments_err"],
-                ["xx", "yy", "xy"]))
+            lsst.afw.table.CovarianceMatrix3fKey(cat.schema["shape_hsm_moments_err"], ["xx", "yy", "xy"]))
         self.assertEqual(cat.getPsfFluxSlot().getFlagKey(),
                          cat.schema.find("flux_psf_flags").key)
         self.assertEqual(cat.getApFluxSlot().getFlagKey(),
@@ -516,9 +504,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
                 ["x", "y"]))
         self.assertEqual(
             cat.getShapeSlot().getErrKey(),
-            lsst.afw.table.CovarianceMatrix3fKey(
-                cat.schema["slot_Shape"],
-                ["xx", "yy", "xy"]))
+            lsst.afw.table.CovarianceMatrix3fKey(cat.schema["slot_Shape"], ["xx", "yy", "xy"]))
         # check the flux->instFlux conversion
         self.assertEqual(cat.schema["a_flux"].asKey(), cat.schema["a_instFlux"].asKey())
         self.assertEqual(cat.schema["a_fluxSigma"].asKey(), cat.schema["a_instFluxErr"].asKey())
@@ -560,8 +546,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
 
         Version 2 catalogs need to have added aliases from `_flux`->`_instFlux`.
         """
-        cat = lsst.afw.table.SourceCatalog.readFits(
-            os.path.join(testPath, "data", "sourceTable-v2.fits"))
+        cat = lsst.afw.table.SourceCatalog.readFits(os.path.join(testPath, "data", "sourceTable-v2.fits"))
         # check the flux->instFlux conversion
         self.assertEqual(cat.schema["a_flux"].asKey(), cat.schema["a_instFlux"].asKey())
         self.assertEqual(cat.schema["a_fluxErr"].asKey(), cat.schema["a_instFluxErr"].asKey())
@@ -592,8 +577,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         """Test that we can still read SourceCatalogs with (Heavy)Footprints saved by an older
         version of the pipeline with a different format.
         """
-        filename = os.path.join(testPath, "data",
-                                "old-footprint-persistence.fits")
+        filename = os.path.join(testPath, "data", "old-footprint-persistence.fits")
         catalog1 = lsst.afw.table.SourceCatalog.readFits(filename)
         self.assertEqual(len(catalog1), 2)
         with self.assertRaises(LookupError):
@@ -609,11 +593,9 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(len(fp1.getPeaks()), 1)
         self.assertEqual(len(fp2.getPeaks()), 1)
         self.assertEqual(fp1.getBBox(),
-                         lsst.geom.Box2I(lsst.geom.Point2I(129, 2),
-                                         lsst.geom.Extent2I(25, 29)))
+                         lsst.geom.Box2I(lsst.geom.Point2I(129, 2), lsst.geom.Extent2I(25, 29)))
         self.assertEqual(fp2.getBBox(),
-                         lsst.geom.Box2I(lsst.geom.Point2I(1184, 2),
-                                         lsst.geom.Extent2I(78, 38)))
+                         lsst.geom.Box2I(lsst.geom.Point2I(1184, 2), lsst.geom.Extent2I(78, 38)))
         hfp = lsst.afw.detection.HeavyFootprintF(fp2)
         self.assertEqual(len(hfp.getImageArray()), fp2.getArea())
         self.assertEqual(len(hfp.getMaskArray()), fp2.getArea())
@@ -634,12 +616,9 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         """Demonstrate that we can create & use the named Flux slot."""
         schema = lsst.afw.table.SourceTable.makeMinimalSchema()
         baseName = "afw_Test"
-        instFluxKey = schema.addField("%s_instFlux" % (baseName,),
-                                      type=np.float64, doc="flux")
-        errKey = schema.addField("%s_instFluxErr" % (baseName,),
-                                 type=np.float64, doc="flux uncertainty")
-        flagKey = schema.addField("%s_flag" % (baseName,),
-                                  type="Flag", doc="flux flag")
+        instFluxKey = schema.addField("%s_instFlux" % (baseName,), type=np.float64, doc="flux")
+        errKey = schema.addField("%s_instFluxErr" % (baseName,), type=np.float64, doc="flux uncertainty")
+        flagKey = schema.addField("%s_flag" % (baseName,), type="Flag", doc="flux flag")
         catalog = lsst.afw.table.SourceCatalog(schema)
         table = catalog.table
 

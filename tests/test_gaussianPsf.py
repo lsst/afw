@@ -87,8 +87,7 @@ class GaussianPsfTestCase(lsst.utils.tests.TestCase):
 
     def testApertureFlux(self):
         image = self.psf.computeKernelImage(lsst.geom.Point2D(0.0, 0.0))
-        # test aperture implementation is very crude; can only test to about
-        # 10%
+        # test aperture implementation is very crude; can only test to about 10%
         self.assertFloatsAlmostEqual(self.psf.computeApertureFlux(5.0), computeNaiveApertureFlux(image, 5.0),
                                      rtol=0.1)
         self.assertFloatsAlmostEqual(self.psf.computeApertureFlux(7.0), computeNaiveApertureFlux(image, 7.0),

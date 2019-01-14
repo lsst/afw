@@ -38,17 +38,12 @@ import lsst.geom
 import lsst.afw.table
 import lsst.afw.geom
 
-try:
-    type(display)
-except NameError:
-    display = False
-
 
 def makePositiveSymmetricMatrix(size):
     """Return a random symmetric matrix with only positive eigenvalues, suitable
     for use as a covariance matrix.
     """
-    a = numpy.random.randn(size, size+1).astype(numpy.float32)
+    a = numpy.random.randn(size, size + 1).astype(numpy.float32)
     m = numpy.dot(a, a.transpose())
     for i in range(size):
         for j in range(i):
@@ -402,12 +397,12 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
         # we set each matrix element a two-digit number where the first digit is the row
         # index and the second digit is the column index.
         for i in range(len(parameterNames)):
-            record.set(sigmaKeys[i], ((i+1)*10 + (i+1))**0.5)
+            record.set(sigmaKeys[i], ((i + 1)*10 + (i + 1))**0.5)
             if varianceOnly:
                 continue
             for j in range(i):
                 if covKeys[k].isValid():
-                    record.set(covKeys[k], (i+1)*10 + (j+1))
+                    record.set(covKeys[k], (i + 1)*10 + (j + 1))
                 k += 1
         # test that the return type and value is correct
         matrix1 = record.get(fKey1)
@@ -419,30 +414,30 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
         k = 0
         for i in range(len(parameterNames)):
             self.assertFloatsAlmostEqual(
-                matrix1[i, i], (i+1)*10 + (i+1), rtol=1E-7)
+                matrix1[i, i], (i + 1)*10 + (i + 1), rtol=1E-7)
             if varianceOnly:
                 continue
             for j in range(i):
                 if covKeys[k].isValid():
                     self.assertFloatsAlmostEqual(
-                        matrix1[i, j], (i+1)*10 + (j+1), rtol=1E-7)
+                        matrix1[i, j], (i + 1)*10 + (j + 1), rtol=1E-7)
                     self.assertFloatsAlmostEqual(
-                        matrix2[i, j], (i+1)*10 + (j+1), rtol=1E-7)
+                        matrix2[i, j], (i + 1)*10 + (j + 1), rtol=1E-7)
                     self.assertFloatsAlmostEqual(
-                        matrix1[j, i], (i+1)*10 + (j+1), rtol=1E-7)
+                        matrix1[j, i], (i + 1)*10 + (j + 1), rtol=1E-7)
                     self.assertFloatsAlmostEqual(
-                        matrix2[j, i], (i+1)*10 + (j+1), rtol=1E-7)
+                        matrix2[j, i], (i + 1)*10 + (j + 1), rtol=1E-7)
                     self.assertFloatsAlmostEqual(
                         fKey1.getElement(record, i, j),
-                        (i+1)*10 + (j+1), rtol=1E-7)
+                        (i + 1)*10 + (j + 1), rtol=1E-7)
                     self.assertFloatsAlmostEqual(
                         fKey2.getElement(record, i, j),
-                        (i+1)*10 + (j+1), rtol=1E-7)
+                        (i + 1)*10 + (j + 1), rtol=1E-7)
                     v = numpy.random.randn()
                     fKey1.setElement(record, i, j, v)
                     self.assertFloatsAlmostEqual(
                         fKey2.getElement(record, i, j), v, rtol=1E-7)
-                    fKey2.setElement(record, i, j, (i+1)*10 + (j+1))
+                    fKey2.setElement(record, i, j, (i + 1)*10 + (j + 1))
                 else:
                     with self.assertRaises(lsst.pex.exceptions.LogicError):
                         fKey1.setElement(record, i, j, 0.0)

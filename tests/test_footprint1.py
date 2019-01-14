@@ -76,7 +76,7 @@ class Object:
         """Insert self into an image"""
         for sp in self.spans:
             y, x0, x1 = sp
-            for x in range(x0, x1+1):
+            for x in range(x0, x1 + 1):
                 im[x, y, afwImage.LOCAL] = self.val
 
     def __eq__(self, other):
@@ -457,7 +457,7 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         # These are the correct values for footprint sizes given the paramters
         # above.
         circle_npix = 29
-        initial_npix = circle_npix * 2 - 1  # touch at one pixel
+        initial_npix = circle_npix*2 - 1  # touch at one pixel
         shrunk_npix = 26
 
         box = lsst.geom.Box2I(lsst.geom.Point2I(0, 0),
@@ -487,20 +487,20 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
             idImage = afwImage.ImageU(imwidth, imheight)
             for i, foot in enumerate([initial, shrunk]):
                 print(foot.getArea())
-                foot.spans.setImage(idImage, i+1)
+                foot.spans.setImage(idImage, i + 1)
             afwDisplay.Display(frame=1).mtv(idImage, title=self._testMethodName + " image")
 
     def testShrinkEightVertical(self):
         # Test a "vertical" figure of 8.
         radius = 3
         imwidth, imheight = 100, 100
-        self._fig8Test(imwidth//2, imheight//2-radius, imwidth//2, imheight//2+radius)
+        self._fig8Test(imwidth//2, imheight//2 - radius, imwidth//2, imheight//2 + radius)
 
     def testShrinkEightHorizontal(self):
         # Test a "horizontal" figure of 8.
         radius = 3
         imwidth, imheight = 100, 100
-        self._fig8Test(imwidth//2-radius, imheight//2, imwidth//2+radius, imheight//2)
+        self._fig8Test(imwidth//2 - radius, imheight//2, imwidth//2 + radius, imheight//2)
 
     def testGrow(self):
         """Test growing a footprint"""
@@ -768,7 +768,7 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         sa = source.getArray()
         for i in range(H):
             for j in range(W):
-                sa[i, j] = 100 * i + j
+                sa[i, j] = 100*i + j
 
         footSpans = [s for s in self.foot.spans]
         footSpans.append(afwGeom.Span(4, 3, 6))
@@ -828,8 +828,8 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         sm = source.getMask().getArray()
         for i in range(H):
             for j in range(W):
-                sa[i, j] = 100 * i + j
-                sv[i, j] = 100 * j + i
+                sa[i, j] = 100*i + j
+                sv[i, j] = 100*j + i
                 sm[i, j] = 1
 
         footSpans = [s for s in self.foot.spans]
@@ -939,9 +939,8 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
             import pylab as plt
             plt.clf()
             for i, im1 in enumerate(ims):
-                plt.subplot(4, 1, i+1)
-                plt.imshow(im1.getArray(), interpolation='nearest',
-                           origin='lower')
+                plt.subplot(4, 1, i + 1)
+                plt.imshow(im1.getArray(), interpolation='nearest', origin='lower')
                 plt.axis([0, 100, 0, 20])
             plt.savefig('merge2.png')
 

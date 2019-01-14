@@ -39,7 +39,6 @@ try:
 except NameError:
     display = False
 
-
 testPath = os.path.abspath(os.path.dirname(__file__))
 
 

@@ -46,7 +46,8 @@ except NameError:
 
 
 class OffsetImageTestCase(unittest.TestCase):
-    """A test case for offsetImage"""
+    """A test case for offsetImage.
+    """
 
     def setUp(self):
         self.inImage = afwImage.ImageF(200, 100)
@@ -57,8 +58,8 @@ class OffsetImageTestCase(unittest.TestCase):
         del self.inImage
 
     def testSetFluxConvervation(self):
-        """Test that flux is preserved"""
-
+        """Test that flux is preserved.
+        """
         for algorithm in ("lanczos5", "bilinear", "nearest"):
             outImage = afwMath.offsetImage(self.inImage, 0, 0, algorithm)
             self.assertEqual(outImage[50, 50, afwImage.LOCAL], self.background)
@@ -70,8 +71,8 @@ class OffsetImageTestCase(unittest.TestCase):
             self.assertAlmostEqual(outImage[50, 50, afwImage.LOCAL], self.background, 4)
 
     def testSetIntegerOffset(self):
-        """Test that we can offset by positive and negative amounts"""
-
+        """Test that we can offset by positive and negative amounts.
+        """
         self.inImage[50, 50, afwImage.LOCAL] = 400
 
         if False and display:
@@ -97,8 +98,8 @@ class OffsetImageTestCase(unittest.TestCase):
                         disp.dot("+", 50 + dx + delta - outImage.getX0(), 50 + dy + delta - outImage.getY0())
 
     def calcGaussian(self, im, x, y, amp, sigma1):
-        """Insert a Gaussian into the image centered at (x, y)"""
-
+        """Insert a Gaussian into the image centered at (x, y).
+        """
         x = x - im.getX0()
         y = y - im.getY0()
 
@@ -109,8 +110,8 @@ class OffsetImageTestCase(unittest.TestCase):
                 im[ix, iy, afwImage.LOCAL] = amp*val
 
     def testOffsetGaussian(self):
-        """Insert a Gaussian, offset, and check the residuals"""
-
+        """Insert a Gaussian, offset, and check the residuals.
+        """
         size = 50
         refIm = afwImage.ImageF(size, size)
         unshiftedIm = afwImage.ImageF(size, size)
@@ -194,7 +195,8 @@ def getOrigFracShift(dx, dy):
 
 
 class TransformImageTestCase(unittest.TestCase):
-    """A test case for rotating images"""
+    """A test case for rotating images.
+    """
 
     def setUp(self):
         self.inImage = afwImage.ImageF(20, 10)
@@ -205,8 +207,8 @@ class TransformImageTestCase(unittest.TestCase):
         del self.inImage
 
     def testRotate(self):
-        """Test that we end up with the correct image after rotating by 90 degrees"""
-
+        """Test that we end up with the correct image after rotating by 90 degrees.
+        """
         for nQuarter, x, y in [(0, 0, 0),
                                (1, 9, 0),
                                (2, 19, 9),
@@ -217,8 +219,8 @@ class TransformImageTestCase(unittest.TestCase):
             self.assertEqual(self.inImage[0, 0, afwImage.LOCAL], outImage[x, y, afwImage.LOCAL])
 
     def testFlip(self):
-        """Test that we end up with the correct image after flipping it"""
-
+        """Test that we end up with the correct image after flipping it.
+        """
         frame = 2
         for flipLR, flipTB, x, y in [(True, False, 19, 0),
                                      (True, True, 19, 9),
@@ -231,14 +233,16 @@ class TransformImageTestCase(unittest.TestCase):
             self.assertEqual(self.inImage[0, 0, afwImage.LOCAL], outImage[x, y, afwImage.LOCAL])
 
     def testMask(self):
-        """Test that we can flip a Mask"""
+        """Test that we can flip a Mask.
+        """
         mask = afwImage.Mask(10, 20)
         # for a while, swig couldn't handle the resulting std::shared_ptr<Mask>
         afwMath.flipImage(mask, True, False)
 
 
 class BinImageTestCase(unittest.TestCase):
-    """A test case for binning images"""
+    """A test case for binning images.
+    """
 
     def setUp(self):
         pass
@@ -247,8 +251,8 @@ class BinImageTestCase(unittest.TestCase):
         pass
 
     def testBin(self):
-        """Test that we can bin images"""
-
+        """Test that we can bin images.
+        """
         inImage = afwImage.ImageF(203, 131)
         inImage.set(1)
         bin = 4
@@ -263,8 +267,8 @@ class BinImageTestCase(unittest.TestCase):
         self.assertEqual(stats.getValue(afwMath.MAX), 1)
 
     def testBin2(self):
-        """Test that we can bin images anisotropically"""
-
+        """Test that we can bin images anisotropically.
+        """
         inImage = afwImage.ImageF(203, 131)
         val = 1
         inImage.set(val)

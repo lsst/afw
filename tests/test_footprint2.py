@@ -57,7 +57,7 @@ def toString(*args):
 def peakFromImage(im, pos):
     """Function to extract the sort key of peak height. Sort by decreasing peak height."""
     val = im[pos[0], pos[1], afwImage.LOCAL][0]
-    return -1.0 * val
+    return -1.0*val
 
 
 class Object:
@@ -70,7 +70,7 @@ class Object:
         """Insert self into an image"""
         for sp in self.spans:
             y, x0, x1 = sp
-            for x in range(x0, x1+1):
+            for x in range(x0, x1 + 1):
                 im[x, y, afwImage.LOCAL] = self.val
 
     def __eq__(self, other):
@@ -440,7 +440,7 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
 
         def peakDescending(p):
             """Sort self.peaks in decreasing peak height to match Footprint.getPeaks()"""
-            return p[2] * -1.0
+            return p[2]*-1.0
         for i, peaks in enumerate(self.peaks):
             self.peaks[i] = sorted([(x, y, self.im.getImage()[x, y, afwImage.LOCAL]) for x, y in peaks],
                                    key=peakDescending)

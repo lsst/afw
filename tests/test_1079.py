@@ -43,13 +43,15 @@ except NameError:
 
 
 class SavingSubImagesTest(unittest.TestCase):
-    """
-    Tests for changes made for ticket #1079. In the LSST wcs transformations are done in terms
-    of pixel position, which is measured from the lower left hand corner of the parent image from
-    which this sub-image is drawn. However, when saving a sub-image to disk, the fits standards
-    has no concept of parent- and sub- images, and specifies that the wcs is measured relative to
-    the pixel index (i.e the lower left hand corner of the sub-image). This test makes sure
-    we're saving and reading wcs headers from sub-images correctly.
+    """Tests for changes made for ticket #1079.
+
+    In the LSST wcs transformations are done in terms of pixel position, which
+    is measured from the lower left hand corner of the parent image from which
+    this sub-image is drawn. However, when saving a sub-image to disk, the fits
+    standards has no concept of parent- and sub- images, and specifies that the
+    wcs is measured relative to the pixel index (i.e. the lower left hand corner
+    of the sub-image). This test makes sure we're saving and reading wcs headers
+    from sub-images correctly.
     """
 
     def setUp(self):
@@ -79,9 +81,10 @@ class SavingSubImagesTest(unittest.TestCase):
         del self.testPositions
 
     def testInvarianceOfCrpix1(self):
-        """Test that crpix is the same for parent and sub-image. Also tests that llc of sub-image
-        saved correctly"""
+        """Test that crpix is the same for parent and sub-image.
 
+        Also tests that llc of sub-image saved correctly.
+        """
         llc = lsst.geom.Point2I(20, 30)
         bbox = lsst.geom.Box2I(llc, lsst.geom.Extent2I(60, 50))
         subImg = afwImage.ExposureF(self.parent, bbox, afwImage.LOCAL)
@@ -96,15 +99,15 @@ class SavingSubImagesTest(unittest.TestCase):
             print(self.oParent, oSubImage)
 
         for i in range(2):
-            self.assertEqual(llc[i], subImgLlc[i],
-                             "Corner of sub-image not correct")
+            self.assertEqual(llc[i], subImgLlc[i], "Corner of sub-image not correct")
             self.assertAlmostEqual(
                 self.oParent[i], oSubImage[i], 6, "Crpix of sub-image not correct")
 
     def testInvarianceOfCrpix2(self):
         """For sub-images loaded from disk, test that crpix is the same for parent and sub-image.
-        Also tests that llc of sub-image saved correctly"""
 
+        Also tests that llc of sub-image saved correctly.
+        """
         # Load sub-image directly off of disk
         llc = lsst.geom.Point2I(20, 30)
         bbox = lsst.geom.Box2I(llc, lsst.geom.Extent2I(60, 50))
@@ -119,18 +122,15 @@ class SavingSubImagesTest(unittest.TestCase):
             print(self.oParent, oSubImage)
 
         for i in range(2):
-            self.assertEqual(llc[i], subImgLlc[i],
-                             "Corner of sub-image not correct")
+            self.assertEqual(llc[i], subImgLlc[i], "Corner of sub-image not correct")
             self.assertAlmostEqual(
                 self.oParent[i], oSubImage[i], 6, "Crpix of sub-image not correct")
 
     def testInvarianceOfPixelToSky(self):
-
         for deep in (True, False):
             llc = lsst.geom.Point2I(20, 30)
             bbox = lsst.geom.Box2I(llc, lsst.geom.Extent2I(60, 50))
-            subImg = afwImage.ExposureF(
-                self.parent, bbox, afwImage.LOCAL, deep)
+            subImg = afwImage.ExposureF(self.parent, bbox, afwImage.LOCAL, deep)
 
             xy0 = subImg.getMaskedImage().getXY0()
 
@@ -141,28 +141,25 @@ class SavingSubImagesTest(unittest.TestCase):
             for p in self.testPositions:
                 subP = p - lsst.geom.Extent2D(llc[0], llc[1])  # pixel in subImg
 
-                if \
-                        subP[0] < 0 or subP[0] >= bbox.getWidth() or \
-                        subP[1] < 0 or subP[1] >= bbox.getHeight():
+                if subP[0] < 0 or subP[0] >= bbox.getWidth() or subP[1] < 0 or subP[1] >= bbox.getHeight():
                     continue
 
                 adParent = self.parent.getWcs().pixelToSky(p)
-                adSub = subImg.getWcs().pixelToSky(
-                    subP + lsst.geom.Extent2D(xy0[0], xy0[1]))
+                adSub = subImg.getWcs().pixelToSky(subP + lsst.geom.Extent2D(xy0[0], xy0[1]))
                 #
                 # Check that we're talking about the same pixel
                 #
                 self.assertEqual(self.parent.maskedImage[lsst.geom.Point2I(p), afwImage.LOCAL],
                                  subImg.maskedImage[lsst.geom.Point2I(subP), afwImage.LOCAL])
 
-                self.assertEqual(adParent[0], adSub[0],
-                                 "RAs are equal; deep = %s" % deep)
-                self.assertEqual(adParent[1], adSub[1],
-                                 "DECs are equal; deep = %s" % deep)
+                self.assertEqual(adParent[0], adSub[0], "RAs are equal; deep = %s" % deep)
+                self.assertEqual(adParent[1], adSub[1], "DECs are equal; deep = %s" % deep)
 
     def testSubSubImage(self):
-        """Check that a sub-image of a sub-image is equivalent to a sub image, i.e
-        that the parent is an invarient"""
+        """Check that a sub-image of a sub-image is equivalent to a sub image.
+
+        I.e. that the parent is an invarient.
+        """
 
         llc1 = lsst.geom.Point2I(20, 30)
         bbox = lsst.geom.Box2I(llc1, lsst.geom.Extent2I(60, 50))
@@ -188,8 +185,7 @@ class SavingSubImagesTest(unittest.TestCase):
 
         for i in range(2):
             self.assertEqual(llc1[i], sub0[i], "XY0 don't match (1)")
-            self.assertEqual(llc1[i] + llc2[i],
-                             subsub0[i], "XY0 don't match (2)")
+            self.assertEqual(llc1[i] + llc2[i], subsub0[i], "XY0 don't match (2)")
 
         subCrpix = subImg.getWcs().getPixelOrigin()
         subsubCrpix = subSubImg.getWcs().getPixelOrigin()
@@ -199,12 +195,12 @@ class SavingSubImagesTest(unittest.TestCase):
                 subCrpix[i], subsubCrpix[i], 6, "crpix don't match")
 
     def testRoundTrip(self):
-        """Test that saving and retrieving an image doesn't alter the metadata"""
+        """Test that saving and retrieving an image doesn't alter the metadata.
+        """
         llc = lsst.geom.Point2I(20, 30)
         bbox = lsst.geom.Box2I(llc, lsst.geom.Extent2I(60, 50))
         for deep in (False, True):
-            subImg = afwImage.ExposureF(
-                self.parent, bbox, afwImage.LOCAL, deep)
+            subImg = afwImage.ExposureF(self.parent, bbox, afwImage.LOCAL, deep)
 
             with lsst.utils.tests.getTempFilePath("_%s.fits" % (deep,)) as outFile:
                 subImg.writeFits(outFile)
@@ -224,8 +220,8 @@ class SavingSubImagesTest(unittest.TestCase):
                         subCrpix[i], newCrpix[i], 6, "crpix has changed; deep = %s" % deep)
 
     def testFitsHeader(self):
-        """Test that XY0 and crpix are written to the header as expected"""
-
+        """Test that XY0 and crpix are written to the header as expected.
+        """
         # getPixelOrigin() returns origin in lsst coordinates, so need to add 1 to
         # compare to values stored in fits headers
         parentCrpix = self.parent.getWcs().getPixelOrigin()
@@ -243,28 +239,24 @@ class SavingSubImagesTest(unittest.TestCase):
 
             def checkLtvHeader(hdr, name, value):
                 # Per DM-4133, LTVn headers are required to be floating point
-                self.assertTrue(hdr.exists(name), name +
-                                " not saved to FITS header")
+                self.assertTrue(hdr.exists(name), name + " not saved to FITS header")
                 self.assertIsInstance(
                     hdr.getScalar(name), numbers.Real, name + " is not numeric")
                 self.assertNotIsInstance(
                     hdr.getScalar(name), numbers.Integral, name + " is an int")
-                self.assertEqual(hdr.getScalar(name), value,
-                                 name + " has wrong value")
+                self.assertEqual(hdr.getScalar(name), value, name + " has wrong value")
 
             checkLtvHeader(hdr, "LTV1", -1*x0)
             checkLtvHeader(hdr, "LTV2", -1*y0)
 
-            self.assertTrue(hdr.exists("CRPIX1"),
-                            "CRPIX1 not saved to fits header")
-            self.assertTrue(hdr.exists("CRPIX2"),
-                            "CRPIX2 not saved to fits header")
+            self.assertTrue(hdr.exists("CRPIX1"), "CRPIX1 not saved to fits header")
+            self.assertTrue(hdr.exists("CRPIX2"), "CRPIX2 not saved to fits header")
 
             fitsCrpix = [hdr.getScalar("CRPIX1"), hdr.getScalar("CRPIX2")]
             self.assertAlmostEqual(
-                fitsCrpix[0] - hdr.getScalar("LTV1"), parentCrpix[0]+1, 6, "CRPIX1 saved wrong")
+                fitsCrpix[0] - hdr.getScalar("LTV1"), parentCrpix[0] + 1, 6, "CRPIX1 saved wrong")
             self.assertAlmostEqual(
-                fitsCrpix[1] - hdr.getScalar("LTV2"), parentCrpix[1]+1, 6, "CRPIX2 saved wrong")
+                fitsCrpix[1] - hdr.getScalar("LTV2"), parentCrpix[1] + 1, 6, "CRPIX2 saved wrong")
 
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):

@@ -47,11 +47,6 @@ import lsst.afw.detection
 from lsst.afw.cameraGeom.testUtils import DetectorWrapper
 from testTableArchivesLib import DummyPsf
 
-try:
-    type(display)
-except NameError:
-    display = False
-
 
 class ExposureTableTestCase(lsst.utils.tests.TestCase):
 
@@ -199,7 +194,7 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
     def testGeometry(self):
         bigBox = lsst.geom.Box2D(lsst.geom.Box2I(self.bbox0))
         bigBox.include(lsst.geom.Box2D(self.bbox1))
-        points = (np.random.rand(100, 2) * np.array([bigBox.getWidth(), bigBox.getHeight()]) +
+        points = (np.random.rand(100, 2)*np.array([bigBox.getWidth(), bigBox.getHeight()]) +
                   np.array([bigBox.getMinX(), bigBox.getMinY()]))
 
         # make a very slightly perturbed wcs so the celestial transform isn't a
@@ -210,7 +205,7 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
         wcs2 = makeSkyWcs(
             crval=crval2,
             crpix=self.wcs.getPixelOrigin() + lsst.geom.Extent2D(30.0, -50.0),
-            cdMatrix=self.wcs.getCdMatrix() * 1.1,
+            cdMatrix=self.wcs.getCdMatrix()*1.1,
         )
         for x1, y1 in points:
             p1 = lsst.geom.Point2D(x1, y1)
