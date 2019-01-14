@@ -222,7 +222,7 @@ private:
  * instance in the list will be fit for.  If all instances in a list are rejected from the spatial model,
  * the best one will be used.
  *
- * @see @link SpatialCellSetExample@endlink
+ * @see The SpatialCellSet example in the module documentation.
  */
 class SpatialCell {
 public:

@@ -8,7 +8,6 @@ by an image processing system.  In particular:
    - \ref afwSecImage : Representation of Images (and Masks)
    - \ref afwSecPyImage : How to manipulate images from python
    - \ref afwSecDisplay : How to display images
-   - \ref afwSecMath :  Mathematical functions such as convolution and image statistics
    - \ref afwSecDetection : Detection of sources in images
    - \ref afwTable : Table and record classes for catalog data
    - \ref afwTablePersistence : Table-based persistence
@@ -280,25 +279,6 @@ You can read the HDU of your desires by passing an \c hdu to the constructor.
 
 \note Per the above, it is possible to append a \c MaskedImage to a FITS file,
 but \b not possible to read it back from a non-default HDU.
-*/
-}}}
-
-//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
-namespace lsst { namespace afw { namespace math {
-/**
-\page afwSecMath Mathematical Operations
-
- - Statistics.
-Annotated examples are available for \link StatisticsExample Statistics\endlink.
- - Background estimation of images.
-Annotated examples are available for \link BackgroundExample Background Estimation\endlink.
- - Interpolate
- - Convolution of images is handled by convolve()
- - Warping Images is handled by warpImage()
- - Manipulating spatially-distributed sets of objects (e.g. PSF candidates);
- an annotated example is available as \link SpatialCellSetExample\endlink
-
 */
 }}}
 
