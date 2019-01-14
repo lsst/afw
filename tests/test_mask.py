@@ -100,8 +100,6 @@ class MaskTestCase(utilsTests.TestCase):
         self.mask2 = afwImage.Mask(self.mask1.getDimensions())
         self.mask2.set(self.val2)
 
-        # TBD: #DM-609 this should be refactored to use @unittest.skipif checks
-        # for afwData above the tests that need it.
         if afwdataDir is not None:
             self.maskFile = os.path.join(afwdataDir, "data", "small_MI.fits")
             # Below: what to expect from the mask plane in the above data.
