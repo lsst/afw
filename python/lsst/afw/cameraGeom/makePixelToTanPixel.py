@@ -29,9 +29,6 @@ def makePixelToTanPixel(bbox, orientation, focalPlaneToField, pixelSizeMm):
     """Make a Transform whose forward direction converts PIXELS to TAN_PIXELS
     for one detector.
 
-    PIXELS and TAN_PIXELS are defined in @ref afwCameraGeomCoordSys in
-    doc/cameraGeom.dox
-
     Parameters
     ----------
     bbox : `lsst.geom.Box2I`
@@ -48,6 +45,11 @@ def makePixelToTanPixel(bbox, orientation, focalPlaneToField, pixelSizeMm):
     -------
     transform : `lsst.afw.geom.TransformPoint2ToPoint2`
         A transform whose forward direction converts PIXELS to TAN_PIXELS.
+
+    Notes
+    -----
+    PIXELS and TAN_PIXELS are described in the CameraGeom documentation under
+    :ref:`camera coordinate systems<section_Camera_Coordinate_Systems>`.
     """
     pixelToFocalPlane = orientation.makePixelFpTransform(pixelSizeMm)
     pixelToField = pixelToFocalPlane.then(focalPlaneToField)
