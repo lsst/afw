@@ -1,9 +1,10 @@
+# This file is part of afw.
 #
-# LSST Data Management System
-# Copyright 2014 LSST Corporation.
-#
-# This product includes software developed by the
-# LSST Project (http://www.lsst.org/).
+# Developed for the LSST Data Management System.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org).
+# See the COPYRIGHT file at the top-level directory of this distribution
+# for details of code ownership.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,27 +16,40 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
-# You should have received a copy of the LSST License Statement and
-# the GNU General Public License along with this program.  If not,
-# see <http://www.lsstcorp.org/LegalNotices/>.
-#
-import lsst.geom
-import lsst.afw.geom
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 __all__ = ["makePixelToTanPixel"]
 
+import lsst.geom
+import lsst.afw.geom
+
 
 def makePixelToTanPixel(bbox, orientation, focalPlaneToField, pixelSizeMm):
-    """!Make a Transform whose forward direction converts PIXELS to TAN_PIXELS for one detector
+    """Make a Transform whose forward direction converts PIXELS to TAN_PIXELS
+    for one detector.
 
-    PIXELS and TAN_PIXELS are defined in @ref afwCameraGeomCoordSys in doc/cameraGeom.dox
+    Parameters
+    ----------
+    bbox : `lsst.geom.Box2I`
+        Detector bounding box.
+    orientation : `lsst.afw.cameraGeom.Orientation`
+        Orientation of detector in focal plane.
+    focalPlaneToField : `lsst.afw.geom.TransformPoint2ToPoint2`
+        A transform that converts from focal plane (mm) to field angle
+        coordinates (radians) in the forward direction.
+    pixelSizeMm : `lsst.geom.Extent2D`
+        Size of the pixel in mm in X and Y.
 
-    @param[in] bbox  detector bounding box (an lsst.geom.Box2I)
-    @param[in] orientation  orientation of detector in focal plane (an lsst.afw.cameraGeom.Orientation)
-    @param[in] focalPlaneToField  an lsst.afw.geom.Transform that converts from focal plane (mm)
-        to field angle coordinates (radians) in the forward direction
-    @param[in] pixelSizeMm  size of the pixel in mm in X and Y (an lsst.geom.Extent2D)
-    @return a TransformPoint2ToPoint2 whose forward direction converts PIXELS to TAN_PIXELS
+    Returns
+    -------
+    transform : `lsst.afw.geom.TransformPoint2ToPoint2`
+        A transform whose forward direction converts PIXELS to TAN_PIXELS.
+
+    Notes
+    -----
+    PIXELS and TAN_PIXELS are described in the CameraGeom documentation under
+    :ref:`camera coordinate systems<section_Camera_Coordinate_Systems>`.
     """
     pixelToFocalPlane = orientation.makePixelFpTransform(pixelSizeMm)
     pixelToField = pixelToFocalPlane.then(focalPlaneToField)

@@ -4,11 +4,24 @@
 lsst.afw.cameraGeom
 ###################
 
-.. Paragraph that describes what this Python module does and links to related modules and frameworks.
+The cameraGeom package describes the geometry of an imaging camera.
 
 .. Add subsections with toctree to individual topic pages.
+
+Using lsst.afw.cameraGeom
+=========================
+
+.. toctree::
+   :maxdepth: 1
+
+   cameraGeom.rst
 
 Python API reference
 ====================
 
-.. .. automodapi:: lsst.afw.cameraGeom
+.. automodapi:: lsst.afw.cameraGeom
+   :no-main-docstr:
+.. automodapi:: lsst.afw.cameraGeom.utils
+   :no-main-docstr:
+.. automodapi:: lsst.afw.cameraGeom.testUtils
+   :no-main-docstr:

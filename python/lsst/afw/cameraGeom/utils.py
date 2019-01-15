@@ -1,9 +1,10 @@
+# This file is part of afw.
 #
-# LSST Data Management System
-# Copyright 2008, 2009, 2010 LSST Corporation.
-#
-# This product includes software developed by the
-# LSST Project (http://www.lsst.org/).
+# Developed for the LSST Data Management System.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org).
+# See the COPYRIGHT file at the top-level directory of this distribution
+# for details of code ownership.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,14 +16,18 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
-# You should have received a copy of the LSST License Statement and
-# the GNU General Public License along with this program.  If not,
-# see <http://www.lsstcorp.org/LegalNotices/>.
-#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
 Support for displaying cameraGeom objects.
 """
+
+__all__ = ['prepareWcsData', 'plotFocalPlane', 'makeImageFromAmp', 'calcRawCcdBBox', 'makeImageFromCcd',
+           'FakeImageDataSource', 'ButlerImage', 'rawCallback', 'overlayCcdBoxes',
+           'showAmp', 'showCcd', 'getCcdInCamBBoxList', 'getCameraImageBBox',
+           'makeImageFromCamera', 'showCamera', 'makeFocalPlaneWcs', 'findAmp']
+
 import math
 import numpy
 import warnings
@@ -96,7 +101,7 @@ def plotFocalPlane(camera, fieldSizeDeg_x=0, fieldSizeDeg_y=None, dx=0.1, dy=0.1
         Spacing of sample points in x in degrees
     dy : `float`
         Spacing of sample points in y in degrees
-    figsize : `tuple` containing two `float`s
+    figsize : `tuple` containing two `float`
         Matplotlib style tuple indicating the size of the figure in inches
     useIds : `bool`
         Label detectors by name, not id?
@@ -515,8 +520,8 @@ def rawCallback(im, ccd=None, imageSource=None,
     """A callback function that may or may not subtract bias/correct gain/trim
     a raw image.
 
-    Paramters
-    ---------
+    Parameters
+    ----------
     im : `lsst.afw.image.Image` or `lsst.afw.image.MaskedImage` or `lsst.afw.image.Exposure`
        An image of a chip, ready to be binned and maybe rotated.
     ccd : `lsst.afw.cameraGeom.Detector` or None

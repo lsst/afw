@@ -1,3 +1,26 @@
+# This file is part of afw.
+#
+# Developed for the LSST Data Management System.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org).
+# See the COPYRIGHT file at the top-level directory of this distribution
+# for details of code ownership.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+__all__ = ["DetectorWrapper", "CameraWrapper"]
+
 import os
 
 import numpy as np
@@ -14,14 +37,47 @@ from .cameraFactory import makeCameraFromCatalogs
 from .makePixelToTanPixel import makePixelToTanPixel
 from .transformConfig import TransformMapConfig
 
-__all__ = ["DetectorWrapper", "CameraWrapper"]
-
 
 class DetectorWrapper:
-    """!A Detector and the data used to construct it
+    """A Detector and the data used to construct it
 
     Intended for use with unit tests, thus saves a copy of all input parameters.
     Does not support setting details of amplifiers.
+
+    Parameters
+    ----------
+    name : `str` (optional)
+        Detector name.
+    id : `int` (optional)
+        Detector ID.
+    detType : `lsst.afw.cameraGeom.DetectorType` (optional)
+        Detector type.
+    serial : `str` (optional)
+        Serial "number".
+    bbox : `lsst.geom.Box2I` (optional)
+        Bounding box; defaults to (0, 0), (1024x1024).
+    numAmps : `int` (optional)
+        Number of amplifiers.
+    pixelSize : `lsst.geom.Point2D` (optional)
+        Pixel size (mm).
+    ampExtent : `lsst.geom.Extent2I` (optional)
+        Dimensions of amplifier image bbox.
+    orientation : `lsst.afw.cameraGeom.Orientation` (optional)
+        Orientation of CCC in focal plane.
+    plateScale : `float` (optional)
+        Plate scale in arcsec/mm; 20.0 is for LSST.
+    radialDistortion : `float` (optional)
+        Radial distortion, in mm/rad^2.
+        The r^3 coefficient of the radial distortion polynomial
+        that converts FIELD_ANGLE in radians to FOCAL_PLANE in mm;
+        0.925 is the value Dave Monet measured for lsstSim data
+    crosstalk : `iterable` (optional)
+        Crosstalk coefficient matrix. If None, then no crosstalk correction
+        can be performed.
+    modFunc : `callable` (optional)
+        A function that can modify attributes just before constructing the
+        detector; modFunc receives one argument: a DetectorWrapper with all
+        attributes except detector set.
     """
 
     def __init__(self,
@@ -39,26 +95,6 @@ class DetectorWrapper:
                  crosstalk=None,
                  modFunc=None,
                  ):
-        """!Construct a DetectorWrapper
-
-        @param[in] name  detector name
-        @param[in] id  detector ID (int)
-        @param[in] detType  detector type (an lsst.afw.cameraGeom.DetectorType)
-        @param[in] serial  serial "number" (a string)
-        @param[in] bbox  bounding box; defaults to (0, 0), (1024x1024) (an lsst.geom.Box2I)
-        @param[in] numAmps  number of amplifiers (int)
-        @param[in] pixelSize  pixel size (mm) (an lsst.geom.Point2D)
-        @param[in] ampExtent  dimensions of amplifier image bbox (an lsst.geom.Extent2I)
-        @param[in] orientation  orientation of CCC in focal plane (lsst.afw.cameraGeom.Orientation)
-        @param[in] plateScale  plate scale in arcsec/mm; 20.0 is for LSST
-        @param[in] radialDistortion  radial distortion, in mm/rad^2
-            (the r^3 coefficient of the radial distortion polynomial
-            that converts FIELD_ANGLE in radians to FOCAL_PLANE in mm);
-            0.925 is the value Dave Monet measured for lsstSim data
-        @param[in] crosstalk  crosstalk coefficient matrix
-        @param[in] modFunc  a function that can modify attributes just before constructing the detector;
-            modFunc receives one argument: a DetectorWrapper with all attributes except detector set.
-        """
         # note that (0., 0.) for the reference position is the center of the
         # first pixel
         self.name = name
@@ -125,19 +161,22 @@ class CameraWrapper:
     """A simple Camera and the data used to construct it
 
     Intended for use with unit tests, thus saves some interesting information.
+
+    Parameters
+    ----------
+    plateScale : `float`
+        Plate scale in arcsec/mm; 20.0 is for LSST.
+    radialDistortion : `float`
+        Radial distortion, in mm/rad^2.
+        The r^3 coefficient of the radial distortion polynomial
+        that converts FIELD_ANGLE in radians to FOCAL_PLANE in mm;
+        0.925 is the value Dave Monet measured for lsstSim data.
+    isLsstLike : `bool`.
+        Make repository products with one raw image per amplifier (True)
+        or with one raw image per detector (False).
     """
 
     def __init__(self, plateScale=20.0, radialDistortion=0.925, isLsstLike=False):
-        """!Construct a CameraWrapper
-
-        @param[in] plateScale  plate scale in arcsec/mm; 20.0 is for LSST
-        @param[in] radialDistortion  radial distortion, in mm/rad^2
-            (the r^3 coefficient of the radial distortion polynomial
-            that converts FIELD_ANGLE in radians to FOCAL_PLANE in mm);
-            0.925 is the value Dave Monet measured for lsstSim data
-        @param[in] isLsstLike  make repository products with one raw image per amplifier (True)
-            or with one raw image per detector (False)
-        """
         afwDir = lsst.utils.getPackageDir("afw")
         self._afwTestDataDir = os.path.join(afwDir, "python", "lsst", "afw",
                                             "cameraGeom", "testData")
@@ -156,11 +195,11 @@ class CameraWrapper:
 
     @property
     def nDetectors(self):
-        """!Return the number of detectors"""
+        """Return the number of detectors"""
         return len(self.detectorNameList)
 
     def makeDetectorConfigs(self, detFile):
-        """!Construct a list of DetectorConfig, one per detector
+        """Construct a list of DetectorConfig, one per detector
         """
         detectors = []
         self.detectorNameList = []
@@ -202,11 +241,15 @@ class CameraWrapper:
         return detectorConfigs
 
     def makeAmpCatalogs(self, ampFile, isLsstLike=False):
-        """!Construct a list of AmpInfoCatalog, one per detector
+        """Construct a dict of AmpInfoCatalog, one per detector.
 
-        @param[in] ampFile  path to amplifier data file
-        @param[in] isLsstLike  if True then there is one raw image per amplifier;
-            if False then there is one raw image per detector
+        Parameters
+        ----------
+        ampFile : `str`
+            Path to amplifier data file.
+        isLsstLike : `bool`
+            If True then there is one raw image per amplifier;
+            if False then there is one raw image per detector.
         """
         readoutMap = {
             'LL': afwTable.ReadoutCorner.LL,
@@ -335,10 +378,14 @@ class CameraWrapper:
         return ampTablesDict
 
     def makeTestRepositoryItems(self, isLsstLike=False):
-        """!Make camera config and amp catalog dictionary, using default detector and amp files
+        """Make camera config and amp catalog dictionary, using default
+        detector and amp files.
 
-        @param[in] isLsstLike  if True then there is one raw image per amplifier;
-            if False then there is one raw image per detector
+        Parameters
+        ----------
+        isLsstLike : `bool`
+            If True then there is one raw image per amplifier;
+            if False then there is one raw image per detector.
         """
         detFile = os.path.join(self._afwTestDataDir, "testCameraDetectors.dat")
         detectorConfigs = self.makeDetectorConfigs(detFile)

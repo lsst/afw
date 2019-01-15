@@ -1,9 +1,10 @@
+# This file is part of afw.
 #
-# LSST Data Management System
-# Copyright 2008, 2009, 2010 LSST Corporation.
-#
-# This product includes software developed by the
-# LSST Project (http://www.lsst.org/).
+# Developed for the LSST Data Management System.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org).
+# See the COPYRIGHT file at the top-level directory of this distribution
+# for details of code ownership.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,15 +16,14 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
-# You should have received a copy of the LSST License Statement and
-# the GNU General Public License along with this program.  If not,
-# see <http://www.lsstcorp.org/LegalNotices/>.
-#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+__all__ = ['assembleAmplifierImage', 'assembleAmplifierRawImage',
+           'makeUpdatedDetector']
+
 import lsst.geom
 from . import copyDetector
-
-__ALL__ = ['assembleAmplifierImage', 'assembleAmplifierRawImage',
-           'updateAmpGeometryForAssembledCcd']
 
 # dict of doFlip: slice
 _SliceDict = {
@@ -53,16 +53,22 @@ def _insertPixelChunk(outView, inView, amplifier, hasArrays):
 
 
 def assembleAmplifierImage(destImage, rawImage, amplifier):
-    """!Assemble the amplifier region of an image from a raw image
+    """Assemble the amplifier region of an image from a raw image.
 
-    @param[in,out] destImage  assembled image (lsst.afw.image.Image or MaskedImage);
-        the region amplifier.getBBox() is overwritten with the assembled amplifier image
-    @param[in] rawImage  raw image (same type as destImage)
-    @param[in] amplifier  amplifier geometry: lsst.afw.cameraGeom.Amplifier with raw amplifier info
+    Parameters
+    ----------
+    destImage : `lsst.afw.image.Image` or `lsst.afw.image.MaskedImage`
+        Assembled image; the region amplifier.getBBox() is overwritten with
+        the assembled amplifier image.
+    rawImage : `lsst.afw.image.Image` or `lsst.afw.image.MaskedImage`
+        Raw image (same type as destImage).
+    amplifier : `lsst.afw.table.AmpInfoRecord`
+        Amplifier geometry, with raw amplifier info.
 
-    @throw RuntimeError if:
-    - image types do not match
-    - amplifier has no raw amplifier info
+    Raises
+    ------
+    RuntimeError
+        Raised if image types do not match or amplifier has no raw amplifier info.
     """
     if not amplifier.getHasRawInfo():
         raise RuntimeError("amplifier must contain raw amplifier info")
@@ -77,19 +83,27 @@ def assembleAmplifierImage(destImage, rawImage, amplifier):
 
 
 def assembleAmplifierRawImage(destImage, rawImage, amplifier):
-    """!Assemble the amplifier region of a raw CCD image
+    """Assemble the amplifier region of a raw CCD image.
 
-    For most cameras this is a no-op: the raw image already is an assembled CCD image.
-    However, it is useful for camera such as LSST for which each amplifier image is a separate image.
+    For most cameras this is a no-op: the raw image already is an assembled
+    CCD image.
+    However, it is useful for camera such as LSST for which each amplifier
+    image is a separate image.
 
-    @param[in,out] destImage  CCD image (lsst.afw.image.Image or MaskedImage);
-        the region amplifier.getRawAmplifier().getBBox() is overwritten with the raw amplifier image
-    @param[in] rawImage  raw image (same type as destImage)
-    @param[in] amplifier  amplifier geometry: lsst.afw.cameraGeom.Amplifier with raw amplifier info
+    Parameters
+    ----------
+    destImage : `lsst.afw.image.Image` or `lsst.afw.image.MaskedImage`
+        CCD Image; the region amplifier.getRawAmplifier().getBBox()
+        is overwritten with the raw amplifier image.
+    rawImage : `lsst.afw.image.Image` or `lsst.afw.image.MaskedImage`
+        Raw image (same type as destImage).
+    amplifier : `lsst.afw.table.AmpInfoRecord`
+        Amplifier geometry with raw amplifier info
 
-    @throw RuntimeError if:
-    - image types do not match
-    - amplifier has no raw amplifier info
+    Raises
+    ------
+    RuntimeError
+        Raised if image types do not match or amplifier has no raw amplifier info.
     """
     if not amplifier.getHasRawInfo():
         raise RuntimeError("amplifier must contain raw amplifier info")
@@ -107,7 +121,13 @@ def assembleAmplifierRawImage(destImage, rawImage, amplifier):
 
 
 def makeUpdatedDetector(ccd):
-    """Return a Detector that has had the definitions of amplifier geometry updated post assembly
+    """Return a Detector that has had the definitions of amplifier geometry
+    updated post assembly.
+
+    Parameters
+    ----------
+    ccd : `lsst.afw.image.Detector`
+        The detector to copy and update.
     """
     ampInfoCatalog = ccd.getAmpInfoCatalog().copy(deep=True)
 

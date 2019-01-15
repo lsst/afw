@@ -1,3 +1,27 @@
+# This file is part of afw.
+#
+# Developed for the LSST Data Management System.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org).
+# See the COPYRIGHT file at the top-level directory of this distribution
+# for details of code ownership.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+__all__ = ['getByKey', 'setByKey', 'HeaderMap', 'HeaderAmpMap',
+           'HeaderDetectorMap', 'DetectorBuilder']
+
 import re
 import warnings
 
@@ -11,9 +35,18 @@ import lsst.afw.geom
 
 def getByKey(metadata, key):
     """Wrapper for getting a value from a metadata object by key.
-       @param[in] metadata  metadata object to query for value
-       @param[in] key       key to use for value lookup
-       @returns value associated with key, None if key does not exist
+
+    Parameters
+    ----------
+    metadata : `lsst.daf.base.PropertySet`
+        Metadata object to query for value.
+    key : `str`
+        Key to use for value lookup.
+
+   Returns
+   -------
+   value : `object`
+       Value associated with key, None if key does not exist.
     """
     mdKeys = metadata.paramNames()
     if key in mdKeys:
@@ -24,11 +57,18 @@ def getByKey(metadata, key):
 
 def setByKey(metadata, key, value, clobber):
     """Wrapper for setting a value in a metadata object.  Deals with case
-       where the key already exists.
-       @param[in, out] metadata  metadata object ot modify in place.
-       @param[in] key       key to associate with value
-       @param[in] value     value to assign in the metadata object
-       @param[in] clobber   Clobber the value if the key already exisists?
+    where the key already exists.
+
+    Parameters
+    ----------
+    metadata : `lsst.daf.base.PropertySet`
+        Metadata object ot modify in place.
+    key : `str`
+        Key to associate with value.
+    value : `object`
+        Value to assign in the metadata object.
+    clobber : `bool`
+        Clobber the value if the key already exists?
     """
     mdKeys = metadata.paramNames()
     if key not in mdKeys or (key in mdKeys and clobber):
@@ -39,23 +79,36 @@ class HeaderMap(dict):
     """ Class to hold mapping of header cards to attributes"""
 
     def addEntry(self, keyname, attribute_name, default=None, transform=lambda x: x):
-        """Adds an entry to the registr
-           @param[in] keyname         Key used to retrieve the header record
-           @param[in] attribute_name  Name of the attribute to store the value in
-           @param[jn] default         Default velue to store if the header card is not available
-           @param[in] transform       Transform to apply to the header value before assigning it to the
-                                      attribute.
+        """Adds an entry to the registry.
+
+        Parameters
+        ----------
+        keyname : `str`
+            Key used to retrieve the header record.
+        attribute_name : `str`
+            Name of the attribute to store the value in.
+        default : `object`
+            Default value to store if the header card is not available.
+        transform : `callable`
+            Transform to apply to the header value before assigning it to the
+            attribute.
         """
         self.__setitem__(attribute_name, {'keyName': keyname,
                                           'default': default,
                                           'transform': transform})
 
     def setAttributes(self, obj, metadata, doRaise=True):
-        """Sets the attributes on the give object given a metadata object.
-           @param[in, out] obj       Object on which to operate in place
-           @param[in]      metadata  Metadata object used for applying the mapping
-           @param[in]      doRaise   Raise exceptions on calling methods on the
-                                     input object that do not exist?
+        """Sets the attributes on the given object given a metadata object.
+
+        Parameters
+        ----------
+        obj : `object`
+            Object on which to operate in place.
+        metadata : `lsst.daf.base.PropertySet`
+            Metadata object used for applying the mapping.
+        doRaise : `bool`
+            Raise exceptions on calling methods on the input object that
+            do not exist?
         """
         for key, attrDict in self.items():
             try:
@@ -100,22 +153,31 @@ class HeaderDetectorMap(HeaderMap):
 
 
 class DetectorBuilder:
+    """
+    Parameters
+    ----------
+    detectorFileName : `str`
+        FITS file containing the detector description.
+        May use [] notation to specify an extension in an MEF.
+    ampFileNameList : `list` of `str`
+        List of FITS file names to use in building the amps.
+        May contain duplicate entries if the raw data are assembled.
+    inAmpCoords : `bool`
+        True if raw data are in amp coordinates, False if raw data
+        are assembled into pseudo detector pixel arrays.
+    plateScale : `float`
+        Nominal platescale (arcsec/mm).
+    radialCoeffs : `iterable` of `float`
+        Radial distortion coefficients for a radial polynomial in
+        normalized units.
+    clobberMetadata : `bool`
+        Clobber metadata from input files if overridden in
+        _sanitizeMetadata().
+    doRaise : `bool`
+        Raise exception if not all non-defaulted keywords are defined?
+    """
     def __init__(self, detectorFileName, ampFileNameList, inAmpCoords=True, plateScale=1.,
                  radialCoeffs=(0., 1.), clobberMetadata=False, doRaise=True):
-        ''' @param[in] detectorFileName  FITS file containing the detector description.
-                                         May use [] notation to specify an extension in an MEF.
-            @param[in] ampFileNameList   List of FITS file names to use in building the amps.
-                                         May contain duplicate entries if the raw data are assembled.
-            @param[in] inAmpCoords       Boolean, True if raw data are in amp coordinates, False if raw data
-                                         are assembled into pseudo detector pixel arrays
-            @param[in] plateScale        Nominal platescale (arcsec/mm)
-            @param[in] radialCoeffs      Radial distortion coefficients for a radial polynomial in normalized
-                                         units.
-            @param[in] clobberMetadata   Clobber metadata from input files if
-                                         overridden in the _sanitizeMetadata method
-            @param[in] doRaise           Raise exception if not all non-defaulted
-                                         keywords are defined?  Default is True.
-        '''
         self.inAmpCoords = inAmpCoords
         self.defaultAmpMap = self._makeDefaultAmpMap()
         self.defaultDetectorMap = self._makeDefaultDetectorMap()
@@ -133,18 +195,29 @@ class DetectorBuilder:
         self.focalPlaneToField = self._makeRadialTransform(radialCoeffs)
 
     def _sanitizeHeaderMetadata(self, metadata, clobber):
-        """This method is called for all metadata and gives an opportunity to add/modify
-           header information for use downstream.
-           Override this method if more than the default is needed.
-           @param[in, out] metadata  Metadata to read/modify
-           @param[in]      clobber   Clobber keys that exist with default keys?
+        """This method is called for all metadata and gives an opportunity to
+        add/modify header information for use downstream.
+
+        Override this method if more than the default is needed.
+
+        Parameters
+        ----------
+        metadata : `lsst.daf.base.PropertySet`
+            Metadata to read/modify
+        clobber : `bool`
+            Clobber keys that exist with default keys?
         """
         self._defaultSanitization(metadata, clobber)
 
     def _defaultSanitization(self, metadata, clobber):
         """Does the default sanitization of the header metadata.
-           @param[in,out] metadata  Header metadata to extend/modify
-           @param[in]     clobber   Override values in existing header cards?
+
+        Parameters
+        ----------
+        metadata : `lsst.daf.base.PropertySet`
+            Header metadata to extend/modify.
+        clobber : `bool`
+            Override values in existing header cards?
         """
 
         if self.inAmpCoords:
@@ -192,8 +265,13 @@ class DetectorBuilder:
                 setByKey(metadata, 'HOSCAN', biassec, clobber)
 
     def _makeDefaultAmpMap(self):
-        """Make the default map from header information to amplifier information
-           @return  The HeaderAmpMap object containing the mapping
+        """Make the default map from header information to amplifier
+        information.
+
+        Returns
+        -------
+        headerAmMap : `HeaderAmpMap`
+             The HeaderAmpMap object containing the mapping
         """
         hMap = HeaderAmpMap()
         emptyBBox = lsst.geom.BoxI()
@@ -222,8 +300,12 @@ class DetectorBuilder:
         return hMap
 
     def _makeDefaultDetectorMap(self):
-        """Make the default map from header information to detector information
-           @return  The HeaderDetectorMap object containing the mapping
+        """Make the default map from header information to detector information.
+
+        Returns
+        -------
+        headerDetectorMap : `HeaderDetectorMap`
+             The HeaderDetectorMap object containing the mapping.
         """
         hMap = HeaderDetectorMap()
         mapList = [('CCDNAME', 'name', 'ccdName'),
@@ -254,15 +336,32 @@ class DetectorBuilder:
 
     def _makeExt(self, extArr):
         """Helper function to make an extent from an array
-           @param[in] extArr Length 2 array to use in creating the Extent object
-           @return  Extent2I constructed from the input list
+
+        Parameters
+        ----------
+        extArr : `array` of `int`
+            Length 2 array to use in creating the Extent object.
+
+        Returns
+        -------
+        extent : `lsst.geom.Extent2I`
+             Extent constructed from the input list.
         """
         return lsst.geom.ExtentI(*extArr)
 
     def _makeBbox(self, boxString):
-        """Helper funtion to make a bounding box from a string representing a FITS style bounding box
-           @param[in] boxString  String describing the bounding box
-           @return    Box2I for the bounding box
+        """Helper funtion to make a bounding box from a string representing a
+        FITS style bounding box.
+
+        Parameters
+        ----------
+        boxString : `str`
+            String describing the bounding box.
+
+        Returns
+        -------
+        bbox : `lsst.geom.Box2I`
+            The bounding box.
         """
         # strip off brackets and split into parts
         x1, x2, y1, y2 = [int(el) for el in re.split(
@@ -286,19 +385,31 @@ class DetectorBuilder:
         return self._makeBbox(boxString).getMaxY()
 
     def _makeRadialTransform(self, radialCoeffs):
-        """Helper function to get the radial transform given the radial polynomial coefficients given in
-           the constructor.
-           @param[in]  radialCoeffs  List of coefficients describing a polynomial radial distortion in
-                                     normalized units.
-           @return     Transform object describing the radial distortion
+        """Helper function to get the radial transform given the radial
+        polynomial coefficients given in the constructor.
+
+        Parameters
+        ----------
+        radialCoeffs : `iterable` of `float`
+            List of coefficients describing a polynomial radial distortion in
+            normalized units. The first value must be 0.
+
+        Returns
+        -------
+        transform : `lsst.afw.geom.TransformPoint2ToPoint2`
+            Transform object describing the radial distortion
         """
         pScaleRad = lsst.geom.arcsecToRad(self.plateScale)
         return lsst.afw.geom.makeRadialTransform([el/pScaleRad for el in radialCoeffs])
 
     def buildDetector(self):
-        """Take all the information and build a Detector object.  The Detector object is necessary for doing
-        things like assembly.
-        @return  Detector object
+        """Take all the information and build a Detector object.
+        The Detector object is necessary for doing things like assembly.
+
+        Returns
+        -------
+        detector : `lsst.afw.cameraGeom.Detector`
+             The detector.
         """
         if self.detector is not None:
             return self.detector
@@ -318,18 +429,34 @@ class DetectorBuilder:
         return self.detector
 
     def makeCalib(self):
-        """PLaceholder for subclasses to implement construction of a calib to associate with the exposure.
-        @return empty afwImage.Calib object
+        """Placeholder for subclasses to implement construction of a calib to
+        associate with the exposure.
+
+        Returns
+        -------
+        calibration : `lsst.afw.image.Calib`
+            Empty calibration
         """
         return afwImage.Calib()
 
     def makeExposure(self, im, mask=None, variance=None):
-        """Method for constructing an exposure object from an image and the information contained in this
-           class to construct the Detector and Calib objects.
-           @param[in]  im        Image used to construct the exposure
-           @param[in]  mask      Optional mask plane as a <askU
-           @param[in]  variance  Optional variance plance as an image of the same type as im
-           @param[out] Exposure object
+        """Method for constructing an exposure object from an image and the
+        information contained in this class to construct the Detector and
+        Calib objects.
+
+        Parameters
+        ----------
+        im : `lsst.afw.image.Image`
+            Image used to construct the exposure.
+        mask : `lsst.afw.image.MaskU`
+            Optional mask plane.
+        variance : `lsst.afw.image.Image`
+            Optional variance plance as an image of the same type as im.
+
+        Returns
+        -------
+        exposure : `lsst.afw.image.Exposure`
+            Constructed exposure (specific type will match that of ``im``).
         """
         if mask is None:
             mask = afwImage.Mask(im.getDimensions())
