@@ -134,7 +134,7 @@ def plotFocalPlane(camera, fieldSizeDeg_x=0, fieldSizeDeg_y=None, dx=0.1, dy=0.1
     pcolors = []
 
     # compute focal plane positions corresponding to field angles field_gridx, field_gridy
-    posFieldAngleList = [lsst.geom.Point2D(x.asRadians(), y.asRadians())
+    posFieldAngleList = [lsst.geom.Point2D(x*lsst.geom.radians, y*lsst.geom.radians)
                          for x, y in zip(field_gridx, field_gridy)]
     posFocalPlaneList = camera.transform(posFieldAngleList, FIELD_ANGLE, FOCAL_PLANE)
     for posFocalPlane in posFocalPlaneList:
@@ -215,7 +215,7 @@ def makeImageFromAmp(amp, imValue=None, imageFactory=afwImage.ImageU, markSize=1
     dbbox = amp.getRawDataBBox()
     img = imageFactory(bbox)
     if imValue is None:
-        img.set(scaleGain(amp.getGain()))
+        img.set(int(scaleGain(amp.getGain())))
     else:
         img.set(imValue)
     # Set the first pixel read to a different value
@@ -699,7 +699,7 @@ def showAmp(amp, imageSource=FakeImageDataSource(isTrimmed=False), display=None,
         Type of image to display (only used if ampImage is `None`).
     """
     if not display:
-        display = _getDisplayFromDisplayOrFrame()
+        display = _getDisplayFromDisplayOrFrame(display)
 
     ampImage = imageSource.getAmpImage(amp, imageFactory=imageFactory)
     ampImSize = ampImage.getDimensions()
