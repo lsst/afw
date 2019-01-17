@@ -23,10 +23,9 @@
 Tests for matching SourceSets
 
 Run with:
-   python SourceMatch.py
+   python test_sourceMatch.py
 or
-   python
-   >>> import SourceMatch; SourceMatch.run()
+   pytest test_sourceMatch.py
 """
 import os
 import re

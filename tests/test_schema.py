@@ -23,10 +23,9 @@
 Tests for table.Schema
 
 Run with:
-   ./testSchema.py
+   python test_schema.py
 or
-   python
-   >>> import testSchema; testSchema.run()
+   pytest test_schema.py
 """
 
 import unittest

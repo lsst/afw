@@ -23,10 +23,9 @@
 Tests for Astropy views into afw.table Catalogs
 
 Run with:
-   ./testAstropyTableViews.py
+   python test_astropyTableViews.py
 or
-   python
-   >>> import testAstropyTableViews; testAstropyTableViews.run()
+   pytest test_astropyTableViews.py
 """
 import unittest
 import operator

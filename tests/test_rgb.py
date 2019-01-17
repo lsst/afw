@@ -23,10 +23,9 @@
 Tests for RGB Images
 
 Run with:
-   ./rgb.py
+   python test_rgb.py
 or
-   python
-   >>> import rgb; rgb.run()
+   pytest test_rgb.py
 """
 import os
 import math

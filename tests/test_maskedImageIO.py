@@ -23,10 +23,9 @@
 Tests for MaskedImages
 
 Run with:
-   python MaskedImageIO.py
+   python test_maskedImageIO.py
 or
-   python
-   >>> import MaskedImageIO; MaskedImageIO.run()
+   pytest test_maskedImageIO.py
 """
 
 import contextlib

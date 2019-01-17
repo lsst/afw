@@ -23,10 +23,9 @@
 Tests for math.ChebyshevBoundedField
 
 Run with:
-   ./testChebyshevBoundedField.py
+   python test_chebyshevBoundedField.py
 or
-   python
-   >>> import testSchema; testSchema.run()
+   pytest test_chebyshevBoundedField.py
 """
 
 import unittest

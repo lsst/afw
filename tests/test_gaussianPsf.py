@@ -23,10 +23,9 @@
 Tests for detection.GaussianPsf
 
 Run with:
-   ./testGaussianPsf.py
+   python test_gaussianPsf.py
 or
-   python
-   >>> import testGaussianPsf; testGaussianPsf.run()
+   pytest test_gaussianPsf.py
 """
 
 import unittest

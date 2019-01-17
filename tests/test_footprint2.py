@@ -23,10 +23,9 @@
 Tests for Footprints, and FootprintSets
 
 Run with:
-   footprint2.py
+   python test_footprint2.py
 or
-   python
-   >>> import footprint2; footprint2.run()
+   pytest test_footprint2.py
 """
 
 import unittest

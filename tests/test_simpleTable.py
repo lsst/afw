@@ -23,10 +23,9 @@
 Tests for table.SimpleTable
 
 Run with:
-   ./testSimpleTable.py
+   python test_simpleTable.py
 or
-   python
-   >>> import testSimpleTable; testSimpleTable.run()
+   pytest test_simpleTable.py
 """
 import os.path
 import unittest

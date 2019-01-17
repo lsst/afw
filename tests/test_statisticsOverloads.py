@@ -23,10 +23,9 @@
 Tests for Statistics
 
 Run with:
-   ./statisticsOverloads.py
+   python test_statisticsOverloads.py
 or
-   python
-   >>> import statisticsOverloads; statisticsOverloads.run()
+   pytest test_statisticsOverloads.py
 """
 
 import unittest

@@ -23,10 +23,9 @@
 Tests for Images
 
 Run with:
-   ./Image.py
+   python test_image.py
 or
-   python
-   >>> import Image; Image.run()
+   pytest test_image.py
 """
 
 import itertools

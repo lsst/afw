@@ -23,10 +23,9 @@
 Tests for statisticsMasked
 
 Run with:
-   ./statisticsMasked.py
+   python test_statisticsMasked.py
 or
-   python
-   >>> import statisticsMasked; statisticsMasked.run()
+   pytest test_statisticsMasked.py
 """
 
 import unittest

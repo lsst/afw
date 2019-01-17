@@ -23,10 +23,9 @@
 Tests for lsst.afw.table.ExposureTable
 
 Run with:
-   python testExposureTable.py
+   python test_exposureTable.py
 or
-   python
-   >>> import testExposureTable; testExposureTable.run()
+   pytest test_exposureTable.py
 """
 
 import os.path

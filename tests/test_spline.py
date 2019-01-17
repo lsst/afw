@@ -23,10 +23,9 @@
 Tests for Splines
 
 Run with:
-   ./spline.py
+   python test_spline.py
 or
-   python
-   >>> import spline; spline.run()
+   pytest test_spline.py
 """
 import math
 import unittest

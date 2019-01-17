@@ -23,10 +23,9 @@
 Tests for HeavyFootprints
 
 Run with:
-   heavyFootprint.py
+   python test_heavyFootprint.py
 or
-   python
-   >>> import heavyFootprint; heavyFootprint.run()
+   pytest test_heavyFootprint.py
 """
 
 import os

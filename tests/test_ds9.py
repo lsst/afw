@@ -23,11 +23,9 @@
 Tests for the legacy display code in ds9.py (iff lsst.display.ds9 is setup)
 
 Run with:
-   ds9.py
+   python test_ds9.py
 or
-   python
-   >>> import ds9
-   >>> ds9.run()
+   pytest test_ds9.py
 """
 import unittest
 

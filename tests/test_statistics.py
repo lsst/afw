@@ -23,10 +23,9 @@
 Tests for Statistics
 
 Run with:
-   ./statistics.py
+   python test_statistics.py
 or
-   python
-   >>> import statistics; statistics.run()
+   pytest test_statistics.py
 """
 
 import math

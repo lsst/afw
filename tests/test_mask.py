@@ -23,10 +23,9 @@
 Tests for Masks
 
 Run with:
-   python Mask.py
+   python test_mask.py
 or
-   python
-   >>> import Mask; Mask.run()
+   pytest test_mask.py
 """
 import os.path
 import unittest

@@ -23,10 +23,9 @@
 Tests for PCA on Images
 
 Run with:
-   python imagePca.py
+   python test_imagePca.py
 or
-   python
-   >>> import imagePca; imagePca.run()
+   pytest test_imagePca.py
 """
 
 import unittest

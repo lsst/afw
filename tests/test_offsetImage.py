@@ -23,10 +23,9 @@
 Tests for offsetting images in (dx, dy)
 
 Run with:
-   python offsetImage.py
+   python test_offsetImage.py
 or
-   python
-   >>> import offsetImage; offsetImage.run()
+   pytest test_offsetImage.py
 """
 import math
 import unittest

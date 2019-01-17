@@ -23,10 +23,10 @@
 Tests for the lsst.afw.math.Random Python wrapper
 
 Run with:
-   python Random_1.py
+   python test_random1.py
 or
-   python
-   >>> import unittest; T=load("Random_1"); unittest.TextTestRunner(verbosity=1).run(T.suite())
+   pytest test_random1.py
+
 """
 
 import sys

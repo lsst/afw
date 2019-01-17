@@ -23,12 +23,10 @@
 Tests for aliases in table.schema
 
 Run with:
-   ./testTableAliases.py
+   python test_tableAliases.py
 or
-   python
-   >>> import testTableAliases; testTableAliases.run()
+   pytest test_tableAliases.py
 """
-
 import unittest
 
 import numpy as np

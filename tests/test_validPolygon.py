@@ -23,10 +23,9 @@
 Tests for ValidPolygon
 
 Run with:
-   ./testValidPolygon.py
+   python test_validPolygon.py
 or
-   python
-   >>> import testValidPolygonTestCase; testPolygonTestCase.run()
+   pytest test_validPolygon.py
 """
 import os
 import unittest

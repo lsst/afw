@@ -23,10 +23,9 @@
 Tests for SpatialCell
 
 Run with:
-   python SpatialCell.py
+   python test_spatialCell.py
 or
-   python
-   >>> import SpatialCell; SpatialCell.run()
+   pytest test_spatialCell.py
 """
 import unittest
 

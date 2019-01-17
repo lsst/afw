@@ -23,10 +23,9 @@
 Tests for MaskedImages
 
 Run with:
-   python MaskedImage.py
+   python test_maskedImage.py
 or
-   python
-   >>> import MaskedImage; MaskedImage.run()
+   pytest test_maskedImage.py
 """
 
 import itertools

@@ -19,15 +19,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-# -*- python -*-
 """
 Tests for statisticsStack row/column statistics
 
 Run with:
-   ./rowColumnStats.py
+   python test_rowColumnStats.py
 or
-   python
-   >>> import rowColumnStats; rowColumnStats.run()
+   pytest test_rowColumnStats.py
 """
 import unittest
 

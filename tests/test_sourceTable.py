@@ -23,10 +23,9 @@
 Tests for table.SourceTable
 
 Run with:
-   ./testSourceTable.py
+   python test_sourceTable.py
 or
-   python
-   >>> import testSourceTable; testSourceTable.run()
+   pytest test_sourceTable.py
 """
 import os
 import unittest

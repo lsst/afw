@@ -23,10 +23,9 @@
 Tests for math.TransformBoundedField
 
 Run with:
-   ./testTransformBoundedField.py
+   python test_transformBoundedField.py
 or
-   python
-   >>> import testSchema; testSchema.run()
+   pytest test_transformBoundedField.py
 """
 
 import unittest

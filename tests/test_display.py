@@ -23,12 +23,7 @@
 Tests for displaying devices
 
 Run with:
-   display.py [backend]
-or
-   python
-   >>> import display
-   >>> display.backend = "ds9"   # optional
-   >>> display.run()
+   python test_display.py [backend]
 """
 import os
 import unittest

@@ -23,10 +23,9 @@
 Tests for table FunctorKeys
 
 Run with:
-   ./testFunctorKeys.py
+   python test_functorKeys.py
 or
-   python
-   >>> import testFunctorKeys; testFunctorKeys.run()
+   pytest test_functorKeys.py
 """
 import unittest
 

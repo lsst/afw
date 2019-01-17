@@ -24,10 +24,9 @@
 Tests for image.ApCorrMap
 
 Run with:
-   ./testApCorrMap.py
+   python test_apCorrMap.py
 or
-   python
-   >>> import testSchema; testSchema.run()
+   pytest test_apCorrMap.py
 """
 import collections
 import os

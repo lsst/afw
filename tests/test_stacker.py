@@ -19,15 +19,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-# -*- python -*-
 """
 Tests for Stack
 
 Run with:
-   ./Stacker.py
+   python test_stacker.py
 or
-   python
-   >>> import Stacker; Stacker.run()
+   pytest test_stacker.py
 """
 import unittest
 from functools import reduce
