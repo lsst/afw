@@ -34,6 +34,7 @@ class MultiMatch:
         self.idKey = schema.find(idField).key
         self.dataIdKeys = {}
         outSchema = self.mapper.editOutputSchema()
+        outSchema.setAliasMap(self.mapper.getInputSchema().getAliasMap())
         self.objectKey = outSchema.addField(
             "object", type=numpy.int64, doc="Unique ID for joined sources")
         for name, dataType in dataIdFormat.items():
