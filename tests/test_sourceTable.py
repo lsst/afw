@@ -259,6 +259,13 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.assertFloatsEqual(cols2["c_yy"], cols2.getIyy())
         self.assertFloatsEqual(cols2["c_xy"], cols2.getIxy())
 
+        # Trying to access slots which have been removed should raise.
+        self.catalog.table.schema.getAliasMap().erase("slot_Centroid")
+        self.catalog.table.schema.getAliasMap().erase("slot_Shape")
+        for quantity in ["X", "Y", "Ixx", "Iyy", "Ixy"]:
+            with self.assertRaises(lsst.pex.exceptions.LogicError):
+                getattr(self.catalog, f"get{quantity}")()
+
     def testForwarding(self):
         """Verify that Catalog forwards unknown methods to its table and/or columns."""
         self.table.definePsfFlux("a")
@@ -639,7 +646,8 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
                                  type=np.float64, doc="flux uncertainty")
         flagKey = schema.addField("%s_flag" % (baseName,),
                                   type="Flag", doc="flux flag")
-        table = lsst.afw.table.SourceTable.make(schema)
+        catalog = lsst.afw.table.SourceCatalog(schema)
+        table = catalog.table
 
         # Initially, the slot is undefined.
         self.assertFalse(getattr(table, "get%sSlot" % (slotName,))().isValid())
@@ -652,7 +660,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(getattr(table, "get%sSlot" % (slotName,))().getFlagKey(), flagKey)
 
         # We should be able to retrieve arbitrary values set in records.
-        record = table.makeRecord()
+        record = catalog.addNew()
         instFlux, err, flag = 10.0, 1.0, False
         record.set(instFluxKey, instFlux)
         record.set(errKey, err)
@@ -662,12 +670,23 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(getattr(record, "get%sErr" % (instFluxName,))(), err)
         self.assertEqual(getattr(record, "get%sFlag" % (slotName,))(), flag)
 
+        # Should also be able to retrieve them as columns from the catalog
+        self.assertEqual(getattr(catalog, f"get{instFluxName}")()[0], instFlux)
+        self.assertEqual(getattr(catalog, f"get{instFluxName}Err")()[0], err)
+
         # And we should be able to delete the slot, breaking the mapping.
         table.schema.getAliasMap().erase("slot_%s" % (slotName,))
         self.assertFalse(getattr(table, "get%sSlot" % (slotName,))().isValid())
         self.assertNotEqual(getattr(table, "get%sSlot" % (slotName,))().getMeasKey(), instFluxKey)
         self.assertNotEqual(getattr(table, "get%sSlot" % (slotName,))().getErrKey(), errKey)
         self.assertNotEqual(getattr(table, "get%sSlot" % (slotName,))().getFlagKey(), flagKey)
+
+        # When the slot has been deleted, attempting to access it should
+        # throw a LogicError.
+        with self.assertRaises(lsst.pex.exceptions.LogicError):
+            getattr(catalog, f"get{instFluxName}")()
+        with self.assertRaises(lsst.pex.exceptions.LogicError):
+            getattr(catalog, f"get{instFluxName}Err")()
 
     def testFluxSlots(self):
         """Check that all the expected flux slots are present & correct."""
