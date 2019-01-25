@@ -69,6 +69,11 @@ std::shared_ptr<BaseTable> BaseColumnView::getTable() const { return _impl->tabl
 
 template <typename T>
 typename ndarray::ArrayRef<T, 1> const BaseColumnView::operator[](Key<T> const &key) const {
+    if (!key.isValid()) {
+        throw LSST_EXCEPT(
+            pex::exceptions::LogicError,
+            "Key is not valid (if this is a SourceCatalog, make sure slot aliases have been set up).");
+    }
     return ndarray::external(reinterpret_cast<T *>(reinterpret_cast<char *>(_impl->buf) + key.getOffset()),
                              ndarray::makeVector(_impl->recordCount),
                              ndarray::makeVector(int(_impl->table->getSchema().getRecordSize() / sizeof(T))),
@@ -77,6 +82,11 @@ typename ndarray::ArrayRef<T, 1> const BaseColumnView::operator[](Key<T> const &
 
 template <typename T>
 typename ndarray::ArrayRef<T, 2, 1> const BaseColumnView::operator[](Key<Array<T> > const &key) const {
+    if (!key.isValid()) {
+        throw LSST_EXCEPT(
+            pex::exceptions::LogicError,
+            "Key is not valid (if this is a SourceCatalog, make sure slot aliases have been set up).");
+    }
     if (key.isVariableLength()) {
         throw LSST_EXCEPT(pex::exceptions::LogicError, "Cannot get columns for variable-length array fields");
     }
@@ -89,6 +99,11 @@ typename ndarray::ArrayRef<T, 2, 1> const BaseColumnView::operator[](Key<Array<T
 
 ndarray::result_of::vectorize<detail::FlagExtractor, ndarray::Array<Field<Flag>::Element const, 1> >::type
         BaseColumnView::operator[](Key<Flag> const &key) const {
+    if (!key.isValid()) {
+        throw LSST_EXCEPT(
+            pex::exceptions::LogicError,
+            "Key is not valid (if this is a SourceCatalog, make sure slot aliases have been set up).");
+    }
     return ndarray::vectorize(detail::FlagExtractor(key),
                               ndarray::Array<Field<Flag>::Element const, 1>(ndarray::external(
                                       reinterpret_cast<Field<Flag>::Element *>(
