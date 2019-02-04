@@ -68,7 +68,7 @@ public:
         if (!key.isValid()) {
             throw LSST_EXCEPT(
                     pex::exceptions::LogicError,
-                    "Key is not valid (if this is a SourceRecord, make sure slot aliases have been setup).");
+                    "Key is not valid (if this is a SourceRecord, make sure slot aliases have been set up).");
         }
         return reinterpret_cast<typename Field<T>::Element*>(reinterpret_cast<char*>(_data) +
                                                              key.getOffset());
@@ -86,7 +86,7 @@ public:
         if (!key.isValid()) {
             throw LSST_EXCEPT(
                     pex::exceptions::LogicError,
-                    "Key is not valid (if this is a SourceRecord, make sure slot aliases have been setup).");
+                    "Key is not valid (if this is a SourceRecord, make sure slot aliases have been set up).");
         }
         return reinterpret_cast<typename Field<T>::Element const*>(reinterpret_cast<char const*>(_data) +
                                                                    key.getOffset());

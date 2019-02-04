@@ -271,6 +271,15 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
             self.assertEqual(catalog[i].get(kI), 4)
             self.assertEqual(catalog[i].get(kD), f3v[i])
 
+        # Accessing an invalid key should raise.
+        for keyType in ["Angle", "ArrayB", "ArrayD", "ArrayF", "ArrayI",
+                        "ArrayU", "B", "D", "F", "Flag", "I", "L", "U"]:
+            # Default-constructed key is invalid
+            invalidKey = getattr(lsst.afw.table, f"Key{keyType}")()
+            self.assertFalse(invalidKey.isValid())
+            with self.assertRaises(lsst.pex.exceptions.LogicError):
+                catalog.get(invalidKey)
+
     def testUnsignedFitsPersistence(self):
         """Test FITS round-trip of unsigned short ints, since FITS handles unsigned columns differently
         from signed columns
