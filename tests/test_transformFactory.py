@@ -259,16 +259,16 @@ class TransformFactoryTestSuite(TransformTestBaseClass):
         self.checkGenericTransform(affineFactory, affineConfig, check)
 
     def checkFullAffine(self, transform, offset, matrix):
-            for fromPoint in self.point2DList():
-                toPoint = transform.applyForward(fromPoint)
-                predToPoint = lsst.geom.Point2D(
-                    matrix[0] * fromPoint[0] +
-                    matrix[1] * fromPoint[1],
-                    matrix[2] * fromPoint[0] +
-                    matrix[3] * fromPoint[1],
-                )
-                predToPoint = predToPoint + offset
-                self.assertPairsAlmostEqual(toPoint, predToPoint)
+        for fromPoint in self.point2DList():
+            toPoint = transform.applyForward(fromPoint)
+            predToPoint = lsst.geom.Point2D(
+                matrix[0] * fromPoint[0] +
+                matrix[1] * fromPoint[1],
+                matrix[2] * fromPoint[0] +
+                matrix[3] * fromPoint[1],
+            )
+            predToPoint = predToPoint + offset
+            self.assertPairsAlmostEqual(toPoint, predToPoint)
 
     def testRadial(self):
         """Test radial = radial Transform
