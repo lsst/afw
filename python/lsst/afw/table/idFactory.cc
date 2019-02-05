@@ -41,6 +41,7 @@ PYBIND11_MODULE(idFactory, mod) {
     cls.def("clone", &IdFactory::clone);
     cls.def_static("makeSimple", IdFactory::makeSimple);
     cls.def_static("makeSource", IdFactory::makeSource, "expId"_a, "reserved"_a);
+    cls.def_static("computeReservedFromMaxBits", IdFactory::computeReservedFromMaxBits, "maxBits"_a);
 }
 }
 }
