@@ -813,10 +813,10 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
         # check invalid # of inputs against valid and invalid # of outputs
         for badNIn, nOut in itertools.product(self.badNAxes[fromName],
                                               self.goodNAxes[toName] + self.badNAxes[toName]):
-                badPolyMap = makeTwoWayPolyMap(badNIn, nOut)
-                msg = "{}, badNIn={}, nOut={}".format(baseMsg, nIn, nOut)
-                with self.assertRaises(InvalidParameterError, msg=msg):
-                    TransformClass(badPolyMap)
+            badPolyMap = makeTwoWayPolyMap(badNIn, nOut)
+            msg = "{}, badNIn={}, nOut={}".format(baseMsg, nIn, nOut)
+            with self.assertRaises(InvalidParameterError, msg=msg):
+                TransformClass(badPolyMap)
 
     def checkTransformFromFrameSet(self, fromName, toName):
         """Check Transform_<fromName>_<toName> using the FrameSet constructor
