@@ -450,7 +450,7 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(photoCalib.getCalibrationMean(), mean)
         self.assertEqual(photoCalib.getCalibrationErr(), err)
 
-    def testCalibEquality(self):
+    def testPhotoCalibEquality(self):
         photoCalib1 = lsst.afw.image.PhotoCalib(self.linearXCalibration, 0.5)
         photoCalib2 = lsst.afw.image.PhotoCalib(self.linearXCalibration, 0.5)
         photoCalib3 = lsst.afw.image.PhotoCalib(5, 0.5)
