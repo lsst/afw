@@ -1,4 +1,4 @@
-.. :py:currentmodule:: lsst.afw.image
+.. py:currentmodule:: lsst.afw.image
 
 .. _lsst.afw.image:
 
@@ -19,9 +19,10 @@ Using lsst.afw.image
    indexing-conventions
    exposure-fits-metadata
 
-.. Add subsections with toctree to individual topic pages.
+.. _lsst.afw.image-contributing:
 
-Python API reference
-====================
+Contributing
+============
 
-.. .. automodapi:: lsst.afw.image
+``lsst.afw.image`` is developed at https://github.com/lsst/afw.
+You can find Jira issues for this module under the `afw <https://jira.lsstcorp.org/issues/?jql=project%20%3D%20DM%20AND%20component%20%3D%20afw>`_ component.
