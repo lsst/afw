@@ -48,6 +48,17 @@ public:
      */
     static std::shared_ptr<IdFactory> makeSource(RecordId expId, int reserved);
 
+    /**
+     * Return the number to pass as the 'reserved' argument to makeSource for
+     * an exposure ID with the given maximum number of bits.
+     *
+     * @param[in]  maxBits  The maximum number of bits an exposure ID can have.
+     */
+    static int computeReservedFromMaxBits(int maxBits) {
+        // Subtract one for signed integers to avoid the sign bit.
+        return sizeof(RecordId)*8 - std::is_signed<RecordId>::value - maxBits;
+    }
+
     IdFactory() = default;
     IdFactory(IdFactory const &) = default;
     IdFactory(IdFactory &&) = default;
