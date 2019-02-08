@@ -6,8 +6,7 @@
 lsst.afw.math
 #############
 
-Mathematical functions such as convolution and image statistics
-
+``lsst.afw.math`` provides mathematical functions such as convolution and image statistics.
 Key features:
 
 * Function objects `FunctionF` and `FunctionD`
@@ -37,13 +36,15 @@ Using lsst.afw.math
 Contributing
 ============
 
-``lsst.afw`` is developed at https://github.com/lsst/afw.
+``lsst.afw.math`` is developed at https://github.com/lsst/afw.
 You can find Jira issues for this module under the `afw <https://jira.lsstcorp.org/issues/?jql=project%20%3D%20DM%20AND%20component%20%3D%20afw>`_ component.
 
 .. If there are topics related to developing this module (rather than using it), link to this from a toctree placed here.
 
 .. .. toctree::
 ..    :maxdepth: 1
+
+.. _lsst.afw.math-pyapi:
 
 Python API reference
 ====================
