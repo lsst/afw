@@ -197,6 +197,12 @@ public:
     /// Set the exposure's transmission curve.
     void setTransmissionCurve(std::shared_ptr<TransmissionCurve const> tc) { _transmissionCurve = tc; }
 
+    /// Get the version of FITS serialization that this ExposureInfo understands.
+    static int getFitsSerializationVersion();
+
+    /// Get the version of FITS serialization version info name
+    static std::string const& getFitsSerializationVersionName();
+
     /**
      *  Construct an ExposureInfo from its various components.
      *

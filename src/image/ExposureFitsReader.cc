@@ -44,6 +44,20 @@ class ExposureFitsReader::MetadataReader {
 public:
     MetadataReader(std::shared_ptr<daf::base::PropertyList> primaryMetadata,
                    std::shared_ptr<daf::base::PropertyList> imageMetadata, lsst::geom::Point2I const& xy0) {
+        int version;
+        auto versionName = ExposureInfo::getFitsSerializationVersionName();
+        if (primaryMetadata->exists(versionName)) {
+            version = primaryMetadata->getAsInt(versionName);
+            primaryMetadata->remove(versionName);
+        } else {
+            version = 0;  // unversioned files are implicitly version 0
+        }
+        if (version > ExposureInfo::getFitsSerializationVersion()) {
+            throw LSST_EXCEPT(pex::exceptions::TypeError,
+                              str(boost::format("Cannot read Exposure FITS version >= %i") %
+                                  ExposureInfo::getFitsSerializationVersion()));
+        }
+
         // Try to read WCS from image metadata, and if found, strip the keywords used
         try {
             wcs = afw::geom::makeSkyWcs(*imageMetadata, true);
