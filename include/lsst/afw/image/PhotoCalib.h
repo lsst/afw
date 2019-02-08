@@ -38,6 +38,7 @@
 #include "lsst/afw/table/Source.h"
 #include "lsst/afw/table/io/Persistable.h"
 #include "lsst/afw/image/MaskedImage.h"
+#include "lsst/daf/base/PropertyList.h"
 #include "lsst/pex/exceptions/Exception.h"
 #include "lsst/utils/Magnitude.h"
 
@@ -487,6 +488,19 @@ private:
                                   std::string const &instFluxField,
                                   ndarray::Array<double, 2, 2> result) const;
 };
+
+/**
+ * Construct a PhotoCalib from FITS FLUXMAG0/FLUXMAG0ERR keywords.
+ *
+ * This provides backwards compatibility with the obsoleted Calib object that PhotoCalib replaced.
+ * It should not be used outside of reading old Exposures written before PhotoCalib existed.
+ *
+ * @param metadata FITS header metadata containing FLUXMAG0 and FLUXMAG0ERR keys.
+ * @param strip Strip FLUXMAG0 and FLUXMAG0ERR from `metadata`?
+ *
+ * @returns Pointer to the constructed PhotoCalib, or nullptr if FLUXMAG0 is not in the metadata.
+ */
+std::shared_ptr<PhotoCalib> makePhotoCalib(daf::base::PropertySet &metadata, bool strip = false);
 
 }  // namespace image
 }  // namespace afw

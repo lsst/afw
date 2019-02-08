@@ -394,6 +394,28 @@ void PhotoCalib::instFluxToMagnitudeArray(afw::table::SourceCatalog const &sourc
     }
 }
 
+std::shared_ptr<PhotoCalib> makePhotoCalib(daf::base::PropertySet &metadata, bool strip) {
+    double calibration = 0.0, calibrationErr = 0.0;
+
+    auto key = "FLUXMAG0";
+    if (metadata.exists(key)) {
+        double fluxMag0 = metadata.getAsDouble(key);
+        if (strip) metadata.remove(key);
+
+        calibration = utils::referenceFlux / fluxMag0;
+        key = "FLUXMAG0ERR";
+        if (metadata.exists(key)) {
+            double fluxMag0Err = metadata.getAsDouble(key);
+            calibrationErr = utils::referenceFlux * fluxMag0Err / std::pow(fluxMag0, 2);
+            if (strip) metadata.remove(key);
+        }
+    } else {
+        return nullptr;
+    }
+
+    return std::make_shared<PhotoCalib>(calibration, calibrationErr);
+}
+
 }  // namespace image
 }  // namespace afw
 }  // namespace lsst

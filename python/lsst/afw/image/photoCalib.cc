@@ -156,6 +156,9 @@ PYBIND11_MODULE(photoCalib, mod) {
     cls.def("__eq__", &PhotoCalib::operator==, py::is_operator());
     cls.def("__ne__", &PhotoCalib::operator!=, py::is_operator());
 
+    /* Utility functions */
+    mod.def("makePhotoCalib", makePhotoCalib, "metadata"_a, "strip"_a = false);
+
     utils::python::addOutputOp(cls, "__str__");
     cls.def("__repr__", [](PhotoCalib const &self) {
         std::ostringstream os;
