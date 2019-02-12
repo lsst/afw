@@ -816,6 +816,50 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         return [corner for corner in cutoutBox.getCorners() if corner in imageBox]
 
 
+class ExposureNoAfwdataTestCase(lsst.utils.tests.TestCase):
+    """Tests of Exposure that don't require afwdata.
+
+    These tests use the trivial exposures written to ``afw/tests/data``.
+    """
+    def setUp(self):
+        self.dataDir = os.path.join(os.path.split(__file__)[0], "data")
+
+        # Check the values below against what was written by comparing with
+        # the code in `afw/tests/data/makeTestExposure.py`
+        nx = ny = 10
+        image = afwImage.ImageF(np.arange(nx*ny, dtype='f').reshape(nx, ny))
+        variance = afwImage.ImageF(np.ones((nx, ny), dtype='f'))
+        mask = afwImage.MaskX(nx, ny)
+        mask.array[5, 5] = 5
+        self.maskedImage = afwImage.MaskedImageF(image, mask, variance)
+
+    def testReadUnversioned(self):
+        """Test that we can read an unversioned (implicit verison 0) file.
+        """
+        filename = os.path.join(self.dataDir, "exposure-noversion.fits")
+        exposure = afwImage.ExposureF.readFits(filename)
+
+        self.assertMaskedImagesEqual(exposure.maskedImage, self.maskedImage)
+
+        calib = afwImage.Calib()
+        calib.setFluxMag0(1e6, 2e4)
+        self.assertEqual(exposure.getCalib(), calib)
+
+    def testReadVersion0(self):
+        """Test that we can read an version 0 file.
+        This file should be identical to the unversioned one, except that it
+        is marked as ExposureInfo version 0 in the header.
+        """
+        filename = os.path.join(self.dataDir, "exposure-version-0.fits")
+        exposure = afwImage.ExposureF.readFits(filename)
+
+        self.assertMaskedImagesEqual(exposure.maskedImage, self.maskedImage)
+
+        calib = afwImage.Calib()
+        calib.setFluxMag0(1e6, 2e4)
+        self.assertEqual(exposure.getCalib(), calib)
+
+
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
     pass
 

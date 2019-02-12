@@ -30,22 +30,34 @@
 #include "lsst/afw/image/TransmissionCurve.h"
 #include "lsst/afw/image/ExposureFitsReader.h"
 
-namespace lsst { namespace afw { namespace image {
+namespace lsst {
+namespace afw {
+namespace image {
 
 namespace {
 
 LOG_LOGGER _log = LOG_GET("afw.image.fits.ExposureFitsReader");
 
-}  // anonymous
+}  // namespace
 
 class ExposureFitsReader::MetadataReader {
 public:
+    MetadataReader(std::shared_ptr<daf::base::PropertyList> primaryMetadata,
+                   std::shared_ptr<daf::base::PropertyList> imageMetadata, lsst::geom::Point2I const& xy0) {
+        int version;
+        auto versionName = ExposureInfo::getFitsSerializationVersionName();
+        if (primaryMetadata->exists(versionName)) {
+            version = primaryMetadata->getAsInt(versionName);
+            primaryMetadata->remove(versionName);
+        } else {
+            version = 0;  // unversioned files are implicitly version 0
+        }
+        if (version > ExposureInfo::getFitsSerializationVersion()) {
+            throw LSST_EXCEPT(pex::exceptions::TypeError,
+                              str(boost::format("Cannot read Exposure FITS version >= %i") %
+                                  ExposureInfo::getFitsSerializationVersion()));
+        }
 
-    MetadataReader(
-        std::shared_ptr<daf::base::PropertyList> primaryMetadata,
-        std::shared_ptr<daf::base::PropertyList> imageMetadata,
-        lsst::geom::Point2I const & xy0
-    ) {
         // Try to read WCS from image metadata, and if found, strip the keywords used
         try {
             wcs = afw::geom::makeSkyWcs(*imageMetadata, true);
@@ -98,12 +110,10 @@ public:
     std::shared_ptr<VisitInfo> visitInfo;
 };
 
-
-class ExposureFitsReader::ArchiveReader{
+class ExposureFitsReader::ArchiveReader {
 public:
-
     enum Component {
-        PSF=0,
+        PSF = 0,
         WCS,
         COADD_INPUTS,
         AP_CORR_MAP,
@@ -113,7 +123,7 @@ public:
         N_ARCHIVE_COMPONENTS
     };
 
-    explicit ArchiveReader(daf::base::PropertyList & metadata) {
+    explicit ArchiveReader(daf::base::PropertyList& metadata) {
         auto popInt = [&metadata](std::string const& name) {
             // The default of zero will cause archive.get to return a
             // null/empty pointer, just as if a null/empty pointer was
@@ -145,7 +155,7 @@ public:
     }
 
     template <typename T>
-    std::shared_ptr<T> readComponent(afw::fits::Fits * fitsFile, Component c) {
+    std::shared_ptr<T> readComponent(afw::fits::Fits* fitsFile, Component c) {
         if (!_ensureLoaded(fitsFile)) {
             return nullptr;
         }
@@ -153,8 +163,7 @@ public:
     }
 
 private:
-
-    bool _ensureLoaded(afw::fits::Fits * fitsFile) {
+    bool _ensureLoaded(afw::fits::Fits* fitsFile) {
         if (_state == ArchiveState::MISSING) {
             return false;
         }
@@ -175,18 +184,11 @@ private:
     std::array<int, N_ARCHIVE_COMPONENTS> _ids = {0};
 };
 
+ExposureFitsReader::ExposureFitsReader(std::string const& fileName) : _maskedImageReader(fileName) {}
 
-ExposureFitsReader::ExposureFitsReader(std::string const& fileName) :
-    _maskedImageReader(fileName)
-{}
+ExposureFitsReader::ExposureFitsReader(fits::MemFileManager& manager) : _maskedImageReader(manager) {}
 
-ExposureFitsReader::ExposureFitsReader(fits::MemFileManager& manager) :
-    _maskedImageReader(manager)
-{}
-
-ExposureFitsReader::ExposureFitsReader(fits::Fits * fitsFile) :
-    _maskedImageReader(fitsFile)
-{}
+ExposureFitsReader::ExposureFitsReader(fits::Fits* fitsFile) : _maskedImageReader(fitsFile) {}
 
 ExposureFitsReader::~ExposureFitsReader() noexcept = default;
 
@@ -194,7 +196,7 @@ lsst::geom::Box2I ExposureFitsReader::readBBox(ImageOrigin origin) {
     return _maskedImageReader.readBBox(origin);
 }
 
-lsst::geom::Point2I ExposureFitsReader::readXY0(lsst::geom::Box2I const & bbox, ImageOrigin origin) {
+lsst::geom::Point2I ExposureFitsReader::readXY0(lsst::geom::Box2I const& bbox, ImageOrigin origin) {
     return _maskedImageReader.readXY0(bbox, origin);
 }
 
@@ -256,7 +258,8 @@ std::shared_ptr<VisitInfo> ExposureFitsReader::readVisitInfo() {
 
 std::shared_ptr<TransmissionCurve> ExposureFitsReader::readTransmissionCurve() {
     _ensureReaders();
-    return _archiveReader->readComponent<TransmissionCurve>(_getFitsFile(), ArchiveReader::TRANSMISSION_CURVE);
+    return _archiveReader->readComponent<TransmissionCurve>(_getFitsFile(),
+                                                            ArchiveReader::TRANSMISSION_CURVE);
 }
 
 std::shared_ptr<cameraGeom::Detector> ExposureFitsReader::readDetector() {
@@ -315,7 +318,7 @@ std::shared_ptr<ExposureInfo> ExposureFitsReader::readExposureInfo() {
         } else {
             result->setWcs(wcs);
         }
-    } catch (pex::exceptions::NotFoundError & err) {
+    } catch (pex::exceptions::NotFoundError& err) {
         auto msg = str(boost::format("Could not read WCS extension; setting to null: %s") % err.what());
         if (result->hasWcs()) {
             msg += " ; using WCS from FITS header";
@@ -326,39 +329,37 @@ std::shared_ptr<ExposureInfo> ExposureFitsReader::readExposureInfo() {
 }
 
 template <typename ImagePixelT>
-Image<ImagePixelT> ExposureFitsReader::readImage(lsst::geom::Box2I const & bbox, ImageOrigin origin,
+Image<ImagePixelT> ExposureFitsReader::readImage(lsst::geom::Box2I const& bbox, ImageOrigin origin,
                                                  bool allowUnsafe) {
     return _maskedImageReader.readImage<ImagePixelT>(bbox, origin, allowUnsafe);
 }
 
 template <typename ImagePixelT>
-ndarray::Array<ImagePixelT, 2, 2> ExposureFitsReader::readImageArray(lsst::geom::Box2I const & bbox,
-                                                                     ImageOrigin origin,
-                                                                     bool allowUnsafe) {
+ndarray::Array<ImagePixelT, 2, 2> ExposureFitsReader::readImageArray(lsst::geom::Box2I const& bbox,
+                                                                     ImageOrigin origin, bool allowUnsafe) {
     return _maskedImageReader.readImageArray<ImagePixelT>(bbox, origin, allowUnsafe);
 }
 
 template <typename MaskPixelT>
-Mask<MaskPixelT> ExposureFitsReader::readMask(lsst::geom::Box2I const & bbox, ImageOrigin origin,
+Mask<MaskPixelT> ExposureFitsReader::readMask(lsst::geom::Box2I const& bbox, ImageOrigin origin,
                                               bool conformMasks, bool allowUnsafe) {
     return _maskedImageReader.readMask<MaskPixelT>(bbox, origin, conformMasks, allowUnsafe);
 }
 
 template <typename MaskPixelT>
-ndarray::Array<MaskPixelT, 2, 2> ExposureFitsReader::readMaskArray(lsst::geom::Box2I const & bbox,
-                                                                   ImageOrigin origin,
-                                                                   bool allowUnsafe) {
+ndarray::Array<MaskPixelT, 2, 2> ExposureFitsReader::readMaskArray(lsst::geom::Box2I const& bbox,
+                                                                   ImageOrigin origin, bool allowUnsafe) {
     return _maskedImageReader.readMaskArray<MaskPixelT>(bbox, origin, allowUnsafe);
 }
 
 template <typename VariancePixelT>
-Image<VariancePixelT> ExposureFitsReader::readVariance(lsst::geom::Box2I const & bbox, ImageOrigin origin,
+Image<VariancePixelT> ExposureFitsReader::readVariance(lsst::geom::Box2I const& bbox, ImageOrigin origin,
                                                        bool allowUnsafe) {
     return _maskedImageReader.readVariance<VariancePixelT>(bbox, origin, allowUnsafe);
 }
 
 template <typename VariancePixelT>
-ndarray::Array<VariancePixelT, 2, 2> ExposureFitsReader::readVarianceArray(lsst::geom::Box2I const & bbox,
+ndarray::Array<VariancePixelT, 2, 2> ExposureFitsReader::readVarianceArray(lsst::geom::Box2I const& bbox,
                                                                            ImageOrigin origin,
                                                                            bool allowUnsafe) {
     return _maskedImageReader.readVarianceArray<VariancePixelT>(bbox, origin, allowUnsafe);
@@ -366,61 +367,41 @@ ndarray::Array<VariancePixelT, 2, 2> ExposureFitsReader::readVarianceArray(lsst:
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> ExposureFitsReader::readMaskedImage(
-    lsst::geom::Box2I const & bbox,
-    ImageOrigin origin,
-    bool conformMasks,
-    bool allowUnsafe
-) {
+        lsst::geom::Box2I const& bbox, ImageOrigin origin, bool conformMasks, bool allowUnsafe) {
     return _maskedImageReader.read<ImagePixelT, MaskPixelT, VariancePixelT>(bbox, origin, conformMasks,
-                                                                            /* needAllHdus= */false,
+                                                                            /* needAllHdus= */ false,
                                                                             allowUnsafe);
 }
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-Exposure<ImagePixelT, MaskPixelT, VariancePixelT> ExposureFitsReader::read(
-    lsst::geom::Box2I const & bbox,
-    ImageOrigin origin,
-    bool conformMasks,
-    bool allowUnsafe
-) {
-    auto mi = readMaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>(bbox, origin, conformMasks,
-                                                                       allowUnsafe);
+Exposure<ImagePixelT, MaskPixelT, VariancePixelT> ExposureFitsReader::read(lsst::geom::Box2I const& bbox,
+                                                                           ImageOrigin origin,
+                                                                           bool conformMasks,
+                                                                           bool allowUnsafe) {
+    auto mi =
+            readMaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>(bbox, origin, conformMasks, allowUnsafe);
     return Exposure<ImagePixelT, MaskPixelT, VariancePixelT>(mi, readExposureInfo());
 }
 
 void ExposureFitsReader::_ensureReaders() {
     if (!_metadataReader) {
-        auto metadataReader = std::make_unique<MetadataReader>(
-            _maskedImageReader.readPrimaryMetadata(),
-            _maskedImageReader.readImageMetadata(),
-            _maskedImageReader.readXY0()
-        );
+        auto metadataReader = std::make_unique<MetadataReader>(_maskedImageReader.readPrimaryMetadata(),
+                                                               _maskedImageReader.readImageMetadata(),
+                                                               _maskedImageReader.readXY0());
         _archiveReader = std::make_unique<ArchiveReader>(*metadataReader->metadata);
         _metadataReader = std::move(metadataReader);  // deferred for exception safety
     }
     assert(_archiveReader);  // should always be initialized with _metadataReader.
 }
 
-#define INSTANTIATE(ImagePixelT) \
-    template Exposure<ImagePixelT, MaskPixel, VariancePixel> ExposureFitsReader::read( \
-        lsst::geom::Box2I const &, \
-        ImageOrigin, \
-        bool, bool \
-    ); \
-    template Image<ImagePixelT> ExposureFitsReader::readImage( \
-        lsst::geom::Box2I const &, \
-        ImageOrigin, bool \
-    ); \
-    template ndarray::Array<ImagePixelT, 2, 2> ExposureFitsReader::readImageArray(\
-        lsst::geom::Box2I const &, \
-        ImageOrigin, \
-        bool \
-    ); \
-    template MaskedImage<ImagePixelT, MaskPixel, VariancePixel> ExposureFitsReader::readMaskedImage( \
-        lsst::geom::Box2I const &, \
-        ImageOrigin, \
-        bool, bool \
-    )
+#define INSTANTIATE(ImagePixelT)                                                                            \
+    template Exposure<ImagePixelT, MaskPixel, VariancePixel> ExposureFitsReader::read(                      \
+            lsst::geom::Box2I const&, ImageOrigin, bool, bool);                                             \
+    template Image<ImagePixelT> ExposureFitsReader::readImage(lsst::geom::Box2I const&, ImageOrigin, bool); \
+    template ndarray::Array<ImagePixelT, 2, 2> ExposureFitsReader::readImageArray(lsst::geom::Box2I const&, \
+                                                                                  ImageOrigin, bool);       \
+    template MaskedImage<ImagePixelT, MaskPixel, VariancePixel> ExposureFitsReader::readMaskedImage(        \
+            lsst::geom::Box2I const&, ImageOrigin, bool, bool)
 
 INSTANTIATE(std::uint16_t);
 INSTANTIATE(int);
@@ -428,29 +409,14 @@ INSTANTIATE(float);
 INSTANTIATE(double);
 INSTANTIATE(std::uint64_t);
 
-template Mask<MaskPixel> ExposureFitsReader::readMask(
-    lsst::geom::Box2I const &,
-    ImageOrigin,
-    bool,
-    bool
-);
-template ndarray::Array<MaskPixel, 2, 2> ExposureFitsReader::readMaskArray(
-    lsst::geom::Box2I const &,
-    ImageOrigin,
-    bool
-);
+template Mask<MaskPixel> ExposureFitsReader::readMask(lsst::geom::Box2I const&, ImageOrigin, bool, bool);
+template ndarray::Array<MaskPixel, 2, 2> ExposureFitsReader::readMaskArray(lsst::geom::Box2I const&,
+                                                                           ImageOrigin, bool);
 
-template Image<VariancePixel> ExposureFitsReader::readVariance(
-    lsst::geom::Box2I const &,
-    ImageOrigin,
-    bool
-);
-template ndarray::Array<VariancePixel, 2, 2> ExposureFitsReader::readVarianceArray(
-    lsst::geom::Box2I const &,
-    ImageOrigin,
-    bool
-);
+template Image<VariancePixel> ExposureFitsReader::readVariance(lsst::geom::Box2I const&, ImageOrigin, bool);
+template ndarray::Array<VariancePixel, 2, 2> ExposureFitsReader::readVarianceArray(lsst::geom::Box2I const&,
+                                                                                   ImageOrigin, bool);
 
-
-
-}}} // lsst::afw::image
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst

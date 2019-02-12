@@ -35,11 +35,21 @@
 
 namespace {
 LOG_LOGGER _log = LOG_GET("afw.image.ExposureInfo");
-}
+}  // namespace
 
 namespace lsst {
 namespace afw {
 namespace image {
+
+int ExposureInfo::getFitsSerializationVersion() {
+    static int const version = 0;
+    return version;
+}
+
+std::string const& ExposureInfo::getFitsSerializationVersionName() {
+    static std::string const versionName("EXPINFO_V");
+    return versionName;
+}
 
 // Clone various components; defined here so that we don't have to expose their insides in Exposure.h
 
@@ -141,6 +151,8 @@ ExposureInfo::FitsWriteData ExposureInfo::_startWriteFits(lsst::geom::Point2I co
     data.varianceMetadata = data.imageMetadata;
 
     data.metadata->combine(getMetadata());
+
+    data.metadata->set(getFitsSerializationVersionName(), getFitsSerializationVersion());
 
     // In the future, we might not have exactly three image HDUs, but we always do right now,
     // so 0=primary, 1=image, 2=mask, 3=variance, 4+=archive
