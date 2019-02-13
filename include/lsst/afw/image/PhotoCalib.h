@@ -112,9 +112,9 @@ inline void assertNonNegative(double value, std::string const &name) {
  */
 class PhotoCalib : public table::io::PersistableFacade<PhotoCalib>, public table::io::Persistable {
 public:
-    // no move or copy
-    PhotoCalib(PhotoCalib const &) = delete;
-    PhotoCalib(PhotoCalib &&) = delete;
+    // Allow move, but no copy
+    PhotoCalib(PhotoCalib const &) = default;
+    PhotoCalib(PhotoCalib &&) = default;
     PhotoCalib &operator=(PhotoCalib const &) = delete;
     PhotoCalib &operator=(PhotoCalib &&) = delete;
 
