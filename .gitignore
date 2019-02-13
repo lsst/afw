@@ -147,6 +147,7 @@ tests/test_imageHash
 tests/test_key
 tests/test_polygon
 tests/test_spherePoint
+tests/test_storable
 tests/test_transform
 tests/test_trapezoidalPacker
 tests/test_warpGpu
