@@ -29,6 +29,7 @@ import unittest
 
 import numpy as np
 from numpy.testing import assert_allclose
+import astropy.units as u
 
 import lsst.utils
 import lsst.utils.tests
@@ -248,7 +249,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         exposureInfo.setValidPolygon(None)
         exposureInfo.setPsf(None)
         exposureInfo.setWcs(None)
-        exposureInfo.setCalib(None)
+        exposureInfo.setPhotoCalib(None)
         exposureInfo.setCoaddInputs(None)
         exposureInfo.setVisitInfo(None)
         exposureInfo.setApCorrMap(None)
@@ -286,12 +287,10 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
             boresightRotAngle=boresightRotAngle,
             weather=weather,
         )
-        # Calib used to have exposure time and exposure date, so check for lack
-        # of interference
-        calib = afwImage.Calib(3.4)
+        photoCalib = afwImage.PhotoCalib(3.4, 5.6)
         exposureInfo = afwImage.ExposureInfo()
         exposureInfo.setVisitInfo(visitInfo)
-        exposureInfo.setCalib(calib)
+        exposureInfo.setPhotoCalib(photoCalib)
         exposureInfo.setDetector(self.detector)
         gFilter = afwImage.Filter("g")
         exposureInfo.setFilter(gFilter)
@@ -302,7 +301,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
             rtExposure = afwImage.ExposureF(tmpFile)
         rtVisitInfo = rtExposure.getInfo().getVisitInfo()
         self.assertEqual(rtVisitInfo.getWeather(), weather)
-        self.assertEqual(rtExposure.getCalib(), calib)
+        self.assertEqual(rtExposure.getPhotoCalib(), photoCalib)
         self.assertEqual(rtExposure.getFilter(), gFilter)
 
     def testSetMembers(self):
@@ -328,28 +327,16 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         except pexExcept.Exception as e:
             print("caught expected exception (getWcs): %s" % e)
             pass
-        #
-        # Test the Calib member.  The Calib tests are in color.py, here we just check that it's in Exposure
-        #
-        calib = exposure.getCalib()
-        fluxMag0, FluxMag0Err = 1.1e12, 2.2e10
-        calib.setFluxMag0(fluxMag0, FluxMag0Err)
-        self.assertEqual(exposure.getCalib().getFluxMag0(),
-                         (fluxMag0, FluxMag0Err))
-        #
-        # now check that we can set Calib
-        #
-        calib = afwImage.Calib()
-        fluxMag0_2, fluxMag0Err_2 = (511.1, 44.4)
-        calib.setFluxMag0(fluxMag0_2, fluxMag0Err_2)
 
-        exposure.setCalib(calib)
+        # The PhotoCalib tests are in test_photoCalib.py;
+        # here we just check that it's gettable and settable.
+        self.assertIsNone(exposure.getPhotoCalib())
 
-        self.assertEqual(exposure.getCalib().getFluxMag0(),
-                         (fluxMag0_2, fluxMag0Err_2))
-        #
+        photoCalib = afwImage.PhotoCalib(511.1, 44.4)
+        exposure.setPhotoCalib(photoCalib)
+        self.assertEqual(exposure.getPhotoCalib(), photoCalib)
+
         # Psfs next
-        #
         self.assertFalse(exposure.hasPsf())
         exposure.setPsf(self.psf)
         self.assertTrue(exposure.hasPsf())
@@ -459,24 +446,8 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         mainExposure.setPsf(self.psf)
 
         # Make sure we can write without an exception
-        fluxMag0, fluxMag0Err = 1e12, 1e10
-        mainExposure.getCalib().setFluxMag0(fluxMag0, fluxMag0Err)
-
-        # Check scaling of Calib
-        scale = 2.0
-        calib = mainExposure.getCalib()
-        self.assertEqual((fluxMag0, fluxMag0Err), calib.getFluxMag0())
-        self.assertEqual((fluxMag0, fluxMag0Err),
-                         mainExposure.getCalib().getFluxMag0())
-        calib *= scale
-        self.assertEqual((fluxMag0*scale, fluxMag0Err*scale),
-                         calib.getFluxMag0())
-        self.assertEqual((fluxMag0*scale, fluxMag0Err*scale),
-                         mainExposure.getCalib().getFluxMag0())
-        calib /= scale
-        self.assertEqual((fluxMag0, fluxMag0Err), calib.getFluxMag0())
-        self.assertEqual((fluxMag0, fluxMag0Err),
-                         mainExposure.getCalib().getFluxMag0())
+        photoCalib = afwImage.PhotoCalib(1e-10, 1e-12)
+        mainExposure.setPhotoCalib(photoCalib)
 
         with lsst.utils.tests.getTempFilePath(".fits") as tmpFile:
             mainExposure.writeFits(tmpFile)
@@ -489,8 +460,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
             self.assertEqual(mainExposure.getFilter().getName(),
                              readExposure.getFilter().getName())
 
-            self.assertEqual((fluxMag0, fluxMag0Err),
-                             readExposure.getCalib().getFluxMag0())
+            self.assertEqual(photoCalib, readExposure.getPhotoCalib())
 
             psf = readExposure.getPsf()
             self.assertIsNotNone(psf)
@@ -531,7 +501,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         xy = lsst.geom.Point2D(0, 0)
         self.assertEqual(e1.getWcs().pixelToSky(xy)[0],
                          e2.getWcs().pixelToSky(xy)[0])
-        self.assertEqual(e1.getCalib(), e2.getCalib())
+        self.assertEqual(e1.getPhotoCalib(), e2.getPhotoCalib())
         # check PSF identity
         if not e1.getPsf():
             self.assertFalse(e2.getPsf())
@@ -833,6 +803,11 @@ class ExposureNoAfwdataTestCase(lsst.utils.tests.TestCase):
         mask.array[5, 5] = 5
         self.maskedImage = afwImage.MaskedImageF(image, mask, variance)
 
+        referenceFlux = (0*u.ABmag).to_value(u.nJy)
+        calibration = referenceFlux/1e6
+        calibrationErr = referenceFlux*2e4/(1e6)**2
+        self.expectedPhotoCalib = afwImage.PhotoCalib(calibration, calibrationErr)
+
     def testReadUnversioned(self):
         """Test that we can read an unversioned (implicit verison 0) file.
         """
@@ -841,9 +816,7 @@ class ExposureNoAfwdataTestCase(lsst.utils.tests.TestCase):
 
         self.assertMaskedImagesEqual(exposure.maskedImage, self.maskedImage)
 
-        calib = afwImage.Calib()
-        calib.setFluxMag0(1e6, 2e4)
-        self.assertEqual(exposure.getCalib(), calib)
+        self.assertEqual(exposure.getPhotoCalib(), self.expectedPhotoCalib)
 
     def testReadVersion0(self):
         """Test that we can read an version 0 file.
@@ -855,9 +828,7 @@ class ExposureNoAfwdataTestCase(lsst.utils.tests.TestCase):
 
         self.assertMaskedImagesEqual(exposure.maskedImage, self.maskedImage)
 
-        calib = afwImage.Calib()
-        calib.setFluxMag0(1e6, 2e4)
-        self.assertEqual(exposure.getCalib(), calib)
+        self.assertEqual(exposure.getPhotoCalib(), self.expectedPhotoCalib)
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):

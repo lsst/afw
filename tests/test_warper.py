@@ -83,10 +83,9 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         imageUtils.defineFilter("i", 748.1)
 
         originalFilter = afwImage.Filter("i")
-        originalCalib = afwImage.Calib()
-        originalCalib.setFluxMag0(1.0e5, 1.0e3)
+        originalPhotoCalib = afwImage.PhotoCalib(1.0e5, 1.0e3)
         originalExposure.setFilter(originalFilter)
-        originalExposure.setCalib(originalCalib)
+        originalExposure.setCalib(originalPhotoCalib)
 
         warpedExposure1 = warper.warpExposure(
             destWcs=swarpedWcs, srcExposure=originalExposure)
@@ -112,8 +111,7 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
 
         self.assertEqual(warpedExposure1.getFilter().getName(),
                          originalFilter.getName())
-        self.assertEqual(warpedExposure1.getCalib().getFluxMag0(),
-                         originalCalib.getFluxMag0())
+        self.assertEqual(warpedExposure1.getPhotoCalib(), originalPhotoCalib)
 
     @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testDestBBox(self):

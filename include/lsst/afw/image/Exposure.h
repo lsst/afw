@@ -130,7 +130,7 @@ public:
      *                                when on-disk values may overflow or truncate.
      */
     explicit Exposure(std::string const& fileName, lsst::geom::Box2I const& bbox = lsst::geom::Box2I(),
-                      ImageOrigin origin = PARENT, bool conformMasks = false, bool allowUnsafe=false);
+                      ImageOrigin origin = PARENT, bool conformMasks = false, bool allowUnsafe = false);
 
     /**
      *  Construct an Exposure by reading a FITS image in memory.
@@ -144,7 +144,7 @@ public:
      *                                when on-disk values may overflow or truncate.
      */
     explicit Exposure(fits::MemFileManager& manager, lsst::geom::Box2I const& bbox = lsst::geom::Box2I(),
-                      ImageOrigin origin = PARENT, bool conformMasks = false, bool allowUnsafe=false);
+                      ImageOrigin origin = PARENT, bool conformMasks = false, bool allowUnsafe = false);
 
     /**
      *  Construct an Exposure from an already-open FITS object.
@@ -158,7 +158,7 @@ public:
      *                                when on-disk values may overflow or truncate.
      */
     explicit Exposure(fits::Fits& fitsfile, lsst::geom::Box2I const& bbox = lsst::geom::Box2I(),
-                      ImageOrigin origin = PARENT, bool conformMasks = false, bool allowUnsafe=false);
+                      ImageOrigin origin = PARENT, bool conformMasks = false, bool allowUnsafe = false);
 
     /** Copy an Exposure
      *
@@ -296,12 +296,23 @@ public:
     }
     /// Set the Exposure's filter
     void setFilter(Filter const& filter) { _info->setFilter(filter); }
+
+    /// Set the Exposure's PhotoCalib object
+    void setPhotoCalib(std::shared_ptr<PhotoCalib const> photoCalib) { _info->setPhotoCalib(photoCalib); }
+    /// Return the Exposure's PhotoCalib object
+    std::shared_ptr<PhotoCalib const> getPhotoCalib() const { return _info->getPhotoCalib(); }
+
     /// Set the Exposure's Calib object
-    void setCalib(std::shared_ptr<Calib> calib) { _info->setCalib(calib); }
+    [[deprecated("Replaced with setPhotoCalib (will be removed in 18.0)")]] void setCalib(
+            std::shared_ptr<PhotoCalib> photoCalib) {
+        _info->setPhotoCalib(photoCalib);
+    }
     /// Return the Exposure's Calib object
-    std::shared_ptr<Calib> getCalib() { return _info->getCalib(); }
-    /// Return the Exposure's Calib object
-    std::shared_ptr<Calib const> getCalib() const { return _info->getCalib(); }
+    [[deprecated("Replaced with getPhotoCalib (will be removed in 18.0)")]] std::shared_ptr<PhotoCalib const>
+    getCalib() const {
+        return _info->getPhotoCalib();
+    }
+
     /// Set the Exposure's Psf
     void setPsf(std::shared_ptr<lsst::afw::detection::Psf const> psf) { _info->setPsf(psf); }
 

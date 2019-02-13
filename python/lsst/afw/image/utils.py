@@ -21,7 +21,7 @@
 #
 
 __all__ = ["clipImage", "resetFilters", "defineFilter",
-           "CalibNoThrow", "projectImage", "getProjectionIndices"]
+           "projectImage", "getProjectionIndices"]
 
 import numpy as np
 
@@ -29,7 +29,6 @@ import lsst.afw.detection as afwDetect
 from .maskedImage import MaskedImage, makeMaskedImage
 from .image import Mask
 from .filter import Filter, FilterProperty
-from .calib import Calib
 
 
 def clipImage(im, minClip, maxClip):
@@ -66,23 +65,6 @@ def defineFilter(name, lambdaEff, lambdaMin=np.nan, lambdaMax=np.nan, alias=[], 
     else:
         for a in alias:
             Filter.defineAlias(name, a)
-
-
-class CalibNoThrow:
-    """A class intended to be used with python's with statement, to return NaNs for negative fluxes
-    instead of raising exceptions (exceptions may be raised for other purposes).
-
-E.g.
-     with CalibNoThrow():
-         ax.plot([exposure.getCalib().getMagnitude(a) for a in candAmps], zGood[:,k], 'b+')
-    """
-
-    def __enter__(self):
-        self._throwOnNegative = Calib.getThrowOnNegativeFlux()
-        Calib.setThrowOnNegativeFlux(False)
-
-    def __exit__(self, *args):
-        Calib.setThrowOnNegativeFlux(self._throwOnNegative)
 
 
 def getProjectionIndices(imageBBox, targetBBox):

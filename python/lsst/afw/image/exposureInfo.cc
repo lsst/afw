@@ -28,7 +28,7 @@
 #include "lsst/afw/geom/polygon/Polygon.h"
 #include "lsst/afw/geom/SkyWcs.h"
 #include "lsst/afw/image/ApCorrMap.h"
-#include "lsst/afw/image/Calib.h"
+#include "lsst/afw/image/PhotoCalib.h"
 #include "lsst/afw/image/CoaddInputs.h"
 #include "lsst/afw/image/Filter.h"
 #include "lsst/afw/image/VisitInfo.h"
@@ -50,7 +50,7 @@ PYBIND11_MODULE(exposureInfo, mod) {
     py::module::import("lsst.afw.geom.skyWcs");
     py::module::import("lsst.afw.cameraGeom.detector");
     py::module::import("lsst.afw.detection.psf");
-    py::module::import("lsst.afw.image.calib");
+    py::module::import("lsst.afw.image.photoCalib");
     py::module::import("lsst.afw.image.apCorrMap");
     py::module::import("lsst.afw.image.coaddInputs");
     py::module::import("lsst.afw.image.filter");
@@ -63,14 +63,15 @@ PYBIND11_MODULE(exposureInfo, mod) {
 
     /* Constructors */
     cls.def(py::init<std::shared_ptr<geom::SkyWcs const> const &,
-                     std::shared_ptr<detection::Psf const> const &, std::shared_ptr<Calib const> const &,
+                     std::shared_ptr<detection::Psf const> const &, std::shared_ptr<PhotoCalib const> const &,
                      std::shared_ptr<cameraGeom::Detector const> const &,
                      std::shared_ptr<geom::polygon::Polygon const> const &, Filter const &,
                      std::shared_ptr<daf::base::PropertySet> const &, std::shared_ptr<CoaddInputs> const &,
                      std::shared_ptr<ApCorrMap> const &, std::shared_ptr<VisitInfo const> const &,
                      std::shared_ptr<TransmissionCurve const> const &>(),
             "wcs"_a = std::shared_ptr<geom::SkyWcs const>(),
-            "psf"_a = std::shared_ptr<detection::Psf const>(), "calib"_a = std::shared_ptr<Calib const>(),
+            "psf"_a = std::shared_ptr<detection::Psf const>(),
+            "photoCalib"_a = std::shared_ptr<PhotoCalib const>(),
             "detector"_a = std::shared_ptr<cameraGeom::Detector const>(),
             "polygon"_a = std::shared_ptr<geom::polygon::Polygon const>(), "filter"_a = Filter(),
             "metadata"_a = std::shared_ptr<daf::base::PropertySet>(),
@@ -87,8 +88,7 @@ PYBIND11_MODULE(exposureInfo, mod) {
 
     cls.def("hasDetector", &ExposureInfo::hasDetector);
     cls.def("getDetector", &ExposureInfo::getDetector);
-    cls.def(
-            "setDetector",
+    cls.def("setDetector",
             [](ExposureInfo &self, py::object detector) {
                 if (detector.is(py::none())) {
                     self.setDetector(nullptr);
@@ -101,17 +101,21 @@ PYBIND11_MODULE(exposureInfo, mod) {
     cls.def("getFilter", &ExposureInfo::getFilter);
     cls.def("setFilter", &ExposureInfo::setFilter, "filter"_a);
 
+    // Deprecated versions
     cls.def("hasCalib", &ExposureInfo::hasCalib);
-    cls.def("getCalib", (std::shared_ptr<Calib>(ExposureInfo::*)()) & ExposureInfo::getCalib);
+    cls.def("getCalib", &ExposureInfo::getCalib);
     cls.def("setCalib", &ExposureInfo::setCalib, "calib"_a);
+
+    cls.def("hasPhotoCalib", &ExposureInfo::hasPhotoCalib);
+    cls.def("getPhotoCalib", &ExposureInfo::getPhotoCalib);
+    cls.def("setPhotoCalib", &ExposureInfo::setPhotoCalib, "photoCalib"_a);
 
     cls.def("getMetadata", &ExposureInfo::getMetadata);
     cls.def("setMetadata", &ExposureInfo::setMetadata, "metadata"_a);
 
     cls.def("hasPsf", &ExposureInfo::hasPsf);
     cls.def("getPsf", &ExposureInfo::getPsf);
-    cls.def(
-            "setPsf",
+    cls.def("setPsf",
             [](ExposureInfo &self, py::object psf) {
                 if (psf.is(py::none())) {
                     self.setPsf(nullptr);
@@ -123,8 +127,7 @@ PYBIND11_MODULE(exposureInfo, mod) {
 
     cls.def("hasValidPolygon", &ExposureInfo::hasValidPolygon);
     cls.def("getValidPolygon", &ExposureInfo::getValidPolygon);
-    cls.def(
-            "setValidPolygon",
+    cls.def("setValidPolygon",
             [](ExposureInfo &self, py::object polygon) {
                 if (polygon.is(py::none())) {
                     self.setValidPolygon(nullptr);

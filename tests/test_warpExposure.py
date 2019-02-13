@@ -108,10 +108,9 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         originalExposure = afwImage.ExposureF(originalExposurePath)
         originalExposure.getInfo().setVisitInfo(makeVisitInfo())
         originalFilter = afwImage.Filter("i")
-        originalCalib = afwImage.Calib()
-        originalCalib.setFluxMag0(1.0e5, 1.0e3)
+        originalPhotoCalib = afwImage.PhotoCalib(1.0e5, 1.0e3)
         originalExposure.setFilter(originalFilter)
-        originalExposure.setCalib(originalCalib)
+        originalExposure.setCalib(originalPhotoCalib)
         afwWarpedExposure = afwImage.ExposureF(
             originalExposure.getBBox(),
             originalExposure.getWcs())
@@ -124,8 +123,7 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
 
         self.assertEqual(afwWarpedExposure.getFilter().getName(),
                          originalFilter.getName())
-        self.assertEqual(afwWarpedExposure.getCalib().getFluxMag0(),
-                         originalCalib.getFluxMag0())
+        self.assertEqual(afwWarpedExposure.getPhotoCalib(), originalPhotoCalib)
         self.assertEqual(afwWarpedExposure.getInfo().getVisitInfo(),
                          originalExposure.getInfo().getVisitInfo())
 

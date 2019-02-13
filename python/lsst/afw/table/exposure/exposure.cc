@@ -29,13 +29,13 @@
 #include "lsst/afw/fits.h"
 #include "lsst/geom/Box.h"
 #include "lsst/geom/Point.h"
-#include "lsst/afw/geom/polygon/Polygon.h"  // forward-declared by Exposure.h
-#include "lsst/afw/geom/SkyWcs.h"           // forward-declared by Transform.h
-#include "lsst/afw/image/ApCorrMap.h"       // forward-declared by Exposure.h
-#include "lsst/afw/image/Calib.h"           // forward-declared by Exposure.h
-#include "lsst/afw/image/VisitInfo.h"       // forward-declared by Exposure.h
-#include "lsst/afw/image/TransmissionCurve.h" // forward-declared by Exposure.h
-#include "lsst/afw/cameraGeom/Detector.h"   // forward-declared by Exposure.h
+#include "lsst/afw/geom/polygon/Polygon.h"     // forward-declared by Exposure.h
+#include "lsst/afw/geom/SkyWcs.h"              // forward-declared by Transform.h
+#include "lsst/afw/image/ApCorrMap.h"          // forward-declared by Exposure.h
+#include "lsst/afw/image/PhotoCalib.h"         // forward-declared by Exposure.h
+#include "lsst/afw/image/VisitInfo.h"          // forward-declared by Exposure.h
+#include "lsst/afw/image/TransmissionCurve.h"  // forward-declared by Exposure.h
+#include "lsst/afw/cameraGeom/Detector.h"      // forward-declared by Exposure.h
 #include "lsst/afw/table/BaseRecord.h"
 #include "lsst/afw/table/BaseTable.h"
 #include "lsst/afw/table/Catalog.h"
@@ -68,17 +68,24 @@ PyExposureRecord declareExposureRecord(py::module &mod) {
     cls.def("getTable", &ExposureRecord::getTable);
     cls.def_property_readonly("table", &ExposureRecord::getTable);
     cls.def("contains",
-            (bool (ExposureRecord::*)(lsst::geom::SpherePoint const &, bool) const) & ExposureRecord::contains,
+            (bool (ExposureRecord::*)(lsst::geom::SpherePoint const &, bool) const) &
+                    ExposureRecord::contains,
             "coord"_a, "includeValidPolygon"_a = false);
-    cls.def("contains", (bool (ExposureRecord::*)(lsst::geom::Point2D const &, geom::SkyWcs const &, bool) const) &
-                                ExposureRecord::contains,
+    cls.def("contains",
+            (bool (ExposureRecord::*)(lsst::geom::Point2D const &, geom::SkyWcs const &, bool) const) &
+                    ExposureRecord::contains,
             "point"_a, "wcs"_a, "includeValidPolygon"_a = false);
     cls.def("getWcs", &ExposureRecord::getWcs);
     cls.def("setWcs", &ExposureRecord::setWcs, "wcs"_a);
     cls.def("getPsf", &ExposureRecord::getPsf);
     cls.def("setPsf", &ExposureRecord::setPsf, "psf"_a);
-    cls.def("getCalib", &ExposureRecord::getCalib);
-    cls.def("setCalib", &ExposureRecord::setCalib, "calib"_a);
+
+    // Deprecated methods
+    cls.def("_getCalib", &ExposureRecord::getCalib);
+    cls.def("_setCalib", &ExposureRecord::setCalib, "photoCalib"_a);
+
+    cls.def("getPhotoCalib", &ExposureRecord::getPhotoCalib);
+    cls.def("setPhotoCalib", &ExposureRecord::setPhotoCalib, "photoCalib"_a);
     cls.def("getApCorrMap", &ExposureRecord::getApCorrMap);
     cls.def("setApCorrMap", &ExposureRecord::setApCorrMap, "apCorrMap"_a);
     cls.def("getValidPolygon", &ExposureRecord::getValidPolygon);
@@ -115,10 +122,10 @@ PyExposureTable declareExposureTable(py::module &mod) {
 
     cls.def("clone", &ExposureTable::clone);
     cls.def("makeRecord", &ExposureTable::makeRecord);
-    cls.def("copyRecord", (std::shared_ptr<ExposureRecord> (ExposureTable::*)(BaseRecord const &)) &
+    cls.def("copyRecord", (std::shared_ptr<ExposureRecord>(ExposureTable::*)(BaseRecord const &)) &
                                   ExposureTable::copyRecord);
     cls.def("copyRecord",
-            (std::shared_ptr<ExposureRecord> (ExposureTable::*)(BaseRecord const &, SchemaMapper const &)) &
+            (std::shared_ptr<ExposureRecord>(ExposureTable::*)(BaseRecord const &, SchemaMapper const &)) &
                     ExposureTable::copyRecord);
     return cls;
 }
@@ -140,10 +147,10 @@ PyExposureCatalog declareExposureCatalog(py::module &mod) {
                    "manager"_a, "hdu"_a = fits::DEFAULT_HDU, "flags"_a = 0);
     // readFits taking Fits objects not wrapped, because Fits objects are not wrapped.
 
-    cls.def("subset", (Catalog (Catalog::*)(ndarray::Array<bool const, 1> const &) const) & Catalog::subset,
+    cls.def("subset", (Catalog(Catalog::*)(ndarray::Array<bool const, 1> const &) const) & Catalog::subset,
             "mask"_a);
     cls.def("subset",
-            (Catalog (Catalog::*)(std::ptrdiff_t, std::ptrdiff_t, std::ptrdiff_t) const) & Catalog::subset,
+            (Catalog(Catalog::*)(std::ptrdiff_t, std::ptrdiff_t, std::ptrdiff_t) const) & Catalog::subset,
             "startd"_a, "stopd"_a, "step"_a);
     cls.def("subsetContaining",
             (Catalog(Catalog::*)(lsst::geom::SpherePoint const &, bool) const) & Catalog::subsetContaining,
@@ -177,6 +184,6 @@ PYBIND11_MODULE(exposure, mod) {
     clsExposureCatalog.attr("Table") = clsExposureTable;
     clsExposureCatalog.attr("ColumnView") = clsExposureColumnView;
 }
-}
-}
-}  // namespace lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst

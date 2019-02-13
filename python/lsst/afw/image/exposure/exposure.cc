@@ -24,7 +24,7 @@
 
 #include "lsst/afw/cameraGeom/Detector.h"
 #include "lsst/afw/geom/SkyWcs.h"
-#include "lsst/afw/image/Calib.h"
+#include "lsst/afw/image/PhotoCalib.h"
 #include "lsst/afw/image/Filter.h"
 #include "lsst/afw/image/Exposure.h"
 #include "lsst/afw/detection/Psf.h"
@@ -104,8 +104,13 @@ PyExposure<PixelT> declareExposure(py::module &mod, const std::string &suffix) {
     cls.def("setDetector", &ExposureT::setDetector, "detector"_a);
     cls.def("getFilter", &ExposureT::getFilter);
     cls.def("setFilter", &ExposureT::setFilter, "filter"_a);
-    cls.def("getCalib", (std::shared_ptr<Calib>(ExposureT::*)()) & ExposureT::getCalib);
-    cls.def("setCalib", &ExposureT::setCalib, "calib"_a);
+
+    // Deprecated methods
+    cls.def("_getCalib", &ExposureT::getCalib);
+    cls.def("_setCalib", &ExposureT::setCalib, "photoCalib"_a);
+
+    cls.def("getPhotoCalib", &ExposureT::getPhotoCalib);
+    cls.def("setPhotoCalib", &ExposureT::setPhotoCalib, "photoCalib"_a);
     cls.def("getPsf", (std::shared_ptr<detection::Psf>(ExposureT::*)()) & ExposureT::getPsf);
     cls.def("setPsf", &ExposureT::setPsf, "psf"_a);
     cls.def("hasPsf", &ExposureT::hasPsf);
@@ -118,22 +123,19 @@ PyExposure<PixelT> declareExposure(py::module &mod, const std::string &suffix) {
     cls.def("writeFits", (void (ExposureT::*)(fits::MemFileManager &) const) & ExposureT::writeFits);
     cls.def("writeFits", [](ExposureT &self, fits::Fits &fits) { self.writeFits(fits); });
 
-    cls.def(
-            "writeFits",
+    cls.def("writeFits",
             [](ExposureT &self, std::string const &filename, fits::ImageWriteOptions const &imageOptions,
                fits::ImageWriteOptions const &maskOptions, fits::ImageWriteOptions const &varianceOptions) {
                 self.writeFits(filename, imageOptions, maskOptions, varianceOptions);
             },
             "filename"_a, "imageOptions"_a, "maskOptions"_a, "varianceOptions"_a);
-    cls.def(
-            "writeFits",
+    cls.def("writeFits",
             [](ExposureT &self, fits::MemFileManager &manager, fits::ImageWriteOptions const &imageOptions,
                fits::ImageWriteOptions const &maskOptions, fits::ImageWriteOptions const &varianceOptions) {
                 self.writeFits(manager, imageOptions, maskOptions, varianceOptions);
             },
             "manager"_a, "imageOptions"_a, "maskOptions"_a, "varianceOptions"_a);
-    cls.def(
-            "writeFits",
+    cls.def("writeFits",
             [](ExposureT &self, fits::Fits &fits, fits::ImageWriteOptions const &imageOptions,
                fits::ImageWriteOptions const &maskOptions, fits::ImageWriteOptions const &varianceOptions) {
                 self.writeFits(fits, imageOptions, maskOptions, varianceOptions);

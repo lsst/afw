@@ -37,7 +37,6 @@
 #include "lsst/afw/geom/SkyWcs.h"
 #include "lsst/afw/image/Exposure.h"
 #include "lsst/afw/detection/Psf.h"
-#include "lsst/afw/image/Calib.h"
 #include "lsst/afw/math/ConvolveImage.h"
 #include "lsst/afw/cameraGeom/Detector.h"
 #include "lsst/afw/fits.h"

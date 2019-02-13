@@ -40,85 +40,28 @@ namespace afw {
 namespace image {
 namespace {
 
-using PyCalib = py::class_<Calib, std::shared_ptr<Calib>>;
-
 template <typename T>
-void declareVectorOperations(py::module & mod)
-{
+void declareVectorOperations(py::module& mod) {
     typedef ndarray::Array<T, 1> Array;
     typedef ndarray::Array<T const, 1> ConstArray;
-    mod.def("abMagFromFlux", (Array(*)(ConstArray const&))&abMagFromFlux<T>, "flux"_a);
-    mod.def("abMagErrFromFluxErr", (Array(*)(ConstArray const&, ConstArray const&))&abMagErrFromFluxErr<T>,
+    mod.def("abMagFromFlux", (Array(*)(ConstArray const&)) & abMagFromFlux<T>, "flux"_a);
+    mod.def("abMagErrFromFluxErr", (Array(*)(ConstArray const&, ConstArray const&)) & abMagErrFromFluxErr<T>,
             "fluxErr"_a, "flux"_a);
-    mod.def("fluxFromABMag", (Array(*)(ConstArray const&))&fluxFromABMag<T>, "mag"_a);
-    mod.def("fluxErrFromABMagErr", (Array(*)(ConstArray const&, ConstArray const&))&fluxErrFromABMagErr<T>,
+    mod.def("fluxFromABMag", (Array(*)(ConstArray const&)) & fluxFromABMag<T>, "mag"_a);
+    mod.def("fluxErrFromABMagErr", (Array(*)(ConstArray const&, ConstArray const&)) & fluxErrFromABMagErr<T>,
             "magErr"_a, "mag"_a);
 }
 
-
 PYBIND11_MODULE(calib, mod) {
     /* Module level */
-    mod.def("abMagFromFlux", (double(*)(double))&abMagFromFlux, "flux"_a);
-    mod.def("abMagErrFromFluxErr", (double(*)(double, double))&abMagErrFromFluxErr, "fluxErr"_a, "flux"_a);
-    mod.def("fluxFromABMag", (double(*)(double))&fluxFromABMag, "mag"_a);
-    mod.def("fluxErrFromABMagErr", (double(*)(double, double))&fluxErrFromABMagErr, "magErr"_a, "mag"_a);
+    mod.def("abMagFromFlux", (double (*)(double)) & abMagFromFlux, "flux"_a);
+    mod.def("abMagErrFromFluxErr", (double (*)(double, double)) & abMagErrFromFluxErr, "fluxErr"_a, "flux"_a);
+    mod.def("fluxFromABMag", (double (*)(double)) & fluxFromABMag, "mag"_a);
+    mod.def("fluxErrFromABMagErr", (double (*)(double, double)) & fluxErrFromABMagErr, "magErr"_a, "mag"_a);
     declareVectorOperations<float>(mod);
     declareVectorOperations<double>(mod);
-    mod.def("stripCalibKeywords", &detail::stripCalibKeywords, "metadata"_a);
-
-    PyCalib cls(mod, "Calib");
-
-    /* Constructors */
-    cls.def(py::init<>());
-    cls.def(py::init<double>(), "fluxMag0"_a);
-    cls.def(py::init<std::shared_ptr<const daf::base::PropertySet>>(), "metadata"_a);
-    cls.def(py::init<std::vector<std::shared_ptr<const Calib>> const &>(), "calibs"_a);
-
-    table::io::python::addPersistableMethods<Calib>(cls);
-
-    /* Operators */
-    cls.def("__eq__", &Calib::operator==, py::is_operator());
-    cls.def("__ne__", &Calib::operator!=, py::is_operator());
-    cls.def("__imul__", &Calib::operator*=);
-    cls.def("__itruediv__", &Calib::operator/=);
-    cls.def("__idiv__", &Calib::operator/=);
-
-    /* Members */
-    cls.def("setFluxMag0", (void (Calib::*)(double, double)) & Calib::setFluxMag0, "fluxMag0"_a,
-            "fluxMag0Err"_a = 0.0);
-    cls.def("setFluxMag0", (void (Calib::*)(std::pair<double, double>)) & Calib::setFluxMag0,
-            "fluxMag0AndErr"_a);
-    cls.def("getFluxMag0", &Calib::getFluxMag0);
-    cls.def("getFlux", (double (Calib::*)(double const) const) & Calib::getFlux, "mag"_a);
-    cls.def("getFlux",
-            (std::pair<double, double> (Calib::*)(double const, double const) const) & Calib::getFlux,
-            "mag"_a, "magErr"_a);
-    cls.def("getFlux", (ndarray::Array<double, 1> (Calib::*)(ndarray::Array<double const, 1> const &) const) &
-                               Calib::getFlux,
-            "mag"_a);
-    cls.def("getFlux",
-            (std::pair<ndarray::Array<double, 1>, ndarray::Array<double, 1>> (Calib::*)(
-                    ndarray::Array<double const, 1> const &, ndarray::Array<double const, 1> const &) const) &
-                    Calib::getFlux,
-            "mag"_a, "magErr"_a);
-    cls.def("getMagnitude", (double (Calib::*)(double const) const) & Calib::getMagnitude, "flux"_a);
-    cls.def("getMagnitude",
-            (std::pair<double, double> (Calib::*)(double const, double const) const) & Calib::getMagnitude,
-            "flux"_a, "fluxErr"_a);
-    cls.def("getMagnitude",
-            (ndarray::Array<double, 1> (Calib::*)(ndarray::Array<double const, 1> const &) const) &
-                    Calib::getMagnitude,
-            "flux"_a);
-    cls.def("getMagnitude",
-            (std::pair<ndarray::Array<double, 1>, ndarray::Array<double, 1>> (Calib::*)(
-                    ndarray::Array<double const, 1> const &, ndarray::Array<double const, 1> const &) const) &
-                    Calib::getMagnitude,
-            "flux"_a, "fluxMag"_a);
-    cls.def_static("setThrowOnNegativeFlux", Calib::setThrowOnNegativeFlux, "raiseException"_a);
-    cls.def_static("getThrowOnNegativeFlux", Calib::getThrowOnNegativeFlux);
-    cls.def("isPersistable", &Calib::isPersistable);
 }
-}
-}
-}
-}  // namespace lsst::afw::image::<anonymous>
+}  // namespace
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst

@@ -117,7 +117,7 @@ public:
     Filter readFilter();
 
     /// Read the Exposure's photometric calibration.
-    std::shared_ptr<Calib> readCalib();
+    std::shared_ptr<PhotoCalib> readPhotoCalib();
 
     /// Read the Exposure's point-spread function.
     std::shared_ptr<detection::Psf> readPsf();
