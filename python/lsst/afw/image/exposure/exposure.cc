@@ -74,10 +74,10 @@ PyExposure<PixelT> declareExposure(py::module &mod, const std::string &suffix) {
     cls.def(py::init<MaskedImageT &, std::shared_ptr<ExposureInfo>>(), "maskedImage"_a, "exposureInfo"_a);
     cls.def(py::init<std::string const &, lsst::geom::Box2I const &, ImageOrigin, bool, bool>(), "fileName"_a,
             "bbox"_a = lsst::geom::Box2I(), "origin"_a = PARENT, "conformMasks"_a = false,
-            "allowUnsafe"_a=false);
+            "allowUnsafe"_a = false);
     cls.def(py::init<fits::MemFileManager &, lsst::geom::Box2I const &, ImageOrigin, bool, bool>(),
             "manager"_a, "bbox"_a = lsst::geom::Box2I(), "origin"_a = PARENT, "conformMasks"_a = false,
-            "allowUnsafe"_a=false);
+            "allowUnsafe"_a = false);
     cls.def(py::init<ExposureT const &, bool>(), "other"_a, "deep"_a = false);
     cls.def(py::init<ExposureT const &, lsst::geom::Box2I const &, ImageOrigin, bool>(), "other"_a, "bbox"_a,
             "origin"_a = PARENT, "deep"_a = false);
@@ -112,25 +112,28 @@ PyExposure<PixelT> declareExposure(py::module &mod, const std::string &suffix) {
     cls.def("getInfo", (std::shared_ptr<ExposureInfo>(ExposureT::*)()) & ExposureT::getInfo);
     cls.def("setInfo", &ExposureT::setInfo, "exposureInfo"_a);
 
-    cls.def("subset", &ExposureT::subset, "bbox"_a, "origin"_a=PARENT);
+    cls.def("subset", &ExposureT::subset, "bbox"_a, "origin"_a = PARENT);
 
     cls.def("writeFits", (void (ExposureT::*)(std::string const &) const) & ExposureT::writeFits);
     cls.def("writeFits", (void (ExposureT::*)(fits::MemFileManager &) const) & ExposureT::writeFits);
     cls.def("writeFits", [](ExposureT &self, fits::Fits &fits) { self.writeFits(fits); });
 
-    cls.def("writeFits",
+    cls.def(
+            "writeFits",
             [](ExposureT &self, std::string const &filename, fits::ImageWriteOptions const &imageOptions,
                fits::ImageWriteOptions const &maskOptions, fits::ImageWriteOptions const &varianceOptions) {
                 self.writeFits(filename, imageOptions, maskOptions, varianceOptions);
             },
             "filename"_a, "imageOptions"_a, "maskOptions"_a, "varianceOptions"_a);
-    cls.def("writeFits",
+    cls.def(
+            "writeFits",
             [](ExposureT &self, fits::MemFileManager &manager, fits::ImageWriteOptions const &imageOptions,
                fits::ImageWriteOptions const &maskOptions, fits::ImageWriteOptions const &varianceOptions) {
                 self.writeFits(manager, imageOptions, maskOptions, varianceOptions);
             },
             "manager"_a, "imageOptions"_a, "maskOptions"_a, "varianceOptions"_a);
-    cls.def("writeFits",
+    cls.def(
+            "writeFits",
             [](ExposureT &self, fits::Fits &fits, fits::ImageWriteOptions const &imageOptions,
                fits::ImageWriteOptions const &maskOptions, fits::ImageWriteOptions const &varianceOptions) {
                 self.writeFits(fits, imageOptions, maskOptions, varianceOptions);
