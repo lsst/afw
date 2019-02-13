@@ -119,7 +119,6 @@ class FitsUtilsTestCase(unittest.TestCase):
                 tmpFile, [tmpFile, tmpFile]))
             # ignore non-defaulted keywords
             detBuilder = DetectorBuilder(tmpFile, [tmpFile, ], doRaise=False)
-            detBuilder.makeCalib()
             detBuilder.makeExposure(afwImage.ImageF(10, 10),
                                     afwImage.Mask(10, 10),
                                     afwImage.ImageF(10, 10))

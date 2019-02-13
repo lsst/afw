@@ -428,21 +428,9 @@ class DetectorBuilder:
             detConfig, ampInfo, self.focalPlaneToField)
         return self.detector
 
-    def makeCalib(self):
-        """Placeholder for subclasses to implement construction of a calib to
-        associate with the exposure.
-
-        Returns
-        -------
-        calibration : `lsst.afw.image.Calib`
-            Empty calibration
-        """
-        return afwImage.Calib()
-
     def makeExposure(self, im, mask=None, variance=None):
         """Method for constructing an exposure object from an image and the
-        information contained in this class to construct the Detector and
-        Calib objects.
+        information contained in this class to construct the Detector.
 
         Parameters
         ----------
@@ -465,8 +453,6 @@ class DetectorBuilder:
         mi = afwImage.makeMaskedImage(im, mask, variance)
         detector = self.buildDetector()
 
-        calib = self.makeCalib()
         exp = afwImage.makeExposure(mi)
-        exp.setCalib(calib)
         exp.setDetector(detector)
         return exp
