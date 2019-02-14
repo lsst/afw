@@ -321,12 +321,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(exposure.getDetector().getSerial(),
                          self.detector.getSerial())
         self.assertEqual(exposure.getFilter().getName(), "g")
-
-        try:
-            exposure.getWcs()
-        except pexExcept.Exception as e:
-            print("caught expected exception (getWcs): %s" % e)
-            pass
+        self.assertEqual(exposure.getWcs(), self.wcs)
 
         # The PhotoCalib tests are in test_photoCalib.py;
         # here we just check that it's gettable and settable.
