@@ -29,6 +29,7 @@
 #include <ostream>
 #include <typeinfo>
 #include <type_traits>
+#include <vector>
 
 #include "boost/core/demangle.hpp"
 
@@ -178,6 +179,230 @@ std::ostream& operator<<(std::ostream& os, Key<K, V> const& key) {
     os << key.getId() << "<" << typeStr << constStr << volatileStr << ">";
     return os;
 }
+
+/**
+ * Interface for a type-safe heterogeneous map.
+ *
+ * Objects of type GenericMap cannot necessarily have keys added or removed, although mutable values can be
+ * modified as usual. In Python, a GenericMap behaves like a ``collections.abc.Mapping``. See
+ * MutableGenericMap for a GenericMap that must allow insertions and deletions.
+ *
+ * @tparam K the key type of the map.
+ *
+ * A Key for the map is parameterized by both the key type `K` and a corresponding value type `V`. The map
+ * is indexed uniquely by a value of type `K`; no two entries in the map may have identical values of
+ * Key::getId().
+ *
+ * All operations are sensitive to the value type of the key: a contains() call requesting an
+ * integer labeled "value", for example, will report no such integer if instead there is a string labeled
+ * "value". Therefore, it is impossible for an element insertion or retrieval operation to throw a
+ * std::bad_cast or corrupt data. All methods that take a Key as an argument will use the exact type of the
+ * key, without considering super- or subtypes; this is because allowing supertype keys (for reads) or subtype
+ * keys (for writes) leads to self-inconsistent semantics on whether a particular typed key is or is
+ * not in the map.
+ *
+ * All subclasses **must** guarantee, as a class invariant, that every value in the map is implicitly
+ * nothrow-convertible to the type indicated by its key. For example, MutableGenericMap ensures this by
+ * appropriately templating all operations that create new key-value pairs.
+ *
+ * A GenericMap may contain primitive types, strings, Storable, and standard smart pointers to
+ * Storable as values. For safety reasons, it may not contain references, C-style pointers, or arrays to any
+ * type.
+ */
+template <typename K>
+class GenericMap {
+public:
+    using key_type = K;
+    using size_type = std::size_t;
+    using difference_type = std::ptrdiff_t;
+
+    virtual ~GenericMap() noexcept = default;
+
+    /**
+     * Return a reference to the mapped value of the element with key equal to `key`.
+     *
+     * @tparam T the type of the element mapped to `key`
+     * @param key the key of the element to find
+     *
+     * @return a reference to the `T` mapped to `key`, if one exists
+     *
+     * @throws pex::exceptions::OutOfRangeError Thrown if the map does not
+     *         have a `T` with the specified key
+     * @exceptsafe Provides strong exception safety.
+     *
+     * @{
+     */
+    template <typename T>
+    T& at(Key<K, T> const& key) {
+        // Both casts are safe; see Effective C++, Item 3
+        return const_cast<T&>(static_cast<const GenericMap&>(*this).at(key));
+    }
+
+    template <typename T>
+    T const& at(Key<K, T> const& key) const;
+
+    /** @} */
+
+    /// Return the number of key-value pairs in the map.
+    virtual size_type size() const noexcept = 0;
+
+    /// Return `true` if this map contains no key-value pairs.
+    virtual bool empty() const noexcept = 0;
+
+    /**
+     * Return the maximum number of elements the container is able to hold due to system or library
+     * implementation limitations.
+     *
+     * @note This value typically reflects the theoretical limit on the size of the container. At runtime, the
+     * size of the container may be limited to a value smaller than max_size() by the amount of RAM available.
+     */
+    virtual size_type max_size() const noexcept = 0;
+
+    /**
+     * Return the number of elements mapped to the specified key.
+     *
+     * @tparam T the value corresponding to `key`
+     * @param key key value of the elements to count
+     *
+     * @return number of `T` with key `key`, that is, either 1 or 0.
+     *
+     * @exceptsafe Provides strong exception safety.
+     */
+    template <typename T>
+    size_type count(Key<K, T> const& key) const {
+        return contains(key) ? 1 : 0;
+    }
+
+    /**
+     * Return `true` if this map contains a mapping whose key has the specified label.
+     *
+     * More formally, this method returns `true` if and only if this map contains a mapping with a key `k`
+     * such that `k.getId() == key`. There can be at most one such mapping.
+     *
+     * @param key the weakly-typed key to search for
+     *
+     * @return `true` if this map contains a mapping for `key`, regardless of value type.
+     *
+     * @exceptsafe Provides strong exception safety.
+     */
+    // TODO: probably not useful if we have no way to do an RTTI query
+    virtual bool contains(K const& key) const = 0;
+
+    /**
+     * Return `true` if this map contains a mapping for the specified key.
+     *
+     * This is equivalent to testing whether `at(key)` would succeed.
+     *
+     * @tparam T the value corresponding to `key`
+     * @param key the key to search for
+     *
+     * @return `true` if this map contains a mapping from the specified key to a `T`
+     *
+     * @exceptsafe Provides strong exception safety.
+     */
+    template <typename T>
+    bool contains(Key<K, T> const& key) const;
+
+    // TODO: still need an API to support RTTI queries from Python
+
+    /**
+     * Return the set of all keys, without type information.
+     *
+     * @return a copy of all keys currently in the map, in the same iteration order as this object. The set
+     * will *not* be updated as this object changes, or vice versa.
+     *
+     * @note The keys are returned as a list, rather than a set, so that subclasses can give them a
+     * well-defined iteration order.
+     *
+     * @exceptsafe Provides strong exception safety.
+     */
+    virtual std::vector<K> keys() const = 0;
+};
+
+/**
+ * Interface for a GenericMap that allows element addition and removal.
+ *
+ * In Python, a MutableGenericMap behaves like a ``collections.abc.MutableMapping``.
+ *
+ * @note Unlike standard library maps, this class does not support `operator[]` or `insert_or_assign`. This is
+ * because these operations would have surprising behavior when dealing with keys of different types but the
+ * same Key::getId().
+ *
+ */
+template <typename K>
+class MutableGenericMap : public GenericMap<K> {
+public:
+    virtual ~MutableGenericMap() noexcept = default;
+
+    /**
+     * Remove all of the mappings from this map.
+     *
+     * After this call, the map will be empty.
+     */
+    virtual void clear() noexcept = 0;
+
+    /**
+     * Insert an element into the map, if the map doesn't already contain a mapping with the same or a
+     * conflicting key.
+     *
+     * @tparam T the type of value to insert
+     * @param key key to insert
+     * @param value value to insert
+     *
+     * @return `true` if the insertion took place, `false` otherwise
+     *
+     * @exceptsafe Provides strong exception safety.
+     *
+     * @note It is possible for a key with a value type other than `T` to prevent insertion. Callers can
+     * safely assume `this->contains(key.getId())` as a postcondition, but not `this->contains(key)`.
+     *
+     * @{
+     */
+    template <typename T>
+    bool insert(Key<K, T> const& key, T const& value);
+    template <typename T>
+    bool insert(Key<K, T> const& key, T&& value);
+
+    /** @} */
+
+    /**
+     * Insert an element into the map, if the map doesn't already contain a mapping with a conflicting key.
+     *
+     * @tparam T the type of value to insert
+     * @param key key to insert
+     * @param value value to insert
+     *
+     * @return a pair consisting of a strongly-typed key for the value and a flag that is `true` if the
+     * insertion took place and `false` otherwise
+     *
+     * @exceptsafe Provides strong exception safety.
+     *
+     * @warning the type of the compiler-generated key may not always be what you expect. Callers should save
+     * the returned key if they wish to retrieve the value later.
+     *
+     * @{
+     */
+
+    template <typename T>
+    std::pair<Key<K, T>, bool> insert(K const& key, T const& value);
+    template <typename T>
+    std::pair<Key<K, T>, bool> insert(K const& key, T&& value);
+
+    /** @} */
+
+    /**
+     * Remove the mapping for a key from this map, if it exists.
+     *
+     * @tparam T the type of value the key maps to
+     * @param key the key to remove
+     *
+     * @return `true` if `key` was removed, `false` if it was not present
+     *
+     * @exceptsafe Provides strong exception safety.
+     */
+    template <typename T>
+    bool erase(Key<K, T> const& key);
+};
 
 }  // namespace typehandling
 }  // namespace afw
