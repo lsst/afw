@@ -597,7 +597,7 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
         calibrationErr = referenceFlux*fluxMag0Err/fluxMag0**2
         photoCalib = lsst.afw.image.makePhotoCalib(metadata)
         self.assertEqual(photoCalib.getInstFluxAtZeroMagnitude(), fluxMag0)
-        self.assertEqual(photoCalib.getCalibrationErr(), calibrationErr)
+        self.assertFloatsAlmostEqual(photoCalib.getCalibrationErr(), calibrationErr)
         # keys aren't deleted by default
         self.assertIn('FLUXMAG0', metadata)
         self.assertIn('FLUXMAG0ERR', metadata)
@@ -614,7 +614,7 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
         metadata.set('FLUXMAG0ERR', fluxMag0Err)
         photoCalib = lsst.afw.image.makePhotoCalib(metadata, strip=True)
         self.assertEqual(photoCalib.getInstFluxAtZeroMagnitude(), fluxMag0)
-        self.assertEqual(photoCalib.getCalibrationErr(), calibrationErr)
+        self.assertFloatsAlmostEqual(photoCalib.getCalibrationErr(), calibrationErr)
         self.assertNotIn('FLUXMAG0', metadata)
         self.assertNotIn('FLUXMAG0ERR', metadata)
 
