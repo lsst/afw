@@ -576,14 +576,14 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
         result = photoCalib.instFluxToNanojansky(-100, 10)
         self.assertGreater(result.error, 0)
 
-    def testCreateFromMetadata(self):
+    def testMakePhotoCalibFromMetadata(self):
         """Test creating a PhotoCalib from the Calib FITS metadata.
         """
         fluxMag0 = 12345
         metadata = lsst.daf.base.PropertySet()
         metadata.set('FLUXMAG0', fluxMag0)
 
-        photoCalib = lsst.afw.image.makePhotoCalib(metadata)
+        photoCalib = lsst.afw.image.makePhotoCalibFromMetadata(metadata)
         self.assertEqual(photoCalib.getInstFluxAtZeroMagnitude(), fluxMag0)
         self.assertEqual(photoCalib.getCalibrationErr(), 0.0)
         # keys aren't deleted by default
@@ -595,7 +595,7 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
         # The reference flux is "nanoJanskys at 0 magnitude".
         referenceFlux = (0*u.ABmag).to_value(u.nJy)
         calibrationErr = referenceFlux*fluxMag0Err/fluxMag0**2
-        photoCalib = lsst.afw.image.makePhotoCalib(metadata)
+        photoCalib = lsst.afw.image.makePhotoCalibFromMetadata(metadata)
         self.assertEqual(photoCalib.getInstFluxAtZeroMagnitude(), fluxMag0)
         self.assertFloatsAlmostEqual(photoCalib.getCalibrationErr(), calibrationErr)
         # keys aren't deleted by default
@@ -605,26 +605,50 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
         # test stripping keys from a new metadata
         metadata = lsst.daf.base.PropertySet()
         metadata.set('FLUXMAG0', fluxMag0)
-        photoCalib = lsst.afw.image.makePhotoCalib(metadata, strip=True)
+        photoCalib = lsst.afw.image.makePhotoCalibFromMetadata(metadata, strip=True)
         self.assertEqual(photoCalib.getInstFluxAtZeroMagnitude(), fluxMag0)
         self.assertEqual(photoCalib.getCalibrationErr(), 0.0)
         self.assertNotIn('FLUXMAG0', metadata)
 
         metadata.set('FLUXMAG0', fluxMag0)
         metadata.set('FLUXMAG0ERR', fluxMag0Err)
-        photoCalib = lsst.afw.image.makePhotoCalib(metadata, strip=True)
+        photoCalib = lsst.afw.image.makePhotoCalibFromMetadata(metadata, strip=True)
         self.assertEqual(photoCalib.getInstFluxAtZeroMagnitude(), fluxMag0)
         self.assertFloatsAlmostEqual(photoCalib.getCalibrationErr(), calibrationErr)
         self.assertNotIn('FLUXMAG0', metadata)
         self.assertNotIn('FLUXMAG0ERR', metadata)
 
-    def testCreateFromMetadataRaisesNoKey(self):
-        """Raise if the metadata does not contain a 'FLUXMAG0' key."""
+    def testMakePhotoCalibFromMetadataNoKey(self):
+        """Return None if the metadata does not contain a 'FLUXMAG0' key."""
         metadata = lsst.daf.base.PropertySet()
         metadata.set('something', 1000)
         metadata.set('FLUXMAG0ERR', 5)
-        result = lsst.afw.image.makePhotoCalib(metadata)
+        result = lsst.afw.image.makePhotoCalibFromMetadata(metadata)
         self.assertIsNone(result)
+
+    def testMakePhotoCalibFromCalibZeroPoint(self):
+        """Test creating from the Calib-style fluxMag0/fluxMag0Err values."""
+        fluxMag0 = 12345
+        fluxMag0Err = 67890
+
+        referenceFlux = (0*u.ABmag).to_value(u.nJy)
+        calibrationErr = referenceFlux*fluxMag0Err/fluxMag0**2
+
+        # create with all zeros
+        photoCalib = lsst.afw.image.makePhotoCalibFromCalibZeroPoint(0, 0)
+        self.assertEqual(photoCalib.getInstFluxAtZeroMagnitude(), 0)
+        self.assertEqual(photoCalib.getCalibrationMean(), np.inf)
+        self.assertTrue(np.isnan(photoCalib.getCalibrationErr()))
+
+        # create with non-zero fluxMag0, but zero err
+        photoCalib = lsst.afw.image.makePhotoCalibFromCalibZeroPoint(fluxMag0, 0)
+        self.assertEqual(photoCalib.getInstFluxAtZeroMagnitude(), fluxMag0)
+        self.assertEqual(photoCalib.getCalibrationErr(), 0.0)
+
+        # create with non-zero fluxMag0 and err
+        photoCalib = lsst.afw.image.makePhotoCalibFromCalibZeroPoint(fluxMag0, fluxMag0Err)
+        self.assertEqual(photoCalib.getInstFluxAtZeroMagnitude(), fluxMag0)
+        self.assertEqual(photoCalib.getCalibrationErr(), calibrationErr)
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):

@@ -500,7 +500,22 @@ private:
  *
  * @returns Pointer to the constructed PhotoCalib, or nullptr if FLUXMAG0 is not in the metadata.
  */
-std::shared_ptr<PhotoCalib> makePhotoCalib(daf::base::PropertySet &metadata, bool strip = false);
+std::shared_ptr<PhotoCalib> makePhotoCalibFromMetadata(daf::base::PropertySet &metadata, bool strip = false);
+
+/**
+ * Construct a PhotoCalib from the deprecated `Calib`-style instFluxMag0/instFluxMag0Err values.
+ *
+ * This provides backwards compatibility with the obsoleted Calib object that PhotoCalib replaced.
+ * It should not be used outside of tests that compare with old persisted Calib objects.
+ *
+ * @param instFluxMag0 The instrumental flux at zero magnitude. If 0, the resulting `PhotoCalib` will have
+ *                     infinite calibrationMean and non-finite (inf or NaN) calibrationErr.
+ * @param instFluxMag0Err The instrumental flux at zero magnitude error. If 0, the resulting `PhotoCalib` will
+ *                        have 0 calibrationErr.
+ *
+ * @returns Pointer to the constructed PhotoCalib.
+ */
+std::shared_ptr<PhotoCalib> makePhotoCalibFromCalibZeroPoint(double instFluxMag0, double instFluxMag0Err);
 
 }  // namespace image
 }  // namespace afw

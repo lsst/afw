@@ -157,7 +157,12 @@ PYBIND11_MODULE(photoCalib, mod) {
     cls.def("__ne__", &PhotoCalib::operator!=, py::is_operator());
 
     /* Utility functions */
-    mod.def("makePhotoCalib", makePhotoCalib, "metadata"_a, "strip"_a = false);
+    mod.def("makePhotoCalibFromMetadata",
+            py::overload_cast<daf::base::PropertySet &, bool>(makePhotoCalibFromMetadata), "metadata"_a,
+            "strip"_a = false);
+    mod.def("makePhotoCalibFromCalibZeroPoint",
+            py::overload_cast<double, double>(makePhotoCalibFromCalibZeroPoint), "instFluxMag0"_a,
+            "instFluxMag0Err"_a = false);
 
     utils::python::addOutputOp(cls, "__str__");
     cls.def("__repr__", [](PhotoCalib const &self) {
