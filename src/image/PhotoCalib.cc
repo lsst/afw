@@ -362,7 +362,79 @@ std::string getPhotoCalibPersistenceName() { return "PhotoCalib"; }
 
 PhotoCalibFactory registration(getPhotoCalibPersistenceName());
 
-}  // anonymous namespace
+}  // namespace
+
+/**
+ * Backwards-compatibility support for depersisting the old Calib (FluxMag0/FluxMag0Err) objects.
+ */
+
+namespace {
+int const CALIB_TABLE_CURRENT_VERSION = 2;         // final version of Calib in ExposureTable
+std::string const EXPTIME_FIELD_NAME = "exptime";  // name of exposure time field (no longer used)
+
+class CalibKeys {
+public:
+    table::Schema schema;
+    table::Key<std::int64_t> midTime;
+    table::Key<double> expTime;
+    table::Key<double> fluxMag0;
+    table::Key<double> fluxMag0Err;
+
+    // No copying
+    CalibKeys(const CalibKeys &) = delete;
+    CalibKeys &operator=(const CalibKeys &) = delete;
+
+    // No moving
+    CalibKeys(CalibKeys &&) = delete;
+    CalibKeys &operator=(CalibKeys &&) = delete;
+
+    CalibKeys(int tableVersion = CALIB_TABLE_CURRENT_VERSION)
+            : schema(), midTime(), expTime(), fluxMag0(), fluxMag0Err() {
+        if (tableVersion == 1) {
+            // obsolete fields
+            midTime = schema.addField<std::int64_t>(
+                    "midtime", "middle of the time of the exposure relative to Unix epoch", "ns");
+            expTime = schema.addField<double>(EXPTIME_FIELD_NAME, "exposure time", "s");
+        }
+        fluxMag0 = schema.addField<double>("fluxmag0", "flux of a zero-magnitude object", "count");
+        fluxMag0Err = schema.addField<double>("fluxmag0.err", "1-sigma error on fluxmag0", "count");
+    }
+};
+
+class CalibFactory : public table::io::PersistableFactory {
+public:
+    std::shared_ptr<table::io::Persistable> read(InputArchive const &archive,
+                                                 CatalogVector const &catalogs) const override {
+        // table version is not persisted, so we don't have a clean way to determine the version;
+        // the hack is version = 1 if exptime found, else current
+        int tableVersion = 1;
+        try {
+            catalogs.front().getSchema().find<double>(EXPTIME_FIELD_NAME);
+        } catch (pex::exceptions::NotFoundError) {
+            tableVersion = CALIB_TABLE_CURRENT_VERSION;
+        }
+
+        CalibKeys const keys{tableVersion};
+        LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
+        LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
+        LSST_ARCHIVE_ASSERT(catalogs.front().getSchema() == keys.schema);
+        table::BaseRecord const &record = catalogs.front().front();
+
+        double calibration = utils::referenceFlux / record.get(keys.fluxMag0);
+        double calibrationErr =
+                utils::referenceFlux * record.get(keys.fluxMag0Err) / std::pow(record.get(keys.fluxMag0), 2);
+        std::cout << "!!!!!!!!!!PhotoCalib: " << calibration << " " << calibrationErr << std::endl;
+        return std::make_shared<PhotoCalib>(calibration, calibrationErr);
+    }
+
+    explicit CalibFactory(std::string const &name) : table::io::PersistableFactory(name) {}
+};
+
+std::string getCalibPersistenceName() { return "Calib"; }
+
+CalibFactory calibRegistration(getCalibPersistenceName());
+
+}  // namespace
 
 std::string PhotoCalib::getPersistenceName() const { return getPhotoCalibPersistenceName(); }
 
