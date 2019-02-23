@@ -29,10 +29,9 @@ defineFilter('ha', 656.28)
 filt = lsst.afw.image.Filter('ha')
 exp.setFilter(filt)
 
-# Fill the Calib
-calib = lsst.afw.image.Calib()
-calib.setFluxMag0(1e6, 2e4)
-exp.setCalib(calib)
+# Fill the PhotoCalib
+photoCalib = lsst.afw.image.PhotoCalib(1e6, 2e4)
+exp.setPhotoCalib(photoCalib)
 
 # Fill the SkyWcs
 ra = 30.0 * lsst.geom.degrees

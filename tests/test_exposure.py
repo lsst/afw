@@ -29,7 +29,6 @@ import unittest
 
 import numpy as np
 from numpy.testing import assert_allclose
-import astropy.units as u
 
 import lsst.utils
 import lsst.utils.tests
@@ -798,10 +797,8 @@ class ExposureNoAfwdataTestCase(lsst.utils.tests.TestCase):
         mask.array[5, 5] = 5
         self.maskedImage = afwImage.MaskedImageF(image, mask, variance)
 
-        referenceFlux = (0*u.ABmag).to_value(u.nJy)
-        calibration = referenceFlux/1e6
-        calibrationErr = referenceFlux*2e4/(1e6)**2
-        self.expectedPhotoCalib = afwImage.PhotoCalib(calibration, calibrationErr)
+        self.v0PhotoCalib = afwImage.makePhotoCalibFromCalibZeroPoint(1e6, 2e4)
+        self.v1PhotoCalib = afwImage.PhotoCalib(1e6, 2e4)
 
     def testReadUnversioned(self):
         """Test that we can read an unversioned (implicit verison 0) file.
@@ -811,7 +808,7 @@ class ExposureNoAfwdataTestCase(lsst.utils.tests.TestCase):
 
         self.assertMaskedImagesEqual(exposure.maskedImage, self.maskedImage)
 
-        self.assertEqual(exposure.getPhotoCalib(), self.expectedPhotoCalib)
+        self.assertEqual(exposure.getPhotoCalib(), self.v0PhotoCalib)
 
     def testReadVersion0(self):
         """Test that we can read an version 0 file.
@@ -823,7 +820,28 @@ class ExposureNoAfwdataTestCase(lsst.utils.tests.TestCase):
 
         self.assertMaskedImagesEqual(exposure.maskedImage, self.maskedImage)
 
-        self.assertEqual(exposure.getPhotoCalib(), self.expectedPhotoCalib)
+        self.assertEqual(exposure.getPhotoCalib(), self.v0PhotoCalib)
+
+        # Check that the metadata reader parses the file correctly
+        reader = afwImage.ExposureFitsReader(filename)
+        self.assertEqual(reader.readExposureInfo().getPhotoCalib(), self.v0PhotoCalib)
+        self.assertEqual(reader.readPhotoCalib(), self.v0PhotoCalib)
+
+    def testReadVersion1(self):
+        """Test that we can read an version 1 file.
+        Version 1 replaced Calib with PhotoCalib.
+        """
+        filename = os.path.join(self.dataDir, "exposure-version-1.fits")
+        exposure = afwImage.ExposureF.readFits(filename)
+
+        self.assertMaskedImagesEqual(exposure.maskedImage, self.maskedImage)
+
+        self.assertEqual(exposure.getPhotoCalib(), self.v1PhotoCalib)
+
+        # Check that the metadata reader parses the file correctly
+        reader = afwImage.ExposureFitsReader(filename)
+        self.assertEqual(reader.readExposureInfo().getPhotoCalib(), self.v1PhotoCalib)
+        self.assertEqual(reader.readPhotoCalib(), self.v1PhotoCalib)
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
