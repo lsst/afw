@@ -34,7 +34,7 @@ namespace table {
 
 namespace {
 
-int const EXPOSURE_TABLE_CURRENT_VERSION = 4;                   // current version of ExposureTable
+int const EXPOSURE_TABLE_CURRENT_VERSION = 5;                   // current version of ExposureTable
 std::string const EXPOSURE_TABLE_VERSION_KEY = "EXPTABLE_VER";  // FITS header key for ExposureTable version
 
 // Field names used to store the archive IDs of different components (used in
@@ -42,6 +42,7 @@ std::string const EXPOSURE_TABLE_VERSION_KEY = "EXPTABLE_VER";  // FITS header k
 // literals).
 std::string const WCS_FIELD_NAME = "wcs";
 std::string const PSF_FIELD_NAME = "psf";
+std::string const CALIB_FIELD_NAME = "calib";  // to support the deprecated Calib in old files
 std::string const PHOTOCALIB_FIELD_NAME = "photoCalib";
 std::string const VISIT_INFO_FIELD_NAME = "visitInfo";
 std::string const AP_CORR_MAP_FIELD_NAME = "apCorrMap";
@@ -62,6 +63,7 @@ struct PersistenceHelper {
     Schema schema;
     Key<int> wcs;
     Key<int> psf;
+    Key<int> calib;  // to support the deprecated Calib in old files (replaced with photoCalib)
     Key<int> photoCalib;
     Key<int> apCorrMap;
     Key<int> validPolygon;
@@ -169,6 +171,7 @@ struct PersistenceHelper {
     PersistenceHelper(Schema const &oldSchema) {
         addIfPresent(oldSchema, wcs, WCS_FIELD_NAME);
         addIfPresent(oldSchema, psf, PSF_FIELD_NAME);
+        addIfPresent(oldSchema, calib, CALIB_FIELD_NAME);
         addIfPresent(oldSchema, photoCalib, PHOTOCALIB_FIELD_NAME);
         addIfPresent(oldSchema, apCorrMap, AP_CORR_MAP_FIELD_NAME);
         addIfPresent(oldSchema, validPolygon, VALID_POLYGON_FIELD_NAME);
@@ -292,8 +295,6 @@ public:
         auto tableVersion = getTableVersion(*metadata);
         PersistableObjectColumnReader<detection::Psf, &ExposureRecord::setPsf>::setup("psf", mapper);
         PersistableObjectColumnReader<geom::SkyWcs, &ExposureRecord::setWcs>::setup("wcs", mapper);
-        PersistableObjectColumnReader<image::PhotoCalib, &ExposureRecord::setPhotoCalib>::setup("photoCalib",
-                                                                                                mapper);
         PersistableObjectColumnReader<image::ApCorrMap, &ExposureRecord::setApCorrMap>::setup("apCorrMap",
                                                                                               mapper);
         PersistableObjectColumnReader<geom::polygon::Polygon, &ExposureRecord::setValidPolygon>::setup(
@@ -311,7 +312,17 @@ public:
             PersistableObjectColumnReader<cameraGeom::Detector, &ExposureRecord::setDetector>::setup(
                     "detector", mapper);
         }
-        std::shared_ptr<ExposureTable> table = ExposureTable::make(mapper.finalize());
+        // Load the PhotoCalib from the `calib` table prior to version 5.
+        if (tableVersion <= 4) {
+            PersistableObjectColumnReader<image::PhotoCalib, &ExposureRecord::setPhotoCalib>::setup("calib",
+                                                                                                    mapper);
+        } else {
+            PersistableObjectColumnReader<image::PhotoCalib, &ExposureRecord::setPhotoCalib>::setup(
+                    "photoCalib", mapper);
+        }
+
+        auto schema = mapper.finalize();
+        std::shared_ptr<ExposureTable> table = ExposureTable::make(schema);
         table->setMetadata(metadata);
         return table;
     }

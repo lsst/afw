@@ -188,6 +188,10 @@ ExposureInfo::FitsWriteData ExposureInfo::_startWriteFits(lsst::geom::Point2I co
         int detectorId = data.archive.put(getDetector());
         data.metadata->set("DETECTOR_ID", detectorId, "archive ID for the Exposure's Detector");
     }
+    if (hasPhotoCalib()) {
+        int photoCalibId = data.archive.put(getPhotoCalib());
+        data.metadata->set("PHOTOCALIB_ID", photoCalibId, "archive ID for photometric calibration");
+    }
 
     // LSST convention is that Wcs is in pixel coordinates (i.e relative to bottom left
     // corner of parent image, if any). The Wcs/Fits convention is that the Wcs is in
