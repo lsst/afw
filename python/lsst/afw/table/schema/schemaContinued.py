@@ -201,3 +201,29 @@ class Schema:
                         d[name] = item
                         break  # break inner loop so we don't match the same name twice
         return d
+
+    def __reduce__(self):
+        """For pickle support."""
+        fields = []
+        for item in self:
+            fields.append(item.field)
+        return (makeSchemaFromFields, (fields,))
+
+
+def makeSchemaFromFields(fields):
+    """Create a Schema from a sequence of Fields. For pickle support.
+
+    Parameters
+    ----------
+    fields : `tuple` ['lsst.afw.table.Field']
+        The fields to construct the new Schema from.
+
+    Returns
+    -------
+    schema : `lsst.afw.table.Schema`
+        The constructed Schema.
+    """
+    schema = Schema()
+    for field in fields:
+        schema.addField(field)
+    return schema

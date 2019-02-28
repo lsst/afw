@@ -29,6 +29,7 @@ or
 """
 
 import unittest
+import pickle
 
 import numpy as np
 
@@ -169,6 +170,18 @@ class SchemaTestCase(unittest.TestCase):
         self.assertTrue(cmp2 & lsst.afw.table.Schema.EQUAL_UNITS)
         self.assertFalse(schema1.compare(
             schema3, lsst.afw.table.Schema.EQUAL_NAMES))
+
+    def testPickle(self):
+        schema = lsst.afw.table.Schema()
+        schema.addField("ra", type="Angle", doc="coord_ra")
+        schema.addField("dec", type="Angle", doc="coord_dec")
+        schema.addField("x", type="D", doc="position_x", units="pixel")
+        schema.addField("y", type="D", doc="position_y")
+        schema.addField("i", type="I", doc="int")
+        schema.addField("f", type="F", doc="float", units="m2")
+        pickled = pickle.dumps(schema, protocol=pickle.HIGHEST_PROTOCOL)
+        unpickled = pickle.loads(pickled)
+        self.assertEqual(schema, unpickled)
 
 
 class SchemaMapperTestCase(unittest.TestCase):

@@ -221,6 +221,15 @@ void declareSchemaType(py::module &mod) {
     clsField.def("copyRenamed", &Field<T>::copyRenamed);
     utils::python::addOutputOp(clsField, "__str__");
     utils::python::addOutputOp(clsField, "__repr__");
+    clsField.def(py::pickle(
+            [](Field<T> const &self) {
+                /* Return a tuple that fully encodes the state of the object */
+                return py::make_tuple(self.getName(), self.getDoc(), self.getUnits());
+            },
+            [](py::tuple t) {
+                if (t.size() != 3) throw std::runtime_error("Invalid number of parameters when unpickling!");
+                return Field<T>(t[0].cast<std::string>(), t[1].cast<std::string>(), t[2].cast<std::string>());
+            }));
 
     // Key
     PyKey<T> clsKey(mod, ("Key" + suffix).c_str());
