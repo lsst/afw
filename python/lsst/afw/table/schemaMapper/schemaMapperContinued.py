@@ -22,9 +22,10 @@
 
 __all__ = []  # import only for the side effects
 
+import lsst.pex.exceptions
 from lsst.utils import continueClass
 
-from ..schema import Field
+from ..schema import Field, Schema
 from .schemaMapper import SchemaMapper
 
 
@@ -85,3 +86,64 @@ class SchemaMapper:
             doReplace = output
             output = None
         return input._addMappingTo(self, output, doReplace)
+
+    def __eq__(self, other):
+        """SchemaMappers are equal if their respective input and output
+        schemas are identical, and they have the same mappings defined.
+
+        Note: It was simpler to implement equality in python than in C++.
+        """
+        iSchema = self.getInputSchema()
+        oSchema = self.getOutputSchema()
+        if (not (iSchema.compare(other.getInputSchema(), Schema.IDENTICAL) == Schema.IDENTICAL and
+                 oSchema.compare(other.getOutputSchema(), Schema.IDENTICAL) == Schema.IDENTICAL)):
+            return False
+
+        for item in iSchema:
+            if self.isMapped(item.key) and other.isMapped(item.key):
+                if (self.getMapping(item.key) == other.getMapping(item.key)):
+                    continue
+                else:
+                    return False
+            elif (not self.isMapped(item.key)) and (not other.isMapped(item.key)):
+                continue
+            else:
+                return False
+
+        return True
+
+    def __reduce__(self):
+        """To support pickle."""
+        mappings = {}
+        for item in self.getInputSchema():
+            try:
+                key = self.getMapping(item.key)
+            except lsst.pex.exceptions.NotFoundError:
+                # Not all fields may be mapped, so just continue if a mapping is not found.
+                continue
+            mappings[item.key] = self.getOutputSchema().find(key).field
+        return (makeSchemaMapper, (self.getInputSchema(), self.getOutputSchema(), mappings))
+
+
+def makeSchemaMapper(input, output, mappings):
+    """Build a mapper from two Schemas and the mapping between them.
+    For pickle support.
+
+    Parameters
+    ----------
+    input : `lsst.afw.table.Schema`
+        The input schema for the mapper.
+    output : `lsst.afw.table.Schema`
+        The output schema for the mapper.
+    mappings : `dict` [`lsst.afw.table.Key`, `lsst.afw.table.Key`]
+        The mappings to define between the input and output schema.
+
+    Returns
+    -------
+    mapper : `lsst.afw.table.SchemaMapper`
+        The constructed SchemaMapper.
+    """
+    mapper = SchemaMapper(input, output)
+    for key, value in mappings.items():
+        mapper.addMapping(key, value)
+    return mapper

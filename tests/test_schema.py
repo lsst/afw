@@ -39,6 +39,10 @@ import lsst.geom
 import lsst.afw.table
 
 
+def _checkSchemaIdentical(schema1, schema2):
+    return schema1.compare(schema2, lsst.afw.table.Schema.IDENTICAL) == lsst.afw.table.Schema.IDENTICAL
+
+
 class SchemaTestCase(unittest.TestCase):
 
     def testSchema(self):
@@ -179,6 +183,7 @@ class SchemaTestCase(unittest.TestCase):
         schema.addField("y", type="D", doc="position_y")
         schema.addField("i", type="I", doc="int")
         schema.addField("f", type="F", doc="float", units="m2")
+        schema.addField("flag", type="Flag", doc="a flag")
         pickled = pickle.dumps(schema, protocol=pickle.HIGHEST_PROTOCOL)
         unpickled = pickle.loads(pickled)
         self.assertEqual(schema, unpickled)
@@ -299,6 +304,130 @@ class SchemaMapperTestCase(unittest.TestCase):
         self.assertEqual(s1.join("a", "b"), "a_b")
         self.assertEqual(s1.join("a", "b", "c"), "a_b_c")
         self.assertEqual(s1.join("a", "b", "c", "d"), "a_b_c_d")
+
+    def _makeMapper(self, name1="a", name2="bb", name3="ccc", name4="dddd"):
+        """Make a SchemaMapper for testing.
+
+        Parameters
+        ----------
+        name1 : `str`, optional
+            Name of a field to "default map" from input to output.
+        name2 : `str`, optional
+            Name of a field to map from input to ``name3`` in output.
+        name3 : `str`, optional
+            Name of a field that is unmapped in input, and mapped from
+            ``name2`` in output.
+        name4 : `str`, optional
+            Name of a field that is unmapped in output.
+
+        Returns
+        -------
+        mapper : `lsst.afw.table.SchemaMapper`
+            The created mapper.
+        """
+        schema = lsst.afw.table.Schema()
+        schema.addField(name1, type=float)
+        schema.addField(name2, type=float)
+        schema.addField(name3, type=float)
+        schema.addField("asdf", type="Flag")
+        mapper = lsst.afw.table.SchemaMapper(schema)
+
+        # add a default mapping for the first field
+        mapper.addMapping(schema.find(name1).key)
+
+        # add a mapping to a new field for the second field
+        field = lsst.afw.table.Field[float](name3, "doc for thingy")
+        mapper.addMapping(schema.find(name2).key, field)
+
+        # add a totally separate field to the output
+        mapper.addOutputField(lsst.afw.table.Field[float](name4, 'docstring'))
+        return mapper
+
+    def testOperatorEquals(self):
+        mapper1 = self._makeMapper()
+        mapper2 = self._makeMapper()
+        self.assertEqual(mapper1, mapper2)
+
+    def testNotEqualInput(self):
+        """Check that differing input schema compare not equal."""
+        mapper1 = self._makeMapper(name2="somethingelse")
+        mapper2 = self._makeMapper()
+        # output schema should still be equal
+        self.assertTrue(_checkSchemaIdentical(mapper1.getOutputSchema(), mapper2.getOutputSchema()))
+        self.assertNotEqual(mapper1, mapper2)
+
+    def testNotEqualOutput(self):
+        """Check that differing output schema compare not equal."""
+        mapper1 = self._makeMapper(name4="another")
+        mapper2 = self._makeMapper()
+        # input schema should still be equal
+        self.assertTrue(_checkSchemaIdentical(mapper1.getInputSchema(), mapper2.getInputSchema()))
+        self.assertNotEqual(mapper1, mapper2)
+
+    def testNotEqualMappings(self):
+        """Check that differing mappings but same schema compare not equal."""
+        schema = lsst.afw.table.Schema()
+        schema.addField('a', type=np.int32, doc="int")
+        schema.addField('b', type=np.int32, doc="int")
+        mapper1 = lsst.afw.table.SchemaMapper(schema)
+        mapper2 = lsst.afw.table.SchemaMapper(schema)
+        mapper1.addMapping(schema['a'].asKey(), 'c')
+        mapper1.addMapping(schema['b'].asKey(), 'd')
+        mapper2.addMapping(schema['b'].asKey(), 'c')
+        mapper2.addMapping(schema['a'].asKey(), 'd')
+
+        # input and output schemas should still be equal
+        self.assertTrue(_checkSchemaIdentical(mapper1.getInputSchema(), mapper2.getInputSchema()))
+        self.assertTrue(_checkSchemaIdentical(mapper1.getOutputSchema(), mapper2.getOutputSchema()))
+        self.assertNotEqual(mapper1, mapper2)
+
+    def testNotEqualMappingsSomeFieldsUnmapped(self):
+        """Check that differing mappings, with some unmapped fields, but the
+        same input and output schema compare not equal.
+        """
+        schema = lsst.afw.table.Schema()
+        schema.addField('a', type=np.int32, doc="int")
+        schema.addField('b', type=np.int32, doc="int")
+        mapper1 = lsst.afw.table.SchemaMapper(schema)
+        mapper2 = lsst.afw.table.SchemaMapper(schema)
+        mapper1.addMapping(schema['a'].asKey(), 'c')
+        mapper1.addMapping(schema['b'].asKey(), 'd')
+        mapper2.addMapping(schema['b'].asKey(), 'c')
+        # add an unmapped field to output of 2 to match 1
+        mapper2.addOutputField(lsst.afw.table.Field[np.int32]('d', doc="int"))
+
+        # input and output schemas should still be equal
+        self.assertTrue(_checkSchemaIdentical(mapper1.getInputSchema(), mapper2.getInputSchema()))
+        self.assertTrue(_checkSchemaIdentical(mapper1.getOutputSchema(), mapper2.getOutputSchema()))
+        self.assertNotEqual(mapper1, mapper2)
+
+    def testPickle(self):
+        schema = lsst.afw.table.Schema()
+        schema.addField("ra", type="Angle", doc="coord_ra")
+        schema.addField("dec", type="Angle", doc="coord_dec")
+        schema.addField("x", type="D", doc="position_x", units="pixel")
+        schema.addField("y", type="D", doc="position_y")
+        schema.addField("i", type="I", doc="int")
+        schema.addField("f", type="F", doc="float", units="m2")
+        schema.addField("flag", type="Flag", doc="a flag")
+        mapper = lsst.afw.table.SchemaMapper(schema)
+        mapper.addMinimalSchema(schema)
+        inKey = schema.addField("bb", type=float)
+        outField = lsst.afw.table.Field[float]("cc", "doc for bb->cc")
+        mapper.addMapping(inKey, outField, True)
+
+        pickled = pickle.dumps(mapper, protocol=pickle.HIGHEST_PROTOCOL)
+        unpickled = pickle.loads(pickled)
+        self.assertEqual(mapper, unpickled)
+
+    def testPickleMissingInput(self):
+        """Test pickling with some fields not being mapped."""
+        mapper = self._makeMapper()
+
+        pickled = pickle.dumps(mapper, protocol=pickle.HIGHEST_PROTOCOL)
+        unpickled = pickle.loads(pickled)
+
+        self.assertEqual(mapper, unpickled)
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):

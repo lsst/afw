@@ -30,6 +30,7 @@
 #include "lsst/utils/python.h"
 
 #include "lsst/afw/fits.h"
+#include "lsst/afw/table/detail/Access.h"
 #include "lsst/afw/table/Schema.h"
 #include "lsst/afw/table/BaseRecord.h"
 #include "lsst/afw/table/SchemaMapper.h"
@@ -150,6 +151,15 @@ void declareKeySpecializations(PyKey<T> &cls) {
     declareKeyAccessors(cls);
     cls.def_property_readonly("subfields", [](py::object const &) { return py::none(); });
     cls.def_property_readonly("subkeys", [](py::object const &) { return py::none(); });
+    cls.def(py::pickle(
+            [](Key<T> const &self) {
+                /* Return a tuple that fully encodes the state of the object */
+                return py::make_tuple(self.getOffset());
+            },
+            [](py::tuple t) {
+                if (t.size() != 1) throw std::runtime_error("Invalid number of parameters when unpickling!");
+                return detail::Access::makeKey<T>(t[0].cast<int>());
+            }));
 }
 
 void declareKeySpecializations(PyKey<Flag> &cls) {
@@ -157,6 +167,15 @@ void declareKeySpecializations(PyKey<Flag> &cls) {
     cls.def_property_readonly("subfields", [](py::object const &) { return py::none(); });
     cls.def_property_readonly("subkeys", [](py::object const &) { return py::none(); });
     cls.def("getBit", &Key<Flag>::getBit);
+    cls.def(py::pickle(
+            [](Key<Flag> const &self) {
+                /* Return a tuple that fully encodes the state of the object */
+                return py::make_tuple(self.getOffset(), self.getBit());
+            },
+            [](py::tuple t) {
+                if (t.size() != 2) throw std::runtime_error("Invalid number of parameters when unpickling!");
+                return detail::Access::makeKey(t[0].cast<int>(), t[1].cast<int>());
+            }));
 }
 
 template <typename U>
@@ -281,7 +300,16 @@ void declareSchemaType(py::module &mod) {
     clsSchemaItem.def("__repr__", [](py::object const &self) -> py::str {
         return py::str("SchemaItem(key={0.key}, field={0.field})").format(self);
     });
-}
+    clsSchemaItem.def(py::pickle(
+            [](SchemaItem<T> const &self) {
+                /* Return a tuple that fully encodes the state of the object */
+                return py::make_tuple(self.key, self.field);
+            },
+            [](py::tuple t) {
+                if (t.size() != 2) throw std::runtime_error("Invalid number of parameters when unpickling!");
+                return SchemaItem<T>(t[0].cast<Key<T>>(), t[1].cast<Field<T>>());
+            }));
+}  // namespace
 
 // Helper class for Schema::find(name, func) that converts the result to Python.
 // In C++14, this should be converted to a universal lambda.
