@@ -199,10 +199,9 @@ void declareSchemaType(py::module &mod) {
     // Field
     PyField<T> clsField(mod, ("Field" + suffix).c_str());
     mod.attr("_Field")[pySuffix] = clsField;
-    clsField.def(py::init(
-                 [astropyUnit](  // capture by value to refcount in Python instead of dangle in C++
-                         std::string const &name, std::string const &doc,
-                         py::str const &units, py::object const &size, py::str const &parse_strict) {
+    clsField.def(py::init([astropyUnit](  // capture by value to refcount in Python instead of dangle in C++
+                                  std::string const &name, std::string const &doc, py::str const &units,
+                                  py::object const &size, py::str const &parse_strict) {
                      astropyUnit(units, "parse_strict"_a = parse_strict);
                      std::string u = py::cast<std::string>(units);
                      if (size.is(py::none())) {
@@ -227,10 +226,12 @@ void declareSchemaType(py::module &mod) {
     PyKey<T> clsKey(mod, ("Key" + suffix).c_str());
     mod.attr("_Key")[pySuffix] = clsKey;
     clsKey.def(py::init<>());
-    clsKey.def("__eq__", [](Key<T> const &self, Key<T> const &other) -> bool { return self == other; },
-               py::is_operator());
-    clsKey.def("__ne__", [](Key<T> const &self, Key<T> const &other) -> bool { return self != other; },
-               py::is_operator());
+    clsKey.def(
+            "__eq__", [](Key<T> const &self, Key<T> const &other) -> bool { return self == other; },
+            py::is_operator());
+    clsKey.def(
+            "__ne__", [](Key<T> const &self, Key<T> const &other) -> bool { return self != other; },
+            py::is_operator());
     clsKey.def("isValid", &Key<T>::isValid);
     clsKey.def("getOffset", &Key<T>::getOffset);
     utils::python::addOutputOp(clsKey, "__str__");
@@ -303,9 +304,11 @@ void declareSchema(py::module &mod) {
     cls.def(py::init<>());
     cls.def(py::init<Schema const &>());
     cls.def("__getitem__", [](Schema &self, std::string const &name) { return self[name]; });
-    cls.def("__eq__", [](Schema const &self, Schema const &other) { return self == other; },
+    cls.def(
+            "__eq__", [](Schema const &self, Schema const &other) { return self == other; },
             py::is_operator());
-    cls.def("__ne__", [](Schema const &self, Schema const &other) { return self != other; },
+    cls.def(
+            "__ne__", [](Schema const &self, Schema const &other) { return self != other; },
             py::is_operator());
     cls.def("getCitizen", &Schema::getCitizen, py::return_value_policy::reference_internal);
     cls.def("getRecordSize", &Schema::getRecordSize);
@@ -351,15 +354,16 @@ void declareSchema(py::module &mod) {
     cls.def_static("readFits", (Schema(*)(fits::MemFileManager &, int)) & Schema::readFits, "manager"_a,
                    "hdu"_a = fits::DEFAULT_HDU);
 
-    cls.def("join", (std::string (Schema::*)(std::string const &, std::string const &) const) & Schema::join,
+    cls.def("join", (std::string(Schema::*)(std::string const &, std::string const &) const) & Schema::join,
             "a"_a, "b"_a);
     cls.def("join",
-            (std::string (Schema::*)(std::string const &, std::string const &, std::string const &) const) &
+            (std::string(Schema::*)(std::string const &, std::string const &, std::string const &) const) &
                     Schema::join,
             "a"_a, "b"_a, "c"_a);
-    cls.def("join", (std::string (Schema::*)(std::string const &, std::string const &, std::string const &,
-                                             std::string const &) const) &
-                            Schema::join,
+    cls.def("join",
+            (std::string(Schema::*)(std::string const &, std::string const &, std::string const &,
+                                    std::string const &) const) &
+                    Schema::join,
             "a"_a, "b"_a, "c"_a, "d"_a);
     utils::python::addOutputOp(cls, "__str__");
     utils::python::addOutputOp(cls, "__repr__");
@@ -413,7 +417,7 @@ PYBIND11_MODULE(schema, mod) {
     declareSchema(mod);
     declareSubSchema(mod);
 }
-}
-}
-}
-}  // namespace lsst::afw::table::<anonymous>
+}  // namespace
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst
