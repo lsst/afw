@@ -394,25 +394,27 @@ void PhotoCalib::instFluxToMagnitudeArray(afw::table::SourceCatalog const &sourc
     }
 }
 
-std::shared_ptr<PhotoCalib> makePhotoCalib(daf::base::PropertySet &metadata, bool strip) {
-    double calibration = 0.0, calibrationErr = 0.0;
-
+std::shared_ptr<PhotoCalib> makePhotoCalibFromMetadata(daf::base::PropertySet &metadata, bool strip) {
     auto key = "FLUXMAG0";
     if (metadata.exists(key)) {
-        double fluxMag0 = metadata.getAsDouble(key);
+        double instFluxMag0 = metadata.getAsDouble(key);
         if (strip) metadata.remove(key);
 
-        calibration = utils::referenceFlux / fluxMag0;
+        double instFluxMag0Err = 0.0;
         key = "FLUXMAG0ERR";
         if (metadata.exists(key)) {
-            double fluxMag0Err = metadata.getAsDouble(key);
-            calibrationErr = utils::referenceFlux * fluxMag0Err / std::pow(fluxMag0, 2);
+            instFluxMag0Err = metadata.getAsDouble(key);
             if (strip) metadata.remove(key);
         }
+        return makePhotoCalibFromCalibZeroPoint(instFluxMag0, instFluxMag0Err);
     } else {
         return nullptr;
     }
+}
 
+std::shared_ptr<PhotoCalib> makePhotoCalibFromCalibZeroPoint(double instFluxMag0, double instFluxMag0Err) {
+    double calibration = utils::referenceFlux / instFluxMag0;
+    double calibrationErr = utils::referenceFlux * instFluxMag0Err / std::pow(instFluxMag0, 2);
     return std::make_shared<PhotoCalib>(calibration, calibrationErr);
 }
 
