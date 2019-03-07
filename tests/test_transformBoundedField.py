@@ -1,9 +1,10 @@
+# This file is part of afw.
 #
-# LSST Data Management System
-# Copyright 2017 LSST Corporation.
-#
-# This product includes software developed by the
-# LSST Project (http://www.lsst.org/).
+# Developed for the LSST Data Management System.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org).
+# See the COPYRIGHT file at the top-level directory of this distribution
+# for details of code ownership.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,19 +16,16 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
-# You should have received a copy of the LSST License Statement and
-# the GNU General Public License along with this program.  If not,
-# see <http://www.lsstcorp.org/LegalNotices/>.
-#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
 Tests for math.TransformBoundedField
 
 Run with:
-   ./testTransformBoundedField.py
+   python test_transformBoundedField.py
 or
-   python
-   >>> import testSchema; testSchema.run()
+   pytest test_transformBoundedField.py
 """
 
 import unittest
@@ -43,10 +41,6 @@ import lsst.afw.geom
 import lsst.afw.image
 from lsst.afw.math import TransformBoundedField
 
-try:
-    type(display)
-except NameError:
-    display = False
 
 CHEBYSHEV_T = [
     lambda x: x**0,
@@ -112,13 +106,13 @@ class TransformBoundedFieldTestCase(lsst.utils.tests.TestCase):
         """
         maxVal = np.max(np.abs(self.transform.applyForward(self.pointList)[0]))
         for multFactor in (-9e99, -1.5e-7, 3.6e-7, 1.5, 9.23e99):
-            atol = abs(maxVal * multFactor * 1e-15)
-            predResult = self.transform.applyForward(self.pointList)[0] * multFactor
+            atol = abs(maxVal*multFactor*1e-15)
+            predResult = self.transform.applyForward(self.pointList)[0]*multFactor
 
-            scaledField1 = self.boundedField * multFactor
+            scaledField1 = self.boundedField*multFactor
             assert_allclose(scaledField1.evaluate(self.xList, self.yList), predResult, atol=atol)
 
-            scaledField2 = multFactor * self.boundedField
+            scaledField2 = multFactor*self.boundedField
             assert_allclose(scaledField2.evaluate(self.xList, self.yList), predResult, atol=atol)
 
     def testBBox(self):
@@ -160,13 +154,13 @@ class TransformBoundedFieldTestCase(lsst.utils.tests.TestCase):
         # DM-11964 shows that CFITSIO cannot handle string fields
         # in binary tables that have more than 28799 characters
         # make sure the test has plenty of margin
-        minChars = 10 * 28799
+        minChars = 10*28799
         degree = 100  # make large enough that len(transform.writeString()) > minChars
-        n_coeffs = (degree + 1) * (degree + 2) // 2
+        n_coeffs = (degree + 1)*(degree + 2)//2
         coeffs = np.zeros((n_coeffs, 4), dtype=float)
         k = 0
-        for j in range(degree+1):
-            for i in range(degree-j+1):
+        for j in range(degree + 1):
+            for i in range(degree - j + 1):
                 coeffs[k][0] = np.random.random()
                 coeffs[k][1] = 1
                 coeffs[k][2] = i

@@ -1,9 +1,10 @@
+# This file is part of afw.
 #
-# LSST Data Management System
-# Copyright 2008, 2009, 2010 LSST Corporation.
-#
-# This product includes software developed by the
-# LSST Project (http://www.lsst.org/).
+# Developed for the LSST Data Management System.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org).
+# See the COPYRIGHT file at the top-level directory of this distribution
+# for details of code ownership.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,19 +16,16 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
-# You should have received a copy of the LSST License Statement and
-# the GNU General Public License along with this program.  If not,
-# see <http://www.lsstcorp.org/LegalNotices/>.
-#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
 Tests for MaskedImages
 
 Run with:
-   python MaskedImage.py
+   python test_maskedImage.py
 or
-   python
-   >>> import MaskedImage; MaskedImage.run()
+   pytest test_maskedImage.py
 """
 
 import itertools
@@ -43,12 +41,13 @@ import lsst.daf.base
 import lsst.geom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
-import lsst.afw.display.ds9 as ds9
+import lsst.afw.display as afwDisplay
 
 try:
     type(display)
 except NameError:
     display = False
+afwDisplay.setDefaultMaskTransparency(75)
 
 
 def makeRampImage(width, height, imgClass=afwImage.MaskedImageF):
@@ -732,7 +731,7 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
             mimage2 = mimage.Factory(mimage)
 
             if display:
-                ds9.mtv(mimage2)
+                afwDisplay.Display(frame=0).mtv(mimage2, title="testSubimages3")
 
             self.checkImgPatch3(mimage2, deep)
 
@@ -790,7 +789,7 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
         im[0:4, 0:4] = im[2:6, 8:12]
 
         if display:
-            ds9.mtv(im)
+            afwDisplay.Display(frame=1).mtv(im, title="testImageSlices")
 
         self.assertEqual(im[0, 6, afwImage.LOCAL], (0, 0x0, 0))
         self.assertEqual(im[6, 17, afwImage.LOCAL], (0, 0x0, 0))

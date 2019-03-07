@@ -1,9 +1,10 @@
+# This file is part of afw.
 #
-# LSST Data Management System
-# Copyright 2008, 2009, 2010 LSST Corporation.
-#
-# This product includes software developed by the
-# LSST Project (http://www.lsst.org/).
+# Developed for the LSST Data Management System.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org).
+# See the COPYRIGHT file at the top-level directory of this distribution
+# for details of code ownership.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,19 +16,16 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
-# You should have received a copy of the LSST License Statement and
-# the GNU General Public License along with this program.  If not,
-# see <http://www.lsstcorp.org/LegalNotices/>.
-#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
 Tests for MaskedImages
 
 Run with:
-   python MaskedImageIO.py
+   python test_maskedImageIO.py
 or
-   python
-   >>> import MaskedImageIO; MaskedImageIO.run()
+   pytest test_maskedImageIO.py
 """
 
 import contextlib
@@ -46,7 +44,7 @@ import lsst.daf.base as dafBase
 import lsst.geom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
-import lsst.afw.display.ds9 as ds9
+import lsst.afw.display as afwDisplay
 import lsst.pex.exceptions as pexEx
 
 try:
@@ -56,6 +54,7 @@ except pexEx.NotFoundError:
 
 try:
     type(display)
+    afwDisplay.setDefaultMaskTransparency(75)
 except NameError:
     display = False
 
@@ -106,7 +105,7 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
         mask = self.mi.getMask()
 
         if display:
-            ds9.mtv(self.mi)
+            afwDisplay.Display(frame=0).mtv(self.mi, title="Image")
 
         self.assertEqual(image[32, 1, afwImage.LOCAL], 3728)
         self.assertEqual(mask[0, 0, afwImage.LOCAL], 2)  # == BAD

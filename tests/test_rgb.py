@@ -1,9 +1,10 @@
+# This file is part of afw.
 #
-# LSST Data Management System
-# Copyright 2015-2016 LSST/AURA
-#
-# This product includes software developed by the
-# LSST Project (http://www.lsst.org/).
+# Developed for the LSST Data Management System.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org).
+# See the COPYRIGHT file at the top-level directory of this distribution
+# for details of code ownership.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,19 +16,16 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
-# You should have received a copy of the LSST License Statement and
-# the GNU General Public License along with this program.  If not,
-# see <https://www.lsstcorp.org/LegalNotices/>.
-#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
 Tests for RGB Images
 
 Run with:
-   ./rgb.py
+   python test_rgb.py
 or
-   python
-   >>> import rgb; rgb.run()
+   pytest test_rgb.py
 """
 import os
 import math
@@ -40,7 +38,7 @@ import lsst.geom
 import lsst.afw.detection as afwDetect
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
-import lsst.afw.display.ds9 as ds9
+import lsst.afw.display as afwDisplay
 import lsst.afw.display.rgb as rgb
 
 ver1, ver2, ver3 = 1, 3, 1
@@ -64,6 +62,7 @@ except (ImportError, AttributeError):
 
 try:
     type(display)
+    afwDisplay.setDefaultMaskTransparency(75)
 except NameError:
     display = False
 
@@ -254,10 +253,10 @@ class RgbTestCase(unittest.TestCase):
             self.assertTrue(np.isfinite(
                 self.images[f].getImage().getArray()).all())
 
-        if False:
-            ds9.mtv(self.images[B], frame=0, title="B")
-            ds9.mtv(self.images[G], frame=1, title="G")
-            ds9.mtv(self.images[R], frame=2, title="R")
+        if display > 1:
+            afwDisplay.Display(frame=0).mtv(self.images[B], title="B: SAT-interpolated")
+            afwDisplay.Display(frame=1).mtv(self.images[G], title="G: SAT-interpolated")
+            afwDisplay.Display(frame=2).mtv(self.images[R], title="R: SAT-interpolated")
         #
         # Prepare for generating an output file
         #
@@ -329,10 +328,10 @@ class RgbTestCase(unittest.TestCase):
         asinh = rgb.asinhMappingF(self.min, self.range, self.Q)
         rgbImage = rgb.RgbImageF(
             self.images[R], self.images[G], self.images[B], asinh)
-        if False:
-            ds9.mtv(self.images[B], frame=0, title="B")
-            ds9.mtv(self.images[G], frame=1, title="G")
-            ds9.mtv(self.images[R], frame=2, title="R")
+        if display > 1:
+            afwDisplay.Display(frame=0).mtv(self.images[B], title="B: legacy API")
+            afwDisplay.Display(frame=1).mtv(self.images[G], title="G: legacy API")
+            afwDisplay.Display(frame=2).mtv(self.images[R], title="R: legacy API")
 
         rgbImage.write(fileName)
 

@@ -1,9 +1,10 @@
+# This file is part of afw.
 #
-# LSST Data Management System
-# Copyright 2008, 2009, 2010 LSST Corporation.
-#
-# This product includes software developed by the
-# LSST Project (http://www.lsst.org/).
+# Developed for the LSST Data Management System.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org).
+# See the COPYRIGHT file at the top-level directory of this distribution
+# for details of code ownership.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,19 +16,16 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
-# You should have received a copy of the LSST License Statement and
-# the GNU General Public License along with this program.  If not,
-# see <http://www.lsstcorp.org/LegalNotices/>.
-#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
 Tests for PCA on Images
 
 Run with:
-   python imagePca.py
+   python test_imagePca.py
 or
-   python
-   >>> import imagePca; imagePca.run()
+   pytest test_imagePca.py
 """
 
 import unittest
@@ -41,8 +39,7 @@ import lsst.utils.tests
 import lsst.pex.exceptions as pexExcept
 import lsst.geom
 import lsst.afw.image as afwImage
-import lsst.afw.display.utils as displayUtils
-import lsst.afw.display.ds9 as ds9
+import lsst.afw.display as afwDisplay
 
 try:
     type(display)
@@ -148,8 +145,8 @@ class ImagePcaTestCase(lsst.utils.tests.TestCase):
             bases.append(im)
 
         if display:
-            mos = displayUtils.Mosaic(background=-10)
-            ds9.mtv(mos.makeMosaic(bases), title="Basis functions", frame=1)
+            mos = afwDisplay.utils.Mosaic(background=-10)
+            afwDisplay.Display(frame=1).mtv(mos.makeMosaic(bases), title="Basis functions")
 
         inputs = []
         for i in range(numInputs):
@@ -162,8 +159,8 @@ class ImagePcaTestCase(lsst.utils.tests.TestCase):
             self.ImageSet.addImage(im, 1.0)
 
         if display:
-            mos = displayUtils.Mosaic(background=-10)
-            ds9.mtv(mos.makeMosaic(inputs), title="Inputs", frame=2)
+            mos = afwDisplay.utils.Mosaic(background=-10)
+            afwDisplay.Display(frame=2).mtv(mos.makeMosaic(inputs), title="Inputs")
 
         self.ImageSet.analyze()
 
@@ -172,8 +169,8 @@ class ImagePcaTestCase(lsst.utils.tests.TestCase):
             eImages.append(img)
 
         if display:
-            mos = displayUtils.Mosaic(background=-10)
-            ds9.mtv(mos.makeMosaic(eImages), title="Eigenimages", frame=3)
+            mos = afwDisplay.utils.Mosaic(background=-10)
+            afwDisplay.Display(frame=3).mtv(mos.makeMosaic(eImages), title="EigenImages")
 
         self.assertEqual(len(eImages), numInputs)
 
@@ -207,8 +204,8 @@ class ImagePcaTestCase(lsst.utils.tests.TestCase):
             eImages.append(img)
 
         if display:
-            mos = displayUtils.Mosaic(background=-10)
-            ds9.mtv(mos.makeMosaic(eImages), frame=1)
+            mos = afwDisplay.utils.Mosaic(background=-10)
+            afwDisplay.Display(frame=0).mtv(mos.makeMosaic(eImages), title="testPcaNaN")
 
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):

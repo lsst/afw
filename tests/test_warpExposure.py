@@ -1,9 +1,10 @@
+# This file is part of afw.
 #
-# LSST Data Management System
-# Copyright 2008, 2009, 2010 LSST Corporation.
-#
-# This product includes software developed by the
-# LSST Project (http://www.lsst.org/).
+# Developed for the LSST Data Management System.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org).
+# See the COPYRIGHT file at the top-level directory of this distribution
+# for details of code ownership.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,10 +16,8 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
-# You should have received a copy of the LSST License Statement and
-# the GNU General Public License along with this program.  If not,
-# see <http://www.lsstcorp.org/LegalNotices/>.
-#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """Test warpExposure
 """
@@ -37,7 +36,7 @@ import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.image.utils as imageUtils
 import lsst.pex.exceptions as pexExcept
-import lsst.afw.display.ds9 as ds9
+import lsst.afw.display as afwDisplay
 from lsst.log import Log
 
 # Change the level to Log.DEBUG to see debug messages
@@ -45,6 +44,7 @@ Log.getLogger("afw.image.Mask").setLevel(Log.INFO)
 Log.getLogger("TRACE2.afw.math.warp").setLevel(Log.INFO)
 Log.getLogger("TRACE3.afw.math.warp").setLevel(Log.INFO)
 
+afwDisplay.setDefaultMaskTransparency(75)
 
 display = False
 # set True to save afw-warped images as FITS files
@@ -598,12 +598,12 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
             if SAVE_FITS_FILES:
                 afwWarpedExposure.writeFits(afwWarpedImagePath)
             if display:
-                ds9.mtv(afwWarpedExposure, frame=1, title="Warped")
+                afwDisplay.Display(frame=1).mtv(afwWarpedExposure, title="Warped")
 
             swarpedMaskedImage = afwImage.MaskedImageF(swarpedImage)
 
             if display:
-                ds9.mtv(swarpedMaskedImage, frame=2, title="SWarped")
+                afwDisplay.Display(frame=2).mtv(swarpedMaskedImage, title="SWarped")
 
             msg = "afw and swarp %s-warped differ (ignoring bad pixels)" % (
                 kernelName,)
@@ -629,11 +629,11 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
             afwMath.warpImage(afwWarpedImage, warpedWcs, originalImage,
                               originalWcs, warpingControl)
             if display:
-                ds9.mtv(afwWarpedImage, frame=1, title="Warped")
-                ds9.mtv(swarpedImage, frame=2, title="SWarped")
+                afwDisplay.Display(frame=1).mtv(afwWarpedImage, title="Warped")
+                afwDisplay.Display(frame=2).mtv(swarpedImage, title="SWarped")
                 diff = swarpedImage.Factory(swarpedImage, True)
                 diff -= afwWarpedImage
-                ds9.mtv(diff, frame=3, title="swarp - afw")
+                afwDisplay.Display(frame=3).mtv(diff, title="swarp - afw")
             if SAVE_FITS_FILES:
                 afwWarpedImage.writeFits(afwWarpedImagePath)
 

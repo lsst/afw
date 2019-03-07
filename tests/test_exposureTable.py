@@ -1,9 +1,10 @@
+# This file is part of afw.
 #
-# LSST Data Management System
-# Copyright 2008-2016 LSST Corporation.
-#
-# This product includes software developed by the
-# LSST Project (http://www.lsst.org/).
+# Developed for the LSST Data Management System.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org).
+# See the COPYRIGHT file at the top-level directory of this distribution
+# for details of code ownership.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,19 +16,16 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
-# You should have received a copy of the LSST License Statement and
-# the GNU General Public License along with this program.  If not,
-# see <http://www.lsstcorp.org/LegalNotices/>.
-#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
 Tests for lsst.afw.table.ExposureTable
 
 Run with:
-   python testExposureTable.py
+   python test_exposureTable.py
 or
-   python
-   >>> import testExposureTable; testExposureTable.run()
+   pytest test_exposureTable.py
 """
 
 import os.path
@@ -47,11 +45,6 @@ import lsst.afw.image
 import lsst.afw.detection
 from lsst.afw.cameraGeom.testUtils import DetectorWrapper
 from testTableArchivesLib import DummyPsf
-
-try:
-    type(display)
-except NameError:
-    display = False
 
 
 class ExposureTableTestCase(lsst.utils.tests.TestCase):
@@ -200,7 +193,7 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
     def testGeometry(self):
         bigBox = lsst.geom.Box2D(lsst.geom.Box2I(self.bbox0))
         bigBox.include(lsst.geom.Box2D(self.bbox1))
-        points = (np.random.rand(100, 2) * np.array([bigBox.getWidth(), bigBox.getHeight()]) +
+        points = (np.random.rand(100, 2)*np.array([bigBox.getWidth(), bigBox.getHeight()]) +
                   np.array([bigBox.getMinX(), bigBox.getMinY()]))
 
         # make a very slightly perturbed wcs so the celestial transform isn't a
@@ -211,7 +204,7 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
         wcs2 = makeSkyWcs(
             crval=crval2,
             crpix=self.wcs.getPixelOrigin() + lsst.geom.Extent2D(30.0, -50.0),
-            cdMatrix=self.wcs.getCdMatrix() * 1.1,
+            cdMatrix=self.wcs.getCdMatrix()*1.1,
         )
         for x1, y1 in points:
             p1 = lsst.geom.Point2D(x1, y1)

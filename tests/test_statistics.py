@@ -1,9 +1,10 @@
+# This file is part of afw.
 #
-# LSST Data Management System
-# Copyright 2008, 2009, 2010 LSST Corporation.
-#
-# This product includes software developed by the
-# LSST Project (http://www.lsst.org/).
+# Developed for the LSST Data Management System.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org).
+# See the COPYRIGHT file at the top-level directory of this distribution
+# for details of code ownership.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,19 +16,16 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
-# You should have received a copy of the LSST License Statement and
-# the GNU General Public License along with this program.  If not,
-# see <http://www.lsstcorp.org/LegalNotices/>.
-#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
 Tests for Statistics
 
 Run with:
-   ./statistics.py
+   python test_statistics.py
 or
-   python
-   >>> import statistics; statistics.run()
+   pytest test_statistics.py
 """
 
 import math
@@ -41,8 +39,10 @@ import lsst.pex.exceptions
 import lsst.geom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
-import lsst.afw.display.ds9 as ds9
+import lsst.afw.display as afwDisplay
 import lsst.pex.exceptions as pexExcept
+
+afwDisplay.setDefaultMaskTransparency(75)
 
 try:
     afwdataDir = lsst.utils.getPackageDir("afwdata")
@@ -162,8 +162,8 @@ class StatisticsTestCase(lsst.utils.tests.TestCase):
                 sim += 1
 
             if display:
-                ds9.mtv(image, frame=0)
-                ds9.mtv(image2, frame=1)
+                afwDisplay.Display(frame=0).mtv(image, "Image 1")
+                afwDisplay.Display(frame=1).mtv(image2, "Image 2 (var inc by 1/4)")
 
             stats = afwMath.makeStatistics(image2,
                                            afwMath.NPOINT | afwMath.STDEV | afwMath.MEAN | afwMath.ERRORS)

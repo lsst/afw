@@ -1,3 +1,24 @@
+# This file is part of afw.
+#
+# Developed for the LSST Data Management System.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org).
+# See the COPYRIGHT file at the top-level directory of this distribution
+# for details of code ownership.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 __all__ = []  # import this module only for its side effects
 
 from lsst.utils import continueClass
@@ -28,13 +49,14 @@ class Polygon:
         return self.contains(point)
 
     def display(self, xy0=None, frame=1, ctype=None):
-        """Display polygon on existing frame in ds9"""
+        """Display polygon on existing frame"""
         import lsst.geom
-        import lsst.afw.display.ds9 as ds9
+        import lsst.afw.display as afwDisplay
         xy0 = lsst.geom.Extent2D(0, 0) if xy0 is None else lsst.geom.Extent2D(xy0)
-        with ds9.Buffering():
+        disp = afwDisplay.Display(frame=frame)
+        with disp.Buffering():
             for p1, p2 in self.getEdges():
-                ds9.line((p1 - xy0, p2 - xy0), frame=frame, ctype=ctype)
+                disp.line((p1 - xy0, p2 - xy0), ctype=ctype)
 
     def plot(self, axes=None, **kwargs):
         """Plot polygon with matplotlib

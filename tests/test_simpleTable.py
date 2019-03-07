@@ -1,9 +1,10 @@
+# This file is part of afw.
 #
-# LSST Data Management System
-# Copyright 2008-2014 AURA/LSST
-#
-# This product includes software developed by the
-# LSST Project (http://www.lsst.org/).
+# Developed for the LSST Data Management System.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org).
+# See the COPYRIGHT file at the top-level directory of this distribution
+# for details of code ownership.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,19 +16,16 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
-# You should have received a copy of the LSST License Statement and
-# the GNU General Public License along with this program.  If not,
-# see <http://www.lsstcorp.org/LegalNotices/>.
-#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
 Tests for table.SimpleTable
 
 Run with:
-   ./testSimpleTable.py
+   python test_simpleTable.py
 or
-   python
-   >>> import testSimpleTable; testSimpleTable.run()
+   pytest test_simpleTable.py
 """
 import os.path
 import unittest
@@ -40,12 +38,6 @@ import lsst.geom
 import lsst.daf.base
 import lsst.afw.table
 import lsst.afw.fits
-
-try:
-    type(display)
-except NameError:
-    display = False
-
 
 # Testing files live under this, in `data/`.
 testPath = os.path.abspath(os.path.dirname(__file__))
@@ -145,7 +137,7 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         self.checkScalarAccessors(record, kF, "fF", 2.5, 3.5)
         self.checkScalarAccessors(record, kD, "fD", 2.5, 3.5)
         self.checkScalarAccessors(record, kAngle, "fAngle",
-                                  5.1 * lsst.geom.degrees, -4.1 * lsst.geom.degrees)
+                                  5.1*lsst.geom.degrees, -4.1*lsst.geom.degrees)
         self.checkScalarAccessors(record, kString, "fString", "ab", "abcd")
         self.checkArrayAccessors(record, kArrayB, "fArrayB",
                                  makeArray(kArrayB.getSize(), dtype=np.uint8))
@@ -282,7 +274,7 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
 
     def testUnsignedFitsPersistence(self):
         """Test FITS round-trip of unsigned short ints, since FITS handles unsigned columns differently
-        from signed columns
+        from signed columns.
         """
         schema = lsst.afw.table.Schema()
         k1 = schema.addField("f1", type=np.uint16, doc="scalar uint16")
@@ -310,7 +302,8 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
             self.assertEqual(n, r[k])
 
     def testTicket2262(self):
-        """Test that we can construct an array field in Python"""
+        """Test that we can construct an array field in Python.
+        """
         f1 = lsst.afw.table.Field["ArrayF"]("name", "doc", "barn", size=5)
         f2 = lsst.afw.table.Field["ArrayD"]("name", "doc", size=5)
         self.assertEqual(f1.getSize(), 5)
@@ -426,7 +419,7 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         cat6.extend(list(cat1), mapper=mapper)
         self.assertFalse(cat6.isContiguous())
         cat7 = lsst.afw.table.SourceCatalog(schema2)
-        cat7.reserve(len(cat1) * 3)
+        cat7.reserve(len(cat1)*3)
         cat7.extend(list(cat1), mapper=mapper)
         cat7.extend(cat1, mapper)
         cat7.extend(list(cat1), mapper)
@@ -471,7 +464,8 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(table.getBufferSize(), 0)
 
     def testTicket2894(self):
-        """Test boolean-array indexing of catalogs"""
+        """Test boolean-array indexing of catalogs.
+        """
         schema = lsst.afw.table.Schema()
         key = schema.addField(lsst.afw.table.Field[np.int32]("i", "doc for i"))
         cat1 = lsst.afw.table.BaseCatalog(schema)
@@ -489,7 +483,8 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
                                key], np.array([1, 3], dtype=np.int32))
 
     def testTicket2938(self):
-        """Test heterogenous catalogs that have records from multiple tables"""
+        """Test heterogenous catalogs that have records from multiple tables.
+        """
         schema = lsst.afw.table.Schema()
         schema.addField("i", type=np.int32, doc="doc for i")
         cat = lsst.afw.table.BaseCatalog(schema)
@@ -508,7 +503,8 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
                 cat.writeFits(filename)
 
     def testTicket3056(self):
-        """Test sorting and sort-based searches of Catalogs"""
+        """Test sorting and sort-based searches of Catalogs.
+        """
         schema = lsst.afw.table.SimpleTable.makeMinimalSchema()
         ki = schema.addField("i", type=np.int32, doc="doc for i")
         kl = schema.addField("l", type=np.int64, doc="doc for l")
@@ -551,7 +547,8 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(s.stop, cat.upper_bound(3, ki))
 
     def testRename(self):
-        """Test field-renaming functionality in Field, SchemaMapper"""
+        """Test field-renaming functionality in Field, SchemaMapper.
+        """
         field1i = lsst.afw.table.Field[np.int32]("i1", "doc for i", "m")
         field2i = field1i.copyRenamed("i2")
         self.assertEqual(field1i.getName(), "i1")
@@ -605,7 +602,7 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
                          schema3.find(k3a).field.getSize())
 
     def testTicket3066(self):
-        """Test the doReplace option on Schema.addField
+        """Test the doReplace option on Schema.addField.
         """
         schema = lsst.afw.table.Schema()
         k1a = schema.addField("f1", doc="f1a", type="I")
@@ -771,7 +768,8 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
                                      covValues["cov_m"], rtol=1E-6)
 
     def testFitsReadVersion1Compatibility(self):
-        """Test that v1 SimpleCatalogs read from FITS get correct aliases."""
+        """Test that v1 SimpleCatalogs read from FITS get correct aliases.
+        """
         filename = os.path.join(testPath, "data", "ps1-refcat-v1.fits")
         catalog = lsst.afw.table.SimpleCatalog.readFits(filename)
         self.assertIn('g_flux', catalog.schema)

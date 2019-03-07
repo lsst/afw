@@ -1,9 +1,10 @@
+# This file is part of afw.
 #
-# LSST Data Management System
-# Copyright 2008, 2009, 2010 LSST Corporation.
-#
-# This product includes software developed by the
-# LSST Project (http://www.lsst.org/).
+# Developed for the LSST Data Management System.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org).
+# See the COPYRIGHT file at the top-level directory of this distribution
+# for details of code ownership.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,19 +16,16 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
-# You should have received a copy of the LSST License Statement and
-# the GNU General Public License along with this program.  If not,
-# see <http://www.lsstcorp.org/LegalNotices/>.
-#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
 Tests for Footprints, and FootprintSets
 
 Run with:
-   footprint2.py
+   python test_footprint2.py
 or
-   python
-   >>> import footprint2; footprint2.run()
+   pytest test_footprint2.py
 """
 
 import unittest
@@ -37,8 +35,9 @@ import lsst.geom
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
 import lsst.afw.detection as afwDetect
-import lsst.afw.display.ds9 as ds9
+import lsst.afw.display as afwDisplay
 
+afwDisplay.setDefaultMaskTransparency(75)
 try:
     type(display)
 except NameError:
@@ -57,7 +56,7 @@ def toString(*args):
 def peakFromImage(im, pos):
     """Function to extract the sort key of peak height. Sort by decreasing peak height."""
     val = im[pos[0], pos[1], afwImage.LOCAL][0]
-    return -1.0 * val
+    return -1.0*val
 
 
 class Object:
@@ -70,7 +69,7 @@ class Object:
         """Insert self into an image"""
         for sp in self.spans:
             y, x0, x1 = sp
-            for x in range(x0, x1+1):
+            for x in range(x0, x1 + 1):
                 im[x, y, afwImage.LOCAL] = self.val
 
     def __eq__(self, other):
@@ -99,7 +98,7 @@ class FootprintSetTestCase(unittest.TestCase):
             obj.insert(self.im)
 
         if False and display:
-            ds9.mtv(self.im, frame=0)
+            afwDisplay.Display(frame=0).mtv(self.im, title=self._testMethodName + " image")
 
     def tearDown(self):
         del self.im
@@ -142,7 +141,7 @@ class FootprintSetTestCase(unittest.TestCase):
             foot.spans.setImage(idImage, foot.getId())
 
         if False:
-            ds9.mtv(idImage, frame=2)
+            afwDisplay.Display(frame=2).mtv(idImage, title=self._testMethodName + " image")
 
         for i in range(len(objects)):
             for sp in objects[i].getSpans():
@@ -157,7 +156,7 @@ class FootprintSetTestCase(unittest.TestCase):
 
         idImage = ds.insertIntoImage(True)
         if display:
-            ds9.mtv(idImage, frame=2)
+            afwDisplay.Display(frame=2).mtv(idImage, title=self._testMethodName + " image")
 
         for i in range(len(objects)):
             for sp in objects[i].getSpans():
@@ -189,8 +188,7 @@ class FootprintSetTestCase(unittest.TestCase):
             i += 1
 
         if display:
-            ds9.mtv(self.im, frame=0)
-            ds9.mtv(idImage, frame=1)
+            afwDisplay.Display(frame=1).mtv(idImage, title=self._testMethodName + " image")
 
     def testGrow(self):
         """Grow footprints using the FootprintSet constructor"""
@@ -247,7 +245,7 @@ class FootprintSetTestCase(unittest.TestCase):
                 im.getMask(), grown.getFootprints(), 0x10)
 
             if display:
-                ds9.mtv(im)
+                afwDisplay.Display(frame=3).mtv(im, title=self._testMethodName + " image")
 
             foot = grown.getFootprints()[0]
 
@@ -285,7 +283,7 @@ class FootprintSetTestCase(unittest.TestCase):
                 im.getMask(), grown.getFootprints(), 0x10)
 
             if display:
-                ds9.mtv(im)
+                afwDisplay.Display(frame=3).mtv(im, title=self._testMethodName + " image")
 
             foot = grown.getFootprints()[0]
             nextra = 0
@@ -314,7 +312,7 @@ class FootprintSetTestCase(unittest.TestCase):
                 im.getMask(), grown.getFootprints(), 0x10)
 
             if display:
-                ds9.mtv(im)
+                afwDisplay.Display(frame=2).mtv(im, title=self._testMethodName + " image")
 
             foot = grown.getFootprints()[0]
             nextra = 0
@@ -354,7 +352,7 @@ class FootprintSetTestCase(unittest.TestCase):
                 im.getMask(), grown.getFootprints(), 0x10)
 
             if display:
-                ds9.mtv(im)
+                afwDisplay.Display(frame=1).mtv(im, title=self._testMethodName + " image")
 
             self.assertEqual(len(grown.getFootprints()), 1)
             foot = grown.getFootprints()[0]
@@ -379,7 +377,7 @@ class FootprintSetTestCase(unittest.TestCase):
         afwDetect.setMaskFromFootprintList(im.getMask(), objects, 0x10)
 
         if display:
-            ds9.mtv(im)
+            afwDisplay.Display(frame=2).mtv(im, title=self._testMethodName + " image")
 
         self.assertEqual(len(objects), 1)
 
@@ -418,7 +416,7 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
                 self.im.getImage()[x, y, afwImage.LOCAL] = I
 
         if False and display:
-            ds9.mtv(self.im, frame=0)
+            afwDisplay.Display(frame=0).mtv(self.im, title=self._testMethodName + " image")
 
     def setUp(self):
         self.im, self.fs = None, None
@@ -441,7 +439,7 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
 
         def peakDescending(p):
             """Sort self.peaks in decreasing peak height to match Footprint.getPeaks()"""
-            return p[2] * -1.0
+            return p[2]*-1.0
         for i, peaks in enumerate(self.peaks):
             self.peaks[i] = sorted([(x, y, self.im.getImage()[x, y, afwImage.LOCAL]) for x, y in peaks],
                                    key=peakDescending)
@@ -470,18 +468,17 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
                          sum([len(f.getPeaks()) for f in feet]))
 
         if display:
-            ds9.mtv(self.im, frame=frame)
+            disp = afwDisplay.Display(frame=frame)
+            disp.mtv(self.im, title=self._testMethodName + " image")
 
-            with ds9.Buffering():
+            with disp.Buffering():
                 for i, foot in enumerate(feet):
                     for p in foot.getPeaks():
-                        ds9.dot("+", p.getIx(), p.getIy(),
-                                size=0.4, frame=frame)
+                        disp.dot("+", p.getIx(), p.getIy(), size=0.4)
 
                     if i < len(self.peaks):
                         for trueX, trueY, peakVal in self.peaks[i]:
-                            ds9.dot("x", trueX, trueY, size=0.4,
-                                    ctype=ds9.RED, frame=frame)
+                            disp.dot("x", trueX, trueY, size=0.4, ctype=afwDisplay.RED)
 
         for i, foot in enumerate(feet):
             npeak = None
@@ -619,18 +616,17 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
         if display:
             frame = 0
 
-            ds9.mtv(self.im, frame=frame)
+            disp = afwDisplay.Display(frame=frame)
+            disp.mtv(self.im, title=self._testMethodName + " image")
 
-            with ds9.Buffering():
+            with disp.Buffering():
                 for i, foot in enumerate(self.fs.getFootprints()):
                     for p in foot.getPeaks():
-                        ds9.dot("+", p.getIx(), p.getIy(),
-                                size=0.4, frame=frame)
+                        disp.dot("+", p.getIx(), p.getIy(), size=0.4)
 
                     if i < len(self.peaks):
                         for trueX, trueY in self.peaks[i]:
-                            ds9.dot("x", trueX, trueY, size=0.4,
-                                    ctype=ds9.RED, frame=frame)
+                            disp.dot("x", trueX, trueY, size=0.4, ctype=afwDisplay.RED)
 
         self.assertEqual(len(self.fs.getFootprints()), 1)
         self.assertEqual(len(self.fs.getFootprints()[

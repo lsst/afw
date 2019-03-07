@@ -1,9 +1,10 @@
+# This file is part of afw.
 #
-# LSST Data Management System
-# Copyright 2008-2017 LSST Corporation.
-#
-# This product includes software developed by the
-# LSST Project (http://www.lsst.org/).
+# Developed for the LSST Data Management System.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org).
+# See the COPYRIGHT file at the top-level directory of this distribution
+# for details of code ownership.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,19 +16,16 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
-# You should have received a copy of the LSST License Statement and
-# the GNU General Public License along with this program.  If not,
-# see <http://www.lsstcorp.org/LegalNotices/>.
-#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
 Tests for HeavyFootprints
 
 Run with:
-   heavyFootprint.py
+   python test_heavyFootprint.py
 or
-   python
-   >>> import heavyFootprint; heavyFootprint.run()
+   pytest test_heavyFootprint.py
 """
 
 import os
@@ -40,10 +38,11 @@ import lsst.geom
 import lsst.afw.image as afwImage
 import lsst.afw.detection as afwDetect
 import lsst.afw.geom as afwGeom
-import lsst.afw.display.ds9 as ds9
+import lsst.afw.display as afwDisplay
 from lsst.log import Log
 
 Log.getLogger("afw.image.Mask").setLevel(Log.INFO)
+afwDisplay.setDefaultMaskTransparency(75)
 
 try:
     type(display)
@@ -90,8 +89,8 @@ class HeavyFootprintTestCase(lsst.utils.tests.TestCase):
         hfoot.insert(omi)
 
         if display:
-            ds9.mtv(imi, frame=0, title="input")
-            ds9.mtv(omi, frame=1, title="output")
+            afwDisplay.Display(frame=0).mtv(imi, title="testCreate input")
+            afwDisplay.Display(frame=1).mtv(omi, title="testCreate output")
 
         for s in self.foot.getSpans():
             y = s.getY()
@@ -137,9 +136,6 @@ class HeavyFootprintTestCase(lsst.utils.tests.TestCase):
         ctrl = afwDetect.HeavyFootprintCtrl(afwDetect.HeavyFootprintCtrl.NONE)
         fs.makeHeavy(self.mi, ctrl)
 
-        if display:
-            ds9.mtv(self.mi, frame=0, title="input")
-
         omi = self.mi.Factory(self.mi.getDimensions())
 
         for foot in fs.getFootprints():
@@ -147,6 +143,10 @@ class HeavyFootprintTestCase(lsst.utils.tests.TestCase):
 
         for foot in fs.getFootprints():
             foot.insert(omi)
+
+        if display:
+            afwDisplay.Display(frame=0).mtv(self.mi, title="testMakeHeavy input")
+            afwDisplay.Display(frame=1).mtv(omi, title="testMakeHeavy output")
 
         self.assertFloatsEqual(
             self.mi.getImage().getArray(), omi.getImage().getArray())
@@ -165,8 +165,8 @@ class HeavyFootprintTestCase(lsst.utils.tests.TestCase):
             foot.insert(omi)
 
         if display:
-            ds9.mtv(self.mi, frame=0, title="input")
-            ds9.mtv(omi, frame=1, title="sub")
+            afwDisplay.Display(frame=0).mtv(self.mi, title="testXY0 input")
+            afwDisplay.Display(frame=1).mtv(omi, title="testXY0 sub")
 
         submi = self.mi.Factory(self.mi, bbox, afwImage.LOCAL)
         self.assertFloatsEqual(submi.getImage().getArray(),

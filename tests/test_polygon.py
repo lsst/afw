@@ -1,9 +1,10 @@
+# This file is part of afw.
 #
-# LSST Data Management System
-# Copyright 2008-2014 LSST Corporation.
-#
-# This product includes software developed by the
-# LSST Project (http://www.lsst.org/).
+# Developed for the LSST Data Management System.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org).
+# See the COPYRIGHT file at the top-level directory of this distribution
+# for details of code ownership.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,10 +16,8 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
-# You should have received a copy of the LSST License Statement and
-# the GNU General Public License along with this program.  If not,
-# see <http://www.lsstcorp.org/LegalNotices/>.
-#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import pickle
 import unittest
@@ -30,7 +29,8 @@ import lsst.geom
 import lsst.afw.geom as afwGeom
 import lsst.afw.image  # noqa required by Polygon.createImage
 
-DEBUG = False
+display = False
+doPause = False  # If False, autoscan plots with 2 sec delay.  If True, impose manual closing of plots.
 
 
 def circle(radius, num, x0=0.0, y0=0.0):
@@ -253,16 +253,18 @@ class PolygonTest(lsst.utils.tests.TestCase):
 
     def testImage(self):
         """Test Polygon.createImage"""
+        if display:
+            import lsst.afw.display as afwDisplay
         for i, num in enumerate(range(3, 30)):
             poly = self.polygon(num, 25, 75, 75)
             box = lsst.geom.Box2I(lsst.geom.Point2I(15, 15),
                                   lsst.geom.Extent2I(115, 115))
             image = poly.createImage(box)
-            if DEBUG:
-                import lsst.afw.display.ds9 as ds9
-                ds9.mtv(image, frame=i+1, title="Polygon nside=%d" % num)
+            if display:
+                disp = afwDisplay.Display(frame=i + 1)
+                disp.mtv(image, title="Polygon nside=%d" % num)
                 for p1, p2 in poly.getEdges():
-                    ds9.line((p1, p2), frame=i+1)
+                    disp.line((p1, p2))
             self.assertAlmostEqual(
                 image.getArray().sum()/poly.calculateArea(), 1.0, 6)
 
@@ -300,15 +302,27 @@ class PolygonTest(lsst.utils.tests.TestCase):
 
     def testSubSample(self):
         """Test Polygon.subSample"""
+        if display:
+            import matplotlib.pyplot as plt
         for num in range(3, 30):
             poly = self.polygon(num)
             sub = poly.subSample(2)
 
-            if DEBUG:
-                import matplotlib.pyplot as plt
+            if display:
                 axes = poly.plot(c='b')
+                axes.set_aspect("equal")
+                axes.set_title("Polygon nside=%d" % num)
                 sub.plot(axes, c='r')
-                plt.show()
+                if not doPause:
+                    try:
+                        plt.pause(2)
+                        plt.close()
+                    except Exception:
+                        print("%s: plt.pause() failed. Please close plots when done." % self.__str__())
+                        plt.show()
+                else:
+                    print("%s: Please close plots when done." % self.__str__())
+                    plt.show()
 
             self.assertEqual(len(sub), 2*num)
             self.assertAlmostEqual(sub.calculateArea(), poly.calculateArea())
@@ -331,6 +345,8 @@ class PolygonTest(lsst.utils.tests.TestCase):
             self.assertAlmostEqual(polyCenter[1], subCenter[1])
 
     def testTransform2(self):
+        if display:
+            import matplotlib.pyplot as plt
         scale = 2.0
         shift = lsst.geom.Extent2D(3.0, 4.0)
         affineTransform = lsst.geom.AffineTransform.makeTranslation(shift) * \
@@ -344,11 +360,21 @@ class PolygonTest(lsst.utils.tests.TestCase):
             self.assertEqual(large1, expect)
             self.assertEqual(large2, expect)
 
-            if DEBUG:
-                import matplotlib.pyplot as plt
+            if display:
                 axes = small.plot(c='k')
+                axes.set_aspect("equal")
+                axes.set_title("AffineTransform: Polygon nside=%d" % num)
                 large1.plot(axes, c='b')
-                plt.show()
+                if not doPause:
+                    try:
+                        plt.pause(2)
+                        plt.close()
+                    except Exception:
+                        print("%s: plt.pause() failed. Please close plots when done." % self.__str__())
+                        plt.show()
+                else:
+                    print("%s: Please close plots when done." % self.__str__())
+                    plt.show()
 
     def testReadWrite(self):
         """Test that polygons can be read and written to fits files"""

@@ -24,10 +24,9 @@
 Tests for Interpolate
 
 Run with:
-   ./Interpolate.py
+   python test_interpolate.py
 or
-   python
-   >>> import Interpolate; Interpolate.run()
+   pytest test_interpolate.py
 """
 
 import unittest

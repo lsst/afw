@@ -1,9 +1,10 @@
+# This file is part of afw.
 #
-# LSST Data Management System
-# Copyright 2008, 2009, 2010 LSST Corporation.
-#
-# This product includes software developed by the
-# LSST Project (http://www.lsst.org/).
+# Developed for the LSST Data Management System.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org).
+# See the COPYRIGHT file at the top-level directory of this distribution
+# for details of code ownership.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,10 +16,8 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
-# You should have received a copy of the LSST License Statement and
-# the GNU General Public License along with this program.  If not,
-# see <http://www.lsstcorp.org/LegalNotices/>.
-#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """Test lsst.afwMath.convolve
 
@@ -44,10 +43,10 @@ import lsst.pex.exceptions as pexExcept
 from test_kernel import makeDeltaFunctionKernelList, makeGaussianKernelList
 from lsst.log import Log
 
-import lsst.afw.display.ds9 as ds9
-import lsst.afw.display.utils as displayUtils
+import lsst.afw.display as afwDisplay
 
 Log.getLogger("afw.image.Mask").setLevel(Log.INFO)
+afwDisplay.setDefaultMaskTransparency(75)
 
 try:
     display
@@ -259,8 +258,9 @@ class ConvolveTestCase(lsst.utils.tests.TestCase):
                          self.maskedImage, kernel, convControl)
 
         if display and False:
-            ds9.mtv(displayUtils.Mosaic().makeMosaic([
-                self.maskedImage, refMaskedImage, self.cnvMaskedImage]), frame=0)
+            afwDisplay.Display(frame=0).mtv(afwDisplay.utils.Mosaic().makeMosaic([
+                self.maskedImage, refMaskedImage, self.cnvMaskedImage]),
+                title=self._testMethodName + " mosaic")
             if False:
                 for (x, y) in ((0, 0), (1, 0), (0, 1), (50, 50)):
                     print("Mask(%d,%d) 0x%x 0x%x" % (x, y, refMaskedImage.getMask()[x, y, afwImage.LOCAL],
@@ -537,7 +537,7 @@ class ConvolveTestCase(lsst.utils.tests.TestCase):
                         if display and False:
                             kim = afwImage.ImageD(kWidth, kHeight)
                             kernel.computeImage(kim, False)
-                            ds9.mtv(kim, frame=1)
+                            afwDisplay.Display(frame=1).mtv(kim, title=self._testMethodName + " image")
 
                         self.runStdTest(
                             kernel, kernelDescr="Delta Function Kernel")

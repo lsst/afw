@@ -25,10 +25,9 @@
 Tests for math.LeastSquares
 
 Run with:
-   ./testLeastSquares.py
+   python test_leastSquares.py
 or
-   python
-   >>> import testLeastSquares; testLeastSquares.run()
+   pytest test_leastSquares.py
 """
 
 import unittest

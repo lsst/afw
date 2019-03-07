@@ -70,7 +70,7 @@ Box2I(minimum=Point2I(0, 0), dimensions=Extent2I(6, 7))
 
 .. note::
 
-    The `PARENT` bounding box's minimum point is ``xy0``, while the `PARENT` bounding box's minimum point is ``(0, 0)``; this is *always* true.
+    The `PARENT` bounding box's minimum point is ``xy0``, while the `LOCAL` bounding box's minimum point is ``(0, 0)``; this is *always* true.
 
 The operation that creates a subimage can also accept an `ImageOrigin` argument:
 

@@ -1,9 +1,10 @@
+# This file is part of afw.
 #
-# LSST Data Management System
-# Copyright 2015 LSST Corporation.
-#
-# This product includes software developed by the
-# LSST Project (http://www.lsst.org/).
+# Developed for the LSST Data Management System.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org).
+# See the COPYRIGHT file at the top-level directory of this distribution
+# for details of code ownership.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,21 +16,14 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
-# You should have received a copy of the LSST License Statement and
-# the GNU General Public License along with this program.  If not,
-# see <http://www.lsstcorp.org/LegalNotices/>.
-#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
 Tests for displaying devices
 
 Run with:
-   display.py [backend]
-or
-   python
-   >>> import display
-   >>> display.backend = "ds9"   # optional
-   >>> display.run()
+   python test_display.py [backend]
 """
 import os
 import unittest
@@ -59,7 +53,7 @@ class DisplayTestCase(unittest.TestCase):
         dirName = os.path.split(__file__)[0]
         self.fileName = os.path.join(
             dirName, "data", "HSC-0908120-056-small.fits")
-        self.display0 = afwDisplay.getDisplay(frame=0, verbose=True)
+        self.display0 = afwDisplay.Display(frame=0, verbose=True)
 
     def testMtv(self):
         """Test basic image display"""
@@ -73,7 +67,7 @@ class DisplayTestCase(unittest.TestCase):
 
     def testWith(self):
         """Test using displays with with statement"""
-        with afwDisplay.getDisplay(0) as disp:
+        with afwDisplay.Display(0) as disp:
             self.assertIsNotNone(disp)
 
     def testTwoDisplays(self):
@@ -96,7 +90,7 @@ class DisplayTestCase(unittest.TestCase):
         self.display0.pan(205, 180)
         self.display0.zoom(4)
 
-        afwDisplay.getDisplay(1).zoom(4, 205, 180)
+        afwDisplay.Display(1).zoom(4, 205, 180)
 
     def testStackingOrder(self):
         """ Un-iconise and raise the display to the top of the stacking order if appropriate"""
@@ -134,7 +128,7 @@ class DisplayTestCase(unittest.TestCase):
 
     def testImageTypes(self):
         """Check that we can display a range of types of image"""
-        with afwDisplay.getDisplay("dummy", "virtualDevice") as dummy:
+        with afwDisplay.Display("dummy", "virtualDevice") as dummy:
             for imageType in [afwImage.DecoratedImageF,
                               afwImage.ExposureF,
                               afwImage.ImageF,

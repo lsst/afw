@@ -1,9 +1,10 @@
+# This file is part of afw.
 #
-# LSST Data Management System
-# Copyright 2008-2017 LSST Corporation.
-#
-# This product includes software developed by the
-# LSST Project (http://www.lsst.org/).
+# Developed for the LSST Data Management System.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org).
+# See the COPYRIGHT file at the top-level directory of this distribution
+# for details of code ownership.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,19 +16,16 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
-# You should have received a copy of the LSST License Statement and
-# the GNU General Public License along with this program.  If not,
-# see <http://www.lsstcorp.org/LegalNotices/>.
-#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
 Tests for table FunctorKeys
 
 Run with:
-   ./testFunctorKeys.py
+   python test_functorKeys.py
 or
-   python
-   >>> import testFunctorKeys; testFunctorKeys.run()
+   pytest test_functorKeys.py
 """
 import unittest
 
@@ -39,17 +37,12 @@ import lsst.geom
 import lsst.afw.table
 import lsst.afw.geom
 
-try:
-    type(display)
-except NameError:
-    display = False
-
 
 def makePositiveSymmetricMatrix(size):
     """Return a random symmetric matrix with only positive eigenvalues, suitable
     for use as a covariance matrix.
     """
-    a = numpy.random.randn(size, size+1).astype(numpy.float32)
+    a = numpy.random.randn(size, size + 1).astype(numpy.float32)
     m = numpy.dot(a, a.transpose())
     for i in range(size):
         for j in range(i):
@@ -403,12 +396,12 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
         # we set each matrix element a two-digit number where the first digit is the row
         # index and the second digit is the column index.
         for i in range(len(parameterNames)):
-            record.set(sigmaKeys[i], ((i+1)*10 + (i+1))**0.5)
+            record.set(sigmaKeys[i], ((i + 1)*10 + (i + 1))**0.5)
             if varianceOnly:
                 continue
             for j in range(i):
                 if covKeys[k].isValid():
-                    record.set(covKeys[k], (i+1)*10 + (j+1))
+                    record.set(covKeys[k], (i + 1)*10 + (j + 1))
                 k += 1
         # test that the return type and value is correct
         matrix1 = record.get(fKey1)
@@ -420,30 +413,30 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
         k = 0
         for i in range(len(parameterNames)):
             self.assertFloatsAlmostEqual(
-                matrix1[i, i], (i+1)*10 + (i+1), rtol=1E-7)
+                matrix1[i, i], (i + 1)*10 + (i + 1), rtol=1E-7)
             if varianceOnly:
                 continue
             for j in range(i):
                 if covKeys[k].isValid():
                     self.assertFloatsAlmostEqual(
-                        matrix1[i, j], (i+1)*10 + (j+1), rtol=1E-7)
+                        matrix1[i, j], (i + 1)*10 + (j + 1), rtol=1E-7)
                     self.assertFloatsAlmostEqual(
-                        matrix2[i, j], (i+1)*10 + (j+1), rtol=1E-7)
+                        matrix2[i, j], (i + 1)*10 + (j + 1), rtol=1E-7)
                     self.assertFloatsAlmostEqual(
-                        matrix1[j, i], (i+1)*10 + (j+1), rtol=1E-7)
+                        matrix1[j, i], (i + 1)*10 + (j + 1), rtol=1E-7)
                     self.assertFloatsAlmostEqual(
-                        matrix2[j, i], (i+1)*10 + (j+1), rtol=1E-7)
+                        matrix2[j, i], (i + 1)*10 + (j + 1), rtol=1E-7)
                     self.assertFloatsAlmostEqual(
                         fKey1.getElement(record, i, j),
-                        (i+1)*10 + (j+1), rtol=1E-7)
+                        (i + 1)*10 + (j + 1), rtol=1E-7)
                     self.assertFloatsAlmostEqual(
                         fKey2.getElement(record, i, j),
-                        (i+1)*10 + (j+1), rtol=1E-7)
+                        (i + 1)*10 + (j + 1), rtol=1E-7)
                     v = numpy.random.randn()
                     fKey1.setElement(record, i, j, v)
                     self.assertFloatsAlmostEqual(
                         fKey2.getElement(record, i, j), v, rtol=1E-7)
-                    fKey2.setElement(record, i, j, (i+1)*10 + (j+1))
+                    fKey2.setElement(record, i, j, (i + 1)*10 + (j + 1))
                 else:
                     with self.assertRaises(lsst.pex.exceptions.LogicError):
                         fKey1.setElement(record, i, j, 0.0)

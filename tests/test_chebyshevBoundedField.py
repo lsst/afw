@@ -1,9 +1,10 @@
+# This file is part of afw.
 #
-# LSST Data Management System
-# Copyright 2008, 2009, 2010 LSST Corporation.
-#
-# This product includes software developed by the
-# LSST Project (http://www.lsst.org/).
+# Developed for the LSST Data Management System.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org).
+# See the COPYRIGHT file at the top-level directory of this distribution
+# for details of code ownership.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,19 +16,16 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
-# You should have received a copy of the LSST License Statement and
-# the GNU General Public License along with this program.  If not,
-# see <http://www.lsstcorp.org/LegalNotices/>.
-#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
 Tests for math.ChebyshevBoundedField
 
 Run with:
-   ./testChebyshevBoundedField.py
+   python test_chebyshevBoundedField.py
 or
-   python
-   >>> import testSchema; testSchema.run()
+   pytest test_chebyshevBoundedField.py
 """
 
 import unittest
@@ -40,10 +38,6 @@ import lsst.geom
 import lsst.afw.image
 import lsst.afw.math
 
-try:
-    type(display)
-except NameError:
-    display = False
 
 CHEBYSHEV_T = [
     lambda x: x**0,
@@ -56,12 +50,13 @@ CHEBYSHEV_T = [
 
 
 def multiply(image, field):
-    """Return the product of image and field() at each point in image."""
+    """Return the product of image and field() at each point in image.
+    """
     box = image.getBBox()
     outImage = lsst.afw.image.ImageF(box)
-    for i in range(box.getMinX(), box.getMaxX()+1):
-        for j in range(box.getMinY(), box.getMaxY()+1):
-            outImage[i, j] = image[i, j] * field.evaluate(i, j)
+    for i in range(box.getMinX(), box.getMaxX() + 1):
+        for j in range(box.getMinY(), box.getMaxY() + 1):
+            outImage[i, j] = image[i, j]*field.evaluate(i, j)
     return outImage
 
 
@@ -80,14 +75,14 @@ class ChebyshevBoundedFieldTestCase(lsst.utils.tests.TestCase):
         self.cases = []
         for orderX in range(0, 5):
             for orderY in range(0, 5):
-                indexX, indexY = np.meshgrid(np.arange(orderX+1, dtype=int),
-                                             np.arange(orderY+1, dtype=int))
+                indexX, indexY = np.meshgrid(np.arange(orderX + 1, dtype=int),
+                                             np.arange(orderY + 1, dtype=int))
                 for triangular in (True, False):
                     ctrl = lsst.afw.math.ChebyshevBoundedFieldControl()
                     ctrl.orderX = orderX
                     ctrl.orderY = orderY
                     ctrl.triangular = triangular
-                    coefficients = np.random.randn(orderY+1, orderX+1)
+                    coefficients = np.random.randn(orderY + 1, orderX + 1)
                     if triangular:
                         coefficients[indexX + indexY >
                                      max(orderX, orderY)] = 0.0
@@ -123,8 +118,8 @@ class ChebyshevBoundedFieldTestCase(lsst.utils.tests.TestCase):
         factor = 12.345
         boxD = lsst.geom.Box2D(self.bbox)
         # sx, sy: transform from self.bbox range to [-1, -1]
-        sx = 2.0 / boxD.getWidth()
-        sy = 2.0 / boxD.getHeight()
+        sx = 2.0/boxD.getWidth()
+        sy = 2.0/boxD.getHeight()
         nPoints = 50
         for ctrl, coefficients in self.cases:
             field = lsst.afw.math.ChebyshevBoundedField(
@@ -150,7 +145,8 @@ class ChebyshevBoundedFieldTestCase(lsst.utils.tests.TestCase):
                 scaled.getCoefficients(), factor*field.getCoefficients())
 
     def testMultiplyImage(self):
-        """Test Multiplying in place an image."""
+        """Test Multiplying in place an image.
+        """
         _, coefficients = self.cases[-2]
         field = lsst.afw.math.ChebyshevBoundedField(self.image.getBBox(), coefficients)
         # multiplyImage() is in-place, so we have to make the expected result first.
@@ -159,7 +155,8 @@ class ChebyshevBoundedFieldTestCase(lsst.utils.tests.TestCase):
         self.assertImagesAlmostEqual(self.image, expect)
 
     def testMultiplyImageRaisesUnequalBBox(self):
-        """Multiplying an image with a different bbox should raise"""
+        """Multiplying an image with a different bbox should raise.
+        """
         _, coefficients = self.cases[-2]
         field = lsst.afw.math.ChebyshevBoundedField(self.image.getBBox(), coefficients)
         subBox = lsst.geom.Box2I(lsst.geom.Point2I(0, 3), lsst.geom.Point2I(3, 4))
@@ -294,10 +291,10 @@ class ChebyshevBoundedFieldTestCase(lsst.utils.tests.TestCase):
         self._testIntegrateBox(bbox, coeffs, (88.0/9.0)*coeffs[2, 2])
 
     def testMean(self):
-        """
-        The mean of the nth 1d Chebyshev (a_n*T_n(x)) on [-1,1] is
-            0 for odd n
-            a_n / (1-n^2) for even n
+        """The mean of the nth 1d Chebyshev (a_n*T_n(x)) on [-1,1] is
+           0 for odd n
+           a_n / (1-n^2) for even n
+
         Similarly, the mean of the (n,m)th 2d Chebyshev is the appropriate
         product of the above.
         """
@@ -386,7 +383,7 @@ class ChebyshevBoundedFieldTestCase(lsst.utils.tests.TestCase):
             self.assertEqual(inField.getBBox(), outField.getBBox())
 
     def testTruncate(self):
-        """Test that truncate() works as expected
+        """Test that truncate() works as expected.
         """
         for ctrl, coefficients in self.cases:
             field1 = lsst.afw.math.ChebyshevBoundedField(

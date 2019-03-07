@@ -24,10 +24,9 @@
 Tests for image.ApCorrMap
 
 Run with:
-   ./testApCorrMap.py
+   python test_apCorrMap.py
 or
-   python
-   >>> import testSchema; testSchema.run()
+   pytest test_apCorrMap.py
 """
 import collections
 import os
@@ -40,11 +39,6 @@ import lsst.pex.exceptions
 import lsst.geom
 import lsst.afw.math
 import lsst.afw.image
-
-try:
-    type(display)
-except NameError:
-    display = False
 
 
 class ApCorrMapTestCase(lsst.utils.tests.TestCase):
@@ -76,7 +70,8 @@ class ApCorrMapTestCase(lsst.utils.tests.TestCase):
 
     def testAccessors(self):
         """Test the accessors and other custom Swig code we've added to make ApCorrMap behave like a Python
-        mapping."""
+        mapping.
+        """
         self.assertEqual(len(self.map), 3)
         self.assertEqual(collections.OrderedDict(self.map),
                          {name: value for (name, value) in list(self.map.items())})
@@ -99,14 +94,16 @@ class ApCorrMapTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(self.map.get("d"), self.map["d"])
 
     def testPersistence(self):
-        """Test that we can round-trip an ApCorrMap through FITS persistence."""
+        """Test that we can round-trip an ApCorrMap through FITS persistence.
+        """
         with lsst.utils.tests.getTempFilePath(".fits") as filename:
             self.map.writeFits(filename)
             map2 = lsst.afw.image.ApCorrMap.readFits(filename)
             self.compare(self.map, map2)
 
     def testExposurePersistence(self):
-        """Test that the ApCorrMap is saved with an Exposure"""
+        """Test that the ApCorrMap is saved with an Exposure.
+        """
         with lsst.utils.tests.getTempFilePath(".fits") as filename:
             exposure1 = lsst.afw.image.ExposureF(self.bbox)
             exposure1.getInfo().setApCorrMap(self.map)
@@ -116,7 +113,8 @@ class ApCorrMapTestCase(lsst.utils.tests.TestCase):
             self.compare(self.map, map2)
 
     def testExposureRecordPersistence(self):
-        """Test that the ApCorrMap is saved with an ExposureRecord"""
+        """Test that the ApCorrMap is saved with an ExposureRecord.
+        """
         with lsst.utils.tests.getTempFilePath(".fits") as filename:
             cat1 = lsst.afw.table.ExposureCatalog(
                 lsst.afw.table.ExposureTable.makeMinimalSchema())
@@ -129,7 +127,8 @@ class ApCorrMapTestCase(lsst.utils.tests.TestCase):
             self.compare(self.map, map2)
 
     def testExposureCatalogBackwardsCompatibility(self):
-        """Test that we can read an ExposureCatalog written with an old version of the code."""
+        """Test that we can read an ExposureCatalog written with an old version of the code.
+        """
         testPath = os.path.abspath(os.path.dirname(__file__))
         filename = os.path.join(testPath, "data", "version-0-ExposureCatalog.fits")
         cat = lsst.afw.table.ExposureCatalog.readFits(filename)
@@ -137,7 +136,8 @@ class ApCorrMapTestCase(lsst.utils.tests.TestCase):
         self.assertIsNone(record.getApCorrMap())
 
     def testScale(self):
-        """Test that we can scale an ApCorrMap"""
+        """Test that we can scale an ApCorrMap.
+        """
         scale = 12.345
         new = lsst.afw.image.ApCorrMap()
         for name, value in self.map.items():

@@ -1,11 +1,11 @@
 #!/usr/bin/env python
-
+# This file is part of afw.
 #
-# LSST Data Management System
-# Copyright 2008, 2009, 2010 LSST Corporation.
-#
-# This product includes software developed by the
-# LSST Project (http://www.lsst.org/).
+# Developed for the LSST Data Management System.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org).
+# See the COPYRIGHT file at the top-level directory of this distribution
+# for details of code ownership.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,16 +17,14 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
-# You should have received a copy of the LSST License Statement and
-# the GNU General Public License along with this program.  If not,
-# see <http://www.lsstcorp.org/LegalNotices/>.
-#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#
+
 import lsst.geom
 import lsst.afw.math as afwMath
 import lsst.afw.image as afwImage
-import lsst.afw.display.ds9 as ds9
+import lsst.afw.display as afwDisplay
 
 # This code was submitted as a part of ticket #749 to demonstrate
 # the failure of Statistics in dealing with NaN
@@ -41,13 +39,13 @@ def main():
     inImage = afwImage.ImageF(lsst.geom.Extent2I(100, 100))
     inImage.set(1)
     if disp:
-        ds9.mtv(inImage, frame=0)
+        afwDisplay.Display(frame=0).mtv(inImage, title="Input Image")
 
     # works
     outImage = afwImage.ImageF(lsst.geom.Extent2I(100, 100))
     afwMath.convolve(outImage, inImage, gaussKernel, False, True)
     if disp:
-        ds9.mtv(outImage, frame=1)
+        afwDisplay.Display(frame=1).mtv(outImage, title="Output Image")
     print("Should be a number: ", afwMath.makeStatistics(
         outImage, afwMath.MEAN).getValue())
     print("Should be a number: ", afwMath.makeStatistics(
@@ -57,7 +55,7 @@ def main():
     outImage = afwImage.ImageF(lsst.geom.Extent2I(100, 100))
     afwMath.convolve(outImage, inImage, gaussKernel, False, False)
     if disp:
-        ds9.mtv(outImage, frame=2)
+        afwDisplay.Display(frame=2).mtv(outImage, title="Output Image")
     print("Should be a number: ", afwMath.makeStatistics(
         outImage, afwMath.MEAN).getValue())
     print("Should be a number: ", afwMath.makeStatistics(

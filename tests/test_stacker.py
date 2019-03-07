@@ -1,9 +1,10 @@
+# This file is part of afw.
 #
-# LSST Data Management System
-# Copyright 2008-2017 LSST Corporation.
-#
-# This product includes software developed by the
-# LSST Project (http://www.lsst.org/).
+# Developed for the LSST Data Management System.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org).
+# See the COPYRIGHT file at the top-level directory of this distribution
+# for details of code ownership.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,20 +16,16 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
-# You should have received a copy of the LSST License Statement and
-# the GNU General Public License along with this program.  If not,
-# see <http://www.lsstcorp.org/LegalNotices/>.
-#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-# -*- python -*-
 """
 Tests for Stack
 
 Run with:
-   ./Stacker.py
+   python test_stacker.py
 or
-   python
-   >>> import Stacker; Stacker.run()
+   pytest test_stacker.py
 """
 import unittest
 from functools import reduce
@@ -40,9 +37,10 @@ import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.utils.tests
 import lsst.pex.exceptions as pexEx
-import lsst.afw.display.ds9 as ds9
+import lsst.afw.display as afwDisplay
 
 display = False
+afwDisplay.setDefaultMaskTransparency(75)
 
 ######################################
 # main body of code
@@ -169,8 +167,8 @@ class StackTestCase(lsst.utils.tests.TestCase):
         imgStack = afwMath.statisticsStack(imgList, afwMath.MEAN)
 
         if display:
-            ds9.mtv(img, frame=1, title="input")
-            ds9.mtv(imgStack, frame=2, title="stack")
+            afwDisplay.Display(frame=1).mtv(img, title="input")
+            afwDisplay.Display(frame=2).mtv(imgStack, title="stack")
 
         self.assertEqual(img[0, 0, afwImage.LOCAL][0], imgStack[0, 0, afwImage.LOCAL][0])
 
@@ -216,15 +214,15 @@ class StackTestCase(lsst.utils.tests.TestCase):
             mimgVec.append(mimg)
 
             if display > 1:
-                ds9.mtv(mimg, frame=i, title=str(i))
+                afwDisplay.Display(frame=i).mtv(mimg, title=str(i))
 
         mimgStack = afwMath.statisticsStack(mimgVec, afwMath.MEAN, sctrl)
 
         if display:
             i += 1
-            ds9.mtv(mimgStack, frame=i, title="Stack")
+            afwDisplay.Display(frame=i).mtv(mimgStack, title="Stack")
             i += 1
-            ds9.mtv(mimgStack.getVariance(), frame=i, title="var(Stack)")
+            afwDisplay.Display(frame=i).mtv(mimgStack.getVariance(), title="var(Stack)")
         #
         # Check the output, ignoring EDGE pixels
         #

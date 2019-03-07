@@ -1,9 +1,10 @@
+# This file is part of afw.
 #
-# LSST Data Management System
-# Copyright 2008-2014 LSST Corporation.
-#
-# This product includes software developed by the
-# LSST Project (http://www.lsst.org/).
+# Developed for the LSST Data Management System.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org).
+# See the COPYRIGHT file at the top-level directory of this distribution
+# for details of code ownership.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,19 +16,16 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
-# You should have received a copy of the LSST License Statement and
-# the GNU General Public License along with this program.  If not,
-# see <http://www.lsstcorp.org/LegalNotices/>.
-#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
 Tests for detection.GaussianPsf
 
 Run with:
-   ./testGaussianPsf.py
+   python test_gaussianPsf.py
 or
-   python
-   >>> import testGaussianPsf; testGaussianPsf.run()
+   pytest test_gaussianPsf.py
 """
 
 import unittest
@@ -40,11 +38,6 @@ import lsst.geom
 import lsst.afw.table
 import lsst.afw.fits
 import lsst.afw.detection
-
-try:
-    type(display)
-except NameError:
-    display = False
 
 
 def makeGaussianImage(bbox, sigma, xc=0.0, yc=0.0):
@@ -93,8 +86,7 @@ class GaussianPsfTestCase(lsst.utils.tests.TestCase):
 
     def testApertureFlux(self):
         image = self.psf.computeKernelImage(lsst.geom.Point2D(0.0, 0.0))
-        # test aperture implementation is very crude; can only test to about
-        # 10%
+        # test aperture implementation is very crude; can only test to about 10%
         self.assertFloatsAlmostEqual(self.psf.computeApertureFlux(5.0), computeNaiveApertureFlux(image, 5.0),
                                      rtol=0.1)
         self.assertFloatsAlmostEqual(self.psf.computeApertureFlux(7.0), computeNaiveApertureFlux(image, 7.0),
