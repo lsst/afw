@@ -648,7 +648,7 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
         # create with non-zero fluxMag0 and err
         photoCalib = lsst.afw.image.makePhotoCalibFromCalibZeroPoint(fluxMag0, fluxMag0Err)
         self.assertEqual(photoCalib.getInstFluxAtZeroMagnitude(), fluxMag0)
-        self.assertEqual(photoCalib.getCalibrationErr(), calibrationErr)
+        self.assertFloatsAlmostEqual(photoCalib.getCalibrationErr(), calibrationErr)
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
