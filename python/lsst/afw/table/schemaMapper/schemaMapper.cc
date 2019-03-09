@@ -41,7 +41,8 @@ using PySchemaMapper = py::class_<SchemaMapper, std::shared_ptr<SchemaMapper>>;
 
 template <typename T>
 void declareSchemaMapperOverloads(PySchemaMapper &cls, std::string const &suffix) {
-    cls.def("getMapping", (Key<T> (SchemaMapper::*)(Key<T> const &) const) & SchemaMapper::getMapping);
+    cls.def("getMapping", (Key<T>(SchemaMapper::*)(Key<T> const &) const) & SchemaMapper::getMapping);
+    cls.def("isMapped", (bool (SchemaMapper::*)(Key<T> const &) const) & SchemaMapper::isMapped);
 };
 
 PYBIND11_MODULE(schemaMapper, mod) {
@@ -59,6 +60,7 @@ PYBIND11_MODULE(schemaMapper, mod) {
     cls.def("addMinimalSchema", &SchemaMapper::addMinimalSchema, "minimal"_a, "doMap"_a = true);
     cls.def_static("removeMinimalSchema", &SchemaMapper::removeMinimalSchema);
     cls.def_static("join", &SchemaMapper::join, "inputs"_a, "prefixes"_a = std::vector<std::string>());
+
     declareSchemaMapperOverloads<std::uint8_t>(cls, "B");
     declareSchemaMapperOverloads<std::uint16_t>(cls, "U");
     declareSchemaMapperOverloads<std::int32_t>(cls, "I");
@@ -74,7 +76,7 @@ PYBIND11_MODULE(schemaMapper, mod) {
     declareSchemaMapperOverloads<lsst::afw::table::Array<float>>(cls, "ArrayF");
     declareSchemaMapperOverloads<lsst::afw::table::Array<double>>(cls, "ArrayD");
 }
-}
-}
-}
-}  // namespace lsst::afw::table::<anonymous>
+}  // namespace
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst

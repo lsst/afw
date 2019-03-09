@@ -30,6 +30,7 @@
 #include "lsst/utils/python.h"
 
 #include "lsst/afw/fits.h"
+#include "lsst/afw/table/detail/Access.h"
 #include "lsst/afw/table/Schema.h"
 #include "lsst/afw/table/BaseRecord.h"
 #include "lsst/afw/table/SchemaMapper.h"
@@ -150,6 +151,15 @@ void declareKeySpecializations(PyKey<T> &cls) {
     declareKeyAccessors(cls);
     cls.def_property_readonly("subfields", [](py::object const &) { return py::none(); });
     cls.def_property_readonly("subkeys", [](py::object const &) { return py::none(); });
+    cls.def(py::pickle(
+            [](Key<T> const &self) {
+                /* Return a tuple that fully encodes the state of the object */
+                return py::make_tuple(self.getOffset());
+            },
+            [](py::tuple t) {
+                if (t.size() != 1) throw std::runtime_error("Invalid number of parameters when unpickling!");
+                return detail::Access::makeKey<T>(t[0].cast<int>());
+            }));
 }
 
 void declareKeySpecializations(PyKey<Flag> &cls) {
@@ -157,6 +167,15 @@ void declareKeySpecializations(PyKey<Flag> &cls) {
     cls.def_property_readonly("subfields", [](py::object const &) { return py::none(); });
     cls.def_property_readonly("subkeys", [](py::object const &) { return py::none(); });
     cls.def("getBit", &Key<Flag>::getBit);
+    cls.def(py::pickle(
+            [](Key<Flag> const &self) {
+                /* Return a tuple that fully encodes the state of the object */
+                return py::make_tuple(self.getOffset(), self.getBit());
+            },
+            [](py::tuple t) {
+                if (t.size() != 2) throw std::runtime_error("Invalid number of parameters when unpickling!");
+                return detail::Access::makeKey(t[0].cast<int>(), t[1].cast<int>());
+            }));
 }
 
 template <typename U>
@@ -199,10 +218,9 @@ void declareSchemaType(py::module &mod) {
     // Field
     PyField<T> clsField(mod, ("Field" + suffix).c_str());
     mod.attr("_Field")[pySuffix] = clsField;
-    clsField.def(py::init(
-                 [astropyUnit](  // capture by value to refcount in Python instead of dangle in C++
-                         std::string const &name, std::string const &doc,
-                         py::str const &units, py::object const &size, py::str const &parse_strict) {
+    clsField.def(py::init([astropyUnit](  // capture by value to refcount in Python instead of dangle in C++
+                                  std::string const &name, std::string const &doc, py::str const &units,
+                                  py::object const &size, py::str const &parse_strict) {
                      astropyUnit(units, "parse_strict"_a = parse_strict);
                      std::string u = py::cast<std::string>(units);
                      if (size.is(py::none())) {
@@ -222,15 +240,26 @@ void declareSchemaType(py::module &mod) {
     clsField.def("copyRenamed", &Field<T>::copyRenamed);
     utils::python::addOutputOp(clsField, "__str__");
     utils::python::addOutputOp(clsField, "__repr__");
+    clsField.def(py::pickle(
+            [](Field<T> const &self) {
+                /* Return a tuple that fully encodes the state of the object */
+                return py::make_tuple(self.getName(), self.getDoc(), self.getUnits());
+            },
+            [](py::tuple t) {
+                if (t.size() != 3) throw std::runtime_error("Invalid number of parameters when unpickling!");
+                return Field<T>(t[0].cast<std::string>(), t[1].cast<std::string>(), t[2].cast<std::string>());
+            }));
 
     // Key
     PyKey<T> clsKey(mod, ("Key" + suffix).c_str());
     mod.attr("_Key")[pySuffix] = clsKey;
     clsKey.def(py::init<>());
-    clsKey.def("__eq__", [](Key<T> const &self, Key<T> const &other) -> bool { return self == other; },
-               py::is_operator());
-    clsKey.def("__ne__", [](Key<T> const &self, Key<T> const &other) -> bool { return self != other; },
-               py::is_operator());
+    clsKey.def(
+            "__eq__", [](Key<T> const &self, Key<T> const &other) -> bool { return self == other; },
+            py::is_operator());
+    clsKey.def(
+            "__ne__", [](Key<T> const &self, Key<T> const &other) -> bool { return self != other; },
+            py::is_operator());
     clsKey.def("isValid", &Key<T>::isValid);
     clsKey.def("getOffset", &Key<T>::getOffset);
     utils::python::addOutputOp(clsKey, "__str__");
@@ -271,7 +300,16 @@ void declareSchemaType(py::module &mod) {
     clsSchemaItem.def("__repr__", [](py::object const &self) -> py::str {
         return py::str("SchemaItem(key={0.key}, field={0.field})").format(self);
     });
-}
+    clsSchemaItem.def(py::pickle(
+            [](SchemaItem<T> const &self) {
+                /* Return a tuple that fully encodes the state of the object */
+                return py::make_tuple(self.key, self.field);
+            },
+            [](py::tuple t) {
+                if (t.size() != 2) throw std::runtime_error("Invalid number of parameters when unpickling!");
+                return SchemaItem<T>(t[0].cast<Key<T>>(), t[1].cast<Field<T>>());
+            }));
+}  // namespace
 
 // Helper class for Schema::find(name, func) that converts the result to Python.
 // In C++14, this should be converted to a universal lambda.
@@ -303,9 +341,11 @@ void declareSchema(py::module &mod) {
     cls.def(py::init<>());
     cls.def(py::init<Schema const &>());
     cls.def("__getitem__", [](Schema &self, std::string const &name) { return self[name]; });
-    cls.def("__eq__", [](Schema const &self, Schema const &other) { return self == other; },
+    cls.def(
+            "__eq__", [](Schema const &self, Schema const &other) { return self == other; },
             py::is_operator());
-    cls.def("__ne__", [](Schema const &self, Schema const &other) { return self != other; },
+    cls.def(
+            "__ne__", [](Schema const &self, Schema const &other) { return self != other; },
             py::is_operator());
     cls.def("getCitizen", &Schema::getCitizen, py::return_value_policy::reference_internal);
     cls.def("getRecordSize", &Schema::getRecordSize);
@@ -351,15 +391,16 @@ void declareSchema(py::module &mod) {
     cls.def_static("readFits", (Schema(*)(fits::MemFileManager &, int)) & Schema::readFits, "manager"_a,
                    "hdu"_a = fits::DEFAULT_HDU);
 
-    cls.def("join", (std::string (Schema::*)(std::string const &, std::string const &) const) & Schema::join,
+    cls.def("join", (std::string(Schema::*)(std::string const &, std::string const &) const) & Schema::join,
             "a"_a, "b"_a);
     cls.def("join",
-            (std::string (Schema::*)(std::string const &, std::string const &, std::string const &) const) &
+            (std::string(Schema::*)(std::string const &, std::string const &, std::string const &) const) &
                     Schema::join,
             "a"_a, "b"_a, "c"_a);
-    cls.def("join", (std::string (Schema::*)(std::string const &, std::string const &, std::string const &,
-                                             std::string const &) const) &
-                            Schema::join,
+    cls.def("join",
+            (std::string(Schema::*)(std::string const &, std::string const &, std::string const &,
+                                    std::string const &) const) &
+                    Schema::join,
             "a"_a, "b"_a, "c"_a, "d"_a);
     utils::python::addOutputOp(cls, "__str__");
     utils::python::addOutputOp(cls, "__repr__");
@@ -413,7 +454,7 @@ PYBIND11_MODULE(schema, mod) {
     declareSchema(mod);
     declareSubSchema(mod);
 }
-}
-}
-}
-}  // namespace lsst::afw::table::<anonymous>
+}  // namespace
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst
