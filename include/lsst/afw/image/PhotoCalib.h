@@ -55,6 +55,8 @@ struct Measurement {
     double const error;
 };
 
+std::ostream &operator<<(std::ostream &os, Measurement const &measurement);
+
 /**
  * Raise lsst::pex::exceptions::InvalidParameterError if value is not >=0.
  *

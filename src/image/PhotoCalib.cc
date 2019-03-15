@@ -44,6 +44,13 @@ namespace image {
 
 // ------------------- helpers -------------------
 
+std::ostream &operator<<(std::ostream &os, Measurement const &measurement) {
+    std::stringstream s;
+    s << std::setprecision(std::numeric_limits<long double>::digits10 + 1);
+    s << "value=" << measurement.value << ", error=" << measurement.error;
+    return os << s.str();
+}
+
 namespace {
 
 int const SERIALIZATION_VERSION = 1;
