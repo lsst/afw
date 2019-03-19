@@ -24,7 +24,7 @@ __all__ = ["Exposure"]
 
 import numpy as np
 
-from deprecated.sphinx import deprecated
+# from deprecated.sphinx import deprecated
 
 from lsst.utils import TemplateMeta
 
@@ -99,13 +99,14 @@ class Exposure(metaclass=TemplateMeta):
 
     writeFitsWithOptions = exposureWriteFitsWithOptions
 
-    @deprecated(reason="Replaced with getPhotoCalib (will be removed in 18.0)", category=FutureWarning)
-    def getCalib(self, *args, **kwargs):
-        return self._getCalib(*args, **kwargs)
+    # TODO DM-18544: activate this once `deprecated` becomes available
+    # @deprecated(reason="Replaced with getPhotoCalib (will be removed in 18.0)", category=FutureWarning)
+    # def getCalib(self, *args, **kwargs):
+    #     return self._getCalib(*args, **kwargs)
 
-    @deprecated(reason="Replaced with setPhotoCalib (will be removed in 18.0)", category=FutureWarning)
-    def setCalib(self, *args, **kwargs):
-        return self._setCalib(*args, **kwargs)
+    # @deprecated(reason="Replaced with setPhotoCalib (will be removed in 18.0)", category=FutureWarning)
+    # def setCalib(self, *args, **kwargs):
+    #     return self._setCalib(*args, **kwargs)
 
 
 Exposure.register(np.int32, ExposureI)
