@@ -92,6 +92,34 @@ double toMagnitudeErr(double instFlux, double instFluxErr, double scale, double 
 
 }  // anonymous namespace
 
+// ------------------ Deprecated Calib interface -------------------
+
+ndarray::Array<double, 1> PhotoCalib::getMagnitude(ndarray::Array<double const, 1> const &instFlux) const {
+    ndarray::Array<double, 1> result = ndarray::allocate(ndarray::makeVector(int(instFlux.size())));
+    auto iter = result.begin();
+    for (auto const &i : instFlux) {
+        *iter = toMagnitude(i, _calibrationMean);
+        iter++;
+    }
+    return result;
+}
+
+std::pair<ndarray::Array<double, 1>, ndarray::Array<double, 1>> PhotoCalib::getMagnitude(
+        ndarray::Array<double const, 1> const &instFlux,
+        ndarray::Array<double const, 1> const &instFluxErr) const {
+    ndarray::Array<double, 1> mag = ndarray::allocate(ndarray::makeVector(int(instFlux.size())));
+    ndarray::Array<double, 1> magErr = ndarray::allocate(ndarray::makeVector(int(instFlux.size())));
+    auto iMag = mag.begin();
+    auto iMagErr = magErr.begin();
+    for (auto i = instFlux.begin(), iErr = instFluxErr.begin(); i != instFlux.end(); ++i, ++iErr) {
+        *iMag = toMagnitude(*i, _calibrationMean);
+        *iMagErr = toMagnitudeErr(*i, *iErr, _calibrationMean, _calibrationErr);
+        iMag++;
+        iMagErr++;
+    }
+    return std::make_pair(mag, magErr);
+}
+
 // ------------------- Conversions to nanojansky -------------------
 
 double PhotoCalib::instFluxToNanojansky(double instFlux, lsst::geom::Point<double, 2> const &point) const {

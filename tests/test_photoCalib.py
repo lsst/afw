@@ -243,6 +243,9 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
                                      photoCalib.magnitudeToInstFlux(mag, self.pointXShift),
                                      rtol=1e-15)
 
+        # test the deprecated interfaces that behave like the old Calib object
+        self.checkDeprecatedCalibInterface(photoCalib)
+
     def _testSourceCatalog(self, photoCalib, catalog, expectNanojansky, expectMag):
         """Test passing in a sourceCatalog."""
 
@@ -649,6 +652,56 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
         photoCalib = lsst.afw.image.makePhotoCalibFromCalibZeroPoint(fluxMag0, fluxMag0Err)
         self.assertEqual(photoCalib.getInstFluxAtZeroMagnitude(), fluxMag0)
         self.assertFloatsAlmostEqual(photoCalib.getCalibrationErr(), calibrationErr)
+
+    def checkDeprecatedCalibInterface(self, photoCalib):
+        """Check the backwards compatibility Calib interface."""
+
+        # These are now no-ops, but we've added a deprecated interface for backwards compatibility.
+        # TODO DM-18544: test that a deprecation warning is raised.
+        try:
+            lsst.afw.image.PhotoCalib.setThrowOnNegativeFlux(True)
+        except AttributeError:
+            self.fail("Expected setThrowOnNegativeFlux to be available as a no-op.")
+        self.assertFalse(lsst.afw.image.PhotoCalib.getThrowOnNegativeFlux())
+
+        result = photoCalib.getFluxMag0()
+        self.assertEqual(result[0], photoCalib.getInstFluxAtZeroMagnitude())
+        self.assertTrue(np.isnan(result[1]))  # we just return NaN for the second element now
+
+        msg = ("PhotoCalib is immutable: create a new `PhotoCalib` with the calibration factor and error"
+               ", or create it like an old Calib object with `makePhotoCalibFromCalibZeroPoint`.")
+        with self.assertRaisesRegex(RuntimeError, msg):
+            photoCalib.setFluxMag0(1)
+        with self.assertRaisesRegex(RuntimeError, msg):
+            photoCalib.setFluxMag0(1, 2)
+
+        # test getMagnitude() for some arbitrary value
+        instFlux = 1234
+        instFluxErr = 567
+        self.assertEqual(photoCalib.getMagnitude(instFlux),
+                         photoCalib.instFluxToMagnitude(instFlux))
+        result = photoCalib.getMagnitude(instFlux, instFluxErr)
+        expect = photoCalib.instFluxToMagnitude(instFlux, instFluxErr)
+        self.assertEqual(expect.value, result[0])
+        self.assertEqual(expect.error, result[1])
+        instFluxes = np.random.random(10)
+        instFluxErrs = np.random.random(10)
+        expect = np.array([photoCalib.instFluxToMagnitude(instFlux) for instFlux in instFluxes])
+        result = photoCalib.getMagnitude(instFluxes)
+        self.assertFloatsAlmostEqual(expect, result)
+        expectMag = np.zeros(len(instFluxes))
+        expectMagErr = np.zeros(len(instFluxes))
+        for i, (instFlux, instFluxErr) in enumerate(zip(instFluxes, instFluxErrs)):
+            temp = photoCalib.instFluxToMagnitude(instFlux, instFluxErr)
+            expectMag[i] = temp.value
+            expectMagErr[i] = temp.error
+        result = photoCalib.getMagnitude(instFluxes, instFluxErrs)
+        self.assertFloatsAlmostEqual(expectMag, result[0])
+        self.assertFloatsAlmostEqual(expectMagErr, result[1])
+
+        # test getFlux() for an arbitrary value
+        mag = 25
+        self.assertEqual(photoCalib.getFlux(mag), photoCalib.magnitudeToInstFlux(mag))
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
