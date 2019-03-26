@@ -30,6 +30,8 @@
 #include <typeinfo>
 #include <type_traits>
 
+#include "boost/core/demangle.hpp"
+
 namespace lsst {
 namespace afw {
 namespace typehandling {
@@ -170,9 +172,9 @@ constexpr Key<K, V> makeKey(K const& id) {
  */
 template <typename K, typename V>
 std::ostream& operator<<(std::ostream& os, Key<K, V> const& key) {
-    static const char* typeStr = typeid(V).name();
-    static const char* constStr = std::is_const<V>::value ? " const" : "";
-    static const char* volatileStr = std::is_volatile<V>::value ? " volatile" : "";
+    static const std::string typeStr = boost::core::demangle(typeid(V).name());
+    static const std::string constStr = std::is_const<V>::value ? " const" : "";
+    static const std::string volatileStr = std::is_volatile<V>::value ? " volatile" : "";
     os << key.getId() << "<" << typeStr << constStr << volatileStr << ">";
     return os;
 }
