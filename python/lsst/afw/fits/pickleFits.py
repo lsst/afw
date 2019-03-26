@@ -1,5 +1,8 @@
 from lsst.afw.fits.fitsLib import MemFileManager, ImageWriteOptions, ImageCompressionOptions
 
+import lsst.afw.table
+import lsst.afw.image
+
 
 def reduceToFits(obj):
     """Pickle to FITS
@@ -20,10 +23,16 @@ def reduceToFits(obj):
     """
     manager = MemFileManager()
     options = ImageWriteOptions(ImageCompressionOptions(ImageCompressionOptions.NONE))
-    try:
-        obj.writeFits(manager, options)
-    except Exception:
+    table = getattr(obj, 'table', None)
+    if isinstance(table, lsst.afw.table.BaseTable):
+        # table objects don't take `options`
         obj.writeFits(manager)
+    else:
+        # MaskedImage and Exposure both require options for each plane (image, mask, variance)
+        if isinstance(obj, (lsst.afw.image.MaskedImage, lsst.afw.image.Exposure)):
+            obj.writeFits(manager, options, options, options)
+        else:
+            obj.writeFits(manager, options)
     size = manager.getLength()
     data = manager.getData()
     return (unreduceFromFits, (obj.__class__, data, size))
