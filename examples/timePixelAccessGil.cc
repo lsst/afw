@@ -25,7 +25,13 @@
 #include <ctime>
 
 #include "boost/format.hpp"
+
+#include "boost/version.hpp"
+#if BOOST_VERSION < 106900
 #include "boost/gil/gil_all.hpp"
+#else
+#include "boost/gil.hpp"
+#endif
 
 template <class ImageT>
 void timePixelAccess(ImageT const &image, float const pix, int nIter) {

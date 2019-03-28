@@ -35,7 +35,13 @@
 #pragma clang diagnostic pop
 #include "boost/format.hpp"
 #include "boost/filesystem/path.hpp"
+
+#include "boost/version.hpp"
+#if BOOST_VERSION < 106900
 #include "boost/gil/gil_all.hpp"
+#else
+#include "boost/gil.hpp"
+#endif
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/geom/wcsUtils.h"

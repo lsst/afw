@@ -28,7 +28,13 @@
 
 #include "boost/format.hpp"
 #include "boost/mpl/vector.hpp"
+
+#include "boost/version.hpp"
+#if BOOST_VERSION < 106900
 #include "boost/gil/gil_all.hpp"
+#else
+#include "boost/gil.hpp"
+#endif
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/fits.h"
