@@ -31,7 +31,6 @@
 #include "lsst/afw/cameraGeom/CameraSys.h"
 #include "lsst/afw/cameraGeom/Orientation.h"
 #include "lsst/geom.h"
-#include "lsst/afw/table/AmpInfo.h"
 #include "lsst/afw/table/io/python.h"
 #include "lsst/afw/typehandling/Storable.h"
 #include "lsst/afw/cameraGeom/Detector.h"
@@ -91,25 +90,25 @@ PYBIND11_MODULE(detector, mod) {
 
     /* Constructors */
     cls.def(py::init<std::string const &, int, DetectorType, std::string const &, lsst::geom::Box2I const &,
-                     table::AmpInfoCatalog const &, Orientation const &, lsst::geom::Extent2D const &,
-                     TransformMap::Transforms const &, Detector::CrosstalkMatrix const &,
-                     std::string const&>(),
-            "name"_a, "id"_a, "type"_a, "serial"_a, "bbox"_a, "ampInfoCatalog"_a, "orientation"_a,
+                     std::vector<std::shared_ptr<Amplifier const>> const &, Orientation const &,
+                     lsst::geom::Extent2D const &, TransformMap::Transforms const &,
+                     Detector::CrosstalkMatrix const &, std::string const &>(),
+            "name"_a, "id"_a, "type"_a, "serial"_a, "bbox"_a, "amplifiers"_a, "orientation"_a,
             "pixelSize"_a, "transforms"_a, "crosstalk"_a = Detector::CrosstalkMatrix(),
             "physicalType"_a = "");
     cls.def(py::init<std::string const &, int, DetectorType, std::string const &, lsst::geom::Box2I const &,
-                     table::AmpInfoCatalog const &, Orientation const &, lsst::geom::Extent2D const &,
-                     std::shared_ptr<TransformMap const>, Detector::CrosstalkMatrix const &,
-                     std::string const&>(),
-            "name"_a, "id"_a, "type"_a, "serial"_a, "bbox"_a, "ampInfoCatalog"_a, "orientation"_a,
+                     std::vector<std::shared_ptr<Amplifier const>> const &, Orientation const &,
+                     lsst::geom::Extent2D const &, std::shared_ptr<TransformMap const>,
+                     Detector::CrosstalkMatrix const &, std::string const &>(),
+            "name"_a, "id"_a, "type"_a, "serial"_a, "bbox"_a, "amplifiers"_a, "orientation"_a,
             "pixelSize"_a, "transformMap"_a, "crosstalk"_a = Detector::CrosstalkMatrix(),
             "physicalType"_a = "");
 
     /* Operators */
     cls.def("__getitem__",
-            (std::shared_ptr<table::AmpInfoRecord const>(Detector::*)(int) const) & Detector::_get, "i"_a);
+            (std::shared_ptr<Amplifier const>(Detector::*)(int) const) & Detector::_get, "i"_a);
     cls.def("__getitem__",
-            (std::shared_ptr<table::AmpInfoRecord const>(Detector::*)(std::string const &) const) &
+            (std::shared_ptr<Amplifier const>(Detector::*)(std::string const &) const) &
                     Detector::_get,
             "name"_a);
     cls.def("__len__", &Detector::size);
@@ -121,7 +120,8 @@ PYBIND11_MODULE(detector, mod) {
     cls.def("getPhysicalType", &Detector::getPhysicalType);
     cls.def("getSerial", &Detector::getSerial);
     cls.def("getBBox", &Detector::getBBox);
-    cls.def("getAmpInfoCatalog", &Detector::getAmpInfoCatalog);
+    cls.def("getAmpInfoCatalog", &Detector::getAmplifiers);  // TODO: deprecate this in Python
+    cls.def("getAmplifiers", &Detector::getAmplifiers);
     cls.def("getOrientation", &Detector::getOrientation);
     cls.def("getPixelSize", &Detector::getPixelSize);
     cls.def("hasCrosstalk", &Detector::hasCrosstalk);

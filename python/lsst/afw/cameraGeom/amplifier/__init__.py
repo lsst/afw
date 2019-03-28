@@ -19,8 +19,5 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from .cameraSys import *
-from .detector import *
 from .amplifier import *
-from .orientation import *
-from .transformMap import *
+from .amplifierContinued import *
