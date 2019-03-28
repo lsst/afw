@@ -26,7 +26,7 @@ import os.path
 import lsst.geom
 from lsst.afw.table import AmpInfoCatalog
 from .cameraGeomLib import FOCAL_PLANE, FIELD_ANGLE, PIXELS, TAN_PIXELS, ACTUAL_PIXELS, CameraSys, \
-    Detector, DetectorType, Orientation, TransformMap
+    Detector, DetectorType, Orientation, TransformMap, Amplifier
 from .camera import Camera
 from .makePixelToTanPixel import makePixelToTanPixel
 from .pupil import PupilFactory
@@ -35,7 +35,7 @@ cameraSysList = [FIELD_ANGLE, FOCAL_PLANE, PIXELS, TAN_PIXELS, ACTUAL_PIXELS]
 cameraSysMap = dict((sys.getSysName(), sys) for sys in cameraSysList)
 
 
-def makeDetectorData(detectorConfig, ampInfoCatalog, focalPlaneToField):
+def makeDetectorData(detectorConfig, amplifiers, focalPlaneToField):
     """Build a dictionary of Detector constructor keyword arguments.
 
     The returned dictionary can be passed as keyword arguments to the Detector
@@ -50,7 +50,7 @@ def makeDetectorData(detectorConfig, ampInfoCatalog, focalPlaneToField):
     ----------
     detectorConfig : `lsst.pex.config.Config`
         Configuration for this detector.
-    ampInfoCatalog : `lsst.afw.table.AmpInfoCatalog`
+    amplifiers : `list` of `~lsst.afw.cameraGeom.Amplifier`
         amplifier information for this detector
     focalPlaneToField : `lsst.afw.geom.TransformPoint2ToPoint2`
         FOCAL_PLANE to FIELD_ANGLE Transform
@@ -59,7 +59,7 @@ def makeDetectorData(detectorConfig, ampInfoCatalog, focalPlaneToField):
     -------
     data : `dict`
         Contains the following keys: name, id, type, serial, bbox, orientation,
-        pixelSize, transforms, ampInfoCatalog, and optionally crosstalk.
+        pixelSize, transforms, amplifiers, and optionally crosstalk.
         The transforms key is a dictionary whose values are Transforms that map
         the Detector's PIXEL coordinate system to the CameraSys in the key.
     """
@@ -70,7 +70,7 @@ def makeDetectorData(detectorConfig, ampInfoCatalog, focalPlaneToField):
         type=DetectorType(detectorConfig.detectorType),
         physicalType=detectorConfig.physicalType,
         serial=detectorConfig.serial,
-        ampInfoCatalog=ampInfoCatalog,
+        amplifiers=amplifiers,
         orientation=makeOrientation(detectorConfig),
         pixelSize=lsst.geom.Extent2D(detectorConfig.pixelSize_x, detectorConfig.pixelSize_y),
         bbox=lsst.geom.Box2I(
@@ -92,21 +92,21 @@ def makeDetectorData(detectorConfig, ampInfoCatalog, focalPlaneToField):
 
     data["transforms"] = transforms
 
-    crosstalk = detectorConfig.getCrosstalk(len(ampInfoCatalog))
+    crosstalk = detectorConfig.getCrosstalk(len(amplifiers))
     if crosstalk is not None:
         data["crosstalk"] = crosstalk
 
     return data
 
 
-def makeDetector(detectorConfig, ampInfoCatalog, focalPlaneToField):
+def makeDetector(detectorConfig, amplifiers, focalPlaneToField):
     """Make a Detector instance from a detector config and amp info catalog
 
     Parameters
     ----------
     detectorConfig : `lsst.pex.config.Config`
         Configuration for this detector.
-    ampInfoCatalog : `lsst.afw.table.AmpInfoCatalog`
+    amplifiers : `list` of `~lsst.afw.cameraGeom.Amplifier`
         amplifier information for this detector
     focalPlaneToField : `lsst.afw.geom.TransformPoint2ToPoint2`
         FOCAL_PLANE to FIELD_ANGLE Transform
@@ -116,11 +116,11 @@ def makeDetector(detectorConfig, ampInfoCatalog, focalPlaneToField):
     detector : `lsst.afw.cameraGeom.Detector`
         New Detector instance.
     """
-    data = makeDetectorData(detectorConfig, ampInfoCatalog, focalPlaneToField)
+    data = makeDetectorData(detectorConfig, amplifiers, focalPlaneToField)
     return Detector(**data)
 
 
-def copyDetector(detector, ampInfoCatalog=None):
+def copyDetector(detector, amplifiers=None):
     """Return a copy of a Detector with possibly-updated amplifier information.
 
     No deep copies are made; the input transformDict is used unmodified
@@ -129,19 +129,19 @@ def copyDetector(detector, ampInfoCatalog=None):
     ----------
     detector : `lsst.afw.cameraGeom.Detector`
         The Detector to clone
-    ampInfoCatalog  The ampInfoCatalog to use; default use original
+    amplifiers  The list of amplifiers to use; default use original
 
     Returns
     -------
     detector : `lsst.afw.cameraGeom.Detector`
         New Detector instance.
     """
-    if ampInfoCatalog is None:
-        ampInfoCatalog = detector.getAmpInfoCatalog()
+    if amplifiers is None:
+        amplifiers = detector.getAmplifiers()
 
     return Detector(detector.getName(), detector.getId(), detector.getType(),
                     detector.getSerial(), detector.getBBox(),
-                    ampInfoCatalog, detector.getOrientation(), detector.getPixelSize(),
+                    amplifiers, detector.getOrientation(), detector.getPixelSize(),
                     detector.getTransformMap(), detector.getCrosstalk(), detector.getPhysicalType())
 
 
@@ -262,7 +262,7 @@ def makeCameraFromCatalogs(cameraConfig, ampInfoCatDict,
         # all of the transforms.
         thisDetectorData = makeDetectorData(
             detectorConfig=detectorConfig,
-            ampInfoCatalog=ampInfoCatDict[detectorConfig.name],
+            amplifiers=[Amplifier.fromRecord(record) for record in ampInfoCatDict[detectorConfig.name]],
             focalPlaneToField=focalPlaneToField,
         )
 

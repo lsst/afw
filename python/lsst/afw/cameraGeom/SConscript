@@ -3,6 +3,7 @@ from lsst.sconsUtils import scripts
 scripts.BasicSConscript.pybind11(['cameraSys',
                                   'camera/camera',
                                   'detector/detector',
+                                  'amplifier/amplifier',
                                   'orientation',
                                   'transformMap',
                                   'detectorCollection/detectorCollection'],
