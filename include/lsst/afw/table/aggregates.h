@@ -172,10 +172,10 @@ public:
         return utils::hashCombine(17, _min, _max);
     }
 
-    /// Get a Point from the given record
+    /// Get a Box from the given record
     Box get(BaseRecord const& record) const override;
 
-    /// Set a Point in the given record
+    /// Set a Box in the given record
     void set(BaseRecord& record, Box const& value) const override;
 
     //@{
