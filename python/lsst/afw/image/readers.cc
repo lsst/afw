@@ -76,7 +76,7 @@ void declareSinglePlaneMethods(py::class_<Class, Args...> & cls) {
         "readArray",
         [](Class & self, lsst::geom::Box2I const & bbox, ImageOrigin origin, bool allowUnsafe,
            py::object dtype) {
-            if (dtype == py::none()) {
+            if (dtype.is(py::none())) {
                 dtype = py::dtype(self.readDType());
             }
             return utils::python::TemplateInvoker().apply(
@@ -101,7 +101,7 @@ void declareMultiPlaneMethods(py::class_<Class, Args...> & cls) {
         "readImage",
         [](Class & self, lsst::geom::Box2I const & bbox, ImageOrigin origin, bool allowUnsafe,
            py::object dtype) {
-            if (dtype == py::none()) {
+            if (dtype.is(py::none())) {
                 dtype = py::dtype(self.readImageDType());
             }
             return utils::python::TemplateInvoker().apply(
@@ -118,7 +118,7 @@ void declareMultiPlaneMethods(py::class_<Class, Args...> & cls) {
         "readImageArray",
         [](Class & self, lsst::geom::Box2I const & bbox, ImageOrigin origin, bool allowUnsafe,
            py::object dtype) {
-            if (dtype == py::none()) {
+            if (dtype.is(py::none())) {
                 dtype = py::dtype(self.readImageDType());
             }
             return utils::python::TemplateInvoker().apply(
@@ -135,7 +135,7 @@ void declareMultiPlaneMethods(py::class_<Class, Args...> & cls) {
         "readMask",
         [](Class & self, lsst::geom::Box2I const & bbox, ImageOrigin origin, bool conformMasks,
            bool allowUnsafe, py::object dtype) {
-            if (dtype == py::none()) {
+            if (dtype.is(py::none())) {
                 dtype = py::dtype(self.readMaskDType());
             }
             return utils::python::TemplateInvoker().apply(
@@ -153,7 +153,7 @@ void declareMultiPlaneMethods(py::class_<Class, Args...> & cls) {
         "readMaskArray",
         [](Class & self, lsst::geom::Box2I const & bbox, ImageOrigin origin, bool allowUnsafe,
            py::object dtype) {
-            if (dtype == py::none()) {
+            if (dtype.is(py::none())) {
                 dtype = py::dtype(self.readMaskDType());
             }
             return utils::python::TemplateInvoker().apply(
@@ -170,7 +170,7 @@ void declareMultiPlaneMethods(py::class_<Class, Args...> & cls) {
         "readVariance",
         [](Class & self, lsst::geom::Box2I const & bbox, ImageOrigin origin, bool allowUnsafe,
            py::object dtype) {
-            if (dtype == py::none()) {
+            if (dtype.is(py::none())) {
                 dtype = py::dtype(self.readVarianceDType());
             }
             return utils::python::TemplateInvoker().apply(
@@ -187,7 +187,7 @@ void declareMultiPlaneMethods(py::class_<Class, Args...> & cls) {
         "readVarianceArray",
         [](Class & self, lsst::geom::Box2I const & bbox, ImageOrigin origin, bool allowUnsafe,
            py::object dtype) {
-            if (dtype == py::none()) {
+            if (dtype.is(py::none())) {
                 dtype = py::dtype(self.readVarianceDType());
             }
             return utils::python::TemplateInvoker().apply(
@@ -210,7 +210,7 @@ void declareImageFitsReader(py::module & mod) {
         "read",
         [](ImageFitsReader & self, lsst::geom::Box2I const & bbox, ImageOrigin origin, bool allowUnsafe,
            py::object dtype) {
-            if (dtype == py::none()) {
+            if (dtype.is(py::none())) {
                 dtype = py::dtype(self.readDType());
             }
             return utils::python::TemplateInvoker().apply(
@@ -233,7 +233,7 @@ void declareMaskFitsReader(py::module & mod) {
         "read",
         [](MaskFitsReader & self, lsst::geom::Box2I const & bbox, ImageOrigin origin,
            bool conformMasks, bool allowUnsafe, py::object dtype) {
-            if (dtype == py::none()) {
+            if (dtype.is(py::none())) {
                 dtype = py::dtype(self.readDType());
             }
             return utils::python::TemplateInvoker().apply(
@@ -264,7 +264,7 @@ void declareMaskedImageFitsReader(py::module & mod) {
         "read",
         [](MaskedImageFitsReader & self, lsst::geom::Box2I const & bbox, ImageOrigin origin,
            bool conformMasks, bool needAllHdus, bool allowUnsafe, py::object dtype) {
-            if (dtype == py::none()) {
+            if (dtype.is(py::none())) {
                 dtype = py::dtype(self.readImageDType());
             }
             return utils::python::TemplateInvoker().apply(
@@ -302,7 +302,7 @@ void declareExposureFitsReader(py::module & mod) {
         "readMaskedImage",
         [](ExposureFitsReader & self, lsst::geom::Box2I const & bbox, ImageOrigin origin,
            bool conformMasks, bool allowUnsafe, py::object dtype) {
-            if (dtype == py::none()) {
+            if (dtype.is(py::none())) {
                 dtype = py::dtype(self.readImageDType());
             }
             return utils::python::TemplateInvoker().apply(
@@ -320,7 +320,7 @@ void declareExposureFitsReader(py::module & mod) {
         "read",
         [](ExposureFitsReader & self, lsst::geom::Box2I const & bbox, ImageOrigin origin,
            bool conformMasks, bool allowUnsafe, py::object dtype) {
-            if (dtype == py::none()) {
+            if (dtype.is(py::none())) {
                 dtype = py::dtype(self.readImageDType());
             }
             return utils::python::TemplateInvoker().apply(

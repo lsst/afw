@@ -51,7 +51,7 @@ PYBIND11_MODULE(camera, mod){
                 py::object pupilFactoryClass
             ) {
                 std::string pupilFactoryName = "lsst.afw.cameraGeom.pupil.PupilFactory";
-                if (pupilFactoryClass != py::none()) {
+                if (!pupilFactoryClass.is(py::none())) {
                     pupilFactoryName = py::str("{}.{}").format(
                         pupilFactoryClass.attr("__module__"),
                         pupilFactoryClass.attr("__name__")
