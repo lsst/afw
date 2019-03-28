@@ -48,7 +48,12 @@
 #pragma warning(disable : 304)
 #endif
 
+#include "boost/version.hpp"
+#if BOOST_VERSION < 106900
 #include "boost/gil/gil_all.hpp"
+#else
+#include "boost/gil.hpp"
+#endif
 
 #if defined(__ICC)
 #pragma warning(pop)
