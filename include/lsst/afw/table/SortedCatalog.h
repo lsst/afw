@@ -26,6 +26,7 @@
 #include "lsst/afw/fitsDefaults.h"
 #include "lsst/afw/table/fwd.h"
 #include "lsst/afw/table/Catalog.h"
+#include "lsst/afw/table/io/InputArchive.h"
 
 namespace lsst {
 namespace afw {
@@ -124,7 +125,8 @@ public:
      *                         the catalog.  See e.g. SourceFitsFlags.
      */
     static SortedCatalogT readFits(std::string const& filename, int hdu = fits::DEFAULT_HDU, int flags = 0) {
-        return io::FitsReader::apply<SortedCatalogT>(filename, hdu, flags);
+        return io::FitsReader::apply<SortedCatalogT>(filename, hdu, flags,
+                                                     std::shared_ptr<io::InputArchive>());
     }
 
     /**
@@ -139,7 +141,8 @@ public:
      */
     static SortedCatalogT readFits(fits::MemFileManager& manager, int hdu = fits::DEFAULT_HDU,
                                    int flags = 0) {
-        return io::FitsReader::apply<SortedCatalogT>(manager, hdu, flags);
+        return io::FitsReader::apply<SortedCatalogT>(manager, hdu, flags,
+                                                     std::shared_ptr<io::InputArchive>());
     }
 
     /**

@@ -12,6 +12,7 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/fitsDefaults.h"
 #include "lsst/afw/table/fwd.h"
+#include "lsst/afw/table/io/InputArchive.h"
 #include "lsst/afw/table/io/FitsWriter.h"
 #include "lsst/afw/table/io/FitsReader.h"
 #include "lsst/afw/table/SchemaMapper.h"
@@ -341,7 +342,7 @@ public:
      *                         the catalog.  See e.g. SourceFitsFlags.
      */
     static CatalogT readFits(std::string const& filename, int hdu = fits::DEFAULT_HDU, int flags = 0) {
-        return io::FitsReader::apply<CatalogT>(filename, hdu, flags);
+        return io::FitsReader::apply<CatalogT>(filename, hdu, flags, std::shared_ptr<io::InputArchive>());
     }
 
     /**
@@ -355,7 +356,7 @@ public:
      *                         the catalog.  See e.g. SourceFitsFlags.
      */
     static CatalogT readFits(fits::MemFileManager& manager, int hdu = fits::DEFAULT_HDU, int flags = 0) {
-        return io::FitsReader::apply<CatalogT>(manager, hdu, flags);
+        return io::FitsReader::apply<CatalogT>(manager, hdu, flags, std::shared_ptr<io::InputArchive>());
     }
 
     /**
