@@ -31,7 +31,7 @@ import lsst.afw.geom as afwGeom
 import lsst.afw.table as afwTable
 from lsst.utils.tests import inTestCase
 from .cameraGeomLib import PIXELS, TAN_PIXELS, FIELD_ANGLE, FOCAL_PLANE, SCIENCE, ACTUAL_PIXELS, \
-    CameraSys, Detector, Orientation
+    CameraSys, Detector, Orientation, Amplifier, ReadoutCorner
 from .cameraConfig import DetectorConfig, CameraConfig
 from .cameraFactory import makeCameraFromCatalogs
 from .makePixelToTanPixel import makePixelToTanPixel
@@ -111,17 +111,16 @@ class DetectorWrapper:
         self.ampExtent = lsst.geom.Extent2I(*ampExtent)
         self.plateScale = float(plateScale)
         self.radialDistortion = float(radialDistortion)
-        schema = afwTable.AmpInfoTable.makeMinimalSchema()
-        self.ampInfo = afwTable.AmpInfoCatalog(schema)
+        self.ampInfo = []
         for i in range(numAmps):
-            record = self.ampInfo.addNew()
+            amp = Amplifier()
             ampName = "amp %d" % (i + 1,)
-            record.setName(ampName)
-            record.setBBox(lsst.geom.Box2I(lsst.geom.Point2I(-1, 1), self.ampExtent))
-            record.setGain(1.71234e3)
-            record.setReadNoise(0.521237e2)
-            record.setReadoutCorner(afwTable.LL)
-            record.setHasRawInfo(False)
+            amp.setName(ampName)
+            amp.setBBox(lsst.geom.Box2I(lsst.geom.Point2I(-1, 1), self.ampExtent))
+            amp.setGain(1.71234e3)
+            amp.setReadNoise(0.521237e2)
+            amp.setReadoutCorner(ReadoutCorner.LL)
+            self.ampInfo.append(amp)
         self.orientation = orientation
 
         # compute TAN_PIXELS transform

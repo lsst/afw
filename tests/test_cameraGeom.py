@@ -241,11 +241,11 @@ class CameraGeomTestCase(lsst.utils.tests.TestCase):
             for det in camera:
                 for amp in det:
                     self.assertEqual(cw.ampInfoDict[det.getName()]['linInfo'][amp.getName()]['linthresh'],
-                                     amp.get('linearityThreshold'))
+                                     amp.getLinearityThreshold())
                     self.assertEqual(cw.ampInfoDict[det.getName()]['linInfo'][amp.getName()]['linmax'],
-                                     amp.get('linearityMaximum'))
+                                     amp.getLinearityMaximum())
                     self.assertEqual(cw.ampInfoDict[det.getName()]['linInfo'][amp.getName()]['linunits'],
-                                     amp.get('linearityUnits'))
+                                     amp.getLinearityUnits())
                     self.assertEqual(cw.ampInfoDict[det.getName()]['linInfo'][amp.getName()]['lintype'],
                                      amp.getLinearityType())
                     for c1, c2 in zip(cw.ampInfoDict[det.getName()]['linInfo'][amp.getName()]['lincoeffs'],

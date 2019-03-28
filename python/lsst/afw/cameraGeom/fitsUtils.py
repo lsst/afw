@@ -414,18 +414,17 @@ class DetectorBuilder:
         if self.detector is not None:
             return self.detector
 
-        schema = afwTable.AmpInfoTable.makeMinimalSchema()
-        ampInfo = afwTable.AmpInfoCatalog(schema)
+        amplifiers = []
         for ampMetadata in self.ampMetadataList:
-            record = ampInfo.addNew()
-            self.defaultAmpMap.setAttributes(record, ampMetadata, self.doRaise)
-            record.setHasRawInfo(True)
+            amp = afwCameraGeom.Amplifier()
+            self.defaultAmpMap.setAttributes(amp, ampMetadata, self.doRaise)
+            amplifiers.append(amp)
 
         detConfig = afwCameraGeom.DetectorConfig()
         self.defaultDetectorMap.setAttributes(
             detConfig, self.detectorMetadata, self.doRaise)
         self.detector = afwCameraGeom.makeDetector(
-            detConfig, ampInfo, self.focalPlaneToField)
+            detConfig, amplifiers, self.focalPlaneToField)
         return self.detector
 
     def makeExposure(self, im, mask=None, variance=None):

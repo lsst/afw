@@ -19,8 +19,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from .cameraSys import *
-from .detector import *
-from .amplifier import *
-from .orientation import *
-from .transformMap import *
+__all__ = ["ReadoutCornerValNameDict", "ReadoutCornerNameValDict"]
+
+
+from .amplifier import ReadoutCorner
+
+ReadoutCornerValNameDict = {
+    ReadoutCorner.LL: "LL",
+    ReadoutCorner.LR: "LR",
+    ReadoutCorner.UR: "UR",
+    ReadoutCorner.UL: "UL",
+}
+ReadoutCornerNameValDict = {val: key for key, val in
+                            ReadoutCornerValNameDict.items()}

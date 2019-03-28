@@ -28,7 +28,7 @@
 #include <unordered_map>
 #include "lsst/base.h"
 #include "lsst/afw/geom/Transform.h"
-#include "lsst/afw/table/AmpInfo.h"
+#include "lsst/afw/cameraGeom/Amplifier.h"
 #include "lsst/afw/cameraGeom/CameraSys.h"
 #include "lsst/afw/cameraGeom/Orientation.h"
 #include "lsst/afw/cameraGeom/TransformMap.h"
@@ -53,11 +53,6 @@ enum DetectorType {
  *
  * Supports transformation of points between FOCAL_PLANE and pixel-based coordinate systems.
  * Also an iterator over amplifiers (in C++ use begin(), end(), in Python use "for amplifier in detector").
- *
- * @todo: this would probably be a bit more robust if it used a ConstAmpInfoCatalog
- * (a catalog with const records) but I don't think const catalogs really work yet;
- * for instance it is not possible to construct one from a non-const catalog,
- * so I don't know how to construct one.
  */
 class Detector final : public table::io::PersistableFacade<Detector>, public typehandling::Storable {
 public:
@@ -71,7 +66,7 @@ public:
      * @param type type of detector
      * @param serial serial "number" that identifies the physical detector
      * @param bbox bounding box
-     * @param ampInfoCatalog catalog of amplifier information
+     * @param amplifiers catalog of amplifier information
      * @param orientation detector position and orientation in focal plane
      * @param pixelSize pixel size (mm)
      * @param transforms map of CameraSys: afw::geom::Transform, where each
@@ -88,7 +83,7 @@ public:
      *   must include the detector name (even though this is redundant).
      */
     Detector(std::string const &name, int id, DetectorType type, std::string const &serial,
-             lsst::geom::Box2I const &bbox, lsst::afw::table::AmpInfoCatalog const &ampInfoCatalog,
+             lsst::geom::Box2I const &bbox, std::vector<std::shared_ptr<Amplifier const>> const &amplifiers,
              Orientation const &orientation, lsst::geom::Extent2D const &pixelSize,
              TransformMap::Transforms const &transforms,
              CrosstalkMatrix const &crosstalk = CrosstalkMatrix(),
@@ -102,7 +97,7 @@ public:
      * @param type function of detector (e.g. SCIENCE, WAVEFRONT)
      * @param serial serial "number" that identifies the physical detector
      * @param bbox bounding box
-     * @param ampInfoCatalog catalog of amplifier information
+     * @param amplifiers catalog of amplifier information
      * @param orientation detector position and orientation in focal plane
      * @param pixelSize pixel size (mm)
      * @param transformMap coordinate systems and transforms between them
@@ -113,7 +108,7 @@ public:
      *     names are not unique
      */
     Detector(std::string const &name, int id, DetectorType type, std::string const &serial,
-             lsst::geom::Box2I const &bbox, lsst::afw::table::AmpInfoCatalog const &ampInfoCatalog,
+             lsst::geom::Box2I const &bbox, std::vector<std::shared_ptr<Amplifier const>> const &amplifiers,
              Orientation const &orientation, lsst::geom::Extent2D const &pixelSize,
              std::shared_ptr<TransformMap const> transformMap,
              CrosstalkMatrix const &crosstalk = CrosstalkMatrix(),
@@ -157,7 +152,11 @@ public:
     lsst::geom::Point2D getCenter(CameraSysPrefix const &cameraSysPrefix) const;
 
     /** Get the amplifier information catalog */
-    table::AmpInfoCatalog const getAmpInfoCatalog() const { return _ampInfoCatalog; }
+    [[deprecated("Renamed to getAmplifiers to reflect removal of AmpInfoCatalog.")]]
+    std::vector<std::shared_ptr<Amplifier const>> getAmpInfoCatalog() const { return getAmplifiers(); }
+
+    /** Get a vector of amplifiers */
+    std::vector<std::shared_ptr<Amplifier const>> getAmplifiers() const { return _amplifiers; }
 
     /** Get detector's orientation in the focal plane */
     Orientation const getOrientation() const { return _orientation; }
@@ -177,27 +176,27 @@ public:
     CrosstalkMatrix const getCrosstalk() const { return _crosstalk; }
 
     /** Get iterator to beginning of amplifier list */
-    table::AmpInfoCatalog::const_iterator begin() const { return _ampInfoCatalog.begin(); }
+    auto begin() const { return _amplifiers.begin(); }
 
     /** Get iterator to end of amplifier list */
-    table::AmpInfoCatalog::const_iterator end() const { return _ampInfoCatalog.end(); }
+    auto end() const { return _amplifiers.end(); }
 
     /**
      * Get the amplifier specified by index
      *
      * @throws std::out_of_range if index is out of range
      */
-    table::AmpInfoRecord const &operator[](size_t i) const { return _ampInfoCatalog.at(i); }
+    Amplifier const &operator[](size_t i) const { return *_amplifiers.at(i); }
 
     /**
      * Get the amplifier specified by name
      *
      * @throws lsst::pex::exceptions::InvalidParameterError if no such amplifier
      */
-    table::AmpInfoRecord const &operator[](std::string const &name) const;
+    Amplifier const &operator[](std::string const &name) const;
 
     /**
-     * Get the amplifier specified by index, returning a shared pointer to an AmpInfo record
+     * Get the amplifier specified by index, returning a shared pointer to an Amplifier
      *
      * @warning Intended only for use by pybind11. This exists because
      * Operator[] returns a data type that is difficult for pybind11 to use.
@@ -208,10 +207,10 @@ public:
      *
      * @throws std::out_of_range if index is out of range
      */
-    std::shared_ptr<table::AmpInfoRecord const> _get(int i) const;
+    std::shared_ptr<Amplifier const> _get(int i) const;
 
     /**
-     * Get the amplifier specified by name, returning a shared pointer to an AmpInfo record
+     * Get the amplifier specified by name, returning a shared pointer to an Amplifier
      *
      * @warning Intended only for internal and pybind11 use. This exists because
      * Operator[] returns a data type that is difficult for pybind11 to use.
@@ -220,12 +219,12 @@ public:
      *
      * @throws std::out_of_range if index is out of range
      */
-    std::shared_ptr<table::AmpInfoRecord const> _get(std::string const &name) const;
+    std::shared_ptr<Amplifier const> _get(std::string const &name) const;
 
     /**
      * Get the number of amplifiers. Renamed to `__len__` in Python.
      */
-    size_t size() const { return _ampInfoCatalog.size(); }
+    size_t size() const { return _amplifiers.size(); }
 
     /** Can this object convert between PIXELS and the specified camera coordinate system? */
     bool hasTransform(CameraSys const &cameraSys) const;
@@ -308,7 +307,7 @@ public:
     bool isPersistable() const noexcept override { return true; }
 
 private:
-    typedef std::unordered_map<std::string, table::AmpInfoCatalog::const_iterator> _AmpInfoMap;
+    using _AmplifierMap = std::unordered_map<std::string, std::shared_ptr<Amplifier const>>;
 
     std::string getPersistenceName() const override;
 
@@ -321,8 +320,8 @@ private:
     DetectorType _type;                     ///< type of detectorsize_t
     std::string _serial;                    ///< serial "number" that identifies the physical detector
     lsst::geom::Box2I _bbox;                ///< bounding box
-    table::AmpInfoCatalog _ampInfoCatalog;  ///< list of amplifier data
-    _AmpInfoMap _ampNameIterMap;            ///< map of amplifier name: catalog iterator
+    std::vector<std::shared_ptr<Amplifier const>> _amplifiers;  ///< list of amplifiers
+    _AmplifierMap _amplifierMap;            ///< map of amplifier name: amplifier
     Orientation _orientation;               ///< position and orientation of detector in focal plane
     lsst::geom::Extent2D _pixelSize;        ///< pixel size (mm)
     CameraSys _nativeSys;                   ///< native coordinate system of this detector

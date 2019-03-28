@@ -27,24 +27,33 @@
 #include "lsst/afw/table/io/OutputArchive.h"
 #include "lsst/afw/table/io/CatalogVector.h"
 #include "lsst/afw/table/io/Persistable.cc"
+#include "lsst/afw/table/aggregates.h"
 #include "lsst/afw/cameraGeom/Detector.h"
 
 namespace lsst {
 namespace afw {
 namespace cameraGeom {
 
+namespace {
+
+using AmpVector = std::vector<std::shared_ptr<Amplifier const>>;
+
+} // anonymous
+
 Detector::Detector(std::string const &name, int id, DetectorType type, std::string const &serial,
-                   lsst::geom::Box2I const &bbox, table::AmpInfoCatalog const &ampInfoCatalog,
+                   lsst::geom::Box2I const &bbox,
+                   AmpVector const &amplifiers,
                    Orientation const &orientation, lsst::geom::Extent2D const &pixelSize,
                    TransformMap::Transforms const &transforms, CrosstalkMatrix const &crosstalk,
                    std::string const &physicalType) :
-    Detector(name, id, type, serial, bbox, ampInfoCatalog, orientation, pixelSize,
+    Detector(name, id, type, serial, bbox, amplifiers, orientation, pixelSize,
              TransformMap::make(CameraSys(PIXELS, name), transforms),
              crosstalk, physicalType)
 {}
 
 Detector::Detector(std::string const &name, int id, DetectorType type, std::string const &serial,
-                   lsst::geom::Box2I const &bbox, table::AmpInfoCatalog const &ampInfoCatalog,
+                   lsst::geom::Box2I const &bbox,
+                   AmpVector const &amplifiers,
                    Orientation const &orientation, lsst::geom::Extent2D const &pixelSize,
                    std::shared_ptr<TransformMap const> transformMap, CrosstalkMatrix const &crosstalk,
                    std::string const &physicalType) :
@@ -53,8 +62,8 @@ Detector::Detector(std::string const &name, int id, DetectorType type, std::stri
     _type(type),
     _serial(serial),
     _bbox(bbox),
-    _ampInfoCatalog(ampInfoCatalog),
-    _ampNameIterMap(),
+    _amplifiers(amplifiers),
+    _amplifierMap(),
     _orientation(orientation),
     _pixelSize(pixelSize),
     _nativeSys(CameraSys(PIXELS, name)),
@@ -62,13 +71,14 @@ Detector::Detector(std::string const &name, int id, DetectorType type, std::stri
     _crosstalk(crosstalk),
     _physicalType(physicalType)
 {
-    // make _ampNameIterMap
-    for (auto ampIter = _ampInfoCatalog.begin(); ampIter != _ampInfoCatalog.end(); ++ampIter) {
-        _ampNameIterMap.insert(std::make_pair(ampIter->getName(), ampIter));
+    // populate _amplifierMap
+    for (auto const & amp : _amplifiers) {
+        _amplifierMap.insert(std::make_pair(amp->getName(), amp));
     }
-    if (_ampNameIterMap.size() != _ampInfoCatalog.size()) {
+    if (_amplifierMap.size() != _amplifiers.size()) {
         throw LSST_EXCEPT(pexExcept::InvalidParameterError,
                           "Invalid ampInfoCatalog: not all amplifier names are unique");
+
     }
 
     // ensure crosstalk coefficients matrix is square
@@ -80,7 +90,7 @@ Detector::Detector(std::string const &name, int id, DetectorType type, std::stri
             os << "Non-square crosstalk matrix: " << _crosstalk << " for detector \"" << _name << "\"";
             throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
         }
-        if (shape[0] != _ampInfoCatalog.size()) {
+        if (shape[0] != _amplifiers.size()) {
             std::ostringstream os;
             os << "Wrong size crosstalk matrix: " << _crosstalk << " for detector \"" << _name << "\"";
             throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
@@ -108,18 +118,18 @@ lsst::geom::Point2D Detector::getCenter(CameraSysPrefix const &cameraSysPrefix) 
     return getCenter(makeCameraSys(cameraSysPrefix));
 }
 
-const table::AmpInfoRecord &Detector::operator[](std::string const &name) const { return *(_get(name)); }
+Amplifier const & Detector::operator[](std::string const &name) const { return *_get(name); }
 
-std::shared_ptr<table::AmpInfoRecord const> Detector::_get(int i) const {
+std::shared_ptr<Amplifier const> Detector::_get(int i) const {
     if (i < 0) {
-        i = _ampInfoCatalog.size() + i;
+        i = _amplifiers.size() + i;
     };
-    return _ampInfoCatalog.get(i);
+    return _amplifiers.at(i);
 }
 
-std::shared_ptr<table::AmpInfoRecord const> Detector::_get(std::string const &name) const {
-    _AmpInfoMap::const_iterator ampIter = _ampNameIterMap.find(name);
-    if (ampIter == _ampNameIterMap.end()) {
+std::shared_ptr<Amplifier const> Detector::_get(std::string const &name) const {
+    auto ampIter = _amplifierMap.find(name);
+    if (ampIter == _amplifierMap.end()) {
         std::ostringstream os;
         os << "Unknown amplifier \"" << name << "\"";
         throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
@@ -249,13 +259,10 @@ public:
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
         auto const & record = catalogs.front().front();
 
-        table::AmpInfoCatalog amps(catalogs.back().getSchema());
+        AmpVector amps;
         amps.reserve(catalogs.back().size());
-        // we can't use amps.assign or amps.insert here because those
-        // require the input record to be a subclass of the output record
-        // to permit shallow assignment while this case is the opposte
-        for (auto const & amp : catalogs.back()) {
-            amps.addNew()->assign(amp);
+        for (auto const & record : catalogs.back()) {
+            amps.push_back(Amplifier::fromRecord(record));
         }
 
         auto flattenedMatrix = record.get(keys.crosstalk);
@@ -335,9 +342,13 @@ void Detector::write(OutputArchiveHandle& handle) const {
     record->set(keys.physicalType, getPhysicalType());
     handle.saveCatalog(cat);
 
-    auto amps = handle.makeCatalog(_ampInfoCatalog.getSchema());
-    amps.assign(_ampInfoCatalog.begin(), _ampInfoCatalog.end(), true);
-    handle.saveCatalog(amps);
+    auto ampCat = handle.makeCatalog(Amplifier::getRecordSchema());
+    ampCat.reserve(getAmplifiers().size());
+    for (auto const & amp : getAmplifiers()) {
+        auto record = ampCat.addNew();
+        amp->toRecord(*record);
+    }
+    handle.saveCatalog(ampCat);
 }
 
 
