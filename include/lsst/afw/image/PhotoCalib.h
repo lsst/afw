@@ -29,6 +29,8 @@
  * @ingroup afw
  */
 
+#include <cmath>  // For quiet_nan in the deprecated block
+
 #include "boost/format.hpp"
 
 #include "lsst/afw/math/BoundedField.h"
@@ -450,6 +452,81 @@ public:
     bool isPersistable() const noexcept override { return true; }
 
     friend std::ostream &operator<<(std::ostream &os, PhotoCalib const &photoCalib);
+
+    /* Backwards compatibility with old Calib object */
+
+    /// No-op: for backwards compatibility with Calib.
+    [[deprecated("No-op: PhotoCalib never throws on negative instFlux. Will remove after v18.")]] static void
+    setThrowOnNegativeFlux(bool raiseException) noexcept {
+        ;  // do nothing!
+    }
+    /// No-op: for backwards compatibility with Calib (always returns false).
+    [[deprecated("No-op: PhotoCalib never throws on negative instFlux. Will remove after v18.")]] static bool
+    getThrowOnNegativeFlux() noexcept {
+        return false;
+    }
+
+    /** @copydoc instFluxToMagnitude(double)const
+     * Deprecated: For backwards compatibility with Calib.
+     */
+    [
+            [deprecated("For backwards compatibility with Calib; use `instFluxToMagnitude` instead. To be "
+                        "removed after v18.")]] double
+    getMagnitude(double instFlux) const {
+        return instFluxToMagnitude(instFlux);
+    }
+
+    /** @copydoc instFluxToMagnitude(double,double)const
+     * Deprecated: For backwards compatibility with Calib.
+     */
+    [
+            [deprecated("For backwards compatibility with Calib; use `instFluxToMagnitude` instead. To be "
+                        "removed after v18.")]] ndarray::Array<double, 1>
+    getMagnitude(ndarray::Array<double const, 1> const &instFlux) const;
+    [
+            [deprecated("For backwards compatibility with Calib; use `instFluxToMagnitude` instead. To be "
+                        "removed after v18.")]] std::pair<double, double>
+    getMagnitude(double instFlux, double instFluxErr) const {
+        auto result = instFluxToMagnitude(instFlux, instFluxErr);
+        return std::make_pair<const double &, const double &>(result.value, result.error);
+    };
+    [[deprecated(
+            "For backwards compatibility with Calib; use `instFluxToMagnitude` instead. To be "
+            "removed after v18.")]] std::pair<ndarray::Array<double, 1>, ndarray::Array<double, 1>>
+    getMagnitude(ndarray::Array<double const, 1> const &instFlux,
+                 ndarray::Array<double const, 1> const &instFluxErr) const;
+    /**
+     * @copydoc magnitudeToInstFlux(double)const
+     * Deprecated: For backwards compatibility with Calib.
+     */
+    [[deprecated(
+            "For backwards compatibility with Calib; use `magnitudeToInstFlux` instead. To be removed "
+            "after v18.")]] double
+    getFlux(double magnitude) const {
+        return magnitudeToInstFlux(magnitude);
+    }
+    /**
+     * @copydoc getInstFluxAtZeroMagnitude()
+     * Deprecated: For backwards compatibility with Calib.
+     */
+    [[deprecated(
+            "For backwards compatibility with Calib: use `getCalibrationMean`, `getCalibrationErr`, or "
+            "`getInstFluxAtZeroMagnitude. To be removed after v18.")]] std::pair<double, double>
+    getFluxMag0() const {
+        return std::make_pair<double, double>(getInstFluxAtZeroMagnitude(),
+                                              std::numeric_limits<double>::quiet_NaN());
+    }
+    /// Invalid for PhotoCalib: this only exists to provide the user an informative error message.
+    [[deprecated(
+            "PhotoCalib is immutable: create a new one with the calibration factor and calibration error,"
+            " or create it like an old Calib object with makePhotoCalibFromCalibZeroPoint.")]] void
+    setFluxMag0(double, double = 0) const {
+        std::string msg =
+                "PhotoCalib is immutable: create a new `PhotoCalib` with the calibration"
+                " factor and error, or create it like an old Calib object with "
+                "`makePhotoCalibFromCalibZeroPoint`.";
+        throw LSST_EXCEPT(pex::exceptions::RuntimeError, msg);
+    }
 
 protected:
     std::string getPersistenceName() const override;
