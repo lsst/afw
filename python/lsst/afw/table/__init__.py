@@ -29,7 +29,6 @@ from .arrays import *
 from .slots import *
 from .simple import *
 from .source import *
-from .ampInfo import *
 from .exposure import *
 from .match import *
 from .catalogMatches import *

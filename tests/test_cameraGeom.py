@@ -66,7 +66,7 @@ class CameraGeomTestCase(lsst.utils.tests.TestCase):
         for cw in self.cameraList:
             self.assertIsInstance(cw.camera, Camera)
             self.assertEqual(cw.nDetectors, len(cw.camera))
-            self.assertEqual(cw.nDetectors, len(cw.ampInfoDict))
+            self.assertEqual(cw.nDetectors, len(cw.ampDataDict))
             self.assertEqual(sorted(cw.detectorNameList),
                              sorted(cw.camera.getNameIter()))
             self.assertEqual(sorted(cw.detectorIdList),
@@ -74,7 +74,7 @@ class CameraGeomTestCase(lsst.utils.tests.TestCase):
             for det in cw.camera:
                 self.assertIsInstance(det, Detector)
                 self.assertEqual(
-                    cw.ampInfoDict[det.getName()]['namps'], len(det))
+                    cw.ampDataDict[det.getName()]['namps'], len(det))
             idList = [det.getId() for det in cw.camera]
             self.assertEqual(idList, sorted(idList))
 
@@ -240,15 +240,15 @@ class CameraGeomTestCase(lsst.utils.tests.TestCase):
             camera = cw.camera
             for det in camera:
                 for amp in det:
-                    self.assertEqual(cw.ampInfoDict[det.getName()]['linInfo'][amp.getName()]['linthresh'],
+                    self.assertEqual(cw.ampDataDict[det.getName()]['linInfo'][amp.getName()]['linthresh'],
                                      amp.getLinearityThreshold())
-                    self.assertEqual(cw.ampInfoDict[det.getName()]['linInfo'][amp.getName()]['linmax'],
+                    self.assertEqual(cw.ampDataDict[det.getName()]['linInfo'][amp.getName()]['linmax'],
                                      amp.getLinearityMaximum())
-                    self.assertEqual(cw.ampInfoDict[det.getName()]['linInfo'][amp.getName()]['linunits'],
+                    self.assertEqual(cw.ampDataDict[det.getName()]['linInfo'][amp.getName()]['linunits'],
                                      amp.getLinearityUnits())
-                    self.assertEqual(cw.ampInfoDict[det.getName()]['linInfo'][amp.getName()]['lintype'],
+                    self.assertEqual(cw.ampDataDict[det.getName()]['linInfo'][amp.getName()]['lintype'],
                                      amp.getLinearityType())
-                    for c1, c2 in zip(cw.ampInfoDict[det.getName()]['linInfo'][amp.getName()]['lincoeffs'],
+                    for c1, c2 in zip(cw.ampDataDict[det.getName()]['linInfo'][amp.getName()]['lincoeffs'],
                                       amp.getLinearityCoeffs()):
                         if np.isfinite(c1) and np.isfinite(c2):
                             self.assertEqual(c1, c2)

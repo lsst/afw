@@ -12,7 +12,6 @@ scripts.BasicSConscript.pybind11(
      'simple/simple',
      'source/source',
      'match/match',
-     'ampInfo/ampInfo',
      'exposure/exposure',
      'idFactory',
      'wcsUtils',

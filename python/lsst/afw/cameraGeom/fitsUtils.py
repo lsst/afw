@@ -27,7 +27,6 @@ import warnings
 
 import lsst.geom
 import lsst.afw.image as afwImage
-import lsst.afw.table as afwTable
 from lsst.afw.fits import readMetadata
 import lsst.afw.cameraGeom as afwCameraGeom
 import lsst.afw.geom
@@ -232,7 +231,7 @@ class DetectorBuilder:
                 setByKey(metadata, 'FLIPX', dtm1 < 0, clobber)
                 setByKey(metadata, 'FLIPY', dtm2 < 0, clobber)
             setByKey(metadata, 'RDCRNR', int(
-                afwTable.ReadoutCorner.LL), clobber)
+                afwCameraGeom.ReadoutCorner.LL), clobber)
         else:
             setByKey(metadata, 'FLIPX', False, clobber)
             setByKey(metadata, 'FLIPY', True, clobber)
@@ -280,8 +279,8 @@ class DetectorBuilder:
                    ('GAIN', 'setGain', 1.),
                    ('RDNOISE', 'setReadNoise', 0.),
                    ('SATURATE', 'setSaturation', 2 << 15),
-                   ('RDCRNR', 'setReadoutCorner', int(
-                       afwTable.ReadoutCorner.LL), afwTable.ReadoutCorner),
+                   ('RDCRNR', 'setReadoutCorner', int(afwCameraGeom.ReadoutCorner.LL),
+                    afwCameraGeom.ReadoutCorner),
                    ('LINCOEFF', 'setLinearityCoeffs', [0., 1.]),
                    ('LINTYPE', 'setLinearityType', 'POLY'),
                    ('RAWBBOX', 'setRawBBox', None, self._makeBbox),
