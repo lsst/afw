@@ -28,7 +28,6 @@ from ._aggregates import *
 from ._arrays import *
 from ._simple import *
 from ._source import *
-from ._ampInfo import *
 from ._exposure import *
 from ._match import *
 from .catalogMatches import *

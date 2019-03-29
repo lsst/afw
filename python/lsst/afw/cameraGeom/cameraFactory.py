@@ -19,12 +19,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-__all__ = ["makeCameraFromPath", "makeCameraFromCatalogs",
+__all__ = ["makeCameraFromPath", "makeCameraFromAmpLists",
            "makeDetector", "copyDetector"]
 
 import os.path
 import lsst.geom
-from lsst.afw.table import AmpInfoCatalog
+from lsst.afw.table import BaseCatalog
 from .cameraGeomLib import FOCAL_PLANE, FIELD_ANGLE, PIXELS, TAN_PIXELS, ACTUAL_PIXELS, CameraSys, \
     Detector, DetectorType, Orientation, TransformMap, Amplifier
 from .camera import Camera
@@ -210,17 +210,17 @@ def makeCameraFromPath(cameraConfig, ampInfoPath, shortNameFunc,
     camera : `lsst.afw.cameraGeom.Camera`
         New Camera instance.
     """
-    ampInfoCatDict = dict()
+    ampListDict = dict()
     for detectorConfig in cameraConfig.detectorList.values():
         shortName = shortNameFunc(detectorConfig.name)
         ampCatPath = os.path.join(ampInfoPath, shortName + ".fits")
-        ampInfoCatalog = AmpInfoCatalog.readFits(ampCatPath)
-        ampInfoCatDict[detectorConfig.name] = ampInfoCatalog
+        catalog = BaseCatalog.readFits(ampCatPath)
+        ampListDict[detectorConfig.name] = [Amplifier.fromRecord(record) for record in catalog]
 
-    return makeCameraFromCatalogs(cameraConfig, ampInfoCatDict, pupilFactoryClass)
+    return makeCameraFromAmpLists(cameraConfig, ampListDict, pupilFactoryClass)
 
 
-def makeCameraFromCatalogs(cameraConfig, ampInfoCatDict,
+def makeCameraFromAmpLists(cameraConfig, ampListDict,
                            pupilFactoryClass=PupilFactory):
     """Construct a Camera instance from a dictionary of detector name: AmpInfoCatalog
 
@@ -228,7 +228,7 @@ def makeCameraFromCatalogs(cameraConfig, ampInfoCatDict,
     ----------
     cameraConfig : `CameraConfig`
         Config describing camera and its detectors.
-    ampInfoCatDict : `dict`
+    ampListDict : `dict`
         A dictionary of detector name: AmpInfoCatalog
     pupilFactoryClass : `type`, optional
         Class to attach to camera; `lsst.default afw.cameraGeom.PupilFactory`.
@@ -262,7 +262,7 @@ def makeCameraFromCatalogs(cameraConfig, ampInfoCatDict,
         # all of the transforms.
         thisDetectorData = makeDetectorData(
             detectorConfig=detectorConfig,
-            amplifiers=[Amplifier.fromRecord(record) for record in ampInfoCatDict[detectorConfig.name]],
+            amplifiers=ampListDict[detectorConfig.name],
             focalPlaneToField=focalPlaneToField,
         )
 
