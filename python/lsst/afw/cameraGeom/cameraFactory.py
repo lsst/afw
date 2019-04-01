@@ -215,7 +215,8 @@ def makeCameraFromPath(cameraConfig, ampInfoPath, shortNameFunc,
         shortName = shortNameFunc(detectorConfig.name)
         ampCatPath = os.path.join(ampInfoPath, shortName + ".fits")
         catalog = BaseCatalog.readFits(ampCatPath)
-        ampListDict[detectorConfig.name] = [Amplifier.fromRecord(record) for record in catalog]
+        ampListDict[detectorConfig.name] = [Amplifier.Builder.fromRecord(record).finish()
+                                            for record in catalog]
 
     return makeCameraFromAmpLists(cameraConfig, ampListDict, pupilFactoryClass)
 

@@ -255,7 +255,7 @@ public:
         std::vector<std::shared_ptr<Amplifier const>> amps;
         amps.reserve(catalogs.back().size());
         for (auto const & record : catalogs.back()) {
-            amps.push_back(Amplifier::fromRecord(record));
+            amps.push_back(Amplifier::Builder::fromRecord(record).finish());
         }
 
         auto flattenedMatrix = record.get(keys.crosstalk);
