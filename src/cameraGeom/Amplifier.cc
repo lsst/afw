@@ -230,6 +230,32 @@ private:
 
 };
 
+
+class FrozenAmplifier final : public Amplifier {
+public:
+
+    explicit FrozenAmplifier(Fields const & fields) : _fields(fields) {}
+
+    // This is a hidden implementation class, so none of its move/copy ctors or
+    // assignment operators would ever be used even if they did exist.
+
+    FrozenAmplifier(FrozenAmplifier const &) = delete;
+    FrozenAmplifier(FrozenAmplifier &&) = delete;
+
+    FrozenAmplifier & operator=(FrozenAmplifier const &) = delete;
+    FrozenAmplifier & operator=(FrozenAmplifier &&) = delete;
+
+    ~FrozenAmplifier() noexcept override = default;
+
+protected:
+
+    Fields const & getFields() const override { return _fields; }
+
+private:
+
+    Fields const _fields;
+};
+
 } // anonyomous
 
 
@@ -237,27 +263,42 @@ table::Schema Amplifier::getRecordSchema() {
     return RecordSchemaHelper::getMinimal().schema;
 }
 
-std::shared_ptr<Amplifier const> Amplifier::fromRecord(table::BaseRecord const & record) {
+Amplifier::Builder Amplifier::rebuild() const { return Builder(*this); }
+
+Amplifier::Builder::Builder(Amplifier const & other) : _fields(other.getFields()) {}
+
+Amplifier::Builder & Amplifier::Builder::operator=(Amplifier const & other) {
+    using std::swap;
+    Fields copy(other.getFields());
+    swap(_fields, copy);
+    return *this;
+}
+
+std::shared_ptr<Amplifier const> Amplifier::Builder::finish() const {
+    return std::make_shared<FrozenAmplifier>(_fields);
+}
+
+Amplifier::Builder Amplifier::Builder::fromRecord(table::BaseRecord const & record) {
     auto const helper = RecordSchemaHelper(record.getSchema());
-    auto result = std::make_shared<Amplifier>();
-    result->setName(record.get(helper.name));
-    result->setBBox(record.get(helper.bbox));
-    result->setGain(record.get(helper.gain));
-    result->setReadNoise(record.get(helper.readNoise));
-    result->setSaturation(record.get(helper.saturation));
-    result->setSuspectLevel(record.get(helper.suspectLevel));
-    result->setReadoutCorner(static_cast<ReadoutCorner>(record.get(helper.readoutCorner)));
-    result->setLinearityCoeffs(ndarray::copy(record.get(helper.linearityCoeffs)));
-    result->setLinearityType(record.get(helper.linearityType));
-    result->setRawBBox(record.get(helper.rawBBox));
-    result->setRawDataBBox(record.get(helper.rawDataBBox));
-    result->setRawFlipX(record.get(helper.rawFlipX));
-    result->setRawFlipY(record.get(helper.rawFlipY));
-    result->setRawXYOffset(lsst::geom::Extent2I(record.get(helper.rawXYOffset)));
-    result->setRawHorizontalOverscanBBox(record.get(helper.rawHorizontalOverscanBBox));
-    result->setRawVerticalOverscanBBox(record.get(helper.rawVerticalOverscanBBox));
-    result->setRawHorizontalOverscanBBox(record.get(helper.rawHorizontalOverscanBBox));
-    result->setRawPrescanBBox(record.get(helper.rawPrescanBBox));
+    Builder result;
+    result.setName(record.get(helper.name));
+    result.setBBox(record.get(helper.bbox));
+    result.setGain(record.get(helper.gain));
+    result.setReadNoise(record.get(helper.readNoise));
+    result.setSaturation(record.get(helper.saturation));
+    result.setSuspectLevel(record.get(helper.suspectLevel));
+    result.setReadoutCorner(static_cast<ReadoutCorner>(record.get(helper.readoutCorner)));
+    result.setLinearityCoeffs(ndarray::copy(record.get(helper.linearityCoeffs)));
+    result.setLinearityType(record.get(helper.linearityType));
+    result.setRawBBox(record.get(helper.rawBBox));
+    result.setRawDataBBox(record.get(helper.rawDataBBox));
+    result.setRawFlipX(record.get(helper.rawFlipX));
+    result.setRawFlipY(record.get(helper.rawFlipY));
+    result.setRawXYOffset(lsst::geom::Extent2I(record.get(helper.rawXYOffset)));
+    result.setRawHorizontalOverscanBBox(record.get(helper.rawHorizontalOverscanBBox));
+    result.setRawVerticalOverscanBBox(record.get(helper.rawVerticalOverscanBBox));
+    result.setRawHorizontalOverscanBBox(record.get(helper.rawHorizontalOverscanBBox));
+    result.setRawPrescanBBox(record.get(helper.rawPrescanBBox));
     // Set not-always-present fields only when present.  While it's usually
     // preferable to use the public setter methods (as above), passing member
     // function pointers through the lambda below is sufficiently unpleasant
@@ -267,38 +308,39 @@ std::shared_ptr<Amplifier const> Amplifier::fromRecord(table::BaseRecord const &
             member = record.get(key);
         }
     };
-    setIfValid(result->_linearityThreshold, helper.linearityThreshold);
-    setIfValid(result->_linearityMaximum, helper.linearityMaximum);
-    setIfValid(result->_linearityUnits, helper.linearityUnits);
+    setIfValid(result._fields.linearityThreshold, helper.linearityThreshold);
+    setIfValid(result._fields.linearityMaximum, helper.linearityMaximum);
+    setIfValid(result._fields.linearityUnits, helper.linearityUnits);
     return result;
 }
 
 void Amplifier::toRecord(table::BaseRecord & record) const {
     auto const helper = RecordSchemaHelper(record.getSchema());
-    record.set(helper.name, getName());
-    record.set(helper.bbox, getBBox());
-    record.set(helper.gain, getGain());
-    record.set(helper.readNoise, getReadNoise());
-    record.set(helper.saturation, getSaturation());
-    record.set(helper.suspectLevel, getSuspectLevel());
-    record.set(helper.readoutCorner, static_cast<int>(getReadoutCorner()));
-    record.set(helper.rawBBox, getRawBBox());
-    record.set(helper.rawDataBBox, getRawDataBBox());
-    record.set(helper.rawFlipX, getRawFlipX());
-    record.set(helper.rawFlipY, getRawFlipY());
-    record.set(helper.rawXYOffset, lsst::geom::Point2I(getRawXYOffset()));
-    record.set(helper.rawHorizontalOverscanBBox, getRawHorizontalOverscanBBox());
-    record.set(helper.rawVerticalOverscanBBox, getRawVerticalOverscanBBox());
-    record.set(helper.rawPrescanBBox, getRawPrescanBBox());
+    auto const & fields = getFields();
+    record.set(helper.name, fields.name);
+    record.set(helper.bbox, fields.bbox);
+    record.set(helper.gain, fields.gain);
+    record.set(helper.readNoise, fields.readNoise);
+    record.set(helper.saturation, fields.saturation);
+    record.set(helper.suspectLevel, fields.suspectLevel);
+    record.set(helper.readoutCorner, static_cast<int>(fields.readoutCorner));
+    record.set(helper.rawBBox, fields.rawBBox);
+    record.set(helper.rawDataBBox, fields.rawDataBBox);
+    record.set(helper.rawFlipX, fields.rawFlipX);
+    record.set(helper.rawFlipY, fields.rawFlipY);
+    record.set(helper.rawXYOffset, lsst::geom::Point2I(fields.rawXYOffset));
+    record.set(helper.rawHorizontalOverscanBBox, fields.rawHorizontalOverscanBBox);
+    record.set(helper.rawVerticalOverscanBBox, fields.rawVerticalOverscanBBox);
+    record.set(helper.rawPrescanBBox, fields.rawPrescanBBox);
     // Set not-always-present fields only when present.
     auto setIfValid = [this, &record](auto value, auto & key) {
         if (key.isValid()) {
             record.set(key, value);
         }
     };
-    setIfValid(getLinearityThreshold(), helper.linearityThreshold);
-    setIfValid(getLinearityMaximum(), helper.linearityMaximum);
-    setIfValid(getLinearityUnits(), helper.linearityUnits);
+    setIfValid(fields.linearityThreshold, helper.linearityThreshold);
+    setIfValid(fields.linearityMaximum, helper.linearityMaximum);
+    setIfValid(fields.linearityUnits, helper.linearityUnits);
 }
 
 }  // namespace table

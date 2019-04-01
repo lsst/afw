@@ -81,7 +81,9 @@ class DetectorTestCase(lsst.utils.tests.TestCase):
         """
         def duplicateAmpName(dw):
             """Set two amplifiers to the same name"""
-            dw.ampInfo[1].setName(dw.ampInfo[0].getName())
+            builder = dw.ampInfo[1].rebuild()
+            builder.setName(dw.ampInfo[0].getName())
+            dw.ampInfo[1] = builder.finish()
         with self.assertRaises(lsst.pex.exceptions.Exception):
             DetectorWrapper(modFunc=duplicateAmpName)
 
