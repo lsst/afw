@@ -415,9 +415,9 @@ class DetectorBuilder:
 
         amplifiers = []
         for ampMetadata in self.ampMetadataList:
-            amp = afwCameraGeom.Amplifier()
-            self.defaultAmpMap.setAttributes(amp, ampMetadata, self.doRaise)
-            amplifiers.append(amp)
+            builder = afwCameraGeom.Amplifier.Builder()
+            self.defaultAmpMap.setAttributes(builder, ampMetadata, self.doRaise)
+            amplifiers.append(builder.finish())
 
         detConfig = afwCameraGeom.DetectorConfig()
         self.defaultDetectorMap.setAttributes(
