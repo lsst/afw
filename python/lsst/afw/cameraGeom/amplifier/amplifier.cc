@@ -37,60 +37,81 @@ namespace cameraGeom {
 namespace {
 
 using PyAmplifier = py::class_<Amplifier, std::shared_ptr<Amplifier>>;
+using PyAmplifierBuilder = py::class_<Amplifier::Builder, Amplifier, std::shared_ptr<Amplifier::Builder>>;
 
-PYBIND11_MODULE(amplifier, mod) {
+PyAmplifier declarePyAmplifier(py::module & mod) {
     py::enum_<ReadoutCorner>(mod, "ReadoutCorner")
         .value("LL", ReadoutCorner::LL)
         .value("LR", ReadoutCorner::LR)
         .value("UR", ReadoutCorner::UR)
         .value("UL", ReadoutCorner::UL);
-
     PyAmplifier cls(mod, "Amplifier");
     cls.def_static("getRecordSchema", &Amplifier::getRecordSchema);
-    cls.def_static("fromRecord", &Amplifier::fromRecord);
-    cls.def(py::init());
     cls.def("toRecord", &Amplifier::toRecord);
+    cls.def("rebuild", &Amplifier::rebuild);
     cls.def("getName", &Amplifier::getName);
-    cls.def("setName", &Amplifier::setName, "name"_a);
     cls.def("getBBox", &Amplifier::getBBox);
-    cls.def("setBBox", &Amplifier::setBBox, "bbox"_a);
     cls.def("getGain", &Amplifier::getGain);
-    cls.def("setGain", &Amplifier::setGain, "gain"_a);
     cls.def("getReadNoise", &Amplifier::getReadNoise);
-    cls.def("setReadNoise", &Amplifier::setReadNoise, "readNoise"_a);
     cls.def("getSaturation", &Amplifier::getSaturation);
-    cls.def("setSaturation", &Amplifier::setSaturation, "saturation"_a);
     cls.def("getSuspectLevel", &Amplifier::getSuspectLevel);
-    cls.def("setSuspectLevel", &Amplifier::setSuspectLevel, "suspectLevel"_a);
     cls.def("getReadoutCorner", &Amplifier::getReadoutCorner);
-    cls.def("setReadoutCorner", &Amplifier::setReadoutCorner, "corner"_a);
     cls.def("getLinearityCoeffs", &Amplifier::getLinearityCoeffs);
-    cls.def("setLinearityCoeffs", &Amplifier::setLinearityCoeffs, "coeffs"_a);
     cls.def("getLinearityType", &Amplifier::getLinearityType);
-    cls.def("setLinearityType", &Amplifier::setLinearityType, "type"_a);
     cls.def("getLinearityThreshold", &Amplifier::getLinearityThreshold);
-    cls.def("setLinearityThreshold", &Amplifier::setLinearityThreshold, "threshold"_a);
     cls.def("getLinearityMaximum", &Amplifier::getLinearityMaximum);
-    cls.def("setLinearityMaximum", &Amplifier::setLinearityMaximum, "maximum"_a);
     cls.def("getLinearityUnits", &Amplifier::getLinearityUnits);
-    cls.def("setLinearityUnits", &Amplifier::setLinearityUnits, "units"_a);
     cls.def("getHasRawInfo", &Amplifier::getHasRawInfo);  // TODO: deprecate
     cls.def("getRawBBox", &Amplifier::getRawBBox);
-    cls.def("setRawBBox", &Amplifier::setRawBBox, "bbox"_a);
     cls.def("getRawDataBBox", &Amplifier::getRawDataBBox);
-    cls.def("setRawDataBBox", &Amplifier::setRawDataBBox, "bbox"_a);
     cls.def("getRawFlipX", &Amplifier::getRawFlipX);
-    cls.def("setRawFlipX", &Amplifier::setRawFlipX, "rawFlipX"_a);
     cls.def("getRawFlipY", &Amplifier::getRawFlipY);
-    cls.def("setRawFlipY", &Amplifier::setRawFlipY, "rawFlipY"_a);
     cls.def("getRawXYOffset", &Amplifier::getRawXYOffset);
-    cls.def("setRawXYOffset", &Amplifier::setRawXYOffset, "offset"_a);
     cls.def("getRawHorizontalOverscanBBox", &Amplifier::getRawHorizontalOverscanBBox);
-    cls.def("setRawHorizontalOverscanBBox", &Amplifier::setRawHorizontalOverscanBBox, "bbox"_a);
     cls.def("getRawVerticalOverscanBBox", &Amplifier::getRawVerticalOverscanBBox);
-    cls.def("setRawVerticalOverscanBBox", &Amplifier::setRawVerticalOverscanBBox, "bbox"_a);
     cls.def("getRawPrescanBBox", &Amplifier::getRawPrescanBBox);
-    cls.def("setRawPrescanBBox", &Amplifier::setRawPrescanBBox, "bbox"_a);
+    return cls;
+}
+
+void declarePyAmplifierBuilder(PyAmplifier & parent) {
+    PyAmplifierBuilder cls(parent, "Builder");
+    cls.def_static("fromRecord", &Amplifier::Builder::fromRecord);
+    cls.def(py::init());
+    cls.def("finish", &Amplifier::Builder::finish);
+    cls.def("assign", [](Amplifier::Builder & self, Amplifier const & other) { self = other; });
+    cls.def("setName", &Amplifier::Builder::setName, "name"_a);
+    cls.def("setBBox", &Amplifier::Builder::setBBox, "bbox"_a);
+    cls.def("setGain", &Amplifier::Builder::setGain, "gain"_a);
+    cls.def("setReadNoise", &Amplifier::Builder::setReadNoise, "readNoise"_a);
+    cls.def("setSaturation", &Amplifier::Builder::setSaturation, "saturation"_a);
+    cls.def("setSuspectLevel", &Amplifier::Builder::setSuspectLevel, "suspectLevel"_a);
+    cls.def("setReadoutCorner", &Amplifier::Builder::setReadoutCorner, "corner"_a);
+    cls.def("setLinearityCoeffs", &Amplifier::Builder::setLinearityCoeffs, "coeffs"_a);
+    // Backwards compatibility: accept std::vector (list in Python) in
+    // addition to ndarray::Array (np.ndarray)
+    cls.def("setLinearityCoeffs",
+            [](Amplifier::Builder & self, std::vector<double> const & coeffs) {
+                ndarray::Array<double, 1, 1> array = ndarray::allocate(coeffs.size());
+                std::copy(coeffs.begin(), coeffs.end(), array.begin());
+                self.setLinearityCoeffs(array);
+            });
+    cls.def("setLinearityType", &Amplifier::Builder::setLinearityType, "type"_a);
+    cls.def("setLinearityThreshold", &Amplifier::Builder::setLinearityThreshold, "threshold"_a);
+    cls.def("setLinearityMaximum", &Amplifier::Builder::setLinearityMaximum, "maximum"_a);
+    cls.def("setLinearityUnits", &Amplifier::Builder::setLinearityUnits, "units"_a);
+    cls.def("setRawBBox", &Amplifier::Builder::setRawBBox, "bbox"_a);
+    cls.def("setRawDataBBox", &Amplifier::Builder::setRawDataBBox, "bbox"_a);
+    cls.def("setRawFlipX", &Amplifier::Builder::setRawFlipX, "rawFlipX"_a);
+    cls.def("setRawFlipY", &Amplifier::Builder::setRawFlipY, "rawFlipY"_a);
+    cls.def("setRawXYOffset", &Amplifier::Builder::setRawXYOffset, "offset"_a);
+    cls.def("setRawHorizontalOverscanBBox", &Amplifier::Builder::setRawHorizontalOverscanBBox, "bbox"_a);
+    cls.def("setRawVerticalOverscanBBox", &Amplifier::Builder::setRawVerticalOverscanBBox, "bbox"_a);
+    cls.def("setRawPrescanBBox", &Amplifier::Builder::setRawPrescanBBox, "bbox"_a);
+}
+
+PYBIND11_MODULE(amplifier, mod) {
+    auto cls = declarePyAmplifier(mod);
+    declarePyAmplifierBuilder(cls);
 }
 
 }  // namespace

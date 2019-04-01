@@ -112,14 +112,14 @@ class DetectorWrapper:
         self.radialDistortion = float(radialDistortion)
         self.ampInfo = []
         for i in range(numAmps):
-            amp = Amplifier()
+            builder = Amplifier.Builder()
             ampName = "amp %d" % (i + 1,)
-            amp.setName(ampName)
-            amp.setBBox(lsst.geom.Box2I(lsst.geom.Point2I(-1, 1), self.ampExtent))
-            amp.setGain(1.71234e3)
-            amp.setReadNoise(0.521237e2)
-            amp.setReadoutCorner(ReadoutCorner.LL)
-            self.ampInfo.append(amp)
+            builder.setName(ampName)
+            builder.setBBox(lsst.geom.Box2I(lsst.geom.Point2I(-1, 1), self.ampExtent))
+            builder.setGain(1.71234e3)
+            builder.setReadNoise(0.521237e2)
+            builder.setReadoutCorner(ReadoutCorner.LL)
+            self.ampInfo.append(builder.finish())
         self.orientation = orientation
 
         # compute TAN_PIXELS transform
@@ -278,8 +278,7 @@ class CameraWrapper:
                 ampList = []
                 ampListDict[ampData['ccd_name']] = ampList
                 self.ampDataDict[ampData['ccd_name']] = {'namps': 1, 'linInfo': {}}
-            amplifier = Amplifier()
-            ampList.append(amplifier)
+            builder = Amplifier.Builder()
             bbox = lsst.geom.Box2I(lsst.geom.Point2I(int(ampData['trimmed_xmin']),
                                                      int(ampData['trimmed_ymin'])),
                                    lsst.geom.Point2I(int(ampData['trimmed_xmax']),
@@ -350,29 +349,30 @@ class CameraWrapper:
                 xoffset = 0
                 yoffset = 0
             offset = lsst.geom.Extent2I(xoffset, yoffset)
-            amplifier.setBBox(bbox)
-            amplifier.setRawXYOffset(offset)
-            amplifier.setName(str(ampData['name']))
-            amplifier.setReadoutCorner(readoutMap[readcorner])
-            amplifier.setGain(float(ampData['gain']))
-            amplifier.setReadNoise(float(ampData['readnoise']))
+            builder.setBBox(bbox)
+            builder.setRawXYOffset(offset)
+            builder.setName(str(ampData['name']))
+            builder.setReadoutCorner(readoutMap[readcorner])
+            builder.setGain(float(ampData['gain']))
+            builder.setReadNoise(float(ampData['readnoise']))
             linCoeffs = np.array([float(ampData['lin_coeffs']), ], dtype=float)
-            amplifier.setLinearityCoeffs(linCoeffs)
-            amplifier.setLinearityType(str(ampData['lin_type']))
-            amplifier.setRawFlipX(flipx)
-            amplifier.setRawFlipY(flipy)
-            amplifier.setRawBBox(rawBbox)
-            amplifier.setRawDataBBox(rawDataBbox)
-            amplifier.setRawHorizontalOverscanBBox(rawHOverscanBbox)
-            amplifier.setRawVerticalOverscanBBox(rawVOverscanBbox)
-            amplifier.setRawPrescanBBox(rawPrescanBbox)
-            amplifier.setLinearityThreshold(float(ampData['lin_thresh']))
-            amplifier.setLinearityMaximum(float(ampData['lin_max']))
-            amplifier.setLinearityUnits(str(ampData['lin_units']))
+            builder.setLinearityCoeffs(linCoeffs)
+            builder.setLinearityType(str(ampData['lin_type']))
+            builder.setRawFlipX(flipx)
+            builder.setRawFlipY(flipy)
+            builder.setRawBBox(rawBbox)
+            builder.setRawDataBBox(rawDataBbox)
+            builder.setRawHorizontalOverscanBBox(rawHOverscanBbox)
+            builder.setRawVerticalOverscanBBox(rawVOverscanBbox)
+            builder.setRawPrescanBBox(rawPrescanBbox)
+            builder.setLinearityThreshold(float(ampData['lin_thresh']))
+            builder.setLinearityMaximum(float(ampData['lin_max']))
+            builder.setLinearityUnits(str(ampData['lin_units']))
             self.ampDataDict[ampData['ccd_name']]['linInfo'][ampData['name']] = \
                 {'lincoeffs': linCoeffs, 'lintype': str(ampData['lin_type']),
                  'linthresh': float(ampData['lin_thresh']), 'linmax': float(ampData['lin_max']),
                  'linunits': str(ampData['lin_units'])}
+            ampList.append(builder.finish())
         return ampListDict
 
     def makeTestRepositoryItems(self, isLsstLike=False):

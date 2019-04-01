@@ -215,7 +215,8 @@ def makeCameraFromPath(cameraConfig, ampInfoPath, shortNameFunc,
         shortName = shortNameFunc(detectorConfig.name)
         ampCatPath = os.path.join(ampInfoPath, shortName + ".fits")
         catalog = BaseCatalog.readFits(ampCatPath)
-        ampListDict[detectorConfig.name] = [Amplifier.fromRecord(record) for record in catalog]
+        ampListDict[detectorConfig.name] = [Amplifier.Builder.fromRecord(record).finish()
+                                            for record in catalog]
 
     return makeCameraFromAmpLists(cameraConfig, ampListDict, pupilFactoryClass)
 
@@ -228,8 +229,8 @@ def makeCameraFromAmpLists(cameraConfig, ampListDict,
     ----------
     cameraConfig : `CameraConfig`
         Config describing camera and its detectors.
-    ampListDict : `dict`
-        A dictionary of detector name: AmpInfoCatalog
+    ampListDict : `dict` [`str`, `list` [`Amplifier.Builder`]]
+        A dictionary of detector name: list of Amplifier.Builder
     pupilFactoryClass : `type`, optional
         Class to attach to camera; `lsst.default afw.cameraGeom.PupilFactory`.
 
