@@ -278,6 +278,14 @@ std::shared_ptr<daf::base::PropertyList> getPropertyListFromFitsChan(ast::FitsCh
                 setMetadataFromFoundValue(*metadata, cardName, foundValue, cardComment);
                 break;
             }
+            case ast::CardType::UNDEF: {
+                if (cardComment.empty()) {
+                    metadata->set(cardName, nullptr);
+                } else {
+                    metadata->set(cardName, nullptr, cardComment);
+                }
+                break;
+            }
             case ast::CardType::CONTINUE: {
                 auto foundValue = fitsChan.getFitsCN();
                 setMetadataFromFoundValue(*metadata, cardName, foundValue, cardComment);
@@ -287,8 +295,7 @@ std::shared_ptr<daf::base::PropertyList> getPropertyListFromFitsChan(ast::FitsCh
                 // Drop HISTORY and COMMENT cards
                 break;
             case ast::CardType::COMPLEXF:
-            case ast::CardType::COMPLEXI:
-            case ast::CardType::UNDEF: {
+            case ast::CardType::COMPLEXI: {
                 // PropertyList supports neither complex numbers nor cards with no value
                 std::ostringstream os;
                 os << "Card " << cardNum << " with name \"" << cardName << "\" has type "
