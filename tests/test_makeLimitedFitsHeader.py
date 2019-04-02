@@ -58,7 +58,7 @@ class MakeLimitedFitsHeaderTestCase(lsst.utils.tests.TestCase):
             with self.subTest(this=this, expected=expected):
                 # For floating point numbers compare as numbers
                 # rather than strings
-                if "'" not in expected and ("." in expected or "E" in expected):
+                if "'" not in expected and ("." in expected[9:] or "E" in expected[9:]):
                     nchars = 10
                     self.assertEqual(this[:nchars], expected[:nchars],
                                      msg=f"Compare first {nchars} characters of '{this}'"
@@ -96,6 +96,7 @@ class MakeLimitedFitsHeaderTestCase(lsst.utils.tests.TestCase):
             ("AFLOATZ", 0.0),  # ensure a float stays a float
             ("INTFLOAT", -5.0),
             ("LONGFLT", 0.0089626337538440005),
+            ("ANUNDEF", None),
             ("LONGNAME1", 1),  # name is longer than 8 characters; skip it
             ("LONGSTR", "skip this item because the formatted value "
                 "is too long: longer than 80 characters "),
@@ -114,6 +115,7 @@ class MakeLimitedFitsHeaderTestCase(lsst.utils.tests.TestCase):
             "AFLOATZ =                    0.0",
             "INTFLOAT=                   -5.0",
             "LONGFLT = 0.0089626337538440005",
+            "ANUNDEF =",
             "ASTRING1= 'value for string'",
         ]
         expectedHeader = "".join("%-80s" % val for val in expectedLines)

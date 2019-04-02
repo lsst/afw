@@ -70,6 +70,8 @@ std::string makeLimitedFitsHeaderImpl(std::vector<std::string> const &paramNames
             out += (boost::format("%#20.17G") % metadata.get<double>(name)).str();
         } else if (type == typeid(float)) {
             out += (boost::format("%#20.15G") % metadata.get<float>(name)).str();
+        } else if (type == typeid(std::nullptr_t)) {
+            out += " ";
         } else if (type == typeid(std::string)) {
             out += "'" + metadata.get<std::string>(name) + "'";
             if (out.size() > 80) {
