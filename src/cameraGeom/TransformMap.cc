@@ -1,9 +1,10 @@
+// -*- lsst-c++ -*-
 /*
- * LSST Data Management System
- * Copyright 2014 LSST Corporation.
- *
- * This product includes software developed by the
- * LSST Project (http://www.lsst.org/).
+ * Developed for the LSST Data Management System.
+ * This product includes software developed by the LSST Project
+ * (https://www.lsst.org).
+ * See the COPYRIGHT file at the top-level directory of this distribution
+ * for details of code ownership.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,19 +16,13 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the LSST License Statement and
- * the GNU General Public License along with this program.  If not,
- * see <http://www.lsstcorp.org/LegalNotices/>.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
-#include <exception>
-#include <memory>
 #include <sstream>
-#include <type_traits>
-#include <set>
+#include <unordered_set>
 
-#include "boost/optional.hpp"
-
+#include "lsst/log/Log.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/table/io/InputArchive.h"
 #include "lsst/afw/table/io/OutputArchive.h"
@@ -39,14 +34,152 @@ namespace lsst {
 namespace afw {
 namespace cameraGeom {
 
+namespace {
+
+// Allows conversions between LSST and AST data formats
+static lsst::afw::geom::Point2Endpoint const POINT2_ENDPOINT;
+
+static auto LOGGER = LOG_GET("afw.cameraGeom.TransformMap");
+
+// Make an AST Frame name for a CameraSys.
+std::string makeFrameName(CameraSys const & sys) {
+    std::string r = "Ident=" + sys.getSysName();
+    if (sys.hasDetectorName()) {
+        r += "_";
+        r += sys.getDetectorName();
+    }
+    return r;
+}
+
+/*
+ * Process a vector connections such that:
+ *  - Connections are sorted according to their distance (in number of
+ *    intermediate connections) from the given reference CameraSys;
+ *  - The fromSys of each Connection is closer to the reference than the
+ *    toSys.
+ *
+ * Only standardized connections may be passed to the (private) TransformMap
+ * ctor.
+ *
+ * `connections` is passed by value so we can either move into it (avoiding a
+ * copy) or copy into it (when we have a const reference and a copy is
+ * unavoidable), depending on the context.
+ */
+std::vector<TransformMap::Connection> standardizeConnections(
+    CameraSys const & reference,
+    std::vector<TransformMap::Connection> connections
+) {
+    if (connections.empty()) {
+        throw LSST_EXCEPT(
+            pex::exceptions::InvalidParameterError,
+            "Cannot create a TransformMap with no connections."
+        );
+    }
+    // Iterator to the first unprocessed connection in result; will be
+    // incremented as we proceed.
+    auto firstUnprocessed = connections.begin();
+    // All CameraSys whose associated Connections are already in the processed
+    // part of `connections`.
+    std::unordered_set<CameraSys> knownSystems = {reference};
+    // The set of CameraSys whose associated Connections are being processed
+    // in this iteration of the outer (while) loop.  These are all some common
+    // distance N from the reference system (in number of connections), where
+    // N increases for each iteration (but is not tracked).
+    std::unordered_set<CameraSys> currentSystems = {reference};
+    // The set of CameraSys that will become currentSys at the next
+    // iteration.
+    std::unordered_set<CameraSys> nextSystems;
+    LOGLS_DEBUG(LOGGER, "Standardizing: starting with reference " << reference);
+    while (!currentSystems.empty()) {
+        if (LOG_CHECK_LVL(LOGGER, LOG_LVL_DEBUG)) {
+            LOGLS_DEBUG(LOGGER, "Standardizing: beginning iteration with currentSystems={ ");
+            for (auto const & sys : currentSystems) {
+                LOGLS_DEBUG(LOGGER, "Standardizing:   " << sys << ", ");
+            }
+            LOGLS_DEBUG(LOGGER, "Standardizing: }");
+        }
+        // Iterate over all unsorted connections, looking for those associated
+        // with the a CameraSys in currentSystems.
+        for (auto connection = firstUnprocessed; connection != connections.end(); ++connection) {
+            bool related = currentSystems.count(connection->fromSys);
+            if (!related && currentSystems.count(connection->toSys)) {
+                LOGLS_DEBUG(LOGGER, "Standardizing: reversing " << (*connection));
+                connection->reverse();
+                related = true;
+            }
+            if (related) {
+                if (connection->toSys == connection->fromSys) {
+                    std::ostringstream ss;
+                    ss << "Identity connection found: " << (*connection) << ".";
+                    throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, ss.str());
+                }
+                if (knownSystems.count(connection->toSys)) {
+                    std::ostringstream ss;
+                    ss << "Multiple paths between reference " << reference
+                       << " and " << connection->toSys << ".";
+                    throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, ss.str());
+                }
+                LOGLS_DEBUG(LOGGER, "Standardizing: adding " << (*connection));
+                nextSystems.insert(connection->toSys);
+                knownSystems.insert(connection->toSys);
+                std::swap(*firstUnprocessed, *connection);
+                ++firstUnprocessed;
+            }
+        }
+        currentSystems.swap(nextSystems);
+        nextSystems.clear();
+    }
+    // Any connections we haven't processed yet must include only CameraSys
+    // we've never seen before.
+    if (firstUnprocessed != connections.end()) {
+        std::ostringstream ss;
+        ss << "Disconnected connection(s) found: " << (*firstUnprocessed);
+        ++firstUnprocessed;
+        for (auto connection = firstUnprocessed; connection != connections.end(); ++connection) {
+            ss << ", " << (*connection);
+        }
+        ss << ".";
+        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, ss.str());
+    }
+    return connections;
+}
+
+} // anonymous
+
+void TransformMap::Connection::reverse() {
+    transform = transform->inverted();
+    toSys.swap(fromSys);
+}
+
+std::ostream & operator<<(std::ostream & os, TransformMap::Connection const & connection) {
+    return os << connection.fromSys << "->" << connection.toSys;
+}
+
 std::shared_ptr<TransformMap const> TransformMap::make(
     CameraSys const & reference,
     Transforms const & transforms
 ) {
-    return Builder(reference).connect(transforms).build();
+    std::vector<Connection> connections;
+    connections.reserve(transforms.size());
+    for (auto const & pair : transforms) {
+        connections.push_back(Connection{pair.second, reference, pair.first});
+    }
+    // We can't use make_shared because TransformMap ctor is private.
+    return std::shared_ptr<TransformMap>(
+        new TransformMap(standardizeConnections(reference, std::move(connections)))
+    );
 }
 
-lsst::afw::geom::Point2Endpoint TransformMap::_pointConverter;
+std::shared_ptr<TransformMap const> TransformMap::make(
+    CameraSys const &reference,
+    std::vector<Connection> const & connections
+) {
+    // We can't use make_shared because TransformMap ctor is private.
+    return std::shared_ptr<TransformMap>(
+        new TransformMap(standardizeConnections(reference, connections))
+    );
+}
+
 
 // All resources owned by value or by smart pointer
 TransformMap::~TransformMap() noexcept = default;
@@ -54,14 +187,14 @@ TransformMap::~TransformMap() noexcept = default;
 lsst::geom::Point2D TransformMap::transform(lsst::geom::Point2D const &point, CameraSys const &fromSys,
                                             CameraSys const &toSys) const {
     auto mapping = _getMapping(fromSys, toSys);
-    return _pointConverter.pointFromData(mapping->applyForward(_pointConverter.dataFromPoint(point)));
+    return POINT2_ENDPOINT.pointFromData(mapping->applyForward(POINT2_ENDPOINT.dataFromPoint(point)));
 }
 
 std::vector<lsst::geom::Point2D> TransformMap::transform(std::vector<lsst::geom::Point2D> const &pointList,
                                                          CameraSys const &fromSys,
                                                          CameraSys const &toSys) const {
     auto mapping = _getMapping(fromSys, toSys);
-    return _pointConverter.arrayFromData(mapping->applyForward(_pointConverter.dataFromArray(pointList)));
+    return POINT2_ENDPOINT.arrayFromData(mapping->applyForward(POINT2_ENDPOINT.dataFromArray(pointList)));
 }
 
 bool TransformMap::contains(CameraSys const &system) const noexcept { return _frameIds.count(system) > 0; }
@@ -83,18 +216,53 @@ int TransformMap::_getFrame(CameraSys const &system) const {
 
 std::shared_ptr<ast::Mapping const> TransformMap::_getMapping(CameraSys const &fromSys,
                                                               CameraSys const &toSys) const {
-    return _transforms->getMapping(_getFrame(fromSys), _getFrame(toSys));
+    return _frameSet->getMapping(_getFrame(fromSys), _getFrame(toSys));
 }
 
 size_t TransformMap::size() const noexcept { return _frameIds.size(); }
 
-TransformMap::TransformMap(std::unique_ptr<ast::FrameSet> && transforms,
-                           CameraSysFrameIdMap && frameIds,
-                           std::vector<std::pair<int, int>> && canonicalConnections) :
-    _transforms(std::move(transforms)),
-    _frameIds(std::move(frameIds)),
-    _canonicalConnections(std::move(canonicalConnections))
-{}
+
+TransformMap::TransformMap(std::vector<Connection> && connections) :
+    _connections(std::move(connections))
+{
+    // standardizeConnections must be run byanything that calls the
+    // constructor, and that should throw on all of the conditions we assert
+    // on below (which is why those are asserts).
+    assert(!_connections.empty());
+
+    int nFrames = 0;  // tracks frameSet->getNFrame() to avoid those (expensive) calls
+
+    // Local helper function that creates a Frame, updates the nFrames counter,
+    // and adds an entry to the frameIds map.  Returns the new Frame.
+    // Should always be called in concert with an update to frameSet.
+    auto addFrameForSys = [this, &nFrames](CameraSys const & sys) mutable -> ast::Frame {
+        #ifndef NDEBUG
+        auto r = // We only care about this return value for the assert below;
+        #endif
+        _frameIds.emplace(sys, ++nFrames);
+        assert(r.second);  // this must actually insert something, not find an already-inserted CameraSys.
+        return ast::Frame(2, makeFrameName(sys));
+    };
+
+    // FrameSet that manages all transforms; should always be updated in
+    // concert with a call to addFrameForSys.
+    _frameSet = std::make_unique<ast::FrameSet>(addFrameForSys(getReferenceSys()));
+
+    for (auto const & connection : _connections) {
+        auto fromSysIdIter = _frameIds.find(connection.fromSys);
+        assert(fromSysIdIter != _frameIds.end());
+        _frameSet->addFrame(fromSysIdIter->second, *connection.transform->getMapping(),
+                            addFrameForSys(connection.toSys));
+    }
+
+    // We've maintained our own counter for frame IDs for performance and
+    // convenience reasons, but it had better match AST's internal counter.
+    assert(_frameSet->getNFrame() == nFrames);
+}
+
+CameraSys TransformMap::getReferenceSys() const { return _connections.front().fromSys; }
+
+std::vector<TransformMap::Connection> TransformMap::getConnections() const { return _connections; }
 
 
 namespace {
@@ -103,6 +271,53 @@ struct PersistenceHelper {
 
     static PersistenceHelper const & get() {
         static PersistenceHelper const instance;
+        return instance;
+    }
+
+    // Schema and keys for the catalog that stores
+    // TransformMap._connectionsByFrameId entries and the associated Transform
+    // extracted from TransformMap._transforms.
+    // Considered as a graph, 'from' and 'to' identify vertices, and
+    // 'transform' identifies an edge.
+    table::Schema schema;
+    table::Key<std::string> fromSysName;
+    table::Key<std::string> fromSysDetectorName;
+    table::Key<std::string> toSysName;
+    table::Key<std::string> toSysDetectorName;
+    table::Key<int> transform;
+
+private:
+
+    PersistenceHelper() :
+        schema(),
+        fromSysName(schema.addField<std::string>("fromSysName",
+                                                 "Camera coordinate system name.", "", 0)),
+        fromSysDetectorName(schema.addField<std::string>("fromSysDetectorName",
+                                                         "Camera coordinate system detector name.", "", 0)),
+        toSysName(schema.addField<std::string>("toSysName",
+                                               "Camera coordinate system name.", "", 0)),
+        toSysDetectorName(schema.addField<std::string>("toSysDetectorName",
+                                                       "Camera coordinate system detector name.", "", 0)),
+        transform(schema.addField<int>("transform", "Archive ID of the transform.", ""))
+    {
+        schema.getCitizen().markPersistent();
+    }
+
+    PersistenceHelper(PersistenceHelper const &) = delete;
+    PersistenceHelper(PersistenceHelper &&) = delete;
+
+    PersistenceHelper & operator=(PersistenceHelper const &) = delete;
+    PersistenceHelper & operator=(PersistenceHelper &&) = delete;
+
+};
+
+
+// PersistenceHelper for a previous format version; now only supported in
+// reading.
+struct OldPersistenceHelper {
+
+    static OldPersistenceHelper const & get() {
+        static OldPersistenceHelper const instance;
         return instance;
     }
 
@@ -130,7 +345,7 @@ struct PersistenceHelper {
 
 private:
 
-    PersistenceHelper() :
+    OldPersistenceHelper() :
         sysSchema(),
         sysName(sysSchema.addField<std::string>("sysName", "Camera coordinate system name", "", 0)),
         detectorName(sysSchema.addField<std::string>("detectorName",
@@ -142,22 +357,14 @@ private:
         transform(connectionSchema.addField<int>("transform", "Archive ID of the transform.", ""))
     {}
 
-    PersistenceHelper(PersistenceHelper const &) = delete;
-    PersistenceHelper(PersistenceHelper &&) = delete;
+    OldPersistenceHelper(OldPersistenceHelper const &) = delete;
+    OldPersistenceHelper(OldPersistenceHelper &&) = delete;
 
-    PersistenceHelper & operator=(PersistenceHelper const &) = delete;
-    PersistenceHelper & operator=(PersistenceHelper &&) = delete;
+    OldPersistenceHelper & operator=(OldPersistenceHelper const &) = delete;
+    OldPersistenceHelper & operator=(OldPersistenceHelper &&) = delete;
 
 };
 
-std::string makeFrameName(CameraSys const & sys) {
-    std::string r = "Ident=" + sys.getSysName();
-    if (sys.hasDetectorName()) {
-        r += "_";
-        r += sys.getDetectorName();
-    }
-    return r;
-}
 
 }  // namespace
 
@@ -173,26 +380,16 @@ std::string TransformMap::getPythonModule() const {
 void TransformMap::write(OutputArchiveHandle& handle) const {
     auto const & keys = PersistenceHelper::get();
 
-    auto sysCat = handle.makeCatalog(keys.sysSchema);
-    for (auto const & sysPair : _frameIds) {
-        auto sysRecord = sysCat.addNew();
-        sysRecord->set(keys.sysName, sysPair.first.getSysName());
-        sysRecord->set(keys.detectorName, sysPair.first.getDetectorName());
-        sysRecord->set(keys.id, sysPair.second);
+    auto cat = handle.makeCatalog(keys.schema);
+    for (auto const & connection : _connections) {
+        auto record = cat.addNew();
+        record->set(keys.fromSysName, connection.fromSys.getSysName());
+        record->set(keys.fromSysDetectorName, connection.fromSys.getDetectorName());
+        record->set(keys.toSysName, connection.toSys.getSysName());
+        record->set(keys.toSysDetectorName, connection.toSys.getDetectorName());
+        record->set(keys.transform, handle.put(connection.transform));
     }
-    sysCat.sort(keys.id);
-    handle.saveCatalog(sysCat);
-
-    auto connectionCat = handle.makeCatalog(keys.connectionSchema);
-    for (auto const & connectionPair : _canonicalConnections) {
-        auto connectionRecord = connectionCat.addNew();
-        connectionRecord->set(keys.from, connectionPair.first);
-        connectionRecord->set(keys.to, connectionPair.second);
-        auto transform = geom::TransformPoint2ToPoint2(
-            *_transforms->getMapping(connectionPair.first, connectionPair.second));
-        connectionRecord->set(keys.transform, handle.put(transform));
-    }
-    handle.saveCatalog(connectionCat);
+    handle.saveCatalog(cat);
 }
 
 class TransformMap::Factory : public table::io::PersistableFactory {
@@ -200,9 +397,9 @@ public:
 
     Factory() : PersistableFactory("TransformMap") {}
 
-    std::shared_ptr<Persistable> read(InputArchive const& archive,
-                                      CatalogVector const& catalogs) const override {
-        auto const & keys = PersistenceHelper::get();
+    std::shared_ptr<Persistable> readOld(InputArchive const& archive,
+                                         CatalogVector const& catalogs) const {
+        auto const & keys = OldPersistenceHelper::get();
 
         LSST_ARCHIVE_ASSERT(catalogs.size() == 2u);
         auto const & sysCat = catalogs[0];
@@ -212,216 +409,60 @@ public:
         LSST_ARCHIVE_ASSERT(sysCat.size() == connectionCat.size() + 1);
         LSST_ARCHIVE_ASSERT(sysCat.isSorted(keys.id));
 
-        CameraSysFrameIdMap frameIdsBySys;
-        std::unordered_map<int, ast::Frame> framesById;
+        std::unordered_map<int, CameraSys> sysById;
         for (auto const & sysRecord : sysCat) {
             auto sys = keys.makeCameraSys(sysRecord);
-            frameIdsBySys.emplace(sys, sysRecord.get(keys.id));
-            framesById.emplace(sysRecord.get(keys.id), ast::Frame(2, makeFrameName(sys)));
+            sysById.emplace(sysRecord.get(keys.id), sys);
         }
 
-        auto baseFrameIter = framesById.find(1);
-        LSST_ARCHIVE_ASSERT(baseFrameIter != framesById.end());
-        auto frameSet = std::make_unique<ast::FrameSet>(baseFrameIter->second);
-        std::vector<std::pair<int, int>> canonicalConnections;
+        auto const referenceSysIter = sysById.find(1);
+        LSST_ARCHIVE_ASSERT(referenceSysIter != sysById.end());
+        std::vector<Connection> connections;
         for (auto const & connectionRecord : connectionCat) {
-            int const fromId = connectionRecord.get(keys.from);
-            int const toId = connectionRecord.get(keys.to);
+            auto const fromSysIter = sysById.find(connectionRecord.get(keys.from));
+            LSST_ARCHIVE_ASSERT(fromSysIter != sysById.end());
+            auto const toSysIter = sysById.find(connectionRecord.get(keys.to));
+            LSST_ARCHIVE_ASSERT(toSysIter != sysById.end());
             auto const transform = archive.get<geom::TransformPoint2ToPoint2>(
                 connectionRecord.get(keys.transform)
             );
-            canonicalConnections.emplace_back(fromId, toId);
-            auto toFrameIter = framesById.find(toId);
-            LSST_ARCHIVE_ASSERT(toFrameIter != framesById.end());
-            frameSet->addFrame(fromId, *transform->getMapping(), toFrameIter->second);
+
+            connections.push_back(Connection{transform, fromSysIter->second, toSysIter->second});
         }
 
-        return std::shared_ptr<TransformMap>(new TransformMap(std::move(frameSet),
-                                                              std::move(frameIdsBySys),
-                                                              std::move(canonicalConnections)));
+        connections = standardizeConnections(referenceSysIter->second, std::move(connections));
+        return std::shared_ptr<TransformMap>(new TransformMap(std::move(connections)));
     }
+
+    std::shared_ptr<Persistable> read(InputArchive const& archive,
+                                      CatalogVector const& catalogs) const override {
+        if (catalogs.size() == 2u) {
+            return readOld(archive, catalogs);
+        }
+
+        auto const & keys = PersistenceHelper::get();
+
+        LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
+        auto const & cat = catalogs[0];
+        LSST_ARCHIVE_ASSERT(cat.getSchema() == keys.schema);
+
+        std::vector<Connection> connections;
+        for (auto const & record : cat) {
+            CameraSys const fromSys(record.get(keys.fromSysName), record.get(keys.fromSysDetectorName));
+            CameraSys const toSys(record.get(keys.toSysName), record.get(keys.toSysDetectorName));
+            auto const transform = archive.get<geom::TransformPoint2ToPoint2>(record.get(keys.transform));
+            connections.push_back(Connection{transform, fromSys, toSys});
+        }
+
+        // deserialized connections should already be standardized
+        return std::shared_ptr<TransformMap>(new TransformMap(std::move(connections)));
+    }
+
+    static Factory const registration;
 
 };
 
-TransformMap::Factory const TransformMap::registration;
-
-
-TransformMap::Builder::Builder(CameraSys const & reference) : _reference(reference) {}
-
-TransformMap::Builder::Builder(Builder const &) = default;
-TransformMap::Builder::Builder(Builder &&) = default;
-
-TransformMap::Builder & TransformMap::Builder::operator=(Builder const &) = default;
-TransformMap::Builder & TransformMap::Builder::operator=(Builder &&) = default;
-
-TransformMap::Builder::~Builder() noexcept = default;
-
-TransformMap::Builder & TransformMap::Builder::connect(
-    CameraSys const & fromSys,
-    CameraSys const & toSys,
-    std::shared_ptr<geom::TransformPoint2ToPoint2 const> transform
-) {
-    if (fromSys == toSys) {
-        std::ostringstream buffer;
-        buffer << "Identity connection detected for " << fromSys << ".";
-        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, buffer.str());
-    }
-    if (!transform->hasForward()) {
-        std::ostringstream buffer;
-        buffer << "Connection from " << fromSys << " to "
-               << toSys << " has no forward transform.";
-        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, buffer.str());
-    }
-    if (!transform->hasInverse()) {
-        std::ostringstream buffer;
-        buffer << "Connection from " << fromSys << " to "
-               << toSys << " has no inverse transform.";
-        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, buffer.str());
-    }
-    _connections.push_back(Connection{false, std::move(transform), fromSys, toSys});
-    return *this;
-}
-
-
-TransformMap::Builder & TransformMap::Builder::connect(
-    CameraSys const & fromSys,
-    Transforms const & transforms
-) {
-    Builder other(_reference);  // temporary for strong exception safety
-    for (auto const & item : transforms) {
-        other.connect(fromSys, item.first, item.second);
-    }
-    _connections.insert(_connections.end(), other._connections.begin(), other._connections.end());
-    return *this;
-}
-
-
-namespace {
-
-/*
- * RAII object that just executes a functor in its destructor.
- */
-template <typename Callable>
-class OnScopeExit {
-public:
-
-    explicit OnScopeExit(Callable callable) : _callable(std::move(callable)) {}
-
-    ~OnScopeExit() noexcept(noexcept(std::declval<Callable>())) {  // noexcept iff "_callable()"" is
-        _callable();
-    }
-
-private:
-    Callable _callable;
-};
-
-// Factory function for OnScopeExit.
-template <typename Callable>
-OnScopeExit<Callable> onScopeExit(Callable callable) {
-    return OnScopeExit<Callable>(std::move(callable));
-}
-
-}  // namespace
-
-
-std::shared_ptr<TransformMap const> TransformMap::Builder::build() const {
-
-    int nFrames = 0;  // tracks frameSet->getNFrame() to avoid those (expensive) calls
-    CameraSysFrameIdMap frameIds;  // mapping from CameraSys to Frame ID (int)
-    std::vector<std::pair<int, int>> canonicalConnections;  // remembers the frame IDs we've connected
-
-    // Local helper function that looks up the Frame ID for a CameraSys, with
-    // results returned via boost::optional.
-    auto findFrameIdForSys = [&frameIds](CameraSys const & sys) -> boost::optional<int> {
-        auto iter = frameIds.find(sys);
-        if (iter != frameIds.end()) {
-            return boost::optional<int>(iter->second);
-        } else {
-            return boost::none;
-        }
-    };
-
-    // Local helper function that creates a Frame, updates the nFrames counter,
-    // and adds an entry to the frameIds map.  Returns the new Frame.
-    // Should always be called in concert with an update to frameSet.
-    auto addFrameForSys = [&frameIds, &nFrames](CameraSys const & sys) mutable -> ast::Frame {
-        frameIds.emplace(sys, ++nFrames);
-        return ast::Frame(2, makeFrameName(sys));
-    };
-
-    // FrameSet that manages all transforms; should always be updated in
-    // concert with a call to addFrameForSys.
-    auto frameSet = std::make_unique<ast::FrameSet>(addFrameForSys(_reference));
-
-    // RAII: make sure all 'processed' fields are reset, no matter how we exit
-    auto guard = onScopeExit(
-        [this]() noexcept {
-            for (auto const & c : _connections) { c.processed = false; }
-        }
-    );
-
-    std::size_t nProcessedTotal = 0;
-    while (nProcessedTotal != _connections.size()) {
-
-        // Loop over all connections, only inserting those that are connected
-        // to already-inserted connections.
-        std::size_t nProcessedThisPass = 0;
-        for (auto const & c : _connections) {
-            if (c.processed) continue;
-            auto fromId = findFrameIdForSys(c.fromSys);
-            auto toId = findFrameIdForSys(c.toSys);
-            if (fromId && toId) {  // We've already inserted both fromSys and toSys. That's a problem.
-                std::ostringstream buffer;
-                buffer << "Duplicate connection from " << c.fromSys << " to " << c.toSys << ".";
-                throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, buffer.str());
-            } else if (fromId) {  // We've already inserted fromSys (only)
-                frameSet->addFrame(*fromId, *c.transform->getMapping(), addFrameForSys(c.toSys));
-                canonicalConnections.emplace_back(*fromId, nFrames);
-                c.processed = true;
-                ++nProcessedThisPass;
-            } else if (toId) {  // We've already inserted toSys (only)
-                frameSet->addFrame(*toId, *c.transform->inverted()->getMapping(), addFrameForSys(c.fromSys));
-                canonicalConnections.emplace_back(*toId, nFrames);
-                c.processed = true;
-                ++nProcessedThisPass;
-            }
-            // If we haven't inserted either yet, just continue; hopefully
-            // we'll have inserted one in a future pass.
-        }
-
-        if (nProcessedThisPass == 0u) {  // We're not making progress, so we must have orphans
-            // Use std::set to compile the list of orphaned coordinate systems
-            // for a friendlier (unique, predictably-ordered) error message.
-            std::set<CameraSys> orphaned;
-            for (auto const & c : _connections) {
-                if (!c.processed) {
-                    orphaned.insert(c.fromSys);
-                    orphaned.insert(c.toSys);
-                }
-            }
-            std::ostringstream buffer;
-            auto o = orphaned.begin();
-            buffer << "Orphaned coordinate system(s) found: " << *o;
-            for (++o; o != orphaned.end(); ++o) {
-                buffer << ", " << *o;
-            }
-            buffer << ".";
-            throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, buffer.str());
-        }
-
-        nProcessedTotal += nProcessedThisPass;
-    }
-
-    // We've maintained our own counter for frame IDs for performance and
-    // convenience reasons, but it had better match AST's internal counter.
-    assert(frameSet->getNFrame() == nFrames);
-
-    // Return the new TransformMap.
-    // We can't use make_shared because TransformMap ctor is private.
-    return std::shared_ptr<TransformMap>(new TransformMap(std::move(frameSet),
-                                                          std::move(frameIds),
-                                                          std::move(canonicalConnections)));
-}
+TransformMap::Factory const TransformMap::Factory::registration;
 
 }  // namespace cameraGeom
 

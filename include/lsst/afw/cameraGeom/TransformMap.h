@@ -1,9 +1,10 @@
+// -*- lsst-c++ -*-
 /*
- * LSST Data Management System
- * Copyright 2014 LSST Corporation.
- *
- * This product includes software developed by the
- * LSST Project (http://www.lsst.org/).
+ * Developed for the LSST Data Management System.
+ * This product includes software developed by the LSST Project
+ * (https://www.lsst.org).
+ * See the COPYRIGHT file at the top-level directory of this distribution
+ * for details of code ownership.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,11 +16,9 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the LSST License Statement and
- * the GNU General Public License along with this program.  If not,
- * see <http://www.lsstcorp.org/LegalNotices/>.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 #if !defined(LSST_AFW_CAMERAGEOM_TRANSFORMMAP_H)
 #define LSST_AFW_CAMERAGEOM_TRANSFORMMAP_H
 
@@ -53,10 +52,9 @@ namespace cameraGeom {
  *   and standard Python iteration in Python.
  *
  * TransformMap is immutable and must always be held by shared_ptr; this is
- * enforced by making all non-deleted constructors private.  Simple
- * TransformMaps in which all transforms are relative to a single CameraSys
- * can be constructed via the `make` static member function, while more general
- * construction is provided by the Builder class.
+ * enforced by making all non-deleted constructors private, and instead
+ * providing static `make` member functions for construction (in Python, these
+ * are exposed as regular constructors).
  *
  * @exceptsafe Unless otherwise specified, all methods guarantee only basic
  *             exception safety.
@@ -76,7 +74,20 @@ public:
     using Transforms = std::unordered_map<CameraSys, std::shared_ptr<geom::TransformPoint2ToPoint2>>;
     using CameraSysIterator = boost::transform_iterator<GetKey, CameraSysFrameIdMap::const_iterator>;
 
-    class Builder;
+    /**
+     * Representation of a single edge in the graph defined by a TransformMap.
+     */
+    struct Connection {
+        std::shared_ptr<geom::TransformPoint2ToPoint2 const> transform;
+        CameraSys fromSys;
+        CameraSys toSys;
+
+        /**
+         * Reverse the connection, by swapping fromSys and toSys and inverting
+         * the transform.
+         */
+        void reverse();
+    };
 
     /**
      * Construct a TransformMap with all transforms relative to a single reference CameraSys.
@@ -88,10 +99,32 @@ public:
      *
      * @throws lsst::pex::exceptions::InvalidParameterError Thrown if `transforms` contains
      *         the `reference` camera system as a key, or if any Transform is not invertible.
+     *
+     * This method is wrapped as a regular constructor in Python.
      */
     static std::shared_ptr<TransformMap const> make(
         CameraSys const &reference,
         Transforms const &transforms
+    );
+
+    /**
+     * Construct a TransformMap from a sequence of Connections.
+     *
+     * @param reference    Initial coordinate system that must be connected
+     *                     to all other coordinate systems in the map.
+     * @param connections  Sequence of Connection structs, each of which relates
+     *                     two CameraSys via the Transform that connects them.
+     *
+     * @throws lsst::pex::exceptions::InvalidParameterError Thrown if the graph
+     *         defined by the given connections does not define a single unique
+     *         path (which may involve multiple Connections) between any
+     *         CameraSys and the reference CameraSys.
+     *
+     * This method is wrapped as a regular constructor in Python.
+     */
+    static std::shared_ptr<TransformMap const> make(
+        CameraSys const &reference,
+        std::vector<Connection> const & connections
     );
 
     ///@{
@@ -162,6 +195,20 @@ public:
      */
     size_t size() const noexcept;
 
+    /**
+     * Return the reference coordinate system used to construct the
+     * TransformMap.
+     */
+    CameraSys getReferenceSys() const;
+
+    /**
+     * Return the sequence of connections used to construct this Transform.
+     *
+     * The order of the connections may differ from the original order, but is
+     * guaranteed to yield the same `TransformMap` when passed to `make` with
+     * the same reference system.
+     */
+    std::vector<Connection> getConnections() const;
 
     /**
      * TransformMaps should always be Persistable.
@@ -173,15 +220,11 @@ private:
     // Helper class used in persistence.
     class Factory;
 
-    static Factory const registration;
+    // Private ctor, only called by `make` static methods and `Factory`.
+    explicit TransformMap(std::vector<Connection> && connections);
 
-    // Private ctor, only called by Builder::build() and Factory.
-    TransformMap(std::unique_ptr<ast::FrameSet> && transforms,
-                 CameraSysFrameIdMap && frameIds,
-                 std::vector<std::pair<int, int>> && canonicalConnections);
-
-    /**
-     * The internal frame ID corresponding to a coordinate system.
+    /*
+     * Return the internal frame ID corresponding to a coordinate system.
      *
      * @param system  The system to convert.
      * @return the ID by which the coordinate system can be found in transforms.
@@ -193,8 +236,8 @@ private:
      */
     int _getFrame(CameraSys const &system) const;
 
-    /**
-     * An ast::Mapping that transforms between two coordinate systems.
+    /*
+     * Return ast::Mapping that transforms between two coordinate systems.
      *
      * @param fromSys, toSys  Coordinate systems between which to transform
      * @return an invertible Mapping that converts from `fromSys` to `toSys`
@@ -210,139 +253,26 @@ private:
 
     void write(OutputArchiveHandle& handle) const override;
 
+    /*
+     * Sequence of connections that define the edges of the graph.
+     * Ordered by distance from the reference system.
+     */
+    std::vector<Connection> _connections;
 
-    /// Allows conversions between LSST and AST data formats
-    static lsst::afw::geom::Point2Endpoint _pointConverter;
+    // Stores information on all relationships between Transforms.
+    std::unique_ptr<ast::FrameSet> _frameSet;
 
-    /// Stores information on all relationships between Transforms.
-    std::unique_ptr<ast::FrameSet const> const _transforms;
-
-    /**
+    /*
      * Translates from LSST coordinate ID to AST frame ID.
      *
      * Must have exactly one mapping for each Frame in `transforms`.
      */
-    CameraSysFrameIdMap const _frameIds;
+    CameraSysFrameIdMap _frameIds;
 
-    /**
-     * Sequence of ordered (fromFrameId, toFrameId) pairs that were construct
-     * the TransformMap, so we can extract and save exactly those mappings
-     * when persisting the TransformMap.
-     */
-    std::vector<std::pair<int, int>> const _canonicalConnections;
 };
 
 
-/**
- * Helper class used to incrementally construct TransformMap instances.
- */
-class TransformMap::Builder {
-public:
-
-    /**
-     * Construct an empty builder with no transforms and only the given
-     * coordinate system.
-     */
-    explicit Builder(CameraSys const & reference);
-
-    ///@{
-    /// Builders are copyable, movable, and assignable.
-    Builder(Builder const &);
-    Builder(Builder &&);  // std::vector move construct is not noexcept until C++17
-    Builder & operator=(Builder const &);
-    Builder & operator=(Builder &&);  // std::vector move assignment is not noexcept until C++17
-    ///@}
-
-    ~Builder() noexcept;
-
-    /**
-     * Add a new coordinate system to the builder.
-     *
-     * @param  fromSys   Coordinate system for the arguments to
-     *                   `transform->applyForward`.
-     * @param  toSys     Coordinate system for the return values of
-     *                   `transform->applyForward`.
-     * @param  transform Mapping from `fromSys` to `toSys`.
-     *
-     * @returns `*this` to enable chained calls.
-     *
-     * @throws pex::exceptions::InvalidParameterError  Thrown if the transform
-     *     does not have forward or inverse mapping, or if `fromSys` and
-     *     `toSys` are the same.
-     *
-     * @exceptsafe strong
-     */
-    Builder & connect(CameraSys const & fromSys, CameraSys const & toSys,
-                      std::shared_ptr<geom::TransformPoint2ToPoint2 const> transform);
-
-    /**
-     * Add multiple connections relative to a single reference CameraSys.
-     *
-     * @param fromSys     Coordinate system of the arguments to
-     *                    Transform::applyForward for each transform in the
-     *                    given map.
-     * @param transforms  A map whose keys are camera coordinate systems, and
-     *                    whose values point to Transforms that convert from
-     *                    `fromSys` coordinate system to the corresponding
-     *                    key. All Transforms must be invertible.
-     *
-     * @returns `*this` to enable chained calls.
-     *
-     * @throws lsst::pex::exceptions::InvalidParameterError Thrown if
-     *     `transforms` contains `fromSys` camera system as a key, or if
-     *     any Transform is not invertible.
-     *
-     * @exceptsafe strong
-     */
-    Builder & connect(CameraSys const & fromSys, Transforms const &transforms);
-
-    /**
-     * Add multiple connections relative to a single reference CameraSys.
-     *
-     * @param transforms  A map whose keys are camera coordinate systems, and
-     *                    whose values point to Transforms that convert from
-     *                    the `reference` coordinate system (i.e. the one the
-     *                    Builder was originally constructed with) to the
-     *                    corresponding key. All Transforms must be
-     *                    invertible.
-     *
-     * @returns `*this` to enable chained calls.
-     *
-     * @throws lsst::pex::exceptions::InvalidParameterError Thrown if
-     *     `transforms` contains the `reference` camera system as a key, or if
-     *     any Transform is not invertible.
-     *
-     * @exceptsafe strong
-     */
-    Builder & connect(Transforms const &transforms) {
-        return connect(_reference, transforms);
-    }
-
-    /**
-     * Construct a TransformMap from the connections in the builder.
-     *
-     * @throws pex::exceptions::InvalidParameterError  Thrown if there is no
-     *     direct or indirect connection between FOCAL_PLANE and one or more
-     *     coordinate systems, or there are  duplicate connections between any
-     *     two systems.
-     *
-     * @exceptsafe strong
-      */
-    std::shared_ptr<TransformMap const> build() const;
-
-private:
-
-    struct Connection {
-        mutable bool processed;
-        std::shared_ptr<geom::TransformPoint2ToPoint2 const> transform;
-        CameraSys fromSys;
-        CameraSys toSys;
-    };
-
-    CameraSys _reference;
-    std::vector<Connection> _connections;
-};
-
+std::ostream & operator<<(std::ostream & os, TransformMap::Connection const & connection);
 
 }  // namespace cameraGeom
 }  // namespace afw

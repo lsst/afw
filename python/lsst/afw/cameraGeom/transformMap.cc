@@ -24,6 +24,7 @@
 
 #include <vector>
 
+#include "lsst/utils/python.h"
 #include "lsst/geom/Point.h"
 #include "lsst/afw/table/io/python.h"
 #include "lsst/afw/cameraGeom/CameraSys.h"
@@ -38,37 +39,20 @@ namespace cameraGeom {
 namespace {
 
 using PyTransformMap = py::class_<TransformMap, std::shared_ptr<TransformMap>>;
-using PyTransformMapBuilder = py::class_<TransformMap::Builder, std::shared_ptr<TransformMap::Builder>>;
-
-void declareTransformMapBuilder(PyTransformMap & parent) {
-    PyTransformMapBuilder cls(parent, "Builder");
-    cls.def(py::init<CameraSys const &>(), "reference"_a);
-    // connect overloads are wrapped with lambdas so we can return the Python
-    // self object directly instead of re-converting *this to Python.
-    cls.def("connect",
-            [](py::object self, CameraSys const & fromSys, CameraSys const & toSys,
-               std::shared_ptr<geom::TransformPoint2ToPoint2 const> transform) {
-                py::cast<TransformMap::Builder &>(self).connect(fromSys, toSys, std::move(transform));
-                return self;
-            },
-            "fromSys"_a, "toSys"_a, "transform"_a);
-    cls.def("connect",
-            [](py::object self, CameraSys const & fromSys, TransformMap::Transforms const & transforms) {
-                py::cast<TransformMap::Builder &>(self).connect(fromSys, transforms);
-                return self;
-            },
-            "fromSys"_a, "transforms"_a);
-    cls.def("connect",
-            [](py::object self, TransformMap::Transforms const & transforms) {
-                py::cast<TransformMap::Builder &>(self).connect(transforms);
-                return self;
-            },
-            "transforms"_a);
-    cls.def("build", &TransformMap::Builder::build);
-}
+using PyTransformMapConnection = py::class_<TransformMap::Connection,
+                                            std::shared_ptr<TransformMap::Connection>>;
 
 void declareTransformMap(py::module & mod) {
     PyTransformMap cls(mod, "TransformMap");
+
+    PyTransformMapConnection clsConnection(cls, "Connection");
+    clsConnection.def(py::init<std::shared_ptr<afw::geom::TransformPoint2ToPoint2 const>,
+                               CameraSys const &, CameraSys const &>(),
+                      "transform"_a, "fromSys"_a, "toSys"_a);
+    clsConnection.def_readwrite("transform", &TransformMap::Connection::transform);
+    clsConnection.def_readwrite("fromSys", &TransformMap::Connection::fromSys);
+    clsConnection.def_readwrite("toSys", &TransformMap::Connection::toSys);
+    utils::python::addOutputOp(clsConnection, "__repr__");
 
     cls.def(
         py::init([](
@@ -80,7 +64,16 @@ void declareTransformMap(py::module & mod) {
         }),
         "reference"_a, "transforms"_a
     );
-
+    cls.def(
+        py::init([](
+            CameraSys const &reference,
+            std::vector<TransformMap::Connection> const & connections
+        ) {
+            // An apparent pybind11 bug: it's usually happy to cast away constness, but won't do it here.
+            return std::const_pointer_cast<TransformMap>(TransformMap::make(reference, connections));
+        }),
+        "reference"_a, "connections"_a
+    );
     cls.def("__len__", &TransformMap::size);
     cls.def("__contains__", &TransformMap::contains);
     cls.def("__iter__", [](TransformMap const &self) { return py::make_iterator(self.begin(), self.end()); },
@@ -106,7 +99,6 @@ void declareTransformMap(py::module & mod) {
 
     table::io::python::addPersistableMethods(cls);
 
-    declareTransformMapBuilder(cls);
 }
 
 PYBIND11_MODULE(transformMap, mod) {

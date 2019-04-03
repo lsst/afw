@@ -250,8 +250,8 @@ def makeCameraFromAmpLists(cameraConfig, ampListDict,
 
     transformDict = makeTransformDict(cameraConfig.transformDict.transforms)
     focalPlaneToField = transformDict[FIELD_ANGLE]
-    transformMapBuilder = TransformMap.Builder(nativeSys)
-    transformMapBuilder.connect(transformDict)
+    connections = [TransformMap.Connection(transform=transform, fromSys=nativeSys, toSys=toSys)
+                   for toSys, transform in transformDict.items()]
 
     # First pass: build a list of all Detector ctor kwargs, minus the
     # transformMap (which needs information from all Detectors).
@@ -290,12 +290,15 @@ def makeCameraFromAmpLists(cameraConfig, ampListDict,
         assert detectorNativeSysPrefix == PIXELS, "Detectors with nativeSys != PIXELS are not supported."
         detectorNativeSys = CameraSys(detectorNativeSysPrefix, detectorConfig.name)
 
-        # Add this detector's transform dict to the shared TransformMapBuilder
-        transformMapBuilder.connect(detectorNativeSys, thisDetectorTransforms)
+        # Add this detector's transform dict to the connections list
+        connections.extend(
+            TransformMap.Connection(transform=transform, fromSys=detectorNativeSys, toSys=toSys)
+            for toSys, transform in thisDetectorTransforms.items()
+        )
 
     # Now that we've collected all of the Transforms, we can finally build the
     # (immutable) TransformMap.
-    transformMap = transformMapBuilder.build()
+    transformMap = TransformMap(nativeSys, connections)
 
     # Second pass through the detectorConfigs: actually make Detector instances
     detectorList = [Detector(transformMap=transformMap, **kw) for kw in detectorData]
