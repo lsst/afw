@@ -98,9 +98,6 @@ public:
                        )
             : _sysName(sysPrefix.getSysName()), _detectorName(detectorName){};
 
-    /// default constructor so SWIG can wrap a vector of pairs containing these
-    CameraSys() : _sysName("?"), _detectorName(){};
-
     ~CameraSys() noexcept = default;
     CameraSys(CameraSys const &) = default;
     CameraSys(CameraSys &&) noexcept = default;
