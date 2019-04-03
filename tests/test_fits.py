@@ -29,10 +29,49 @@ import lsst.utils.tests
 
 
 class FitsTestCase(lsst.utils.tests.TestCase):
+
+    def setUp(self):
+        # May appear only once in the FITS file (because cfitsio will insist on putting them there)
+        self.single = ["SIMPLE", "BITPIX", "EXTEND", "NAXIS"]
+
+    def writeAndRead(self, header):
+        """Write the supplied header and read it back again.
+        """
+        fitsFile = lsst.afw.fits.MemFileManager()
+        with lsst.afw.fits.Fits(fitsFile, "w") as fits:
+            fits.createEmpty()
+            fits.writeMetadata(header)
+        with lsst.afw.fits.Fits(fitsFile, "r") as fits:
+            metadata = fits.readMetadata()
+        return metadata
+
+    def testSimpleIO(self):
+        """Check that a simple header can be written and read back."""
+
+        expected = {
+            "ASTRING": "Test String",
+            "ANUNDEF": None,
+            "AFLOAT": 3.1415,
+            "ANINT": 42,
+        }
+
+        header = PropertyList()
+        for k, v in expected.items():
+            header[k] = v
+
+        output = self.writeAndRead(header)
+
+        # Remove keys added by cfitsio
+        for k in self.single:
+            if k in output:
+                del output[k]
+        if "COMMENT" in output:
+            del output["COMMENT"]
+
+        self.assertEqual(output.toDict(), header.toDict())
+
     def testIgnoreKeywords(self):
         """Check that certain keywords are ignored in read/write of headers"""
-        # May appear only once in the FITS file (because cfitsio will insist on putting them there)
-        single = ["SIMPLE", "BITPIX", "EXTEND", "NAXIS"]
         # May not appear at all in the FITS file (cfitsio doesn't write these by default)
         notAtAll = [
             # FITS core keywords
@@ -49,20 +88,15 @@ class FitsTestCase(lsst.utils.tests.TestCase):
         others = ["FOOBAR", "SIMPLETN", "DATASUMX", "NAX", "SIM"]
 
         header = PropertyList()
-        for ii, key in enumerate(single + notAtAll + others):
+        for ii, key in enumerate(self.single + notAtAll + others):
             header.add(key, ii)
-        fitsFile = lsst.afw.fits.MemFileManager()
-        with lsst.afw.fits.Fits(fitsFile, "w") as fits:
-            fits.createEmpty()
-            fits.writeMetadata(header)
-        with lsst.afw.fits.Fits(fitsFile, "r") as fits:
-            metadata = fits.readMetadata()
-            for key in single:
-                self.assertEqual(metadata.valueCount(key), 1, key)
-            for key in notAtAll:
-                self.assertEqual(metadata.valueCount(key), 0, key)
-            for key in others:
-                self.assertEqual(metadata.valueCount(key), 1, key)
+        metadata = self.writeAndRead(header)
+        for key in self.single:
+            self.assertEqual(metadata.valueCount(key), 1, key)
+        for key in notAtAll:
+            self.assertEqual(metadata.valueCount(key), 0, key)
+        for key in others:
+            self.assertEqual(metadata.valueCount(key), 1, key)
 
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):

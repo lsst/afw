@@ -598,6 +598,12 @@ void writeKeyImpl(Fits &fits, char const *key, T const &value, char const *comme
                    const_cast<T *>(&value), const_cast<char *>(comment), &fits.status);
 }
 
+void writeKeyImpl(Fits &fits, char const *key, char const *comment) {
+    // Write a key with an undefined value
+    fits_write_key_null(reinterpret_cast<fitsfile *>(fits.fptr), const_cast<char *>(key),
+                        const_cast<char *>(comment), &fits.status);
+}
+
 void writeKeyImpl(Fits &fits, char const *key, std::string const &value, char const *comment) {
     if (strncmp(key, "COMMENT", 7) == 0) {
         fits_write_comment(reinterpret_cast<fitsfile *>(fits.fptr), const_cast<char *>(value.c_str()),
@@ -830,6 +836,14 @@ public:
         }
     }
 
+    void add(std::string const &key, std::string const &comment) {
+        if (list) {
+            list->add(key, nullptr, comment);
+        } else {
+            set->add(key, nullptr);
+        }
+    }
+
     bool strip;
     daf::base::PropertySet *set;
     daf::base::PropertyList *list;
@@ -881,7 +895,11 @@ void MetadataIterationFunctor::operator()(std::string const &key, std::string co
     } else if (key == "COMMENT" && !(strip && boost::regex_match(comment, fitsDefinitionCommentRegex))) {
         add(key, comment, "");
     } else if (value.empty()) {
-        // do nothing for empty values
+        // do nothing for empty values that are comments
+        // Otherwise write null value to PropertySet
+        if (key != "COMMENT") {
+            add(key, comment);
+        }
     } else {
         throw LSST_EXCEPT(
                 afw::fits::FitsError,
@@ -964,6 +982,16 @@ void writeKeyFromProperty(Fits &fits, daf::base::PropertySet const &metadata, st
             }
         } else {
             writeKeyImpl(fits, key.c_str(), metadata.get<std::string>(key), comment);
+        }
+    } else if (valueType == typeid(nullptr_t)) {
+        if (metadata.isArray(key)) {
+            // Write multiple undefined values for the same key
+            std::vector<std::string> tmp = metadata.getArray<std::string>(key);
+            for (std::size_t i = 0; i != tmp.size(); ++i) {
+                writeKeyImpl(fits, key.c_str(), comment);
+            }
+        } else {
+            writeKeyImpl(fits, key.c_str(), comment);
         }
     } else {
         // FIXME: inherited this error handling from fitsIo.cc; need a better option.
