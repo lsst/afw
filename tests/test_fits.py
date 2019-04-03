@@ -20,12 +20,15 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
+import os
 import unittest
 
 from lsst.daf.base import PropertyList
 
 import lsst.afw.fits
 import lsst.utils.tests
+
+testPath = os.path.abspath(os.path.dirname(__file__))
 
 
 class FitsTestCase(lsst.utils.tests.TestCase):
@@ -69,6 +72,19 @@ class FitsTestCase(lsst.utils.tests.TestCase):
             del output["COMMENT"]
 
         self.assertEqual(output.toDict(), header.toDict())
+
+    def testReadUndefined(self):
+        """Read a header with some undefined values that might override."""
+        testFile = os.path.join(testPath, "data", "ticket18864.fits")
+        metadata = lsst.afw.fits.readMetadata(testFile)
+
+        # Neither of these should be arrays despite having doubled keywords
+        # The first value for ADC-STR should override the second undef value
+        self.assertAlmostEqual(metadata.getScalar("ADC-STR"), 22.01)
+
+        # The value for DOM-WND should be the second value since the first
+        # was undefined
+        self.assertAlmostEqual(metadata.getScalar("DOM-WND"), 4.8)
 
     def testIgnoreKeywords(self):
         """Check that certain keywords are ignored in read/write of headers"""

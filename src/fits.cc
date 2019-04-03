@@ -829,18 +829,54 @@ public:
 
     template <typename T>
     void add(std::string const &key, T value, std::string const &comment) {
+        // PropertyList/Set can not support array items where some elements are
+        // defined and some undefined. If we are adding defined value where
+        // previously we have an undefined value we must use set instead.
         if (list) {
-            list->add(key, value, comment);
+            if (list->exists(key) && list->isUndefined(key)) {
+                LOGLS_WARN("afw.fits",
+                           boost::format("In %s, replacing undefined value for key '%s'.") %
+                                         BOOST_CURRENT_FUNCTION % key);
+                list->set(key, value, comment);
+            } else {
+                list->add(key, value, comment);
+            }
         } else {
-            set->add(key, value);
+            if (set->exists(key) && set->isUndefined(key)) {
+                LOGLS_WARN("afw.fits",
+                           boost::format("In %s, replacing undefined value for key '%s'.") %
+                                         BOOST_CURRENT_FUNCTION % key);
+                set->set(key, value);
+            } else {
+                set->add(key, value);
+            }
         }
     }
 
     void add(std::string const &key, std::string const &comment) {
+        // If this undefined value is adding to a pre-existing key that has
+        // a defined value we must skip the add so as not to break
+        // PropertyList/Set.
         if (list) {
-            list->add(key, nullptr, comment);
+            if (list->exists(key) && !list->isUndefined(key)) {
+                // Do nothing. Assume the previously defined value takes
+                // precedence.
+                LOGLS_WARN("afw.fits",
+                           boost::format("In %s, dropping undefined value for key '%s'.") %
+                                         BOOST_CURRENT_FUNCTION % key);
+            } else {
+                list->add(key, nullptr, comment);
+            }
         } else {
-            set->add(key, nullptr);
+            if (set->exists(key) && !set->isUndefined(key)) {
+                // Do nothing. Assume the previously defined value takes
+                // precedence.
+                LOGLS_WARN("afw.fits",
+                           boost::format("In %s, dropping undefined value for key '%s'.") %
+                                         BOOST_CURRENT_FUNCTION % key);
+            } else {
+                set->add(key, nullptr);
+            }
         }
     }
 
