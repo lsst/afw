@@ -207,9 +207,10 @@ class FrameSetUtilsTestCase(lsst.utils.tests.TestCase):
         fc.setFitsL("ALOGICAL", logicalVal, "Comment for ALOGICAL")
         fc.setFitsS("ASTRING", stringVal, "Comment for ASTRING")
         fc.setFitsCM("a comment, which will be ignored by getPropertyListFromFitsChan")
-        expectedNames = ["ACONT", "AFLOAT", "ANINT", "ALOGICAL", "ASTRING"]
+        fc.setFitsU("ANUNDEF", "Comment for ANUNDEF")
+        expectedNames = ["ACONT", "AFLOAT", "ANINT", "ALOGICAL", "ASTRING", "ANUNDEF"]
 
-        self.assertEqual(fc.nCard, 6)
+        self.assertEqual(fc.nCard, 7)
         metadata = getPropertyListFromFitsChan(fc)
         self.assertEqual(metadata.getOrderedNames(), expectedNames)
 
@@ -219,24 +220,13 @@ class FrameSetUtilsTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(metadata.getScalar("ALOGICAL"), logicalVal)
         self.assertEqual(metadata.getScalar("ASTRING"), stringVal)
         self.assertEqual(metadata.getScalar("ACONT"), continueVal)
+        self.assertIsNone(metadata.getScalar("ANUNDEF"))
 
         for name in expectedNames:
             self.assertEqual(metadata.getComment(name), "Comment for %s" % (name,))
 
         # complex values are not supported by PropertyList
         fc.setFitsCF("UNSUPP", complex(1, 0))
-        badCard = fc.getCard()
-        with self.assertRaises(lsst.pex.exceptions.TypeError):
-            getPropertyListFromFitsChan(fc)
-        fc.setCard(badCard)
-        fc.clearCard()
-        fc.findFits("UNSUPP", inc=False)
-        fc.delFits()
-        metadata = getPropertyListFromFitsChan(fc)
-        self.assertEqual(metadata.getOrderedNames(), expectedNames)
-
-        # cards with no value are not supported by PropertyList
-        fc.setFitsU("UNSUPP")
         badCard = fc.getCard()
         with self.assertRaises(lsst.pex.exceptions.TypeError):
             getPropertyListFromFitsChan(fc)
@@ -279,12 +269,6 @@ class FrameSetUtilsTestCase(lsst.utils.tests.TestCase):
         fc = ast.FitsChan(ast.StringStream())
         self.assertEqual(fc.className, "FitsChan")
         fc.setFitsCF("ACOMPLEX", complex(1, 1))
-        with self.assertRaises(lsst.pex.exceptions.TypeError):
-            getPropertyListFromFitsChan(fc)
-
-        fc = ast.FitsChan(ast.StringStream())
-        self.assertEqual(fc.className, "FitsChan")
-        fc.setFitsU("UNDEFVAL")
         with self.assertRaises(lsst.pex.exceptions.TypeError):
             getPropertyListFromFitsChan(fc)
 

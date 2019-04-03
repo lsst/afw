@@ -70,6 +70,8 @@ std::string makeLimitedFitsHeaderImpl(std::vector<std::string> const &paramNames
             out += (boost::format("%#20.17G") % metadata.get<double>(name)).str();
         } else if (type == typeid(float)) {
             out += (boost::format("%#20.15G") % metadata.get<float>(name)).str();
+        } else if (type == typeid(std::nullptr_t)) {
+            out += " ";
         } else if (type == typeid(std::string)) {
             out += "'" + metadata.get<std::string>(name) + "'";
             if (out.size() > 80) {
@@ -596,6 +598,12 @@ void writeKeyImpl(Fits &fits, char const *key, T const &value, char const *comme
                    const_cast<T *>(&value), const_cast<char *>(comment), &fits.status);
 }
 
+void writeKeyImpl(Fits &fits, char const *key, char const *comment) {
+    // Write a key with an undefined value
+    fits_write_key_null(reinterpret_cast<fitsfile *>(fits.fptr), const_cast<char *>(key),
+                        const_cast<char *>(comment), &fits.status);
+}
+
 void writeKeyImpl(Fits &fits, char const *key, std::string const &value, char const *comment) {
     if (strncmp(key, "COMMENT", 7) == 0) {
         fits_write_comment(reinterpret_cast<fitsfile *>(fits.fptr), const_cast<char *>(value.c_str()),
@@ -821,10 +829,54 @@ public:
 
     template <typename T>
     void add(std::string const &key, T value, std::string const &comment) {
+        // PropertyList/Set can not support array items where some elements are
+        // defined and some undefined. If we are adding defined value where
+        // previously we have an undefined value we must use set instead.
         if (list) {
-            list->add(key, value, comment);
+            if (list->exists(key) && list->isUndefined(key)) {
+                LOGLS_WARN("afw.fits",
+                           boost::format("In %s, replacing undefined value for key '%s'.") %
+                                         BOOST_CURRENT_FUNCTION % key);
+                list->set(key, value, comment);
+            } else {
+                list->add(key, value, comment);
+            }
         } else {
-            set->add(key, value);
+            if (set->exists(key) && set->isUndefined(key)) {
+                LOGLS_WARN("afw.fits",
+                           boost::format("In %s, replacing undefined value for key '%s'.") %
+                                         BOOST_CURRENT_FUNCTION % key);
+                set->set(key, value);
+            } else {
+                set->add(key, value);
+            }
+        }
+    }
+
+    void add(std::string const &key, std::string const &comment) {
+        // If this undefined value is adding to a pre-existing key that has
+        // a defined value we must skip the add so as not to break
+        // PropertyList/Set.
+        if (list) {
+            if (list->exists(key) && !list->isUndefined(key)) {
+                // Do nothing. Assume the previously defined value takes
+                // precedence.
+                LOGLS_WARN("afw.fits",
+                           boost::format("In %s, dropping undefined value for key '%s'.") %
+                                         BOOST_CURRENT_FUNCTION % key);
+            } else {
+                list->add(key, nullptr, comment);
+            }
+        } else {
+            if (set->exists(key) && !set->isUndefined(key)) {
+                // Do nothing. Assume the previously defined value takes
+                // precedence.
+                LOGLS_WARN("afw.fits",
+                           boost::format("In %s, dropping undefined value for key '%s'.") %
+                                         BOOST_CURRENT_FUNCTION % key);
+            } else {
+                set->add(key, nullptr);
+            }
         }
     }
 
@@ -879,7 +931,11 @@ void MetadataIterationFunctor::operator()(std::string const &key, std::string co
     } else if (key == "COMMENT" && !(strip && boost::regex_match(comment, fitsDefinitionCommentRegex))) {
         add(key, comment, "");
     } else if (value.empty()) {
-        // do nothing for empty values
+        // do nothing for empty values that are comments
+        // Otherwise write null value to PropertySet
+        if (key != "COMMENT") {
+            add(key, comment);
+        }
     } else {
         throw LSST_EXCEPT(
                 afw::fits::FitsError,
@@ -962,6 +1018,16 @@ void writeKeyFromProperty(Fits &fits, daf::base::PropertySet const &metadata, st
             }
         } else {
             writeKeyImpl(fits, key.c_str(), metadata.get<std::string>(key), comment);
+        }
+    } else if (valueType == typeid(nullptr_t)) {
+        if (metadata.isArray(key)) {
+            // Write multiple undefined values for the same key
+            std::vector<std::string> tmp = metadata.getArray<std::string>(key);
+            for (std::size_t i = 0; i != tmp.size(); ++i) {
+                writeKeyImpl(fits, key.c_str(), comment);
+            }
+        } else {
+            writeKeyImpl(fits, key.c_str(), comment);
         }
     } else {
         // FIXME: inherited this error handling from fitsIo.cc; need a better option.
