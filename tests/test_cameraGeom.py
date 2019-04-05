@@ -313,14 +313,14 @@ class CameraGeomTestCase(lsst.utils.tests.TestCase):
             with self.assertRaises(pexExcept.InvalidParameterError):
                 camera.transform(point, FOCAL_PLANE, CameraSys("badSystem"))
             # non-existent source detector
-            with self.assertRaises(KeyError):
+            with self.assertRaises(pexExcept.InvalidParameterError):
                 camera.getTransform(CameraSys("pixels", "invalid"), FOCAL_PLANE)
-            with self.assertRaises(KeyError):
+            with self.assertRaises(pexExcept.InvalidParameterError):
                 camera.transform(point, CameraSys("pixels", "invalid"), FOCAL_PLANE)
             # non-existent destination detector
-            with self.assertRaises(KeyError):
+            with self.assertRaises(pexExcept.InvalidParameterError):
                 camera.getTransform(FOCAL_PLANE, CameraSys("pixels", "invalid"))
-            with self.assertRaises(KeyError):
+            with self.assertRaises(pexExcept.InvalidParameterError):
                 camera.transform(point, FOCAL_PLANE, CameraSys("pixels", "invalid"))
 
     def testDetectorCollectionPersistence(self):

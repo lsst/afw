@@ -23,7 +23,6 @@ __all__ = ['assembleAmplifierImage', 'assembleAmplifierRawImage',
            'makeUpdatedDetector']
 
 import lsst.geom
-from . import copyDetector
 
 # dict of doFlip: slice
 _SliceDict = {
@@ -62,7 +61,7 @@ def assembleAmplifierImage(destImage, rawImage, amplifier):
         the assembled amplifier image.
     rawImage : `lsst.afw.image.Image` or `lsst.afw.image.MaskedImage`
         Raw image (same type as destImage).
-    amplifier : `lsst.afw.table.AmpInfoRecord`
+    amplifier : `lsst.afw.cameraGeom.Amplifier`
         Amplifier geometry, with raw amplifier info.
 
     Raises
@@ -97,7 +96,7 @@ def assembleAmplifierRawImage(destImage, rawImage, amplifier):
         is overwritten with the raw amplifier image.
     rawImage : `lsst.afw.image.Image` or `lsst.afw.image.MaskedImage`
         Raw image (same type as destImage).
-    amplifier : `lsst.afw.table.AmpInfoRecord`
+    amplifier : `lsst.afw.cameraGeom.Amplifier`
         Amplifier geometry with raw amplifier info
 
     Raises
@@ -129,9 +128,8 @@ def makeUpdatedDetector(ccd):
     ccd : `lsst.afw.image.Detector`
         The detector to copy and update.
     """
-    ampInfoCatalog = ccd.getAmpInfoCatalog().copy(deep=True)
-
-    for amp in ampInfoCatalog:
+    builder = ccd.rebuild()
+    for amp in builder.getAmplifiers():
         assert amp.getHasRawInfo()
 
         bbox = amp.getRawBBox()
@@ -166,4 +164,4 @@ def makeUpdatedDetector(ccd):
         amp.setRawFlipX(False)
         amp.setRawFlipY(False)
 
-    return copyDetector(ccd, ampInfoCatalog)
+    return builder.finish()

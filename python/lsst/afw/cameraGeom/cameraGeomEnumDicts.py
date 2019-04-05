@@ -21,13 +21,13 @@
 
 __all__ = ['DetectorTypeValNameDict', 'DetectorTypeNameValDict']
 
-from . import cameraGeomLib
+from .detector import DetectorType
 
 DetectorTypeValNameDict = {
-    cameraGeomLib.SCIENCE: "SCIENCE",
-    cameraGeomLib.FOCUS: "FOCUS",
-    cameraGeomLib.GUIDER: "GUIDER",
-    cameraGeomLib.WAVEFRONT: "WAVEFRONT",
+    DetectorType.SCIENCE: "SCIENCE",
+    DetectorType.FOCUS: "FOCUS",
+    DetectorType.GUIDER: "GUIDER",
+    DetectorType.WAVEFRONT: "WAVEFRONT",
 }
 DetectorTypeNameValDict = {val: key for key, val in
                            DetectorTypeValNameDict.items()}
