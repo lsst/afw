@@ -53,7 +53,7 @@ class DetectorTestCase(lsst.utils.tests.TestCase):
             self.assertEqual(bbox.getMin()[i], dw.bbox.getMin()[i])
             self.assertEqual(bbox.getMax()[i], dw.bbox.getMax()[i])
         self.assertAlmostEqual(dw.pixelSize, detector.getPixelSize())
-        self.assertEqual(len(detector), len(dw.ampInfo))
+        self.assertEqual(len(detector), len(dw.ampList))
 
         orientation = detector.getOrientation()
 
@@ -81,9 +81,9 @@ class DetectorTestCase(lsst.utils.tests.TestCase):
         """
         def duplicateAmpName(dw):
             """Set two amplifiers to the same name"""
-            builder = dw.ampInfo[1].rebuild()
-            builder.setName(dw.ampInfo[0].getName())
-            dw.ampInfo[1] = builder.finish()
+            builder = dw.ampList[1]
+            builder.setName(dw.ampList[0].getName())
+            dw.ampList[1] = builder
         with self.assertRaises(lsst.pex.exceptions.Exception):
             DetectorWrapper(modFunc=duplicateAmpName)
 
@@ -122,10 +122,10 @@ class DetectorTestCase(lsst.utils.tests.TestCase):
         """
         dw = DetectorWrapper()
         ampList = [amp for amp in dw.detector]
-        self.assertEqual(len(ampList), len(dw.ampInfo))
+        self.assertEqual(len(ampList), len(dw.ampList))
         for i, amp in enumerate(ampList):
             self.assertEqual(amp.getName(), dw.detector[i].getName())
-            self.assertEqual(amp.getName(), dw.ampInfo[i].getName())
+            self.assertEqual(amp.getName(), dw.ampList[i].getName())
             self.assertEqual(
                 amp.getName(), dw.detector[amp.getName()].getName())
 
@@ -195,15 +195,14 @@ class DetectorTestCase(lsst.utils.tests.TestCase):
             predCtrPoint = transform.applyForward(ctrPixPoint)
             self.assertPairsAlmostEqual(predCtrPoint, ctrPoint)
 
-    @unittest.skip("Disabled until new cameraGeom mutability patterns are implemented")
-    def testCopyDetector(self):
-        """Test copyDetector() method
+    def testDetectorRebuild(self):
+        """Test Detector.rebuild() method
         """
         #
         # Make a copy without any modifications
         #
         detector = DetectorWrapper().detector
-        ndetector = cameraGeom.copyDetector(detector)
+        ndetector = detector.rebuild().finish()
 
         self.assertEqual(detector.getName(), ndetector.getName())
         self.assertEqual(detector.getBBox(), ndetector.getBBox())
@@ -214,11 +213,11 @@ class DetectorTestCase(lsst.utils.tests.TestCase):
         #
         # Now make a copy with a hacked-up set of amps
         #
-        amplifiers = detector.getAmplifiers().copy()
-        for i, amp in enumerate(amplifiers, 1):
+        builder = detector.rebuild()
+        for i, amp in enumerate(builder, 1):
             amp.setRawXYOffset(i*lsst.geom.ExtentI(1, 1))
 
-        ndetector = cameraGeom.copyDetector(detector, amplifiers=amplifiers)
+        ndetector = builder.finish()
 
         self.assertEqual(detector.getName(), ndetector.getName())
         self.assertEqual(detector.getBBox(), ndetector.getBBox())

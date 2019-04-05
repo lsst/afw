@@ -311,9 +311,7 @@ private:
         toSysDetectorName(schema.addField<std::string>("toSysDetectorName",
                                                        "Camera coordinate system detector name.", "", 0)),
         transform(schema.addField<int>("transform", "Archive ID of the transform.", ""))
-    {
-        schema.getCitizen().markPersistent();
-    }
+    {}
 
     PersistenceHelper(PersistenceHelper const &) = delete;
     PersistenceHelper(PersistenceHelper &&) = delete;

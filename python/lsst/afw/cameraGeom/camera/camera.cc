@@ -21,6 +21,8 @@
 
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
+
+#include "lsst/utils/python.h"
 #include "lsst/afw/table/io/python.h"
 #include "lsst/afw/cameraGeom/Camera.h"
 
@@ -31,45 +33,24 @@ namespace lsst {
 namespace afw {
 namespace cameraGeom {
 
-PYBIND11_MODULE(camera, mod){
-    py::module::import("lsst.afw.cameraGeom.detectorCollection");
-    py::module::import("lsst.afw.cameraGeom.transformMap");
+using PyCamera = py::class_<Camera, DetectorCollection, std::shared_ptr<Camera>>;
+using PyCameraBuilder = py::class_<Camera::Builder, DetectorCollectionBase<Detector::InCameraBuilder>,
+                                   std::shared_ptr<Camera::Builder>>;
 
-    py::class_<Camera, DetectorCollection, std::shared_ptr<Camera>> cls(mod, "Camera");
+// Bindings here are ordered to match the order of the declarations in
+// Camera.h to the greatest extent possible; modifications to this file should
+// attempt to preserve this.
 
-    cls.def(py::init<std::string const &, Camera::DetectorList const &,
-                     std::shared_ptr<TransformMap>, std::string const &>(),
-            "name"_a, "detectorList"_a, "transformMap"_a, "pupilFactoryName"_a);
-    // Python-only constructor that takes a PupilFactory type object for
-    // backwards compatibility.
-    cls.def(
-        py::init(
-            [](
-                std::string const & name,
-                Camera::DetectorList const & detectorList,
-                std::shared_ptr<TransformMap> transformMap,
-                py::object pupilFactoryClass
-            ) {
-                std::string pupilFactoryName = "lsst.afw.cameraGeom.pupil.PupilFactory";
-                if (!pupilFactoryClass.is(py::none())) {
-                    pupilFactoryName = py::str("{}.{}").format(
-                        pupilFactoryClass.attr("__module__"),
-                        pupilFactoryClass.attr("__name__")
-                    );
-                }
-                return std::make_shared<Camera>(name, detectorList, transformMap, pupilFactoryName);
-            }
-        ),
-        "name"_a,
-        "detectorList"_a,
-        "transformMap"_a,
-        "pupilFactoryClass"_a=py::none()
-    );
+void declareCameraBuilder(PyCamera & parent);
+
+void declareCamera(py::module & mod) {
+    PyCamera cls(mod, "Camera");
+    declareCameraBuilder(cls);
+    cls.def("rebuild", &Camera::rebuild);
     cls.def("getName", &Camera::getName);
     cls.def("getPupilFactoryName", &Camera::getPupilFactoryName);
     cls.def("findDetectors", &Camera::findDetectors, "point"_a, "cameraSys"_a);
     cls.def("findDetectorsList", &Camera::findDetectorsList, "pointList"_a, "cameraSys"_a);
-    cls.def("getTransformMap", &Camera::getTransformMap);
     // transform methods are wrapped with lambdas that translate exceptions for backwards compatibility
     cls.def(
         "getTransform",
@@ -83,6 +64,7 @@ PYBIND11_MODULE(camera, mod){
         },
         "fromSys"_a, "toSys"_a
     );
+    cls.def("getTransformMap", &Camera::getTransformMap);
     cls.def(
         "transform",
         [](
@@ -117,8 +99,43 @@ PYBIND11_MODULE(camera, mod){
         },
         "points"_a, "fromSys"_a, "toSys"_a
     );
-
     table::io::python::addPersistableMethods(cls);
+}
+
+void declareCameraBuilder(PyCamera & parent) {
+    PyCameraBuilder cls(parent, "Builder");
+    cls.def(py::init<std::string const &>(), "name"_a);
+    cls.def(py::init<Camera const &>(), "camera"_a);
+    cls.def("finish", &Camera::Builder::finish);
+    cls.def("getName", &Camera::Builder::getName);
+    cls.def("setName", &Camera::Builder::setName);
+    cls.def("getPupilFactoryName", &Camera::Builder::getPupilFactoryName);
+    cls.def("setPupilFactoryName", &Camera::Builder::setPupilFactoryName);
+    cls.def("setPupilFactoryClass",
+            [](Camera::Builder & self, py::object pupilFactoryClass) {
+                std::string pupilFactoryName = "lsst.afw.cameraGeom.pupil.PupilFactory";
+                if (!pupilFactoryClass.is(py::none())) {
+                    pupilFactoryName = py::str("{}.{}").format(
+                        pupilFactoryClass.attr("__module__"),
+                        pupilFactoryClass.attr("__name__")
+                    );
+                }
+                self.setPupilFactoryName(pupilFactoryName);
+            });
+    cls.def("setTransformFromFocalPlaneTo", &Camera::Builder::setTransformFromFocalPlaneTo,
+            "toSys"_a, "transform"_a);
+    cls.def("discardTransformFromFocalPlaneTo",&Camera::Builder::discardTransformFromFocalPlaneTo);
+    cls.def("add", &Camera::Builder::add);
+    cls.def("__delitem__", py::overload_cast<int>(&Camera::Builder::remove));
+    cls.def("__delitem__", py::overload_cast<std::string const &>(&Camera::Builder::remove));
+}
+
+PYBIND11_MODULE(camera, mod){
+    py::module::import("lsst.afw.cameraGeom.detectorCollection");
+    py::module::import("lsst.afw.cameraGeom.detector");
+    py::module::import("lsst.afw.cameraGeom.transformMap");
+
+    declareCamera(mod);
 }
 
 } // cameraGeom

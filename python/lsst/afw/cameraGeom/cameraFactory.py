@@ -19,14 +19,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-__all__ = ["makeCameraFromPath", "makeCameraFromAmpLists",
-           "makeDetector", "copyDetector"]
+__all__ = ["makeCameraFromPath", "makeCameraFromAmpLists"]
 
 import os.path
 import lsst.geom
 from lsst.afw.table import BaseCatalog
 from .cameraGeomLib import FOCAL_PLANE, FIELD_ANGLE, PIXELS, TAN_PIXELS, ACTUAL_PIXELS, CameraSys, \
-    Detector, DetectorType, Orientation, TransformMap, Amplifier
+    DetectorType, Orientation, Amplifier
 from .camera import Camera
 from .makePixelToTanPixel import makePixelToTanPixel
 from .pupil import PupilFactory
@@ -35,7 +34,7 @@ cameraSysList = [FIELD_ANGLE, FOCAL_PLANE, PIXELS, TAN_PIXELS, ACTUAL_PIXELS]
 cameraSysMap = dict((sys.getSysName(), sys) for sys in cameraSysList)
 
 
-def makeDetectorData(detectorConfig, amplifiers, focalPlaneToField):
+def addDetectorBuilderFromConfig(cameraBuilder, detectorConfig, amplifiers, focalPlaneToField):
     """Build a dictionary of Detector constructor keyword arguments.
 
     The returned dictionary can be passed as keyword arguments to the Detector
@@ -48,6 +47,9 @@ def makeDetectorData(detectorConfig, amplifiers, focalPlaneToField):
 
     Parameters
     ----------
+    cameraBuilder : `lsst.afw.cameraGeonm.Camera.Builder`
+        Camera builder object to which the new Detector Builder
+        should be added.
     detectorConfig : `lsst.pex.config.Config`
         Configuration for this detector.
     amplifiers : `list` [`~lsst.afw.cameraGeom.Amplifier`]
@@ -57,92 +59,48 @@ def makeDetectorData(detectorConfig, amplifiers, focalPlaneToField):
 
     Returns
     -------
-    data : `dict`
-        Contains the following keys: name, id, type, serial, bbox, orientation,
-        pixelSize, transforms, amplifiers, and optionally crosstalk.
-        The transforms key is a dictionary whose values are Transforms that map
-        the Detector's PIXEL coordinate system to the CameraSys in the key.
+    detectorBuilder : `lsst.afw.cameraGeom.Detector.InCameraBuilder`
+        A builder object for a detector corresponding to the given config,
+        associated with the given camera builder object.
     """
-
-    data = dict(
-        name=detectorConfig.name,
-        id=detectorConfig.id,
-        type=DetectorType(detectorConfig.detectorType),
-        physicalType=detectorConfig.physicalType,
-        serial=detectorConfig.serial,
-        amplifiers=amplifiers,
-        orientation=makeOrientation(detectorConfig),
-        pixelSize=lsst.geom.Extent2D(detectorConfig.pixelSize_x, detectorConfig.pixelSize_y),
-        bbox=lsst.geom.Box2I(
+    detectorBuilder = cameraBuilder.add(detectorConfig.name, detectorConfig.id)
+    detectorBuilder.setType(DetectorType(detectorConfig.detectorType))
+    detectorBuilder.setSerial(detectorConfig.serial)
+    detectorBuilder.setPhysicalType(detectorConfig.physicalType)
+    detectorBuilder.setOrientation(makeOrientation(detectorConfig))
+    detectorBuilder.setPixelSize(lsst.geom.Extent2D(detectorConfig.pixelSize_x, detectorConfig.pixelSize_y))
+    detectorBuilder.setBBox(
+        lsst.geom.Box2I(
             minimum=lsst.geom.Point2I(detectorConfig.bbox_x0, detectorConfig.bbox_y0),
             maximum=lsst.geom.Point2I(detectorConfig.bbox_x1, detectorConfig.bbox_y1),
-        ),
+        )
     )
+
+    for ampBuilder in amplifiers:
+        detectorBuilder.append(ampBuilder)
 
     transforms = makeTransformDict(detectorConfig.transformDict.transforms)
-    transforms[FOCAL_PLANE] = data["orientation"].makePixelFpTransform(data["pixelSize"])
 
+    # It seems the C++ code has always assumed that the "nativeSys" for
+    # detectors is PIXELS, despite the configs here giving the illusion of
+    # choice.  We'll use PIXELS if the config value is None, and assert that
+    # the value is PIXELS otherwise.  Note that we can't actually get rid of
+    # the nativeSys config option without breaking lots of on-disk camera
+    # configs.
+    detectorNativeSysPrefix = cameraSysMap.get(detectorConfig.transformDict.nativeSys, PIXELS)
+    assert detectorNativeSysPrefix == PIXELS, "Detectors with nativeSys != PIXELS are not supported."
+
+    for toSys, transform in transforms.items():
+        detectorBuilder.setTransformFromPixelsTo(toSys, transform)
     tanPixSys = CameraSys(TAN_PIXELS, detectorConfig.name)
     transforms[tanPixSys] = makePixelToTanPixel(
-        bbox=data["bbox"],
-        orientation=data["orientation"],
+        bbox=detectorBuilder.getBBox(),
+        orientation=detectorBuilder.getOrientation(),
         focalPlaneToField=focalPlaneToField,
-        pixelSizeMm=data["pixelSize"],
+        pixelSizeMm=detectorBuilder.getPixelSize(),
     )
-
-    data["transforms"] = transforms
-
-    crosstalk = detectorConfig.getCrosstalk(len(amplifiers))
-    if crosstalk is not None:
-        data["crosstalk"] = crosstalk
-
-    return data
-
-
-def makeDetector(detectorConfig, amplifiers, focalPlaneToField):
-    """Make a Detector instance from a detector config and amp info catalog
-
-    Parameters
-    ----------
-    detectorConfig : `lsst.pex.config.Config`
-        Configuration for this detector.
-    amplifiers : `list` of `~lsst.afw.cameraGeom.Amplifier`
-        amplifier information for this detector
-    focalPlaneToField : `lsst.afw.geom.TransformPoint2ToPoint2`
-        FOCAL_PLANE to FIELD_ANGLE Transform
-
-    Returns
-    -------
-    detector : `lsst.afw.cameraGeom.Detector`
-        New Detector instance.
-    """
-    data = makeDetectorData(detectorConfig, amplifiers, focalPlaneToField)
-    return Detector(**data)
-
-
-def copyDetector(detector, amplifiers=None):
-    """Return a copy of a Detector with possibly-updated amplifier information.
-
-    No deep copies are made; the input transformDict is used unmodified
-
-    Parameters
-    ----------
-    detector : `lsst.afw.cameraGeom.Detector`
-        The Detector to clone
-    amplifiers  The list of amplifiers to use; default use original
-
-    Returns
-    -------
-    detector : `lsst.afw.cameraGeom.Detector`
-        New Detector instance.
-    """
-    if amplifiers is None:
-        amplifiers = detector.getAmplifiers()
-
-    return Detector(detector.getName(), detector.getId(), detector.getType(),
-                    detector.getSerial(), detector.getBBox(),
-                    amplifiers, detector.getOrientation(), detector.getPixelSize(),
-                    detector.getTransformMap(), detector.getCrosstalk(), detector.getPhysicalType())
+    detectorBuilder.setCrosstalk(detectorConfig.getCrosstalk(len(amplifiers)))
+    return detectorBuilder
 
 
 def makeOrientation(detectorConfig):
@@ -223,7 +181,8 @@ def makeCameraFromPath(cameraConfig, ampInfoPath, shortNameFunc,
 
 def makeCameraFromAmpLists(cameraConfig, ampListDict,
                            pupilFactoryClass=PupilFactory):
-    """Construct a Camera instance from a dictionary of detector name: AmpInfoCatalog
+    """Construct a Camera instance from a dictionary of detector name: list of
+    Amplifier.Builder
 
     Parameters
     ----------
@@ -241,66 +200,27 @@ def makeCameraFromAmpLists(cameraConfig, ampListDict,
     """
     nativeSys = cameraSysMap[cameraConfig.transformDict.nativeSys]
 
-    # nativeSys=FOCAL_PLANE seems to be assumed in various places in this file
-    # (e.g. the definition of TAN_PIXELS), despite CameraConfig providing the
-    # illusion that it's configurable.
-    # Note that we can't actually get rid of the nativeSys config option
-    # without breaking lots of on-disk camera configs.
+    # nativeSys=FOCAL_PLANE seems is baked into the camera class definition,
+    # despite CameraConfig providing the illusion that it's configurable. Note
+    # that we can't actually get rid of the nativeSys config option without
+    # breaking lots of on-disk camera configs.
     assert nativeSys == FOCAL_PLANE, "Cameras with nativeSys != FOCAL_PLANE are not supported."
+
+    cameraBuilder = Camera.Builder(cameraConfig.name)
+    cameraBuilder.setPupilFactoryClass(pupilFactoryClass)
 
     transformDict = makeTransformDict(cameraConfig.transformDict.transforms)
     focalPlaneToField = transformDict[FIELD_ANGLE]
-    connections = [TransformMap.Connection(transform=transform, fromSys=nativeSys, toSys=toSys)
-                   for toSys, transform in transformDict.items()]
 
-    # First pass: build a list of all Detector ctor kwargs, minus the
-    # transformMap (which needs information from all Detectors).
-    detectorData = []
+    for toSys, transform in transformDict.items():
+        cameraBuilder.setTransformFromFocalPlaneTo(toSys, transform)
+
     for detectorConfig in cameraConfig.detectorList.values():
-
-        # Get kwargs that could be used to construct each Detector
-        # if we didn't care about giving each of them access to
-        # all of the transforms.
-        thisDetectorData = makeDetectorData(
+        addDetectorBuilderFromConfig(
+            cameraBuilder,
             detectorConfig=detectorConfig,
             amplifiers=ampListDict[detectorConfig.name],
             focalPlaneToField=focalPlaneToField,
         )
 
-        # Pull the transforms dictionary out of the data dict; we'll replace
-        # it with a TransformMap argument later.
-        thisDetectorTransforms = thisDetectorData.pop("transforms")
-
-        # Save the rest of the Detector data dictionary for later
-        detectorData.append(thisDetectorData)
-
-        # For reasons I don't understand, some obs_ packages (e.g. HSC) set
-        # nativeSys to None for their detectors (which doesn't seem to be
-        # permitted by the config class!), but they really mean PIXELS. For
-        # backwards compatibility we use that as the default...
-        detectorNativeSysPrefix = cameraSysMap.get(detectorConfig.transformDict.nativeSys, PIXELS)
-
-        # ...well, actually, it seems that we've always assumed down in C++
-        # that the answer is always PIXELS without ever checking that it is.
-        # So let's assert that it is, since there are hints all over this file
-        # (e.g. the definition of TAN_PIXELS) that other parts of the codebase
-        # have regularly made that assumption as well.  Note that we can't
-        # actually get rid of the nativeSys config option without breaking
-        # lots of on-disk camera configs.
-        assert detectorNativeSysPrefix == PIXELS, "Detectors with nativeSys != PIXELS are not supported."
-        detectorNativeSys = CameraSys(detectorNativeSysPrefix, detectorConfig.name)
-
-        # Add this detector's transform dict to the connections list
-        connections.extend(
-            TransformMap.Connection(transform=transform, fromSys=detectorNativeSys, toSys=toSys)
-            for toSys, transform in thisDetectorTransforms.items()
-        )
-
-    # Now that we've collected all of the Transforms, we can finally build the
-    # (immutable) TransformMap.
-    transformMap = TransformMap(nativeSys, connections)
-
-    # Second pass through the detectorConfigs: actually make Detector instances
-    detectorList = [Detector(transformMap=transformMap, **kw) for kw in detectorData]
-
-    return Camera(cameraConfig.name, detectorList, transformMap, pupilFactoryClass)
+    return cameraBuilder.finish()

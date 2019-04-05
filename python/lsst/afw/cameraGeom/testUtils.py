@@ -29,8 +29,11 @@ import lsst.utils
 import lsst.geom
 import lsst.afw.geom as afwGeom
 from lsst.utils.tests import inTestCase
-from .cameraGeomLib import PIXELS, TAN_PIXELS, FIELD_ANGLE, FOCAL_PLANE, SCIENCE, ACTUAL_PIXELS, \
-    CameraSys, Detector, Orientation, Amplifier, ReadoutCorner
+from .cameraSys import CameraSys, PIXELS, TAN_PIXELS, FIELD_ANGLE, FOCAL_PLANE, ACTUAL_PIXELS
+from .orientation import Orientation
+from .amplifier import Amplifier, ReadoutCorner
+from .camera import Camera
+from .detector import DetectorType
 from .cameraConfig import DetectorConfig, CameraConfig
 from .cameraFactory import makeCameraFromAmpLists
 from .makePixelToTanPixel import makePixelToTanPixel
@@ -84,7 +87,7 @@ class DetectorWrapper:
     def __init__(self,
                  name="detector 1",
                  id=1,
-                 detType=SCIENCE,
+                 detType=DetectorType.SCIENCE,
                  serial="xkcd722",
                  bbox=None,    # do not use mutable objects as defaults
                  numAmps=3,
@@ -96,6 +99,7 @@ class DetectorWrapper:
                  crosstalk=None,
                  modFunc=None,
                  physicalType="CCD",
+                 cameraBuilder=None
                  ):
         # note that (0., 0.) for the reference position is the center of the
         # first pixel
@@ -109,18 +113,8 @@ class DetectorWrapper:
         self.pixelSize = lsst.geom.Extent2D(*pixelSize)
         self.ampExtent = lsst.geom.Extent2I(*ampExtent)
         self.plateScale = float(plateScale)
-        self.radialDistortion = float(radialDistortion)
-        self.ampInfo = []
-        for i in range(numAmps):
-            builder = Amplifier.Builder()
-            ampName = "amp %d" % (i + 1,)
-            builder.setName(ampName)
-            builder.setBBox(lsst.geom.Box2I(lsst.geom.Point2I(-1, 1), self.ampExtent))
-            builder.setGain(1.71234e3)
-            builder.setReadNoise(0.521237e2)
-            builder.setReadoutCorner(ReadoutCorner.LL)
-            self.ampInfo.append(builder.finish())
         self.orientation = orientation
+        self.radialDistortion = float(radialDistortion)
 
         # compute TAN_PIXELS transform
         pScaleRad = lsst.geom.arcsecToRad(self.plateScale)
@@ -133,31 +127,45 @@ class DetectorWrapper:
             focalPlaneToField=focalPlaneToField,
             pixelSizeMm=self.pixelSize,
         )
-
+        tanPixelSys = CameraSys(TAN_PIXELS, self.name)
+        actualPixelSys = CameraSys(ACTUAL_PIXELS, self.name)
         self.transMap = {
             FOCAL_PLANE: self.orientation.makePixelFpTransform(self.pixelSize),
-            CameraSys(TAN_PIXELS, self.name): pixelToTanPixel,
-            CameraSys(ACTUAL_PIXELS, self.name): afwGeom.makeRadialTransform([0, 0.95, 0.01]),
+            tanPixelSys: pixelToTanPixel,
+            actualPixelSys: afwGeom.makeRadialTransform([0, 0.95, 0.01]),
         }
         if crosstalk is None:
             crosstalk = [[0.0 for _ in range(numAmps)] for _ in range(numAmps)]
         self.crosstalk = crosstalk
         self.physicalType = physicalType
+        if cameraBuilder is None:
+            cameraBuilder = Camera.Builder("CameraForDetectorWrapper")
+        self.ampList = []
+        for i in range(numAmps):
+            ampBuilder = Amplifier.Builder()
+            ampName = "amp %d" % (i + 1,)
+            ampBuilder.setName(ampName)
+            ampBuilder.setBBox(lsst.geom.Box2I(lsst.geom.Point2I(-1, 1), self.ampExtent))
+            ampBuilder.setGain(1.71234e3)
+            ampBuilder.setReadNoise(0.521237e2)
+            ampBuilder.setReadoutCorner(ReadoutCorner.LL)
+            self.ampList.append(ampBuilder)
         if modFunc:
             modFunc(self)
-        self.detector = Detector(
-            self.name,
-            self.id,
-            self.type,
-            self.serial,
-            self.bbox,
-            self.ampInfo,
-            self.orientation,
-            self.pixelSize,
-            self.transMap,
-            np.array(self.crosstalk, dtype=np.float32),
-            self.physicalType,
-        )
+        detectorBuilder = cameraBuilder.add(self.name, self.id)
+        detectorBuilder.setType(self.type)
+        detectorBuilder.setSerial(self.serial)
+        detectorBuilder.setPhysicalType(self.physicalType)
+        detectorBuilder.setBBox(self.bbox)
+        detectorBuilder.setOrientation(self.orientation)
+        detectorBuilder.setPixelSize(self.pixelSize)
+        detectorBuilder.setTransformFromPixelsTo(tanPixelSys, self.transMap[tanPixelSys])
+        detectorBuilder.setTransformFromPixelsTo(actualPixelSys, self.transMap[actualPixelSys])
+        detectorBuilder.setCrosstalk(np.array(self.crosstalk, dtype=np.float32))
+        for ampBuilder in self.ampList:
+            detectorBuilder.append(ampBuilder)
+        camera = cameraBuilder.finish()
+        self.detector = camera[self.name]
 
 
 class CameraWrapper:
@@ -372,7 +380,7 @@ class CameraWrapper:
                 {'lincoeffs': linCoeffs, 'lintype': str(ampData['lin_type']),
                  'linthresh': float(ampData['lin_thresh']), 'linmax': float(ampData['lin_max']),
                  'linunits': str(ampData['lin_units'])}
-            ampList.append(builder.finish())
+            ampList.append(builder)
         return ampListDict
 
     def makeTestRepositoryItems(self, isLsstLike=False):
