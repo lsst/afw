@@ -69,6 +69,9 @@ def addDetectorBuilderFromConfig(cameraBuilder, detectorConfig, amplifiers, foca
     for ampBuilder in amplifiers:
         detectorBuilder.append(ampBuilder)
 
+    for ampBuilder in amplifiers:
+        detectorBuilder.append(ampBuilder)
+
     transforms = makeTransformDict(detectorConfig.transformDict.transforms)
 
     # It seems the C++ code has always assumed that the "nativeSys" for
@@ -80,6 +83,17 @@ def addDetectorBuilderFromConfig(cameraBuilder, detectorConfig, amplifiers, foca
     detectorNativeSysPrefix = cameraSysMap.get(detectorConfig.transformDict.nativeSys, PIXELS)
     assert detectorNativeSysPrefix == PIXELS, "Detectors with nativeSys != PIXELS are not supported."
 
+    # It seems the C++ code has always assumed that the "nativeSys" for
+    # detectors is PIXELS, despite the configs here giving the illusion of
+    # choice.  We'll use PIXELS if the config value is None, and assert that
+    # the value is PIXELS otherwise.  Note that we can't actually get rid of
+    # the nativeSys config option without breaking lots of on-disk camera
+    # configs.
+    detectorNativeSysPrefix = cameraSysMap.get(detectorConfig.transformDict.nativeSys, PIXELS)
+    assert detectorNativeSysPrefix == PIXELS, "Detectors with nativeSys != PIXELS are not supported."
+
+    for toSys, transform in transforms.items():
+        detectorBuilder.setTransformFromPixelsTo(toSys, transform)
     tanPixSys = CameraSys(TAN_PIXELS, detectorConfig.name)
     transforms[tanPixSys] = makePixelToTanPixel(
         bbox=detectorBuilder.getBBox(),

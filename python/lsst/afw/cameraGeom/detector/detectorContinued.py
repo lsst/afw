@@ -35,6 +35,7 @@ DetectorTypeNameValDict = {val: key for key, val in
                            DetectorTypeValNameDict.items()}
 
 
+
 @continueClass  # noqa: F811
 class DetectorBase:
     def __iter__(self):
