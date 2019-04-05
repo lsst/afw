@@ -34,55 +34,22 @@ namespace {
 // Set this as a function to ensure FOCAL_PLANE is defined before use.
 CameraSys const getNativeCameraSys() { return FOCAL_PLANE; }
 
-/**
- * Get a transform from one TransformMap
- *
- * `fromSys` and `toSys` must both be present in the same TransformMap, but that TransformMap may be from
- *    any detector or this camera object.
- *
- * @param[in] fromSys  Camera coordinate system of input points
- * @param[in] toSys  Camera coordinate system of returned points
- * @returns an afw::geom::TransformPoint2ToPoint2 that transforms from `fromSys` to `toSys` in the forward
- *    direction
- *
- * @throws lsst::pex::exceptions::InvalidParameter if no transform is available.  This includes the case that
- *    `fromSys` specifies a known detector and `toSys` specifies any other detector (known or unknown)
- * @throws KeyError if an unknown detector is specified
- */
-std::shared_ptr<afw::geom::TransformPoint2ToPoint2> getTransformFromOneTransformMap(
-    Camera const &camera, CameraSys const &fromSys, CameraSys const &toSys) {
-
-    if (fromSys.hasDetectorName()) {
-        auto det = camera[fromSys.getDetectorName()];
-        return det->getTransformMap()->getTransform(fromSys, toSys);
-    } else if (toSys.hasDetectorName()) {
-        auto det = camera[toSys.getDetectorName()];
-        return det->getTransformMap()->getTransform(fromSys, toSys);
-    } else {
-        return camera.getTransformMap()->getTransform(fromSys, toSys);
-    }
-}
-
-} // anonymous
-
-Camera::Camera(std::string const &name, DetectorList const &detectorList,
-               std::shared_ptr<TransformMap> transformMap, std::string const &pupilFactoryName) :
-    DetectorCollection(detectorList),
-    _name(name), _transformMap(std::move(transformMap)), _pupilFactoryName(pupilFactoryName)
-    {}
+} // anonymoous
 
 Camera::~Camera() noexcept = default;
 
+Camera::Builder Camera::rebuild() const {
+    return Camera::Builder(*this);
+}
+
 Camera::DetectorList Camera::findDetectors(lsst::geom::Point2D const &point,
                                            CameraSys const &cameraSys) const {
-    auto transform = getTransformFromOneTransformMap(*this, cameraSys, getNativeCameraSys());
-    auto nativePoint = transform->applyForward(point);
+    auto nativePoint = transform(point, cameraSys, getNativeCameraSys());
 
     DetectorList detectorList;
     for (auto const &item : getIdMap()) {
         auto detector = item.second;
-        auto nativeToPixels = detector->getTransform(getNativeCameraSys(), PIXELS);
-        auto pointPixels = nativeToPixels->applyForward(nativePoint);
+        auto pointPixels = detector->transform(nativePoint, getNativeCameraSys(), PIXELS);
         if (lsst::geom::Box2D(detector->getBBox()).contains(pointPixels)) {
             detectorList.push_back(std::move(detector));
         }
@@ -92,15 +59,12 @@ Camera::DetectorList Camera::findDetectors(lsst::geom::Point2D const &point,
 
 std::vector<Camera::DetectorList> Camera::findDetectorsList(std::vector<lsst::geom::Point2D> const &pointList,
                                                             CameraSys const &cameraSys) const {
-    auto transform = getTransformFromOneTransformMap(*this, cameraSys, getNativeCameraSys());
     std::vector<DetectorList> detectorListList(pointList.size());
-
-    auto nativePointList = transform->applyForward(pointList);
+    auto nativePointList = transform(pointList, cameraSys, getNativeCameraSys());
 
     for (auto const &item: getIdMap()) {
         auto const &detector = item.second;
-        auto nativeToPixels = detector->getTransform(getNativeCameraSys(), PIXELS);
-        auto pointPixelsList = nativeToPixels->applyForward(nativePointList);
+        auto pointPixelsList = detector->transform(nativePointList, getNativeCameraSys(), PIXELS);
         for (std::size_t i = 0; i < pointPixelsList.size(); ++i) {
             auto const &pointPixels = pointPixelsList[i];
             if (lsst::geom::Box2D(detector->getBBox()).contains(pointPixels)) {
@@ -113,25 +77,7 @@ std::vector<Camera::DetectorList> Camera::findDetectorsList(std::vector<lsst::ge
 
 std::shared_ptr<afw::geom::TransformPoint2ToPoint2> Camera::getTransform(CameraSys const &fromSys,
                                                                          CameraSys const &toSys) const {
-    try {
-        return getTransformMap()->getTransform(fromSys, toSys);
-    } catch (pex::exceptions::InvalidParameterError &) {}
-
-    // If the Camera was constructed after DM-14980 using the makeCamera*
-    // methods in cameraFactory.py, the Camera and all Detectors share a
-    // single TransformMap that knows about all of the coordinate systems. In
-    // that case the above call should succeed (unless the requested
-    // coordinate systems are totally bogus).
-    //
-    // But if someone built this Camera by hand, the Detectors will know about
-    // only the coordinate systems associated with them, while the Camera
-    // itself only knows about coordinate systems that aren't associated with
-    // any particular Detector.  In that case we need to (in general) look up
-    // transforms in multiple places and connect them using the "native camera
-    // sys" that's known to everything (at least usually FOCAL_PLANE).
-    auto fromSysToNative = getTransformFromOneTransformMap(*this, fromSys, getNativeCameraSys());
-    auto nativeToToSys = getTransformFromOneTransformMap(*this, getNativeCameraSys(), toSys);
-    return fromSysToNative->then(*nativeToToSys);
+    return getTransformMap()->getTransform(fromSys, toSys);
 }
 
 lsst::geom::Point2D Camera::transform(lsst::geom::Point2D const &point, CameraSys const &fromSys,
@@ -145,6 +91,21 @@ std::vector<lsst::geom::Point2D> Camera::transform(std::vector<lsst::geom::Point
                                                    CameraSys const &toSys) const {
     auto transform = getTransform(fromSys, toSys);
     return transform->applyForward(points);
+}
+
+std::shared_ptr<Detector::InCameraBuilder> Camera::makeDetectorBuilder(std::string const & name, int id) {
+    return std::shared_ptr<Detector::InCameraBuilder>(new Detector::InCameraBuilder(name, id));
+}
+
+std::shared_ptr<Detector::InCameraBuilder> Camera::makeDetectorBuilder(Detector const & detector) {
+    return std::shared_ptr<Detector::InCameraBuilder>(new Detector::InCameraBuilder(detector));
+}
+
+
+std::vector<TransformMap::Connection> const & Camera::getDetectorBuilderConnections(
+    Detector::InCameraBuilder const & detector
+) {
+    return detector._connections;
 }
 
 
@@ -185,6 +146,16 @@ private:
 
 } // anonymous
 
+void Camera::write(OutputArchiveHandle& handle) const {
+    DetectorCollection::write(handle);
+    auto const & keys = PersistenceHelper::get();
+    auto cat = handle.makeCatalog(keys.schema);
+    auto record = cat.addNew();
+    record->set(keys.name, getName());
+    record->set(keys.pupilFactoryName, getPupilFactoryName());
+    record->set(keys.transformMap, handle.put(getTransformMap()));
+    handle.saveCatalog(cat);
+}
 
 class Camera::Factory : public table::io::PersistableFactory {
 public:
@@ -203,6 +174,13 @@ public:
 
 Camera::Factory const Camera::Factory::registration;
 
+Camera::Camera(std::string const & name, DetectorList const & detectors,
+               std::shared_ptr<TransformMap const> transformMap, std::string const & pupilFactoryName) :
+    DetectorCollection(detectors),
+    _name(name),
+    _pupilFactoryName(pupilFactoryName),
+    _transformMap(transformMap)
+{}
 
 Camera::Camera(table::io::InputArchive const & archive, table::io::CatalogVector const & catalogs) :
     DetectorCollection(archive, catalogs)
@@ -220,18 +198,130 @@ Camera::Camera(table::io::InputArchive const & archive, table::io::CatalogVector
     _transformMap = archive.get<TransformMap>(record.get(keys.transformMap));
 }
 
-
 std::string Camera::getPersistenceName() const { return "Camera"; }
 
-void Camera::write(OutputArchiveHandle& handle) const {
-    DetectorCollection::write(handle);
-    auto const & keys = PersistenceHelper::get();
-    auto cat = handle.makeCatalog(keys.schema);
-    auto record = cat.addNew();
-    record->set(keys.name, getName());
-    record->set(keys.pupilFactoryName, getPupilFactoryName());
-    record->set(keys.transformMap, handle.put(getTransformMap()));
-    handle.saveCatalog(cat);
+
+Camera::Builder::Builder(std::string const & name) : _name(name) {}
+
+Camera::Builder::Builder(Camera const & camera) :
+    _name(camera.getName()),
+    _pupilFactoryName(camera.getPupilFactoryName())
+{
+    // Add Detector Builders for all Detectors; does not (yet) include
+    // coordinate transform information.
+    for (auto const & pair : camera.getIdMap()) {
+        BaseCollection::add(Camera::makeDetectorBuilder(*pair.second));
+    }
+    // Iterate over connections in TransformMap, distributing them between the
+    // Camera Builder and the Detector Builders.
+    for (auto const & connection : camera.getTransformMap()->getConnections()) {
+        // asserts below are on Detector, Camera, and TransformMap invariants:
+        //  - Connections should always be from native sys to something else.
+        //  - The only connections between full-camera and per-detector sys
+        //    should be from the camera native sys (FOCAL_PLANE) to the
+        //    detector native sys (PIXELS).
+        //  - When TransformMap standardizes connections, it should maintain
+        //    these directions, as that's consistent with "pointing away" from
+        //    the overall reference sys (the camera native sys).
+        if (connection.fromSys.hasDetectorName()) {
+            assert(connection.toSys.getDetectorName() == connection.fromSys.getDetectorName());
+            auto detector = (*this)[connection.fromSys.getDetectorName()];
+            assert(connection.fromSys == detector->getNativeCoordSys());
+            detector->setTransformFromPixelsTo(CameraSysPrefix(connection.toSys.getSysName()),
+                                               connection.transform);
+        } else {
+            assert(connection.fromSys == getNativeCameraSys());
+            if (!connection.toSys.hasDetectorName()) {
+                _connections.push_back(connection);
+            }
+            // We ignore the FOCAL_PLANE to PIXELS transforms transforms, as
+            // those are always regenerated from the Orientation when we
+            // rebuild the Camera.
+        }
+    }
+}
+
+std::shared_ptr<Camera const> Camera::Builder::finish() const {
+    // Make a big vector of all coordinate transform connections;
+    // start with general transforms for the camera as a whole:
+    std::vector<TransformMap::Connection> connections(_connections);
+    // Loop over detectors and add the transforms from FOCAL_PLANE
+    // to PIXELS (via the Orientation), and then any extra transforms
+    // from PIXELS to other things.
+    for (auto const & pair : getIdMap()) {
+        auto const & detectorBuilder = *pair.second;
+        connections.push_back(
+            TransformMap::Connection{
+                detectorBuilder.getOrientation().makeFpPixelTransform(detectorBuilder.getPixelSize()),
+                getNativeCameraSys(),
+                detectorBuilder.getNativeCoordSys()
+            }
+        );
+        connections.insert(connections.end(),
+                           getDetectorBuilderConnections(detectorBuilder).begin(),
+                           getDetectorBuilderConnections(detectorBuilder).end());
+    }
+    // Make a single big TransformMap.
+    auto transformMap = TransformMap::make(getNativeCameraSys(), connections);
+    // Make actual Detector objects, giving each the full TransformMap.
+    DetectorList detectors;
+    detectors.reserve(size());
+    for (auto const & pair : getIdMap()) {
+        auto const & detectorBuilder = *pair.second;
+        detectors.push_back(detectorBuilder.finish(transformMap));
+    }
+    return std::shared_ptr<Camera>(new Camera(_name, detectors, std::move(transformMap), _pupilFactoryName));
+}
+
+
+namespace {
+
+template <typename Iter>
+Iter findConnection(Iter first, Iter last, CameraSys const & toSys) {
+    return std::find_if(
+        first, last,
+        [&toSys](auto const & connection) {
+            return connection.toSys == toSys;
+        }
+    );
+}
+
+} // anonymous
+
+void Camera::Builder::setTransformFromFocalPlaneTo(
+    CameraSys const & toSys,
+    std::shared_ptr<afw::geom::TransformPoint2ToPoint2 const> transform
+) {
+    if (toSys.hasDetectorName()) {
+        throw LSST_EXCEPT(
+            pex::exceptions::LogicError,
+            (boost::format("%s should be added to Detector %s, not Camera") %
+             toSys.getSysName() % toSys.getDetectorName()).str()
+        );
+    }
+    auto iter = findConnection(_connections.begin(), _connections.end(), toSys);
+    if (iter == _connections.end()) {
+        _connections.push_back(
+            TransformMap::Connection{transform, getNativeCameraSys(), toSys}
+        );
+    } else {
+        iter->transform = transform;
+    }
+}
+
+bool Camera::Builder::discardTransformFromFocalPlaneTo(CameraSys const & toSys) {
+    auto iter = findConnection(_connections.begin(), _connections.end(), toSys);
+    if (iter != _connections.end()) {
+        _connections.erase(iter);
+        return true;
+    }
+    return false;
+}
+
+std::shared_ptr<Detector::InCameraBuilder> Camera::Builder::add(std::string const & name, int id) {
+    auto detector = makeDetectorBuilder(name, id);
+    BaseCollection::add(detector);
+    return detector;
 }
 
 } // namespace cameraGeom

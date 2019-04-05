@@ -25,6 +25,7 @@ __all__ = ["Detector"]
 from lsst.utils import continueClass
 from .detector import Detector
 
+
 @continueClass  # noqa: F811
 class Detector:
     def __iter__(self):

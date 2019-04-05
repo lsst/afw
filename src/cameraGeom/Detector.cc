@@ -1,9 +1,10 @@
+/// -*- lsst-c++ -*-
 /*
- * LSST Data Management System
- * Copyright 2014 LSST Corporation.
- *
- * This product includes software developed by the
- * LSST Project (http://www.lsst.org/).
+ * Developed for the LSST Data Management System.
+ * This product includes software developed by the LSST Project
+ * (https://www.lsst.org).
+ * See the COPYRIGHT file at the top-level directory of this distribution
+ * for details of code ownership.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,13 +16,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the LSST License Statement and
- * the GNU General Public License along with this program.  If not,
- * see <http://www.lsstcorp.org/LegalNotices/>.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 #include <sstream>
 #include <utility>
+#include <unordered_set>
 
 #include "lsst/afw/table/io/InputArchive.h"
 #include "lsst/afw/table/io/OutputArchive.h"
@@ -34,66 +34,33 @@ namespace lsst {
 namespace afw {
 namespace cameraGeom {
 
-Detector::Detector(std::string const &name, int id, DetectorType type, std::string const &serial,
-                   lsst::geom::Box2I const &bbox,
-                   std::vector<std::shared_ptr<Amplifier const>> const &amplifiers,
-                   Orientation const &orientation, lsst::geom::Extent2D const &pixelSize,
-                   TransformMap::Transforms const &transforms, CrosstalkMatrix const &crosstalk,
-                   std::string const &physicalType) :
-    Detector(name, id, type, serial, bbox, amplifiers, orientation, pixelSize,
-             TransformMap::make(CameraSys(PIXELS, name), transforms),
-             crosstalk, physicalType)
-{}
+namespace {
 
-Detector::Detector(std::string const &name, int id, DetectorType type, std::string const &serial,
-                   lsst::geom::Box2I const &bbox,
-                   std::vector<std::shared_ptr<Amplifier const>> const &amplifiers,
-                   Orientation const &orientation, lsst::geom::Extent2D const &pixelSize,
-                   std::shared_ptr<TransformMap const> transformMap, CrosstalkMatrix const &crosstalk,
-                   std::string const &physicalType) :
-    _name(name),
-    _id(id),
-    _type(type),
-    _serial(serial),
-    _bbox(bbox),
-    _amplifiers(amplifiers),
-    _amplifierMap(),
-    _orientation(orientation),
-    _pixelSize(pixelSize),
-    _nativeSys(CameraSys(PIXELS, name)),
-    _transformMap(std::move(transformMap)),
-    _crosstalk(crosstalk),
-    _physicalType(physicalType)
-{
-    // populate _amplifierMap
-    for (auto const & amp : _amplifiers) {
-        _amplifierMap.insert(std::make_pair(amp->getName(), amp));
+template <typename Iter>
+Iter findAmpIterByName(Iter first, Iter last, std::string const & name) {
+    // Given that the number of amplifiers is generally quite small (even LSST
+    // only has 16), we just do a linear search in the vector, as adding a map
+    // of some kind is definitely more storage and code complexity, without
+    // necessarily being any faster.
+    auto iter = std::find_if(first, last, [&name](auto const & ptr) { return ptr->getName() == name; });
+    if (iter == last) {
+        throw LSST_EXCEPT(
+            pex::exceptions::InvalidParameterError,
+            (boost::format("Amplifier with name %s not found.") % name).str()
+        );
     }
-    if (_amplifierMap.size() != _amplifiers.size()) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterError,
-                          "Invalid ampInfoCatalog: not all amplifier names are unique");
-    }
+    return iter;
+}
 
-    // ensure crosstalk coefficients matrix is square
-    if (hasCrosstalk()) {
-        auto shape = _crosstalk.getShape();
-        assert(shape.size() == 2);  // we've declared this as a 2D array
-        if (shape[0] != shape[1]) {
-            std::ostringstream os;
-            os << "Non-square crosstalk matrix: " << _crosstalk << " for detector \"" << _name << "\"";
-            throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
-        }
-        if (shape[0] != _amplifiers.size()) {
-            std::ostringstream os;
-            os << "Wrong size crosstalk matrix: " << _crosstalk << " for detector \"" << _name << "\"";
-            throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
-        }
-    }
+} // anonymous
+
+std::shared_ptr<Detector::PartialRebuilder> Detector::rebuild() const {
+    return std::make_shared<PartialRebuilder>(*this);
 }
 
 std::vector<lsst::geom::Point2D> Detector::getCorners(CameraSys const &cameraSys) const {
-    std::vector<lsst::geom::Point2D> nativeCorners = lsst::geom::Box2D(_bbox).getCorners();
-    auto nativeToCameraSys = _transformMap->getTransform(_nativeSys, cameraSys);
+    std::vector<lsst::geom::Point2D> nativeCorners = lsst::geom::Box2D(getBBox()).getCorners();
+    auto nativeToCameraSys = _transformMap->getTransform(getNativeCoordSys(), cameraSys);
     return nativeToCameraSys->applyForward(nativeCorners);
 }
 
@@ -102,32 +69,13 @@ std::vector<lsst::geom::Point2D> Detector::getCorners(CameraSysPrefix const &cam
 }
 
 lsst::geom::Point2D Detector::getCenter(CameraSys const &cameraSys) const {
-    auto ctrPix = lsst::geom::Box2D(_bbox).getCenter();
+    auto ctrPix = lsst::geom::Box2D(getBBox()).getCenter();
     auto transform = getTransform(PIXELS, cameraSys);
     return transform->applyForward(ctrPix);
 }
 
 lsst::geom::Point2D Detector::getCenter(CameraSysPrefix const &cameraSysPrefix) const {
     return getCenter(makeCameraSys(cameraSysPrefix));
-}
-
-Amplifier const & Detector::operator[](std::string const &name) const { return *_get(name); }
-
-std::shared_ptr<Amplifier const> Detector::_get(int i) const {
-    if (i < 0) {
-        i = _amplifiers.size() + i;
-    };
-    return _amplifiers.at(i);
-}
-
-std::shared_ptr<Amplifier const> Detector::_get(std::string const &name) const {
-    auto ampIter = _amplifierMap.find(name);
-    if (ampIter == _amplifierMap.end()) {
-        std::ostringstream os;
-        os << "Unknown amplifier \"" << name << "\"";
-        throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
-    }
-    return ampIter->second;
 }
 
 bool Detector::hasTransform(CameraSys const &cameraSys) const { return _transformMap->contains(cameraSys); }
@@ -152,6 +100,40 @@ template <typename FromSysT, typename ToSysT>
 std::vector<lsst::geom::Point2D> Detector::transform(std::vector<lsst::geom::Point2D> const &points,
                                                      FromSysT const &fromSys, ToSysT const &toSys) const {
     return _transformMap->transform(points, makeCameraSys(fromSys), makeCameraSys(toSys));
+}
+
+std::shared_ptr<Amplifier const> Detector::operator[](std::string const &name) const {
+    return *findAmpIterByName(_amplifiers.begin(), _amplifiers.end(), name);
+}
+
+Detector::Detector(Fields fields, std::shared_ptr<TransformMap const> transformMap,
+                   std::vector<std::shared_ptr<Amplifier const>> &&amplifiers) :
+    _fields(std::move(fields)), _transformMap(std::move(transformMap)), _amplifiers(std::move(amplifiers))
+{
+    // Make sure amplifier names are unique.
+    std::unordered_set<std::string> amplifierNames;
+    for (auto const &ptr : _amplifiers) {
+        if (!amplifierNames.insert(ptr->getName()).second) {
+            throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
+                              (boost::format("Multiple amplifiers with name %s") % ptr->getName()).str());
+        }
+    }
+    // Ensure crosstalk coefficients matrix has the right shape.
+    if (hasCrosstalk()) {
+        auto crosstalk = getCrosstalk();
+        auto shape = crosstalk.getShape();
+        assert(shape.size() == 2);  // we've declared this as a 2D array
+        if (shape[0] != shape[1]) {
+            std::ostringstream os;
+            os << "Non-square crosstalk matrix: " << crosstalk << " for detector \"" << getName() << "\"";
+            throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
+        }
+        if (shape[0] != _amplifiers.size()) {
+            std::ostringstream os;
+            os << "Wrong size crosstalk matrix: " << crosstalk << " for detector \"" << getName() << "\"";
+            throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
+        }
+    }
 }
 
 namespace {
@@ -236,11 +218,12 @@ private:
 
 };
 
+} // anonymous
 
-class DetectorFactory : public table::io::PersistableFactory {
+class Detector::Factory : public table::io::PersistableFactory {
 public:
 
-    DetectorFactory() : PersistableFactory("Detector") {}
+    Factory() : PersistableFactory("Detector") {}
 
     std::shared_ptr<table::io::Persistable> read(InputArchive const& archive,
                                                  CatalogVector const& catalogs) const override {
@@ -267,14 +250,12 @@ public:
 
         // get values for not-always-present fields if present
         const auto physicalType = keys.physicalType.isValid() ? record.get(keys.physicalType) : "";
-
-        return std::make_shared<Detector>(
+        Fields fields = {
             record.get(keys.name),
             record.get(keys.id),
             static_cast<DetectorType>(record.get(keys.type)),
             record.get(keys.serial),
             record.get(keys.bbox),
-            amps,
             Orientation(
                 record.get(keys.fpPosition),
                 record.get(keys.refPoint),
@@ -283,17 +264,24 @@ public:
                 record.get(keys.roll)
             ),
             lsst::geom::Extent2D(record.get(keys.pixelSize)),
-            archive.get<TransformMap>(record.get(keys.transformMap)),
             crosstalk,
             physicalType
+        };
+
+        return std::shared_ptr<Detector>(
+            new Detector(
+                std::move(fields),
+                archive.get<TransformMap>(record.get(keys.transformMap)),
+                std::move(amps)
+            )
         );
     }
 
+    static Factory const registration;
+
 };
 
-DetectorFactory const registration;
-
-} // anonymous
+Detector::Factory const Detector::Factory::registration;
 
 std::string Detector::getPersistenceName() const {
     return "Detector";
@@ -342,6 +330,134 @@ void Detector::write(OutputArchiveHandle& handle) const {
         amp->toRecord(*record);
     }
     handle.saveCatalog(ampCat);
+}
+
+
+std::shared_ptr<Amplifier::Builder> Detector::Builder::operator[](std::string const &name) const {
+    return *findAmpIterByName(_amplifiers.begin(), _amplifiers.end(), name);
+}
+
+void Detector::Builder::append(std::shared_ptr<Amplifier::Builder> builder) {
+    _amplifiers.push_back(std::move(builder));
+}
+
+std::vector<std::shared_ptr<Amplifier::Builder>> Detector::Builder::rebuildAmplifiers(
+    Detector const & detector
+) {
+    std::vector<std::shared_ptr<Amplifier::Builder>> result;
+    result.reserve(detector.size());
+    for (auto const & ampPtr : detector) {
+        result.push_back(std::make_shared<Amplifier::Builder>(*ampPtr));
+    }
+    return result;
+}
+
+Detector::Builder::Builder(std::string const & name, int id) {
+    _fields.name = name;
+    _fields.id = id;
+}
+
+std::vector<std::shared_ptr<Amplifier const>> Detector::Builder::finishAmplifiers() const {
+    std::vector<std::shared_ptr<Amplifier const>> result;
+    result.reserve(_amplifiers.size());
+    for (auto const & ampBuilderPtr : _amplifiers) {
+        result.push_back(ampBuilderPtr->finish());
+    }
+    return result;
+}
+
+
+Detector::PartialRebuilder::PartialRebuilder(Detector const & detector) :
+    Builder(detector._fields, rebuildAmplifiers(detector)),
+    _transformMap(detector.getTransformMap())
+{}
+
+std::shared_ptr<Detector const> Detector::PartialRebuilder::finish() const {
+    auto amplifiers = finishAmplifiers();
+    return std::shared_ptr<Detector>(new Detector(getFields(), _transformMap, std::move(amplifiers)));
+}
+
+
+namespace {
+
+template <typename Iter>
+Iter findConnection(Iter first, Iter last, CameraSys const & toSys) {
+    return std::find_if(
+        first, last,
+        [&toSys](auto const & connection) {
+            return connection.toSys == toSys;
+        }
+    );
+}
+
+} // anonymous
+
+
+void Detector::InCameraBuilder::setTransformFromPixelsTo(
+    CameraSysPrefix const & toSys,
+    std::shared_ptr<afw::geom::TransformPoint2ToPoint2 const> transform
+) {
+    return setTransformFromPixelsTo(makeCameraSys(toSys), std::move(transform));
+}
+
+void Detector::InCameraBuilder::setTransformFromPixelsTo(
+    CameraSys const & toSys,
+    std::shared_ptr<afw::geom::TransformPoint2ToPoint2 const> transform
+) {
+    if (toSys.getDetectorName() != getName()) {
+        throw LSST_EXCEPT(
+            pex::exceptions::InvalidParameterError,
+            (boost::format("Cannot add coordinate system for detector '%s' to detector '%s'.") %
+             toSys.getDetectorName() % getName()).str()
+        );
+    }
+    auto iter = findConnection(_connections.begin(), _connections.end(), toSys);
+    if (iter == _connections.end()) {
+        _connections.push_back(
+            TransformMap::Connection{transform, getNativeCoordSys(), toSys}
+        );
+    } else {
+        iter->transform = transform;
+    }
+}
+
+bool Detector::InCameraBuilder::discardTransformFromPixelsTo(CameraSysPrefix const & toSys) {
+    return discardTransformFromPixelsTo(makeCameraSys(toSys));
+}
+
+bool Detector::InCameraBuilder::discardTransformFromPixelsTo(CameraSys const & toSys) {
+    if (toSys.getDetectorName() != getName()) {
+        throw LSST_EXCEPT(
+            pex::exceptions::InvalidParameterError,
+            (boost::format("Cannot add coordinate system for detector '%s' to detector '%s'.") %
+             toSys.getDetectorName() % getName()).str()
+        );
+    }
+    auto iter = findConnection(_connections.begin(), _connections.end(), toSys);
+    if (iter != _connections.end()) {
+        _connections.erase(iter);
+        return true;
+    }
+    return false;
+}
+
+
+Detector::InCameraBuilder::InCameraBuilder(Detector const & detector) :
+    Builder(detector.getFields(), rebuildAmplifiers(detector))
+{}
+
+Detector::InCameraBuilder::InCameraBuilder(std::string const & name, int id) :
+    Builder(name, id)
+{}
+
+
+std::shared_ptr<Detector const> Detector::InCameraBuilder::finish(
+    std::shared_ptr<TransformMap const> transformMap
+) const {
+    auto amplifiers = finishAmplifiers();
+    return std::shared_ptr<Detector const>(
+        new Detector(getFields(), std::move(transformMap), std::move(amplifiers))
+    );
 }
 
 

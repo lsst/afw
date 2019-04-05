@@ -23,11 +23,12 @@
 #include <memory>
 #include <string>
 
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
+#include "pybind11/pybind11.h"
+#include "pybind11/stl.h"
 
 #include "ndarray/pybind11.h"
 
+#include "lsst/utils/python.h"
 #include "lsst/afw/cameraGeom/CameraSys.h"
 #include "lsst/afw/cameraGeom/Orientation.h"
 #include "lsst/geom.h"
@@ -42,6 +43,16 @@ namespace lsst {
 namespace afw {
 namespace cameraGeom {
 
+namespace {
+
+using PyDetectorBase = py::class_<DetectorBase, std::shared_ptr<DetectorBase>>;
+using PyDetector = py::class_<Detector, DetectorBase, std::shared_ptr<Detector>>;
+using PyDetectorBuilder = py::class_<Detector::Builder, DetectorBase, std::shared_ptr<Detector::Builder>>;
+using PyDetectorPartialRebuilder = py::class_<Detector::PartialRebuilder, Detector::Builder,
+                                              std::shared_ptr<Detector::PartialRebuilder>>;
+using PyDetectorInCameraBuilder = py::class_<Detector::InCameraBuilder, Detector::Builder,
+                                             std::shared_ptr<Detector::InCameraBuilder>>;
+
 // Declare Detector methods overloaded on one coordinate system class
 template <typename SysT, typename PyClass>
 void declare1SysMethods(PyClass &cls) {
@@ -51,8 +62,7 @@ void declare1SysMethods(PyClass &cls) {
     cls.def("getCenter", (lsst::geom::Point2D(Detector::*)(SysT const &) const) & Detector::getCenter,
             "cameraSys"_a);
     cls.def("hasTransform", (bool (Detector::*)(SysT const &) const) & Detector::hasTransform, "cameraSys"_a);
-    cls.def("makeCameraSys", (CameraSys const (Detector::*)(SysT const &) const) & Detector::makeCameraSys,
-            "cameraSys"_a);
+
 }
 
 // Declare Detector methods templated on two coordinate system classes
@@ -74,67 +84,128 @@ void declare2SysMethods(PyClass &cls) {
             "points"_a, "fromSys"_a, "toSys"_a);
 }
 
-PYBIND11_MODULE(detector, mod) {
-    /* Module level */
-    py::class_<Detector, std::shared_ptr<Detector>> cls(mod, "Detector");
+void declareDetectorBase(py::module & mod) {
+    PyDetectorBase cls(mod, "DetectorBase");
+    cls.def("getName", &DetectorBase::getName);
+    cls.def("getId", &DetectorBase::getId);
+    cls.def("getType", &DetectorBase::getType);
+    cls.def("getPhysicalType", &DetectorBase::getPhysicalType);
+    cls.def("getSerial", &DetectorBase::getSerial);
+    cls.def("getBBox", &DetectorBase::getBBox);
+    cls.def("getOrientation", &DetectorBase::getOrientation);
+    cls.def("getPixelSize", &DetectorBase::getPixelSize);
+    cls.def("hasCrosstalk", &DetectorBase::hasCrosstalk);
+    cls.def("getCrosstalk", &DetectorBase::getCrosstalk);
+    cls.def("getNativeCoordSys", &DetectorBase::getNativeCoordSys);
+    cls.def("makeCameraSys",
+            py::overload_cast<CameraSys const &>(&DetectorBase::makeCameraSys, py::const_),
+            "cameraSys"_a);
+    cls.def("makeCameraSys",
+            py::overload_cast<CameraSysPrefix const &>(&DetectorBase::makeCameraSys, py::const_),
+            "cameraSysPrefix"_a);
+}
 
-    /* Member types and enums */
-    py::enum_<DetectorType>(mod, "DetectorType")
-            .value("SCIENCE", DetectorType::SCIENCE)
-            .value("FOCUS", DetectorType::FOCUS)
-            .value("GUIDER", DetectorType::GUIDER)
-            .value("WAVEFRONT", DetectorType::WAVEFRONT)
-            .export_values();
+void declareDetectorBuilder(PyDetector & parent);
+void declareDetectorPartialRebuilder(PyDetector & parent);
+void declareDetectorInCameraBuilder(PyDetector & parent);
 
-    /* Constructors */
-    cls.def(py::init<std::string const &, int, DetectorType, std::string const &, lsst::geom::Box2I const &,
-                     std::vector<std::shared_ptr<Amplifier const>> const &, Orientation const &,
-                     lsst::geom::Extent2D const &, TransformMap::Transforms const &,
-                     Detector::CrosstalkMatrix const &, std::string const &>(),
-            "name"_a, "id"_a, "type"_a, "serial"_a, "bbox"_a, "amplifiers"_a, "orientation"_a,
-            "pixelSize"_a, "transforms"_a, "crosstalk"_a = Detector::CrosstalkMatrix(),
-            "physicalType"_a = "");
-    cls.def(py::init<std::string const &, int, DetectorType, std::string const &, lsst::geom::Box2I const &,
-                     std::vector<std::shared_ptr<Amplifier const>> const &, Orientation const &,
-                     lsst::geom::Extent2D const &, std::shared_ptr<TransformMap const>,
-                     Detector::CrosstalkMatrix const &, std::string const &>(),
-            "name"_a, "id"_a, "type"_a, "serial"_a, "bbox"_a, "amplifiers"_a, "orientation"_a,
-            "pixelSize"_a, "transformMap"_a, "crosstalk"_a = Detector::CrosstalkMatrix(),
-            "physicalType"_a = "");
-
-    /* Operators */
-    cls.def("__getitem__",
-            (std::shared_ptr<Amplifier const>(Detector::*)(int) const) & Detector::_get, "i"_a);
-    cls.def("__getitem__",
-            (std::shared_ptr<Amplifier const>(Detector::*)(std::string const &) const) &
-                    Detector::_get,
-            "name"_a);
-    cls.def("__len__", &Detector::size);
-
-    /* Members */
-    cls.def("getName", &Detector::getName);
-    cls.def("getId", &Detector::getId);
-    cls.def("getType", &Detector::getType);
-    cls.def("getPhysicalType", &Detector::getPhysicalType);
-    cls.def("getSerial", &Detector::getSerial);
-    cls.def("getBBox", &Detector::getBBox);
-    cls.def("getAmpInfoCatalog", &Detector::getAmplifiers);  // TODO: deprecate this in Python
-    cls.def("getAmplifiers", &Detector::getAmplifiers);
-    cls.def("getOrientation", &Detector::getOrientation);
-    cls.def("getPixelSize", &Detector::getPixelSize);
-    cls.def("hasCrosstalk", &Detector::hasCrosstalk);
-    cls.def("getCrosstalk", &Detector::getCrosstalk);
-    cls.def("getTransformMap", &Detector::getTransformMap);
-    cls.def("getNativeCoordSys", &Detector::getNativeCoordSys);
+void declareDetector(py::module & mod) {
+    PyDetector cls(mod, "Detector");
+    declareDetectorBuilder(cls);
+    declareDetectorPartialRebuilder(cls);
+    declareDetectorInCameraBuilder(cls);
+    cls.def("rebuild", &Detector::rebuild);
     declare1SysMethods<CameraSys>(cls);
     declare1SysMethods<CameraSysPrefix>(cls);
     declare2SysMethods<CameraSys, CameraSys>(cls);
     declare2SysMethods<CameraSys, CameraSysPrefix>(cls);
     declare2SysMethods<CameraSysPrefix, CameraSys>(cls);
     declare2SysMethods<CameraSysPrefix, CameraSysPrefix>(cls);
-
+    cls.def("getTransformMap", &Detector::getTransformMap);
+    cls.def("getAmplifiers", &Detector::getAmplifiers);
+    // __iter__ defined in pure-Python extension
+    cls.def("__getitem__",
+            [](Detector const & self, std::ptrdiff_t i) {
+                return self[utils::python::cppIndex(self.size(), i)];
+            },
+            "i"_a);
+    cls.def("__getitem__",
+            py::overload_cast<std::string const &>(&Detector::operator[], py::const_),
+            "name"_a);
+    cls.def("__len__", &Detector::size);
     table::io::python::addPersistableMethods(cls);
 }
+
+void declareDetectorBuilder(PyDetector & parent) {
+    PyDetectorBuilder cls(parent, "Builder");
+    cls.def("setBBox", &Detector::Builder::setBBox);
+    cls.def("setType", &Detector::Builder::setType);
+    cls.def("setSerial", &Detector::Builder::setSerial);
+    cls.def("setPhysicalType", &Detector::Builder::setPhysicalType);
+    cls.def("setCrosstalk", &Detector::Builder::setCrosstalk);
+    cls.def("unsetCrosstalk", &Detector::Builder::unsetCrosstalk);
+    cls.def("getAmplifiers", &Detector::Builder::getAmplifiers);
+    // TODO: __iter__ defined in pure-Python extension
+    cls.def("__getitem__",
+            [](Detector::Builder const & self, std::ptrdiff_t i) {
+                return self[utils::python::cppIndex(self.size(), i)];
+            },
+            "i"_a);
+    cls.def("__getitem__",
+            py::overload_cast<std::string const &>(&Detector::Builder::operator[], py::const_),
+            "name"_a);
+    cls.def("append", &Detector::Builder::append);
+    cls.def("clear", &Detector::Builder::clear);
+    cls.def("__len__", &Detector::Builder::size);
+}
+
+void declareDetectorPartialRebuilder(PyDetector & parent) {
+    PyDetectorPartialRebuilder cls(parent, "PartialRebuilder");
+    cls.def(py::init<Detector const &>(), "detector"_a);
+    cls.def("finish", &Detector::PartialRebuilder::finish);
+}
+
+void declareDetectorInCameraBuilder(PyDetector & parent) {
+    PyDetectorInCameraBuilder cls(parent, "InCameraBuilder");
+    cls.def("setOrientation", &Detector::InCameraBuilder::setOrientation);
+    cls.def("setPixelSize", &Detector::InCameraBuilder::setPixelSize);
+    cls.def("setTransformFromPixelsTo",
+            py::overload_cast<CameraSysPrefix const &,
+                              std::shared_ptr<afw::geom::TransformPoint2ToPoint2 const>>(
+                &Detector::InCameraBuilder::setTransformFromPixelsTo
+            ),
+            "toSys"_a, "transform"_a);
+    cls.def("setTransformFromPixelsTo",
+            py::overload_cast<CameraSys const &,
+                              std::shared_ptr<afw::geom::TransformPoint2ToPoint2 const>>(
+                &Detector::InCameraBuilder::setTransformFromPixelsTo
+            ),
+            "toSys"_a, "transform"_a);
+    cls.def("discardTransformFromPixelsTo",
+            py::overload_cast<CameraSysPrefix const &>(
+                &Detector::InCameraBuilder::discardTransformFromPixelsTo
+            ),
+            "toSys"_a);
+    cls.def("discardTransformFromPixelsTo",
+            py::overload_cast<CameraSys const &>(
+                &Detector::InCameraBuilder::discardTransformFromPixelsTo
+            ),
+            "toSys"_a);
+}
+
+PYBIND11_MODULE(detector, mod) {
+    py::enum_<DetectorType>(mod, "DetectorType")
+            .value("SCIENCE", DetectorType::SCIENCE)
+            .value("FOCUS", DetectorType::FOCUS)
+            .value("GUIDER", DetectorType::GUIDER)
+            .value("WAVEFRONT", DetectorType::WAVEFRONT)
+            ;
+    declareDetectorBase(mod);
+    declareDetector(mod);
+}
+
+
+}  // anonymous
 }  // namespace cameraGeom
 }  // namespace afw
 }  // namespace lsst

@@ -147,7 +147,7 @@ void DetectorCollectionBase<T>::remove(int id) {
 }
 
 template class DetectorCollectionBase<Detector const>;
-
+template class DetectorCollectionBase<Detector::InCameraBuilder>;
 
 namespace {
 
