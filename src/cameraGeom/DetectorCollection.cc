@@ -29,13 +29,52 @@ namespace lsst {
 namespace afw {
 namespace cameraGeom {
 
-DetectorCollection::DetectorCollection(List const & detectorList) {
+template <typename T>
+DetectorCollectionBase<T>::~DetectorCollectionBase() noexcept = default;
+
+template <typename T>
+std::shared_ptr<T> DetectorCollectionBase<T>::operator[](std::string const & name) const {
+    auto det = get(name);
+    if (det == nullptr) {
+        throw LSST_EXCEPT(pex::exceptions::NotFoundError,
+                          (boost::format("Detector with name %s not found") % name).str());
+    }
+    return det;
+}
+
+template <typename T>
+std::shared_ptr<T> DetectorCollectionBase<T>::operator[](int id) const {
+    auto det = get(id);
+    if (det == nullptr) {
+        throw LSST_EXCEPT(pex::exceptions::NotFoundError,
+                          (boost::format("Detector with ID %s not found") % id).str());
+    }
+    return det;
+}
+
+template <typename T>
+std::shared_ptr<T> DetectorCollectionBase<T>::get(std::string const & name, std::shared_ptr<T> def) const {
+    auto i = _nameDict.find(name);
+    if (i == _nameDict.end()) {
+        return def;
+    }
+    return i->second;
+}
+
+template <typename T>
+std::shared_ptr<T> DetectorCollectionBase<T>::get(int id, std::shared_ptr<T> def) const {
+    auto i = _idDict.find(id);
+    if (i == _idDict.end()) {
+        return def;
+    }
+    return i->second;
+}
+
+template <typename T>
+DetectorCollectionBase<T>::DetectorCollectionBase(List const & detectorList) {
     for (auto const & detector : detectorList) {
         _nameDict[detector->getName()] = detector;
         _idDict[detector->getId()] = detector;
-        for (auto const & corner : detector->getCorners(FOCAL_PLANE)) {
-            _fpBBox.include(corner);
-        }
     }
 
     if (_idDict.size() < detectorList.size()) {
@@ -46,40 +85,78 @@ DetectorCollection::DetectorCollection(List const & detectorList) {
     }
 }
 
-DetectorCollection::~DetectorCollection() noexcept = default;
-
-std::shared_ptr<Detector> DetectorCollection::operator[](std::string const & name) const {
-    auto det = get(name);
-    if (det == nullptr) {
-        throw LSST_EXCEPT(pex::exceptions::NotFoundError, "Detector name not found");
+template <typename T>
+void DetectorCollectionBase<T>::add(std::shared_ptr<T> detector) {
+    auto idIter = _idDict.find(detector->getId());
+    auto nameIter = _nameDict.find(detector->getName());
+    if (idIter == _idDict.end()) {
+        if (nameIter == _nameDict.end()) {
+            try {
+                _idDict.emplace(detector->getId(), detector);
+                _nameDict.emplace(detector->getName(), detector);
+            } catch (...) {
+                _idDict.clear();
+                _nameDict.clear();
+                throw;
+            }
+        } else {
+            throw LSST_EXCEPT(
+                pex::exceptions::RuntimeError,
+                (boost::format("Detector name %s is not unique.") % detector->getName()).str()
+            );
+        }
+    } else {
+        if (nameIter == _nameDict.end()) {
+            throw LSST_EXCEPT(
+                pex::exceptions::RuntimeError,
+                (boost::format("Detector ID %s is not unique.") % detector->getId()).str()
+            );
+        } else {
+            if (nameIter->second != detector) {
+                assert(idIter->second != detector);
+                throw LSST_EXCEPT(
+                    pex::exceptions::RuntimeError,
+                    (boost::format("Detector name %s and ID %s are not unique.") % detector->getName()
+                     % detector->getId()).str()
+                );
+            }
+            // detector is already present; do nothing
+        }
     }
-    return det;
 }
 
-std::shared_ptr<Detector> DetectorCollection::operator[](int id) const {
-    auto det = get(id);
-    if (det == nullptr) {
-        throw LSST_EXCEPT(pex::exceptions::NotFoundError, "Detector id not found");
+template <typename T>
+void DetectorCollectionBase<T>::remove(std::string const & name) {
+    auto nameIter = _nameDict.find(name);
+    if (nameIter == _nameDict.end()) {
+        throw LSST_EXCEPT(
+            pex::exceptions::NotFoundError,
+            (boost::format("Detector with name %s not found.") % name).str()
+        );
     }
-    return det;
+    auto idIter = _idDict.find(nameIter->second->getId());
+    assert(idIter != _idDict.end());
+    _nameDict.erase(nameIter);
+    _idDict.erase(idIter);
 }
 
-std::shared_ptr<Detector> DetectorCollection::get(std::string const & name,
-                                                  std::shared_ptr<Detector> def) const {
-    auto i = _nameDict.find(name);
-    if (i == _nameDict.end()) {
-        return def;
+template <typename T>
+void DetectorCollectionBase<T>::remove(int id) {
+    auto idIter = _idDict.find(id);
+    if (idIter == _idDict.end()) {
+        throw LSST_EXCEPT(
+            pex::exceptions::NotFoundError,
+            (boost::format("Detector with ID %s not found.") % id).str()
+        );
     }
-    return i->second;
+    auto nameIter = _nameDict.find(idIter->second->getName());
+    assert(nameIter != _nameDict.end());
+    _nameDict.erase(nameIter);
+    _idDict.erase(idIter);
 }
 
-std::shared_ptr<Detector> DetectorCollection::get(int id, std::shared_ptr<Detector> def) const {
-    auto i = _idDict.find(id);
-    if (i == _idDict.end()) {
-        return def;
-    }
-    return i->second;
-}
+template class DetectorCollectionBase<Detector const>;
+
 
 namespace {
 
@@ -127,6 +204,16 @@ private:
 } // anonymous
 
 
+DetectorCollection::DetectorCollection(List const & detectorList) :
+    DetectorCollectionBase<Detector const>(detectorList)
+{
+    for (auto const & detector : detectorList) {
+        for (auto const & corner : detector->getCorners(FOCAL_PLANE)) {
+            _fpBBox.include(corner);
+        }
+    }
+}
+
 class DetectorCollection::Factory : public table::io::PersistableFactory {
 public:
 
@@ -149,6 +236,8 @@ DetectorCollection::DetectorCollection(
     table::io::CatalogVector const & catalogs
 ) : DetectorCollection(PersistenceHelper::get().makeDetectorList(archive, catalogs))
 {}
+
+DetectorCollection::~DetectorCollection() noexcept = default;
 
 std::string DetectorCollection::getPersistenceName() const {
     return "DetectorCollection";

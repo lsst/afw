@@ -32,45 +32,64 @@ namespace lsst {
 namespace afw {
 namespace cameraGeom {
 
-PYBIND11_MODULE(detectorCollection, mod){
-    py::module::import("lsst.afw.cameraGeom.detector");
+namespace {
 
-    py::class_<DetectorCollection, std::shared_ptr<DetectorCollection>> cls(mod, "DetectorCollection");
+template <typename T>
+using PyDetectorCollectionBase = py::class_<DetectorCollectionBase<T>,
+                                            std::shared_ptr<DetectorCollectionBase<T>>>;
 
-    cls.def(py::init<DetectorCollection::List const & >(), "list"_a);
-    cls.def("getNameMap", &DetectorCollection::getNameMap);
-    cls.def("getIdMap", &DetectorCollection::getIdMap);
-    cls.def("getFpBBox", &DetectorCollection::getFpBBox);
-    cls.def("__len__", &DetectorCollection::size);
+using PyDetectorCollection = py::class_<DetectorCollection, DetectorCollectionBase<Detector const>,
+                                        std::shared_ptr<DetectorCollection>>;
+
+template <typename T>
+void declareDetectorCollectionBase(PyDetectorCollectionBase<T> & cls) {
+    cls.def("getNameMap", &DetectorCollectionBase<T>::getNameMap);
+    cls.def("getIdMap", &DetectorCollectionBase<T>::getIdMap);
+    cls.def("__len__", &DetectorCollectionBase<T>::size);
     cls.def(
         "get",
-        py::overload_cast<std::string const &, std::shared_ptr<Detector>>(
-            &DetectorCollection::get, py::const_
+        py::overload_cast<std::string const &, std::shared_ptr<T>>(
+            &DetectorCollectionBase<T>::get, py::const_
         ),
         "name"_a, "default"_a=nullptr
     );
     cls.def(
         "get",
-        py::overload_cast<int, std::shared_ptr<Detector>>(
-            &DetectorCollection::get, py::const_
+        py::overload_cast<int, std::shared_ptr<T>>(
+            &DetectorCollectionBase<T>::get, py::const_
         ),
         "id"_a, "default"_a=nullptr
     );
     cls.def(
         "__contains__",
-        [](DetectorCollection const & self, std::string const &name) {
+        [](DetectorCollectionBase<T> const & self, std::string const &name) {
             return self.get(name) != nullptr;
         }
     );
     cls.def(
         "__contains__",
-        [](DetectorCollection const & self, int id) {
+        [](DetectorCollectionBase<T> const & self, int id) {
             return self.get(id) != nullptr;
         }
     );
+}
 
+void declareDetectorCollection(py::module & mod) {
+    PyDetectorCollectionBase<Detector const> base(mod, "DetectorCollectionDetectorBase");
+    declareDetectorCollectionBase(base);
+    PyDetectorCollection cls(mod, "DetectorCollection");
+    cls.def(py::init<DetectorCollection::List>());
+    cls.def("getFpBBox", &DetectorCollection::getFpBBox);
     table::io::python::addPersistableMethods(cls);
 }
+
+PYBIND11_MODULE(detectorCollection, mod){
+    py::module::import("lsst.afw.cameraGeom.detector");
+    declareDetectorCollection(mod);
+}
+
+} // anonymous
+
 } // cameraGeom
 } // afw
 } // lsst

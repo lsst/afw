@@ -35,16 +35,128 @@ namespace afw {
 namespace cameraGeom {
 
 /**
+ * An abstract base class for collections of Detectors and specific subclasses
+ * thereof.
+ *
+ * @tparam T   Element type; either `Detector` or a subclass thereof.
+ *
+ * This class provides the common interface and implementation for
+ * `DetectorCollection` (which holds true `Detector` instances) and
+ * `Camera::Builder` (which holds `Detector::InCameraBuilder` instances).  It
+ * is not intended to define an interface independent of those classes.
+ */
+template <typename T>
+class DetectorCollectionBase {
+public:
+
+    using NameMap = std::unordered_map<std::string, std::shared_ptr<T>>;
+    using IdMap = std::map<int, std::shared_ptr<T>>;
+    using List = std::vector<std::shared_ptr<T>>;
+
+    virtual ~DetectorCollectionBase() noexcept = 0;
+
+    /// Get an unordered map keyed by name.
+    NameMap const & getNameMap() const noexcept { return _nameDict; }
+
+    /// Get an unordered map keyed by ID.
+    IdMap const & getIdMap() const noexcept { return _idDict; }
+
+    /**
+     * Get the number of detectors.  Renamed to `__len__` in Python.
+     */
+    std::size_t size() const noexcept { return _idDict.size(); }
+
+    /**
+     * Determine if the collection contains any detectors.
+     */
+    bool empty() const noexcept { return _idDict.empty(); }
+
+    /**
+     * Implement the [name] operator
+     *
+     * @param[in] name  detector name
+     * @returns pointer to detector entry
+     */
+    std::shared_ptr<T> operator[](std::string const & name) const;
+
+    /**
+     * Implement the [id] operator
+     *
+     * @param[in] id  detector name
+     * @returns pointer to detector entry
+     */
+    std::shared_ptr<T> operator[](int id) const;
+
+    /**
+     * Retrieve a detector by name, or fall back to a default.
+     *
+     * @param[in] name  detector name
+     * @param[in] def  default detector to return.  This defaults to `nullptr`.
+     *
+     * @returns pointer to detector entry if the entry exists, else return
+     *          the default value
+     */
+    std::shared_ptr<T> get(std::string const & name, std::shared_ptr<T> def=nullptr) const;
+
+    /**
+     * Retrieve a detector by ID, or fall back to a default.
+     *
+     * @param[in] id  detector id
+     * @param[in] def  default detector to return.  This defaults to `nullptr`.
+     *
+     * @returns pointer to detector entry if the entry exists, else return
+     *          the default value
+     */
+    std::shared_ptr<T> get(int id, std::shared_ptr<T> def=nullptr) const;
+
+protected:
+
+    explicit DetectorCollectionBase(List const & detectorList);
+
+    DetectorCollectionBase() noexcept = default;
+
+    DetectorCollectionBase(DetectorCollectionBase const &) = default;
+    DetectorCollectionBase(DetectorCollectionBase &&) = default;
+
+    DetectorCollectionBase & operator=(DetectorCollectionBase const &) = default;
+    DetectorCollectionBase & operator=(DetectorCollectionBase &&) = default;
+
+    /**
+     * Add a detector to the collection.
+     *
+     * @param[in] New detector to add to the collection.
+     *
+     * @throw pex::exceptions::RuntimeError  Thrown if the ID and/or name
+     *     conflict with those of detectors already in the collection.
+     *
+     * @exceptsafe  Strong for pex::exceptions::RuntimeError, weak (collection
+     *              is made empty) otherwise.
+     */
+    void add(std::shared_ptr<T> detector);
+
+    void remove(std::string const & name);
+    void remove(int id);
+
+private:
+    NameMap _nameDict;                //< map keyed on name
+    IdMap _idDict;                    //< map keyed on id
+};
+
+
+/**
  * An immutable collection of Detectors that can be accessed by name or ID
  */
-class DetectorCollection : public table::io::PersistableFacade<DetectorCollection>,
+class DetectorCollection : public DetectorCollectionBase<Detector const>,
+                           public table::io::PersistableFacade<DetectorCollection>,
                            public table::io::Persistable {
 public:
-    using NameMap = std::unordered_map<std::string, std::shared_ptr<Detector>>;
-    using IdMap = std::map<int, std::shared_ptr<Detector>>;
-    using List = std::vector<std::shared_ptr<Detector>>;
 
-    explicit DetectorCollection(List const & detectorList);
+    DetectorCollection(List const & list);
+
+    virtual ~DetectorCollection() noexcept;
+
+    /// Return a focal plane bounding box that encompasses all detectors
+    lsst::geom::Box2D const & getFpBBox() const noexcept { return _fpBBox; }
 
     // DetectorCollection is immutable, so it cannot be moveable.  It is also
     // always held by shared_ptr, so there is no good reason to copy it.
@@ -54,61 +166,6 @@ public:
     // DetectorCollection is immutable, so it cannot be assignable.
     DetectorCollection & operator=(DetectorCollection const &) = delete;
     DetectorCollection & operator=(DetectorCollection &&) = delete;
-
-    virtual ~DetectorCollection() noexcept;
-
-    /// Get an unordered map over detector names
-    NameMap const & getNameMap() const noexcept { return _nameDict; }
-
-    /// Get an unordered map over detector IDs
-    IdMap const & getIdMap() const noexcept { return _idDict; }
-
-    /// Return a focal plane bounding box that encompasses all detectors
-    lsst::geom::Box2D const & getFpBBox() const noexcept { return _fpBBox; }
-
-    /**
-     * Get the number of detectors.  Renamed to `__len__` in Python.
-     */
-    std::size_t size() const noexcept { return _idDict.size(); }
-
-    /**
-     * Determine if the DetectorCollection contains any Detectors.
-     */
-    bool empty() const noexcept { return _idDict.empty(); }
-
-    /**
-     * Implement the [name] operator
-     *
-     * @param[in] name  detector name
-     * @return pointer to detector entry
-     */
-    std::shared_ptr<Detector> operator[](std::string const & name) const;
-
-    /**
-     * Implement the [id] operator
-     *
-     * @param[in] id  detector name
-     * @return pointer to detector entry
-     */
-    std::shared_ptr<Detector> operator[](int id) const;
-
-    /**
-     * Support the "in" operator
-     *
-     * @param[in] name  detector name
-     * @param[in] def  default detector to return.  This defaults to the NULL pointer
-     * @return pointer to detector entry if the entry exists, else return the default value
-     */
-    std::shared_ptr<Detector> get(std::string const & name, std::shared_ptr<Detector> def=nullptr) const;
-
-    /**
-     * Support the "in" operator
-     *
-     * @param[in] id  detector id
-     * @param[in] def  default detector to return.  This defaults to the NULL pointer
-     * @return pointer to detector entry if the entry exists, else return the default value
-     */
-    std::shared_ptr<Detector> get(int id, std::shared_ptr<Detector> def=nullptr) const;
 
     /// DetectorCollections are always persistable.
     bool isPersistable() const noexcept override {
@@ -129,8 +186,6 @@ private:
 
     class Factory;
 
-    NameMap _nameDict;                //< map of detector names
-    IdMap _idDict;                    //< map of detector ids
     lsst::geom::Box2D _fpBBox;        //< bounding box of collection
 };
 
