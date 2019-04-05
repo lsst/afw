@@ -21,12 +21,12 @@
 
 __all__ = []
 
-from lsst.utils import continueClass
-from .detectorCollection import DetectorCollection
+from lsst.utils import TemplateMeta
+from ..detector import Detector
+from .detectorCollection import DetectorCollectionDetectorBase
 
 
-@continueClass  # noqa: F811
-class DetectorCollection:
+class DetectorCollectionBase(metaclass=TemplateMeta):  # noqa: F811
     """!An immutable collection of Detectors that can be accessed by name or ID
     """
 
@@ -51,3 +51,6 @@ class DetectorCollection:
         """
         for k, v in self.getIdMap().items():
             yield k
+
+
+DetectorCollectionBase.register(Detector, DetectorCollectionDetectorBase)

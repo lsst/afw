@@ -20,19 +20,10 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-__all__ = ["Detector", "DetectorType",
-           "SCIENCE", "FOCUS", "GUIDER", "WAVEFRONT"]
+__all__ = ["Detector"]
 
 from lsst.utils import continueClass
-from .detector import Detector, DetectorType
-
-# export DetectorType enums as module globals for SWIG compatibility;
-# @TODO update our code to stop using these globals and remove this code
-SCIENCE = DetectorType.SCIENCE
-FOCUS = DetectorType.FOCUS
-GUIDER = DetectorType.GUIDER
-WAVEFRONT = DetectorType.WAVEFRONT
-
+from .detector import Detector
 
 @continueClass  # noqa: F811
 class Detector:

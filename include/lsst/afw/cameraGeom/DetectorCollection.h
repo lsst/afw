@@ -34,37 +34,21 @@ namespace lsst {
 namespace afw {
 namespace cameraGeom {
 
-/**
- * An immutable collection of Detectors that can be accessed by name or ID
- */
-class DetectorCollection : public table::io::PersistableFacade<DetectorCollection>,
-                           public table::io::Persistable {
+template <typename T>
+class DetectorCollectionBase {
 public:
-    using NameMap = std::unordered_map<std::string, std::shared_ptr<Detector>>;
-    using IdMap = std::map<int, std::shared_ptr<Detector>>;
-    using List = std::vector<std::shared_ptr<Detector>>;
 
-    explicit DetectorCollection(List const & detectorList);
+    using NameMap = std::unordered_map<std::string, std::shared_ptr<T>>;
+    using IdMap = std::map<int, std::shared_ptr<T>>;
+    using List = std::vector<std::shared_ptr<T>>;
 
-    // DetectorCollection is immutable, so it cannot be moveable.  It is also
-    // always held by shared_ptr, so there is no good reason to copy it.
-    DetectorCollection(DetectorCollection const &) = delete;
-    DetectorCollection(DetectorCollection &&) = delete;
+    virtual ~DetectorCollectionBase() noexcept = default;
 
-    // DetectorCollection is immutable, so it cannot be assignable.
-    DetectorCollection & operator=(DetectorCollection const &) = delete;
-    DetectorCollection & operator=(DetectorCollection &&) = delete;
-
-    virtual ~DetectorCollection() noexcept;
-
-    /// Get an unordered map over detector names
+    /// Get an unordered map keyed by name.
     NameMap const & getNameMap() const noexcept { return _nameDict; }
 
-    /// Get an unordered map over detector IDs
+    /// Get an unordered map keyed by ID.
     IdMap const & getIdMap() const noexcept { return _idDict; }
-
-    /// Return a focal plane bounding box that encompasses all detectors
-    lsst::geom::Box2D const & getFpBBox() const noexcept { return _fpBBox; }
 
     /**
      * Get the number of detectors.  Renamed to `__len__` in Python.
@@ -72,7 +56,7 @@ public:
     std::size_t size() const noexcept { return _idDict.size(); }
 
     /**
-     * Determine if the DetectorCollection contains any Detectors.
+     * Determine if the collection contains any detectors.
      */
     bool empty() const noexcept { return _idDict.empty(); }
 
@@ -82,7 +66,7 @@ public:
      * @param[in] name  detector name
      * @return pointer to detector entry
      */
-    std::shared_ptr<Detector> operator[](std::string const & name) const;
+    std::shared_ptr<T> operator[](std::string const & name) const;
 
     /**
      * Implement the [id] operator
@@ -90,7 +74,7 @@ public:
      * @param[in] id  detector name
      * @return pointer to detector entry
      */
-    std::shared_ptr<Detector> operator[](int id) const;
+    std::shared_ptr<T> operator[](int id) const;
 
     /**
      * Support the "in" operator
@@ -99,7 +83,7 @@ public:
      * @param[in] def  default detector to return.  This defaults to the NULL pointer
      * @return pointer to detector entry if the entry exists, else return the default value
      */
-    std::shared_ptr<Detector> get(std::string const & name, std::shared_ptr<Detector> def=nullptr) const;
+    std::shared_ptr<T> get(std::string const & name, std::shared_ptr<T> def=nullptr) const;
 
     /**
      * Support the "in" operator
@@ -108,7 +92,52 @@ public:
      * @param[in] def  default detector to return.  This defaults to the NULL pointer
      * @return pointer to detector entry if the entry exists, else return the default value
      */
-    std::shared_ptr<Detector> get(int id, std::shared_ptr<Detector> def=nullptr) const;
+    std::shared_ptr<T> get(int id, std::shared_ptr<T> def=nullptr) const;
+
+protected:
+
+    explicit DetectorCollectionBase(List const & detectorList);
+
+    DetectorCollectionBase() noexcept = default;
+
+    DetectorCollectionBase(DetectorCollectionBase const &) = default;
+    DetectorCollectionBase(DetectorCollectionBase &&) = default;
+
+    DetectorCollectionBase & operator=(DetectorCollectionBase const &) = default;
+    DetectorCollectionBase & operator=(DetectorCollectionBase &&) = default;
+
+    void add(std::shared_ptr<T> detector);
+
+    void remove(std::string const & name);
+    void remove(int id);
+
+private:
+    NameMap _nameDict;                //< map keyed on name
+    IdMap _idDict;                    //< map keyed on id
+};
+
+
+/**
+ * An immutable collection of Detectors that can be accessed by name or ID
+ */
+class DetectorCollection : public DetectorCollectionBase<Detector const>,
+                           public table::io::PersistableFacade<DetectorCollection>,
+                           public table::io::Persistable {
+public:
+
+    DetectorCollection(List const & list);
+
+    /// Return a focal plane bounding box that encompasses all detectors
+    lsst::geom::Box2D const & getFpBBox() const noexcept { return _fpBBox; }
+
+    // DetectorCollection is immutable, so it cannot be moveable.  It is also
+    // always held by shared_ptr, so there is no good reason to copy it.
+    DetectorCollection(DetectorCollection const &) = delete;
+    DetectorCollection(DetectorCollection &&) = delete;
+
+    // DetectorCollection is immutable, so it cannot be assignable.
+    DetectorCollection & operator=(DetectorCollection const &) = delete;
+    DetectorCollection & operator=(DetectorCollection &&) = delete;
 
     /// DetectorCollections are always persistable.
     bool isPersistable() const noexcept override {
@@ -129,8 +158,6 @@ private:
 
     class Factory;
 
-    NameMap _nameDict;                //< map of detector names
-    IdMap _idDict;                    //< map of detector ids
     lsst::geom::Box2D _fpBBox;        //< bounding box of collection
 };
 
