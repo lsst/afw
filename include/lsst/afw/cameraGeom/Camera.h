@@ -33,27 +33,19 @@ namespace lsst {
 namespace afw {
 namespace cameraGeom {
 
-/**
- * A collection of Detectors plus additional coordinate system support.
- *
- * Camera.transform transforms points from one camera coordinate system to another.
- * Camera.getTransform returns a transform between camera coordinate systems.
- * Camera.findDetectors finds all detectors overlapping a specified point.
- */
-class Camera : public table::io::PersistableFacade<Camera>, public DetectorCollection {
-public:
-    using DetectorList = DetectorCollection::List;
 
-    /**
-     * Construct a camera
-     *
-     * @param[in] name  name of camera
-     * @param[in] detectorList  a DetectorList in index order
-     * @param[in] transformMap  a TransformMap that at least supports FOCAL_PLANE and FIELD_ANGLE coordinates
-     * @param[in] pupilFactoryName name of a PupilFactory class for this camera
-     */
-    Camera(std::string const &name, DetectorList const &detectorList,
-           std::shared_ptr<TransformMap> transformMap, std::string const &pupilFactoryName);
+/**
+ * An immutable representation of a camera.
+ *
+ * Cameras are created (and modified, when necessary) via the Camera::Builder
+ * helper class.
+ */
+class Camera : public DetectorCollection, public table::io::PersistableFacade<Camera> {
+public:
+
+    class Builder;
+
+    using DetectorList = DetectorCollection::List;
 
     // Camera is immutable, so it cannot be moveable.  It is also always held
     // by shared_ptr, so there is no good reason to copy it.
@@ -65,6 +57,13 @@ public:
     Camera & operator=(Camera &&) = delete;
 
     virtual ~Camera() noexcept;
+
+    /**
+     * Create a Camera::Builder object initialized with this camera's state.
+     *
+     * This is simply a shortcut for `Camera::Builder(*this)`.
+     */
+    Camera::Builder rebuild() const;
 
     /**
      * Return the name of the camera
@@ -105,8 +104,7 @@ public:
      *    `fromSys` to `toSys` in the forward direction
      *
      * @throws lsst::pex::exceptions::InvalidParameterError if no transform is
-     *    available. This includes the case that `fromSys` specifies a known
-     *    detector and `toSys` specifies any other detector (known or unknown)
+     *    available.
      * @throws KeyError if an unknown detector is specified
      */
     std::shared_ptr<afw::geom::TransformPoint2ToPoint2> getTransform(CameraSys const &fromSys,
@@ -147,28 +145,151 @@ public:
     /**
      * Cameras are always persistable.
      */
-    bool isPersistable() const noexcept override {
-        return true;
-    }
+    bool isPersistable() const noexcept override { return true; }
 
 protected:
-
-    Camera(table::io::InputArchive const & archive, table::io::CatalogVector const & catalogs);
 
     void write(OutputArchiveHandle& handle) const override;
 
 private:
 
+    // static methods below provide access to private methods of
+    // Detector::InCameraBuilder for use by Camera::Builder, because
+    // Detector::InCameraBuilder can only friend Camera.
+
+    /*
+     * Create a new Detector::InCameraBuilder for a completely new Detector.
+     */
+    static std::shared_ptr<Detector::InCameraBuilder> makeDetectorBuilder(std::string const & name, int id);
+
+    /*
+     * Create a new Detector::InCameraBuilder with the state of the given
+     * Detector.
+     */
+    static std::shared_ptr<Detector::InCameraBuilder> makeDetectorBuilder(Detector const & detector);
+
+    /*
+     * Extract the sequence of TransformMap::Connections from a
+     * Detector::InCameraBuilder.
+     */
+    static std::vector<TransformMap::Connection> const & getDetectorBuilderConnections(
+        Detector::InCameraBuilder const & detector
+    );
+
+    // Deserialization factory.
     class Factory;
+
+    // Constructor used by Camera::Builder.
+    // Some arguments passed by value to make moves possible.
+    Camera(std::string const & name, DetectorList detectors,
+           std::shared_ptr<TransformMap const> transformMap, std::string const & pupilFactoryName);
+
+    // Constructor used by persistence.
+    Camera(table::io::InputArchive const & archive, table::io::CatalogVector const & catalogs);
 
     std::string getPersistenceName() const override;
 
     // getPythonModule implementation inherited from DetectorCollection.
 
     std::string _name;
-    std::shared_ptr<TransformMap const> _transformMap;
     std::string _pupilFactoryName;
+    std::shared_ptr<TransformMap const> _transformMap;
 };
+
+
+/**
+ * A helper class for creating and modifying cameras.
+ *
+ * Camera and Camera::Builder have no direct inheritance relationship, but both
+ * inherit from different specializations of DetectorCollectionBase, so their
+ * container-of-detectors interfaces can generally be used the same way in
+ * both Python and templated C++.
+ */
+class Camera::Builder : public DetectorCollectionBase<Detector::InCameraBuilder> {
+    using BaseCollection = DetectorCollectionBase<Detector::InCameraBuilder>;
+public:
+
+    virtual ~Builder() noexcept;
+
+    /**
+     * Construct a Builder for a completely new Camera with the given name.
+     */
+    explicit Builder(std::string const &name);
+
+    /**
+     * Construct a Builder with the state of an existing Camera.
+     */
+    explicit Builder(Camera const & camera);
+
+    /**
+     * Construct a new Camera from the state of the Builder.
+     */
+    std::shared_ptr<Camera const> finish() const;
+
+    /// @copydoc Camera::getName
+    std::string getName() const { return _name; }
+
+    /// Set the name of the camera.
+    void setName(std::string const & name) { _name = name; }
+
+    /// @copydoc Camera::getPupilFactoryName.
+    std::string getPupilFactoryName() const { return _pupilFactoryName; }
+
+    /// Set the fully-qualified name of the Python class that provides this Camera's PupilFactory.
+    void setPupilFactoryName(std::string const & pupilFactoryName) { _pupilFactoryName = pupilFactoryName; }
+
+    /**
+     * Set the transformation from FOCAL_PLANE to the given coordinate system.
+     *
+     * @param toSys     Coordinate system this transform returns points in.
+     * @param transform Transform from FOCAL_PLANE to `toSys`.
+     *
+     * If a transform already exists from FOCAL_PLANE to `toSys`, it is
+     * overwritten.
+     */
+    void setTransformFromFocalPlaneTo(CameraSys const & toSys,
+                                      std::shared_ptr<afw::geom::TransformPoint2ToPoint2 const> transform);
+
+    /**
+     * Remove any transformation from FOCAL_PLANE to the given coordinate system.
+     *
+     * @param  toSys Coordinate system this transform returns points in.
+     * @return true if a transform was removed; false otherwise.
+     */
+    bool discardTransformFromFocalPlaneTo(CameraSys const & toSys);
+
+    /**
+     * Add a new Detector with the given name and ID.
+     *
+     * This is the only way to create a completely new detector (as opposed to
+     * a copy of an existing one), and it permanently sets that Detector's name
+     * and ID.
+     *
+     * @throw pex::exceptions::RuntimeError  Thrown if the ID and/or name
+     *     conflict with those of detectors already in the collection.
+     *
+     * @exceptsafe  Strong for pex::exceptions::RuntimeError, none otherwise.
+     */
+    std::shared_ptr<Detector::InCameraBuilder> add(std::string const & name, int id);
+
+    //@{
+    /**
+     * Remove the detector with the given name or ID.
+     *
+     * Wrapped as `__delitem__` in Python.
+     *
+     * @throws pex::exceptions::NotFoundError if no such detector exists.
+     */
+    void remove(std::string const & name) { return BaseCollection::remove(name); }
+    void remove(int id) { return BaseCollection::remove(id); }
+    //@}
+
+private:
+    std::string _name;
+    std::string _pupilFactoryName;
+    std::vector<TransformMap::Connection> _connections;
+};
+
 
 } // namespace cameraGeom
 } // namespace afw

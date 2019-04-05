@@ -86,6 +86,12 @@ void declareDetectorCollection(py::module & mod) {
 PYBIND11_MODULE(detectorCollection, mod){
     py::module::import("lsst.afw.cameraGeom.detector");
     declareDetectorCollection(mod);
+
+    PyDetectorCollectionBase<Detector::InCameraBuilder> cameraBuilderBase(
+        mod,
+        "DetectorCollectionBuilderBase"
+    );
+    declareDetectorCollectionBase(cameraBuilderBase);
 }
 
 } // anonymous

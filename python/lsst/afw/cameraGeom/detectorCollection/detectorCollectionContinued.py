@@ -23,7 +23,7 @@ __all__ = []
 
 from lsst.utils import TemplateMeta
 from ..detector import Detector
-from .detectorCollection import DetectorCollectionDetectorBase
+from .detectorCollection import DetectorCollectionDetectorBase, DetectorCollectionBuilderBase
 
 
 class DetectorCollectionBase(metaclass=TemplateMeta):  # noqa: F811
@@ -54,3 +54,4 @@ class DetectorCollectionBase(metaclass=TemplateMeta):  # noqa: F811
 
 
 DetectorCollectionBase.register(Detector, DetectorCollectionDetectorBase)
+DetectorCollectionBase.register(Detector.InCameraBuilder, DetectorCollectionBuilderBase)
