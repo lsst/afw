@@ -12,7 +12,7 @@
 #include "lsst/afw/table/io/OutputArchive.h"
 #include "lsst/afw/table/io/InputArchive.h"
 #include "lsst/afw/geom/SkyWcs.h"
-#include "lsst/afw/image/Calib.h"
+#include "lsst/afw/image/PhotoCalib.h"
 #include "lsst/afw/image/ApCorrMap.h"
 #include "lsst/afw/detection/Psf.h"
 #include "lsst/afw/geom/polygon/Polygon.h"
@@ -34,7 +34,7 @@ namespace table {
 
 namespace {
 
-int const EXPOSURE_TABLE_CURRENT_VERSION = 4;                   // current version of ExposureTable
+int const EXPOSURE_TABLE_CURRENT_VERSION = 5;                   // current version of ExposureTable
 std::string const EXPOSURE_TABLE_VERSION_KEY = "EXPTABLE_VER";  // FITS header key for ExposureTable version
 
 // Field names used to store the archive IDs of different components (used in
@@ -42,7 +42,8 @@ std::string const EXPOSURE_TABLE_VERSION_KEY = "EXPTABLE_VER";  // FITS header k
 // literals).
 std::string const WCS_FIELD_NAME = "wcs";
 std::string const PSF_FIELD_NAME = "psf";
-std::string const CALIB_FIELD_NAME = "calib";
+std::string const CALIB_FIELD_NAME = "calib";  // to support the deprecated Calib in old files
+std::string const PHOTOCALIB_FIELD_NAME = "photoCalib";
 std::string const VISIT_INFO_FIELD_NAME = "visitInfo";
 std::string const AP_CORR_MAP_FIELD_NAME = "apCorrMap";
 std::string const VALID_POLYGON_FIELD_NAME = "validPolygon";
@@ -62,7 +63,8 @@ struct PersistenceHelper {
     Schema schema;
     Key<int> wcs;
     Key<int> psf;
-    Key<int> calib;
+    Key<int> calib;  // to support the deprecated Calib in old files (replaced with photoCalib)
+    Key<int> photoCalib;
     Key<int> apCorrMap;
     Key<int> validPolygon;
     Key<int> visitInfo;
@@ -94,7 +96,7 @@ struct PersistenceHelper {
         output.assign(input, mapper);
         output.set(psf, archive.put(input.getPsf(), permissive));
         output.set(wcs, archive.put(input.getWcs(), permissive));
-        output.set(calib, archive.put(input.getCalib(), permissive));
+        output.set(photoCalib, archive.put(input.getPhotoCalib(), permissive));
         output.set(apCorrMap, archive.put(input.getApCorrMap(), permissive));
         output.set(validPolygon, archive.put(input.getValidPolygon(), permissive));
         output.set(visitInfo, archive.put(input.getVisitInfo(), permissive));
@@ -113,7 +115,10 @@ struct PersistenceHelper {
             output.setWcs(archive.get<geom::SkyWcs>(input.get(wcs)));
         }
         if (calib.isValid()) {
-            output.setCalib(archive.get<image::Calib>(input.get(calib)));
+            output.setPhotoCalib(archive.get<image::PhotoCalib>(input.get(calib)));
+        }
+        if (photoCalib.isValid()) {
+            output.setPhotoCalib(archive.get<image::PhotoCalib>(input.get(photoCalib)));
         }
         if (apCorrMap.isValid()) {
             output.setApCorrMap(archive.get<image::ApCorrMap>(input.get(apCorrMap)));
@@ -145,7 +150,7 @@ struct PersistenceHelper {
             : schema(),
               wcs(schema.addField<int>(WCS_FIELD_NAME, "archive ID for Wcs object")),
               psf(schema.addField<int>(PSF_FIELD_NAME, "archive ID for Psf object")),
-              calib(schema.addField<int>(CALIB_FIELD_NAME, "archive ID for Calib object")),
+              photoCalib(schema.addField<int>(PHOTOCALIB_FIELD_NAME, "archive ID for PhotoCalib object")),
               apCorrMap(schema.addField<int>(AP_CORR_MAP_FIELD_NAME, "archive ID for ApCorrMap object")),
               validPolygon(schema.addField<int>(VALID_POLYGON_FIELD_NAME, "archive ID for Polygon object")),
               visitInfo(schema.addField<int>(VISIT_INFO_FIELD_NAME, "archive ID for VisitInfo object")),
@@ -167,6 +172,7 @@ struct PersistenceHelper {
         addIfPresent(oldSchema, wcs, WCS_FIELD_NAME);
         addIfPresent(oldSchema, psf, PSF_FIELD_NAME);
         addIfPresent(oldSchema, calib, CALIB_FIELD_NAME);
+        addIfPresent(oldSchema, photoCalib, PHOTOCALIB_FIELD_NAME);
         addIfPresent(oldSchema, apCorrMap, AP_CORR_MAP_FIELD_NAME);
         addIfPresent(oldSchema, validPolygon, VALID_POLYGON_FIELD_NAME);
         addIfPresent(oldSchema, visitInfo, VISIT_INFO_FIELD_NAME);
@@ -240,7 +246,7 @@ void ExposureFitsWriter::_writeRecord(BaseRecord const &r) {
 //----- ExposureFitsReader ---------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------------------
 
-// FitsColumnReader that reads a Persistable subclass T (Wcs, Psf, or Calib here) by using an int
+// FitsColumnReader that reads a Persistable subclass T (Wcs, Psf, or PhotoCalib here) by using an int
 // column to retrieve the object from an InputArchive and attach it to an ExposureRecord via
 // the Setter member function pointer.
 template <typename T, void (ExposureRecord::*Setter)(std::shared_ptr<T const>)>
@@ -289,7 +295,6 @@ public:
         auto tableVersion = getTableVersion(*metadata);
         PersistableObjectColumnReader<detection::Psf, &ExposureRecord::setPsf>::setup("psf", mapper);
         PersistableObjectColumnReader<geom::SkyWcs, &ExposureRecord::setWcs>::setup("wcs", mapper);
-        PersistableObjectColumnReader<image::Calib, &ExposureRecord::setCalib>::setup("calib", mapper);
         PersistableObjectColumnReader<image::ApCorrMap, &ExposureRecord::setApCorrMap>::setup("apCorrMap",
                                                                                               mapper);
         PersistableObjectColumnReader<geom::polygon::Polygon, &ExposureRecord::setValidPolygon>::setup(
@@ -304,10 +309,20 @@ public:
                                                                                         mapper);
         }
         if (tableVersion > 3) {
-            PersistableObjectColumnReader<cameraGeom::Detector,
-                                          &ExposureRecord::setDetector>::setup("detector", mapper);
+            PersistableObjectColumnReader<cameraGeom::Detector, &ExposureRecord::setDetector>::setup(
+                    "detector", mapper);
         }
-        std::shared_ptr<ExposureTable> table = ExposureTable::make(mapper.finalize());
+        // Load the PhotoCalib from the `calib` table prior to version 5.
+        if (tableVersion <= 4) {
+            PersistableObjectColumnReader<image::PhotoCalib, &ExposureRecord::setPhotoCalib>::setup("calib",
+                                                                                                    mapper);
+        } else {
+            PersistableObjectColumnReader<image::PhotoCalib, &ExposureRecord::setPhotoCalib>::setup(
+                    "photoCalib", mapper);
+        }
+
+        auto schema = mapper.finalize();
+        std::shared_ptr<ExposureTable> table = ExposureTable::make(schema);
         table->setMetadata(metadata);
         return table;
     }
@@ -366,7 +381,7 @@ void ExposureRecord::_assign(BaseRecord const &other) {
         ExposureRecord const &s = dynamic_cast<ExposureRecord const &>(other);
         _psf = s._psf;
         _wcs = s._wcs;
-        _calib = s._calib;
+        _photoCalib = s._photoCalib;
         _apCorrMap = s._apCorrMap;
         _validPolygon = s._validPolygon;
         _visitInfo = s._visitInfo;

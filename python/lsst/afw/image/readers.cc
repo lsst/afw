@@ -32,7 +32,7 @@
 #include "lsst/afw/geom/SkyWcs.h"
 #include "lsst/afw/geom/polygon/Polygon.h"
 #include "lsst/afw/detection/Psf.h"
-#include "lsst/afw/image/Calib.h"
+#include "lsst/afw/image/PhotoCalib.h"
 #include "lsst/afw/image/Filter.h"
 #include "lsst/afw/image/CoaddInputs.h"
 #include "lsst/afw/image/VisitInfo.h"
@@ -289,7 +289,7 @@ void declareExposureFitsReader(py::module & mod) {
     cls.def("readMetadata", &ExposureFitsReader::readMetadata);
     cls.def("readWcs", &ExposureFitsReader::readWcs);
     cls.def("readFilter", &ExposureFitsReader::readFilter);
-    cls.def("readCalib", &ExposureFitsReader::readCalib);
+    cls.def("readPhotoCalib", &ExposureFitsReader::readPhotoCalib);
     cls.def("readPsf", &ExposureFitsReader::readPsf);
     cls.def("readValidPolygon", &ExposureFitsReader::readValidPolygon);
     cls.def("readApCorrMap", &ExposureFitsReader::readApCorrMap);

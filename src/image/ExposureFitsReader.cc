@@ -21,7 +21,7 @@
 
 #include "lsst/log/Log.h"
 
-#include "lsst/afw/image/Calib.h"
+#include "lsst/afw/image/PhotoCalib.h"
 #include "lsst/afw/geom/polygon/Polygon.h"
 #include "lsst/afw/geom/SkyWcs.h"
 #include "lsst/afw/cameraGeom/Detector.h"
@@ -44,7 +44,6 @@ class ExposureFitsReader::MetadataReader {
 public:
     MetadataReader(std::shared_ptr<daf::base::PropertyList> primaryMetadata,
                    std::shared_ptr<daf::base::PropertyList> imageMetadata, lsst::geom::Point2I const& xy0) {
-        int version;
         auto versionName = ExposureInfo::getFitsSerializationVersionName();
         if (primaryMetadata->exists(versionName)) {
             version = primaryMetadata->getAsInt(versionName);
@@ -89,8 +88,10 @@ public:
         visitInfo = std::make_shared<VisitInfo>(*metadata);
         detail::stripVisitInfoKeywords(*metadata);
 
-        calib = std::make_shared<Calib>(metadata);
-        detail::stripCalibKeywords(metadata);
+        // Version 0 persisted Calib FLUXMAG0 in the metadata, >=1 persisted PhotoCalib as a binary table.
+        if (version == 0) {
+            photoCalib = makePhotoCalibFromMetadata(*metadata, true);
+        }
 
         // Strip MJD-OBS and DATE-OBS from metadata; those may be read by
         // either SkyWcs or VisitInfo or both, so neither can strip them.
@@ -103,10 +104,11 @@ public:
         metadata->remove("DETSER");
     }
 
+    int version;
     std::shared_ptr<daf::base::PropertyList> metadata;
     Filter filter;
     std::shared_ptr<afw::geom::SkyWcs> wcs;
-    std::shared_ptr<Calib> calib;
+    std::shared_ptr<PhotoCalib> photoCalib;
     std::shared_ptr<VisitInfo> visitInfo;
 };
 
@@ -120,6 +122,7 @@ public:
         VALID_POLYGON,
         TRANSMISSION_CURVE,
         DETECTOR,
+        PHOTOCALIB,
         N_ARCHIVE_COMPONENTS
     };
 
@@ -152,6 +155,7 @@ public:
         _ids[VALID_POLYGON] = popInt("VALID_POLYGON_ID");
         _ids[TRANSMISSION_CURVE] = popInt("TRANSMISSION_CURVE_ID");
         _ids[DETECTOR] = popInt("DETECTOR_ID");
+        _ids[PHOTOCALIB] = popInt("PHOTOCALIB_ID");
     }
 
     template <typename T>
@@ -225,9 +229,13 @@ Filter ExposureFitsReader::readFilter() {
     return _metadataReader->filter;
 }
 
-std::shared_ptr<Calib> ExposureFitsReader::readCalib() {
+std::shared_ptr<PhotoCalib> ExposureFitsReader::readPhotoCalib() {
     _ensureReaders();
-    return _metadataReader->calib;
+    if (_metadataReader->version == 0) {
+        return _metadataReader->photoCalib;
+    } else {
+        return _archiveReader->readComponent<image::PhotoCalib>(_getFitsFile(), ArchiveReader::PHOTOCALIB);
+    }
 }
 
 std::shared_ptr<detection::Psf> ExposureFitsReader::readPsf() {
@@ -271,7 +279,7 @@ std::shared_ptr<ExposureInfo> ExposureFitsReader::readExposureInfo() {
     auto result = std::make_shared<ExposureInfo>();
     result->setMetadata(readMetadata());
     result->setFilter(readFilter());
-    result->setCalib(readCalib());
+    result->setPhotoCalib(readPhotoCalib());
     result->setVisitInfo(readVisitInfo());
     // When reading an ExposureInfo (as opposed to reading individual
     // components), we warn and try to proceed when a component is present
@@ -326,7 +334,7 @@ std::shared_ptr<ExposureInfo> ExposureFitsReader::readExposureInfo() {
         LOGLS_WARN(_log, msg);
     }
     return result;
-}
+}  // namespace image
 
 template <typename ImagePixelT>
 Image<ImagePixelT> ExposureFitsReader::readImage(lsst::geom::Box2I const& bbox, ImageOrigin origin,

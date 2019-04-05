@@ -24,7 +24,7 @@
 
 #include "lsst/afw/cameraGeom/Detector.h"
 #include "lsst/afw/geom/SkyWcs.h"
-#include "lsst/afw/image/Calib.h"
+#include "lsst/afw/image/PhotoCalib.h"
 #include "lsst/afw/image/Filter.h"
 #include "lsst/afw/image/Exposure.h"
 #include "lsst/afw/detection/Psf.h"
@@ -74,10 +74,10 @@ PyExposure<PixelT> declareExposure(py::module &mod, const std::string &suffix) {
     cls.def(py::init<MaskedImageT &, std::shared_ptr<ExposureInfo>>(), "maskedImage"_a, "exposureInfo"_a);
     cls.def(py::init<std::string const &, lsst::geom::Box2I const &, ImageOrigin, bool, bool>(), "fileName"_a,
             "bbox"_a = lsst::geom::Box2I(), "origin"_a = PARENT, "conformMasks"_a = false,
-            "allowUnsafe"_a=false);
+            "allowUnsafe"_a = false);
     cls.def(py::init<fits::MemFileManager &, lsst::geom::Box2I const &, ImageOrigin, bool, bool>(),
             "manager"_a, "bbox"_a = lsst::geom::Box2I(), "origin"_a = PARENT, "conformMasks"_a = false,
-            "allowUnsafe"_a=false);
+            "allowUnsafe"_a = false);
     cls.def(py::init<ExposureT const &, bool>(), "other"_a, "deep"_a = false);
     cls.def(py::init<ExposureT const &, lsst::geom::Box2I const &, ImageOrigin, bool>(), "other"_a, "bbox"_a,
             "origin"_a = PARENT, "deep"_a = false);
@@ -104,15 +104,20 @@ PyExposure<PixelT> declareExposure(py::module &mod, const std::string &suffix) {
     cls.def("setDetector", &ExposureT::setDetector, "detector"_a);
     cls.def("getFilter", &ExposureT::getFilter);
     cls.def("setFilter", &ExposureT::setFilter, "filter"_a);
-    cls.def("getCalib", (std::shared_ptr<Calib>(ExposureT::*)()) & ExposureT::getCalib);
-    cls.def("setCalib", &ExposureT::setCalib, "calib"_a);
+
+    // Deprecated methods
+    cls.def("getCalib", &ExposureT::getCalib);
+    cls.def("setCalib", &ExposureT::setCalib, "photoCalib"_a);
+
+    cls.def("getPhotoCalib", &ExposureT::getPhotoCalib);
+    cls.def("setPhotoCalib", &ExposureT::setPhotoCalib, "photoCalib"_a);
     cls.def("getPsf", (std::shared_ptr<detection::Psf>(ExposureT::*)()) & ExposureT::getPsf);
     cls.def("setPsf", &ExposureT::setPsf, "psf"_a);
     cls.def("hasPsf", &ExposureT::hasPsf);
     cls.def("getInfo", (std::shared_ptr<ExposureInfo>(ExposureT::*)()) & ExposureT::getInfo);
     cls.def("setInfo", &ExposureT::setInfo, "exposureInfo"_a);
 
-    cls.def("subset", &ExposureT::subset, "bbox"_a, "origin"_a=PARENT);
+    cls.def("subset", &ExposureT::subset, "bbox"_a, "origin"_a = PARENT);
 
     cls.def("writeFits", (void (ExposureT::*)(std::string const &) const) & ExposureT::writeFits);
     cls.def("writeFits", (void (ExposureT::*)(fits::MemFileManager &) const) & ExposureT::writeFits);

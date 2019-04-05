@@ -24,7 +24,7 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/log/Log.h"
 #include "lsst/afw/image/ExposureInfo.h"
-#include "lsst/afw/image/Calib.h"
+#include "lsst/afw/image/PhotoCalib.h"
 #include "lsst/afw/geom/polygon/Polygon.h"
 #include "lsst/afw/geom/SkyWcs.h"
 #include "lsst/afw/image/ApCorrMap.h"
@@ -42,7 +42,10 @@ namespace afw {
 namespace image {
 
 int ExposureInfo::getFitsSerializationVersion() {
-    static int const version = 0;
+    // Version history:
+    // unversioned and 0: photometric calibration via Calib, WCS via SkyWcs using AST.
+    // 1: photometric calibration via PhotoCalib
+    static int const version = 1;
     return version;
 }
 
@@ -53,11 +56,6 @@ std::string const& ExposureInfo::getFitsSerializationVersionName() {
 
 // Clone various components; defined here so that we don't have to expose their insides in Exposure.h
 
-std::shared_ptr<Calib> ExposureInfo::_cloneCalib(std::shared_ptr<Calib const> calib) {
-    if (calib) return std::shared_ptr<Calib>(new Calib(*calib));
-    return std::shared_ptr<Calib>();
-}
-
 std::shared_ptr<ApCorrMap> ExposureInfo::_cloneApCorrMap(std::shared_ptr<ApCorrMap const> apCorrMap) {
     if (apCorrMap) {
         return std::make_shared<ApCorrMap>(*apCorrMap);
@@ -67,7 +65,7 @@ std::shared_ptr<ApCorrMap> ExposureInfo::_cloneApCorrMap(std::shared_ptr<ApCorrM
 
 ExposureInfo::ExposureInfo(std::shared_ptr<geom::SkyWcs const> const& wcs,
                            std::shared_ptr<detection::Psf const> const& psf,
-                           std::shared_ptr<Calib const> const& calib,
+                           std::shared_ptr<PhotoCalib const> const& photoCalib,
                            std::shared_ptr<cameraGeom::Detector const> const& detector,
                            std::shared_ptr<geom::polygon::Polygon const> const& polygon, Filter const& filter,
                            std::shared_ptr<daf::base::PropertySet> const& metadata,
@@ -77,7 +75,7 @@ ExposureInfo::ExposureInfo(std::shared_ptr<geom::SkyWcs const> const& wcs,
                            std::shared_ptr<TransmissionCurve const> const& transmissionCurve)
         : _wcs(wcs),
           _psf(std::const_pointer_cast<detection::Psf>(psf)),
-          _calib(calib ? _cloneCalib(calib) : std::shared_ptr<Calib>(new Calib())),
+          _photoCalib(photoCalib),
           _detector(detector),
           _validPolygon(polygon),
           _filter(filter),
@@ -91,7 +89,7 @@ ExposureInfo::ExposureInfo(std::shared_ptr<geom::SkyWcs const> const& wcs,
 ExposureInfo::ExposureInfo(ExposureInfo const& other)
         : _wcs(other._wcs),
           _psf(other._psf),
-          _calib(_cloneCalib(other._calib)),
+          _photoCalib(other._photoCalib),
           _detector(other._detector),
           _validPolygon(other._validPolygon),
           _filter(other._filter),
@@ -107,7 +105,7 @@ ExposureInfo::ExposureInfo(ExposureInfo&& other) : ExposureInfo(other) {}
 ExposureInfo::ExposureInfo(ExposureInfo const& other, bool copyMetadata)
         : _wcs(other._wcs),
           _psf(other._psf),
-          _calib(_cloneCalib(other._calib)),
+          _photoCalib(other._photoCalib),
           _detector(other._detector),
           _validPolygon(other._validPolygon),
           _filter(other._filter),
@@ -123,7 +121,7 @@ ExposureInfo& ExposureInfo::operator=(ExposureInfo const& other) {
     if (&other != this) {
         _wcs = other._wcs;
         _psf = other._psf;
-        _calib = _cloneCalib(other._calib);
+        _photoCalib = other._photoCalib;
         _detector = other._detector;
         _validPolygon = other._validPolygon;
         _filter = other._filter;
@@ -190,6 +188,10 @@ ExposureInfo::FitsWriteData ExposureInfo::_startWriteFits(lsst::geom::Point2I co
         int detectorId = data.archive.put(getDetector());
         data.metadata->set("DETECTOR_ID", detectorId, "archive ID for the Exposure's Detector");
     }
+    if (hasPhotoCalib()) {
+        int photoCalibId = data.archive.put(getPhotoCalib());
+        data.metadata->set("PHOTOCALIB_ID", photoCalibId, "archive ID for photometric calibration");
+    }
 
     // LSST convention is that Wcs is in pixel coordinates (i.e relative to bottom left
     // corner of parent image, if any). The Wcs/Fits convention is that the Wcs is in
@@ -231,12 +233,6 @@ ExposureInfo::FitsWriteData ExposureInfo::_startWriteFits(lsst::geom::Point2I co
     if (visitInfoPtr) {
         detail::setVisitInfoMetadata(*(data.metadata), *visitInfoPtr);
     }
-
-    /*
-     * We need to define these keywords properly! XXX
-     */
-    data.metadata->set("FLUXMAG0", getCalib()->getFluxMag0().first);
-    data.metadata->set("FLUXMAG0ERR", getCalib()->getFluxMag0().second);
 
     return data;
 }

@@ -30,7 +30,7 @@ from lsst.afw.geom import makeSkyWcs, Polygon
 from lsst.afw.table import ExposureTable
 from lsst.afw.image import (Image, Mask, Exposure, LOCAL, PARENT, MaskPixel, VariancePixel,
                             ImageFitsReader, MaskFitsReader, MaskedImageFitsReader, ExposureFitsReader,
-                            Filter, Calib, ApCorrMap, VisitInfo, TransmissionCurve, CoaddInputs)
+                            Filter, PhotoCalib, ApCorrMap, VisitInfo, TransmissionCurve, CoaddInputs)
 from lsst.afw.image.utils import defineFilter
 from lsst.afw.detection import GaussianPsf
 from lsst.afw.cameraGeom.testUtils import DetectorWrapper
@@ -179,7 +179,7 @@ class FitsReaderTestCase(lsst.utils.tests.TestCase):
         self.assertWcsAlmostEqualOverBBox(exposureIn.getWcs(), reader.readWcs(), self.bbox,
                                           maxDiffPix=0, maxDiffSky=0*degrees)
         self.assertEqual(exposureIn.getFilter(), reader.readFilter())
-        self.assertEqual(exposureIn.getCalib(), reader.readCalib())
+        self.assertEqual(exposureIn.getPhotoCalib(), reader.readPhotoCalib())
         self.assertImagesEqual(exposureIn.getPsf().computeImage(), reader.readPsf().computeImage())
         self.assertEqual(exposureIn.getInfo().getValidPolygon(), reader.readValidPolygon())
         self.assertCountEqual(exposureIn.getInfo().getApCorrMap(), reader.readApCorrMap())
@@ -197,7 +197,7 @@ class FitsReaderTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(record.getPsf(), reader.readPsf())
         self.assertEqual(record.getValidPolygon(), reader.readValidPolygon())
         self.assertEqual(record.getApCorrMap(), reader.readApCorrMap())
-        self.assertEqual(record.getCalib(), reader.readCalib())
+        self.assertEqual(record.getPhotoCalib(), reader.readPhotoCalib())
         self.assertEqual(record.getDetector(), reader.readDetector())
         self.checkMultiPlaneReader(
             reader, exposureIn, fileName, dtypesOut,
@@ -213,7 +213,7 @@ class FitsReaderTestCase(lsst.utils.tests.TestCase):
         wcs = makeSkyWcs(Point2D(2.5, 3.75), SpherePoint(40.0*degrees, 50.0*degrees),
                          np.array([[1E-5, 0.0], [0.0, -1E-5]]))
         defineFilter("test_readers_filter", lambdaEff=470.0)
-        calib = Calib(2.5E4)
+        calib = PhotoCalib(2.5E4)
         psf = GaussianPsf(21, 21, 8.0)
         polygon = Polygon(Box2D(self.bbox))
         apCorrMap = ApCorrMap()

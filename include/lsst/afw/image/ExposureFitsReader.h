@@ -22,12 +22,13 @@
 #ifndef LSST_AFW_IMAGE_EXPOSUREFITSREADER_H
 #define LSST_AFW_IMAGE_EXPOSUREFITSREADER_H
 
-
 #include "lsst/afw/image/MaskedImageFitsReader.h"
 #include "lsst/afw/image/ExposureInfo.h"
 #include "lsst/afw/image/Exposure.h"
 
-namespace lsst { namespace afw { namespace image {
+namespace lsst {
+namespace afw {
+namespace image {
 
 /**
  * A FITS reader class for Exposures and their components.
@@ -40,20 +41,19 @@ namespace lsst { namespace afw { namespace image {
  */
 class ExposureFitsReader {
 public:
-
     /**
      * Construct a FITS reader object.
      *
      * @param  fileName Name of a file to open.
      */
-    explicit ExposureFitsReader(std::string const& fileName);
+    explicit ExposureFitsReader(std::string const &fileName);
 
     /**
      * Construct a FITS reader object.
      *
      * @param  manager  Memory block containing a FITS file.
      */
-    explicit ExposureFitsReader(fits::MemFileManager& manager);
+    explicit ExposureFitsReader(fits::MemFileManager &manager);
 
     /**
      * Construct a FITS reader object.
@@ -61,13 +61,13 @@ public:
      * @param  fitsFile  Pointer to a CFITSIO file object.  Lifetime will not
      *                   be managed by the Reader object.
      */
-    explicit ExposureFitsReader(fits::Fits * fitsFile);
+    explicit ExposureFitsReader(fits::Fits *fitsFile);
 
     // FITS readers are not copyable, movable, or assignable.
     ExposureFitsReader(ExposureFitsReader const &) = delete;
     ExposureFitsReader(ExposureFitsReader &&) = delete;
-    ExposureFitsReader & operator=(ExposureFitsReader const &) = delete;
-    ExposureFitsReader & operator=(ExposureFitsReader &&) = delete;
+    ExposureFitsReader &operator=(ExposureFitsReader const &) = delete;
+    ExposureFitsReader &operator=(ExposureFitsReader &&) = delete;
 
     ~ExposureFitsReader() noexcept;
 
@@ -90,7 +90,7 @@ public:
      *                 If LOCAL, the returned box will always have a minimum
      *                 of (0, 0).
      */
-    lsst::geom::Box2I readBBox(ImageOrigin origin=PARENT);
+    lsst::geom::Box2I readBBox(ImageOrigin origin = PARENT);
 
     /**
      * Read the image origin from the on-disk image or a subimage thereof.
@@ -99,10 +99,8 @@ public:
      * @param  origin Coordinate system convention for the given box.  Ignored
      *                if `bbox` is empty.
      */
-    lsst::geom::Point2I readXY0(
-        lsst::geom::Box2I const & bbox=lsst::geom::Box2I(),
-        ImageOrigin origin=PARENT
-    );
+    lsst::geom::Point2I readXY0(lsst::geom::Box2I const &bbox = lsst::geom::Box2I(),
+                                ImageOrigin origin = PARENT);
 
     /**
      * Read the flexible metadata associated with the Exposure.
@@ -119,7 +117,7 @@ public:
     Filter readFilter();
 
     /// Read the Exposure's photometric calibration.
-    std::shared_ptr<Calib> readCalib();
+    std::shared_ptr<PhotoCalib> readPhotoCalib();
 
     /// Read the Exposure's point-spread function.
     std::shared_ptr<detection::Psf> readPsf();
@@ -160,11 +158,11 @@ public:
      * on-disk image.
      */
     template <typename ImagePixelT>
-    Image<ImagePixelT> readImage(lsst::geom::Box2I const & bbox=lsst::geom::Box2I(),
-                                 ImageOrigin origin=PARENT, bool allowUnsafe=false);
+    Image<ImagePixelT> readImage(lsst::geom::Box2I const &bbox = lsst::geom::Box2I(),
+                                 ImageOrigin origin = PARENT, bool allowUnsafe = false);
     template <typename ImagePixelT>
-    ndarray::Array<ImagePixelT, 2, 2> readImageArray(lsst::geom::Box2I const & bbox=lsst::geom::Box2I(),
-                                                     ImageOrigin origin=PARENT, bool allowUnsafe=false);
+    ndarray::Array<ImagePixelT, 2, 2> readImageArray(lsst::geom::Box2I const &bbox = lsst::geom::Box2I(),
+                                                     ImageOrigin origin = PARENT, bool allowUnsafe = false);
     ///@}
 
     /**
@@ -183,8 +181,9 @@ public:
      * on-disk image.
      */
     template <typename MaskPixelT>
-    Mask<MaskPixelT> readMask(lsst::geom::Box2I const & bbox=lsst::geom::Box2I(),
-                              ImageOrigin origin=PARENT, bool conformMasks=false, bool allowUnsafe=false);
+    Mask<MaskPixelT> readMask(lsst::geom::Box2I const &bbox = lsst::geom::Box2I(),
+                              ImageOrigin origin = PARENT, bool conformMasks = false,
+                              bool allowUnsafe = false);
 
     /**
      * Read the mask plane.
@@ -200,8 +199,8 @@ public:
      * on-disk image.
      */
     template <typename MaskPixelT>
-    ndarray::Array<MaskPixelT, 2, 2> readMaskArray(lsst::geom::Box2I const & bbox=lsst::geom::Box2I(),
-                                                   ImageOrigin origin=PARENT, bool allowUnsafe=false);
+    ndarray::Array<MaskPixelT, 2, 2> readMaskArray(lsst::geom::Box2I const &bbox = lsst::geom::Box2I(),
+                                                   ImageOrigin origin = PARENT, bool allowUnsafe = false);
 
     ///@{
     /**
@@ -218,11 +217,12 @@ public:
      * on-disk image.
      */
     template <typename VariancePixelT>
-    Image<VariancePixelT> readVariance(lsst::geom::Box2I const & bbox=lsst::geom::Box2I(),
-                                       ImageOrigin origin=PARENT, bool allowUnsafe=false);
+    Image<VariancePixelT> readVariance(lsst::geom::Box2I const &bbox = lsst::geom::Box2I(),
+                                       ImageOrigin origin = PARENT, bool allowUnsafe = false);
     template <typename VariancePixelT>
-    ndarray::Array<VariancePixelT, 2, 2> readVarianceArray(lsst::geom::Box2I const & bbox=lsst::geom::Box2I(),
-                                                           ImageOrigin origin=PARENT, bool allowUnsafe=false);
+    ndarray::Array<VariancePixelT, 2, 2> readVarianceArray(
+            lsst::geom::Box2I const &bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT,
+            bool allowUnsafe = false);
     ///@}
 
     /**
@@ -240,11 +240,10 @@ public:
      * argument to provide the type to read (for the image plane).  This
      * defaults to the type of the on-disk image.
      */
-    template <typename ImagePixelT, typename MaskPixelT=MaskPixel, typename VariancePixelT=VariancePixel>
+    template <typename ImagePixelT, typename MaskPixelT = MaskPixel, typename VariancePixelT = VariancePixel>
     MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> readMaskedImage(
-        lsst::geom::Box2I const & bbox=lsst::geom::Box2I(), ImageOrigin origin=PARENT,
-        bool conformMasks=false, bool allowUnsafe=false
-    );
+            lsst::geom::Box2I const &bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT,
+            bool conformMasks = false, bool allowUnsafe = false);
 
     /**
      * Read the full Exposure.
@@ -261,11 +260,10 @@ public:
      * argument to provide the type to read (for the image plane).  This
      * defaults to the type of the on-disk image.
      */
-    template <typename ImagePixelT, typename MaskPixelT=MaskPixel, typename VariancePixelT=VariancePixel>
+    template <typename ImagePixelT, typename MaskPixelT = MaskPixel, typename VariancePixelT = VariancePixel>
     Exposure<ImagePixelT, MaskPixelT, VariancePixelT> read(
-        lsst::geom::Box2I const & bbox=lsst::geom::Box2I(), ImageOrigin origin=PARENT,
-        bool conformMasks=false, bool allowUnsafe=false
-    );
+            lsst::geom::Box2I const &bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT,
+            bool conformMasks = false, bool allowUnsafe = false);
 
     /**
      * Return the name of the file this reader targets.
@@ -273,19 +271,20 @@ public:
     std::string getFileName() const { return _maskedImageReader.getFileName(); }
 
 private:
-
     class MetadataReader;
     class ArchiveReader;
 
     void _ensureReaders();
 
-    fits::Fits * _getFitsFile() { return _maskedImageReader._getFitsFile(); }
+    fits::Fits *_getFitsFile() { return _maskedImageReader._getFitsFile(); }
 
     MaskedImageFitsReader _maskedImageReader;
     std::unique_ptr<MetadataReader> _metadataReader;
     std::unique_ptr<ArchiveReader> _archiveReader;
 };
 
-}}} // namespace lsst::afw::image
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst
 
-#endif // !LSST_AFW_IMAGE_EXPOSUREFITSREADER_H
+#endif  // !LSST_AFW_IMAGE_EXPOSUREFITSREADER_H

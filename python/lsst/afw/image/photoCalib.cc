@@ -49,6 +49,13 @@ void declareMeasurement(py::module &mod) {
     cls.def(py::init<double, double>(), "value"_a, "error"_a);
     cls.def_readonly("value", &Measurement::value);
     cls.def_readonly("error", &Measurement::error);
+
+    utils::python::addOutputOp(cls, "__str__");
+    cls.def("__repr__", [](Measurement const &self) {
+        std::ostringstream os;
+        os << "Measurement(" << self << ")";
+        return os.str();
+    });
 }
 
 PYBIND11_MODULE(photoCalib, mod) {

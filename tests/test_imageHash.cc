@@ -37,16 +37,6 @@ namespace lsst {
 namespace afw {
 namespace image {
 
-BOOST_AUTO_TEST_CASE(CalibHash) {
-    utils::assertValidHash<Calib>();
-
-    Calib test1a, test1b;
-    test1a.setFluxMag0(42.0, 5.0);
-    test1b.setFluxMag0(42.0, 5.0);
-
-    utils::assertHashesEqual(test1a, test1b);
-}
-
 BOOST_AUTO_TEST_CASE(ColorHash) {
     utils::assertValidHash<Color>();
 

@@ -22,8 +22,22 @@
 
 __all__ = []  # import this module only for its side effects
 
+# from deprecated.sphinx import deprecated
+
 from ..base import Catalog
 from .exposure import ExposureCatalog
+
+
+# TODO DM-18544: activate this once `deprecated` becomes available
+# @continueClass  # noqa F811
+# class ExposureRecord:
+#     @deprecated(reason="Replaced with getPhotoCalib (will be removed in 18.0)", category=FutureWarning)
+#     def getCalib(self, *args, **kwargs):
+#         return self._getCalib(*args, **kwargs)
+
+#     @deprecated(reason="Replaced with setPhotoCalib (will be removed in 18.0)", category=FutureWarning)
+#     def setCalib(self, *args, **kwargs):
+#         return self._setCalib(*args, **kwargs)
 
 
 Catalog.register("Exposure", ExposureCatalog)

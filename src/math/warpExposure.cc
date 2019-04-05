@@ -47,7 +47,7 @@
 #include "lsst/afw/math/warpExposure.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/math/Kernel.h"
-#include "lsst/afw/image/Calib.h"
+#include "lsst/afw/image/PhotoCalib.h"
 #include "lsst/afw/math/detail/WarpAtOnePoint.h"
 
 namespace pexExcept = lsst::pex::exceptions;
@@ -244,8 +244,7 @@ int warpExposure(DestExposureT &destExposure, SrcExposureT const &srcExposure, W
         throw LSST_EXCEPT(pexExcept::InvalidParameterError, "srcExposure has no Wcs");
     }
     typename DestExposureT::MaskedImageT mi = destExposure.getMaskedImage();
-    std::shared_ptr<image::Calib> calibCopy(new image::Calib(*srcExposure.getCalib()));
-    destExposure.setCalib(calibCopy);
+    destExposure.setPhotoCalib(srcExposure.getPhotoCalib());
     destExposure.setFilter(srcExposure.getFilter());
     destExposure.getInfo()->setVisitInfo(srcExposure.getInfo()->getVisitInfo());
     return warpImage(mi, *destExposure.getWcs(), srcExposure.getMaskedImage(), *srcExposure.getWcs(), control,

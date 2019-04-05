@@ -28,7 +28,6 @@
 
 #include "lsst/geom.h"
 #include "lsst/afw/image/LsstImageTypes.h"
-#include "lsst/afw/image/Calib.h"
 #include "lsst/afw/image/ApCorrMap.h"
 #include "lsst/afw/image/Filter.h"
 #include "lsst/afw/cameraGeom/Detector.h"

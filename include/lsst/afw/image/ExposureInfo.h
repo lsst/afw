@@ -56,7 +56,7 @@ class Fits;
 
 namespace image {
 
-class Calib;
+class PhotoCalib;
 class ApCorrMap;
 class VisitInfo;
 class TransmissionCurve;
@@ -67,8 +67,9 @@ class TransmissionCurve;
  *  The constness semantics of the things held by ExposureInfo are admittedly a bit of a mess,
  *  but they're that way to preserve backwards compatibility for now.  Eventually I'd like to make
  *  a lot of these things immutable, but in the meantime, here's the summary:
- *   - Wcs, Calib, and Psf are held by non-const pointer, and you can get a non-const pointer via a
+ *   - Wcs and Psf are held by non-const pointer, and you can get a non-const pointer via a
  *     non-const member function accessor and a const pointer via a const member function accessor.
+ *   - PhotoCalib is held by const pointer and only returned by const pointer (it's immutable).
  *   - Detector is held by const pointer and only returned by const pointer (but if you're
  *     in Python, SWIG will have casted all that constness away).
  *   - Filter is held and returned by value.
@@ -76,8 +77,8 @@ class TransmissionCurve;
  *   - Metadata is held by non-const pointer, and you can get a non-const pointer via a const
  *     member function accessor (i.e. constness is not propagated).
  *
- *  The setters for Wcs and Calib clone their input arguments (this is a departure from the
- *  previous behavior for Calib and Wcs but it's safer w.r.t. aliasing and it matches the old
+ *  The setter for Wcs clones its input arguments (this is a departure from the
+ *  previous behavior for Wcs but it's safer w.r.t. aliasing and it matches the old
  *  (and current) behavior of the Exposure and ExposureInfo constructors, which clone their
  *  arguments.  The setter for Psf and constructors do not clone the Psf, as Psfs are immutable
  *  and hence we don't need to ensure strict ownership.  The setter for Detector does *not*
@@ -110,17 +111,31 @@ public:
     /// Set the exposure's filter
     void setFilter(Filter const& filter) { _filter = filter; }
 
-    /// Does this exposure have a Calib?
-    bool hasCalib() const { return static_cast<bool>(_calib); }
+    /// Does this exposure have a photometric calibration?
+    bool hasPhotoCalib() const { return static_cast<bool>(_photoCalib); }
 
     /// Return the exposure's photometric calibration
-    std::shared_ptr<Calib> getCalib() { return _calib; }
+    std::shared_ptr<PhotoCalib const> getPhotoCalib() const { return _photoCalib; }
+
+    /// Set the Exposure's PhotoCalib object
+    void setPhotoCalib(std::shared_ptr<PhotoCalib const> photoCalib) { _photoCalib = photoCalib; }
+
+    /// Does this exposure have a photometric calibration?
+    [[deprecated("Replaced with hasPhotoCalib (will be removed in 18.0)")]] bool hasCalib() const {
+        return static_cast<bool>(_photoCalib);
+    }
 
     /// Return the exposure's photometric calibration
-    std::shared_ptr<Calib const> getCalib() const { return _calib; }
+    [[deprecated("Replaced with getPhotoCalib (will be removed in 18.0)")]] std::shared_ptr<PhotoCalib const>
+    getCalib() const {
+        return _photoCalib;
+    }
 
-    /// Set the Exposure's Calib object
-    void setCalib(std::shared_ptr<Calib const> calib) { _calib = _cloneCalib(calib); }
+    /// Set the Exposure's PhotoCalib object
+    [[deprecated("Replaced with setPhotoCalib (will be removed in 18.0)")]] void setCalib(
+            std::shared_ptr<PhotoCalib const> photoCalib) {
+        _photoCalib = photoCalib;
+    }
 
     /// Return flexible metadata
     std::shared_ptr<daf::base::PropertySet> getMetadata() const { return _metadata; }
@@ -206,14 +221,14 @@ public:
     /**
      *  Construct an ExposureInfo from its various components.
      *
-     *  If a null Calib and/or PropertySet pointer is passed (the default),
-     *  a new Calib and/or PropertyList will be created.  To set these pointers
-     *  to null, you must explicitly call setCalib or setMetadata after construction.
+     *  If a null PhotoCalib and/or PropertySet pointer is passed (the default),
+     *  a new PhotoCalib and/or PropertyList will be created.  To set these pointers
+     *  to null, you must explicitly call setPhotoCalib or setMetadata after construction.
      */
     explicit ExposureInfo(
             std::shared_ptr<geom::SkyWcs const> const& wcs = std::shared_ptr<geom::SkyWcs const>(),
             std::shared_ptr<detection::Psf const> const& psf = std::shared_ptr<detection::Psf const>(),
-            std::shared_ptr<Calib const> const& calib = std::shared_ptr<Calib const>(),
+            std::shared_ptr<PhotoCalib const> const& photoCalib = std::shared_ptr<PhotoCalib const>(),
             std::shared_ptr<cameraGeom::Detector const> const& detector =
                     std::shared_ptr<cameraGeom::Detector const>(),
             std::shared_ptr<geom::polygon::Polygon const> const& polygon =
@@ -292,12 +307,11 @@ private:
      */
     void _finishWriteFits(fits::Fits& fitsfile, FitsWriteData const& data) const;
 
-    static std::shared_ptr<Calib> _cloneCalib(std::shared_ptr<Calib const> calib);
     static std::shared_ptr<ApCorrMap> _cloneApCorrMap(std::shared_ptr<ApCorrMap const> apCorrMap);
 
     std::shared_ptr<geom::SkyWcs const> _wcs;
     std::shared_ptr<detection::Psf> _psf;
-    std::shared_ptr<Calib> _calib;
+    std::shared_ptr<PhotoCalib const> _photoCalib;
     std::shared_ptr<cameraGeom::Detector const> _detector;
     std::shared_ptr<geom::polygon::Polygon const> _validPolygon;
     Filter _filter;

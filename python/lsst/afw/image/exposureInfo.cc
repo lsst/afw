@@ -28,13 +28,12 @@
 #include "lsst/afw/geom/polygon/Polygon.h"
 #include "lsst/afw/geom/SkyWcs.h"
 #include "lsst/afw/image/ApCorrMap.h"
-#include "lsst/afw/image/Calib.h"
+#include "lsst/afw/image/PhotoCalib.h"
 #include "lsst/afw/image/CoaddInputs.h"
 #include "lsst/afw/image/Filter.h"
 #include "lsst/afw/image/VisitInfo.h"
 #include "lsst/afw/image/TransmissionCurve.h"
 #include "lsst/afw/image/ExposureInfo.h"
-
 
 namespace py = pybind11;
 using namespace py::literals;
@@ -51,7 +50,7 @@ PYBIND11_MODULE(exposureInfo, mod) {
     py::module::import("lsst.afw.geom.skyWcs");
     py::module::import("lsst.afw.cameraGeom.detector");
     py::module::import("lsst.afw.detection.psf");
-    py::module::import("lsst.afw.image.calib");
+    py::module::import("lsst.afw.image.photoCalib");
     py::module::import("lsst.afw.image.apCorrMap");
     py::module::import("lsst.afw.image.coaddInputs");
     py::module::import("lsst.afw.image.filter");
@@ -63,28 +62,28 @@ PYBIND11_MODULE(exposureInfo, mod) {
     /* Member types and enums */
 
     /* Constructors */
-    cls.def(py::init<std::shared_ptr<geom::SkyWcs const> const &, std::shared_ptr<detection::Psf const> const &,
-                     std::shared_ptr<Calib const> const &,
+    cls.def(py::init<std::shared_ptr<geom::SkyWcs const> const &,
+                     std::shared_ptr<detection::Psf const> const &, std::shared_ptr<PhotoCalib const> const &,
                      std::shared_ptr<cameraGeom::Detector const> const &,
                      std::shared_ptr<geom::polygon::Polygon const> const &, Filter const &,
                      std::shared_ptr<daf::base::PropertySet> const &, std::shared_ptr<CoaddInputs> const &,
                      std::shared_ptr<ApCorrMap> const &, std::shared_ptr<VisitInfo const> const &,
                      std::shared_ptr<TransmissionCurve const> const &>(),
-            "wcs"_a = std::shared_ptr<geom::SkyWcs const>(), "psf"_a = std::shared_ptr<detection::Psf const>(),
-            "calib"_a = std::shared_ptr<Calib const>(),
+            "wcs"_a = std::shared_ptr<geom::SkyWcs const>(),
+            "psf"_a = std::shared_ptr<detection::Psf const>(),
+            "photoCalib"_a = std::shared_ptr<PhotoCalib const>(),
             "detector"_a = std::shared_ptr<cameraGeom::Detector const>(),
             "polygon"_a = std::shared_ptr<geom::polygon::Polygon const>(), "filter"_a = Filter(),
             "metadata"_a = std::shared_ptr<daf::base::PropertySet>(),
             "coaddInputs"_a = std::shared_ptr<CoaddInputs>(), "apCorrMap"_a = std::shared_ptr<ApCorrMap>(),
-            "visitInfo"_a = std::shared_ptr<VisitInfo const>(),
-            "transmissionCurve"_a = nullptr);
+            "visitInfo"_a = std::shared_ptr<VisitInfo const>(), "transmissionCurve"_a = nullptr);
     cls.def(py::init<>());
     cls.def(py::init<ExposureInfo>(), "other"_a);
     cls.def(py::init<ExposureInfo, bool>(), "other"_a, "copyMetadata"_a);
 
     /* Members */
     cls.def("hasWcs", &ExposureInfo::hasWcs);
-    cls.def("getWcs", (std::shared_ptr<geom::SkyWcs> (ExposureInfo::*)()) & ExposureInfo::getWcs);
+    cls.def("getWcs", (std::shared_ptr<geom::SkyWcs>(ExposureInfo::*)()) & ExposureInfo::getWcs);
     cls.def("setWcs", &ExposureInfo::setWcs, "wcs"_a);
 
     cls.def("hasDetector", &ExposureInfo::hasDetector);
@@ -102,9 +101,14 @@ PYBIND11_MODULE(exposureInfo, mod) {
     cls.def("getFilter", &ExposureInfo::getFilter);
     cls.def("setFilter", &ExposureInfo::setFilter, "filter"_a);
 
+    // Deprecated versions
     cls.def("hasCalib", &ExposureInfo::hasCalib);
-    cls.def("getCalib", (std::shared_ptr<Calib> (ExposureInfo::*)()) & ExposureInfo::getCalib);
+    cls.def("getCalib", &ExposureInfo::getCalib);
     cls.def("setCalib", &ExposureInfo::setCalib, "calib"_a);
+
+    cls.def("hasPhotoCalib", &ExposureInfo::hasPhotoCalib);
+    cls.def("getPhotoCalib", &ExposureInfo::getPhotoCalib);
+    cls.def("setPhotoCalib", &ExposureInfo::setPhotoCalib, "photoCalib"_a);
 
     cls.def("getMetadata", &ExposureInfo::getMetadata);
     cls.def("setMetadata", &ExposureInfo::setMetadata, "metadata"_a);
@@ -134,7 +138,7 @@ PYBIND11_MODULE(exposureInfo, mod) {
             "polygon"_a);
 
     cls.def("hasApCorrMap", &ExposureInfo::hasApCorrMap);
-    cls.def("getApCorrMap", (std::shared_ptr<ApCorrMap> (ExposureInfo::*)()) & ExposureInfo::getApCorrMap);
+    cls.def("getApCorrMap", (std::shared_ptr<ApCorrMap>(ExposureInfo::*)()) & ExposureInfo::getApCorrMap);
     cls.def("setApCorrMap", &ExposureInfo::setApCorrMap, "apCorrMap"_a);
     cls.def("initApCorrMap", &ExposureInfo::initApCorrMap);
 
@@ -150,7 +154,7 @@ PYBIND11_MODULE(exposureInfo, mod) {
     cls.def("getTransmissionCurve", &ExposureInfo::getTransmissionCurve);
     cls.def("setTransmissionCurve", &ExposureInfo::setTransmissionCurve, "transmissionCurve"_a);
 }
-}
-}
-}
-}  // namespace lsst::afw::image::<anonymous>
+}  // namespace
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst

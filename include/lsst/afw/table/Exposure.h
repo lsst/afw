@@ -37,7 +37,7 @@ namespace lsst {
 namespace afw {
 
 namespace image {
-class Calib;
+class PhotoCalib;
 class ApCorrMap;
 class VisitInfo;
 class TransmissionCurve;
@@ -56,7 +56,7 @@ class Polygon;
 
 namespace cameraGeom {
 class Detector;
-} // namespace cameraGeom
+}  // namespace cameraGeom
 
 namespace table {
 
@@ -119,15 +119,25 @@ public:
                   bool includeValidPolygon = false) const;
 
     //@{
-    /// Get/Set the the attached Wcs, Psf, Calib, or ApCorrMap.  No copies are made.
+    /// Get/Set the the attached Wcs, Psf, PhotoCalib, or ApCorrMap.  No copies are made.
     std::shared_ptr<geom::SkyWcs const> getWcs() const { return _wcs; }
     void setWcs(std::shared_ptr<geom::SkyWcs const> wcs) { _wcs = wcs; }
 
     std::shared_ptr<detection::Psf const> getPsf() const { return _psf; }
     void setPsf(std::shared_ptr<detection::Psf const> psf) { _psf = psf; }
 
-    std::shared_ptr<image::Calib const> getCalib() const { return _calib; }
-    void setCalib(std::shared_ptr<image::Calib const> calib) { _calib = calib; }
+    std::shared_ptr<image::PhotoCalib const> getPhotoCalib() const { return _photoCalib; }
+    void setPhotoCalib(std::shared_ptr<image::PhotoCalib const> photoCalib) { _photoCalib = photoCalib; }
+
+    [[deprecated("Replaced with getPhotoCalib (will be removed in 18.0)")]] std::shared_ptr<
+            image::PhotoCalib const>
+    getCalib() const {
+        return _photoCalib;
+    }
+    [[deprecated("Replaced with setPhotoCalib (will be removed in 18.0)")]] void setCalib(
+            std::shared_ptr<image::PhotoCalib const> photoCalib) {
+        _photoCalib = photoCalib;
+    }
 
     std::shared_ptr<image::ApCorrMap const> getApCorrMap() const { return _apCorrMap; }
     void setApCorrMap(std::shared_ptr<image::ApCorrMap const> apCorrMap) { _apCorrMap = apCorrMap; }
@@ -145,9 +155,7 @@ public:
         _transmissionCurve = std::move(transmissionCurve);
     }
 
-    std::shared_ptr<cameraGeom::Detector const> getDetector() const {
-        return _detector;
-    }
+    std::shared_ptr<cameraGeom::Detector const> getDetector() const { return _detector; }
     void setDetector(std::shared_ptr<cameraGeom::Detector const> detector) {
         _detector = std::move(detector);
     }
@@ -169,7 +177,7 @@ private:
 
     std::shared_ptr<geom::SkyWcs const> _wcs;
     std::shared_ptr<detection::Psf const> _psf;
-    std::shared_ptr<image::Calib const> _calib;
+    std::shared_ptr<image::PhotoCalib const> _photoCalib;
     std::shared_ptr<image::ApCorrMap const> _apCorrMap;
     std::shared_ptr<geom::polygon::Polygon const> _validPolygon;
     std::shared_ptr<image::VisitInfo const> _visitInfo;

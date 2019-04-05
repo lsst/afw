@@ -118,8 +118,8 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
                 self.wcs.getPixelOrigin() + lsst.geom.Extent2D(3.0, 6.0)
             )
         )
-        self.calib = lsst.afw.image.Calib()
-        self.calib.setFluxMag0(56.0, 2.2)
+        # these numbers are what were persisted as `Calib` objects in the files.
+        self.photoCalib = lsst.afw.image.makePhotoCalibFromCalibZeroPoint(56.0, 2.2)
         self.visitInfo = self.createVisitInfo()
         self.detector = DetectorWrapper().detector
         record0 = self.cat.addNew()
@@ -129,7 +129,7 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
         record0.setBBox(self.bbox0)
         record0.setPsf(self.psf)
         record0.setWcs(self.wcs)
-        record0.setCalib(self.calib)
+        record0.setPhotoCalib(self.photoCalib)
         record0.setVisitInfo(self.visitInfo)
         record0.setValidPolygon(None)
         record0.setDetector(None)
@@ -146,7 +146,7 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
         del self.cat
         del self.psf
         del self.wcs
-        del self.calib
+        del self.photoCalib
         del self.visitInfo
         del self.detector
 
@@ -161,8 +161,8 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(record1.getBBox(), self.bbox1)
         self.comparePsfs(record0.getPsf(), self.psf)
         self.assertIsNone(record1.getPsf())
-        self.assertEqual(record0.getCalib(), self.calib)
-        self.assertIsNone(record1.getCalib())
+        self.assertEqual(record0.getPhotoCalib(), self.photoCalib)
+        self.assertIsNone(record1.getPhotoCalib())
         self.assertEqual(record0.getVisitInfo(), self.visitInfo)
         self.assertIsNone(record1.getVisitInfo())
         self.assertEqual(record0.getValidPolygon(), None)
@@ -182,8 +182,8 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
             self.assertEqual(self.cat[1].get(self.kb), cat1[1].get(self.kb))
             self.assertEqual(self.cat[1].getWcs(), cat1[1].getWcs())
             self.assertIsNone(self.cat[1].getPsf())
-            self.assertIsNone(self.cat[1].getCalib())
-            self.assertEqual(self.cat[0].getCalib(), cat1[0].getCalib())
+            self.assertIsNone(self.cat[1].getPhotoCalib())
+            self.assertEqual(self.cat[0].getPhotoCalib(), cat1[0].getPhotoCalib())
             self.assertEqual(self.cat[0].getVisitInfo(),
                              cat1[0].getVisitInfo())
             self.assertIsNone(cat1[1].getVisitInfo())
@@ -259,8 +259,8 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(self.cat[1].get(self.kb), catV1[1].get(self.kb))
         self.assertEqual(self.cat[1].getWcs(), catV1[1].getWcs())
         self.assertIsNone(self.cat[1].getPsf())
-        self.assertIsNone(self.cat[1].getCalib())
-        self.assertEqual(self.cat[0].getCalib(), catV1[0].getCalib())
+        self.assertIsNone(self.cat[1].getPhotoCalib())
+        self.assertEqual(self.cat[0].getPhotoCalib(), catV1[0].getPhotoCalib())
         self.assertIsNone(catV1[0].getVisitInfo())
         self.assertIsNone(catV1[1].getVisitInfo())
 
