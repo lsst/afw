@@ -65,10 +65,8 @@ enum class ReadoutCorner {
  @endverbatim
  * @note
  * * All bounding boxes are parent boxes with respect to the raw image.
- * * The overscan and underscan bounding boxes are regions containing USABLE data,
- *   NOT the entire underscan and overscan region. These bounding boxes should exclude areas
- *   with weird electronic artifacts. Each bounding box can be empty (0 extent) if the corresponding
- *   region is not used for data processing.
+ * * The overscan and prescan bounding boxes represent the full regions;
+ *   unusable regions are set via ISR configuration parameters.
  * * xyOffset is not used for instrument signature removal (ISR); it is intended for use by display
  *   utilities. It supports construction of a raw CCD image in the case that raw data is provided as
  *   individual amplifier images (which is uncommon):
@@ -182,19 +180,19 @@ public:
     lsst::geom::Extent2I getRawXYOffset() const { return getFields().rawXYOffset; }
 
     /**
-     * The bounding box of usable horizontal overscan pixels in the assembled,
+     * The bounding box of horizontal overscan pixels in the assembled,
      * untrimmed raw image.
      */
     lsst::geom::Box2I getRawHorizontalOverscanBBox() const { return getFields().rawHorizontalOverscanBBox; }
 
     /**
-     * The bounding box of usable vertical overscan pixels in the assembled,
+     * The bounding box of vertical overscan pixels in the assembled,
      * untrimmed raw image.
      */
     lsst::geom::Box2I getRawVerticalOverscanBBox() const { return getFields().rawVerticalOverscanBBox; }
 
     /**
-     * The bounding box of usable (horizontal) prescan pixels in the assembled,
+     * The bounding box of (horizontal) prescan pixels in the assembled,
      * untrimmed raw image.
      */
     lsst::geom::Box2I getRawPrescanBBox() const { return getFields().rawPrescanBBox; }
