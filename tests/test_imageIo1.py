@@ -138,6 +138,21 @@ class ReadFitsTestCase(lsst.utils.tests.TestCase):
                 im = afwImage.ImageF(tmpFile, hdu)
                 self.assertEqual(im[0, 0, afwImage.LOCAL], 100*hdu)
 
+    # TODO: neither this test nor the one above it is thread-safe because
+    # image compression is a global flag
+    def testImageCompressionDisabled(self):
+        """Test that imageCompressionDisabled handles errors correctly.
+        """
+        for initState in [True, False]:
+            afwFits.setAllowImageCompression(initState)
+            try:
+                with afwFits.imageCompressionDisabled():
+                    self.assertFalse(afwFits.getAllowImageCompression())
+                    raise RuntimeError("Processing failed; abort!")
+            except RuntimeError:
+                pass
+            self.assertEqual(afwFits.getAllowImageCompression(), initState)
+
     def testWriteBool(self):
         """Test that we can read and write bools"""
         with lsst.utils.tests.getTempFilePath(".fits") as tmpFile:
