@@ -1,0 +1,2 @@
+opt = "g"
+archflags = "-pthread"
