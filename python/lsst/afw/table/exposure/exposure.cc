@@ -81,8 +81,8 @@ PyExposureRecord declareExposureRecord(py::module &mod) {
     cls.def("setPsf", &ExposureRecord::setPsf, "psf"_a);
 
     // Deprecated methods
-    cls.def("getCalib", &ExposureRecord::getCalib);
-    cls.def("setCalib", &ExposureRecord::setCalib, "photoCalib"_a);
+    cls.def("_getCalib", &ExposureRecord::getCalib);
+    cls.def("_setCalib", &ExposureRecord::setCalib, "photoCalib"_a);
 
     cls.def("getPhotoCalib", &ExposureRecord::getPhotoCalib);
     cls.def("setPhotoCalib", &ExposureRecord::setPhotoCalib, "photoCalib"_a);
