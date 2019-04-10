@@ -76,12 +76,12 @@ Eigen::Matrix2d makeCdMatrix(lsst::geom::Angle const &scale,
  * @anchor skywcs_frames **Frames of reference**
  *
  * SkyWcs internally keeps track of the following frames of reference:
- * - ACTUAL_PIXELS (optional): "actual" pixel position using the @ref pixel_position_standards "LSST
- * standard". This has the same meaning as the lsst.afw.cameraGeom.ACTUAL_PIXELS frame: actual pixels include
+ * - cameraGeom::ACTUAL_PIXELS (optional): "actual" pixel position using the @ref pixel_position_standards
+ * "LSST standard". This has the same meaning as the cameraGeom::ACTUAL_PIXELS frame: actual pixels include
  * effects such as "tree ring" distortions and electrical effects at the edge of CCDs. This frame should
  * only be provided if there is a reasonable model for these imperfections.
- * - PIXELS: nominal pixel position, using the @ref pixel_position_standards "LSST standard".
- *     This has the same meaning as the lsst.afw.cameraGeom.PIXELS frame:
+ * - cameraGeom::PIXELS: nominal pixel position, using the @ref pixel_position_standards "LSST standard".
+ *     This has the same meaning as the cameraGeom::PIXELS frame:
  *     nominal pixels may be rectangular, but are uniform in size and spacing.
  * - IWC: intermediate world coordinates (the FITS WCS concept).
  * - SKY: position on the sky as ICRS, with standard RA, Dec axis order.
@@ -103,8 +103,9 @@ Eigen::Matrix2d makeCdMatrix(lsst::geom::Angle const &scale,
  * direction.
  *
  * This FrameDict contains the named frames described in @ref skywcs_frames "frames of reference", e.g.
- * "SKY", "IWC", "PIXELS" and possibly "ACTUAL_PIXELS". "SKY" is the current frame.
- *  If "ACTUAL_PIXELS" is present then it is the base frame, otherwise "PIXELS" is the base frame.
+ * "SKY", "IWC", cameraGeom::PIXELS and possibly cameraGeom::ACTUAL_PIXELS. "SKY" is the current frame.
+ *  If cameraGeom::ACTUAL_PIXELS is present then it is the base frame, otherwise cameraGeom::PIXELS is the
+ * base frame.
  *
  * The "SKY" frame is of type ast::SkyFrame and has the following attributes:
  * - `SkyRef` is set to the sky origin of the WCS (ICRS RA, Dec) in radians.
@@ -241,9 +242,9 @@ public:
     /**
      * Get the contained FrameDict
      *
-     * The base frame will be PIXELS or ACTUAL_PIXELS and the current frame will be SKY,
-     * so the forward transform goes from pixels (using the LSST zero convention)
-     * to sky ICRS RA, Dec (in radians). For more details see
+     * The base frame will be cameraGeom::PIXELS or cameraGeom::ACTUAL_PIXELS and the current frame will be
+     * SKY, so the forward transform goes from pixels (using the LSST zero convention) to sky ICRS RA, Dec (in
+     * radians). For more details see
      *  @ref skywcs_frameDict "the contained ast::FrameDict"
      */
     std::shared_ptr<const ast::FrameDict> getFrameDict() const;
@@ -465,15 +466,15 @@ std::shared_ptr<SkyWcs> makeFlippedWcs(SkyWcs const &wcs, bool flipLR, bool flip
 /**
  * Create a new SkyWcs whose pixels are transformed by pixelTransform, as described below.
  *
- * If modifyActualPixels is true and the ACTUAL_PIXELS frame exists then pixelTransform
- * is inserted just after the ACTUAL_PIXELS frame:
+ * If modifyActualPixels is true and the cameraGeom::ACTUAL_PIXELS frame exists then pixelTransform
+ * is inserted just after the cameraGeom::ACTUAL_PIXELS frame:
  *
  *     newActualPixelsToPixels = pixelTransform -> oldActualPixelsToPixels
  *
  * This is appropriate for shifting a WCS, e.g. when writing FITS metadata for a subimage.
  *
- * If modifyActualPixels is false or the ACTUAL_PIXELS frame does not exist then pixelTransform
- * is inserted just after the PIXELS frame:
+ * If modifyActualPixels is false or the cameraGeom::ACTUAL_PIXELS frame does not exist then pixelTransform
+ * is inserted just after the cameraGeom::PIXELS frame:
  *
  *     newPixelsToIwc = pixelTransform -> oldPixelsToIwc
  *
@@ -484,8 +485,8 @@ std::shared_ptr<SkyWcs> makeFlippedWcs(SkyWcs const &wcs, bool flipLR, bool flip
  * @param[in] pixelTransform  Transform to insert
  * @param[in] wcs  Input WCS
  * @param[in] modifyActualPixels  Location at which to insert the transform;
- *    if true and the ACTUAL_PIXELS frame is present then insert just after the ACTUAL_PIXELS frame,
- *    else insert just after the PIXELS frame.
+ *    if true and the cameraGeom::ACTUAL_PIXELS frame is present then insert just after the
+ * cameraGeom::ACTUAL_PIXELS frame, else insert just after the cameraGeom::PIXELS frame.
  * @return the new WCS
  */
 std::shared_ptr<SkyWcs> makeModifiedWcs(TransformPoint2ToPoint2 const &pixelTransform, SkyWcs const &wcs,
@@ -524,8 +525,8 @@ std::shared_ptr<SkyWcs> makeSkyWcs(lsst::geom::Point2D const &crpix, lsst::geom:
 /**
  * Construct a FITS SkyWcs from camera geometry
  *
- * @param[in] pixelsToFieldAngle  Transformation from @ref afwCameraGeomPIXELS "pixels"
- *              to @ref afwCameraGeomFIELD_ANGLE "field angle" (in radians).
+ * @param[in] pixelsToFieldAngle  Transformation from @ref cameraGeom::PIXELS "pixels"
+ *              to @ref cameraGeom::FIELD_ANGLE "field angle" (in radians).
  * @param[in] orientation  Position angle of focal plane +Y, measured from N through E at crval.
  *                         At 0 degrees, +Y is along N and +X is along W/E if flipX false/true.
  *                         At 90 degrees, +Y is along E and +X is along N/S if flipX false/true.
@@ -596,7 +597,7 @@ std::shared_ptr<TransformPoint2ToSpherePoint> getIntermediateWorldCoordsToSky(Sk
 /**
  * Return a transform from pixel coordinates to intermediate world coordinates
  *
- * The pixel frame is is the base frame: ACTUAL_PIXELS, if present, else PIXELS.
+ * The pixel frame is is the base frame: cameraGeom::ACTUAL_PIXELS, if present, else cameraGeom::PIXELS.
  */
 std::shared_ptr<TransformPoint2ToPoint2> getPixelToIntermediateWorldCoords(SkyWcs const &wcs,
                                                                            bool simplify = true);
