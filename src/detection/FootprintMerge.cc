@@ -270,14 +270,17 @@ void FootprintMergeList::addCatalog(std::shared_ptr<afw::table::SourceTable> sou
                 if (box.overlaps(foot->getBBox()) && (**iter).overlaps(*foot)) {
                     if (!first) {
                         first = *iter;
-                        // Add Footprint to existing merge and set flag for this band
+                        // Add new footprint to existing FootprintMerge without peaks, in order to connect
+                        // other now-overlapping FootprintMerges. If two FootprintMerges both overlap with
+                        // the new footprint, they are now guaranteed to overlap with each other.
+                        // Hold off adding foot's lower-priority peaks until the higher-priority existing
+                        // peaks merged into this first FootprintMerge. 
                         if (doMerge) {
-                            first->add(foot, _peakSchemaMapper, keyIter->second, minNewPeakDist,
-                                       maxSamePeakDist);
+                            first->add(foot, _peakSchemaMapper, keyIter->second);
                         }
                     } else {
-                        // Add merged Footprint to first
                         if (doMerge) {
+                            // Add existing merged Footprint to first
                             first->add(**iter, _filterMap, minNewPeakDist, maxSamePeakDist);
                             iter = _mergeList.erase(iter);
                             continue;
@@ -285,10 +288,14 @@ void FootprintMergeList::addCatalog(std::shared_ptr<afw::table::SourceTable> sou
                     }
                 }
                 ++iter;
-            }
-        }
+            } // while mergeList
+        } //     if checkForMatches
 
-        if (!first) {
+        if (doMerge && first) {
+            // Now merge footprint including peaks into the newly-connected, higher-priority FootprintMerge
+            first->add(foot, _peakSchemaMapper, keyIter->second, minNewPeakDist, maxSamePeakDist);
+        } else {
+           // Footprint did not overlap with any existing FootprintMerges. Add to MergeList
             _mergeList.push_back(std::make_shared<FootprintMerge>(foot, sourceTable, _peakTable,
                                                                   _peakSchemaMapper, keyIter->second));
         }

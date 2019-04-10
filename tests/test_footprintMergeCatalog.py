@@ -298,6 +298,46 @@ class FootprintMergeCatalogTestCase(lsst.utils.tests.TestCase):
                     self.assertEqual(numPeak, 1)
                 peakIndex += 1
 
+    def testDM17431(self):
+        """Test that priority order is respected
+
+        specifically when lower priority footprints overlap two previously
+        disconnected higher priority footprints.
+        """
+        box = lsst.geom.Box2I(lsst.geom.Point2I(0, 0), lsst.geom.Point2I(100, 100))
+        psfsig = 1.
+        kernelSize = 41
+        flux = 1000
+        cat1 = {}
+        cat2 = {}
+        peakDist = 10
+        samePeakDist = 3
+
+        # cat2 connects cat1's 2 separated footprints.
+        # 65 and 70 are too close to be new or same peaks.
+        # 70 is higher priority and should be in the catalog instead of 65.
+        cat1['pos'] = [(50, 50), (70, 50)]
+        cat2['pos'] = [(55, 50), (65, 50)]
+        schema = afwTable.SourceTable.makeMinimalSchema()
+        idFactory = afwTable.IdFactory.makeSimple()
+        table = afwTable.SourceTable.make(schema, idFactory)
+
+        for (cat, psfFactor) in zip([cat1, cat2], [1, 2]):
+            cat['mi'] = afwImage.MaskedImageD(box)
+            cat['psf'] = afwDetect.GaussianPsf(kernelSize, kernelSize, psfFactor*psfsig)
+            insertPsf(cat['pos'], cat['mi'], cat['psf'], kernelSize, flux)
+            fp = afwDetect.FootprintSet(cat['mi'], afwDetect.Threshold(0.001), "DETECTED")
+            cat['catalog'] = afwTable.SourceCatalog(table)
+            fp.makeSources(cat['catalog'])
+
+        merge, nob, npeak = mergeCatalogs([cat1['catalog'], cat2['catalog']], ["1", "2"],
+                                          peakDist, idFactory, samePeakDist=samePeakDist)
+
+        # Check that both higher-priority cat1 records survive peak merging
+        for record in cat1['catalog']:
+            for peak in record.getFootprint().getPeaks():
+                self.assertTrue(isPeakInCatalog(peak, merge))
+
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
     pass
