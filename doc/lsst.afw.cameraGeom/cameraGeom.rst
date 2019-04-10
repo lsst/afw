@@ -35,6 +35,8 @@ An example of how to use the utilities to visualize a camera is available in the
 Camera Coordinate Systems
 =========================
 
+.. TODO DM-19576: Convert these blocks to links to the docstrings of the constants in CameraSys (which currently lives in doxygen), once we have the ability to connect this doc to our C++ docs..
+
 The cameraGeom package supports the following camera-based 2-dimensional coordinate systems, and it is possible to add others:
 
 .. _CameraGeom_FOCAL_PLANE:

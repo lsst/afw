@@ -155,29 +155,39 @@ private:
 // *** Standard camera coordinate systems ***
 
 /**
- * Focal plane coordinates:
- * Rectilinear x, y (and z when talking about the location of a detector) on the camera focal plane (mm).
- * For z=0 choose a convenient point near the focus at x, y = 0.
+ * Focal plane coordinates: Position on a 2-d planar approximation to the focal plane (x,y mm).
+ *
+ * The origin and orientation may be defined by the camera team, but we strongly recommend that the origin be
+ * on the optical axis and (if using CCD detectors) that the X axis be aligned along CCD rows.
+ *
+ * @note Location and orientation of detectors are defined in a 3-d version of `FOCAL_PLANE` coordinates
+ * (the z axis is also relevant). Rectilinear x, y (and z when talking about the location of a detector) on
+ * the camera focal plane (mm). For z=0 choose a convenient point near the focus at x, y = 0.
  */
 extern CameraSys const FOCAL_PLANE;
 
 /**
- * Field angle coordinates:
- * Angular x,y offset from the optic axis (radians).
+ * Field angle coordinates: Angle of a principal ray relative to the optical axis (x,y radians).
+ *
+ * The orientation of the x,y axes is the same as ``FOCAL_PLANE``.
  */
 extern CameraSys const FIELD_ANGLE;
 
 /**
- * Nominal pixels on the detector (unbinned)
+ * Pixel coordinates: Nominal position on the entry surface of a given detector (x, y unbinned pixels).
+ *
+ * For CCD detectors the x axis *must* be along rows (the direction of the serial register). This is required
+ * for our interpolation algorithm to interpolate across bad columns.
+ *
  * This ignores manufacturing imperfections, "tree ring" distortions and all other such effects.
  * It is a uniform grid of rectangular (usually square) pixels.
  *
- * This is a detector prefix; call Detector.makeCameraSys(PIXELS) to make a full coordsys.
+ * @warning This is a detector prefix; call Detector.makeCameraSys(PIXELS) to make a full CameraSys.
  */
 extern CameraSysPrefix const PIXELS;
 
 /**
- * Tangent-plane pixels on the detector (unbinned)
+ * Tangent-plane pixels on the detector (x, y unbinned pixels)
  *
  * Converting from PIXELS to TAN_PIXELS has the effect of removing optical distortion
  * (and the distortion due to rectangular pixels)
@@ -189,15 +199,15 @@ extern CameraSysPrefix const PIXELS;
  *   (where nominal pixels size is mean of x, y pixel size).
  * * The point at the center of the detector has the same value in PIXELS and TAN_PIXELS
  *
- * This is a detector prefix; call Detector.makeCameraSys(TAN_PIXELS) to make a full coordsys.
+ * This is a detector prefix; call Detector.makeCameraSys(TAN_PIXELS) to make a full CameraSys.
  */
 extern CameraSysPrefix const TAN_PIXELS;
 
 /**
- * The actual pixels where the photon lands and electrons are generated (unbinned)
+ * The actual pixels where the photon lands and electrons are generated (x,y unbinned)
  * This takes into account manufacturing defects, "tree ring" distortions and other such effects.
  *
- * This is a detector prefix; call Detector.makeCameraSys(ACTUAL_PIXELS) to make a full coordsys.
+ * This is a detector prefix; call Detector.makeCameraSys(ACTUAL_PIXELS) to make a full CameraSys.
  */
 extern CameraSysPrefix const ACTUAL_PIXELS;
 
