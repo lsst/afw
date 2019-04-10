@@ -534,13 +534,9 @@ private:
                          int const iX, std::vector<int> const& ypix) const;
 
 #if defined(LSST_makeBackground_getImage)
-    BOOST_PP_SEQ_FOR_EACH(LSST_makeBackground_getImage, override, LSST_makeBackground_getImage_types)
+    BOOST_PP_SEQ_FOR_EACH(LSST_makeBackground_getImage, override, LSST_makeBackground_getImage_types);
     BOOST_PP_SEQ_FOR_EACH(LSST_makeBackground_getApproximate, override,
-                          LSST_makeBackground_getApproximate_types)
-#if 0  // keep for use in Background instantiations
-#undef LSST_makeBackground_getImage_types
-#undef LSST_makeBackground_getApproximate_types
-#endif
+                          LSST_makeBackground_getApproximate_types);
 #undef LSST_makeBackground_getImage
 #undef LSST_makeBackground_getApproximate
 #endif
