@@ -1,0 +1,13 @@
+from lsst.sconsUtils import env, targets
+
+ptenv = env.Clone()
+ptenv.Append(CCFLAGS=[ '-pthread',])
+ptenv.Append(CCFLAGS=[ '-Og' ])
+
+# For unknown reasons, -O3 is not removed by AppendUnique
+# ptenv.AppendUnique(CCFLAGS=['-Og'],delete_existing=1)
+
+# Tell SCons the program to build
+targets['examples'].extend( 
+  ptenv.Program('ptest', ['ptest.cc'] , LIBS = env.getLibs("main"))
+)
