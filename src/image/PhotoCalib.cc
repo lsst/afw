@@ -430,7 +430,6 @@ public:
         double calibration = utils::referenceFlux / record.get(keys.fluxMag0);
         double calibrationErr =
                 utils::referenceFlux * record.get(keys.fluxMag0Err) / std::pow(record.get(keys.fluxMag0), 2);
-        std::cout << "!!!!!!!!!!PhotoCalib: " << calibration << " " << calibrationErr << std::endl;
         return std::make_shared<PhotoCalib>(calibration, calibrationErr);
     }
 
