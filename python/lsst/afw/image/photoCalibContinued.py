@@ -32,7 +32,7 @@ from deprecated.sphinx import deprecated
 from .photoCalib import PhotoCalib
 
 
-@continueClass  # noqa F811
+@continueClass  # noqa: F811
 class PhotoCalib:
     @staticmethod
     @deprecated("No-op: PhotoCalib never throws on negative instFlux (will be removed after v18).",

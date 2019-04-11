@@ -25,7 +25,7 @@ from lsst.utils import continueClass
 from .detectorCollection import DetectorCollection
 
 
-@continueClass  # noqa F811
+@continueClass  # noqa: F811
 class DetectorCollection:
     """!An immutable collection of Detectors that can be accessed by name or ID
     """

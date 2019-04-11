@@ -25,7 +25,7 @@ from lsst.utils import continueClass
 from .polygon import Polygon
 
 
-@continueClass  # noqa F811
+@continueClass  # noqa: F811
 class Polygon:
     def __repr__(self):
         return "%s(%s)" % (self.__class__.__name__, [p for p in self.getVertices()])

@@ -27,7 +27,7 @@ import numpy as np
 import lsst.utils.tests
 import lsst.geom
 import lsst.afw.geom as afwGeom
-import lsst.afw.image  # noqa required by Polygon.createImage
+import lsst.afw.image  # noqa: F401 required by Polygon.createImage
 
 display = False
 doPause = False  # If False, autoscan plots with 2 sec delay.  If True, impose manual closing of plots.

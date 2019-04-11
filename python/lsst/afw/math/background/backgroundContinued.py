@@ -25,7 +25,7 @@ from .background import Background
 __all__ = []  # import this module only for its side effects
 
 
-@continueClass  # noqa F811
+@continueClass  # noqa: F811
 class Background:
     def __reduce__(self):
         """Pickling"""

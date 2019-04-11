@@ -4,7 +4,7 @@ from lsst.utils import continueClass
 from .quadrupole import Quadrupole
 
 
-@continueClass  # noqa F811
+@continueClass  # noqa: F811
 class Quadrupole:
     def __repr__(self):
         return "Quadrupole(ixx=%r, iyy=%r, ixy=%r)" % (self.getIxx(), self.getIyy(), self.getIxy())

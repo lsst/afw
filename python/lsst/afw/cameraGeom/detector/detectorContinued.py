@@ -34,7 +34,7 @@ GUIDER = DetectorType.GUIDER
 WAVEFRONT = DetectorType.WAVEFRONT
 
 
-@continueClass  # noqa F811
+@continueClass  # noqa: F811
 class Detector:
     def __iter__(self):
         return (self[i] for i in range(len(self)))

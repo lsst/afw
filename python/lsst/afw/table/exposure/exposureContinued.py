@@ -30,7 +30,7 @@ from ..base import Catalog
 from .exposure import ExposureCatalog, ExposureRecord
 
 
-@continueClass  # noqa F811
+@continueClass  # noqa: F811
 class ExposureRecord:
     @deprecated(reason="Replaced with getPhotoCalib (will be removed after v18)", category=FutureWarning)
     def getCalib(self, *args, **kwargs):

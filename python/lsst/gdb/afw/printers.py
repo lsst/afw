@@ -4,7 +4,7 @@ import re
 import sys
 
 try:
-    debug  # noqa F821
+    debug  # noqa: F821
 except Exception:
     debug = False
 
@@ -907,4 +907,4 @@ try:
     printers.append(build_daf_base_dictionary())
 except ImportError as e:
     print("RHL", e)
-    from .printers_oldgdb import *  # noqa F403
+    from .printers_oldgdb import *  # noqa: F401, F403

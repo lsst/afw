@@ -4,7 +4,7 @@ from lsst.utils import continueClass
 from .footprintMerge import FootprintMergeList
 
 
-@continueClass  # noqa F811
+@continueClass  # noqa: F811
 class FootprintMergeList:
     def getMergedSourceCatalog(self, catalogs, filters,
                                peakDist, schema, idFactory, samePeakDist):

@@ -5,7 +5,7 @@ from .fits import (Fits, ImageWriteOptions, ImageCompressionOptions, ImageScalin
                    compressionAlgorithmToString, scalingAlgorithmToString)
 
 
-@continueClass  # noqa F811
+@continueClass  # noqa: F811
 class Fits:
     def __enter__(self):
         return self
@@ -14,13 +14,13 @@ class Fits:
         self.closeFile()
 
 
-@continueClass  # noqa F811
+@continueClass  # noqa: F811
 class ImageWriteOptions:
     def __repr__(self):
         return "%s(compression=%r, scaling=%r)" % (self.__class__.__name__, self.compression, self.scaling)
 
 
-@continueClass  # noqa F811
+@continueClass  # noqa: F811
 class ImageCompressionOptions:
     def __repr__(self):
         return ("%s(algorithm=%r, tiles=%r, quantizeLevel=%f" %
@@ -28,7 +28,7 @@ class ImageCompressionOptions:
                  self.tiles.tolist(), self.quantizeLevel))
 
 
-@continueClass  # noqa F811
+@continueClass  # noqa: F811
 class ImageScalingOptions:
     def __repr__(self):
         return ("%s(algorithm=%r, bitpix=%d, maskPlanes=%s, seed=%d, quantizeLevel=%f, quantizePad=%f, "
