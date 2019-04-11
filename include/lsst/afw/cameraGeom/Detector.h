@@ -77,6 +77,7 @@ public:
      *                   Transform's forward transform transforms from PIXELS
      *                   to the specified camera system
      * @param crosstalk matrix of crosstalk coefficients
+     * @param physicalType detector type, e.g. "CCD", "ITL-A", "HgCdTe"
      *
      * @throws lsst::pex::exceptions::InvalidParameterError if any amplifier
      *     names are not unique
@@ -89,14 +90,15 @@ public:
              lsst::geom::Box2I const &bbox, lsst::afw::table::AmpInfoCatalog const &ampInfoCatalog,
              Orientation const &orientation, lsst::geom::Extent2D const &pixelSize,
              TransformMap::Transforms const &transforms,
-             CrosstalkMatrix const &crosstalk = CrosstalkMatrix());
+             CrosstalkMatrix const &crosstalk = CrosstalkMatrix(),
+             std::string const &physicalType="");
 
     /**
      * Make a Detector
      *
      * @param name name of detector's location in the camera
      * @param id detector integer ID; used as keys in some tables
-     * @param type type of detector
+     * @param type function of detector (e.g. SCIENCE, WAVEFRONT)
      * @param serial serial "number" that identifies the physical detector
      * @param bbox bounding box
      * @param ampInfoCatalog catalog of amplifier information
@@ -104,6 +106,7 @@ public:
      * @param pixelSize pixel size (mm)
      * @param transformMap coordinate systems and transforms between them
      * @param crosstalk matrix of crosstalk coefficients
+     * @param physicalType detector type, e.g. "CCD", "ITL-A", "HgCdTe"
      *
      * @throws lsst::pex::exceptions::InvalidParameterError if: any amplifier
      *     names are not unique
@@ -112,7 +115,8 @@ public:
              lsst::geom::Box2I const &bbox, lsst::afw::table::AmpInfoCatalog const &ampInfoCatalog,
              Orientation const &orientation, lsst::geom::Extent2D const &pixelSize,
              std::shared_ptr<TransformMap const> transformMap,
-             CrosstalkMatrix const &crosstalk = CrosstalkMatrix());
+             CrosstalkMatrix const &crosstalk = CrosstalkMatrix(),
+             std::string const &physicalType="");
 
     ~Detector() = default;
 
@@ -127,7 +131,11 @@ public:
     /** Get the detector ID */
     int getId() const { return _id; }
 
+    /** Get the "type" (really purpose) of the Detector */
     DetectorType getType() const { return _type; }
+
+    /** Get information about the physical type of the device (e.g. CCD, E2V, ITL-A, HgCdTe) */
+    std::string getPhysicalType() const { return _physicalType; }
 
     /** Get the detector serial "number" */
     std::string getSerial() const { return _serial; }
@@ -319,6 +327,7 @@ private:
     CameraSys _nativeSys;                   ///< native coordinate system of this detector
     std::shared_ptr<TransformMap const> _transformMap;   ///< registry of coordinate transforms
     CrosstalkMatrix _crosstalk;             ///< crosstalk coefficients
+    std::string _physicalType;              ///< the physical type of the detector (e.g. CCD, ITL, E2V)
 };
 }  // namespace cameraGeom
 }  // namespace afw

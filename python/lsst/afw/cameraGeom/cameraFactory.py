@@ -68,6 +68,7 @@ def makeDetectorData(detectorConfig, ampInfoCatalog, focalPlaneToField):
         name=detectorConfig.name,
         id=detectorConfig.id,
         type=DetectorType(detectorConfig.detectorType),
+        physicalType=detectorConfig.physicalType,
         serial=detectorConfig.serial,
         ampInfoCatalog=ampInfoCatalog,
         orientation=makeOrientation(detectorConfig),
@@ -141,7 +142,7 @@ def copyDetector(detector, ampInfoCatalog=None):
     return Detector(detector.getName(), detector.getId(), detector.getType(),
                     detector.getSerial(), detector.getBBox(),
                     ampInfoCatalog, detector.getOrientation(), detector.getPixelSize(),
-                    detector.getTransformMap(), detector.getCrosstalk())
+                    detector.getTransformMap(), detector.getCrosstalk(), detector.getPhysicalType())
 
 
 def makeOrientation(detectorConfig):

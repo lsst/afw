@@ -78,6 +78,8 @@ class DetectorWrapper:
         A function that can modify attributes just before constructing the
         detector; modFunc receives one argument: a DetectorWrapper with all
         attributes except detector set.
+    physicalType : `str` (optional)
+        The physical type of the device, e.g. CCD, E2V, HgCdTe
     """
 
     def __init__(self,
@@ -94,6 +96,7 @@ class DetectorWrapper:
                  radialDistortion=0.925,
                  crosstalk=None,
                  modFunc=None,
+                 physicalType="CCD",
                  ):
         # note that (0., 0.) for the reference position is the center of the
         # first pixel
@@ -141,6 +144,7 @@ class DetectorWrapper:
         if crosstalk is None:
             crosstalk = [[0.0 for _ in range(numAmps)] for _ in range(numAmps)]
         self.crosstalk = crosstalk
+        self.physicalType = physicalType
         if modFunc:
             modFunc(self)
         self.detector = Detector(
@@ -154,6 +158,7 @@ class DetectorWrapper:
             self.pixelSize,
             self.transMap,
             np.array(self.crosstalk, dtype=np.float32),
+            self.physicalType,
         )
 
 
@@ -450,6 +455,7 @@ def assertDetectorsEqual(self, detector1, detector2, **kwds):
     self.assertEqual(detector1.getName(), detector2.getName())
     self.assertEqual(detector1.getId(), detector2.getId())
     self.assertEqual(detector1.getSerial(), detector2.getSerial())
+    self.assertEqual(detector1.getPhysicalType(), detector2.getPhysicalType())
     self.assertEqual(detector1.getBBox(), detector2.getBBox())
     self.assertEqual(detector1.getPixelSize(), detector2.getPixelSize())
     orientationIn = detector1.getOrientation()

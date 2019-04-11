@@ -40,6 +40,8 @@ class DetectorConfig(pexConfig.Config):
     bbox_y1 = pexConfig.Field("y1 of pixel bounding box", int)
     detectorType = pexConfig.Field(
         "Detector type: SCIENCE=0, FOCUS=1, GUIDER=2, WAVEFRONT=3", int)
+    physicalType = pexConfig.Field(
+        "How this specific detector is constructed; e.g. CCD, E2V, HgCdTe ", str, default="CCD")
     serial = pexConfig.Field(
         "Serial string associated with this specific detector", str)
     offset_x = pexConfig.Field(

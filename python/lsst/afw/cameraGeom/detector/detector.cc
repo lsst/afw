@@ -90,14 +90,18 @@ PYBIND11_MODULE(detector, mod) {
     /* Constructors */
     cls.def(py::init<std::string const &, int, DetectorType, std::string const &, lsst::geom::Box2I const &,
                      table::AmpInfoCatalog const &, Orientation const &, lsst::geom::Extent2D const &,
-                     TransformMap::Transforms const &, Detector::CrosstalkMatrix const &>(),
+                     TransformMap::Transforms const &, Detector::CrosstalkMatrix const &,
+                     std::string const&>(),
             "name"_a, "id"_a, "type"_a, "serial"_a, "bbox"_a, "ampInfoCatalog"_a, "orientation"_a,
-            "pixelSize"_a, "transforms"_a, "crosstalk"_a = Detector::CrosstalkMatrix());
+            "pixelSize"_a, "transforms"_a, "crosstalk"_a = Detector::CrosstalkMatrix(),
+            "physicalType"_a = "");
     cls.def(py::init<std::string const &, int, DetectorType, std::string const &, lsst::geom::Box2I const &,
                      table::AmpInfoCatalog const &, Orientation const &, lsst::geom::Extent2D const &,
-                     std::shared_ptr<TransformMap const>, Detector::CrosstalkMatrix const &>(),
+                     std::shared_ptr<TransformMap const>, Detector::CrosstalkMatrix const &,
+                     std::string const&>(),
             "name"_a, "id"_a, "type"_a, "serial"_a, "bbox"_a, "ampInfoCatalog"_a, "orientation"_a,
-            "pixelSize"_a, "transformMap"_a, "crosstalk"_a = Detector::CrosstalkMatrix());
+            "pixelSize"_a, "transformMap"_a, "crosstalk"_a = Detector::CrosstalkMatrix(),
+            "physicalType"_a = "");
 
     /* Operators */
     cls.def("__getitem__",
@@ -112,6 +116,7 @@ PYBIND11_MODULE(detector, mod) {
     cls.def("getName", &Detector::getName);
     cls.def("getId", &Detector::getId);
     cls.def("getType", &Detector::getType);
+    cls.def("getPhysicalType", &Detector::getPhysicalType);
     cls.def("getSerial", &Detector::getSerial);
     cls.def("getBBox", &Detector::getBBox);
     cls.def("getAmpInfoCatalog", &Detector::getAmpInfoCatalog);

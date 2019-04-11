@@ -36,16 +36,18 @@ namespace cameraGeom {
 Detector::Detector(std::string const &name, int id, DetectorType type, std::string const &serial,
                    lsst::geom::Box2I const &bbox, table::AmpInfoCatalog const &ampInfoCatalog,
                    Orientation const &orientation, lsst::geom::Extent2D const &pixelSize,
-                   TransformMap::Transforms const &transforms, CrosstalkMatrix const &crosstalk) :
+                   TransformMap::Transforms const &transforms, CrosstalkMatrix const &crosstalk,
+                   std::string const &physicalType) :
     Detector(name, id, type, serial, bbox, ampInfoCatalog, orientation, pixelSize,
              TransformMap::make(CameraSys(PIXELS, name), transforms),
-             crosstalk)
+             crosstalk, physicalType)
 {}
 
 Detector::Detector(std::string const &name, int id, DetectorType type, std::string const &serial,
                    lsst::geom::Box2I const &bbox, table::AmpInfoCatalog const &ampInfoCatalog,
                    Orientation const &orientation, lsst::geom::Extent2D const &pixelSize,
-                   std::shared_ptr<TransformMap const> transformMap, CrosstalkMatrix const &crosstalk) :
+                   std::shared_ptr<TransformMap const> transformMap, CrosstalkMatrix const &crosstalk,
+                   std::string const &physicalType) :
     _name(name),
     _id(id),
     _type(type),
@@ -57,7 +59,8 @@ Detector::Detector(std::string const &name, int id, DetectorType type, std::stri
     _pixelSize(pixelSize),
     _nativeSys(CameraSys(PIXELS, name)),
     _transformMap(std::move(transformMap)),
-    _crosstalk(crosstalk)
+    _crosstalk(crosstalk),
+    _physicalType(physicalType)
 {
     // make _ampNameIterMap
     for (auto ampIter = _ampInfoCatalog.begin(); ampIter != _ampInfoCatalog.end(); ++ampIter) {
@@ -172,6 +175,33 @@ public:
     table::Key<lsst::geom::Angle> roll;
     table::Key<int> transformMap;
     table::Key<table::Array<float>> crosstalk;
+    table::Key<std::string> physicalType;
+
+    PersistenceHelper(table::Schema const & existing) :
+        schema(existing),
+        name(schema["name"]),
+        id(schema["id"]),
+        type(schema["type"]),
+        serial(schema["serial"]),
+        bbox(schema["bbox"]),
+        pixelSize(schema["pixelSize"]),
+        fpPosition(schema["fpPosition"]),
+        refPoint(schema["refPoint"]),
+        yaw(schema["yaw"]),
+        pitch(schema["pitch"]),
+        roll(schema["roll"]),
+        transformMap(schema["transformMap"]),
+        crosstalk(schema["crosstalk"])
+    {
+        auto setKeyIfPresent = [this](auto & key, std::string const & name) {
+            try {
+                key = schema[name];
+            } catch (pex::exceptions::NotFoundError &) {}
+        };
+        // This field was not part of the original Detector minimal
+        // schema, but needed to be added
+        setKeyIfPresent(physicalType, "physicalType");
+    }
 
 private:
 
@@ -191,7 +221,8 @@ private:
         pitch(schema.addField<lsst::geom::Angle>("pitch", "Rotation about Y' (Z'=Z to X'), 2nd rotation")),
         roll(schema.addField<lsst::geom::Angle>("roll", "Rotation about X'' (Y''=Y' to Z''), 3rd rotation")),
         transformMap(schema.addField<int>("transformMap", "Archive ID of TransformMap", "")),
-        crosstalk(schema.addField<table::Array<float>>("crosstalk", "Crosstalk matrix, flattened", "", 0))
+        crosstalk(schema.addField<table::Array<float>>("crosstalk", "Crosstalk matrix, flattened", "", 0)),
+        physicalType(schema.addField<std::string>("physicalType", "Physical type of the detector", "", 0))
     {
         schema.getCitizen().markPersistent();
     }
@@ -212,7 +243,8 @@ public:
 
     std::shared_ptr<table::io::Persistable> read(InputArchive const& archive,
                                                  CatalogVector const& catalogs) const override {
-        auto const & keys = PersistenceHelper::get();
+        // N.b. can't use "auto const keys" as cctor is deleted
+        auto const & keys = PersistenceHelper(catalogs.front().getSchema());
 
         LSST_ARCHIVE_ASSERT(catalogs.size() == 2u);
         LSST_ARCHIVE_ASSERT(catalogs.front().getSchema() == keys.schema);
@@ -235,6 +267,9 @@ public:
             ndarray::flatten<1>(crosstalk) = flattenedMatrix;
         }
 
+        // get values for not-always-present fields if present
+        const auto physicalType = keys.physicalType.isValid() ? record.get(keys.physicalType) : "";
+
         return std::make_shared<Detector>(
             record.get(keys.name),
             record.get(keys.id),
@@ -251,7 +286,8 @@ public:
             ),
             lsst::geom::Extent2D(record.get(keys.pixelSize)),
             archive.get<TransformMap>(record.get(keys.transformMap)),
-            crosstalk
+            crosstalk,
+            physicalType
         );
     }
 
@@ -298,6 +334,7 @@ void Detector::write(OutputArchiveHandle& handle) const {
     };
 
     record->set(keys.crosstalk, flattenMatrix(getCrosstalk()));
+    record->set(keys.physicalType, getPhysicalType());
     handle.saveCatalog(cat);
 
     auto amps = handle.makeCatalog(_ampInfoCatalog.getSchema());
