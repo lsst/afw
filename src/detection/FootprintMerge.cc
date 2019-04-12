@@ -247,8 +247,8 @@ void FootprintMergeList::addCatalog(std::shared_ptr<afw::table::SourceTable> sou
                           (boost::format("Filter %s not in original list") % filter).str());
     }
 
-    // If list is empty don't check for any matches, just add all the objects
-    bool checkForMatches = (_mergeList.size() > 0);
+    // If list is empty or merging not requested, don't check for any matches, just add all the objects
+    bool checkForMatches = !_mergeList.empty() && doMerge;
 
     for (afw::table::SourceCatalog::const_iterator srcIter = inputCat.begin(); srcIter != inputCat.end();
          ++srcIter) {
@@ -275,23 +275,19 @@ void FootprintMergeList::addCatalog(std::shared_ptr<afw::table::SourceTable> sou
                         // the new footprint, they are now guaranteed to overlap with each other.
                         // Hold off adding foot's lower-priority peaks until the higher-priority existing
                         // peaks merged into this first FootprintMerge. 
-                        if (doMerge) {
-                            first->add(foot, _peakSchemaMapper, keyIter->second);
-                        }
+                        first->add(foot, _peakSchemaMapper, keyIter->second);
                     } else {
-                        if (doMerge) {
-                            // Add existing merged Footprint to first
-                            first->add(**iter, _filterMap, minNewPeakDist, maxSamePeakDist);
-                            iter = _mergeList.erase(iter);
-                            continue;
-                        }
+                        // Add existing merged Footprint to first
+                        first->add(**iter, _filterMap, minNewPeakDist, maxSamePeakDist);
+                        iter = _mergeList.erase(iter);
+                        continue;
                     }
                 }
                 ++iter;
             } // while mergeList
         } //     if checkForMatches
 
-        if (doMerge && first) {
+        if (first) {
             // Now merge footprint including peaks into the newly-connected, higher-priority FootprintMerge
             first->add(foot, _peakSchemaMapper, keyIter->second, minNewPeakDist, maxSamePeakDist);
         } else {
