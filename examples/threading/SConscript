@@ -1,11 +1,16 @@
 from lsst.sconsUtils import env, targets
 
 ptenv = env.Clone()
-ptenv.Append(CCFLAGS=[ '-pthread',])
-ptenv.Append(CCFLAGS=[ '-Og' ])
 
-# For unknown reasons, -O3 is not removed by AppendUnique
-# ptenv.AppendUnique(CCFLAGS=['-Og'],delete_existing=1)
+
+# gcc supposed to take the last in case of ambiguity
+# For clarity, remove existing optimization flags
+
+for x in ('-O1','-O2','-O3'):
+    if x in ptenv['CCFLAGS']:
+        ptenv['CCFLAGS'].remove(x)
+
+ptenv.AppendUnique(CCFLAGS=[ '-pthread', '-Og'])
 
 # Tell SCons the program to build
 targets['examples'].extend( 

@@ -10,13 +10,13 @@ Build notes
 ===========
 
 * This example program by default is built with `-pthread` and `-Og`
-  appended to CCFLAGS. This overrides the default `-O3`.
+  appended to CCFLAGS. `-O3` is removed from CCFLAGS.
    
 * You may want to build the whole `afw` package or the whole lsstsw
   stack with `-pthread -Og` compilation flags. `scons` does not
   use shell environment variables for consistency.
    
-* To remove `-O3`, sconsUtils recognizes the `opt` command line option
+* To change `-O3`, sconsUtils recognizes the `opt` command line option
   `opt=g` translates to `-Og`.
    
 * sconsUtils reads the `buildOpts.py` file for command line options
