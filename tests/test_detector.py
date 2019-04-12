@@ -63,6 +63,8 @@ class DetectorTestCase(lsst.utils.tests.TestCase):
         for cameraSys in dw.transMap:
             self.assertTrue(cameraSys in transformMap)
 
+        self.assertEqual(detector.getPhysicalType(), "CCD")  # the default in DetectorWrapper, not Detector
+
         # make sure some complex objects stick around after detector is deleted
 
         detectorName = detector.getName()
@@ -202,6 +204,7 @@ class DetectorTestCase(lsst.utils.tests.TestCase):
 
         self.assertEqual(detector.getName(), ndetector.getName())
         self.assertEqual(detector.getBBox(), ndetector.getBBox())
+        self.assertEqual(detector.getPhysicalType(), ndetector.getPhysicalType())
         for amp, namp in zip(detector, ndetector):
             self.assertEqual(amp.getBBox(), namp.getBBox())
             self.assertEqual(amp.getRawXYOffset(), namp.getRawXYOffset())

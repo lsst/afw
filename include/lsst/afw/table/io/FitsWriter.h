@@ -82,7 +82,7 @@ public:
     FitsWriter(FitsWriter&&) = default;
     FitsWriter& operator=(FitsWriter const&) = default;
     FitsWriter& operator=(FitsWriter&&) = default;
-    ~FitsWriter() = default;
+    virtual ~FitsWriter() = default;
 
 protected:
     /// Write a table and its schema.
