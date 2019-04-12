@@ -143,15 +143,19 @@ class ReadFitsTestCase(lsst.utils.tests.TestCase):
     def testImageCompressionDisabled(self):
         """Test that imageCompressionDisabled handles errors correctly.
         """
-        for initState in [True, False]:
-            afwFits.setAllowImageCompression(initState)
-            try:
-                with afwFits.imageCompressionDisabled():
-                    self.assertFalse(afwFits.getAllowImageCompression())
-                    raise RuntimeError("Processing failed; abort!")
-            except RuntimeError:
-                pass
-            self.assertEqual(afwFits.getAllowImageCompression(), initState)
+        defaultState = afwFits.getAllowImageCompression()
+        try:
+            for initState in [True, False]:
+                afwFits.setAllowImageCompression(initState)
+                try:
+                    with afwFits.imageCompressionDisabled():
+                        self.assertFalse(afwFits.getAllowImageCompression())
+                        raise RuntimeError("Processing failed; abort!")
+                except RuntimeError:
+                    pass
+                self.assertEqual(afwFits.getAllowImageCompression(), initState)
+        finally:
+            afwFits.setAllowImageCompression(defaultState)
 
     def testWriteBool(self):
         """Test that we can read and write bools"""
