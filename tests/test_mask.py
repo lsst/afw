@@ -39,7 +39,7 @@ import lsst.daf.base
 import lsst.geom
 import lsst.afw.image as afwImage
 import lsst.afw.display as afwDisplay
-import lsst.afw.display.ds9 as ds9  # noqa for some reason images don't display without both imports
+import lsst.afw.display.ds9 as ds9  # noqa: F401 for some reason images don't display without both imports
 
 try:
     type(display)

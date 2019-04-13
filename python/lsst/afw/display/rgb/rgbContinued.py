@@ -469,7 +469,7 @@ def writeRGB(fileName, rgbImage):
 #
 
 
-class asinhMappingF:  # noqa N801
+class asinhMappingF:  # noqa: N801
     """Deprecated object used to support legacy API
     """
 

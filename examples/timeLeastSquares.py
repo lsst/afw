@@ -4,7 +4,7 @@ import timeit
 import sys
 import numpy
 from matplotlib import pyplot
-from lsst.afw.math import LeastSquares  # noqa F401
+from lsst.afw.math import LeastSquares  # noqa: F401
 
 nDataList = 2**numpy.arange(4, 14, 2, dtype=int)
 dimensionList = 2**numpy.arange(1, 8, dtype=int)

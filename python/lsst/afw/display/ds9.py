@@ -24,7 +24,7 @@ import lsst.afw.display
 import lsst.afw.image as afwImage
 from .interface import getDisplay as _getDisplay, getDefaultBackend, setDefaultBackend
 # Backwards compatibility.  Downstream code should be converted to use display.RED etc.
-from .interface import BLACK, RED, GREEN, BLUE, CYAN, MAGENTA, YELLOW, WHITE  # noqa F401
+from .interface import BLACK, RED, GREEN, BLUE, CYAN, MAGENTA, YELLOW, WHITE  # noqa: F401
 try:
     loaded
 except NameError:

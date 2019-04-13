@@ -29,7 +29,7 @@ from .source import SourceCatalog, SourceTable
 Catalog.register("Source", SourceCatalog)
 
 
-@continueClass  # noqa F811
+@continueClass  # noqa: F811
 class SourceCatalog:
 
     def getChildren(self, parent, *args):

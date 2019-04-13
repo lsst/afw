@@ -172,20 +172,20 @@ PYBIND11_MODULE(photoCalib, mod) {
             "instFluxMag0Err"_a = false);
 
     /* Deprecated Calib interface */
-    cls.def_static("setThrowOnNegativeFlux", &PhotoCalib::setThrowOnNegativeFlux);
-    cls.def_static("getThrowOnNegativeFlux", &PhotoCalib::getThrowOnNegativeFlux);
-    cls.def("getMagnitude", py::overload_cast<double>(&PhotoCalib::getMagnitude, py::const_), "instFlux"_a);
-    cls.def("getMagnitude", py::overload_cast<double, double>(&PhotoCalib::getMagnitude, py::const_),
+    cls.def_static("_setThrowOnNegativeFlux", &PhotoCalib::setThrowOnNegativeFlux);
+    cls.def_static("_getThrowOnNegativeFlux", &PhotoCalib::getThrowOnNegativeFlux);
+    cls.def("_getMagnitude", py::overload_cast<double>(&PhotoCalib::getMagnitude, py::const_), "instFlux"_a);
+    cls.def("_getMagnitude", py::overload_cast<double, double>(&PhotoCalib::getMagnitude, py::const_),
             "instFlux"_a, "instFluxErr"_a);
-    cls.def("getMagnitude",
+    cls.def("_getMagnitude",
             py::overload_cast<ndarray::Array<double const, 1> const &>(&PhotoCalib::getMagnitude, py::const_),
             "instFlux"_a);
-    cls.def("getMagnitude",
+    cls.def("_getMagnitude",
             py::overload_cast<ndarray::Array<double const, 1> const &,
                               ndarray::Array<double const, 1> const &>(&PhotoCalib::getMagnitude, py::const_),
             "instFlux"_a, "instFluxErr"_a);
-    cls.def("getFlux", &PhotoCalib::getFlux, "instFlux"_a);
-    cls.def("getFluxMag0", &PhotoCalib::getFluxMag0);
+    cls.def("_getFlux", &PhotoCalib::getFlux, "instFlux"_a);
+    cls.def("_getFluxMag0", &PhotoCalib::getFluxMag0);
     cls.def("setFluxMag0", &PhotoCalib::setFluxMag0, "instFluxMag0"_a, "instFluxMag0Err"_a = 0.0);
 
     utils::python::addOutputOp(cls, "__str__");

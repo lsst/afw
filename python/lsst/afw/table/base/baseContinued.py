@@ -29,7 +29,7 @@ from ..schema import Key
 __all__ = ["Catalog"]
 
 
-@continueClass  # noqa F811
+@continueClass  # noqa: F811
 class BaseRecord:
 
     def extract(self, *patterns, **kwds):

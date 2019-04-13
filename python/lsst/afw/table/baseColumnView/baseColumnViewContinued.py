@@ -33,7 +33,7 @@ from .baseColumnView import _BaseColumnViewBase
 # base class, so we use the same naming convention we use for those.
 
 
-@continueClass  # noqa F811
+@continueClass  # noqa: F811
 class _BaseColumnViewBase:
 
     def getBits(self, keys=None):

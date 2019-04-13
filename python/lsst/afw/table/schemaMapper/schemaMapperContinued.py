@@ -29,7 +29,7 @@ from ..schema import Field, Schema
 from .schemaMapper import SchemaMapper
 
 
-@continueClass  # noqa F811
+@continueClass  # noqa: F811
 class SchemaMapper:
 
     def addOutputField(self, field, type=None, doc=None, units="", size=None,

@@ -4,7 +4,7 @@ from lsst.utils import continueClass
 from .axes import Axes
 
 
-@continueClass  # noqa F811
+@continueClass  # noqa: F811
 class Axes:
     def __repr__(self):
         return "Axes(a=%r, b=%r, theta=%r)" % (self.getA(), self.getB(), self.getTheta())
