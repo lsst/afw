@@ -166,6 +166,7 @@ tests/testEigenLib.py
 tests/test_tableArchives
 tests/ramFitsIO_fpC-005902-r6-0677_sub.fits_imageRamOut.fit
 tests/test_simpleTable
+tests/test_simpleGenericMap
 tests/test_distortion
 tests/test_schema
 tests/test_span
