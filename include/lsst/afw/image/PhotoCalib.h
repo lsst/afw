@@ -250,8 +250,6 @@ public:
      *                            "PsfFlux_instFluxErr"
      * @param[in]  outField       The field to write the nJy and magnitude errors to.
      *                            Keys of the form "*_instFlux" and "*_instFluxErr" must exist in the schema.
-     *
-     * @warning Not implemented yet: See DM-10155.
      */
     void instFluxToNanojansky(afw::table::SourceCatalog &sourceCatalog, std::string const &instFluxField,
                               std::string const &outField) const;
@@ -330,8 +328,6 @@ public:
      * @param[in]  outField       The field to write the magnitudes and magnitude errors to.
      *                            Keys of the form "*_instFlux", "*_instFluxErr", *_mag", and "*_magErr"
      *                            must exist in the schema.
-     *
-     * @warning Not implemented yet: See DM-10155.
      */
     void instFluxToMagnitude(afw::table::SourceCatalog &sourceCatalog, std::string const &instFluxField,
                              std::string const &outField) const;
