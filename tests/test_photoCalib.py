@@ -654,10 +654,9 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
         self.assertFloatsAlmostEqual(photoCalib.getCalibrationErr(), calibrationErr)
 
     def checkDeprecatedCalibInterface(self, photoCalib):
-        """Check the backwards compatibility Calib interface."""
-
-        # These are now no-ops, but we've added a deprecated interface for backwards compatibility.
-        # TODO DM-18544: test that a deprecation warning is raised.
+        """Check the backwards compatibility Calib interface.
+        These are now no-ops, but we've added a deprecated interface for backwards compatibility.
+        """
         try:
             with self.assertWarns(FutureWarning):
                 lsst.afw.image.PhotoCalib.setThrowOnNegativeFlux(True)

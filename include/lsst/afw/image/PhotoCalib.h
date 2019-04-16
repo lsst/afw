@@ -339,7 +339,7 @@ public:
     /**
      * Return a flux calibrated image, with pixel values in nJy.
      *
-     * Mask pixels are propogated directly from the input image.
+     * Mask pixels are propagated directly from the input image.
      *
      * @param maskedImage The masked image to calibrate.
      * @param includeScaleUncertainty Include the uncertainty on the calibration in the resulting variance?
