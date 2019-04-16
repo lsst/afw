@@ -217,8 +217,9 @@ public:
      *
      * @param[in]  sourceRecord  The source record to get instFlux and position from.
      * @param[in]  instFluxField The instFlux field: Keys of the form "*_instFlux" and "*_instFluxErr" must
-     *                           exist. For example: instFluxField = "PsfFlux" -> "PsfFlux_instFlux",
-     *                           "PsfFlux_instFluxErr"
+     *                           exist.
+     *                           For example: instFluxField="slot_PsfFlux" will use the fields named:
+     *                           "slot_PsfFlux_instFlux", "slot_PsfFlux_instFluxErr"
      *
      * @returns    The flux in nJy and error for this source.
      */
@@ -231,8 +232,9 @@ public:
      *
      * @param[in]  sourceCatalog  The source catalog to get instFlux and position from.
      * @param[in]  instFluxField  The instFlux field: Keys of the form "*_instFlux" and "*_instFluxErr" must
-     *                            exist. For example: instFluxField = "PsfFlux" -> "PsfFlux_instFlux",
-     *                            "PsfFlux_instFluxErr"
+     *                            exist.
+     *                            For example: instFluxField="slot_PsfFlux" will use the fields named:
+     *                            "slot_PsfFlux_instFlux", "slot_PsfFlux_instFluxErr"
      *
      * @returns    The flux in nJy and error for this source.
      */
@@ -246,8 +248,9 @@ public:
      *
      * @param[in]  sourceCatalog  The source catalog to get instFlux and position from.
      * @param[in]  instFluxField  The instFlux field: Keys of the form "*_instFlux" and "*_instFluxErr" must
-     *                            exist. For example: instFluxField = "PsfFlux" -> "PsfFlux_instFlux",
-     *                            "PsfFlux_instFluxErr"
+     *                            exist.
+     *                            For example: instFluxField="slot_PsfFlux" will use the fields named:
+     *                            "slot_PsfFlux_instFlux", "slot_PsfFlux_instFluxErr"
      * @param[in]  outField       The field to write the nJy and magnitude errors to.
      *                            Keys of the form "*_instFlux" and "*_instFluxErr" must exist in the schema.
      */
@@ -292,8 +295,9 @@ public:
      *
      * @param[in]  sourceRecord  The source record to get instFlux and position from.
      * @param[in]  instFluxField The instFlux field: Keys of the form "*_instFlux" and "*_instFluxErr" must
-     *                           exist. For example: instFluxField = "PsfFlux" -> "PsfFlux_instFlux",
-     *                           "PsfFlux_instFluxErr"
+     *                           exist.
+     *                           For example: instFluxField="slot_PsfFlux" will use the fields named:
+     *                           "slot_PsfFlux_instFlux", "slot_PsfFlux_instFluxErr"
      *
      * @returns    The magnitude and magnitude error for this source.
      */
@@ -306,8 +310,9 @@ public:
      *
      * @param[in]  sourceCatalog  The source catalog to get instFlux and position from.
      * @param[in]  instFluxField  The instFlux field: Keys of the form "*_instFlux" and "*_instFluxErr" must
-     *                            exist. For example: instFluxField = "PsfFlux" -> "PsfFlux_instFlux",
-     *                            "PsfFlux_instFluxErr"
+     *                            exist.
+     *                            For example: instFluxField="slot_PsfFlux" will use the fields named:
+     *                            "slot_PsfFlux_instFlux", "slot_PsfFlux_instFluxErr"
      *
      * @returns    The magnitudes and magnitude errors for the sources.
      */
@@ -323,8 +328,9 @@ public:
      *
      * @param[in]  sourceCatalog  The source catalog to get instFlux and position from.
      * @param[in]  instFluxField  The instFlux field: Keys of the form "*_instFlux" and "*_instFluxErr" must
-     *                            exist. For example: instFluxField = "PsfFlux" -> "PsfFlux_instFlux",
-     *                            "PsfFlux_instFluxErr"
+     *                            exist.
+     *                            For example: instFluxField="slot_PsfFlux" will use the fields named:
+     *                            "slot_PsfFlux_instFlux", "slot_PsfFlux_instFluxErr"
      * @param[in]  outField       The field to write the magnitudes and magnitude errors to.
      *                            Keys of the form "*_instFlux", "*_instFluxErr", *_mag", and "*_magErr"
      *                            must exist in the schema.
