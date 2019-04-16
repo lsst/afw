@@ -149,7 +149,7 @@ static std::unordered_set<std::string> const ignoreKeys = {
         // FITS core keywords
         "SIMPLE", "BITPIX", "NAXIS", "EXTEND", "GCOUNT", "PCOUNT", "XTENSION", "TFIELDS", "BSCALE", "BZERO",
         // FITS compression keywords
-        "ZBITPIX", "ZIMAGE", "ZCMPTYPE", "ZSIMPLE", "ZEXTEND", "ZBLANK", "ZDATASUM", "ZHECKSUM",
+        "ZBITPIX", "ZIMAGE", "ZCMPTYPE", "ZSIMPLE", "ZEXTEND", "ZBLANK", "ZDATASUM", "ZHECKSUM", "ZQUANTIZ",
         // Not essential, but will prevent fitsverify warnings
         "DATASUM", "CHECKSUM"};
 

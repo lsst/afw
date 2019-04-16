@@ -94,7 +94,7 @@ class FitsTestCase(lsst.utils.tests.TestCase):
             "GCOUNT", "PCOUNT", "XTENSION", "BSCALE", "BZERO", "TZERO", "TSCAL",
             # FITS compression keywords
             "ZBITPIX", "ZIMAGE", "ZCMPTYPE", "ZSIMPLE", "ZEXTEND", "ZBLANK", "ZDATASUM", "ZHECKSUM",
-            "ZNAXIS", "ZTILE", "ZNAME", "ZVAL",
+            "ZNAXIS", "ZTILE", "ZNAME", "ZVAL", "ZQUANTIZ",
             # Not essential these be excluded, but will prevent fitsverify warnings
             "DATASUM", "CHECKSUM",
         ]
