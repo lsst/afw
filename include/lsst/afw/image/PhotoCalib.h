@@ -346,6 +346,29 @@ public:
                                       bool includeScaleUncertainty = true) const;
 
     /**
+     * Return a flux calibrated catalog, with new `_flux`, `_fluxErr`, `_mag`, and `_magErr` fields.
+     *
+     * If the input catalog already has `*_flux` and `*_mag` fields matching `instFluxFields`, they will be
+     * replaced with the new fields.
+     *
+     * @param catalog The catalog to compute calibrated fluxes of. This catalog is exactly reproduced in the
+     * output catalog.
+     * @param instFluxFields The fields to calibrate. If empty, every field ending with `_instFlux` will have
+     * its corresponding calibrated fields produced in the output catalog. If `_instFluxErr` also exists, it
+     * will be used to compute the `_fluxErr` and `_magErr` fields too.
+     *
+     * @return The calibrated catalog, with new flux and magnitude (and their errors) fields.
+     *
+     * @throws lsst::pex::exceptions::NotFoundError if any item in `instfluxFields` does not have a
+     * corresponding `*_instFlux` field in catalog.schema.
+     */
+    afw::table::SourceCatalog calibrateCatalog(afw::table::SourceCatalog const &catalog,
+                                               std::vector<std::string> const &instFluxFields) const;
+
+    /// @overload calibrateCatalog(table::SourceCatalog const &, std::vector<std::string> const &) const;
+    afw::table::SourceCatalog calibrateCatalog(afw::table::SourceCatalog const &catalog) const;
+
+    /**
      * Convert AB magnitude to instFlux (ADU).
      *
      * If passed point, use the exact calculation at that point, otherwise, use the mean scaling factor.
@@ -358,6 +381,7 @@ public:
      * @returns    Source instFlux in ADU.
      */
     double magnitudeToInstFlux(double magnitude, lsst::geom::Point<double, 2> const &point) const;
+
     /// @overload magnitudeToInstFlux(double, lsst::geom::Point<double, 2> const &) const;
     double magnitudeToInstFlux(double magnitude) const;
 

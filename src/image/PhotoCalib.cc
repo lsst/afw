@@ -25,7 +25,7 @@
 #include "lsst/geom/Point.h"
 #include "lsst/afw/image/PhotoCalib.h"
 #include "lsst/afw/math/BoundedField.h"
-#include "lsst/afw/table/Source.h"
+#include "lsst/afw/table.h"
 #include "lsst/afw/table/io/CatalogVector.h"
 #include "lsst/afw/table/io/OutputArchive.h"
 #include "lsst/daf/base/PropertySet.h"
@@ -291,6 +291,86 @@ MaskedImage<float> PhotoCalib::calibrateImage(MaskedImage<float> const &maskedIm
     }
 
     return result;
+}
+
+afw::table::SourceCatalog PhotoCalib::calibrateCatalog(afw::table::SourceCatalog const &catalog,
+                                                       std::vector<std::string> const &instFluxFields) const {
+    auto const &inSchema = catalog.getSchema();
+    afw::table::SchemaMapper mapper(inSchema, true);  // true: share the alias map
+    mapper.addMinimalSchema(inSchema);
+
+    using FieldD = afw::table::Field<double>;
+
+    struct Keys {
+        table::Key<double> instFlux;
+        table::Key<double> instFluxErr;
+        table::Key<double> flux;
+        table::Key<double> fluxErr;
+        table::Key<double> mag;
+        table::Key<double> magErr;
+    };
+
+    std::vector<Keys> keys;
+    keys.reserve(instFluxFields.size());
+    for (auto const &field : instFluxFields) {
+        Keys newKey;
+        newKey.instFlux = inSchema[inSchema.join(field, "instFlux")];
+        newKey.flux =
+                mapper.addOutputField(FieldD(inSchema.join(field, "flux"), "calibrated flux", "nJy"), true);
+        newKey.mag = mapper.addOutputField(
+                FieldD(inSchema.join(field, "mag"), "calibrated magnitude", "mag(AB)"), true);
+        try {
+            newKey.instFluxErr = inSchema.find<double>(inSchema.join(field, "instFluxErr")).key;
+            newKey.fluxErr = mapper.addOutputField(
+                    FieldD(inSchema.join(field, "fluxErr"), "calibrated flux uncertainty", "nJy"), true);
+            newKey.magErr = mapper.addOutputField(
+                    FieldD(inSchema.join(field, "magErr"), "calibrated magnitude uncertainty", "mag(AB)"),
+                    true);
+        } catch (pex::exceptions::NotFoundError &) {
+            ;  // Keys struct defaults to invalid keys; that marks the error as missing.
+        }
+        keys.emplace_back(newKey);
+    }
+
+    // Create the new catalog
+    afw::table::SourceCatalog output(mapper.getOutputSchema());
+    output.insert(mapper, output.begin(), catalog.begin(), catalog.end());
+
+    auto calibration = evaluateCatalog(output);
+
+    // fill in the catalog values
+    int iRec = 0;
+    for (auto &rec : output) {
+        for (auto &key : keys) {
+            double instFlux = rec.get(key.instFlux);
+            double nanojansky = toNanojansky(instFlux, calibration[iRec]);
+            rec.set(key.flux, nanojansky);
+            rec.set(key.mag, toMagnitude(instFlux, calibration[iRec]));
+            if (key.instFluxErr.isValid()) {
+                double instFluxErr = rec.get(key.instFluxErr);
+                rec.set(key.fluxErr, toNanojanskyErr(instFlux, instFluxErr, calibration[iRec],
+                                                     _calibrationErr, nanojansky));
+                rec.set(key.magErr,
+                        toMagnitudeErr(instFlux, instFluxErr, calibration[iRec], _calibrationErr));
+            }
+        }
+        ++iRec;
+    }
+
+    return output;
+}
+
+afw::table::SourceCatalog PhotoCalib::calibrateCatalog(afw::table::SourceCatalog const &catalog) const {
+    std::vector<std::string> instFluxFields;
+    static std::string const SUFFIX = "_instFlux";
+    for (auto const &name : catalog.getSchema().getNames()) {
+        // Pick every field ending in "_instFlux", grabbing everything before that prefix.
+        if (name.size() > SUFFIX.size() + 1 &&
+            name.compare(name.size() - SUFFIX.size(), SUFFIX.size(), SUFFIX) == 0) {
+            instFluxFields.emplace_back(name.substr(0, name.size() - 9));
+        }
+    }
+    return calibrateCatalog(catalog, instFluxFields);
 }
 
 // ------------------- persistence -------------------

@@ -117,6 +117,9 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
                              doc="another instrumental Flux")
         self.schema.addField(self.otherInstFluxKeyName+"_instFluxErr", type="D", units="count",
                              doc="another instrumental flux error")
+        self.noErrInstFluxKeyName = "NoErrFlux"
+        self.schema.addField(self.noErrInstFluxKeyName+"_instFlux", type="D", units="count",
+                             doc="instrumental Flux with no error")
         self.table = lsst.afw.table.SourceTable.make(self.schema)
         self.table.defineCentroid('centroid')
         self.catalog = lsst.afw.table.SourceCatalog(self.table)
@@ -128,6 +131,7 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
         record.set(self.instFluxKeyName+'_instFluxErr', self.instFluxErr1)
         record.set(self.otherInstFluxKeyName+'_instFlux', self.instFlux1)
         record.set(self.otherInstFluxKeyName+'_instFluxErr', self.instFluxErr1)
+        record.set(self.noErrInstFluxKeyName+'_instFlux', self.instFlux1)
         record = self.catalog.addNew()
         record.set('id', 2)
         record.set('centroid_x', self.pointYShift[0])
@@ -136,6 +140,7 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
         record.set(self.instFluxKeyName+'_instFluxErr', self.instFluxErr1)
         record.set(self.otherInstFluxKeyName+'_instFlux', self.instFlux2)
         record.set(self.otherInstFluxKeyName+'_instFluxErr', self.instFluxErr1)
+        record.set(self.noErrInstFluxKeyName+'_instFlux', self.instFlux2)
 
         self.constantCalibration = lsst.afw.math.ChebyshevBoundedField(self.bbox,
                                                                        np.array([[self.calibration]]))
@@ -257,7 +262,7 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
         self.checkDeprecatedCalibInterface(photoCalib)
 
     def _testSourceCatalog(self, photoCalib, catalog, expectNanojansky, expectMag):
-        """Test passing in a sourceCatalog."""
+        """Test instFluxTo*(sourceCatalog, ...), and calibrateCatalog()."""
 
         # test calculations on a sourceCatalog, returning the array
         result = photoCalib.instFluxToNanojansky(catalog, self.instFluxKeyName)
@@ -265,20 +270,52 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
         result = photoCalib.instFluxToMagnitude(catalog, self.instFluxKeyName)
         self.assertFloatsAlmostEqual(expectMag, result)
 
-        # modify the catalog in-place.
-        photoCalib.instFluxToMagnitude(catalog, self.instFluxKeyName, self.instFluxKeyName)
-        self.assertFloatsAlmostEqual(catalog[self.instFluxKeyName+'_mag'], expectMag[:, 0])
-        self.assertFloatsAlmostEqual(catalog[self.instFluxKeyName+'_magErr'], expectMag[:, 1])
-
-        # modify the catalog in-place
+        # Test modifying the catalog in-place with instFluxToNanojansky/instFluxToMagnitude
         # The original instFluxes shouldn't change: save them to test that.
-        origFlux = catalog[self.instFluxKeyName+'_instFlux'].copy()
-        origFluxErr = catalog[self.instFluxKeyName+'_instFluxErr'].copy()
-        photoCalib.instFluxToNanojansky(catalog, self.instFluxKeyName, self.instFluxKeyName)
-        self.assertFloatsAlmostEqual(catalog[self.instFluxKeyName+'_fluxErr'], expectNanojansky[:, 1])
-        self.assertFloatsAlmostEqual(catalog[self.instFluxKeyName+'_flux'], expectNanojansky[:, 0])
-        self.assertFloatsAlmostEqual(catalog[self.instFluxKeyName+'_instFlux'], origFlux)
-        self.assertFloatsAlmostEqual(catalog[self.instFluxKeyName+'_instFluxErr'], origFluxErr)
+        origInstFlux = catalog[self.instFluxKeyName+'_instFlux'].copy()
+        origInstFluxErr = catalog[self.instFluxKeyName+'_instFluxErr'].copy()
+
+        def checkCatalog(catalog, expect, keyName, outField):
+            """Test that the fields in the catalog are correct."""
+            self.assertFloatsAlmostEqual(catalog[keyName+'_%s' % outField], expect[:, 0])
+            self.assertFloatsAlmostEqual(catalog[keyName+'_%sErr' % outField], expect[:, 1])
+            self.assertFloatsAlmostEqual(catalog[keyName+'_instFlux'], origInstFlux)
+            self.assertFloatsAlmostEqual(catalog[keyName+'_instFluxErr'], origInstFluxErr)
+
+        testCat = catalog.copy(deep=True)
+        photoCalib.instFluxToMagnitude(testCat, self.instFluxKeyName, self.instFluxKeyName)
+        checkCatalog(testCat, expectMag, self.instFluxKeyName, "mag")
+
+        testCat = catalog.copy(deep=True)
+        photoCalib.instFluxToNanojansky(testCat, self.instFluxKeyName, self.instFluxKeyName)
+        checkCatalog(testCat, expectNanojansky, self.instFluxKeyName, "flux")
+
+        testCat = catalog.copy(deep=True)
+        photoCalib.instFluxToMagnitude(testCat, self.instFluxKeyName, self.instFluxKeyName)
+        checkCatalog(testCat, expectMag, self.instFluxKeyName, "mag")
+
+        # test returning a calibrated catalog with calibrateCatalog
+
+        # test that trying to calibrate a non-existent flux field raises
+        with self.assertRaises(lsst.pex.exceptions.NotFoundError):
+            photoCalib.calibrateCatalog(testCat, ["NotARealFluxFieldName"])
+
+        # test calibrating just one flux field
+        testCat = catalog.copy(deep=True)
+        result = photoCalib.calibrateCatalog(testCat, [self.otherInstFluxKeyName])
+        checkCatalog(result, expectNanojansky, self.otherInstFluxKeyName, "flux")
+        checkCatalog(result, expectMag, self.otherInstFluxKeyName, "mag")
+
+        # test calibrating all of the flux fields
+        testCat = catalog.copy(deep=True)
+        result = photoCalib.calibrateCatalog(testCat)
+        checkCatalog(result, expectNanojansky, self.instFluxKeyName, "flux")
+        checkCatalog(result, expectMag, self.instFluxKeyName, "mag")
+        checkCatalog(result, expectNanojansky, self.otherInstFluxKeyName, "flux")
+        checkCatalog(result, expectMag, self.otherInstFluxKeyName, "mag")
+        self.assertFloatsAlmostEqual(result[self.noErrInstFluxKeyName+'_flux'], expectNanojansky[:, 0])
+        self.assertFloatsAlmostEqual(result[self.noErrInstFluxKeyName+'_mag'], expectMag[:, 0])
+        self.assertFloatsAlmostEqual(result[self.noErrInstFluxKeyName+'_instFlux'], origInstFlux)
 
     def testNonVarying(self):
         """Test constructing with a constant calibration factor."""
