@@ -100,17 +100,23 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
         self.schema = lsst.afw.table.SourceTable.makeMinimalSchema()
         self.instFluxKeyName = "SomeFlux"
         lsst.afw.table.Point2DKey.addFields(self.schema, "centroid", "centroid", "pixels")
-        self.schema.addField(self.instFluxKeyName+"_instFlux", type="D", doc="post-ISR instrumental Flux")
-        self.schema.addField(self.instFluxKeyName+"_instFluxErr", type="D",
-                             doc="post-ISR instrumental flux stddev")
-        self.schema.addField(self.instFluxKeyName+"_flux", type="D",
-                             doc="calibrated flux (nJy)")
-        self.schema.addField(self.instFluxKeyName+"_fluxErr", type="D",
-                             doc="calibrated flux stddev (nJy)")
+        self.schema.addField(self.instFluxKeyName+"_instFlux", type="D", units="count",
+                             doc="post-ISR instrumental Flux")
+        self.schema.addField(self.instFluxKeyName+"_instFluxErr", type="D", units="count",
+                             doc="post-ISR instrumental flux error")
+        self.schema.addField(self.instFluxKeyName+"_flux", type="D", units="nJy",
+                             doc="calibrated flux")
+        self.schema.addField(self.instFluxKeyName+"_fluxErr", type="D", units="nJy",
+                             doc="calibrated flux error")
         self.schema.addField(self.instFluxKeyName+"_mag", type="D",
                              doc="calibrated magnitude")
         self.schema.addField(self.instFluxKeyName+"_magErr", type="D",
-                             doc="calibrated magnitude stddev")
+                             doc="calibrated magnitude error")
+        self.otherInstFluxKeyName = "OtherFlux"
+        self.schema.addField(self.otherInstFluxKeyName+"_instFlux", type="D", units="count",
+                             doc="another instrumental Flux")
+        self.schema.addField(self.otherInstFluxKeyName+"_instFluxErr", type="D", units="count",
+                             doc="another instrumental flux error")
         self.table = lsst.afw.table.SourceTable.make(self.schema)
         self.table.defineCentroid('centroid')
         self.catalog = lsst.afw.table.SourceCatalog(self.table)
@@ -120,12 +126,16 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
         record.set('centroid_y', self.point0[1])
         record.set(self.instFluxKeyName+'_instFlux', self.instFlux1)
         record.set(self.instFluxKeyName+'_instFluxErr', self.instFluxErr1)
+        record.set(self.otherInstFluxKeyName+'_instFlux', self.instFlux1)
+        record.set(self.otherInstFluxKeyName+'_instFluxErr', self.instFluxErr1)
         record = self.catalog.addNew()
         record.set('id', 2)
         record.set('centroid_x', self.pointYShift[0])
         record.set('centroid_y', self.pointYShift[1])
         record.set(self.instFluxKeyName+'_instFlux', self.instFlux2)
         record.set(self.instFluxKeyName+'_instFluxErr', self.instFluxErr1)
+        record.set(self.otherInstFluxKeyName+'_instFlux', self.instFlux2)
+        record.set(self.otherInstFluxKeyName+'_instFluxErr', self.instFluxErr1)
 
         self.constantCalibration = lsst.afw.math.ChebyshevBoundedField(self.bbox,
                                                                        np.array([[self.calibration]]))
