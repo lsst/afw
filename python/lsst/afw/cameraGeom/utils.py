@@ -515,7 +515,7 @@ class ButlerImage(FakeImageDataSource):
 
 
 def rawCallback(im, ccd=None, imageSource=None,
-                correctGain=False, subtractBias=False, convertToFloat=False):
+                correctGain=False, subtractBias=False, convertToFloat=False, obeyNQuarter=True):
     """A callback function that may or may not subtract bias/correct gain/trim
     a raw image.
 
@@ -533,6 +533,8 @@ def rawCallback(im, ccd=None, imageSource=None,
         Subtract the bias from each amplifier?
     convertToFloat : `bool`
         Convert ``im`` to floating point if possible.
+    obeyNQuarter : `bool`
+        Obey nQuarter from the Detector (default: True)
 
     Returns
     -------
@@ -577,6 +579,10 @@ def rawCallback(im, ccd=None, imageSource=None,
             assembleAmplifierImage(ccdImage, ampImage, amp)
         else:
             assembleAmplifierRawImage(ccdImage, ampImage, amp)
+
+    if obeyNQuarter:
+        nQuarter = ccd.getOrientation().getNQuarter()
+        ccdImage = afwMath.rotateImageBy90(ccdImage, nQuarter)
 
     return ccdImage
 
@@ -918,9 +924,6 @@ def makeImageFromCamera(camera, detectorNameList=None, background=numpy.nan, buf
         im = imageSource.getCcdImage(det, imageFactory, binSize)[0]
         if im is None:
             continue
-
-        nQuarter = det.getOrientation().getNQuarter()
-        im = afwMath.rotateImageBy90(im, nQuarter)
 
         imView = camIm.Factory(camIm, bbox, afwImage.LOCAL)
         try:
