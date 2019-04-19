@@ -551,6 +551,10 @@ private:
      * Helper function to manage constant vs. non-constant PhotoCalibs
      */
     double evaluate(lsst::geom::Point<double, 2> const &point) const;
+    /**
+     * Return the calibration evaluated at a sequence of points.
+     */
+    ndarray::Array<double, 1> evaluateArray(ndarray::Array<double, 1> xx, ndarray::Array<double, 1> yy) const;
 
     /// Returns the spatially-constant calibration (for setting _calibrationMean)
     double computeCalibrationMean(std::shared_ptr<afw::math::BoundedField> calibration) const;
