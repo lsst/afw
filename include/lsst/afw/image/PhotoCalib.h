@@ -554,7 +554,12 @@ private:
     /**
      * Return the calibration evaluated at a sequence of points.
      */
-    ndarray::Array<double, 1> evaluateArray(ndarray::Array<double, 1> xx, ndarray::Array<double, 1> yy) const;
+    ndarray::Array<double, 1> evaluateArray(ndarray::Array<double, 1> const &xx,
+                                            ndarray::Array<double, 1> const &yy) const;
+    /**
+     * Return the calibration evaluated at the centroids of a SourceCatalog.
+     */
+    ndarray::Array<double, 1> evaluateCatalog(afw::table::SourceCatalog const &sourceCatalog) const;
 
     /// Returns the spatially-constant calibration (for setting _calibrationMean)
     double computeCalibrationMean(std::shared_ptr<afw::math::BoundedField> calibration) const;
@@ -589,8 +594,8 @@ std::shared_ptr<PhotoCalib> makePhotoCalibFromMetadata(daf::base::PropertySet &m
  *
  * @param instFluxMag0 The instrumental flux at zero magnitude. If 0, the resulting `PhotoCalib` will have
  *                     infinite calibrationMean and non-finite (inf or NaN) calibrationErr.
- * @param instFluxMag0Err The instrumental flux at zero magnitude error. If 0, the resulting `PhotoCalib` will
- *                        have 0 calibrationErr.
+ * @param instFluxMag0Err The instrumental flux at zero magnitude error. If 0, the resulting `PhotoCalib`
+ * will have 0 calibrationErr.
  *
  * @returns Pointer to the constructed PhotoCalib.
  */

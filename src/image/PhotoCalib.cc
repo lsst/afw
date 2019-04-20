@@ -465,8 +465,8 @@ double PhotoCalib::evaluate(lsst::geom::Point<double, 2> const &point) const {
         return _calibration->evaluate(point);
 }
 
-ndarray::Array<double, 1> PhotoCalib::evaluateArray(ndarray::Array<double, 1> xx,
-                                                    ndarray::Array<double, 1> yy) const {
+ndarray::Array<double, 1> PhotoCalib::evaluateArray(ndarray::Array<double, 1> const &xx,
+                                                    ndarray::Array<double, 1> const &yy) const {
     if (_isConstant) {
         ndarray::Array<double, 1> result = ndarray::allocate(ndarray::makeVector(xx.size()));
         result.deep() = _calibrationMean;
@@ -476,13 +476,7 @@ ndarray::Array<double, 1> PhotoCalib::evaluateArray(ndarray::Array<double, 1> xx
     }
 }
 
-void PhotoCalib::instFluxToNanojanskyArray(afw::table::SourceCatalog const &sourceCatalog,
-                                           std::string const &instFluxField,
-                                           ndarray::Array<double, 2, 2> result) const {
-    double instFlux, instFluxErr, nanojansky;  //, calibration;
-    auto instFluxKey = sourceCatalog.getSchema().find<double>(instFluxField + "_instFlux").key;
-    auto instFluxErrKey = sourceCatalog.getSchema().find<double>(instFluxField + "_instFluxErr").key;
-
+ndarray::Array<double, 1> PhotoCalib::evaluateCatalog(afw::table::SourceCatalog const &sourceCatalog) const {
     ndarray::Array<double, 1> xx = ndarray::allocate(ndarray::makeVector(sourceCatalog.size()));
     ndarray::Array<double, 1> yy = ndarray::allocate(ndarray::makeVector(sourceCatalog.size()));
     size_t i = 0;
@@ -492,15 +486,22 @@ void PhotoCalib::instFluxToNanojanskyArray(afw::table::SourceCatalog const &sour
         yy[i] = point.getY();
         ++i;
     }
-    auto calibration = evaluateArray(xx, yy);
+    return evaluateArray(xx, yy);
+}
 
-    i = 0;
+void PhotoCalib::instFluxToNanojanskyArray(afw::table::SourceCatalog const &sourceCatalog,
+                                           std::string const &instFluxField,
+                                           ndarray::Array<double, 2, 2> result) const {
+    auto instFluxKey = sourceCatalog.getSchema().find<double>(instFluxField + "_instFlux").key;
+    auto instFluxErrKey = sourceCatalog.getSchema().find<double>(instFluxField + "_instFluxErr").key;
+
+    auto calibration = evaluateCatalog(sourceCatalog);
+    int i = 0;
     auto iter = result.begin();
     for (auto const &rec : sourceCatalog) {
-        instFlux = rec.get(instFluxKey);
-        instFluxErr = rec.get(instFluxErrKey);
-        // calibration = evaluate(rec.getCentroid());
-        nanojansky = toNanojansky(instFlux, calibration[i]);
+        double instFlux = rec.get(instFluxKey);
+        double instFluxErr = rec.get(instFluxErrKey);
+        double nanojansky = toNanojansky(instFlux, calibration[i]);
         (*iter)[0] = nanojansky;
         (*iter)[1] = toNanojanskyErr(instFlux, instFluxErr, calibration[i], _calibrationErr, nanojansky);
         ++iter;
@@ -511,27 +512,15 @@ void PhotoCalib::instFluxToNanojanskyArray(afw::table::SourceCatalog const &sour
 void PhotoCalib::instFluxToMagnitudeArray(afw::table::SourceCatalog const &sourceCatalog,
                                           std::string const &instFluxField,
                                           ndarray::Array<double, 2, 2> result) const {
-    double instFlux, instFluxErr;  //, calibration;
     auto instFluxKey = sourceCatalog.getSchema().find<double>(instFluxField + "_instFlux").key;
     auto instFluxErrKey = sourceCatalog.getSchema().find<double>(instFluxField + "_instFluxErr").key;
 
-    ndarray::Array<double, 1> xx = ndarray::allocate(ndarray::makeVector(sourceCatalog.size()));
-    ndarray::Array<double, 1> yy = ndarray::allocate(ndarray::makeVector(sourceCatalog.size()));
-    size_t i = 0;
-    for (auto const &rec : sourceCatalog) {
-        auto point = rec.getCentroid();
-        xx[i] = point.getX();
-        yy[i] = point.getY();
-        ++i;
-    }
-    auto calibration = evaluateArray(xx, yy);
-    // std::iota(xx.begin(), xx.end(), .getBeginX());
+    auto calibration = evaluateCatalog(sourceCatalog);
     auto iter = result.begin();
-    i = 0;
+    int i = 0;
     for (auto const &rec : sourceCatalog) {
-        instFlux = rec.get(instFluxKey);
-        instFluxErr = rec.get(instFluxErrKey);
-        // calibration = evaluate(rec.getCentroid());
+        double instFlux = rec.get(instFluxKey);
+        double instFluxErr = rec.get(instFluxErrKey);
         (*iter)[0] = toMagnitude(instFlux, calibration[i]);
         (*iter)[1] = toMagnitudeErr(instFlux, instFluxErr, calibration[i], _calibrationErr);
         ++iter;
