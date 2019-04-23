@@ -48,8 +48,10 @@ LSST_EXCEPTION_TYPE(UnsupportedOperationException, pex::exceptions::RuntimeError
 /**
  * Interface supporting iteration over heterogenous containers.
  *
- * Many operations defined by Storable are optional, and may throw UnsupportedOperationException if they are
- * not defined.
+ * Storable may be subclassed by either C++ or Python classes. Many operations defined by Storable are
+ * optional, and may throw UnsupportedOperationException if they are not defined.
+ *
+ * @see StorableHelper
  *
  * @note All Storables are equality-comparable through operator==(Storable const&, Storable const&). This may
  * cause inconsistent behavior when Storable is used as a mixin in a class hierarchy with an existing equality

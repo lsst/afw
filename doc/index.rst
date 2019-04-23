@@ -20,5 +20,6 @@ afw documentation preview
    lsst.afw.image/index
    lsst.afw.math/index
    lsst.afw.table/index
+   lsst.afw.typehandling/index
    lsst.afw.multiband/index
 
