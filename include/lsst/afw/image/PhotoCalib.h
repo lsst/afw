@@ -348,18 +348,17 @@ public:
     /**
      * Return a flux calibrated catalog, with new `_flux`, `_fluxErr`, `_mag`, and `_magErr` fields.
      *
-     * If the input catalog already has `*_flux` and `*_mag` fields matching `instFluxFields`, they will be
-     * replaced with the new fields.
+     * If the input catalog already has `_flux`, `_mag`, `_fluxErr`, and/or `_magErr` fields matching
+     * `instFluxFields`, they will be replaced with the new fields.
      *
-     * @param catalog The catalog to compute calibrated fluxes of. This catalog is exactly reproduced in the
-     * output catalog.
-     * @param instFluxFields The fields to calibrate. If empty, every field ending with `_instFlux` will have
-     * its corresponding calibrated fields produced in the output catalog. If `_instFluxErr` also exists, it
-     * will be used to compute the `_fluxErr` and `_magErr` fields too.
+     * @param catalog The source catalog to compute calibrated fluxes for.
+     * @param instFluxFields The fields to calibrate (optional). If not provided, every field ending with
+     * `_instFlux` will be calibrated.
      *
-     * @return The calibrated catalog, with new flux and magnitude (and their errors) fields.
+     * @return A deep copy of the input catalog, with new calibrated flux and magnitude fields. Elements of
+     * `instFluxFields` that have `_instFluxErr` will be used to compute the `_fluxErr` and `_magErr` fields.
      *
-     * @throws lsst::pex::exceptions::NotFoundError if any item in `instfluxFields` does not have a
+     * @throws lsst::pex::exceptions::NotFoundError if any item in `instFluxFields` does not have a
      * corresponding `*_instFlux` field in catalog.schema.
      */
     afw::table::SourceCatalog calibrateCatalog(afw::table::SourceCatalog const &catalog,
