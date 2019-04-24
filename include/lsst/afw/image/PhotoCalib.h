@@ -250,8 +250,6 @@ public:
      *                            "PsfFlux_instFluxErr"
      * @param[in]  outField       The field to write the nJy and magnitude errors to.
      *                            Keys of the form "*_instFlux" and "*_instFluxErr" must exist in the schema.
-     *
-     * @warning Not implemented yet: See DM-10155.
      */
     void instFluxToNanojansky(afw::table::SourceCatalog &sourceCatalog, std::string const &instFluxField,
                               std::string const &outField) const;
@@ -330,8 +328,6 @@ public:
      * @param[in]  outField       The field to write the magnitudes and magnitude errors to.
      *                            Keys of the form "*_instFlux", "*_instFluxErr", *_mag", and "*_magErr"
      *                            must exist in the schema.
-     *
-     * @warning Not implemented yet: See DM-10155.
      */
     void instFluxToMagnitude(afw::table::SourceCatalog &sourceCatalog, std::string const &instFluxField,
                              std::string const &outField) const;
@@ -339,7 +335,7 @@ public:
     /**
      * Return a flux calibrated image, with pixel values in nJy.
      *
-     * Mask pixels are propogated directly from the input image.
+     * Mask pixels are propagated directly from the input image.
      *
      * @param maskedImage The masked image to calibrate.
      * @param includeScaleUncertainty Include the uncertainty on the calibration in the resulting variance?
@@ -348,6 +344,29 @@ public:
      */
     MaskedImage<float> calibrateImage(MaskedImage<float> const &maskedImage,
                                       bool includeScaleUncertainty = true) const;
+
+    /**
+     * Return a flux calibrated catalog, with new `_flux`, `_fluxErr`, `_mag`, and `_magErr` fields.
+     *
+     * If the input catalog already has `*_flux` and `*_mag` fields matching `instFluxFields`, they will be
+     * replaced with the new fields.
+     *
+     * @param catalog The catalog to compute calibrated fluxes of. This catalog is exactly reproduced in the
+     * output catalog.
+     * @param instFluxFields The fields to calibrate. If empty, every field ending with `_instFlux` will have
+     * its corresponding calibrated fields produced in the output catalog. If `_instFluxErr` also exists, it
+     * will be used to compute the `_fluxErr` and `_magErr` fields too.
+     *
+     * @return The calibrated catalog, with new flux and magnitude (and their errors) fields.
+     *
+     * @throws lsst::pex::exceptions::NotFoundError if any item in `instfluxFields` does not have a
+     * corresponding `*_instFlux` field in catalog.schema.
+     */
+    afw::table::SourceCatalog calibrateCatalog(afw::table::SourceCatalog const &catalog,
+                                               std::vector<std::string> const &instFluxFields) const;
+
+    /// @overload calibrateCatalog(table::SourceCatalog const &, std::vector<std::string> const &) const;
+    afw::table::SourceCatalog calibrateCatalog(afw::table::SourceCatalog const &catalog) const;
 
     /**
      * Convert AB magnitude to instFlux (ADU).
@@ -362,6 +381,7 @@ public:
      * @returns    Source instFlux in ADU.
      */
     double magnitudeToInstFlux(double magnitude, lsst::geom::Point<double, 2> const &point) const;
+
     /// @overload magnitudeToInstFlux(double, lsst::geom::Point<double, 2> const &) const;
     double magnitudeToInstFlux(double magnitude) const;
 
@@ -555,6 +575,15 @@ private:
      * Helper function to manage constant vs. non-constant PhotoCalibs
      */
     double evaluate(lsst::geom::Point<double, 2> const &point) const;
+    /**
+     * Return the calibration evaluated at a sequence of points.
+     */
+    ndarray::Array<double, 1> evaluateArray(ndarray::Array<double, 1> const &xx,
+                                            ndarray::Array<double, 1> const &yy) const;
+    /**
+     * Return the calibration evaluated at the centroids of a SourceCatalog.
+     */
+    ndarray::Array<double, 1> evaluateCatalog(afw::table::SourceCatalog const &sourceCatalog) const;
 
     /// Returns the spatially-constant calibration (for setting _calibrationMean)
     double computeCalibrationMean(std::shared_ptr<afw::math::BoundedField> calibration) const;
@@ -589,8 +618,8 @@ std::shared_ptr<PhotoCalib> makePhotoCalibFromMetadata(daf::base::PropertySet &m
  *
  * @param instFluxMag0 The instrumental flux at zero magnitude. If 0, the resulting `PhotoCalib` will have
  *                     infinite calibrationMean and non-finite (inf or NaN) calibrationErr.
- * @param instFluxMag0Err The instrumental flux at zero magnitude error. If 0, the resulting `PhotoCalib` will
- *                        have 0 calibrationErr.
+ * @param instFluxMag0Err The instrumental flux at zero magnitude error. If 0, the resulting `PhotoCalib`
+ * will have 0 calibrationErr.
  *
  * @returns Pointer to the constructed PhotoCalib.
  */

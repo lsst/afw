@@ -159,6 +159,14 @@ PYBIND11_MODULE(photoCalib, mod) {
     cls.def("calibrateImage", &PhotoCalib::calibrateImage, "maskedImage"_a,
             "includeScaleUncertainty"_a = true);
 
+    cls.def("calibrateCatalog",
+            py::overload_cast<afw::table::SourceCatalog const &, std::vector<std::string> const &>(
+                    &PhotoCalib::calibrateCatalog, py::const_),
+            "maskedImage"_a, "fluxFields"_a);
+    cls.def("calibrateCatalog",
+            py::overload_cast<afw::table::SourceCatalog const &>(&PhotoCalib::calibrateCatalog, py::const_),
+            "maskedImage"_a);
+
     /* Operators */
     cls.def("__eq__", &PhotoCalib::operator==, py::is_operator());
     cls.def("__ne__", &PhotoCalib::operator!=, py::is_operator());
