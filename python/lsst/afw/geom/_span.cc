@@ -66,6 +66,7 @@ static void declareSpanIterator(lsst::utils::python::WrapperCollection &wrappers
 void declareSpan(lsst::utils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(PySpan(wrappers.module, "Span"), [](auto &mod, auto &cls) {
         cls.def(py::init<int, int, int>());
+        cls.def(py::init<Span::Interval const &, int>());
         cls.def(py::init<>());
         cls.def("__eq__", &Span::operator==, py::is_operator());
         cls.def("__ne__", &Span::operator!=, py::is_operator());
@@ -78,6 +79,7 @@ void declareSpan(lsst::utils::python::WrapperCollection &wrappers) {
         cls.def("__iter__", [](const Span &s) { return SpanIterator(s); });
         cls.def("getX0", (int (Span::*)() const) & Span::getX0);
         cls.def("getX1", (int (Span::*)() const) & Span::getX1);
+        cls.def("getX", &Span::getX);
         cls.def("getY", (int (Span::*)() const) & Span::getY);
         cls.def("getWidth", &Span::getWidth);
         cls.def("getMinX", &Span::getMinX);
