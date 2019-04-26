@@ -39,7 +39,6 @@
 #include "boost/iterator/zip_iterator.hpp"
 #include "boost/tuple/tuple.hpp"  // cannot convert to std::tuple (yet) because of use with boost::gil
 
-#include "lsst/daf/base/Citizen.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/Mask.h"
 
@@ -71,7 +70,7 @@ namespace image {
 /// A class to manipulate images, masks, and variance as a single object
 template <typename ImagePixelT, typename MaskPixelT = lsst::afw::image::MaskPixel,
           typename VariancePixelT = lsst::afw::image::VariancePixel>
-class MaskedImage : public lsst::daf::base::Citizen {
+class MaskedImage {
 public:
     /// shared pointer to the Image
     typedef std::shared_ptr<image::Image<ImagePixelT>> ImagePtr;
@@ -654,7 +653,7 @@ public:
             std::shared_ptr<daf::base::PropertySet> maskMetadata = std::shared_ptr<daf::base::PropertySet>(),
             std::shared_ptr<daf::base::PropertySet> varianceMetadata =
                     std::shared_ptr<daf::base::PropertySet>(),
-            bool allowUnsafe=false);
+            bool allowUnsafe = false);
 
     /**
      *  Construct a MaskedImage by reading a FITS image in memory.
@@ -682,7 +681,7 @@ public:
             std::shared_ptr<daf::base::PropertySet> maskMetadata = std::shared_ptr<daf::base::PropertySet>(),
             std::shared_ptr<daf::base::PropertySet> varianceMetadata =
                     std::shared_ptr<daf::base::PropertySet>(),
-            bool allowUnsafe=false);
+            bool allowUnsafe = false);
 
     /**
      *  Construct a MaskedImage from an already-open FITS object.
@@ -710,7 +709,7 @@ public:
             std::shared_ptr<daf::base::PropertySet> maskMetadata = std::shared_ptr<daf::base::PropertySet>(),
             std::shared_ptr<daf::base::PropertySet> varianceMetadata =
                     std::shared_ptr<daf::base::PropertySet>(),
-            bool allowUnsafe=false);
+            bool allowUnsafe = false);
 
     /**
      * Copy constructor;  shallow, unless deep is true.
@@ -742,7 +741,7 @@ public:
 
                 const bool deep  ///< Must be true; needed to disambiguate
                 )
-            : lsst::daf::base::Citizen(typeid(this)), _image(), _mask(), _variance() {
+            : _image(), _mask(), _variance() {
         if (!deep) {
             throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                               "Only deep copies are permitted for MaskedImages with different pixel types");
@@ -788,14 +787,12 @@ public:
      *       references to images (just as the copy constructor does).
      *       This is an intrinsic flaw in Image's design.
      */
-    MaskedImage subset(lsst::geom::Box2I const & bbox, ImageOrigin origin=PARENT) const {
+    MaskedImage subset(lsst::geom::Box2I const& bbox, ImageOrigin origin = PARENT) const {
         return MaskedImage(*this, bbox, origin, false);
     }
 
     /// Return a subimage corresponding to the given box (interpreted as PARENT coordinates).
-    MaskedImage operator[](lsst::geom::Box2I const & bbox) const {
-        return subset(bbox);
-    }
+    MaskedImage operator[](lsst::geom::Box2I const& bbox) const { return subset(bbox); }
 
     /**
      * Copy the pixels from the rhs to the lhs

@@ -212,8 +212,8 @@ protected:
     /// additional fields on new lines, with the syntax "%(name)s: %(value)s".
     virtual void _stream(std::ostream& os) const;
 
-private:
 
+private:
     friend class BaseTable;
     friend class BaseColumnView;
 

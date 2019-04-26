@@ -36,7 +36,6 @@
 #include <memory>
 
 #include "lsst/base.h"
-#include "lsst/daf/base/Citizen.h"
 #include "lsst/daf/base/PropertySet.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image/ImageBase.h"
@@ -165,7 +164,7 @@ public:
                   std::shared_ptr<lsst::daf::base::PropertySet> metadata =
                           std::shared_ptr<lsst::daf::base::PropertySet>(),
                   lsst::geom::Box2I const& bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT,
-                  bool conformMasks = false, bool allowUnsafe=false);
+                  bool conformMasks = false, bool allowUnsafe = false);
 
     /**
      *  Construct a Mask by reading a FITS image in memory.
@@ -191,7 +190,7 @@ public:
                   std::shared_ptr<lsst::daf::base::PropertySet> metadata =
                           std::shared_ptr<lsst::daf::base::PropertySet>(),
                   lsst::geom::Box2I const& bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT,
-                  bool conformMasks = false, bool allowUnsafe=false);
+                  bool conformMasks = false, bool allowUnsafe = false);
 
     /**
      *  Construct a Mask from an already-open FITS object.
@@ -214,7 +213,7 @@ public:
                   std::shared_ptr<lsst::daf::base::PropertySet> metadata =
                           std::shared_ptr<lsst::daf::base::PropertySet>(),
                   lsst::geom::Box2I const& bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT,
-                  bool conformMasks = false, bool allowUnsafe=false);
+                  bool conformMasks = false, bool allowUnsafe = false);
 
     // generalised copy constructor
     template <typename OtherPixelT>
@@ -274,14 +273,12 @@ public:
      *       references to images (just as the copy constructor does).
      *       This is an intrinsic flaw in Image's design.
      */
-    Mask subset(lsst::geom::Box2I const & bbox, ImageOrigin origin=PARENT) const {
+    Mask subset(lsst::geom::Box2I const& bbox, ImageOrigin origin = PARENT) const {
         return Mask(*this, bbox, origin, false);
     }
 
     /// Return a subimage corresponding to the given box (interpreted as PARENT coordinates).
-    Mask operator[](lsst::geom::Box2I const & bbox) const {
-        return subset(bbox);
-    }
+    Mask operator[](lsst::geom::Box2I const& bbox) const { return subset(bbox); }
 
     using ImageBase<MaskPixelT>::operator[];
 
@@ -521,7 +518,6 @@ public:
     void conformMaskPlanes(const MaskPlaneDict& masterPlaneDict);
 
 private:
-
     friend class MaskFitsReader;
 
     std::shared_ptr<detail::MaskDict> _maskDict;  // our bitplane dictionary

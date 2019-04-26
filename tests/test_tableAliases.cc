@@ -13,7 +13,7 @@
 #include "lsst/afw/table/BaseTable.h"
 #include "lsst/afw/table/BaseRecord.h"
 
-// Need to do some of these tests in C++ to subclass BaseTable and use the full functionality of Citizen.
+// Need to do some of these tests in C++ to subclass BaseTable
 
 namespace {
 

@@ -360,7 +360,6 @@ protected:
                   throughputAtMax(
                           schema.addField<double>("throughputAtMax", "throughput above minimum wavelength")) {
             Impl::setupPersistence(schema, arrays);
-            schema.getCitizen().markPersistent();
         }
     };
 
@@ -476,9 +475,7 @@ protected:
         PersistenceHelper()
                 : schema(),
                   a(schema.addField<int>("a", "archive ID of first operand")),
-                  b(schema.addField<int>("b", "archive ID of second operand")) {
-            schema.getCitizen().markPersistent();
-        }
+                  b(schema.addField<int>("b", "archive ID of second operand")) {}
     };
 
     class Factory : public table::io::PersistableFactory {
@@ -567,9 +564,7 @@ protected:
         PersistenceHelper()
                 : schema(),
                   nested(schema.addField<int>("nested", "archive ID of the nested TransmissionCurve")),
-                  transform(schema.addField<int>("transform", "archive ID of the coordinate transform")) {
-            schema.getCitizen().markPersistent();
-        }
+                  transform(schema.addField<int>("transform", "archive ID of the coordinate transform")) {}
     };
 
     void write(OutputArchiveHandle& handle) const override {

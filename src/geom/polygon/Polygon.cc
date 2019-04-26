@@ -544,9 +544,7 @@ private:
     PolygonSchema()
             : schema(),
               vertices(afw::table::PointKey<double>::addFields(schema, "vertices", "list of vertex points",
-                                                               "")) {
-        schema.getCitizen().markPersistent();
-    }
+                                                               "")) {}
 };
 
 class PolygonFactory : public table::io::PersistableFactory {

@@ -103,9 +103,7 @@ struct DummyPsfPersistenceHelper {
     DummyPsfPersistenceHelper& operator=(DummyPsfPersistenceHelper&&) = delete;
 
 private:
-    DummyPsfPersistenceHelper() : schema(), x(schema.addField<double>("x", "dummy parameter")) {
-        schema.getCitizen().markPersistent();
-    }
+    DummyPsfPersistenceHelper() : schema(), x(schema.addField<double>("x", "dummy parameter")) {}
 };
 
 class DummyPsfFactory : public lsst::afw::table::io::PersistableFactory {

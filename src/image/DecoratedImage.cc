@@ -54,22 +54,20 @@ void DecoratedImage<PixelT>::init() {
 
 template <typename PixelT>
 DecoratedImage<PixelT>::DecoratedImage(lsst::geom::Extent2I const& dimensions)
-        : daf::base::Citizen(typeid(this)), _image(new Image<PixelT>(dimensions)) {
+        : _image(new Image<PixelT>(dimensions)) {
     init();
 }
 template <typename PixelT>
-DecoratedImage<PixelT>::DecoratedImage(lsst::geom::Box2I const& bbox)
-        : daf::base::Citizen(typeid(this)), _image(new Image<PixelT>(bbox)) {
+DecoratedImage<PixelT>::DecoratedImage(lsst::geom::Box2I const& bbox) : _image(new Image<PixelT>(bbox)) {
     init();
 }
 template <typename PixelT>
-DecoratedImage<PixelT>::DecoratedImage(std::shared_ptr<Image<PixelT>> rhs)
-        : daf::base::Citizen(typeid(this)), _image(rhs) {
+DecoratedImage<PixelT>::DecoratedImage(std::shared_ptr<Image<PixelT>> rhs) : _image(rhs) {
     init();
 }
 template <typename PixelT>
 DecoratedImage<PixelT>::DecoratedImage(const DecoratedImage& src, const bool deep)
-        : daf::base::Citizen(typeid(this)), _image(new Image<PixelT>(*src._image, deep)), _gain(src._gain) {
+        : _image(new Image<PixelT>(*src._image, deep)), _gain(src._gain) {
     setMetadata(src.getMetadata());
 }
 template <typename PixelT>
@@ -99,11 +97,10 @@ void swap(DecoratedImage<PixelT>& a, DecoratedImage<PixelT>& b) {
 template <typename PixelT>
 DecoratedImage<PixelT>::DecoratedImage(const std::string& fileName, const int hdu,
                                        lsst::geom::Box2I const& bbox, ImageOrigin const origin,
-                                       bool allowUnsafe)
-        : daf::base::Citizen(typeid(this)) {
+                                       bool allowUnsafe) {
     init();
-    _image = std::shared_ptr<Image<PixelT>>(new Image<PixelT>(fileName, hdu, getMetadata(), bbox, origin,
-                                                              allowUnsafe));
+    _image = std::shared_ptr<Image<PixelT>>(
+            new Image<PixelT>(fileName, hdu, getMetadata(), bbox, origin, allowUnsafe));
 }
 
 template <typename PixelT>

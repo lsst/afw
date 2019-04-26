@@ -86,9 +86,7 @@ public:
 private:
     SkyWcsPersistenceHelper()
             : schema(),
-              wcs(schema.addField<table::Array<std::uint8_t>>("wcs", "wcs string representation", "")) {
-        schema.getCitizen().markPersistent();
-    }
+              wcs(schema.addField<table::Array<std::uint8_t>>("wcs", "wcs string representation", "")) {}
 };
 
 class SkyWcsFactory : public table::io::PersistableFactory {
@@ -116,7 +114,8 @@ ast::FrameDict makeSkyWcsFrameDict(TransformPoint2ToPoint2 const& pixelsToFieldA
                                    lsst::geom::SpherePoint const& crval,
                                    std::string const& projection = "TAN") {
     auto const orientationAndFlipXMatrix = makeCdMatrix(1 * lsst::geom::degrees, orientation, flipX);
-    auto const initialWcs = makeSkyWcs(lsst::geom::Point2D(0, 0), crval, orientationAndFlipXMatrix, projection);
+    auto const initialWcs =
+            makeSkyWcs(lsst::geom::Point2D(0, 0), crval, orientationAndFlipXMatrix, projection);
     auto const initialFrameDict = initialWcs->getFrameDict();
     auto const iwcToSkyMap = initialFrameDict->getMapping("IWC", "SKY");
     auto const pixelFrame = initialFrameDict->getFrame("PIXELS");
@@ -166,7 +165,9 @@ lsst::geom::Angle SkyWcs::getPixelScale(lsst::geom::Point2D const& pixel) const 
     // (use a vector so all three points can be converted to sky in a single call)
     double const side = 1.0;
     std::vector<lsst::geom::Point2D> pixVec = {
-            pixel, pixel + lsst::geom::Extent2D(side, 0), pixel + lsst::geom::Extent2D(0, side),
+            pixel,
+            pixel + lsst::geom::Extent2D(side, 0),
+            pixel + lsst::geom::Extent2D(0, side),
     };
 
     auto skyVec = pixelToSky(pixVec);

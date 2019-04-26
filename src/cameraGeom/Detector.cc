@@ -223,9 +223,7 @@ private:
         transformMap(schema.addField<int>("transformMap", "Archive ID of TransformMap", "")),
         crosstalk(schema.addField<table::Array<float>>("crosstalk", "Crosstalk matrix, flattened", "", 0)),
         physicalType(schema.addField<std::string>("physicalType", "Physical type of the detector", "", 0))
-    {
-        schema.getCitizen().markPersistent();
-    }
+    {}
 
     PersistenceHelper(PersistenceHelper const &) = delete;
     PersistenceHelper(PersistenceHelper &&) = delete;

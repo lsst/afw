@@ -131,13 +131,5 @@ int main(int argc, char **argv) {
         status = EXIT_FAILURE;
     }
 
-    // Check for memory leaks
-    if (lsst::daf::base::Citizen::census(0) == 0) {
-        cerr << "No leaks detected" << endl;
-    } else {
-        cerr << "Leaked memory blocks:" << endl;
-        lsst::daf::base::Citizen::census(cerr);
-        status = EXIT_FAILURE;
-    }
     return status;
 }

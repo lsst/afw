@@ -193,9 +193,7 @@ struct PersistenceHelper {
     }
 
 private:
-    PersistenceHelper() : schema(), name(schema.addField<std::string>("name", "name of the filter")) {
-        schema.getCitizen().markPersistent();
-    }
+    PersistenceHelper() : schema(), name(schema.addField<std::string>("name", "name of the filter")) {}
 };
 
 class FilterFactory : public table::io::PersistableFactory {

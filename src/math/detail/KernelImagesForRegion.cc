@@ -48,12 +48,7 @@ namespace detail {
 
 KernelImagesForRegion::KernelImagesForRegion(KernelConstPtr kernelPtr, lsst::geom::Box2I const &bbox,
                                              lsst::geom::Point2I const &xy0, bool doNormalize)
-        : daf::base::Citizen(typeid(this)),
-          _kernelPtr(kernelPtr),
-          _bbox(bbox),
-          _xy0(xy0),
-          _doNormalize(doNormalize),
-          _imagePtrList(4) {
+        : _kernelPtr(kernelPtr), _bbox(bbox), _xy0(xy0), _doNormalize(doNormalize), _imagePtrList(4) {
     if (!_kernelPtr) {
         throw LSST_EXCEPT(pexExcept::InvalidParameterError, "kernelPtr is null");
     }
@@ -68,12 +63,7 @@ KernelImagesForRegion::KernelImagesForRegion(KernelConstPtr const kernelPtr, lss
                                              lsst::geom::Point2I const &xy0, bool doNormalize,
                                              ImagePtr bottomLeftImagePtr, ImagePtr bottomRightImagePtr,
                                              ImagePtr topLeftImagePtr, ImagePtr topRightImagePtr)
-        : daf::base::Citizen(typeid(this)),
-          _kernelPtr(kernelPtr),
-          _bbox(bbox),
-          _xy0(xy0),
-          _doNormalize(doNormalize),
-          _imagePtrList(4) {
+        : _kernelPtr(kernelPtr), _bbox(bbox), _xy0(xy0), _doNormalize(doNormalize), _imagePtrList(4) {
     if (!_kernelPtr) {
         throw LSST_EXCEPT(pexExcept::InvalidParameterError, "kernelPtr is null");
     }

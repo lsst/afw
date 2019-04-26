@@ -409,7 +409,6 @@ ExposureTable::~ExposureTable() = default;
 ExposureTable::MinimalSchema::MinimalSchema() {
     id = schema.addField<RecordId>("id", "unique ID");
     bbox = Box2IKey::addFields(schema, "bbox", "bounding box", "pixel");
-    schema.getCitizen().markPersistent();
 }
 
 ExposureTable::MinimalSchema &ExposureTable::getMinimalSchema() {

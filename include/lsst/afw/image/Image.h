@@ -46,7 +46,6 @@
 #include "lsst/afw/math/Function.h"
 #include "lsst/afw/fitsDefaults.h"
 #include "lsst/daf/base/PropertySet.h"
-#include "lsst/daf/base/Citizen.h"
 #include "lsst/pex/exceptions.h"
 #include "ndarray.h"
 
@@ -146,7 +145,7 @@ public:
                    std::shared_ptr<lsst::daf::base::PropertySet> metadata =
                            std::shared_ptr<lsst::daf::base::PropertySet>(),
                    lsst::geom::Box2I const& bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT,
-                   bool allowUnsafe=false);
+                   bool allowUnsafe = false);
 
     /**
      *  Construct an Image by reading a FITS image in memory.
@@ -166,7 +165,7 @@ public:
                    std::shared_ptr<lsst::daf::base::PropertySet> metadata =
                            std::shared_ptr<lsst::daf::base::PropertySet>(),
                    lsst::geom::Box2I const& bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT,
-                   bool allowUnsafe=false);
+                   bool allowUnsafe = false);
 
     /**
      *  Construct an Image from an already-open FITS object.
@@ -183,7 +182,7 @@ public:
                    std::shared_ptr<lsst::daf::base::PropertySet> metadata =
                            std::shared_ptr<lsst::daf::base::PropertySet>(),
                    lsst::geom::Box2I const& bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT,
-                   bool allowUnsafe=false);
+                   bool allowUnsafe = false);
 
     // generalised copy constructor
     template <typename OtherPixelT>
@@ -224,14 +223,12 @@ public:
      *       references to images (just as the copy constructor does).
      *       This is an intrinsic flaw in Image's design.
      */
-    Image subset(lsst::geom::Box2I const & bbox, ImageOrigin origin=PARENT) const {
+    Image subset(lsst::geom::Box2I const& bbox, ImageOrigin origin = PARENT) const {
         return Image(*this, bbox, origin, false);
     }
 
     /// Return a subimage corresponding to the given box (interpreted as PARENT coordinates).
-    Image operator[](lsst::geom::Box2I const & bbox) const {
-        return subset(bbox);
-    }
+    Image operator[](lsst::geom::Box2I const& bbox) const { return subset(bbox); }
 
     using ImageBase<PixelT>::operator[];
 
@@ -404,7 +401,7 @@ void swap(Image<PixelT>& a, Image<PixelT>& b);
  * A container for an Image and its associated metadata
  */
 template <typename PixelT>
-class DecoratedImage : public lsst::daf::base::Citizen {
+class DecoratedImage {
 public:
     /**
      * Create an %image of the specified size
@@ -450,7 +447,7 @@ public:
      */
     explicit DecoratedImage(std::string const& fileName, const int hdu = fits::DEFAULT_HDU,
                             lsst::geom::Box2I const& bbox = lsst::geom::Box2I(),
-                            ImageOrigin const origin = PARENT, bool allowUnsafe=false);
+                            ImageOrigin const origin = PARENT, bool allowUnsafe = false);
 
     /**
      * Assignment operator

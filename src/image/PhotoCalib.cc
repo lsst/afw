@@ -422,9 +422,7 @@ private:
                       schema.addField<double>("calibrationErr", "1-sigma error on calibrationMean", "count")),
               isConstant(schema.addField<table::Flag>("isConstant", "Is this spatially-constant?")),
               field(schema.addField<int>("field", "archive ID of the BoundedField object")),
-              version(schema.addField<int>("version", "version of this PhotoCalib")) {
-        schema.getCitizen().markPersistent();
-    }
+              version(schema.addField<int>("version", "version of this PhotoCalib")) {}
 };
 
 class PhotoCalibFactory : public table::io::PersistableFactory {

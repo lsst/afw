@@ -162,9 +162,7 @@ private:
               equinox(schema.addField<double>("equinox", "equinox of coordinates")),
               radesys(schema.addField<std::string>("radesys", "coordinate system for equinox", 72)),
               cunit1(schema.addField<std::string>("cunit1", "coordinate units", 72)),
-              cunit2(schema.addField<std::string>("cunit2", "coordinate units", 72)) {
-        schema.getCitizen().markPersistent();
-    }
+              cunit2(schema.addField<std::string>("cunit2", "coordinate units", 72)) {}
 };
 
 std::shared_ptr<daf::base::PropertyList> getOldWcsMetadata(table::BaseRecord const& record) {

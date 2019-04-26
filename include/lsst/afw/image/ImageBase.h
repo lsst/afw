@@ -40,7 +40,6 @@
 #include "lsst/afw/image/lsstGil.h"
 #include "lsst/afw/image/ImageUtils.h"
 #include "lsst/afw/math/Function.h"
-#include "lsst/daf/base/Citizen.h"
 #include "lsst/pex/exceptions.h"
 #include "ndarray.h"
 
@@ -100,7 +99,7 @@ enum ImageOrigin { PARENT, LOCAL };
 // specialised subclasses
 //
 template <typename PixelT>
-class ImageBase : public lsst::daf::base::Citizen {
+class ImageBase {
 private:
     typedef typename lsst::afw::image::detail::types_traits<PixelT>::view_t _view_t;
     typedef typename lsst::afw::image::detail::types_traits<PixelT>::const_view_t _const_view_t;
@@ -215,7 +214,7 @@ public:
      * ImageBase types.
      */
     template <typename OtherPixelT>
-    ImageBase(const ImageBase<OtherPixelT>& rhs, const bool deep) : lsst::daf::base::Citizen(typeid(this)) {
+    ImageBase(const ImageBase<OtherPixelT>& rhs, const bool deep) {
         if (!deep) {
             throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                               "Only deep copies are permitted for ImageBases with different pixel types");

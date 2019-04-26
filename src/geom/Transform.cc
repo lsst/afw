@@ -215,9 +215,7 @@ private:
     TransformPersistenceHelper()
             : schema(),
               bytes(schema.addField<table::Array<std::uint8_t>>(
-                      "bytes", "a bytestring containing the output of Transform.writeString", "")) {
-        schema.getCitizen().markPersistent();
-    }
+                      "bytes", "a bytestring containing the output of Transform.writeString", "")) {}
 };
 
 template <typename FromEndpoint, typename ToEndpoint>

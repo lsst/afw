@@ -10,8 +10,6 @@
 #include "boost/variant.hpp"
 #include "boost/mpl/transform.hpp"
 
-#include "lsst/daf/base/Citizen.h"
-
 namespace lsst {
 namespace afw {
 namespace table {
@@ -46,11 +44,8 @@ class Access;
  *  Because Schema holds SchemaImpl by shared pointer, one SchemaImpl can be shared between
  *  multiple Schemas (and SubSchemas), which implement copy-on-write by creating a new SchemaImpl
  *  if the pointer they have isn't unique when they are modified.
- *
- *  SchemaImpl inherits from Citizen; this allows both Schemas and SubSchemas to be tracked in
- *  a more meaningful way than if we derived either of those from Citizen.
  */
-class SchemaImpl : public daf::base::Citizen {
+class SchemaImpl {
 private:
     /// Boost.MPL metafunction that returns a SchemaItem<T> given a T.
     struct MakeItem {
@@ -148,12 +143,7 @@ public:
     ItemContainer const& getItems() const { return _items; }
 
     /// Default constructor.
-    explicit SchemaImpl()
-            : daf::base::Citizen(typeid(this)),
-              _recordSize(0),
-              _lastFlagField(-1),
-              _lastFlagBit(-1),
-              _items() {}
+    explicit SchemaImpl() : _recordSize(0), _lastFlagField(-1), _lastFlagBit(-1), _items() {}
 
     /**
      *  A functor-wrapper used in the implementation of Schema::forEach.

@@ -31,7 +31,6 @@
 #include "ndarray/eigen.h"
 #include <memory>
 
-#include "lsst/daf/base/Citizen.h"
 #include "lsst/daf/base/DateTime.h"
 #include "lsst/pex/exceptions.h"
 
@@ -124,7 +123,7 @@ private:
  *
  */
 template <typename T>
-class Covariogram : public lsst::daf::base::Citizen {
+class Covariogram {
 public:
     virtual ~Covariogram();
 
@@ -139,7 +138,7 @@ public:
     /**
      * construct a Covariogram assigning default values to the hyper parameters
      */
-    explicit Covariogram() : lsst::daf::base::Citizen(typeid(this)){};
+    explicit Covariogram(){};
 
     /**
      * Actually evaluate the covariogram function relating two points you want to interpolate from

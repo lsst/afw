@@ -77,7 +77,7 @@ class HeavyFootprintTestCase(lsst.utils.tests.TestCase):
 
         hfoot = afwDetect.makeHeavyFootprint(self.foot, self.mi)
         # check we can call a base-class method
-        self.assertNotEqual(hfoot.getId(), None)
+        self.assertTrue(hfoot.isHeavy())
         #
         # Check we didn't modify the input image
         #

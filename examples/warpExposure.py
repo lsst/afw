@@ -26,7 +26,6 @@ import optparse
 
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
-import lsst.daf.base as dafBase
 import lsst.log as log
 import lsst.log.utils as logUtils
 
@@ -84,9 +83,4 @@ where exposure arguments are paths to Exposure fits files"""
 
 
 if __name__ == "__main__":
-    memId0 = dafBase.Citizen_getNextMemId()
     main()
-    # check for memory leaks
-    if dafBase.Citizen_census(0, memId0) != 0:
-        print(dafBase.Citizen_census(0, memId0), "Objects leaked:")
-        print(dafBase.Citizen_census(dafBase.cout, memId0))

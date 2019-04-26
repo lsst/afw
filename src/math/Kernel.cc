@@ -44,7 +44,7 @@ namespace lsst {
 namespace afw {
 
 template std::shared_ptr<math::Kernel> table::io::PersistableFacade<math::Kernel>::dynamicCast(
-        std::shared_ptr<table::io::Persistable> const&);
+        std::shared_ptr<table::io::Persistable> const &);
 
 namespace math {
 
@@ -55,18 +55,10 @@ deltafunction_kernel_tag deltafunction_kernel_tag_;
 //
 // Constructors
 //
-Kernel::Kernel()
-        : daf::base::Citizen(typeid(this)),
-          _spatialFunctionList(),
-          _width(0),
-          _height(0),
-          _ctrX(0),
-          _ctrY(0),
-          _nKernelParams(0) {}
+Kernel::Kernel() : _spatialFunctionList(), _width(0), _height(0), _ctrX(0), _ctrY(0), _nKernelParams(0) {}
 
 Kernel::Kernel(int width, int height, unsigned int nKernelParams, SpatialFunction const &spatialFunction)
-        : daf::base::Citizen(typeid(this)),
-          _spatialFunctionList(),
+        : _spatialFunctionList(),
           _width(width),
           _height(height),
           _ctrX((width - 1) / 2),
@@ -105,8 +97,7 @@ double Kernel::computeImage(image::Image<Pixel> &image, bool doNormalize, double
 }
 
 Kernel::Kernel(int width, int height, std::vector<SpatialFunctionPtr> spatialFunctionList)
-        : daf::base::Citizen(typeid(this)),
-          _width(width),
+        : _width(width),
           _height(height),
           _ctrX(width / 2),
           _ctrY(height / 2),

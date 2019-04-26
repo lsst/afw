@@ -36,8 +36,7 @@ namespace image {
 namespace {
 
 template <typename ImagePixelT>  // only the image type varies; mask and variance are fixed
-using PyMaskedImage = py::class_<MaskedImage<ImagePixelT>, std::shared_ptr<MaskedImage<ImagePixelT>>,
-                                 daf::base::Citizen>;
+using PyMaskedImage = py::class_<MaskedImage<ImagePixelT>, std::shared_ptr<MaskedImage<ImagePixelT>>>;
 
 /**
 @internal Declare a constructor that takes a MaskedImage of FromPixelT and returns a MaskedImage cast to
@@ -80,14 +79,14 @@ PyMaskedImage<ImagePixelT> declareMaskedImage(py::module &mod, const std::string
                      bool>(),
             "fileName"_a, "metadata"_a = nullptr, "bbox"_a = lsst::geom::Box2I(), "origin"_a = PARENT,
             "conformMasks"_a = false, "needAllHdus"_a = false, "imageMetadata"_a = nullptr,
-            "maskMetadata"_a = nullptr, "varianceMetadata"_a = nullptr, "allowUnsafe"_a=false);
-    cls.def(py::init<fits::MemFileManager &, std::shared_ptr<daf::base::PropertySet>, lsst::geom::Box2I const &,
-                     ImageOrigin, bool, bool, std::shared_ptr<daf::base::PropertySet>,
+            "maskMetadata"_a = nullptr, "varianceMetadata"_a = nullptr, "allowUnsafe"_a = false);
+    cls.def(py::init<fits::MemFileManager &, std::shared_ptr<daf::base::PropertySet>,
+                     lsst::geom::Box2I const &, ImageOrigin, bool, bool,
                      std::shared_ptr<daf::base::PropertySet>, std::shared_ptr<daf::base::PropertySet>,
-                     bool>(),
+                     std::shared_ptr<daf::base::PropertySet>, bool>(),
             "manager"_a, "metadata"_a = nullptr, "bbox"_a = lsst::geom::Box2I(), "origin"_a = PARENT,
             "conformMasks"_a = false, "needAllHdus"_a = false, "imageMetadata"_a = nullptr,
-            "maskMetadata"_a = nullptr, "varianceMetadata"_a = nullptr, "allowUnsafe"_a=false);
+            "maskMetadata"_a = nullptr, "varianceMetadata"_a = nullptr, "allowUnsafe"_a = false);
     cls.def(py::init<MI const &, bool>(), "rhs"_a, "deep"_a = false);
     cls.def(py::init<MI const &, lsst::geom::Box2I const &, ImageOrigin, bool>(), "rhs"_a, "bbox"_a,
             "origin"_a = PARENT, "deep"_a = false);
@@ -97,9 +96,9 @@ PyMaskedImage<ImagePixelT> declareMaskedImage(py::module &mod, const std::string
     cls.def("assign", &MI::assign, "rhs"_a, "bbox"_a = lsst::geom::Box2I(), "origin"_a = PARENT,
             py::is_operator()  // py::is_operator is a workaround for code in slicing.py
                                // that expects NotImplemented to be returned on failure.
-            );
+    );
 
-    cls.def("subset", &MI::subset, "bbox"_a, "origin"_a=PARENT);
+    cls.def("subset", &MI::subset, "bbox"_a, "origin"_a = PARENT);
 
     cls.def("__ilshift__", &MI::operator<<=);
     cls.def("__iadd__", (MI & (MI::*)(ImagePixelT const)) & MI::operator+=);
@@ -122,57 +121,61 @@ PyMaskedImage<ImagePixelT> declareMaskedImage(py::module &mod, const std::string
     cls.def("scaledDivides", &MI::scaledDivides);
 
     /* Members */
-    cls.def("writeFits", (void (MI::*)(std::string const &, std::shared_ptr<daf::base::PropertySet const>,
-                                       std::shared_ptr<daf::base::PropertySet const>,
-                                       std::shared_ptr<daf::base::PropertySet const>,
-                                       std::shared_ptr<daf::base::PropertySet const>) const) &
-                                 MI::writeFits,
+    cls.def("writeFits",
+            (void (MI::*)(std::string const &, std::shared_ptr<daf::base::PropertySet const>,
+                          std::shared_ptr<daf::base::PropertySet const>,
+                          std::shared_ptr<daf::base::PropertySet const>,
+                          std::shared_ptr<daf::base::PropertySet const>) const) &
+                    MI::writeFits,
             "fileName"_a, "metadata"_a = std::shared_ptr<daf::base::PropertySet const>(),
             "imageMetadata"_a = std::shared_ptr<daf::base::PropertySet const>(),
             "maskMetadata"_a = std::shared_ptr<daf::base::PropertySet const>(),
             "varianceMetadata"_a = std::shared_ptr<daf::base::PropertySet const>());
-    cls.def("writeFits", (void (MI::*)(fits::MemFileManager &, std::shared_ptr<daf::base::PropertySet const>,
-                                       std::shared_ptr<daf::base::PropertySet const>,
-                                       std::shared_ptr<daf::base::PropertySet const>,
-                                       std::shared_ptr<daf::base::PropertySet const>) const) &
-                                 MI::writeFits,
+    cls.def("writeFits",
+            (void (MI::*)(fits::MemFileManager &, std::shared_ptr<daf::base::PropertySet const>,
+                          std::shared_ptr<daf::base::PropertySet const>,
+                          std::shared_ptr<daf::base::PropertySet const>,
+                          std::shared_ptr<daf::base::PropertySet const>) const) &
+                    MI::writeFits,
             "manager"_a, "metadata"_a = std::shared_ptr<daf::base::PropertySet const>(),
             "imageMetadata"_a = std::shared_ptr<daf::base::PropertySet const>(),
             "maskMetadata"_a = std::shared_ptr<daf::base::PropertySet const>(),
             "varianceMetadata"_a = std::shared_ptr<daf::base::PropertySet const>());
-    cls.def("writeFits", (void (MI::*)(fits::Fits &, std::shared_ptr<daf::base::PropertySet const>,
-                                       std::shared_ptr<daf::base::PropertySet const>,
-                                       std::shared_ptr<daf::base::PropertySet const>,
-                                       std::shared_ptr<daf::base::PropertySet const>) const) &
-                                 MI::writeFits,
+    cls.def("writeFits",
+            (void (MI::*)(fits::Fits &, std::shared_ptr<daf::base::PropertySet const>,
+                          std::shared_ptr<daf::base::PropertySet const>,
+                          std::shared_ptr<daf::base::PropertySet const>,
+                          std::shared_ptr<daf::base::PropertySet const>) const) &
+                    MI::writeFits,
             "fitsfile"_a, "metadata"_a = std::shared_ptr<daf::base::PropertySet const>(),
             "imageMetadata"_a = std::shared_ptr<daf::base::PropertySet const>(),
             "maskMetadata"_a = std::shared_ptr<daf::base::PropertySet const>(),
             "varianceMetadata"_a = std::shared_ptr<daf::base::PropertySet const>());
 
-    cls.def("writeFits", [](MI & self, std::string const& filename,
-                            fits::ImageWriteOptions const& imageOptions,
-                            fits::ImageWriteOptions const& maskOptions,
-                            fits::ImageWriteOptions const& varianceOptions,
-                            std::shared_ptr<daf::base::PropertySet const> header) {
-                            self.writeFits(filename, imageOptions, maskOptions, varianceOptions, header); },
+    cls.def("writeFits",
+            [](MI &self, std::string const &filename, fits::ImageWriteOptions const &imageOptions,
+               fits::ImageWriteOptions const &maskOptions, fits::ImageWriteOptions const &varianceOptions,
+               std::shared_ptr<daf::base::PropertySet const> header) {
+                self.writeFits(filename, imageOptions, maskOptions, varianceOptions, header);
+            },
             "filename"_a, "imageOptions"_a, "maskOptions"_a, "varianceOptions"_a,
-            "header"_a=std::shared_ptr<daf::base::PropertyList>());
-    cls.def("writeFits", [](MI & self, fits::MemFileManager &manager,
-                            fits::ImageWriteOptions const& imageOptions,
-                            fits::ImageWriteOptions const& maskOptions,
-                            fits::ImageWriteOptions const& varianceOptions,
-                            std::shared_ptr<daf::base::PropertySet const> header) {
-                            self.writeFits(manager, imageOptions, maskOptions, varianceOptions, header); },
+            "header"_a = std::shared_ptr<daf::base::PropertyList>());
+    cls.def("writeFits",
+            [](MI &self, fits::MemFileManager &manager, fits::ImageWriteOptions const &imageOptions,
+               fits::ImageWriteOptions const &maskOptions, fits::ImageWriteOptions const &varianceOptions,
+               std::shared_ptr<daf::base::PropertySet const> header) {
+                self.writeFits(manager, imageOptions, maskOptions, varianceOptions, header);
+            },
             "manager"_a, "imageOptions"_a, "maskOptions"_a, "varianceOptions"_a,
-            "header"_a=std::shared_ptr<daf::base::PropertyList>());
-    cls.def("writeFits", [](MI & self, fits::Fits &fits, fits::ImageWriteOptions const& imageOptions,
-                            fits::ImageWriteOptions const& maskOptions,
-                            fits::ImageWriteOptions const& varianceOptions,
-                            std::shared_ptr<daf::base::PropertySet const> header) {
-                                self.writeFits(fits, imageOptions, maskOptions, varianceOptions, header); },
+            "header"_a = std::shared_ptr<daf::base::PropertyList>());
+    cls.def("writeFits",
+            [](MI &self, fits::Fits &fits, fits::ImageWriteOptions const &imageOptions,
+               fits::ImageWriteOptions const &maskOptions, fits::ImageWriteOptions const &varianceOptions,
+               std::shared_ptr<daf::base::PropertySet const> header) {
+                self.writeFits(fits, imageOptions, maskOptions, varianceOptions, header);
+            },
             "fits"_a, "imageOptions"_a, "maskOptions"_a, "varianceOptions"_a,
-            "header"_a=std::shared_ptr<daf::base::PropertyList>());
+            "header"_a = std::shared_ptr<daf::base::PropertyList>());
 
     cls.def_static("readFits", (MI(*)(std::string const &))MI::readFits, "filename"_a);
     cls.def_static("readFits", (MI(*)(fits::MemFileManager &))MI::readFits, "manager"_a);
@@ -208,7 +211,6 @@ void declareMakeMaskedImage(py::module &mod) {
 
 template <typename ImagePixelT1, typename ImagePixelT2>
 void declareImagesOverlap(py::module &mod) {
-
     // wrap both the Image and MaskedImage versions of imagesOverlap here, as wrapping
     // the Image version in the Image wrapper results in it being invisible in lsst.afw.image
     mod.def("imagesOverlap",
@@ -222,7 +224,7 @@ void declareImagesOverlap(py::module &mod) {
             "image1"_a, "image2"_a);
 }
 
-}  // anonymous
+}  // namespace
 
 PYBIND11_MODULE(maskedImage, mod) {
     py::module::import("lsst.afw.image.image");
@@ -281,6 +283,6 @@ PYBIND11_MODULE(maskedImage, mod) {
     declareImagesOverlap<std::uint64_t, std::uint16_t>(mod);
     declareImagesOverlap<std::uint64_t, std::uint64_t>(mod);
 }
-}
-}
-}  // namspace lsst::afw::image
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst

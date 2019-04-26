@@ -94,26 +94,17 @@ typename ImageBase<PixelT>::_view_t ImageBase<PixelT>::_makeSubView(lsst::geom::
 
 template <typename PixelT>
 ImageBase<PixelT>::ImageBase(lsst::geom::Extent2I const& dimensions)
-        : daf::base::Citizen(typeid(this)),
-          _origin(0, 0),
-          _manager(),
-          _gilView(_allocateView(dimensions, _manager)) {}
+        : _origin(0, 0), _manager(), _gilView(_allocateView(dimensions, _manager)) {}
 
 template <typename PixelT>
 ImageBase<PixelT>::ImageBase(lsst::geom::Box2I const& bbox)
-        : daf::base::Citizen(typeid(this)),
-          _origin(bbox.getMin()),
-          _manager(),
-          _gilView(_allocateView(bbox.getDimensions(), _manager)) {}
+        : _origin(bbox.getMin()), _manager(), _gilView(_allocateView(bbox.getDimensions(), _manager)) {}
 
 template <typename PixelT>
 ImageBase<PixelT>::ImageBase(ImageBase const& rhs, bool const deep
 
                              )
-        : daf::base::Citizen(typeid(this)),
-          _origin(rhs._origin),
-          _manager(rhs._manager),
-          _gilView(rhs._gilView) {
+        : _origin(rhs._origin), _manager(rhs._manager), _gilView(rhs._gilView) {
     if (deep) {
         ImageBase tmp(getBBox());
         tmp.assign(*this);  // now copy the pixels
@@ -129,8 +120,7 @@ ImageBase<PixelT>::ImageBase(ImageBase const& rhs, lsst::geom::Box2I const& bbox
                              bool const deep
 
                              )
-        : daf::base::Citizen(typeid(this)),
-          _origin((origin == PARENT) ? bbox.getMin() : rhs._origin + lsst::geom::Extent2I(bbox.getMin())),
+        : _origin((origin == PARENT) ? bbox.getMin() : rhs._origin + lsst::geom::Extent2I(bbox.getMin())),
           _manager(rhs._manager),  // reference counted pointer, don't copy pixels
           _gilView(_makeSubView(bbox.getDimensions(), _origin - rhs._origin, rhs._gilView)) {
     if (deep) {
@@ -142,8 +132,7 @@ ImageBase<PixelT>::ImageBase(ImageBase const& rhs, lsst::geom::Box2I const& bbox
 
 template <typename PixelT>
 ImageBase<PixelT>::ImageBase(Array const& array, bool deep, lsst::geom::Point2I const& xy0)
-        : daf::base::Citizen(typeid(this)),
-          _origin(xy0),
+        : _origin(xy0),
           _manager(array.getManager()),
           _gilView(boost::gil::interleaved_view(array.template getSize<1>(), array.template getSize<0>(),
                                                 (typename _view_t::value_type*)array.getData(),
@@ -230,8 +219,8 @@ typename ImageBase<PixelT>::PixelConstReference ImageBase<PixelT>::operator()(
 }
 
 template <typename PixelT>
-typename ImageBase<PixelT>::PixelReference
-ImageBase<PixelT>::get(lsst::geom::Point2I const & index, ImageOrigin origin) {
+typename ImageBase<PixelT>::PixelReference ImageBase<PixelT>::get(lsst::geom::Point2I const& index,
+                                                                  ImageOrigin origin) {
     int x = index.getX();
     int y = index.getY();
     if (origin == PARENT) {
@@ -242,8 +231,8 @@ ImageBase<PixelT>::get(lsst::geom::Point2I const & index, ImageOrigin origin) {
 }
 
 template <typename PixelT>
-typename ImageBase<PixelT>::PixelConstReference
-ImageBase<PixelT>::get(lsst::geom::Point2I const & index, ImageOrigin origin) const {
+typename ImageBase<PixelT>::PixelConstReference ImageBase<PixelT>::get(lsst::geom::Point2I const& index,
+                                                                       ImageOrigin origin) const {
     int x = index.getX();
     int y = index.getY();
     if (origin == PARENT) {
@@ -252,7 +241,6 @@ ImageBase<PixelT>::get(lsst::geom::Point2I const & index, ImageOrigin origin) co
     }
     return _gilView(x, y)[0];
 }
-
 
 template <typename PixelT>
 void ImageBase<PixelT>::swap(ImageBase& rhs) {
@@ -381,8 +369,7 @@ Image<PixelT>& Image<PixelT>::operator=(Image&& rhs) {
 
 template <typename PixelT>
 Image<PixelT>::Image(std::string const& fileName, int hdu, std::shared_ptr<daf::base::PropertySet> metadata,
-                     lsst::geom::Box2I const& bbox, ImageOrigin origin, bool allowUnsafe)
-{
+                     lsst::geom::Box2I const& bbox, ImageOrigin origin, bool allowUnsafe) {
     ImageFitsReader reader(fileName, hdu);
     *this = reader.read<PixelT>(bbox, origin, allowUnsafe);
     if (metadata) {
@@ -393,8 +380,7 @@ Image<PixelT>::Image(std::string const& fileName, int hdu, std::shared_ptr<daf::
 template <typename PixelT>
 Image<PixelT>::Image(fits::MemFileManager& manager, int const hdu,
                      std::shared_ptr<daf::base::PropertySet> metadata, lsst::geom::Box2I const& bbox,
-                     ImageOrigin const origin, bool allowUnsafe)
-{
+                     ImageOrigin const origin, bool allowUnsafe) {
     ImageFitsReader reader(manager, hdu);
     *this = reader.read<PixelT>(bbox, origin, allowUnsafe);
     if (metadata) {
@@ -404,8 +390,7 @@ Image<PixelT>::Image(fits::MemFileManager& manager, int const hdu,
 
 template <typename PixelT>
 Image<PixelT>::Image(fits::Fits& fitsFile, std::shared_ptr<daf::base::PropertySet> metadata,
-                     lsst::geom::Box2I const& bbox, ImageOrigin const origin, bool allowUnsafe)
-{
+                     lsst::geom::Box2I const& bbox, ImageOrigin const origin, bool allowUnsafe) {
     ImageFitsReader reader(&fitsFile);
     *this = reader.read<PixelT>(bbox, origin, allowUnsafe);
     if (metadata) {

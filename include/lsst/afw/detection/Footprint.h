@@ -59,8 +59,7 @@ namespace detection {
  * a PeakCatalog which is used to store the location and intensity of peaks in
  * the detection.
  */
-class Footprint : public lsst::daf::base::Citizen,
-                  public afw::table::io::PersistableFacade<lsst::afw::detection::Footprint>,
+class Footprint : public afw::table::io::PersistableFacade<lsst::afw::detection::Footprint>,
                   public afw::table::io::Persistable {
 public:
     /*
@@ -95,8 +94,7 @@ public:
     /** @brief Constructor of a empty Footprint object
      */
     explicit Footprint()
-            : lsst::daf::base::Citizen(typeid(this)),
-              _spans(std::make_shared<geom::SpanSet>()),
+            : _spans(std::make_shared<geom::SpanSet>()),
               _peaks(PeakTable::makeMinimalSchema()),
               _region(lsst::geom::Box2I()) {}
 

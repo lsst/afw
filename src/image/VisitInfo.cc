@@ -224,9 +224,7 @@ private:
               // weather data
               airTemperature(schema.addField<double>("airtemperature", "air temperature", "C")),
               airPressure(schema.addField<double>("airpressure", "air pressure", "Pascal")),
-              humidity(schema.addField<double>("humidity", "humidity (%)", "")) {
-        schema.getCitizen().markPersistent();
-    }
+              humidity(schema.addField<double>("humidity", "humidity (%)", "")) {}
 };
 
 class VisitInfoFactory : public table::io::PersistableFactory {

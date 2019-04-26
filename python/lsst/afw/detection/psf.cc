@@ -25,7 +25,6 @@
 #include <pybind11/pybind11.h>
 //#include <pybind11/stl.h>
 
-#include "lsst/daf/base/Citizen.h"
 #include "lsst/geom/Point.h"
 #include "lsst/afw/image/Color.h"
 #include "lsst/afw/table/io/python.h"  // for addPersistableMethods
@@ -44,7 +43,7 @@ auto const NullPoint = lsst::geom::Point2D(std::numeric_limits<double>::quiet_Na
 
 PYBIND11_MODULE(psf, mod) {
     /* Module level */
-    py::class_<Psf, std::shared_ptr<Psf>, daf::base::Citizen> cls(mod, "Psf");
+    py::class_<Psf, std::shared_ptr<Psf>> cls(mod, "Psf");
 
     /* Member types and enums */
     py::enum_<Psf::ImageOwnerEnum>(cls, "ImageOwnerEnum")
@@ -74,6 +73,6 @@ PYBIND11_MODULE(psf, mod) {
     cls.def("getCacheCapacity", &Psf::getCacheCapacity);
     cls.def("setCacheCapacity", &Psf::setCacheCapacity);
 }
-}
-}
-}  // namespace lsst::afw::detection;
+}  // namespace detection
+}  // namespace afw
+}  // namespace lsst

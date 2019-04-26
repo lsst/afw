@@ -47,7 +47,7 @@ namespace {
  * Minuit wrapper for a function(x)
  */
 template <typename ReturnT>
-class MinimizerFunctionBase1 : public ROOT::Minuit2::FCNBase, public daf::base::Citizen {
+class MinimizerFunctionBase1 : public ROOT::Minuit2::FCNBase {
 public:
     explicit MinimizerFunctionBase1(Function1<ReturnT> const &function,
                                     std::vector<double> const &measurementList,
@@ -80,7 +80,7 @@ private:
  * Minuit wrapper for a function(x, y)
  */
 template <typename ReturnT>
-class MinimizerFunctionBase2 : public ROOT::Minuit2::FCNBase, public daf::base::Citizen {
+class MinimizerFunctionBase2 : public ROOT::Minuit2::FCNBase {
 public:
     explicit MinimizerFunctionBase2(Function2<ReturnT> const &function,
                                     std::vector<double> const &measurementList,
@@ -120,8 +120,7 @@ MinimizerFunctionBase1<ReturnT>::MinimizerFunctionBase1(Function1<ReturnT> const
                                                         std::vector<double> const &varianceList,
                                                         std::vector<double> const &xPositionList,
                                                         double errorDef)
-        : daf::base::Citizen(typeid(this)),
-          _functionPtr(function.clone()),
+        : _functionPtr(function.clone()),
           _measurementList(measurementList),
           _varianceList(varianceList),
           _xPositionList(xPositionList),
@@ -134,8 +133,7 @@ MinimizerFunctionBase2<ReturnT>::MinimizerFunctionBase2(Function2<ReturnT> const
                                                         std::vector<double> const &xPositionList,
                                                         std::vector<double> const &yPositionList,
                                                         double errorDef)
-        : daf::base::Citizen(typeid(this)),
-          _functionPtr(function.clone()),
+        : _functionPtr(function.clone()),
           _measurementList(measurementList),
           _varianceList(varianceList),
           _xPositionList(xPositionList),

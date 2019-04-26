@@ -50,7 +50,7 @@ typedef std::uint64_t FootprintIdPixel;
 /**
  * A set of Footprints, associated with a MaskedImage
  */
-class FootprintSet : public lsst::daf::base::Citizen {
+class FootprintSet {
 public:
     /// The FootprintSet's set of Footprint%s
     typedef std::vector<std::shared_ptr<Footprint>> FootprintList;
