@@ -21,29 +21,32 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "pybind11/pybind11.h"
+#include <string>
 
-#include "lsst/utils/python.h"
-
-namespace py = pybind11;
-using namespace pybind11::literals;
+#include "lsst/afw/typehandling/python.h"
 
 namespace lsst {
 namespace afw {
 namespace typehandling {
 
-using utils::python::WrapperCollection;
+std::string declareGenericMapRestrictions(std::string const& className, std::string const& keyName) {
+    // Give the class a custom docstring to avoid confusing Python users
+    std::string docstring = R"docstring(
+For compatibility with C++, ``)docstring" +
+                            className + R"docstring(`` has the following restrictions:
+    - all keys must be )docstring" + keyName +
+                            R"docstring(
+    - values must be built-in types or subclasses of `lsst.afw.typehandling.Storable`.
+      Almost any user-defined class in C++ or Python can have
+      `~lsst.afw.typehandling.Storable` as a mixin.
 
-void wrapGenericMap(utils::python::WrapperCollection& wrappers);
-void wrapStorable(utils::python::WrapperCollection& wrappers);
-void wrapSimpleGenericMap(utils::python::WrapperCollection& wrappers);
-
-PYBIND11_MODULE(_typehandling, mod) {
-    WrapperCollection w(mod, "lsst.afw.typehandling");
-    wrapStorable(w);
-    wrapGenericMap(w);
-    wrapSimpleGenericMap(w);
-    w.finish();
+As a safety precaution, `~lsst.afw.typehandling.Storable` objects that are
+added from C++ may be copied when you retrieve them from Python, making it
+impossible to modify them in-place. This issue does not affect objects that
+are added from Python, or objects that are always passed by
+:cpp:class:`shared_ptr` in C++.
+)docstring";
+    return docstring;
 }
 
 }  // namespace typehandling

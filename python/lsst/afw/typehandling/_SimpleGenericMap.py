@@ -19,6 +19,27 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from ._typehandling import *
-from ._GenericMap import *
-from ._SimpleGenericMap import *
+__all__ = []
+
+from lsst.utils import continueClass
+from ._typehandling import SimpleGenericMapS
+
+
+# pybind11-generated constructor, can only create empty map
+_oldInit = SimpleGenericMapS.__init__
+
+
+@continueClass  # noqa F811
+class SimpleGenericMapS:
+    def __init__(self, source=None, **kwargs):
+        _oldInit(self)
+        if source:
+            self.update(source, **kwargs)
+        else:
+            self.update(**kwargs)
+
+    @classmethod
+    def fromkeys(cls, iterable, value=None):
+        mapping = cls()
+        mapping.update({key: value for key in iterable})
+        return mapping

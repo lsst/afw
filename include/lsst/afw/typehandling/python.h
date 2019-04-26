@@ -26,6 +26,8 @@
 
 #include "pybind11/pybind11.h"
 
+#include <string>
+
 #include "lsst/afw/typehandling/Storable.h"
 
 namespace lsst {
@@ -62,6 +64,8 @@ protected:
         PYBIND11_OVERLOAD_NAME(bool, Base, "__eq__", equals, other);
     }
 };
+
+std::string declareGenericMapRestrictions(std::string const& className, std::string const& keyName);
 
 }  // namespace typehandling
 }  // namespace afw

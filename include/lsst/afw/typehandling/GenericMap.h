@@ -449,8 +449,6 @@ public:
 
     /** @} */
 
-    // TODO: still need an API to support RTTI queries from Python
-
     /**
      * Return the set of all keys, without type information.
      *
