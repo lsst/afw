@@ -146,7 +146,7 @@ std::shared_ptr<BaseRecord> BaseTable::_makeRecord() {
     return std::shared_ptr<BaseRecord>(new BaseRecord(shared_from_this()));
 }
 
-BaseTable::BaseTable(Schema const &schema) : daf::base::Citizen(typeid(this)), _schema(schema) {
+BaseTable::BaseTable(Schema const &schema) : _schema(schema) {
     Block::padSchema(_schema);
     _schema.disconnectAliases();
     _schema.getAliasMap()->_table = this;

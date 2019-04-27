@@ -69,15 +69,7 @@ BOOST_AUTO_TEST_CASE(aliasMapLinks) {
     BOOST_CHECK_EQUAL(table->lastAliasChanged, "c");
 
     // Now we delete the table, and then verify that the link to the table has been broken
-    lsst::daf::base::Citizen::memId tableCitizenId = table->getId();
     table.reset();
-
-    // Is it really dead?
-    typedef std::vector<lsst::daf::base::Citizen const*> CensusVector;
-    std::unique_ptr<CensusVector const> census(lsst::daf::base::Citizen::census());
-    for (CensusVector::const_iterator i = census->begin(); i != census->end(); ++i) {
-        BOOST_CHECK((**i).getId() != tableCitizenId);
-    }
 
     // If the link isn't broken, this will segfault.
     aliases->set("d", "a");

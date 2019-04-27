@@ -28,7 +28,7 @@ namespace table {
  *
  *  Records are noncopyable, and are hence usually passed by shared_ptr or [const-]reference.
  */
-class BaseRecord : public daf::base::Citizen {
+class BaseRecord {
 public:
     // No copying
     BaseRecord(const BaseRecord&) = delete;
@@ -187,7 +187,7 @@ protected:
     virtual void _stream(std::ostream& os) const;
 
     /// Construct a record with uninitialized data.
-    BaseRecord(std::shared_ptr<BaseTable> const& table) : daf::base::Citizen(typeid(this)), _table(table) {
+    BaseRecord(std::shared_ptr<BaseTable> const& table) : _table(table) {
         table->_initialize(*this);
     }
 

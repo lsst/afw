@@ -4,7 +4,6 @@
 #include <memory>
 
 #include "lsst/base.h"
-#include "lsst/daf/base/Citizen.h"
 #include "ndarray/Manager.h"
 #include "lsst/afw/table/fwd.h"
 #include "lsst/afw/table/Schema.h"
@@ -41,7 +40,7 @@ namespace table {
  *  Each table class should be associated with a particular record class (1-to-1).  Each table instance may
  *  be associated with many record instances.
  */
-class BaseTable : public std::enable_shared_from_this<BaseTable>, public daf::base::Citizen {
+class BaseTable : public std::enable_shared_from_this<BaseTable> {
 public:
     /// The associated record class.
     typedef BaseRecord Record;
@@ -186,7 +185,7 @@ protected:
 
     /// Copy construct.
     BaseTable(BaseTable const& other)
-            : daf::base::Citizen(other), _schema(other._schema), _metadata(other._metadata) {
+            : _schema(other._schema), _metadata(other._metadata) {
         if (_metadata) _metadata = std::static_pointer_cast<daf::base::PropertyList>(_metadata->deepCopy());
     }
     // Delegate to copy-constructor for backwards compatibility
