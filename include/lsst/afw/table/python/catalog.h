@@ -162,6 +162,7 @@ PyCatalog<Record> declareCatalog(pybind11::module &mod, std::string const &name,
     cls.def_property_readonly("schema", &Catalog::getSchema);
     cls.def("capacity", &Catalog::capacity);
     cls.def("__len__", &Catalog::size);
+    cls.def("resize", &Catalog::resize);
 
     // Use private names for the following so the public Python method
     // can manage the _column cache
