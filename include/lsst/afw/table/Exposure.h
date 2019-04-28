@@ -83,6 +83,19 @@ public:
     typedef ExposureCatalogT<ExposureRecord> Catalog;
     typedef ExposureCatalogT<ExposureRecord const> ConstCatalog;
 
+    /**
+     *  Constructor used by ExposureTable.
+     *
+     *  While formally public, this constructor is conceptually and effectively
+     *  protected, due to the (protected) ConstructionToken argument.
+     *
+     *  This is to allow make_shared to be used, as that cannot be used on a
+     *  truly protected or private constructor.
+     */
+    ExposureRecord(ConstructionToken const & token, detail::RecordData && data) :
+        BaseRecord(token, std::move(data))
+    {}
+
     std::shared_ptr<ExposureTable const> getTable() const {
         return std::static_pointer_cast<ExposureTable const>(BaseRecord::getTable());
     }
@@ -168,7 +181,6 @@ public:
     ~ExposureRecord() override;
 
 protected:
-    explicit ExposureRecord(std::shared_ptr<ExposureTable> const& table);
 
     void _assign(BaseRecord const& other) override;
 

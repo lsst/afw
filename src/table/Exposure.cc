@@ -372,8 +372,6 @@ bool ExposureRecord::contains(lsst::geom::Point2D const &point, geom::SkyWcs con
     return contains(wcs.pixelToSky(point), includeValidPolygon);
 }
 
-ExposureRecord::ExposureRecord(std::shared_ptr<ExposureTable> const &table) : BaseRecord(table) {}
-
 ExposureRecord::~ExposureRecord() = default;
 
 void ExposureRecord::_assign(BaseRecord const &other) {
@@ -434,7 +432,7 @@ std::shared_ptr<BaseTable> ExposureTable::_clone() const {
 }
 
 std::shared_ptr<BaseRecord> ExposureTable::_makeRecord() {
-    return std::shared_ptr<ExposureRecord>(new ExposureRecord(getSelf<ExposureTable>()));
+    return constructRecord<ExposureRecord>();
 }
 
 //-----------------------------------------------------------------------------------------------------------

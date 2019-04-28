@@ -363,8 +363,6 @@ static SourceFitsReader const sourceFitsReader;
 //----- SourceTable/Record member function implementations --------------------------------------------------
 //-----------------------------------------------------------------------------------------------------------
 
-SourceRecord::SourceRecord(std::shared_ptr<SourceTable> const &table) : SimpleRecord(table) {}
-
 SourceRecord::~SourceRecord() = default;
 
 void SourceRecord::updateCoord(geom::SkyWcs const &wcs) { setCoord(wcs.pixelToSky(getCentroid())); }
@@ -424,7 +422,7 @@ std::shared_ptr<BaseTable> SourceTable::_clone() const {
 }
 
 std::shared_ptr<BaseRecord> SourceTable::_makeRecord() {
-    std::shared_ptr<SourceRecord> record(new SourceRecord(getSelf<SourceTable>()));
+    auto record = constructRecord<SourceRecord>();
     if (getIdFactory()) record->setId((*getIdFactory())());
     return record;
 }

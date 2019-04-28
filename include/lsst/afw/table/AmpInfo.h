@@ -89,6 +89,19 @@ public:
     AmpInfoRecord &operator=(AmpInfoRecord &&) = delete;
     ~AmpInfoRecord() override;
 
+    /**
+     *  Constructor used by AmpInfoTable.
+     *
+     *  While formally public, this constructor is conceptually and effectively
+     *  protected, due to the (protected) ConstructionToken argument.
+     *
+     *  This is to allow make_shared to be used, as that cannot be used on a
+     *  truly protected or private constructor.
+     */
+    AmpInfoRecord(ConstructionToken const & token, detail::RecordData && data) :
+        BaseRecord(token, std::move(data))
+    {}
+
     std::shared_ptr<AmpInfoTable const> getTable() const {
         return std::static_pointer_cast<AmpInfoTable const>(BaseRecord::getTable());
     }
@@ -161,10 +174,8 @@ public:
 
     //@}
 
-protected:
+private:
     friend class AmpInfoTable;
-
-    explicit AmpInfoRecord(std::shared_ptr<AmpInfoTable> const &table);
 };
 
 /**

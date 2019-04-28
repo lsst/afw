@@ -19,6 +19,24 @@ class Fits;
 
 namespace table {
 
+namespace detail {
+
+/**
+ *  Helper struct that contains the information passed from BaseTable to
+ *  BaseRecord at construction.
+ *
+ *  This can't be a nested class of either of those two classes for dependency
+ *  reasons, but it should nevertheless be considered opaque by all derived
+ *  Table and Record classes.
+ */
+struct RecordData {
+    void * data;
+    std::shared_ptr<BaseTable> table;
+    ndarray::Manager::Ptr manager;
+};
+
+} // namespace detail
+
 /**
  *  Base class for all tables.
  *
@@ -160,17 +178,25 @@ public:
     virtual ~BaseTable();
 
 protected:
-    /// Convenience function for static-casting shared_from_this for use by derived classes.
-    template <typename Derived>
-    std::shared_ptr<Derived> getSelf() {
-        return std::static_pointer_cast<Derived>(shared_from_this());
-    }
 
-    /// Convenience function for static-casting shared_from_this for use by derived classes.
-    template <typename Derived>
-    std::shared_ptr<Derived const> getSelf() const {
-        return std::static_pointer_cast<Derived const>(shared_from_this());
-    }
+    /**
+     *  Helper function that must be used by all _makeRecord overrides to
+     *  actually construct records.
+     *
+     *  Use of this function is enforced by the fact that
+     *  Record::ConstructionToken can only be created by BaseTable, and is only
+     *  ever constructed inside this method.
+     *
+     *  This function expects Record subclasses to have a constructor signature
+     *  of the form
+     *
+     *      Record(ConstructionToken const &, detail::RecordData &&, Args && ...);
+     *
+     */
+    // n.b. this is implemented in BaseRecord.h, as it requires the BaseRecord
+    // definition, and must go in a header.
+    template <typename RecordT, typename ...Args>
+    std::shared_ptr<RecordT> constructRecord(Args && ...args);
 
     virtual void handleAliasChange(std::string const& alias) {}
 
@@ -196,8 +222,8 @@ private:
     friend class io::FitsWriter;
     friend class AliasMap;
 
-    // Called by BaseRecord ctor to fill in its _data, _table, and _manager members.
-    void _initialize(BaseRecord& record);
+    // Obtain raw data pointers and their managing objects for a new record.
+    detail::RecordData _makeNewRecordData();
 
     /*
      *  Called by BaseRecord dtor to notify the table when it is about to be destroyed.
@@ -219,6 +245,7 @@ private:
     ndarray::Manager::Ptr _manager;                      // current memory block to use for new records
     std::shared_ptr<daf::base::PropertyList> _metadata;  // flexible metadata; may be null
 };
+
 }  // namespace table
 }  // namespace afw
 }  // namespace lsst

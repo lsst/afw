@@ -21,7 +21,9 @@ class TestTable;
 
 class TestRecord : public lsst::afw::table::BaseRecord {
 public:
-    explicit TestRecord(std::shared_ptr<TestTable> const& table);
+    explicit TestRecord(ConstructionToken const & token, lsst::afw::table::detail::RecordData && data) :
+        lsst::afw::table::BaseRecord(token, std::move(data))
+    {}
 };
 
 class TestTable : public lsst::afw::table::BaseTable {
@@ -46,11 +48,9 @@ protected:
     }
 
     virtual std::shared_ptr<lsst::afw::table::BaseRecord> _makeRecord() {
-        return std::make_shared<TestRecord>(getSelf<TestTable>());
+        return constructRecord<TestRecord>();
     }
 };
-
-TestRecord::TestRecord(std::shared_ptr<TestTable> const& table) : lsst::afw::table::BaseRecord(table) {}
 
 }  // namespace
 
