@@ -75,6 +75,11 @@ class ComplexStorable final : public SimpleStorable {
 public:
     constexpr ComplexStorable(double storage) : SimpleStorable(), storage(storage) {}
 
+    ComplexStorable& operator=(double newValue) {
+        storage = newValue;
+        return *this;
+    }
+
     std::unique_ptr<Storable> clone() const override { return std::make_unique<ComplexStorable>(storage); }
 
     std::string toString() const override { return "ComplexStorable(" + std::to_string(storage) + ")"; }
