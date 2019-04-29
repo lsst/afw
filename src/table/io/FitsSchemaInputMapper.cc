@@ -373,16 +373,39 @@ public:
     }
 
     StandardReader(Schema &schema, FitsSchemaItem const &item, FieldBase<T> const &base)
-            : _column(item.column), _key(schema.addField<T>(item.ttype, item.doc, item.tunit, base)) {}
+            : _column(item.column), _key(schema.addField<T>(item.ttype, item.doc, item.tunit, base)),
+              _cache(), _cacheFirstRow(0)
+    {}
+
+    void prepRead(std::size_t firstRow, std::size_t nRows, fits::Fits & fits) override {
+        // We only prep and cache scalar-valued columns, not array-valued
+        // columns, as apparently the order CFITSIO reads array-valued columns
+        // is not the order we want.
+        if (_key.getElementCount() == 1u) {
+            std::size_t nElements = nRows*_key.getElementCount();
+            _cache.resize(nElements);
+            _cacheFirstRow = firstRow;
+            fits.readTableArray(firstRow, _column, nElements, &_cache.front());
+        }
+    }
 
     void readCell(BaseRecord &record, std::size_t row, afw::fits::Fits &fits,
                   std::shared_ptr<InputArchive> const &archive) const override {
-        fits.readTableArray(row, _column, _key.getElementCount(), record.getElement(_key));
+        if (_cache.empty()) {
+            fits.readTableArray(row, _column, _key.getElementCount(), record.getElement(_key));
+        } else {
+            assert(row >= _cacheFirstRow);
+            std::size_t offset = row - _cacheFirstRow;
+            assert(offset < _cache.size());
+            std::copy_n(_cache.begin() + offset, _key.getElementCount(), record.getElement(_key));
+        }
     }
 
 private:
     int _column;
     Key<T> _key;
+    std::vector<typename FieldBase<T>::Element> _cache;
+    std::size_t _cacheFirstRow;
 };
 
 class AngleReader : public FitsColumnReader {
@@ -405,16 +428,32 @@ public:
         }
     }
 
+    void prepRead(std::size_t firstRow, std::size_t nRows, fits::Fits & fits) override {
+        assert(_key.getElementCount() == 1u);
+        _cache.resize(nRows);
+        _cacheFirstRow = firstRow;
+        fits.readTableArray(firstRow, _column, nRows, &_cache.front());
+    }
+
     void readCell(BaseRecord &record, std::size_t row, afw::fits::Fits &fits,
                   std::shared_ptr<InputArchive> const &archive) const override {
-        double tmp = 0;
-        fits.readTableScalar(row, _column, tmp);
-        record.set(_key, tmp * lsst::geom::radians);
+        if (_cache.empty()) {
+            double tmp = 0;
+            fits.readTableScalar(row, _column, tmp);
+            record.set(_key, tmp * lsst::geom::radians);
+        } else {
+            assert(row >= _cacheFirstRow);
+            std::size_t offset = row - _cacheFirstRow;
+            assert(offset < _cache.size());
+            record.set(_key, _cache[offset] * lsst::geom::radians);
+        }
     }
 
 private:
     int _column;
     Key<lsst::geom::Angle> _key;
+    std::vector<double> _cache;
+    std::size_t _cacheFirstRow;
 };
 
 class StringReader : public FitsColumnReader {
@@ -833,8 +872,16 @@ void FitsSchemaInputMapper::readRecord(BaseRecord &record, afw::fits::Fits &fits
             record.set(_impl->flagKeys[bit], _impl->flagWorkspace[bit]);
         }
     }
-    for (auto iter = _impl->readers.begin(); iter != _impl->readers.end(); ++iter) {
-        (**iter).readCell(record, row, fits, _impl->archive);
+    if (N_ROWS_TO_PREP != 1 && row % N_ROWS_TO_PREP == 0) {
+        // Give readers a chance to read and cache up to N_ROWS_TO_PREP rows-
+        // worth of values.
+        std::size_t size = std::min(N_ROWS_TO_PREP, fits.countRows() - row);
+        for (auto & reader : _impl->readers) {
+            reader->prepRead(row, size, fits);
+        }
+    }
+    for (auto const & reader : _impl->readers) {
+        reader->readCell(record, row, fits, _impl->archive);
     }
 }
 }  // namespace io

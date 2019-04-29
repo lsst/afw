@@ -6,15 +6,20 @@
 #include "lsst/afw/table/Schema.h"
 #include "lsst/afw/table/io/InputArchive.h"
 #include "lsst/afw/table/BaseRecord.h"
+#include "lsst/afw/table/BaseColumnView.h"
 
 namespace lsst {
 namespace afw {
 namespace table {
 namespace io {
 
+/**
+ *  Polymorphic reader interface used to read different kinds of objects from
+ *  one or more FITS binary table columns.
+ */
 class FitsColumnReader {
 public:
-    FitsColumnReader() = default;
+    FitsColumnReader() noexcept = default;
 
     // Neither copyable nor moveable.
     FitsColumnReader(FitsColumnReader const &) = delete;
@@ -22,10 +27,33 @@ public:
     FitsColumnReader &operator=(FitsColumnReader const &) = delete;
     FitsColumnReader &operator=(FitsColumnReader &&) = delete;
 
+    /**
+     *  Optionally read ahead and cache values from multiple rows.
+     *
+     *  Subclasses are not required to implement this method; if they do, they
+     *  should indicate to readCell that cached values should be used instead.
+     *  Subclasses should not assume that prepRead will always be called,
+     *  however.
+     *
+     *  @param[in] firstRow Index of the first row to read.
+     *  @param[in] nRows    Number of rows to read.
+     *  @param[in] fits     FITS file manager object.
+     */
+    virtual void prepRead(std::size_t firstRow, std::size_t nRows, fits::Fits & fits) {}
+
+    /**
+     *  Read values from a single row.
+     *
+     *  @param[in,out] record   Record to populate.
+     *  @param[in]     row      Index of the row to read from.
+     *  @param[in]     fits     FITS file manager object.
+     *  @param[in]     archive  Archive holding persisted objects, loaded from
+     *                          other HDUs.  May be null.
+     */
     virtual void readCell(BaseRecord &record, std::size_t row, fits::Fits &fits,
                           std::shared_ptr<InputArchive> const &archive) const = 0;
 
-    virtual ~FitsColumnReader() = default;
+    virtual ~FitsColumnReader() noexcept = default;
 };
 
 /**
@@ -63,6 +91,19 @@ struct FitsSchemaItem {
 class FitsSchemaInputMapper {
 public:
     typedef FitsSchemaItem Item;
+
+    /**
+     *  When processing each column, ask CFITSIO to read this many rows of
+     *  values from that column in a single call.
+     *
+     *  Both FITS binary tables and afw.table are stored row-major, so setting
+     *  this to something other than 1 leads to nonsequential reads.  But
+     *  given the way the I/O code is structured, we tend to get nonsequential
+     *  reads anyway, and it seems the per-call overload to CFITSIO is
+     *  sufficiently high that it's best to have *significantly*
+     *  non-sequential reads by making this >> 1.
+     */
+    static constexpr std::size_t N_ROWS_TO_PREP = 256;
 
     /// Construct a mapper from a PropertyList of FITS header values, stripping recognized keys if desired.
     FitsSchemaInputMapper(daf::base::PropertyList &metadata, bool stripMetadata);
