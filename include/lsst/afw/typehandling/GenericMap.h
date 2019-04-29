@@ -40,6 +40,7 @@
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/typehandling/Storable.h"
+#include "lsst/afw/typehandling/PolymorphicValue.h"
 
 namespace lsst {
 namespace afw {
@@ -280,9 +281,8 @@ public:
         try {
             auto foo = unsafeLookup(key.getId());
             // Don't use pointer-based get, because it won't work after migrating to std::variant
-            // return unique_ptr by reference, so the pointer in internal storage won't get cleared
-            auto& holder = boost::get<std::unique_ptr<Storable> const&>(foo);
-            T* typedPointer = dynamic_cast<T*>(holder.get());
+            Storable const& value = boost::get<PolymorphicValue const&>(foo);
+            T const* typedPointer = dynamic_cast<T const*>(&value);
             if (typedPointer != nullptr) {
                 return *typedPointer;
             } else {
@@ -420,9 +420,9 @@ public:
         auto foo = unsafeLookup(key.getId());
         try {
             // Don't use pointer-based get, because it won't work after migrating to std::variant
-            // return unique_ptr by reference, so the pointer in internal storage won't get cleared
-            auto& holder = boost::get<std::unique_ptr<Storable> const&>(foo);
-            return dynamic_cast<T*>(holder.get()) != nullptr;
+            Storable const& value = boost::get<PolymorphicValue const&>(foo);
+            auto asT = dynamic_cast<T const*>(&value);
+            return asT != nullptr;
         } catch (boost::bad_get const&) {
             return false;
         }
@@ -483,9 +483,7 @@ public:
             return false;
         }
         for (K const& key : keys1) {
-            // objects conceptually held by value are copied and held by unique_ptr
-            // make sure to compare the objects being pointed instead
-            if (!_proxyEquals(this->unsafeLookup(key), other.unsafeLookup(key))) {
+            if (this->unsafeLookup(key) != other.unsafeLookup(key)) {
                 return false;
             }
         }
@@ -508,12 +506,12 @@ protected:
     /**
      * A type-agnostic reference to the value stored inside the map.
      *
-     * Keys of any subclass of Storable are implemented using `unique_ptr<Storable>` to preserve type.
+     * Keys of any subclass of Storable are implemented using PolymorphicValue to preserve type.
      */
     // may need to use std::reference_wrapper when migrating to std::variant, but it confuses Boost
-    using ValueReference = boost::variant<bool const&, std::int32_t const&, std::int64_t const&, float const&,
-                                          double const&, std::string const&, std::unique_ptr<Storable> const&,
-                                          std::shared_ptr<Storable> const&>;
+    using ValueReference =
+            boost::variant<bool const&, std::int32_t const&, std::int64_t const&, float const&, double const&,
+                           std::string const&, PolymorphicValue const&, std::shared_ptr<Storable> const&>;
 
     /**
      * The types that can be stored in a map.
@@ -547,32 +545,6 @@ private:
     std::unordered_set<K> keySet() const {
         auto rawKeys = keys();
         return std::unordered_set<K>(rawKeys.begin(), rawKeys.end());
-    }
-
-    class _ProxyComparator {
-    public:
-        template <typename T, typename U, typename std::enable_if_t<!std::is_same<T, U>::value, int> = 0>
-        bool operator()(T const& lhs, U const& rhs) const {
-            return false;
-        }
-        template <typename T>
-        bool operator()(T const& lhs, T const& rhs) const {
-            return lhs == rhs;
-        }
-        bool operator()(Storable const& lhs, Storable const& rhs) const { return lhs.equals(rhs); }
-        bool operator()(std::unique_ptr<Storable> const& lhs, std::unique_ptr<Storable> const& rhs) const {
-            return (*lhs).equals(*rhs);
-        }
-    };
-
-    /**
-     * Equality test for internal representations of objects.
-     *
-     * Storable behaves as if held by value, but actually held by unique_ptr.
-     * Override unique_ptr comparisons to compare the objects, not the pointers.
-     */
-    bool _proxyEquals(ValueReference const& value1, ValueReference const& value2) const noexcept {
-        return boost::apply_visitor(_ProxyComparator(), value1, value2);
     }
 };
 
@@ -618,11 +590,8 @@ public:
      *
      * @note This implementation calls @ref contains(K const&) const "contains",
      *       then calls @ref unsafeInsert if there is no conflicting key.
-     *
-     * @{
      */
-    // Can't partially specialize method templates, rely on enable_if to avoid duplicates
-    template <typename T, typename std::enable_if_t<!std::is_base_of<Storable, T>::value, int> = 0>
+    template <typename T>
     bool insert(Key<K, T> const& key, T const& value) {
         if (this->contains(key.getId())) {
             return false;
@@ -630,18 +599,6 @@ public:
 
         return unsafeInsert(key.getId(), StorableType(value));
     }
-
-    template <typename T, typename std::enable_if_t<std::is_base_of<Storable, T>::value, int> = 0>
-    bool insert(Key<K, T> const& key, T const& value) {
-        if (this->contains(key.getId())) {
-            return false;
-        }
-
-        auto holder = value.clone();
-        return unsafeInsert(key.getId(), StorableType(std::move(holder)));
-    }
-
-    /** @} */
 
     /**
      * Insert an element into the map, if the map doesn't already contain a mapping with a conflicting key.

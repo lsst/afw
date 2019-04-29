@@ -56,26 +56,11 @@ protected:
 
 public:
     SimpleGenericMap() = default;
-    SimpleGenericMap(SimpleGenericMap const& other) : _storage() {
-        for (auto const& keyValue : other._storage) {
-            auto const& key = keyValue.first;
-            auto const& value = keyValue.second;
-            _storage.insert(std::make_pair(key, _proxyCopy(value)));
-        }
-    }
+    SimpleGenericMap(SimpleGenericMap const& other) = default;
     SimpleGenericMap(SimpleGenericMap&&) = default;
     virtual ~SimpleGenericMap() noexcept = default;
 
-    SimpleGenericMap& operator=(SimpleGenericMap const& other) {
-        std::unordered_map<K, StorableType> copy;
-        for (auto const& keyValue : other._storage) {
-            auto const& key = keyValue.first;
-            auto const& value = keyValue.second;
-            copy.insert(std::make_pair(key, _proxyCopy(value)));
-        }
-        std::swap(_storage, copy);
-        return *this;
-    };
+    SimpleGenericMap& operator=(SimpleGenericMap const& other) = default;
     SimpleGenericMap& operator=(SimpleGenericMap&&) = default;
 
     typename GenericMap<K>::size_type size() const noexcept override { return _storage.size(); }
@@ -117,25 +102,6 @@ protected:
 private:
     // StorableType is a value, so we might as well use it in the implementation
     std::unordered_map<K, StorableType> _storage;
-
-    class _ProxyCopier {
-    public:
-        template <typename T>
-        StorableType operator()(T const& value) const {
-            return value;
-        }
-        StorableType operator()(std::unique_ptr<Storable> const& pointer) const { return pointer->clone(); }
-    };
-
-    /**
-     * Make a copy of any value stored in StorableType.
-     *
-     * @param value The value to copy.
-     * @returns If `value` is a unique_ptr to Storable, returns a unique_ptr
-     *          to a copy of the original value. Otherwise, returns an
-     *          ordinary copy.
-     */
-    StorableType _proxyCopy(StorableType const& value) { return boost::apply_visitor(_ProxyCopier(), value); }
 };
 
 }  // namespace typehandling

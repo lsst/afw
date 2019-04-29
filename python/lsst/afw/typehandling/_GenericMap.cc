@@ -35,6 +35,22 @@
 #include "lsst/afw/typehandling/GenericMap.h"
 #include "lsst/afw/typehandling/python.h"
 
+// From https://pybind11.readthedocs.io/en/stable/advanced/cast/stl.html#c-17-library-containers
+// Not needed once we can use std::variant
+namespace pybind11 {
+namespace detail {
+template <typename... Ts>
+struct type_caster<boost::variant<Ts...>> : variant_caster<boost::variant<Ts...>> {};
+template <>
+struct visit_helper<boost::variant> {
+    template <typename... Args>
+    static auto call(Args&&... args) -> decltype(boost::apply_visitor(args...)) {
+        return boost::apply_visitor(args...);
+    }
+};
+}  // namespace detail
+}  // namespace pybind11
+
 namespace py = pybind11;
 using namespace py::literals;
 
@@ -53,25 +69,10 @@ public:
     using MutableGenericMap<K>::unsafeErase;
 };
 
-// This class lets us implement __getitem__ using GenericMap::unsafeLookup
-// Nonlocal class definition to let us use a method template for well-behaved types
-class VariantOneWayCaster {
-public:
-    template <typename T>
-    py::object operator()(T const& value) {
-        return py::cast(value);
-    }
-    // GenericMap::get returns the same reference, depend on RVP to avoid double-deletion
-    py::object operator()(std::unique_ptr<Storable> const& pointer) { return py::cast(*pointer); }
-};
-
 template <typename K>
 py::object get(GenericMap<K>& self, K const& key) {
     auto callable = &Publicist<K>::unsafeLookup;
-    auto ref = (self.*callable)(key);
-    // Use visitor because py::type_caster for variant chokes on unique_ptr const&
-    py::object obj = boost::apply_visitor(VariantOneWayCaster(), ref);
-    return obj;
+    return py::cast((self.*callable)(key));
 };
 
 template <typename K>
