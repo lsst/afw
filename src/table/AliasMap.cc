@@ -71,7 +71,7 @@ std::string AliasMap::apply(std::string const& name) const {
 }
 
 std::string AliasMap::get(std::string const& name) const {
-    Iterator i = _internal.lower_bound(name);
+    Iterator i = _internal.find(name);
     if (i == _internal.end()) {
         throw LSST_EXCEPT(pex::exceptions::NotFoundError,
                           (boost::format("Alias '%s' not found") % name).str());
