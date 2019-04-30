@@ -94,6 +94,8 @@ public:
     InputContainer inputs;
 };
 
+std::size_t FitsSchemaInputMapper::N_ROWS_TO_PREP = 256;
+
 FitsSchemaInputMapper::FitsSchemaInputMapper(daf::base::PropertyList &metadata, bool stripMetadata)
         : _impl(std::make_shared<Impl>()) {
     // Set the table version.  If AFW_TABLE_VERSION tag exists, use that

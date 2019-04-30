@@ -103,7 +103,7 @@ public:
      *  sufficiently high that it's best to have *significantly*
      *  non-sequential reads by making this >> 1.
      */
-    static constexpr std::size_t N_ROWS_TO_PREP = 256;
+    static std::size_t N_ROWS_TO_PREP;
 
     /// Construct a mapper from a PropertyList of FITS header values, stripping recognized keys if desired.
     FitsSchemaInputMapper(daf::base::PropertyList &metadata, bool stripMetadata);
