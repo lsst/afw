@@ -21,3 +21,4 @@
 #
 
 from .persistable import *
+from .fits import *

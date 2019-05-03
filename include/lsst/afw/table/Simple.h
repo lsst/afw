@@ -52,6 +52,19 @@ public:
     typedef SortedCatalogT<SimpleRecord> Catalog;
     typedef SortedCatalogT<SimpleRecord const> ConstCatalog;
 
+    /**
+     *  Constructor used by SimpleTable.
+     *
+     *  While formally public, this constructor is conceptually and effectively
+     *  protected, due to the (protected) ConstructionToken argument.
+     *
+     *  This is to allow make_shared to be used, as that cannot be used on a
+     *  truly protected or private constructor.
+     */
+    SimpleRecord(ConstructionToken const & token, detail::RecordData && data) :
+        BaseRecord(token, std::move(data))
+    {}
+
     std::shared_ptr<SimpleTable const> getTable() const {
         return std::static_pointer_cast<SimpleTable const>(BaseRecord::getTable());
     }
@@ -77,10 +90,8 @@ public:
     SimpleRecord& operator=(SimpleRecord&&) = delete;
     ~SimpleRecord() override;
 
-protected:
+private:
     friend class SimpleTable;
-
-    explicit SimpleRecord(std::shared_ptr<SimpleTable> const& table);
 };
 
 /**

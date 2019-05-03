@@ -86,6 +86,19 @@ public:
     typedef SortedCatalogT<SourceRecord> Catalog;
     typedef SortedCatalogT<SourceRecord const> ConstCatalog;
 
+    /**
+     *  Constructor used by SourceTable.
+     *
+     *  While formally public, this constructor is conceptually and effectively
+     *  protected, due to the (protected) ConstructionToken argument.
+     *
+     *  This is to allow make_shared to be used, as that cannot be used on a
+     *  truly protected or private constructor.
+     */
+    SourceRecord(ConstructionToken const & token, detail::RecordData && data) :
+        SimpleRecord(token, std::move(data))
+    {}
+
     std::shared_ptr<Footprint> getFootprint() const { return _footprint; }
 
     void setFootprint(std::shared_ptr<Footprint> const &footprint) { _footprint = footprint; }
@@ -191,7 +204,6 @@ public:
     ~SourceRecord();
 
 protected:
-    explicit SourceRecord(std::shared_ptr<SourceTable> const &table);
 
     virtual void _assign(BaseRecord const &other);
 

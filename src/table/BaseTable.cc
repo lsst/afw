@@ -143,10 +143,10 @@ std::shared_ptr<BaseTable> BaseTable::_clone() const {
 }
 
 std::shared_ptr<BaseRecord> BaseTable::_makeRecord() {
-    return std::shared_ptr<BaseRecord>(new BaseRecord(shared_from_this()));
+    return constructRecord<BaseRecord>();
 }
 
-BaseTable::BaseTable(Schema const &schema) : daf::base::Citizen(typeid(this)), _schema(schema) {
+BaseTable::BaseTable(Schema const &schema) : _schema(schema) {
     Block::padSchema(_schema);
     _schema.disconnectAliases();
     _schema.getAliasMap()->_table = this;
@@ -155,55 +155,6 @@ BaseTable::BaseTable(Schema const &schema) : daf::base::Citizen(typeid(this)), _
 BaseTable::~BaseTable() { _schema.getAliasMap()->_table = 0; }
 
 namespace {
-
-// A Schema Functor used to set floating point-fields to NaN and initialize variable-length arrays
-// using placement new.  All other fields are left alone, as they should already be zero.
-struct RecordInitializer {
-    template <typename T>
-    static void fill(T *element, int size) {}  // this matches all non-floating-point-element fields.
-
-    static void fill(float *element, int size) {
-        std::fill(element, element + size, std::numeric_limits<float>::quiet_NaN());
-    }
-
-    static void fill(double *element, int size) {
-        std::fill(element, element + size, std::numeric_limits<double>::quiet_NaN());
-    }
-
-    static void fill(lsst::geom::Angle *element, int size) {
-        fill(reinterpret_cast<double *>(element), size);
-    }
-
-    template <typename T>
-    void operator()(SchemaItem<T> const &item) const {
-        fill(reinterpret_cast<typename Field<T>::Element *>(data + item.key.getOffset()),
-             item.key.getElementCount());
-    }
-
-    template <typename T>
-    void operator()(SchemaItem<Array<T> > const &item) const {
-        if (item.key.isVariableLength()) {
-            // Use placement new because the memory (for one ndarray) is already allocated
-            new (data + item.key.getOffset()) ndarray::Array<T, 1, 1>();
-        } else {
-            fill(reinterpret_cast<typename Field<T>::Element *>(data + item.key.getOffset()),
-                 item.key.getElementCount());
-        }
-    }
-
-    void operator()(SchemaItem<std::string> const &item) const {
-        if (item.key.isVariableLength()) {
-            // Use placement new because the memory (for one std::string) is already allocated
-            new (reinterpret_cast<std::string *>(data + item.key.getOffset())) std::string();
-        } else {
-            fill(reinterpret_cast<char *>(data + item.key.getOffset()), item.key.getElementCount());
-        }
-    }
-
-    void operator()(SchemaItem<Flag> const &item) const {}  // do nothing for Flag fields; already 0
-
-    char *data;
-};
 
 // A Schema Functor used to set destroy variable-length array fields using an explicit call to their
 // destructor (necessary since we used placement new).  All other fields are ignored, as they're POD.
@@ -232,11 +183,13 @@ struct RecordDestroyer {
 
 }  // namespace
 
-void BaseTable::_initialize(BaseRecord &record) {
-    record._data = Block::get(_schema.getRecordSize(), _manager);
-    RecordInitializer f = {reinterpret_cast<char *>(record._data)};
-    _schema.forEach(f);
-    record._manager = _manager;  // manager always points to the most recently-used block.
+detail::RecordData BaseTable::_makeNewRecordData() {
+    auto data = Block::get(_schema.getRecordSize(), _manager);
+    return detail::RecordData{
+        data,
+        shared_from_this(),
+        _manager  // manager always points to the most recently-used block.
+    };
 }
 
 void BaseTable::_destroy(BaseRecord &record) {

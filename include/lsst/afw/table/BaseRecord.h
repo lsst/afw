@@ -28,8 +28,34 @@ namespace table {
  *
  *  Records are noncopyable, and are hence usually passed by shared_ptr or [const-]reference.
  */
-class BaseRecord : public daf::base::Citizen {
+class BaseRecord {
+protected:
+
+    // Protected class whose instances must be passed to the public
+    // constructor, providing more fine-grained access control than a
+    // protected constructor would.  In particular, this allows make_shared to
+    // be used.
+    class ConstructionToken {
+    private:
+        friend class BaseTable;
+
+        // A private ctor for this class (and friendship) is necessary to
+        // prevent e.g. BaseRecord({}, ...) calls from code without access
+        // to ConstructionToken.
+        explicit ConstructionToken(int) noexcept {}
+    };
+
 public:
+
+    /**
+     *  Construct a record with uninitialized data.
+     *
+     *  Access to this constructor is restricted to BaseTable and BaseRecord
+     *  subclasses via the ConstructionToken argument, which can only be
+     *  constructed by BaseTable.  This constructor is public so it can still
+     *  be called by std::make_shared code with access to ConstructionToken.
+     */
+    BaseRecord(ConstructionToken const &, detail::RecordData && data);
     // No copying
     BaseRecord(const BaseRecord&) = delete;
     BaseRecord& operator=(const BaseRecord&) = delete;
@@ -186,12 +212,8 @@ protected:
     /// additional fields on new lines, with the syntax "%(name)s: %(value)s".
     virtual void _stream(std::ostream& os) const;
 
-    /// Construct a record with uninitialized data.
-    BaseRecord(std::shared_ptr<BaseTable> const& table) : daf::base::Citizen(typeid(this)), _table(table) {
-        table->_initialize(*this);
-    }
-
 private:
+
     friend class BaseTable;
     friend class BaseColumnView;
 
@@ -200,6 +222,14 @@ private:
     std::shared_ptr<BaseTable> _table;  // the associated table
     ndarray::Manager::Ptr _manager;  // shared manager for lifetime of _data (like shared_ptr with no pointer)
 };
+
+template <typename RecordT, typename ...Args>
+std::shared_ptr<RecordT> BaseTable::constructRecord(Args && ...args) {
+    return std::make_shared<RecordT>(BaseRecord::ConstructionToken(0), _makeNewRecordData(),
+                                     std::forward<Args>(args)...);
+}
+
+
 }  // namespace table
 }  // namespace afw
 }  // namespace lsst

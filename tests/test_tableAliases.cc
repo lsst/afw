@@ -21,7 +21,9 @@ class TestTable;
 
 class TestRecord : public lsst::afw::table::BaseRecord {
 public:
-    explicit TestRecord(std::shared_ptr<TestTable> const& table);
+    explicit TestRecord(ConstructionToken const & token, lsst::afw::table::detail::RecordData && data) :
+        lsst::afw::table::BaseRecord(token, std::move(data))
+    {}
 };
 
 class TestTable : public lsst::afw::table::BaseTable {
@@ -46,11 +48,9 @@ protected:
     }
 
     virtual std::shared_ptr<lsst::afw::table::BaseRecord> _makeRecord() {
-        return std::make_shared<TestRecord>(getSelf<TestTable>());
+        return constructRecord<TestRecord>();
     }
 };
-
-TestRecord::TestRecord(std::shared_ptr<TestTable> const& table) : lsst::afw::table::BaseRecord(table) {}
 
 }  // namespace
 
@@ -69,15 +69,7 @@ BOOST_AUTO_TEST_CASE(aliasMapLinks) {
     BOOST_CHECK_EQUAL(table->lastAliasChanged, "c");
 
     // Now we delete the table, and then verify that the link to the table has been broken
-    lsst::daf::base::Citizen::memId tableCitizenId = table->getId();
     table.reset();
-
-    // Is it really dead?
-    typedef std::vector<lsst::daf::base::Citizen const*> CensusVector;
-    std::unique_ptr<CensusVector const> census(lsst::daf::base::Citizen::census());
-    for (CensusVector::const_iterator i = census->begin(); i != census->end(); ++i) {
-        BOOST_CHECK((**i).getId() != tableCitizenId);
-    }
 
     // If the link isn't broken, this will segfault.
     aliases->set("d", "a");

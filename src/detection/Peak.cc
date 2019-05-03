@@ -90,8 +90,6 @@ static PeakFitsReader const peakFitsReader;
 //----- PeakTable/Record member function implementations -----------------------------------------------
 //-----------------------------------------------------------------------------------------------------------
 
-PeakRecord::PeakRecord(std::shared_ptr<PeakTable> const& table) : BaseRecord(table) {}
-
 std::ostream& operator<<(std::ostream& os, PeakRecord const& record) {
     return os << (boost::format("%d: (%d,%d)  (%.3f,%.3f)") % record.getId() % record.getIx() %
                   record.getIy() % record.getFx() % record.getFy());
@@ -167,7 +165,7 @@ std::shared_ptr<afw::table::BaseTable> PeakTable::_clone() const {
 }
 
 std::shared_ptr<afw::table::BaseRecord> PeakTable::_makeRecord() {
-    std::shared_ptr<PeakRecord> record(new PeakRecord(getSelf<PeakTable>()));
+    auto record = constructRecord<PeakRecord>();
     if (getIdFactory()) record->setId((*getIdFactory())());
     return record;
 }

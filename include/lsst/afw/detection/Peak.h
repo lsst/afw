@@ -46,6 +46,19 @@ public:
     typedef afw::table::CatalogT<PeakRecord> Catalog;
     typedef afw::table::CatalogT<PeakRecord const> ConstCatalog;
 
+    /**
+     *  Constructor used by PeakTable.
+     *
+     *  While formally public, this constructor is conceptually and effectively
+     *  protected, due to the (protected) ConstructionToken argument.
+     *
+     *  This is to allow make_shared to be used, as that cannot be used on a
+     *  truly protected or private constructor.
+     */
+    PeakRecord(ConstructionToken const & token, table::detail::RecordData && data) :
+        BaseRecord(token, std::move(data))
+    {}
+
     ~PeakRecord() override = default;
     PeakRecord(PeakRecord const&) = delete;
     PeakRecord(PeakRecord&&) = delete;
@@ -78,9 +91,6 @@ public:
     float getPeakValue() const;
     void setPeakValue(float peakValue);
     //@}
-
-protected:
-    explicit PeakRecord(std::shared_ptr<PeakTable> const& table);
 
 private:
     friend class PeakTable;

@@ -68,8 +68,6 @@ static AmpInfoFitsReader const ampInfoFitsReader;
 //----- AmpInfoTable/Record member function implementations -----------------------------------------------
 //-----------------------------------------------------------------------------------------------------------
 
-AmpInfoRecord::AmpInfoRecord(std::shared_ptr<AmpInfoTable> const &table) : BaseRecord(table) {}
-
 AmpInfoRecord::~AmpInfoRecord() = default;
 
 std::shared_ptr<AmpInfoTable> AmpInfoTable::make(Schema const &schema) {
@@ -167,7 +165,7 @@ std::shared_ptr<BaseTable> AmpInfoTable::_clone() const {
 }
 
 std::shared_ptr<BaseRecord> AmpInfoTable::_makeRecord() {
-    return std::shared_ptr<AmpInfoRecord>(new AmpInfoRecord(getSelf<AmpInfoTable>()));
+    return constructRecord<AmpInfoRecord>();
 }
 
 //-------------------------------------------------------------------------------------------------

@@ -428,6 +428,19 @@ public:
     void reserve(size_type n) {
         if (n <= _internal.size()) return;
         _table->preallocate(n - _internal.size());
+        _internal.reserve(n);
+    }
+
+    /// Change the size of the catalog, removing or adding empty records as needed.
+    void resize(size_type n) {
+        size_type old = size();
+        _internal.resize(n);
+        if (old < n) {
+            _table->preallocate(n - old);
+            for (size_type i = old; i != n; ++i) {
+                _internal[i] = _table->makeRecord();
+            }
+        }
     }
 
     /// Return the record at index i.

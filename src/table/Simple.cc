@@ -70,8 +70,6 @@ static SimpleFitsReader const simpleFitsReader;
 //----- SimpleTable/Record member function implementations -----------------------------------------------
 //-----------------------------------------------------------------------------------------------------------
 
-SimpleRecord::SimpleRecord(std::shared_ptr<SimpleTable> const& table) : BaseRecord(table) {}
-
 SimpleRecord::~SimpleRecord() = default;
 
 std::shared_ptr<SimpleTable> SimpleTable::make(Schema const& schema,
@@ -113,7 +111,7 @@ std::shared_ptr<BaseTable> SimpleTable::_clone() const {
 }
 
 std::shared_ptr<BaseRecord> SimpleTable::_makeRecord() {
-    std::shared_ptr<SimpleRecord> record(new SimpleRecord(getSelf<SimpleTable>()));
+    auto record = constructRecord<SimpleRecord>();
     if (getIdFactory()) record->setId((*getIdFactory())());
     return record;
 }
