@@ -34,8 +34,8 @@ namespace io {
 
 PYBIND11_MODULE(fits, mod) {
 
-    mod.def("setNRowsToPrep", [](std::size_t n) { FitsSchemaInputMapper::N_ROWS_TO_PREP = n; });
-    mod.def("getNRowsToPrep", []() { return FitsSchemaInputMapper::N_ROWS_TO_PREP; });
+    mod.def("setPreppedRowsFactor", [](std::size_t n) { FitsSchemaInputMapper::PREPPED_ROWS_FACTOR = n; });
+    mod.def("getPreppedRowsFactor", []() { return FitsSchemaInputMapper::PREPPED_ROWS_FACTOR; });
 
 }
 

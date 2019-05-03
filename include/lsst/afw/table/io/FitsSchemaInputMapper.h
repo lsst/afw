@@ -93,17 +93,18 @@ public:
     typedef FitsSchemaItem Item;
 
     /**
-     *  When processing each column, ask CFITSIO to read this many rows of
-     *  values from that column in a single call.
+     *  When processing each column, divide this number by the record size (in
+     *  bytes) and ask CFITSIO to read this many that of values from that
+     *  column in a single call.
      *
-     *  Both FITS binary tables and afw.table are stored row-major, so setting
-     *  this to something other than 1 leads to nonsequential reads.  But
-     *  given the way the I/O code is structured, we tend to get nonsequential
-     *  reads anyway, and it seems the per-call overload to CFITSIO is
-     *  sufficiently high that it's best to have *significantly*
-     *  non-sequential reads by making this >> 1.
+     *  Both FITS binary tables and afw.table are stored row-major, so reading
+     *  multiple rows from a single column at a time leads to nonsequential
+     *  reads.  But given the way the I/O code is structured, we tend to get
+     *  nonsequential reads anyway, and it seems the per-call overload to
+     *  CFITSIO is sufficiently high that it's best to do this anyway for all
+     *  but the largest record sizes.
      */
-    static std::size_t N_ROWS_TO_PREP;
+    static std::size_t PREPPED_ROWS_FACTOR;
 
     /// Construct a mapper from a PropertyList of FITS header values, stripping recognized keys if desired.
     FitsSchemaInputMapper(daf::base::PropertyList &metadata, bool stripMetadata);

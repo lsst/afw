@@ -92,9 +92,10 @@ public:
     std::unique_ptr<bool[]> flagWorkspace;
     std::shared_ptr<io::InputArchive> archive;
     InputContainer inputs;
+    std::size_t nRowsToPrep = 1;
 };
 
-std::size_t FitsSchemaInputMapper::N_ROWS_TO_PREP = 256;
+std::size_t FitsSchemaInputMapper::PREPPED_ROWS_FACTOR = 1 << 15;  // determined empirically; see DM-19461.
 
 FitsSchemaInputMapper::FitsSchemaInputMapper(daf::base::PropertyList &metadata, bool stripMetadata)
         : _impl(std::make_shared<Impl>()) {
@@ -408,6 +409,7 @@ private:
     Key<T> _key;
     std::vector<typename FieldBase<T>::Element> _cache;
     std::size_t _cacheFirstRow;
+    std::size_t _nRowsToPrep;
 };
 
 class AngleReader : public FitsColumnReader {
@@ -864,6 +866,7 @@ Schema FitsSchemaInputMapper::finalize() {
         }
     }
     _impl->asList().clear();
+    _impl->nRowsToPrep = std::max(PREPPED_ROWS_FACTOR / _impl->schema.getRecordSize(), std::size_t(1));
     return _impl->schema;
 }
 
@@ -874,10 +877,10 @@ void FitsSchemaInputMapper::readRecord(BaseRecord &record, afw::fits::Fits &fits
             record.set(_impl->flagKeys[bit], _impl->flagWorkspace[bit]);
         }
     }
-    if (N_ROWS_TO_PREP != 1 && row % N_ROWS_TO_PREP == 0) {
-        // Give readers a chance to read and cache up to N_ROWS_TO_PREP rows-
+    if (_impl->nRowsToPrep != 1 && row % _impl->nRowsToPrep == 0) {
+        // Give readers a chance to read and cache up to nRowsToPrep rows-
         // worth of values.
-        std::size_t size = std::min(N_ROWS_TO_PREP, fits.countRows() - row);
+        std::size_t size = std::min(_impl->nRowsToPrep, fits.countRows() - row);
         for (auto & reader : _impl->readers) {
             reader->prepRead(row, size, fits);
         }
