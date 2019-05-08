@@ -1,0 +1,9 @@
+# -*- python -*-
+from lsst.sconsUtils import scripts
+scripts.BasicSConscript.pybind11(
+    ["_typehandling"],
+    extraSrc={
+        "_typehandling": ["_GenericMap.cc", "_SimpleGenericMap.cc", "_Storable.cc"],
+    },
+    addUnderscore=False
+)
