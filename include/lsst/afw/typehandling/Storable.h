@@ -65,6 +65,9 @@ public:
     /**
      * Create a new object that is a copy of this one (optional operation).
      *
+     * This operation is required for Storables that are stored in GenericMap
+     * by value, but not for those stored by shared pointer.
+     *
      * @throws UnsupportedOperationException Thrown if this object is not cloneable.
      */
     virtual std::unique_ptr<Storable> clone() const;
