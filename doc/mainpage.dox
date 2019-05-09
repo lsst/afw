@@ -11,7 +11,6 @@ by an image processing system.  In particular:
    - \ref afwSecDetection : Detection of sources in images
    - \ref afwTable : Table and record classes for catalog data
    - \ref afwTablePersistence : Table-based persistence
-   - \ref afwCameraGeom : Camera geometry, including transformation between camera-based coordinate systems
 */
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
