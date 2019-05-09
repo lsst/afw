@@ -170,7 +170,7 @@ std::ostream& operator<<(std::ostream& os, BoostPolygon const& poly) {
 }
 
 std::ostream& operator<<(std::ostream& os, Polygon const& poly) {
-    os << "Polygon(" << poly.getVertices() << ")";
+    os << poly.toString();
     return os;
 }
 
@@ -589,6 +589,21 @@ void Polygon::write(OutputArchiveHandle& handle) const {
 
     handle.saveCatalog(catalog);
 }
+
+std::shared_ptr<typehandling::Storable> Polygon::cloneStorable() const {
+    return std::make_unique<Polygon>(*this);
+}
+
+std::string Polygon::toString() const {
+    std::stringstream buffer;
+    buffer << "Polygon(" << this->getVertices() << ")";
+    return buffer.str();
+}
+
+bool Polygon::equals(typehandling::Storable const& other) const noexcept {
+    return singleClassEquals(*this, other);
+}
+
 }  // namespace polygon
 }  // namespace geom
 }  // namespace afw

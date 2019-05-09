@@ -38,6 +38,7 @@
 #include "lsst/afw/geom/Transform.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/MaskedImage.h"
+#include "lsst/afw/typehandling/Storable.h"
 
 namespace lsst {
 namespace afw {
@@ -55,7 +56,7 @@ LSST_EXCEPTION_TYPE(SinglePolygonException, lsst::pex::exceptions::RuntimeError,
 ///
 /// Polygons are defined by a set of vertices
 
-class Polygon : public afw::table::io::PersistableFacade<Polygon>, public afw::table::io::Persistable {
+class Polygon final : public afw::table::io::PersistableFacade<Polygon>, public afw::typehandling::Storable {
 public:
     typedef lsst::geom::Box2D Box;
     typedef lsst::geom::Point2D Point;
@@ -137,7 +138,7 @@ public:
     bool operator!=(Polygon const& other) const { return !(*this == other); }
 
     /// Return a hash of this object.
-    std::size_t hash_value() const noexcept;
+    std::size_t hash_value() const noexcept override;
 
     /// Returns whether the polygon contains the point
     bool contains(Point const& point) const;
@@ -249,9 +250,21 @@ public:
     }
     //@}
 
-    //@{
     /// Whether Polygon is persistable which is always true
     bool isPersistable() const noexcept override { return true; }
+
+    /// Create a new Polygon that is a copy of this one.
+    std::shared_ptr<typehandling::Storable> cloneStorable() const override;
+
+    /// Create a string representation of this object.
+    std::string toString() const override;
+
+    /**
+     * Compare this object to another Storable.
+     *
+     * @returns `*this == other` if `other` is a Polygon; otherwise `false`.
+     */
+    bool equals(typehandling::Storable const& other) const noexcept override;
 
 protected:
     std::string getPersistenceName() const override;
