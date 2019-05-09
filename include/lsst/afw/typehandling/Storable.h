@@ -67,18 +67,14 @@ public:
      *
      * @throws UnsupportedOperationException Thrown if this object is not cloneable.
      */
-    virtual std::unique_ptr<Storable> clone() const {
-        throw LSST_EXCEPT(UnsupportedOperationException, "Cloning is not supported.");
-    }
+    virtual std::unique_ptr<Storable> clone() const;
 
     /**
      * Create a string representation of this object (optional operation).
      *
      * @throws UnsupportedOperationException Thrown if this object does not have a string representation.
      */
-    virtual std::string toString() const {
-        throw LSST_EXCEPT(UnsupportedOperationException, "No string representation available.");
-    }
+    virtual std::string toString() const;
 
     /**
      * Return a hash of this object (optional operation).
@@ -87,9 +83,7 @@ public:
      *
      * @note Subclass authors are responsible for any associated specializations of std::hash.
      */
-    virtual std::size_t hash_value() const {
-        throw LSST_EXCEPT(UnsupportedOperationException, "Hashes are not supported.");
-    }
+    virtual std::size_t hash_value() const;
 
     /**
      * Compare this object to another Storable.
@@ -106,12 +100,8 @@ public:
      * they are symmetric and will give the same result no matter what the
      * compile-time types of the left- and right-hand sides are.
      */
-    virtual bool equals(Storable const& other) const noexcept { return false; }
+    virtual bool equals(Storable const& other) const noexcept;
 };
-
-inline Storable::~Storable() {}
-
-/** @} */
 
 /**
  * Output operator for Storable.
