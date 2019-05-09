@@ -1155,7 +1155,7 @@ class FootprintSetTestCase(unittest.TestCase):
         ds = afwDetect.FootprintSet(self.ms, afwDetect.Threshold(10))
         objects = ds.getFootprints()
 
-        idImage = ds.insertIntoImage(True)
+        idImage = ds.insertIntoImage()
         if display:
             afwDisplay.Display(frame=2).mtv(idImage, title=self._testMethodName + " image")
 

@@ -923,18 +923,13 @@ FootprintSet::FootprintSet(FootprintSet const &fs1, FootprintSet const &fs2, boo
     throw LSST_EXCEPT(pex::exceptions::LogicError, "NOT IMPLEMENTED");
 }
 
-std::shared_ptr<image::Image<FootprintIdPixel>> FootprintSet::insertIntoImage(bool const relativeIDs) const {
+std::shared_ptr<image::Image<FootprintIdPixel>> FootprintSet::insertIntoImage() const {
     auto im = std::make_shared<image::Image<FootprintIdPixel>>(_region);
     *im = 0;
 
     FootprintIdPixel id = 0;
     for (auto const &fIter : *_footprints) {
-        if (relativeIDs) {
-            id++;
-        } else {
-            id = fIter->getId();
-        }
-
+        id++;
         fIter->getSpans()->applyFunctor(setIdImage<FootprintIdPixel>(id), *im);
     }
 
