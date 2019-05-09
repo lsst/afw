@@ -97,9 +97,6 @@ class FootprintSetTestCase(unittest.TestCase):
         for obj in self.objects:
             obj.insert(self.im)
 
-        if False and display:
-            afwDisplay.Display(frame=0).mtv(self.im, title=self._testMethodName + " image")
-
     def tearDown(self):
         del self.im
 
@@ -139,9 +136,6 @@ class FootprintSetTestCase(unittest.TestCase):
 
         for i, foot in enumerate(objects):
             foot.spans.setImage(idImage, i + 1)
-
-        if False:
-            afwDisplay.Display(frame=2).mtv(idImage, title=self._testMethodName + " image")
 
         for i in range(len(objects)):
             for sp in objects[i].getSpans():
@@ -413,9 +407,6 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
         for obj in self.objects:
             for x, y, I in obj:
                 self.im.getImage()[x, y, afwImage.LOCAL] = I
-
-        if False and display:
-            afwDisplay.Display(frame=0).mtv(self.im, title=self._testMethodName + " image")
 
     def setUp(self):
         self.im, self.fs = None, None
