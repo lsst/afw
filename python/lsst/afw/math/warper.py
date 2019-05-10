@@ -188,6 +188,8 @@ class Warper:
         -----
         calls `lsst.afw.math.warpExposure` insted of `~Warper.warpImage` because the former
         copies attributes such as ``Calib``, and that should be done in one place
+
+        The PSF is not warped. To warp the PSF, use `lsst.meas.algorithms.WarpedPsf`
         """
         destBBox = self._computeDestBBox(
             destWcs=destWcs,
