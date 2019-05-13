@@ -28,6 +28,7 @@
 #include <map>
 
 #include "lsst/afw/table/io/Persistable.h"
+#include "lsst/afw/typehandling/Storable.h"
 #include "lsst/afw/math/BoundedField.h"
 
 namespace lsst {
@@ -41,7 +42,7 @@ namespace image {
  *  (given the simplified interface, for instance, we could switch to unordered_map or some other
  *  underyling container in the future).
  */
-class ApCorrMap : public table::io::PersistableFacade<ApCorrMap>, public table::io::Persistable {
+class ApCorrMap final : public table::io::PersistableFacade<ApCorrMap>, public typehandling::Storable {
     typedef std::map<std::string, std::shared_ptr<math::BoundedField>> Internal;
 
 public:
@@ -79,6 +80,9 @@ public:
     /// Scale all fields by a constant
     ApCorrMap& operator*=(double const scale);
     ApCorrMap& operator/=(double const scale) { return *this *= 1.0 / scale; }
+
+    /// Create a new ApCorrMap that is a copy of this one.
+    std::shared_ptr<typehandling::Storable> cloneStorable() const override;
 
 private:
     std::string getPersistenceName() const override;

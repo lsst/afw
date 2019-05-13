@@ -145,6 +145,11 @@ ApCorrMap& ApCorrMap::operator*=(double const scale) {
     _internal = replacement;
     return *this;
 }
+
+std::shared_ptr<typehandling::Storable> ApCorrMap::cloneStorable() const {
+    return std::make_unique<ApCorrMap>(*this);
+}
+
 }  // namespace image
 }  // namespace afw
 }  // namespace lsst
