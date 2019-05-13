@@ -34,6 +34,7 @@
 #include "lsst/afw/math/Kernel.h"
 #include "lsst/afw/image/Color.h"
 #include "lsst/afw/table/io/Persistable.h"
+#include "lsst/afw/typehandling/Storable.h"
 
 namespace lsst {
 namespace afw {
@@ -74,7 +75,7 @@ struct PsfCacheKey;
  */
 class Psf : public daf::base::Citizen,
             public afw::table::io::PersistableFacade<Psf>,
-            public afw::table::io::Persistable {
+            public afw::typehandling::Storable {
     static lsst::geom::Point2D makeNullPoint() {
         return lsst::geom::Point2D(std::numeric_limits<double>::quiet_NaN());
     }
@@ -107,6 +108,14 @@ public:
      *  returned images.
      */
     virtual std::shared_ptr<Psf> clone() const = 0;
+
+    /**
+     * @copybrief clone
+     *
+     * This method is an alias of @ref clone that can be called from a
+     * reference to @ref typehandling::Storable "Storable".
+     */
+    std::shared_ptr<typehandling::Storable> cloneStorable() const override final { return clone(); }
 
     /**
      *  Return clone with specified kernel dimensions
