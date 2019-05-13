@@ -36,6 +36,11 @@
 
 #include "lsst/afw/image/Filter.h"
 
+#include "lsst/afw/table/io/InputArchive.h"
+#include "lsst/afw/table/io/OutputArchive.h"
+#include "lsst/afw/table/io/CatalogVector.h"
+#include "lsst/afw/table/io/Persistable.cc"
+
 namespace pexEx = lsst::pex::exceptions;
 
 namespace lsst {
@@ -166,6 +171,64 @@ std::vector<std::string> Filter::getNames() {
     std::sort(names.begin(), names.end());
 
     return names;
+}
+
+std::shared_ptr<typehandling::Storable> Filter::cloneStorable() const {
+    return std::make_unique<Filter>(*this);
+}
+
+bool Filter::equals(typehandling::Storable const& other) const noexcept {
+    return singleClassEquals(*this, other);
+}
+
+namespace {
+
+struct PersistenceHelper {
+    table::Schema schema;
+    table::Key<std::string> name;
+
+    static PersistenceHelper const& get() {
+        static PersistenceHelper const instance;
+        return instance;
+    }
+
+private:
+    PersistenceHelper() : schema(), name(schema.addField<std::string>("name", "name of the filter")) {
+        schema.getCitizen().markPersistent();
+    }
+};
+
+class FilterFactory : public table::io::PersistableFactory {
+public:
+    std::shared_ptr<table::io::Persistable> read(InputArchive const& archive,
+                                                 CatalogVector const& catalogs) const override {
+        PersistenceHelper const& keys = PersistenceHelper::get();
+        LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
+        LSST_ARCHIVE_ASSERT(catalogs.front().getSchema() == keys.schema);
+        return std::make_shared<Filter>(catalogs.front().begin()->get(keys.name), true);
+    }
+
+    FilterFactory(std::string const& name) : afw::table::io::PersistableFactory(name) {}
+};
+
+std::string getPersistenceName() { return "Filter"; }
+
+FilterFactory registration(getPersistenceName());
+
+}  // namespace
+
+bool Filter::isPersistable() const noexcept { return true; }
+
+std::string Filter::getPersistenceName() const { return getPersistenceName(); }
+
+std::string Filter::getPythonModule() const { return "lsst.afw.image"; };
+
+void Filter::write(OutputArchiveHandle& handle) const {
+    PersistenceHelper const& keys = PersistenceHelper::get();
+    table::BaseCatalog catalog = handle.makeCatalog(keys.schema);
+    std::shared_ptr<table::BaseRecord> record = catalog.addNew();
+    record->set(keys.name, getName());
+    handle.saveCatalog(catalog);
 }
 
 bool Filter::operator==(Filter const& rhs) const noexcept { return _id != UNKNOWN && _id == rhs._id; }
