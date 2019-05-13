@@ -137,7 +137,8 @@ public:
     std::size_t hash_value() const;
 
 private:
-    std::unique_ptr<Storable> _value;
+    // unique_ptr would be more appropriate, but Storable::cloneStorable must return shared_ptr
+    std::shared_ptr<Storable> _value;
 };
 
 }  // namespace typehandling

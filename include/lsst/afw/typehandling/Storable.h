@@ -73,7 +73,8 @@ public:
      * @note If this class supports a `clone` operation, the two should behave
      *       identically except for the formal return type.
      */
-    virtual std::unique_ptr<Storable> cloneStorable() const;
+    // Return shared_ptr to work around https://github.com/pybind/pybind11/issues/1138
+    virtual std::shared_ptr<Storable> cloneStorable() const;
 
     /**
      * Create a string representation of this object (optional operation).

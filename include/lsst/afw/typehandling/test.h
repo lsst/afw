@@ -59,7 +59,7 @@ class SimpleStorable : public Storable {
 public:
     virtual ~SimpleStorable() = default;
 
-    std::unique_ptr<Storable> cloneStorable() const override { return std::make_unique<SimpleStorable>(); }
+    std::shared_ptr<Storable> cloneStorable() const override { return std::make_unique<SimpleStorable>(); }
 
     std::string toString() const override { return "Simplest possible representation"; }
 
@@ -80,7 +80,7 @@ public:
         return *this;
     }
 
-    std::unique_ptr<Storable> cloneStorable() const override {
+    std::shared_ptr<Storable> cloneStorable() const override {
         return std::make_unique<ComplexStorable>(storage);
     }
 

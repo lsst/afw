@@ -32,12 +32,12 @@ namespace typehandling {
 
 PolymorphicValue::PolymorphicValue(Storable const& value) : _value(value.cloneStorable()) {}
 // No move-constructor, because putting a pointer to Storable&& into a
-// unique_ptr is safe only if the object was dynamically allocated
+// shared_ptr is safe only if the object was dynamically allocated
 
 PolymorphicValue::~PolymorphicValue() noexcept = default;
 
 PolymorphicValue::PolymorphicValue(PolymorphicValue const& other)
-        : _value(other._value ? other._value->cloneStorable() : std::unique_ptr<Storable>()) {}
+        : _value(other._value ? other._value->cloneStorable() : nullptr) {}
 PolymorphicValue::PolymorphicValue(PolymorphicValue&&) = default;  // other._value emptied
 
 PolymorphicValue& PolymorphicValue::operator=(PolymorphicValue const& other) {
