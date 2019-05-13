@@ -45,7 +45,7 @@ class Dummy : public Storable {};
 
 BOOST_AUTO_TEST_CASE(Defaults) {
     Dummy dummy;
-    BOOST_CHECK_THROW(dummy.clone(), UnsupportedOperationException);
+    BOOST_CHECK_THROW(dummy.cloneStorable(), UnsupportedOperationException);
 
     BOOST_TEST(!dummy.isPersistable());
     BOOST_TEST(!dummy.equals(Dummy()));

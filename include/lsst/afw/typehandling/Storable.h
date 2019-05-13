@@ -69,8 +69,11 @@ public:
      * by value, but not for those stored by shared pointer.
      *
      * @throws UnsupportedOperationException Thrown if this object is not cloneable.
+     *
+     * @note If this class supports a `clone` operation, the two should behave
+     *       identically except for the formal return type.
      */
-    virtual std::unique_ptr<Storable> clone() const;
+    virtual std::unique_ptr<Storable> cloneStorable() const;
 
     /**
      * Create a string representation of this object (optional operation).

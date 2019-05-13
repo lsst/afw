@@ -65,7 +65,7 @@ public:
      * @param other the PolymorphicValue to copy.
      *
      * @throws UnsupportedOperationException Thrown if a copy is required and
-     *      the object in `other` does not implement Storable::clone.
+     *      the object in `other` does not implement Storable::cloneStorable.
      *
      * @{
      */
@@ -84,7 +84,7 @@ public:
      * @param other the PolymorphicValue to overwrite this value with.
      *
      * @throws UnsupportedOperationException Thrown if a copy is required and
-     *      the object in `other` does not implement Storable::clone.
+     *      the object in `other` does not implement Storable::cloneStorable.
      *
      * @{
      */

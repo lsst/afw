@@ -30,19 +30,19 @@ namespace lsst {
 namespace afw {
 namespace typehandling {
 
-PolymorphicValue::PolymorphicValue(Storable const& value) : _value(value.clone()) {}
+PolymorphicValue::PolymorphicValue(Storable const& value) : _value(value.cloneStorable()) {}
 // No move-constructor, because putting a pointer to Storable&& into a
 // unique_ptr is safe only if the object was dynamically allocated
 
 PolymorphicValue::~PolymorphicValue() noexcept = default;
 
 PolymorphicValue::PolymorphicValue(PolymorphicValue const& other)
-        : _value(other._value ? other._value->clone() : std::unique_ptr<Storable>()) {}
+        : _value(other._value ? other._value->cloneStorable() : std::unique_ptr<Storable>()) {}
 PolymorphicValue::PolymorphicValue(PolymorphicValue&&) = default;  // other._value emptied
 
 PolymorphicValue& PolymorphicValue::operator=(PolymorphicValue const& other) {
     if (other._value) {
-        _value = other._value->clone();
+        _value = other._value->cloneStorable();
     } else {
         _value.reset();
     }
