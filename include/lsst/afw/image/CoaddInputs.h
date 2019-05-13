@@ -27,6 +27,7 @@
 #include "lsst/base.h"
 #include "lsst/afw/table/Exposure.h"
 #include "lsst/afw/table/io/Persistable.h"
+#include "lsst/afw/typehandling/Storable.h"
 
 namespace lsst {
 namespace afw {
@@ -45,7 +46,7 @@ namespace image {
  *  single-depth ones, so they simply pick out the single non-coadd-Psf that is valid for each
  *  point).
  */
-class CoaddInputs : public table::io::PersistableFacade<CoaddInputs>, public table::io::Persistable {
+class CoaddInputs final : public table::io::PersistableFacade<CoaddInputs>, public typehandling::Storable {
 public:
     table::ExposureCatalog visits;
     table::ExposureCatalog ccds;
@@ -77,6 +78,9 @@ public:
      *  Psf is not persistable, it will silently not be saved, instead of throwing an exception.
      */
     bool isPersistable() const noexcept override;
+
+    /// Create a new CoaddInputs that is a copy of this one.
+    std::shared_ptr<typehandling::Storable> cloneStorable() const override;
 
 protected:
     std::string getPersistenceName() const override;
