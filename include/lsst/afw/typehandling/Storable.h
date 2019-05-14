@@ -99,7 +99,7 @@ public:
      * method to give results consistent with `operator==` for all inputs that
      * are accepted by both.
      *
-     * @return This implementation always returns `false`.
+     * @returns This implementation returns whether the two objects are the same.
      *
      * @warning This method compares an object to any type of Storable,
      * although cross-class comparisons should usually return `false`. If

@@ -48,6 +48,7 @@ BOOST_AUTO_TEST_CASE(Defaults) {
     BOOST_CHECK_THROW(dummy.cloneStorable(), UnsupportedOperationException);
 
     BOOST_TEST(!dummy.isPersistable());
+    BOOST_TEST(dummy.equals(dummy));
     BOOST_TEST(!dummy.equals(Dummy()));
 
     std::stringstream buffer;

@@ -45,7 +45,7 @@ std::size_t Storable::hash_value() const {
     throw LSST_EXCEPT(UnsupportedOperationException, "Hashes are not supported.");
 }
 
-bool Storable::equals(Storable const& other) const noexcept { return false; }
+bool Storable::equals(Storable const& other) const noexcept { return this == &other; }
 
 }  // namespace typehandling
 }  // namespace afw
