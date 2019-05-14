@@ -52,11 +52,6 @@ LSST_EXCEPTION_TYPE(UnsupportedOperationException, pex::exceptions::RuntimeError
  * optional, and may throw UnsupportedOperationException if they are not defined.
  *
  * @see StorableHelper
- *
- * @note All Storables are equality-comparable through operator==(Storable const&, Storable const&). This may
- * cause inconsistent behavior when Storable is used as a mixin in a class hierarchy with an existing equality
- * operator. Developers should take care to ensure the result is the same no matter which operator is called;
- * disambiguating calls may require adding an explicit overload for the derived class.
  */
 class Storable : public table::io::Persistable {
 public:
