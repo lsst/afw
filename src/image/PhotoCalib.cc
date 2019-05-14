@@ -21,6 +21,7 @@
  */
 
 #include <cmath>
+#include <iostream>
 
 #include "lsst/geom/Point.h"
 #include "lsst/afw/image/PhotoCalib.h"
@@ -263,12 +264,26 @@ double PhotoCalib::computeCalibrationMean(std::shared_ptr<afw::math::BoundedFiel
     return calibration->mean();
 }
 
-std::ostream &operator<<(std::ostream &os, PhotoCalib const &photoCalib) {
-    if (photoCalib._isConstant)
-        os << "spatially constant with ";
+std::shared_ptr<typehandling::Storable> PhotoCalib::cloneStorable() const {
+    return std::make_unique<PhotoCalib>(*this);
+}
+
+std::string PhotoCalib::toString() const {
+    std::stringstream buffer;
+    if (_isConstant)
+        buffer << "spatially constant with ";
     else
-        os << *(photoCalib._calibration) << " with ";
-    return os << "mean: " << photoCalib._calibrationMean << " error: " << photoCalib._calibrationErr;
+        buffer << *_calibration << " with ";
+    buffer << "mean: " << _calibrationMean << " error: " << _calibrationErr;
+    return buffer.str();
+}
+
+bool PhotoCalib::equals(typehandling::Storable const &other) const noexcept {
+    return singleClassEquals(*this, other);
+}
+
+std::ostream &operator<<(std::ostream &os, PhotoCalib const &photoCalib) {
+    return os << photoCalib.toString();
 }
 
 MaskedImage<float> PhotoCalib::calibrateImage(MaskedImage<float> const &maskedImage,
