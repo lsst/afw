@@ -41,6 +41,19 @@ namespace {
 
 class Dummy : public Storable {};
 
+class Comparable : public Storable {
+public:
+    explicit Comparable(int id) : id(id) {}
+
+    bool operator==(Comparable const& other) const noexcept { return id == other.id; }
+    bool operator!=(Comparable const& other) const noexcept { return !(*this == other); }
+
+    bool equals(Storable const& other) const noexcept override { return singleClassEquals(*this, other); }
+
+private:
+    int id;
+};
+
 }  // namespace
 
 BOOST_AUTO_TEST_CASE(Defaults) {
@@ -53,6 +66,26 @@ BOOST_AUTO_TEST_CASE(Defaults) {
 
     std::stringstream buffer;
     BOOST_CHECK_THROW(buffer << dummy, UnsupportedOperationException);
+}
+
+BOOST_AUTO_TEST_CASE(SingleClassEquals) {
+    Comparable value1(42), value2(44);
+
+    BOOST_REQUIRE(value1 == value1);
+    BOOST_REQUIRE(value2 == value2);
+    BOOST_REQUIRE(value1 != value2);
+    BOOST_REQUIRE(value2 != value1);
+
+    BOOST_TEST(value1.equals(value1));
+    BOOST_TEST(value2.equals(value2));
+    BOOST_TEST(!value1.equals(value2));
+    BOOST_TEST(!value2.equals(value1));
+
+    Dummy dummy;
+    BOOST_TEST(!value1.equals(dummy));
+    BOOST_TEST(!value2.equals(dummy));
+    BOOST_TEST(!dummy.equals(value1));
+    BOOST_TEST(!dummy.equals(value1));
 }
 
 }  // namespace typehandling

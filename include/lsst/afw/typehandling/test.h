@@ -63,10 +63,7 @@ public:
 
     std::string toString() const override { return "Simplest possible representation"; }
 
-    bool equals(Storable const& other) const noexcept override {
-        auto simpleOther = dynamic_cast<SimpleStorable const*>(&other);
-        return simpleOther != nullptr;
-    }
+    bool equals(Storable const& other) const noexcept override { return singleClassEquals(*this, other); }
     virtual bool operator==(SimpleStorable const& other) const { return true; }
     bool operator!=(SimpleStorable const& other) const { return !(*this == other); }
 };

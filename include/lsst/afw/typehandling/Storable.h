@@ -101,8 +101,46 @@ public:
      * cross-class comparisons are valid, implementers should take care that
      * they are symmetric and will give the same result no matter what the
      * compile-time types of the left- and right-hand sides are.
+     *
+     * @see singleClassEquals
      */
     virtual bool equals(Storable const& other) const noexcept;
+
+protected:
+    /**
+     * Test if a Storable is of a particular class and equal to another object.
+     *
+     * This method template simplifies implementations of @ref equals that
+     * delegate to `operator==` without supporting cross-class comparisons.
+     *
+     * @tparam T The class expected of the two objects to be compared.
+     * @param lhs, rhs The objects to compare. Note that `rhs` need not be
+     *                 a `T`, while `lhs` must be.
+     * @returns `true` if `rhs` is a `T` and `lhs == rhs`; `false` otherwise.
+     *
+     * @exceptsafe Provides the same level of exception safety as `operator==`.
+     *             Most implementations of `operator==` do not throw.
+     *
+     * @note This method template calls `operator==` with both arguments of
+     *       compile-time type `T const&`. Its use is *not* recommended if
+     *       there would be any ambiguity as to which `operator==` gets picked
+     *       by overload resolution.
+     *
+     * This method template is typically called from @ref equals as:
+     *
+     *     bool MyType::equals(Storable const& other) const noexcept {
+     *         return singleClassEquals(*this, other);
+     *     }
+     */
+    template <class T>
+    static bool singleClassEquals(T const& lhs, Storable const& rhs) {
+        auto typedRhs = dynamic_cast<T const*>(&rhs);
+        if (typedRhs != nullptr) {
+            return lhs == *typedRhs;
+        } else {
+            return false;
+        }
+    }
 };
 
 /**
