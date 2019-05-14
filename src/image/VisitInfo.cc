@@ -445,22 +445,36 @@ lsst::geom::Angle VisitInfo::getBoresightParAngle() const {
     return result * lsst::geom::radians;
 }
 
+std::shared_ptr<typehandling::Storable> VisitInfo::cloneStorable() const {
+    return std::make_unique<VisitInfo>(*this);
+}
+
+bool VisitInfo::equals(typehandling::Storable const& other) const noexcept {
+    return singleClassEquals(*this, other);
+}
+
+std::string VisitInfo::toString() const {
+    std::stringstream buffer;
+    buffer << "VisitInfo(";
+    buffer << "exposureId=" << getExposureId() << ", ";
+    buffer << "exposureTime=" << getExposureTime() << ", ";
+    buffer << "darkTime=" << getDarkTime() << ", ";
+    buffer << "date=" << getDate().toString(daf::base::DateTime::TAI) << ", ";
+    buffer << "UT1=" << getUt1() << ", ";
+    buffer << "ERA=" << getEra() << ", ";
+    buffer << "boresightRaDec=" << getBoresightRaDec() << ", ";
+    buffer << "boresightAzAlt=" << getBoresightAzAlt() << ", ";
+    buffer << "boresightAirmass=" << getBoresightAirmass() << ", ";
+    buffer << "boresightRotAngle=" << getBoresightRotAngle() << ", ";
+    buffer << "rotType=" << static_cast<int>(getRotType()) << ", ";
+    buffer << "observatory=" << getObservatory() << ", ";
+    buffer << "weather=" << getWeather();
+    buffer << ")";
+    return buffer.str();
+}
+
 std::ostream& operator<<(std::ostream& os, VisitInfo const& visitInfo) {
-    os << "VisitInfo(";
-    os << "exposureId=" << visitInfo.getExposureId() << ", ";
-    os << "exposureTime=" << visitInfo.getExposureTime() << ", ";
-    os << "darkTime=" << visitInfo.getDarkTime() << ", ";
-    os << "date=" << visitInfo.getDate().toString(daf::base::DateTime::TAI) << ", ";
-    os << "UT1=" << visitInfo.getUt1() << ", ";
-    os << "ERA=" << visitInfo.getEra() << ", ";
-    os << "boresightRaDec=" << visitInfo.getBoresightRaDec() << ", ";
-    os << "boresightAzAlt=" << visitInfo.getBoresightAzAlt() << ", ";
-    os << "boresightAirmass=" << visitInfo.getBoresightAirmass() << ", ";
-    os << "boresightRotAngle=" << visitInfo.getBoresightRotAngle() << ", ";
-    os << "rotType=" << static_cast<int>(visitInfo.getRotType()) << ", ";
-    os << "observatory=" << visitInfo.getObservatory() << ", ";
-    os << "weather=" << visitInfo.getWeather();
-    os << ")";
+    os << visitInfo.toString();
     return os;
 }
 
