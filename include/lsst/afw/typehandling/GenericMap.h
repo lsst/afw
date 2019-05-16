@@ -25,6 +25,7 @@
 #ifndef LSST_AFW_TYPEHANDLING_GENERICMAP_H
 #define LSST_AFW_TYPEHANDLING_GENERICMAP_H
 
+#include <algorithm>
 #include <cstdint>
 #include <functional>
 #include <ostream>
@@ -477,9 +478,9 @@ public:
      * @{
      */
     virtual bool operator==(GenericMap const& other) const {
-        auto keys1 = this->keySet();
-        auto keys2 = other.keySet();
-        if (keys1 != keys2) {
+        auto keys1 = this->keys();
+        auto keys2 = other.keys();
+        if (!std::is_permutation(keys1.begin(), keys1.end(), keys2.begin(), keys2.end())) {
             return false;
         }
         for (K const& key : keys1) {
@@ -535,17 +536,6 @@ protected:
      * @exceptsafe Must provide strong exception safety.
      */
     virtual ValueReference unsafeLookup(K key) const = 0;
-
-private:
-    /**
-     * Return the set of all keys, without type information.
-     *
-     * This method only differs from @ref keys in that it returns a set, not a list.
-     */
-    std::unordered_set<K> keySet() const {
-        auto rawKeys = keys();
-        return std::unordered_set<K>(rawKeys.begin(), rawKeys.end());
-    }
 };
 
 /**
