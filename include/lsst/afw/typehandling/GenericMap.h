@@ -516,7 +516,7 @@ protected:
     /**
      * The types that can be stored in a map.
      *
-     * These are the pass-by-value equivalents (using std::decay) of ValueReference.
+     * These are the pass-by-value equivalents (using std::decay) of @ref ValueReference.
      */
     // this mouthful is shorter than the equivalent expression with result_of
     using StorableType = decltype(_referenceToType(std::declval<ValueReference>()));
