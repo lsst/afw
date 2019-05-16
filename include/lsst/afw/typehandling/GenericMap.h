@@ -258,68 +258,16 @@ public:
         return const_cast<T&>(static_cast<const GenericMap&>(*this).at(key));
     }
 
-    // Can't partially specialize method templates, rely on enable_if to avoid duplicates
-    template <typename T,
-              typename std::enable_if_t<
-                      std::is_fundamental<T>::value || std::is_base_of<std::string, T>::value, int> = 0>
+    template <typename T, typename std::enable_if_t<!IS_SMART_PTR<T>, int> = 0>
     T const& at(Key<K, T> const& key) const {
-        static_assert(!std::is_const<T>::value,
-                      "Due to implementation constraints, const keys are not supported.");
-        try {
-            auto foo = unsafeLookup(key.getId());
-            return boost::get<T const&>(foo);
-        } catch (boost::bad_get const&) {
-            std::stringstream message;
-            message << "Key " << key << " not found, but a key labeled " << key.getId() << " is present.";
-            throw LSST_EXCEPT(pex::exceptions::OutOfRangeError, message.str());
-        }
-    }
-
-    template <typename T, typename std::enable_if_t<std::is_base_of<Storable, T>::value, int> = 0>
-    T const& at(Key<K, T> const& key) const {
-        static_assert(!std::is_const<T>::value,
-                      "Due to implementation constraints, const keys are not supported.");
-        try {
-            auto foo = unsafeLookup(key.getId());
-            // Don't use pointer-based get, because it won't work after migrating to std::variant
-            Storable const& value = boost::get<PolymorphicValue const&>(foo);
-            T const* typedPointer = dynamic_cast<T const*>(&value);
-            if (typedPointer != nullptr) {
-                return *typedPointer;
-            } else {
-                std::stringstream message;
-                message << "Key " << key << " not found, but a key labeled " << key.getId() << " is present.";
-                throw LSST_EXCEPT(pex::exceptions::OutOfRangeError, message.str());
-            }
-        } catch (boost::bad_get const&) {
-            std::stringstream message;
-            message << "Key " << key << " not found, but a key labeled " << key.getId() << " is present.";
-            throw LSST_EXCEPT(pex::exceptions::OutOfRangeError, message.str());
-        }
+        // Delegate to private methods to hide further special-casing of T
+        return _at(key);
     }
 
     template <typename T, typename std::enable_if_t<std::is_base_of<Storable, T>::value, int> = 0>
     std::shared_ptr<T> at(Key<K, std::shared_ptr<T>> const& key) const {
-        static_assert(!std::is_const<T>::value,
-                      "Due to implementation constraints, const keys are not supported.");
-        try {
-            auto foo = unsafeLookup(key.getId());
-            auto pointer = boost::get<std::shared_ptr<Storable> const&>(foo);
-            std::shared_ptr<T> typedPointer = std::dynamic_pointer_cast<T>(pointer);
-            // shared_ptr can be empty without being null. dynamic_pointer_cast
-            // only promises result of failed cast is empty, so test for that
-            if (typedPointer.use_count() > 0) {
-                return typedPointer;
-            } else {
-                std::stringstream message;
-                message << "Key " << key << " not found, but a key labeled " << key.getId() << " is present.";
-                throw LSST_EXCEPT(pex::exceptions::OutOfRangeError, message.str());
-            }
-        } catch (boost::bad_get const&) {
-            std::stringstream message;
-            message << "Key " << key << " not found, but a key labeled " << key.getId() << " is present.";
-            throw LSST_EXCEPT(pex::exceptions::OutOfRangeError, message.str());
-        }
+        // Delegate to private methods to hide further special-casing of T
+        return _at(key);
     }
 
     /** @} */
@@ -388,67 +336,12 @@ public:
      *       determine if the value is of the expected type. The performance of
      *       this method depends strongly on the performance of
      *       contains(K const&).
-     *
-     * @{
      */
-    // Can't partially specialize method templates, rely on enable_if to avoid duplicates
-    template <typename T,
-              typename std::enable_if_t<
-                      std::is_fundamental<T>::value || std::is_base_of<std::string, T>::value, int> = 0>
+    template <typename T>
     bool contains(Key<K, T> const& key) const {
-        // Avoid actually getting and casting an object, if at all possible
-        if (!contains(key.getId())) {
-            return false;
-        }
-
-        auto foo = unsafeLookup(key.getId());
-        // boost::variant has no equivalent to std::holds_alternative
-        try {
-            boost::get<T const&>(foo);
-            return true;
-        } catch (boost::bad_get const&) {
-            return false;
-        }
+        // Delegate to private methods to hide special-casing of T
+        return _contains(key);
     }
-
-    template <typename T, typename std::enable_if_t<std::is_base_of<Storable, T>::value, int> = 0>
-    bool contains(Key<K, T> const& key) const {
-        // Avoid actually getting and casting an object, if at all possible
-        if (!contains(key.getId())) {
-            return false;
-        }
-
-        auto foo = unsafeLookup(key.getId());
-        try {
-            // Don't use pointer-based get, because it won't work after migrating to std::variant
-            Storable const& value = boost::get<PolymorphicValue const&>(foo);
-            auto asT = dynamic_cast<T const*>(&value);
-            return asT != nullptr;
-        } catch (boost::bad_get const&) {
-            return false;
-        }
-    }
-
-    template <typename T, typename std::enable_if_t<std::is_base_of<Storable, T>::value, int> = 0>
-    bool contains(Key<K, std::shared_ptr<T>> const& key) const {
-        // Avoid actually getting and casting an object, if at all possible
-        if (!contains(key.getId())) {
-            return false;
-        }
-
-        auto foo = unsafeLookup(key.getId());
-        try {
-            auto pointer = boost::get<std::shared_ptr<Storable> const&>(foo);
-            std::shared_ptr<T> typedPointer = std::dynamic_pointer_cast<T>(pointer);
-            // shared_ptr can be empty without being null. dynamic_pointer_cast
-            // only promises result of failed cast is empty, so test for that
-            return typedPointer.use_count() > 0;
-        } catch (boost::bad_get const&) {
-            return false;
-        }
-    }
-
-    /** @} */
 
     /**
      * Return the set of all keys, without type information.
@@ -649,6 +542,131 @@ protected:
     /** @} */
 
 private:
+    // Neither Storable nor shared_ptr<Storable>
+    template <typename T,
+              typename std::enable_if_t<
+                      std::is_fundamental<T>::value || std::is_base_of<std::string, T>::value, int> = 0>
+    T const& _at(Key<K, T> const& key) const {
+        static_assert(!std::is_const<T>::value,
+                      "Due to implementation constraints, const keys are not supported.");
+        try {
+            auto foo = unsafeLookup(key.getId());
+            return boost::get<T const&>(foo);
+        } catch (boost::bad_get const&) {
+            std::stringstream message;
+            message << "Key " << key << " not found, but a key labeled " << key.getId() << " is present.";
+            throw LSST_EXCEPT(pex::exceptions::OutOfRangeError, message.str());
+        }
+    }
+
+    // Storable and its subclasses
+    template <typename T, typename std::enable_if_t<std::is_base_of<Storable, T>::value, int> = 0>
+    T const& _at(Key<K, T> const& key) const {
+        static_assert(!std::is_const<T>::value,
+                      "Due to implementation constraints, const keys are not supported.");
+        try {
+            auto foo = unsafeLookup(key.getId());
+            // Don't use pointer-based get, because it won't work after migrating to std::variant
+            Storable const& value = boost::get<PolymorphicValue const&>(foo);
+            T const* typedPointer = dynamic_cast<T const*>(&value);
+            if (typedPointer != nullptr) {
+                return *typedPointer;
+            } else {
+                std::stringstream message;
+                message << "Key " << key << " not found, but a key labeled " << key.getId() << " is present.";
+                throw LSST_EXCEPT(pex::exceptions::OutOfRangeError, message.str());
+            }
+        } catch (boost::bad_get const&) {
+            std::stringstream message;
+            message << "Key " << key << " not found, but a key labeled " << key.getId() << " is present.";
+            throw LSST_EXCEPT(pex::exceptions::OutOfRangeError, message.str());
+        }
+    }
+
+    // shared_ptr<Storable>
+    template <typename T, typename std::enable_if_t<std::is_base_of<Storable, T>::value, int> = 0>
+    std::shared_ptr<T> _at(Key<K, std::shared_ptr<T>> const& key) const {
+        static_assert(!std::is_const<T>::value,
+                      "Due to implementation constraints, const keys are not supported.");
+        try {
+            auto foo = unsafeLookup(key.getId());
+            auto pointer = boost::get<std::shared_ptr<Storable> const&>(foo);
+            std::shared_ptr<T> typedPointer = std::dynamic_pointer_cast<T>(pointer);
+            // shared_ptr can be empty without being null. dynamic_pointer_cast
+            // only promises result of failed cast is empty, so test for that
+            if (typedPointer.use_count() > 0) {
+                return typedPointer;
+            } else {
+                std::stringstream message;
+                message << "Key " << key << " not found, but a key labeled " << key.getId() << " is present.";
+                throw LSST_EXCEPT(pex::exceptions::OutOfRangeError, message.str());
+            }
+        } catch (boost::bad_get const&) {
+            std::stringstream message;
+            message << "Key " << key << " not found, but a key labeled " << key.getId() << " is present.";
+            throw LSST_EXCEPT(pex::exceptions::OutOfRangeError, message.str());
+        }
+    }
+
+    // Neither Storable nor shared_ptr<Storable>
+    template <typename T,
+              typename std::enable_if_t<
+                      std::is_fundamental<T>::value || std::is_base_of<std::string, T>::value, int> = 0>
+    bool _contains(Key<K, T> const& key) const {
+        // Avoid actually getting and casting an object, if at all possible
+        if (!contains(key.getId())) {
+            return false;
+        }
+
+        auto foo = unsafeLookup(key.getId());
+        // boost::variant has no equivalent to std::holds_alternative
+        try {
+            boost::get<T const&>(foo);
+            return true;
+        } catch (boost::bad_get const&) {
+            return false;
+        }
+    }
+
+    // Storable and its subclasses
+    template <typename T, typename std::enable_if_t<std::is_base_of<Storable, T>::value, int> = 0>
+    bool _contains(Key<K, T> const& key) const {
+        // Avoid actually getting and casting an object, if at all possible
+        if (!contains(key.getId())) {
+            return false;
+        }
+
+        auto foo = unsafeLookup(key.getId());
+        try {
+            // Don't use pointer-based get, because it won't work after migrating to std::variant
+            Storable const& value = boost::get<PolymorphicValue const&>(foo);
+            auto asT = dynamic_cast<T const*>(&value);
+            return asT != nullptr;
+        } catch (boost::bad_get const&) {
+            return false;
+        }
+    }
+
+    // shared_ptr<Storable>
+    template <typename T, typename std::enable_if_t<std::is_base_of<Storable, T>::value, int> = 0>
+    bool _contains(Key<K, std::shared_ptr<T>> const& key) const {
+        // Avoid actually getting and casting an object, if at all possible
+        if (!contains(key.getId())) {
+            return false;
+        }
+
+        auto foo = unsafeLookup(key.getId());
+        try {
+            auto pointer = boost::get<std::shared_ptr<Storable> const&>(foo);
+            std::shared_ptr<T> typedPointer = std::dynamic_pointer_cast<T>(pointer);
+            // shared_ptr can be empty without being null. dynamic_pointer_cast
+            // only promises result of failed cast is empty, so test for that
+            return typedPointer.use_count() > 0;
+        } catch (boost::bad_get const&) {
+            return false;
+        }
+    }
+
     // Type alias to properly handle Visitor output
     // Assume that each operator() has the same return type; variant will enforce it
     /// @cond
