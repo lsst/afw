@@ -582,41 +582,41 @@ public:
     }
 
 private:
+    // Transformations between value/reference/ref-to-const versions of internal variant type, to let
+    //     the set of value types supported by GenericMap be defined only once
     // Icky TMP, but I can't find another way to get at the template arguments for variant :(
-    // Methods have no definition but can't be deleted without breaking definition of StorableType
+    // Methods have no definition but can't be deleted without breaking type definitions below
+
     /// @cond
-    template <typename T>
-    using _RemoveConstFromRef = std::add_lvalue_reference_t<std::remove_const_t<std::remove_reference_t<T>>>;
+    // may need to use std::reference_wrapper when migrating to std::variant, but it confuses Boost
     template <typename... Types>
-    static boost::variant<std::decay_t<Types>...> _referenceToType(boost::variant<Types...> const&) noexcept;
+    static boost::variant<std::add_lvalue_reference_t<Types>...> _typeToRef(
+            boost::variant<Types...> const&) noexcept;
     template <typename... Types>
-    static boost::variant<_RemoveConstFromRef<Types>...> _constRefToRef(
+    static boost::variant<std::add_lvalue_reference_t<std::add_const_t<Types>>...> _typeToConstRef(
             boost::variant<Types...> const&) noexcept;
     /// @endcond
 
 protected:
     /**
-     * A type-agnostic reference to the value stored inside the map.
-     *
-     * Keys of any subclass of Storable are implemented using PolymorphicValue to preserve type.
-     *
-     * @{
-     */
-    // may need to use std::reference_wrapper when migrating to std::variant, but it confuses Boost
-    using ConstValueReference =
-            boost::variant<bool const&, std::int32_t const&, std::int64_t const&, float const&, double const&,
-                           std::string const&, PolymorphicValue const&, std::shared_ptr<Storable> const&>;
-    using ValueReference = decltype(_constRefToRef(std::declval<ConstValueReference>()));
-
-    /** @} */
-
-    /**
      * The types that can be stored in a map.
      *
-     * These are the pass-by-value equivalents (using std::decay) of @ref ConstValueReference.
+     * Keys of any subclass of Storable are implemented using PolymorphicValue to preserve type.
+     */
+    using StorableType = boost::variant<bool, std::int32_t, std::int64_t, float, double, std::string,
+                                        PolymorphicValue, std::shared_ptr<Storable>>;
+
+    /**
+     * A type-agnostic reference to the value stored inside the map.
+     *
+     * These are the reference equivalents (`T const&` or `T&`) of @ref StorableType.
+     * @{
      */
     // this mouthful is shorter than the equivalent expression with result_of
-    using StorableType = decltype(_referenceToType(std::declval<ConstValueReference>()));
+    using ConstValueReference = decltype(_typeToConstRef(std::declval<StorableType>()));
+    using ValueReference = decltype(_typeToRef(std::declval<StorableType>()));
+
+    /** @} */
 
     /**
      * Return a reference to the mapped value of the element with key equal to `key`.
@@ -638,8 +638,10 @@ protected:
     ValueReference unsafeLookup(K key) {
         ConstValueReference constRef = static_cast<const GenericMap&>(*this).unsafeLookup(key);
         auto removeConst = [](auto const& value) -> ValueReference {
+            using NonConstRef = std::add_lvalue_reference_t<
+                    std::remove_const_t<std::remove_reference_t<decltype(value)>>>;
             // This cast is safe; see Effective C++, Item 3
-            return const_cast<_RemoveConstFromRef<decltype(value)>>(value);
+            return const_cast<NonConstRef>(value);
         };
         return boost::apply_visitor(removeConst, constRef);
     }
