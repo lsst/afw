@@ -495,12 +495,103 @@ public:
 
     /** @} */
 
+    /**
+     * Apply an operation to each key-value pair in the map.
+     *
+     * @tparam Visitor a callable that takes a key and a value. See below for
+     *                 exact requirements.
+     * @param visitor the visitor to apply
+     * @returns if `Visitor` has a return value, a `std::vector` of values
+     *          returned from applying `visitor` to each key in @ref keys, in
+     *          that order. Otherwise, `void`.
+     *
+     * @exceptsafe Provides the same level of exception safety as `Visitor`, or
+     *             strong exception safety if `Visitor` cannot throw.
+     *
+     * A `Visitor` must define one or more `operator()` that take a
+     * weakly-typed key and a value. Each `operator()` must return the same
+     * type (which may be `void`). Through any combination of overloading or
+     * templates, the visitor must accept values of the following types:
+     *      * either `bool` or `bool const&`
+     *      * either `std::int32_t` or `std::int32_t const&`
+     *      * either `std::int64_t` or `std::int64_t const&`
+     *      * either `float` or `float const&`
+     *      * either `double` or `double const&`
+     *      * `std::string const&`
+     *      * `Storable const&`
+     *      * `std::shared_ptr<Storable>`
+     *
+     * @note This implementation calls @ref keys, then calls @ref unsafeLookup
+     *       for each key before passing the result to `visitor`.
+     *
+     * An example visitor that prints each key-value pair to standard output:
+     *
+     *     template <typename K>
+     *     class Printer {
+     *     public:
+     *         template <typename V>
+     *         void operator()(K const& key, V const& value) {
+     *             std::cout << key << ": " << value << "," << std::endl;
+     *         }
+     *
+     *         void operator()(K const& key, Storable const& value) {
+     *             std::cout << key << ": ";
+     *             try {
+     *                 std::cout << value;
+     *             } catch (UnsupportedOperationException const&) {
+     *                 std::cout << "[unprintable]";
+     *             }
+     *             std::cout << "," << std::endl;
+     *         }
+     *
+     *         void operator()(K const& key, std::shared_ptr<Storable> value) {
+     *             if (value != nullptr) {
+     *                 operator()(key, *value);
+     *             } else {
+     *                 operator()(key, "null");
+     *             }
+     *         }
+     *     };
+     */
+    template <class Visitor>
+    auto apply(Visitor&& visitor) const {
+        // Delegate to private methods to hide special-casing of Visitor
+        return _apply(visitor);
+    }
+
+    /**
+     * Apply a modifying operation to each key-value pair in the map.
+     *
+     * @tparam Visitor a callable that takes a key and a value. Requirements as for
+     *                 @ref apply(Visitor&&) const, except that it may take
+     *                 non-`const` references to values.
+     * @param visitor the visitor to apply
+     * @returns if `Visitor` has a return value, a `std::vector` of values
+     *          returned from applying `visitor` to each key in @ref keys, in
+     *          that order. Otherwise, `void`.
+     *
+     * @exceptsafe Provides basic exception safety if `Visitor` is exception-safe.
+     *
+     * @note This implementation calls @ref keys, then calls @ref unsafeLookup
+     *       for each key before passing the result to `visitor`.
+     */
+    template <class Visitor>
+    auto apply(Visitor&& visitor) {
+        // Delegate to private methods to hide special-casing of Visitor
+        return _apply(visitor);
+    }
+
 private:
     // Icky TMP, but I can't find another way to get at the template arguments for variant :(
-    // Method has no definition but can't be deleted without breaking definition of StorableType
+    // Methods have no definition but can't be deleted without breaking definition of StorableType
     /// @cond
+    template <typename T>
+    using _RemoveConstFromRef = std::add_lvalue_reference_t<std::remove_const_t<std::remove_reference_t<T>>>;
     template <typename... Types>
     static boost::variant<std::decay_t<Types>...> _referenceToType(boost::variant<Types...> const&) noexcept;
+    template <typename... Types>
+    static boost::variant<_RemoveConstFromRef<Types>...> _constRefToRef(
+            boost::variant<Types...> const&) noexcept;
     /// @endcond
 
 protected:
@@ -508,19 +599,24 @@ protected:
      * A type-agnostic reference to the value stored inside the map.
      *
      * Keys of any subclass of Storable are implemented using PolymorphicValue to preserve type.
+     *
+     * @{
      */
     // may need to use std::reference_wrapper when migrating to std::variant, but it confuses Boost
-    using ValueReference =
+    using ConstValueReference =
             boost::variant<bool const&, std::int32_t const&, std::int64_t const&, float const&, double const&,
                            std::string const&, PolymorphicValue const&, std::shared_ptr<Storable> const&>;
+    using ValueReference = decltype(_constRefToRef(std::declval<ConstValueReference>()));
+
+    /** @} */
 
     /**
      * The types that can be stored in a map.
      *
-     * These are the pass-by-value equivalents (using std::decay) of @ref ValueReference.
+     * These are the pass-by-value equivalents (using std::decay) of @ref ConstValueReference.
      */
     // this mouthful is shorter than the equivalent expression with result_of
-    using StorableType = decltype(_referenceToType(std::declval<ValueReference>()));
+    using StorableType = decltype(_referenceToType(std::declval<ConstValueReference>()));
 
     /**
      * Return a reference to the mapped value of the element with key equal to `key`.
@@ -534,8 +630,79 @@ protected:
      * @throws pex::exceptions::OutOfRangeError Thrown if the map does not have
      *         a value with the specified key
      * @exceptsafe Must provide strong exception safety.
+     *
+     * @{
      */
-    virtual ValueReference unsafeLookup(K key) const = 0;
+    virtual ConstValueReference unsafeLookup(K key) const = 0;
+
+    ValueReference unsafeLookup(K key) {
+        ConstValueReference constRef = static_cast<const GenericMap&>(*this).unsafeLookup(key);
+        auto removeConst = [](auto const& value) -> ValueReference {
+            // This cast is safe; see Effective C++, Item 3
+            return const_cast<_RemoveConstFromRef<decltype(value)>>(value);
+        };
+        return boost::apply_visitor(removeConst, constRef);
+    }
+
+    /** @} */
+
+private:
+    // Type alias to properly handle Visitor output
+    // Assume that each operator() has the same return type; variant will enforce it
+    /// @cond
+    template <class Visitor>
+    using _VisitorResult = std::result_of_t<Visitor && (K&&, bool&)>;
+    /// @endcond
+
+    // No return value, const GenericMap
+    template <class Visitor, typename std::enable_if_t<std::is_void<_VisitorResult<Visitor>>::value, int> = 0>
+    void _apply(Visitor&& visitor) const {
+        for (K const& key : keys()) {
+            boost::variant<K> varKey = key;
+            boost::apply_visitor(visitor, varKey, unsafeLookup(key));
+        }
+    }
+
+    // Return value, const GenericMap
+    template <class Visitor,
+              typename std::enable_if_t<!std::is_void<_VisitorResult<Visitor>>::value, int> = 0>
+    auto _apply(Visitor&& visitor) const {
+        std::vector<_VisitorResult<Visitor>> results;
+        results.reserve(size());
+
+        for (K const& key : keys()) {
+            boost::variant<K> varKey = key;
+            results.emplace_back(boost::apply_visitor(visitor, varKey, unsafeLookup(key)));
+        }
+        return results;
+    }
+
+    // No return value, non-const GenericMap
+    template <class Visitor, typename std::enable_if_t<std::is_void<_VisitorResult<Visitor>>::value, int> = 0>
+    void _apply(Visitor&& visitor) {
+        for (K const& key : keys()) {
+            boost::variant<K> varKey = key;
+            // Boost gets confused if we pass it a temporary variant
+            ValueReference ref = unsafeLookup(key);
+            boost::apply_visitor(visitor, varKey, ref);
+        }
+    }
+
+    // Return value, non-const GenericMap
+    template <class Visitor,
+              typename std::enable_if_t<!std::is_void<_VisitorResult<Visitor>>::value, int> = 0>
+    auto _apply(Visitor&& visitor) {
+        std::vector<_VisitorResult<Visitor>> results;
+        results.reserve(size());
+
+        for (K const& key : keys()) {
+            boost::variant<K> varKey = key;
+            // Boost gets confused if we pass it a temporary variant
+            ValueReference ref = unsafeLookup(key);
+            results.emplace_back(boost::apply_visitor(visitor, varKey, ref));
+        }
+        return results;
+    }
 };
 
 /**

@@ -32,7 +32,9 @@
 #pragma clang diagnostic pop
 
 #include <memory>
+#include <numeric>
 #include <set>
+#include <sstream>
 #include <string>
 
 #include <boost/mpl/list.hpp>
@@ -98,6 +100,13 @@ public:
 
 private:
     double storage;
+};
+
+template <typename T>
+std::string universalToString(T const& value) {
+    std::stringstream buffer;
+    buffer << value;
+    return buffer.str();
 };
 
 // Would make more sense as static constants in GenericFactory
@@ -200,6 +209,157 @@ BOOST_TEST_CASE_TEMPLATE_FUNCTION(TestEquals, GenericMapFactory) {
     BOOST_CHECK(*map1 == *map1);
     // Maps are unequal because shared_ptr members point to different objects
     BOOST_CHECK(*map1 != *(factory.makeGenericMap()));
+}
+
+BOOST_TEST_CASE_TEMPLATE_FUNCTION(TestConstVisitor, GenericMapFactory) {
+    static GenericMapFactory const factory;
+    std::unique_ptr<GenericMap<int> const> const map = factory.makeGenericMap();
+    std::vector<int> mapKeys = map->keys();
+
+    // Visitors return string because it's one of the few operations valid for all types of interest
+    // This lets us test generic lambdas as visitors
+    auto bruteForcePrinter = [&map](int key) {
+        switch (key) {
+            case 0:
+                return universalToString(map->at(KEY0));
+            case 1:
+                return universalToString(map->at(KEY1));
+            case 2:
+                return universalToString(map->at(KEY2));
+            case 3:
+                return universalToString(map->at(KEY3));
+            case 4:
+                return universalToString(map->at(KEY4));
+            case 5:
+                return universalToString(map->at(KEY5));
+            default:
+                throw std::invalid_argument("Bad key found");
+        };
+    };
+    std::vector<std::string> expected;
+    for (int key : mapKeys) {
+        expected.push_back(bruteForcePrinter(key));
+    }
+
+    // Test local class that returns void
+    class {
+    public:
+        std::vector<std::string> results;
+
+        // Local classes can't have method templates
+        void operator()(int, bool value) { results.push_back(universalToString(value)); }
+        void operator()(int, std::int32_t const& value) { results.push_back(universalToString(value)); }
+        void operator()(int, std::int64_t value) { results.push_back(universalToString(value)); }
+        void operator()(int, float const& value) { results.push_back(universalToString(value)); }
+        void operator()(int, double value) { results.push_back(universalToString(value)); }
+        void operator()(int, std::string const& value) { results.push_back(universalToString(value)); }
+        void operator()(int, Storable const& value) { results.push_back(universalToString(value)); }
+        void operator()(int, std::shared_ptr<Storable> value) { results.push_back(universalToString(value)); }
+    } printer;
+    map->apply(printer);
+    BOOST_REQUIRE(printer.results.size() == expected.size());
+    for (std::size_t i = 0; i < printer.results.size(); ++i) {
+        BOOST_TEST(printer.results[i] == expected[i], printer.results[i] << " != " << expected[i] << ", key = " << mapKeys[i]);
+    }
+
+    // Test lambda that returns string
+    std::vector<std::string> strings = map->apply([](int, auto const& value) { return universalToString(value); });
+    BOOST_REQUIRE(strings.size() == expected.size());
+    for (std::size_t i = 0; i < strings.size(); ++i) {
+        BOOST_TEST(strings[i] == expected[i], strings[i] << " != " << expected[i] << ", key = " << mapKeys[i]);
+    }
+}
+
+BOOST_TEST_CASE_TEMPLATE_FUNCTION(TestModifyingVoidVisitor, GenericMapFactory) {
+    static GenericMapFactory const factory;
+    std::unique_ptr<GenericMap<int>> map = factory.makeGenericMap();
+    std::vector<int> originalKeys = map->keys();
+
+    // Test local class that returns void
+    class {
+    public:
+        // Local classes can't have method templates
+        void operator()(int, bool& value) { value = !value; }
+        void operator()(int, std::int32_t& value) { value *= 2; }
+        void operator()(int, std::int64_t& value) { value *= 2; }
+        void operator()(int, float& value) { value *= 2; }
+        void operator()(int, double& value) { value *= 2; }
+        void operator()(int, std::string& value) { value += "Appendix"; }
+        void operator()(int, Storable& value) {
+            auto complexStorable = dynamic_cast<ComplexStorable*>(&value);
+            if (complexStorable != nullptr) {
+                *complexStorable = 42;
+            }
+        }
+        void operator()(int, std::shared_ptr<Storable>) {}
+    } grower;
+    map->apply(grower);
+    std::vector<int> newKeys = map->keys();
+
+    BOOST_TEST(newKeys == originalKeys);
+    BOOST_TEST(map->at(KEY0) == !VALUE0);
+    BOOST_TEST(map->at(KEY1) == 2 * VALUE1);
+    BOOST_TEST(map->at(KEY2) == 2 * VALUE2);
+    BOOST_TEST(map->at(KEY3) == VALUE3 + "Appendix");
+    BOOST_TEST(*(map->at(KEY4)) == VALUE4);
+    BOOST_TEST(map->at(KEY5) != VALUE5);
+    BOOST_TEST(map->at(KEY5) == ComplexStorable(42));
+}
+
+BOOST_TEST_CASE_TEMPLATE_FUNCTION(TestModifyingReturningVisitor, GenericMapFactory) {
+    static GenericMapFactory const factory;
+    std::unique_ptr<GenericMap<int>> map = factory.makeGenericMap();
+    std::vector<int> originalKeys = map->keys();
+
+    // Test local class that returns int
+    class {
+    public:
+        // Local classes can't have method templates
+        int operator()(int key, bool& value) {
+            value = !value;
+            return key;
+        }
+        int operator()(int key, std::int32_t& value) {
+            value *= 2;
+            return key;
+        }
+        int operator()(int key, std::int64_t& value) {
+            value *= 2;
+            return key;
+        }
+        int operator()(int key, float& value) {
+            value *= 2;
+            return key;
+        }
+        int operator()(int key, double& value) {
+            value *= 2;
+            return key;
+        }
+        int operator()(int key, std::string& value) {
+            value += "Appendix";
+            return key;
+        }
+        int operator()(int key, Storable& value) {
+            auto complexStorable = dynamic_cast<ComplexStorable*>(&value);
+            if (complexStorable != nullptr) {
+                *complexStorable = 42;
+            }
+            return key;
+        }
+        int operator()(int key, std::shared_ptr<Storable>) { return key; }
+    } grower;
+    std::vector<int> editedKeys = map->apply(grower);
+    BOOST_TEST(editedKeys == originalKeys);
+
+    std::vector<int> newKeys = map->keys();
+    BOOST_TEST(newKeys == originalKeys);
+    BOOST_TEST(map->at(KEY0) == !VALUE0);
+    BOOST_TEST(map->at(KEY1) == 2 * VALUE1);
+    BOOST_TEST(map->at(KEY2) == 2 * VALUE2);
+    BOOST_TEST(map->at(KEY3) == VALUE3 + "Appendix");
+    BOOST_TEST(*(map->at(KEY4)) == VALUE4);
+    BOOST_TEST(map->at(KEY5) != VALUE5);
+    BOOST_TEST(map->at(KEY5) == ComplexStorable(42));
 }
 
 BOOST_TEST_CASE_TEMPLATE_FUNCTION(TestMutableEquals, GenericMapFactory) {
@@ -549,6 +709,9 @@ void addGenericMapTestCases(boost::unit_test::test_suite* const suite) {
     suite->add(BOOST_TEST_CASE_TEMPLATE(TestWeakContains, factories));
     suite->add(BOOST_TEST_CASE_TEMPLATE(TestContains, factories));
     suite->add(BOOST_TEST_CASE_TEMPLATE(TestKeys, factories));
+    suite->add(BOOST_TEST_CASE_TEMPLATE(TestConstVisitor, factories));
+    suite->add(BOOST_TEST_CASE_TEMPLATE(TestModifyingVoidVisitor, factories));
+    suite->add(BOOST_TEST_CASE_TEMPLATE(TestModifyingReturningVisitor, factories));
 }
 
 /**

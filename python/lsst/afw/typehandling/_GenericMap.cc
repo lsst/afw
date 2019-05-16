@@ -65,13 +65,15 @@ namespace {
 template <typename K>
 class Publicist : public MutableGenericMap<K> {
 public:
-    using MutableGenericMap<K>::unsafeLookup;
+    using GenericMap<K>::ConstValueReference;
+    using GenericMap<K>::unsafeLookup;
     using MutableGenericMap<K>::unsafeErase;
 };
 
 template <typename K>
 py::object get(GenericMap<K>& self, K const& key) {
-    auto callable = &Publicist<K>::unsafeLookup;
+    auto callable = static_cast<typename Publicist<K>::ConstValueReference (GenericMap<K>::*)(K) const>(
+            &Publicist<K>::unsafeLookup);
     return py::cast((self.*callable)(key));
 };
 

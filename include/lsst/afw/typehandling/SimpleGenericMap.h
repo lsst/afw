@@ -52,7 +52,7 @@ template <typename K>
 class SimpleGenericMap final : public MutableGenericMap<K> {
 protected:
     using typename GenericMap<K>::StorableType;
-    using typename GenericMap<K>::ValueReference;
+    using typename GenericMap<K>::ConstValueReference;
 
 public:
     SimpleGenericMap() = default;
@@ -83,7 +83,7 @@ public:
     void clear() noexcept override { _storage.clear(); }
 
 protected:
-    ValueReference unsafeLookup(K key) const override {
+    ConstValueReference unsafeLookup(K key) const override {
         try {
             return _storage.at(key);
         } catch (std::out_of_range& e) {
