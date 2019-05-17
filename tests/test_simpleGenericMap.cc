@@ -78,7 +78,7 @@ std::unique_ptr<SimpleGenericMap<int>> makeDerivedMap() {
     return std::unique_ptr<Map>(dynamic_cast<Map*>(factory.makeGenericMap().release()));
 }
 
-void checkIndependentCopy(SimpleGenericMap<int>& copy, SimpleGenericMap<int>& original) {
+void checkIndependentCopy(MutableGenericMap<int>& copy, MutableGenericMap<int>& original) {
     // Use BOOST_CHECK to avoid BOOST_TEST bug from GenericMap being unprintable
     BOOST_CHECK(original == copy);
 
@@ -100,8 +100,23 @@ BOOST_AUTO_TEST_CASE(Copy) {
     checkIndependentCopy(copy, *original);
 }
 
+BOOST_AUTO_TEST_CASE(CopyConvert) {
+    std::unique_ptr<MutableGenericMap<int>> original = makeDerivedMap();
+
+    SimpleGenericMap<int> copy(*original);
+    checkIndependentCopy(copy, *original);
+}
+
 BOOST_AUTO_TEST_CASE(CopyAssign) {
     auto original = makeDerivedMap();
+
+    SimpleGenericMap<int> copy;
+    copy = *original;
+    checkIndependentCopy(copy, *original);
+}
+
+BOOST_AUTO_TEST_CASE(CopyAssignConvert) {
+    std::unique_ptr<MutableGenericMap<int>> original = makeDerivedMap();
 
     SimpleGenericMap<int> copy;
     copy = *original;

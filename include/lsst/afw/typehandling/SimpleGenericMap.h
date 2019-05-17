@@ -58,10 +58,17 @@ public:
     SimpleGenericMap() = default;
     SimpleGenericMap(SimpleGenericMap const& other) = default;
     SimpleGenericMap(SimpleGenericMap&&) = default;
+    SimpleGenericMap(GenericMap<K> const& other) : _storage(_convertStorage(other)) {}
     virtual ~SimpleGenericMap() noexcept = default;
 
     SimpleGenericMap& operator=(SimpleGenericMap const& other) = default;
     SimpleGenericMap& operator=(SimpleGenericMap&&) = default;
+    SimpleGenericMap& operator=(GenericMap<K> const& other) {
+        // Atomic because unordered_map is nothrow move-assignable,
+        // so only _convertStorage can fail
+        _storage = _convertStorage(other);
+        return *this;
+    }
 
     typename GenericMap<K>::size_type size() const noexcept override { return _storage.size(); }
 
@@ -94,7 +101,7 @@ protected:
     }
 
     bool unsafeInsert(K key, StorableType&& value) override {
-        return _storage.insert(std::make_pair(key, std::move(value))).second;
+        return _storage.emplace(key, std::move(value)).second;
     }
 
     bool unsafeErase(K key) override { return _storage.erase(key); }
@@ -102,6 +109,20 @@ protected:
 private:
     // StorableType is a value, so we might as well use it in the implementation
     std::unordered_map<K, StorableType> _storage;
+
+    /**
+     * Create a new back-end map that contains the same mappings as a GenericMap.
+     *
+     * @param map The map whose contents should be copied.
+     * @return a new map with the same mappings as `map`.
+     *
+     * @exceptsafe Provides strong exception-safety.
+     */
+    static std::unordered_map<K, StorableType> _convertStorage(GenericMap<K> const& map) {
+        std::unordered_map<K, StorableType> newStorage;
+        map.apply([&newStorage](K const& key, auto const& value) { newStorage.emplace(key, value); });
+        return newStorage;
+    }
 };
 
 }  // namespace typehandling
