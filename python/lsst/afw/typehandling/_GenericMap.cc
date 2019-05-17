@@ -123,11 +123,12 @@ void declareGenericMap(utils::python::WrapperCollection& wrappers, std::string c
                 // Prevent segfaults when assigning a key<Storable> to Python variable, then deleting from map
                 // No existing code depends on being able to modify an item stored by value
                 "key"_a, "default"_a = py::none(), py::return_value_policy::copy);
-        // __iter__ easier to implement in Python
+        cls.def("__iter__",
+                [](Class const& self) { return py::make_iterator(self.keys().begin(), self.keys().end()); },
+                py::keep_alive<0, 1>());
         cls.def("__len__", &Class::size);
         cls.def("__bool__", [](Class const& self) { return !self.empty(); });
         // Can't wrap keys directly because pybind11 always copies vectors, so it won't be a view
-        cls.def("_keys", &Class::keys, py::return_value_policy::reference_internal);
         // items easier to implement in Python
         // values easier to implement in Python
     });
