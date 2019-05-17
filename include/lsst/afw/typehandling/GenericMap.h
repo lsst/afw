@@ -346,15 +346,18 @@ public:
     /**
      * Return the set of all keys, without type information.
      *
-     * @return a copy of all keys currently in the map, in the same iteration order as this object. The set
-     * will *not* be updated as this object changes, or vice versa.
+     * @return a read-only view of all keys currently in the map, in the same
+     *         iteration order as this object. The view will be updated by
+     *         changes to the underlying map.
+     *
+     * @warning Do not modify this map while iterating over its keys.
+     * @warning Do not store the returned reference in variables that outlive
+     *          the map; destroying the map will invalidate the reference.
      *
      * @note The keys are returned as a list, rather than a set, so that subclasses can give them a
      * well-defined iteration order.
-     *
-     * @exceptsafe Provides strong exception safety.
      */
-    virtual std::vector<K> keys() const = 0;
+    virtual std::vector<K> const& keys() const noexcept = 0;
 
     /**
      * Test for map equality.
@@ -370,7 +373,7 @@ public:
      *
      * @{
      */
-    virtual bool operator==(GenericMap const& other) const {
+    virtual bool operator==(GenericMap const& other) const noexcept {
         auto keys1 = this->keys();
         auto keys2 = other.keys();
         if (!std::is_permutation(keys1.begin(), keys1.end(), keys2.begin(), keys2.end())) {

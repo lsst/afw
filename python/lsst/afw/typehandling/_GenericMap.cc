@@ -126,8 +126,8 @@ void declareGenericMap(utils::python::WrapperCollection& wrappers, std::string c
         // __iter__ easier to implement in Python
         cls.def("__len__", &Class::size);
         cls.def("__bool__", [](Class const& self) { return !self.empty(); });
-        cls.def("_keys", &Class::keys);  // Private to let a proper view be defined in Python
-        // keys easier to implement in Python
+        // Can't wrap keys directly because pybind11 always copies vectors, so it won't be a view
+        cls.def("_keys", &Class::keys, py::return_value_policy::reference_internal);
         // items easier to implement in Python
         // values easier to implement in Python
     });
