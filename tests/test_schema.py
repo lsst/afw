@@ -43,6 +43,22 @@ def _checkSchemaIdentical(schema1, schema2):
     return schema1.compare(schema2, lsst.afw.table.Schema.IDENTICAL) == lsst.afw.table.Schema.IDENTICAL
 
 
+def addTestFields(schema):
+    """Add Fields to the schema to test operations on each Field type.
+    """
+    schema.addField("ra", type="Angle", doc="coord_ra")
+    schema.addField("dec", type="Angle", doc="coord_dec")
+    schema.addField("x", type="D", doc="position_x", units="pixel")
+    schema.addField("y", type="D", doc="position_y")
+    schema.addField("i", type="I", doc="int")
+    schema.addField("f", type="F", doc="float", units="m2")
+    schema.addField("flag", type="Flag", doc="a flag")
+    schema.addField("string", type="String", doc="A string field", size=42)
+    schema.addField("variable_string", type="String", doc="A variable-length string field", size=0)
+    schema.addField("array", type="ArrayF", doc="An array field", size=10)
+    schema.addField("variable_array", type="ArrayF", doc="A variable-length array field", size=0)
+
+
 class SchemaTestCase(unittest.TestCase):
 
     def testSchema(self):
@@ -177,13 +193,8 @@ class SchemaTestCase(unittest.TestCase):
 
     def testPickle(self):
         schema = lsst.afw.table.Schema()
-        schema.addField("ra", type="Angle", doc="coord_ra")
-        schema.addField("dec", type="Angle", doc="coord_dec")
-        schema.addField("x", type="D", doc="position_x", units="pixel")
-        schema.addField("y", type="D", doc="position_y")
-        schema.addField("i", type="I", doc="int")
-        schema.addField("f", type="F", doc="float", units="m2")
-        schema.addField("flag", type="Flag", doc="a flag")
+        addTestFields(schema)
+
         pickled = pickle.dumps(schema, protocol=pickle.HIGHEST_PROTOCOL)
         unpickled = pickle.loads(pickled)
         self.assertEqual(schema, unpickled)
@@ -403,13 +414,7 @@ class SchemaMapperTestCase(unittest.TestCase):
 
     def testPickle(self):
         schema = lsst.afw.table.Schema()
-        schema.addField("ra", type="Angle", doc="coord_ra")
-        schema.addField("dec", type="Angle", doc="coord_dec")
-        schema.addField("x", type="D", doc="position_x", units="pixel")
-        schema.addField("y", type="D", doc="position_y")
-        schema.addField("i", type="I", doc="int")
-        schema.addField("f", type="F", doc="float", units="m2")
-        schema.addField("flag", type="Flag", doc="a flag")
+        addTestFields(schema)
         mapper = lsst.afw.table.SchemaMapper(schema)
         mapper.addMinimalSchema(schema)
         inKey = schema.addField("bb", type=float)
