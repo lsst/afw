@@ -24,16 +24,10 @@ import unittest
 
 import lsst.utils.tests
 
-from lsst.afw.typehandling import Storable, UnsupportedOperationException
+from lsst.afw.typehandling import Storable
 
 
-class PointlessStorable(Storable):
-    """Test of default behavior of Storable.
-    """
-    pass
-
-
-class PointyStorable(Storable):
+class DemoStorable(Storable):
     """Test that we can inherit from Storable in Python.
     """
     def __init__(self, state):
@@ -44,53 +38,26 @@ class PointyStorable(Storable):
         return "value = %s" % self._state
 
     def __repr__(self):
-        return "PointyStorable(%r)" % self._state
+        return "DemoStorable(%r)" % self._state
 
     def __hash__(self):
         return hash(self._state)
 
     def __copy__(self):
-        return PointyStorable(self._state)
+        return DemoStorable(self._state)
 
     def __deepcopy__(self, memo=None):
-        return PointyStorable(copy.deepcopy(self._state, memo))
+        return DemoStorable(copy.deepcopy(self._state, memo))
 
     def __eq__(self, other):
         return self._state == other._state
-
-
-class StorableTestSuite(lsst.utils.tests.TestCase):
-
-    def setUp(self):
-        self.testbed = PointlessStorable()
-
-    def testCopy(self):
-        with self.assertRaises(UnsupportedOperationException):
-            copy.copy(self.testbed)
-        with self.assertRaises(UnsupportedOperationException):
-            copy.deepcopy(self.testbed)
-
-    def testStr(self):
-        with self.assertRaises(UnsupportedOperationException):
-            str(self.testbed)
-
-    def testRepr(self):
-        with self.assertRaises(UnsupportedOperationException):
-            repr(self.testbed)
-
-    def testHash(self):
-        with self.assertRaises(UnsupportedOperationException):
-            hash(self.testbed)
-
-    def testEq(self):
-        self.assertNotEqual(self.testbed, PointlessStorable())
 
 
 class PointyStorableTestSuite(lsst.utils.tests.TestCase):
 
     def setUp(self):
         self.aList = [42]
-        self.testbed = PointyStorable(self.aList)
+        self.testbed = DemoStorable(self.aList)
 
     def testCopy(self):
         shallow = copy.copy(self.testbed)
@@ -102,22 +69,22 @@ class PointyStorableTestSuite(lsst.utils.tests.TestCase):
         self.assertEqual(deep, self.testbed)
 
         self.aList.append(43)
-        self.assertEqual(shallow, PointyStorable([42, 43]))
-        self.assertEqual(deep, PointyStorable([42]))
+        self.assertEqual(shallow, DemoStorable([42, 43]))
+        self.assertEqual(deep, DemoStorable([42]))
 
     def testStr(self):
         self.assertEqual(str(self.testbed), "value = [42]")
 
     def testRepr(self):
-        self.assertEqual(repr(self.testbed), "PointyStorable([42])")
+        self.assertEqual(repr(self.testbed), "DemoStorable([42])")
 
     def testHash(self):
         with self.assertRaises(TypeError):
             hash(self.testbed)
 
     def testEq(self):
-        self.assertEqual(self.testbed, PointyStorable([42]))
-        self.assertNotEqual(self.testbed, PointyStorable(0))
+        self.assertEqual(self.testbed, DemoStorable([42]))
+        self.assertNotEqual(self.testbed, DemoStorable(0))
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):

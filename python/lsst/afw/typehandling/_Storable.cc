@@ -38,19 +38,12 @@ namespace typehandling {
 using PyStorable = py::class_<Storable, std::shared_ptr<Storable>, table::io::Persistable, StorableHelper<>>;
 
 void wrapStorable(utils::python::WrapperCollection& wrappers) {
-    wrappers.addSignatureDependency("lsst.pex.exceptions");
     wrappers.addInheritanceDependency("lsst.afw.table.io");
 
-    wrappers.wrapException<UnsupportedOperationException, pex::exceptions::RuntimeError>(
-            "UnsupportedOperationException", "RuntimeError");
     wrappers.wrapType(PyStorable(wrappers.module, "Storable"), [](auto& mod, auto& cls) {
         // Do not wrap methods inherited from Persistable
         cls.def(py::init<>());  // Dummy constructor for pure-Python subclasses
-        cls.def("__copy__", &Storable::clone);
-        cls.def("__deepcopy__", [](Storable const& self, py::dict const& memo) { return self.clone(); },
-                "memo"_a = py::none());
-        cls.def("__repr__", &Storable::toString);
-        cls.def("__hash__", &Storable::hash_value);
+        // Do not wrap optional Storable methods; let subclasses do it as appropriate
         cls.def("__eq__", [](Storable const& self, Storable const& other) { return self.equals(other); },
                 "other"_a);
     });
