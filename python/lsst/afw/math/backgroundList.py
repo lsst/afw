@@ -25,7 +25,7 @@ import os
 import lsst.daf.base as dafBase
 import lsst.geom
 import lsst.afw.image as afwImage
-from lsst.afw.fits import FitsError, MemFileManager, reduceToFits, Fits, DEFAULT_HDU
+from lsst.afw.fits import MemFileManager, reduceToFits, Fits
 from . import mathLib as afwMath
 
 
@@ -164,32 +164,22 @@ class BackgroundList:
 
         self = BackgroundList()
 
-        if hdu == DEFAULT_HDU:
-            hdu = -1
-        else:
-            # we want to start at 0 (post RFC-304), but are about to increment
-            hdu -= 1
+        f = Fits(fileName, 'r')
+        nHdus = f.countHdus()
+        f.closeFile()
+        if nHdus % 3 != 0:
+            raise RuntimeError(f"BackgroundList FITS file {fileName} has {nHdus} HDUs;"
+                               f"expected a multiple of 3 (compression is not supported).")
 
-        fits = Fits(fileName, "r")
-        fits.setHdu(hdu + 1)
-        if fits.checkCompressedImagePhu():
-            hdu += 1
-
-        while True:
-            hdu += 1
-
-            md = dafBase.PropertyList()
-            try:
-                img = afwImage.ImageF(fileName, hdu, md)
-                hdu += 1
-            except FitsError:
-                break
-
-            msk = afwImage.Mask(fileName, hdu)
-            hdu += 1
-            var = afwImage.ImageF(fileName, hdu)
-
-            statsImage = afwImage.makeMaskedImage(img, msk, var)
+        for hdu in range(0, nHdus, 3):
+            # It seems like we ought to be able to just use
+            # MaskedImageFitsReader here, but it warns about EXTTYPE and still
+            # doesn't work quite naturally when starting from a nonzero HDU.
+            imageReader = afwImage.ImageFitsReader(fileName, hdu=hdu)
+            maskReader = afwImage.MaskFitsReader(fileName, hdu=hdu + 1)
+            varianceReader = afwImage.ImageFitsReader(fileName, hdu=hdu + 2)
+            statsImage = afwImage.MaskedImageF(imageReader.read(), maskReader.read(), varianceReader.read())
+            md = imageReader.readMetadata()
 
             x0 = md.getScalar("BKGD_X0")
             y0 = md.getScalar("BKGD_Y0")
