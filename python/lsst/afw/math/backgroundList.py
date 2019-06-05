@@ -181,37 +181,30 @@ class BackgroundList:
             statsImage = afwImage.MaskedImageF(imageReader.read(), maskReader.read(), varianceReader.read())
             md = imageReader.readMetadata()
 
-            x0 = md.getScalar("BKGD_X0")
-            y0 = md.getScalar("BKGD_Y0")
-            width = md.getScalar("BKGD_WIDTH")
-            height = md.getScalar("BKGD_HEIGHT")
-            imageBBox = lsst.geom.BoxI(lsst.geom.PointI(
-                x0, y0), lsst.geom.ExtentI(width, height))
+            x0 = md["BKGD_X0"]
+            y0 = md["BKGD_Y0"]
+            width = md["BKGD_WIDTH"]
+            height = md["BKGD_HEIGHT"]
+            imageBBox = lsst.geom.BoxI(lsst.geom.PointI(x0, y0), lsst.geom.ExtentI(width, height))
 
-            interpStyle = afwMath.Interpolate.Style(md.getScalar("INTERPSTYLE"))
-            undersampleStyle = afwMath.UndersampleStyle(
-                md.getScalar("UNDERSAMPLESTYLE"))
+            interpStyle = afwMath.Interpolate.Style(md["INTERPSTYLE"])
+            undersampleStyle = afwMath.UndersampleStyle(md["UNDERSAMPLESTYLE"])
 
             # Older outputs won't have APPROX* settings.  Provide alternative defaults.
             # Note: Currently X- and Y-orders must be equal due to a limitation in
             #       math::Chebyshev1Function2.  Setting approxOrderY = -1 is equivalent
             #       to saying approxOrderY = approxOrderX.
-            approxStyle = md.getScalar("APPROXSTYLE") if "APPROXSTYLE" in md.names() \
-                else afwMath.ApproximateControl.UNKNOWN
+            approxStyle = md.get("APPROXSTYLE", afwMath.ApproximateControl.UNKNOWN)
             approxStyle = afwMath.ApproximateControl.Style(approxStyle)
-            approxOrderX = md.getScalar(
-                "APPROXORDERX") if "APPROXORDERX" in md.names() else 1
-            approxOrderY = md.getScalar(
-                "APPROXORDERY") if "APPROXORDERY" in md.names() else -1
-            approxWeighting = md.getScalar(
-                "APPROXWEIGHTING") if "APPROXWEIGHTING" in md.names() else True
+            approxOrderX = md.get("APPROXORDERX", 1)
+            approxOrderY = md.get("APPROXORDERY", -1)
+            approxWeighting = md.get("APPROXWEIGHTING", True)
 
             bkgd = afwMath.BackgroundMI(imageBBox, statsImage)
             bctrl = bkgd.getBackgroundControl()
             bctrl.setInterpStyle(interpStyle)
             bctrl.setUndersampleStyle(undersampleStyle)
-            actrl = afwMath.ApproximateControl(
-                approxStyle, approxOrderX, approxOrderY, approxWeighting)
+            actrl = afwMath.ApproximateControl(approxStyle, approxOrderX, approxOrderY, approxWeighting)
             bctrl.setApproximateControl(actrl)
             bgInfo = (bkgd, interpStyle, undersampleStyle, approxStyle,
                       approxOrderX, approxOrderY, approxWeighting)
