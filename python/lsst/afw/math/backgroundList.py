@@ -25,7 +25,7 @@ import os
 import lsst.daf.base as dafBase
 import lsst.geom
 import lsst.afw.image as afwImage
-from lsst.afw.fits import FitsError, MemFileManager, reduceToFits, Fits, DEFAULT_HDU
+from lsst.afw.fits import MemFileManager, reduceToFits, Fits
 from . import mathLib as afwMath
 
 
@@ -164,64 +164,47 @@ class BackgroundList:
 
         self = BackgroundList()
 
-        if hdu == DEFAULT_HDU:
-            hdu = -1
-        else:
-            # we want to start at 0 (post RFC-304), but are about to increment
-            hdu -= 1
+        f = Fits(fileName, 'r')
+        nHdus = f.countHdus()
+        f.closeFile()
+        if nHdus % 3 != 0:
+            raise RuntimeError(f"BackgroundList FITS file {fileName} has {nHdus} HDUs;"
+                               f"expected a multiple of 3 (compression is not supported).")
 
-        fits = Fits(fileName, "r")
-        fits.setHdu(hdu + 1)
-        if fits.checkCompressedImagePhu():
-            hdu += 1
+        for hdu in range(0, nHdus, 3):
+            # It seems like we ought to be able to just use
+            # MaskedImageFitsReader here, but it warns about EXTTYPE and still
+            # doesn't work quite naturally when starting from a nonzero HDU.
+            imageReader = afwImage.ImageFitsReader(fileName, hdu=hdu)
+            maskReader = afwImage.MaskFitsReader(fileName, hdu=hdu + 1)
+            varianceReader = afwImage.ImageFitsReader(fileName, hdu=hdu + 2)
+            statsImage = afwImage.MaskedImageF(imageReader.read(), maskReader.read(), varianceReader.read())
+            md = imageReader.readMetadata()
 
-        while True:
-            hdu += 1
+            x0 = md["BKGD_X0"]
+            y0 = md["BKGD_Y0"]
+            width = md["BKGD_WIDTH"]
+            height = md["BKGD_HEIGHT"]
+            imageBBox = lsst.geom.BoxI(lsst.geom.PointI(x0, y0), lsst.geom.ExtentI(width, height))
 
-            md = dafBase.PropertyList()
-            try:
-                img = afwImage.ImageF(fileName, hdu, md)
-                hdu += 1
-            except FitsError:
-                break
-
-            msk = afwImage.Mask(fileName, hdu)
-            hdu += 1
-            var = afwImage.ImageF(fileName, hdu)
-
-            statsImage = afwImage.makeMaskedImage(img, msk, var)
-
-            x0 = md.getScalar("BKGD_X0")
-            y0 = md.getScalar("BKGD_Y0")
-            width = md.getScalar("BKGD_WIDTH")
-            height = md.getScalar("BKGD_HEIGHT")
-            imageBBox = lsst.geom.BoxI(lsst.geom.PointI(
-                x0, y0), lsst.geom.ExtentI(width, height))
-
-            interpStyle = afwMath.Interpolate.Style(md.getScalar("INTERPSTYLE"))
-            undersampleStyle = afwMath.UndersampleStyle(
-                md.getScalar("UNDERSAMPLESTYLE"))
+            interpStyle = afwMath.Interpolate.Style(md["INTERPSTYLE"])
+            undersampleStyle = afwMath.UndersampleStyle(md["UNDERSAMPLESTYLE"])
 
             # Older outputs won't have APPROX* settings.  Provide alternative defaults.
             # Note: Currently X- and Y-orders must be equal due to a limitation in
             #       math::Chebyshev1Function2.  Setting approxOrderY = -1 is equivalent
             #       to saying approxOrderY = approxOrderX.
-            approxStyle = md.getScalar("APPROXSTYLE") if "APPROXSTYLE" in md.names() \
-                else afwMath.ApproximateControl.UNKNOWN
+            approxStyle = md.get("APPROXSTYLE", afwMath.ApproximateControl.UNKNOWN)
             approxStyle = afwMath.ApproximateControl.Style(approxStyle)
-            approxOrderX = md.getScalar(
-                "APPROXORDERX") if "APPROXORDERX" in md.names() else 1
-            approxOrderY = md.getScalar(
-                "APPROXORDERY") if "APPROXORDERY" in md.names() else -1
-            approxWeighting = md.getScalar(
-                "APPROXWEIGHTING") if "APPROXWEIGHTING" in md.names() else True
+            approxOrderX = md.get("APPROXORDERX", 1)
+            approxOrderY = md.get("APPROXORDERY", -1)
+            approxWeighting = md.get("APPROXWEIGHTING", True)
 
             bkgd = afwMath.BackgroundMI(imageBBox, statsImage)
             bctrl = bkgd.getBackgroundControl()
             bctrl.setInterpStyle(interpStyle)
             bctrl.setUndersampleStyle(undersampleStyle)
-            actrl = afwMath.ApproximateControl(
-                approxStyle, approxOrderX, approxOrderY, approxWeighting)
+            actrl = afwMath.ApproximateControl(approxStyle, approxOrderX, approxOrderY, approxWeighting)
             bctrl.setApproximateControl(actrl)
             bgInfo = (bkgd, interpStyle, undersampleStyle, approxStyle,
                       approxOrderX, approxOrderY, approxWeighting)
