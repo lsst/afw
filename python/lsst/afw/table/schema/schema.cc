@@ -82,6 +82,55 @@ void declareFieldBaseSpecializations(PyFieldBase<std::string> &cls) {
     cls.def("getSize", &FieldBase<std::string>::getSize);
 }
 
+// Specializations for Field
+
+template <typename T>
+void declareFieldSpecializations(PyField<T> &cls) {
+    cls.def(py::pickle(
+            [](Field<T> const &self) {
+                /* Return a tuple that fully encodes the state of the object */
+                return py::make_tuple(self.getName(), self.getDoc(), self.getUnits());
+            },
+            [](py::tuple t) {
+                int const NPARAMS = 3;
+                if (t.size() != NPARAMS) {
+                    std::ostringstream os;
+                    os << "Invalid number of parameters (" << t.size() << ") when unpickling; expected "
+                       << NPARAMS;
+                    throw std::runtime_error(os.str());
+                }
+                return Field<T>(t[0].cast<std::string>(), t[1].cast<std::string>(), t[2].cast<std::string>());
+            }));
+}
+
+// Field<Array<T>> and Field<std::string> have the same pickle implementation
+template <typename T>
+void _sequenceFieldSpecializations(PyField<T> &cls) {
+    cls.def(py::pickle(
+            [](Field<T> const &self) {
+                /* Return a tuple that fully encodes the state of the object */
+                return py::make_tuple(self.getName(), self.getDoc(), self.getUnits(), self.getSize());
+            },
+            [](py::tuple t) {
+                int const NPARAMS = 4;
+                if (t.size() != NPARAMS) {
+                    std::ostringstream os;
+                    os << "Invalid number of parameters (" << t.size() << ") when unpickling; expected "
+                       << NPARAMS;
+                    throw std::runtime_error(os.str());
+                }
+                return Field<T>(t[0].cast<std::string>(), t[1].cast<std::string>(), t[2].cast<std::string>(),
+                                t[3].cast<int>());
+            }));
+}
+
+template <typename T>
+void declareFieldSpecializations(PyField<Array<T>> &cls) {
+    _sequenceFieldSpecializations(cls);
+}
+
+void declareFieldSpecializations(PyField<std::string> &cls) { _sequenceFieldSpecializations(cls); }
+
 // Specializations for KeyBase
 
 template <typename T>
@@ -157,7 +206,13 @@ void declareKeySpecializations(PyKey<T> &cls) {
                 return py::make_tuple(self.getOffset());
             },
             [](py::tuple t) {
-                if (t.size() != 1) throw std::runtime_error("Invalid number of parameters when unpickling!");
+                int const NPARAMS = 1;
+                if (t.size() != NPARAMS) {
+                    std::ostringstream os;
+                    os << "Invalid number of parameters (" << t.size() << ") when unpickling; expected "
+                       << NPARAMS;
+                    throw std::runtime_error(os.str());
+                }
                 return detail::Access::makeKey<T>(t[0].cast<int>());
             }));
 }
@@ -173,28 +228,70 @@ void declareKeySpecializations(PyKey<Flag> &cls) {
                 return py::make_tuple(self.getOffset(), self.getBit());
             },
             [](py::tuple t) {
-                if (t.size() != 2) throw std::runtime_error("Invalid number of parameters when unpickling!");
+                int const NPARAMS = 2;
+                if (t.size() != NPARAMS) {
+                    std::ostringstream os;
+                    os << "Invalid number of parameters (" << t.size() << ") when unpickling; expected "
+                       << NPARAMS;
+                    throw std::runtime_error(os.str());
+                }
                 return detail::Access::makeKey(t[0].cast<int>(), t[1].cast<int>());
             }));
 }
 
-template <typename U>
-void declareKeySpecializations(PyKey<Array<U>> &cls) {
+template <typename T>
+void declareKeySpecializations(PyKey<Array<T>> &cls) {
     declareKeyAccessors(cls);
-    cls.def_property_readonly("subfields", [](Key<Array<U>> const &self) -> py::object {
+    cls.def_property_readonly("subfields", [](Key<Array<T>> const &self) -> py::object {
         py::list result;
         for (int i = 0; i < self.getSize(); ++i) {
             result.append(py::cast(i));
         }
         return py::tuple(result);
     });
-    cls.def_property_readonly("subkeys", [](Key<Array<U>> const &self) -> py::object {
+    cls.def_property_readonly("subkeys", [](Key<Array<T>> const &self) -> py::object {
         py::list result;
         for (int i = 0; i < self.getSize(); ++i) {
             result.append(py::cast(self[i]));
         }
         return py::tuple(result);
     });
+    cls.def(py::pickle(
+            [](Key<Array<T>> const &self) {
+                /* Return a tuple that fully encodes the state of the object */
+                return py::make_tuple(self.getOffset(), self.getElementCount());
+            },
+            [](py::tuple t) {
+                int const NPARAMS = 2;
+                if (t.size() != NPARAMS) {
+                    std::ostringstream os;
+                    os << "Invalid number of parameters (" << t.size() << ") when unpickling; expected "
+                       << NPARAMS;
+                    throw std::runtime_error(os.str());
+                }
+                return detail::Access::makeKeyArray<T>(t[0].cast<int>(), t[1].cast<int>());
+            }));
+}
+
+void declareKeySpecializations(PyKey<std::string> &cls) {
+    declareKeyAccessors(cls);
+    cls.def_property_readonly("subfields", [](py::object const &) { return py::none(); });
+    cls.def_property_readonly("subkeys", [](py::object const &) { return py::none(); });
+    cls.def(py::pickle(
+            [](Key<std::string> const &self) {
+                /* Return a tuple that fully encodes the state of the object */
+                return py::make_tuple(self.getOffset(), self.getElementCount());
+            },
+            [](py::tuple t) {
+                int const NPARAMS = 2;
+                if (t.size() != NPARAMS) {
+                    std::ostringstream os;
+                    os << "Invalid number of parameters (" << t.size() << ") when unpickling; expected "
+                       << NPARAMS;
+                    throw std::runtime_error(os.str());
+                }
+                return detail::Access::makeKeyString(t[0].cast<int>(), t[1].cast<int>());
+            }));
 }
 
 // Wrap all helper classes (FieldBase, KeyBase, Key, Field, SchemaItem) declarefor a Schema field type.
@@ -217,6 +314,8 @@ void declareSchemaType(py::module &mod) {
 
     // Field
     PyField<T> clsField(mod, ("Field" + suffix).c_str());
+    declareFieldSpecializations(clsField);
+
     mod.attr("_Field")[pySuffix] = clsField;
     clsField.def(py::init([astropyUnit](  // capture by value to refcount in Python instead of dangle in C++
                                   std::string const &name, std::string const &doc, py::str const &units,
@@ -240,15 +339,6 @@ void declareSchemaType(py::module &mod) {
     clsField.def("copyRenamed", &Field<T>::copyRenamed);
     utils::python::addOutputOp(clsField, "__str__");
     utils::python::addOutputOp(clsField, "__repr__");
-    clsField.def(py::pickle(
-            [](Field<T> const &self) {
-                /* Return a tuple that fully encodes the state of the object */
-                return py::make_tuple(self.getName(), self.getDoc(), self.getUnits());
-            },
-            [](py::tuple t) {
-                if (t.size() != 3) throw std::runtime_error("Invalid number of parameters when unpickling!");
-                return Field<T>(t[0].cast<std::string>(), t[1].cast<std::string>(), t[2].cast<std::string>());
-            }));
 
     // Key
     PyKey<T> clsKey(mod, ("Key" + suffix).c_str());
@@ -306,7 +396,13 @@ void declareSchemaType(py::module &mod) {
                 return py::make_tuple(self.key, self.field);
             },
             [](py::tuple t) {
-                if (t.size() != 2) throw std::runtime_error("Invalid number of parameters when unpickling!");
+                int const NPARAMS = 2;
+                if (t.size() != NPARAMS) {
+                    std::ostringstream os;
+                    os << "Invalid number of parameters (" << t.size() << ") when unpickling; expected "
+                       << NPARAMS;
+                    throw std::runtime_error(os.str());
+                }
                 return SchemaItem<T>(t[0].cast<Key<T>>(), t[1].cast<Field<T>>());
             }));
 }  // namespace

@@ -75,6 +75,15 @@ public:
     /// @internal Access to the private Key constructor.
     static Key<Flag> makeKey(int offset, int bit) { return Key<Flag>(offset, bit); }
 
+    /// @internal Access to the private Key constructor.
+    static Key<std::string> makeKeyString(int offset, int size) { return Key<std::string>(offset, size); }
+
+    /// @internal Access to the private Key constructor.
+    template <typename T>
+    static Key<Array<T>> makeKeyArray(int offset, int size) {
+        return Key<Array<T>>(offset, size);
+    }
+
     /// @internal Add some padding to a schema without adding a field.
     static void padSchema(Schema &schema, int bytes) {
         schema._edit();
