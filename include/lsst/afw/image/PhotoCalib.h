@@ -104,7 +104,7 @@ inline void assertNonNegative(double value, std::string const &name) {
  *
  * where referenceFlux is the AB Magnitude reference flux from Oke & Gunn 1983 (first equation),
  * @f[
- *     referenceFlux = 1e23 * 10^(48.6/-2.5)
+ *     referenceFlux = 1e23 * 10^{(48.6/-2.5)}
  * @f]
  * and
  * @f[
