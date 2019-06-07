@@ -25,6 +25,7 @@
 #ifndef LSST_AFW_TYPEHANDLING_GENERICMAP_H
 #define LSST_AFW_TYPEHANDLING_GENERICMAP_H
 
+#include <algorithm>
 #include <cstdint>
 #include <functional>
 #include <ostream>
@@ -257,68 +258,16 @@ public:
         return const_cast<T&>(static_cast<const GenericMap&>(*this).at(key));
     }
 
-    // Can't partially specialize method templates, rely on enable_if to avoid duplicates
-    template <typename T,
-              typename std::enable_if_t<
-                      std::is_fundamental<T>::value || std::is_base_of<std::string, T>::value, int> = 0>
+    template <typename T, typename std::enable_if_t<!IS_SMART_PTR<T>, int> = 0>
     T const& at(Key<K, T> const& key) const {
-        static_assert(!std::is_const<T>::value,
-                      "Due to implementation constraints, const keys are not supported.");
-        try {
-            auto foo = unsafeLookup(key.getId());
-            return boost::get<T const&>(foo);
-        } catch (boost::bad_get const&) {
-            std::stringstream message;
-            message << "Key " << key << " not found, but a key labeled " << key.getId() << " is present.";
-            throw LSST_EXCEPT(pex::exceptions::OutOfRangeError, message.str());
-        }
-    }
-
-    template <typename T, typename std::enable_if_t<std::is_base_of<Storable, T>::value, int> = 0>
-    T const& at(Key<K, T> const& key) const {
-        static_assert(!std::is_const<T>::value,
-                      "Due to implementation constraints, const keys are not supported.");
-        try {
-            auto foo = unsafeLookup(key.getId());
-            // Don't use pointer-based get, because it won't work after migrating to std::variant
-            Storable const& value = boost::get<PolymorphicValue const&>(foo);
-            T const* typedPointer = dynamic_cast<T const*>(&value);
-            if (typedPointer != nullptr) {
-                return *typedPointer;
-            } else {
-                std::stringstream message;
-                message << "Key " << key << " not found, but a key labeled " << key.getId() << " is present.";
-                throw LSST_EXCEPT(pex::exceptions::OutOfRangeError, message.str());
-            }
-        } catch (boost::bad_get const&) {
-            std::stringstream message;
-            message << "Key " << key << " not found, but a key labeled " << key.getId() << " is present.";
-            throw LSST_EXCEPT(pex::exceptions::OutOfRangeError, message.str());
-        }
+        // Delegate to private methods to hide further special-casing of T
+        return _at(key);
     }
 
     template <typename T, typename std::enable_if_t<std::is_base_of<Storable, T>::value, int> = 0>
     std::shared_ptr<T> at(Key<K, std::shared_ptr<T>> const& key) const {
-        static_assert(!std::is_const<T>::value,
-                      "Due to implementation constraints, const keys are not supported.");
-        try {
-            auto foo = unsafeLookup(key.getId());
-            auto pointer = boost::get<std::shared_ptr<Storable> const&>(foo);
-            std::shared_ptr<T> typedPointer = std::dynamic_pointer_cast<T>(pointer);
-            // shared_ptr can be empty without being null. dynamic_pointer_cast
-            // only promises result of failed cast is empty, so test for that
-            if (typedPointer.use_count() > 0) {
-                return typedPointer;
-            } else {
-                std::stringstream message;
-                message << "Key " << key << " not found, but a key labeled " << key.getId() << " is present.";
-                throw LSST_EXCEPT(pex::exceptions::OutOfRangeError, message.str());
-            }
-        } catch (boost::bad_get const&) {
-            std::stringstream message;
-            message << "Key " << key << " not found, but a key labeled " << key.getId() << " is present.";
-            throw LSST_EXCEPT(pex::exceptions::OutOfRangeError, message.str());
-        }
+        // Delegate to private methods to hide further special-casing of T
+        return _at(key);
     }
 
     /** @} */
@@ -387,14 +336,286 @@ public:
      *       determine if the value is of the expected type. The performance of
      *       this method depends strongly on the performance of
      *       contains(K const&).
+     */
+    template <typename T>
+    bool contains(Key<K, T> const& key) const {
+        // Delegate to private methods to hide special-casing of T
+        return _contains(key);
+    }
+
+    /**
+     * Return the set of all keys, without type information.
+     *
+     * @return a read-only view of all keys currently in the map, in the same
+     *         iteration order as this object. The view will be updated by
+     *         changes to the underlying map.
+     *
+     * @warning Do not modify this map while iterating over its keys.
+     * @warning Do not store the returned reference in variables that outlive
+     *          the map; destroying the map will invalidate the reference.
+     *
+     * @note The keys are returned as a list, rather than a set, so that subclasses can give them a
+     * well-defined iteration order.
+     */
+    virtual std::vector<K> const& keys() const noexcept = 0;
+
+    /**
+     * Test for map equality.
+     *
+     * Two GenericMap objects are considered equal if they map the same keys to
+     * the same values. The two objects do not need to have the same
+     * implementation class. If either class orders its keys, the order
+     * is ignored.
+     *
+     * @note This implementation calls @ref keys on both objects and compares
+     *       the results. If the two objects have the same keys, it calls
+     *       @ref unsafeLookup for each key and compares the values.
      *
      * @{
      */
-    // Can't partially specialize method templates, rely on enable_if to avoid duplicates
+    virtual bool operator==(GenericMap const& other) const noexcept {
+        auto keys1 = this->keys();
+        auto keys2 = other.keys();
+        if (!std::is_permutation(keys1.begin(), keys1.end(), keys2.begin(), keys2.end())) {
+            return false;
+        }
+        for (K const& key : keys1) {
+            if (this->unsafeLookup(key) != other.unsafeLookup(key)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    bool operator!=(GenericMap const& other) const { return !(*this == other); }
+
+    /** @} */
+
+    /**
+     * Apply an operation to each key-value pair in the map.
+     *
+     * @tparam Visitor a callable that takes a key and a value. See below for
+     *                 exact requirements.
+     * @param visitor the visitor to apply
+     * @returns if `Visitor` has a return value, a `std::vector` of values
+     *          returned from applying `visitor` to each key in @ref keys, in
+     *          that order. Otherwise, `void`.
+     *
+     * @exceptsafe Provides the same level of exception safety as `Visitor`, or
+     *             strong exception safety if `Visitor` cannot throw.
+     *
+     * A `Visitor` must define one or more `operator()` that take a
+     * weakly-typed key and a value. Each `operator()` must return the same
+     * type (which may be `void`). Through any combination of overloading or
+     * templates, the visitor must accept values of the following types:
+     *      * either `bool` or `bool const&`
+     *      * either `std::int32_t` or `std::int32_t const&`
+     *      * either `std::int64_t` or `std::int64_t const&`
+     *      * either `float` or `float const&`
+     *      * either `double` or `double const&`
+     *      * `std::string const&`
+     *      * `Storable const&`
+     *      * `std::shared_ptr<Storable>`
+     *
+     * @note This implementation calls @ref keys, then calls @ref unsafeLookup
+     *       for each key before passing the result to `visitor`.
+     *
+     * An example visitor that prints each key-value pair to standard output:
+     *
+     *     template <typename K>
+     *     class Printer {
+     *     public:
+     *         template <typename V>
+     *         void operator()(K const& key, V const& value) {
+     *             std::cout << key << ": " << value << "," << std::endl;
+     *         }
+     *
+     *         void operator()(K const& key, Storable const& value) {
+     *             std::cout << key << ": ";
+     *             try {
+     *                 std::cout << value;
+     *             } catch (UnsupportedOperationException const&) {
+     *                 std::cout << "[unprintable]";
+     *             }
+     *             std::cout << "," << std::endl;
+     *         }
+     *
+     *         void operator()(K const& key, std::shared_ptr<Storable> value) {
+     *             if (value != nullptr) {
+     *                 operator()(key, *value);
+     *             } else {
+     *                 operator()(key, "null");
+     *             }
+     *         }
+     *     };
+     */
+    template <class Visitor>
+    auto apply(Visitor&& visitor) const {
+        // Delegate to private methods to hide special-casing of Visitor
+        return _apply(visitor);
+    }
+
+    /**
+     * Apply a modifying operation to each key-value pair in the map.
+     *
+     * @tparam Visitor a callable that takes a key and a value. Requirements as for
+     *                 @ref apply(Visitor&&) const, except that it may take
+     *                 non-`const` references to values.
+     * @param visitor the visitor to apply
+     * @returns if `Visitor` has a return value, a `std::vector` of values
+     *          returned from applying `visitor` to each key in @ref keys, in
+     *          that order. Otherwise, `void`.
+     *
+     * @exceptsafe Provides basic exception safety if `Visitor` is exception-safe.
+     *
+     * @note This implementation calls @ref keys, then calls @ref unsafeLookup
+     *       for each key before passing the result to `visitor`.
+     */
+    template <class Visitor>
+    auto apply(Visitor&& visitor) {
+        // Delegate to private methods to hide special-casing of Visitor
+        return _apply(visitor);
+    }
+
+private:
+    // Transformations between value/reference/ref-to-const versions of internal variant type, to let
+    //     the set of value types supported by GenericMap be defined only once
+    // Icky TMP, but I can't find another way to get at the template arguments for variant :(
+    // Methods have no definition but can't be deleted without breaking type definitions below
+
+    /// @cond
+    // may need to use std::reference_wrapper when migrating to std::variant, but it confuses Boost
+    template <typename... Types>
+    static boost::variant<std::add_lvalue_reference_t<Types>...> _typeToRef(
+            boost::variant<Types...> const&) noexcept;
+    template <typename... Types>
+    static boost::variant<std::add_lvalue_reference_t<std::add_const_t<Types>>...> _typeToConstRef(
+            boost::variant<Types...> const&) noexcept;
+    /// @endcond
+
+protected:
+    /**
+     * The types that can be stored in a map.
+     *
+     * Keys of any subclass of Storable are implemented using PolymorphicValue to preserve type.
+     */
+    using StorableType = boost::variant<bool, std::int32_t, std::int64_t, float, double, std::string,
+                                        PolymorphicValue, std::shared_ptr<Storable>>;
+
+    /**
+     * A type-agnostic reference to the value stored inside the map.
+     *
+     * These are the reference equivalents (`T const&` or `T&`) of @ref StorableType.
+     * @{
+     */
+    // this mouthful is shorter than the equivalent expression with result_of
+    using ConstValueReference = decltype(_typeToConstRef(std::declval<StorableType>()));
+    using ValueReference = decltype(_typeToRef(std::declval<StorableType>()));
+
+    /** @} */
+
+    /**
+     * Return a reference to the mapped value of the element with key equal to `key`.
+     *
+     * This method is the primary way to implement the GenericMap interface.
+     *
+     * @param key the key of the element to find
+     *
+     * @return the value mapped to `key`, if one exists
+     *
+     * @throws pex::exceptions::OutOfRangeError Thrown if the map does not have
+     *         a value with the specified key
+     * @exceptsafe Must provide strong exception safety.
+     *
+     * @{
+     */
+    virtual ConstValueReference unsafeLookup(K key) const = 0;
+
+    ValueReference unsafeLookup(K key) {
+        ConstValueReference constRef = static_cast<const GenericMap&>(*this).unsafeLookup(key);
+        auto removeConst = [](auto const& value) -> ValueReference {
+            using NonConstRef = std::add_lvalue_reference_t<
+                    std::remove_const_t<std::remove_reference_t<decltype(value)>>>;
+            // This cast is safe; see Effective C++, Item 3
+            return const_cast<NonConstRef>(value);
+        };
+        return boost::apply_visitor(removeConst, constRef);
+    }
+
+    /** @} */
+
+private:
+    // Neither Storable nor shared_ptr<Storable>
     template <typename T,
               typename std::enable_if_t<
                       std::is_fundamental<T>::value || std::is_base_of<std::string, T>::value, int> = 0>
-    bool contains(Key<K, T> const& key) const {
+    T const& _at(Key<K, T> const& key) const {
+        static_assert(!std::is_const<T>::value,
+                      "Due to implementation constraints, const keys are not supported.");
+        try {
+            auto foo = unsafeLookup(key.getId());
+            return boost::get<T const&>(foo);
+        } catch (boost::bad_get const&) {
+            std::stringstream message;
+            message << "Key " << key << " not found, but a key labeled " << key.getId() << " is present.";
+            throw LSST_EXCEPT(pex::exceptions::OutOfRangeError, message.str());
+        }
+    }
+
+    // Storable and its subclasses
+    template <typename T, typename std::enable_if_t<std::is_base_of<Storable, T>::value, int> = 0>
+    T const& _at(Key<K, T> const& key) const {
+        static_assert(!std::is_const<T>::value,
+                      "Due to implementation constraints, const keys are not supported.");
+        try {
+            auto foo = unsafeLookup(key.getId());
+            // Don't use pointer-based get, because it won't work after migrating to std::variant
+            Storable const& value = boost::get<PolymorphicValue const&>(foo);
+            T const* typedPointer = dynamic_cast<T const*>(&value);
+            if (typedPointer != nullptr) {
+                return *typedPointer;
+            } else {
+                std::stringstream message;
+                message << "Key " << key << " not found, but a key labeled " << key.getId() << " is present.";
+                throw LSST_EXCEPT(pex::exceptions::OutOfRangeError, message.str());
+            }
+        } catch (boost::bad_get const&) {
+            std::stringstream message;
+            message << "Key " << key << " not found, but a key labeled " << key.getId() << " is present.";
+            throw LSST_EXCEPT(pex::exceptions::OutOfRangeError, message.str());
+        }
+    }
+
+    // shared_ptr<Storable>
+    template <typename T, typename std::enable_if_t<std::is_base_of<Storable, T>::value, int> = 0>
+    std::shared_ptr<T> _at(Key<K, std::shared_ptr<T>> const& key) const {
+        static_assert(!std::is_const<T>::value,
+                      "Due to implementation constraints, const keys are not supported.");
+        try {
+            auto foo = unsafeLookup(key.getId());
+            auto pointer = boost::get<std::shared_ptr<Storable> const&>(foo);
+            std::shared_ptr<T> typedPointer = std::dynamic_pointer_cast<T>(pointer);
+            // shared_ptr can be empty without being null. dynamic_pointer_cast
+            // only promises result of failed cast is empty, so test for that
+            if (typedPointer.use_count() > 0) {
+                return typedPointer;
+            } else {
+                std::stringstream message;
+                message << "Key " << key << " not found, but a key labeled " << key.getId() << " is present.";
+                throw LSST_EXCEPT(pex::exceptions::OutOfRangeError, message.str());
+            }
+        } catch (boost::bad_get const&) {
+            std::stringstream message;
+            message << "Key " << key << " not found, but a key labeled " << key.getId() << " is present.";
+            throw LSST_EXCEPT(pex::exceptions::OutOfRangeError, message.str());
+        }
+    }
+
+    // Neither Storable nor shared_ptr<Storable>
+    template <typename T,
+              typename std::enable_if_t<
+                      std::is_fundamental<T>::value || std::is_base_of<std::string, T>::value, int> = 0>
+    bool _contains(Key<K, T> const& key) const {
         // Avoid actually getting and casting an object, if at all possible
         if (!contains(key.getId())) {
             return false;
@@ -410,8 +631,9 @@ public:
         }
     }
 
+    // Storable and its subclasses
     template <typename T, typename std::enable_if_t<std::is_base_of<Storable, T>::value, int> = 0>
-    bool contains(Key<K, T> const& key) const {
+    bool _contains(Key<K, T> const& key) const {
         // Avoid actually getting and casting an object, if at all possible
         if (!contains(key.getId())) {
             return false;
@@ -428,8 +650,9 @@ public:
         }
     }
 
+    // shared_ptr<Storable>
     template <typename T, typename std::enable_if_t<std::is_base_of<Storable, T>::value, int> = 0>
-    bool contains(Key<K, std::shared_ptr<T>> const& key) const {
+    bool _contains(Key<K, std::shared_ptr<T>> const& key) const {
         // Avoid actually getting and casting an object, if at all possible
         if (!contains(key.getId())) {
             return false;
@@ -447,104 +670,61 @@ public:
         }
     }
 
-    /** @} */
-
-    /**
-     * Return the set of all keys, without type information.
-     *
-     * @return a copy of all keys currently in the map, in the same iteration order as this object. The set
-     * will *not* be updated as this object changes, or vice versa.
-     *
-     * @note The keys are returned as a list, rather than a set, so that subclasses can give them a
-     * well-defined iteration order.
-     *
-     * @exceptsafe Provides strong exception safety.
-     */
-    virtual std::vector<K> keys() const = 0;
-
-    /**
-     * Test for map equality.
-     *
-     * Two GenericMap objects are considered equal if they map the same keys to
-     * the same values. The two objects do not need to have the same
-     * implementation class. If either class orders its keys, the order
-     * is ignored.
-     *
-     * @note This implementation calls @ref keys on both objects and compares
-     *       the results. If the two objects have the same keys, it calls
-     *       @ref unsafeLookup for each key and compares the values.
-     *
-     * @{
-     */
-    virtual bool operator==(GenericMap const& other) const {
-        auto keys1 = this->keySet();
-        auto keys2 = other.keySet();
-        if (keys1 != keys2) {
-            return false;
-        }
-        for (K const& key : keys1) {
-            if (this->unsafeLookup(key) != other.unsafeLookup(key)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    bool operator!=(GenericMap const& other) const { return !(*this == other); }
-
-    /** @} */
-
-private:
-    // Icky TMP, but I can't find another way to get at the template arguments for variant :(
-    // Method has no definition but can't be deleted without breaking definition of StorableType
+    // Type alias to properly handle Visitor output
+    // Assume that each operator() has the same return type; variant will enforce it
     /// @cond
-    template <typename... Types>
-    static boost::variant<std::decay_t<Types>...> _referenceToType(boost::variant<Types...> const&) noexcept;
+    template <class Visitor>
+    using _VisitorResult = std::result_of_t<Visitor && (K&&, bool&)>;
     /// @endcond
 
-protected:
-    /**
-     * A type-agnostic reference to the value stored inside the map.
-     *
-     * Keys of any subclass of Storable are implemented using PolymorphicValue to preserve type.
-     */
-    // may need to use std::reference_wrapper when migrating to std::variant, but it confuses Boost
-    using ValueReference =
-            boost::variant<bool const&, std::int32_t const&, std::int64_t const&, float const&, double const&,
-                           std::string const&, PolymorphicValue const&, std::shared_ptr<Storable> const&>;
+    // No return value, const GenericMap
+    template <class Visitor, typename std::enable_if_t<std::is_void<_VisitorResult<Visitor>>::value, int> = 0>
+    void _apply(Visitor&& visitor) const {
+        for (K const& key : keys()) {
+            boost::variant<K> varKey = key;
+            boost::apply_visitor(visitor, varKey, unsafeLookup(key));
+        }
+    }
 
-    /**
-     * The types that can be stored in a map.
-     *
-     * These are the pass-by-value equivalents (using std::decay) of ValueReference.
-     */
-    // this mouthful is shorter than the equivalent expression with result_of
-    using StorableType = decltype(_referenceToType(std::declval<ValueReference>()));
+    // Return value, const GenericMap
+    template <class Visitor,
+              typename std::enable_if_t<!std::is_void<_VisitorResult<Visitor>>::value, int> = 0>
+    auto _apply(Visitor&& visitor) const {
+        std::vector<_VisitorResult<Visitor>> results;
+        results.reserve(size());
 
-    /**
-     * Return a reference to the mapped value of the element with key equal to `key`.
-     *
-     * This method is the primary way to implement the GenericMap interface.
-     *
-     * @param key the key of the element to find
-     *
-     * @return the value mapped to `key`, if one exists
-     *
-     * @throws pex::exceptions::OutOfRangeError Thrown if the map does not have
-     *         a value with the specified key
-     * @exceptsafe Must provide strong exception safety.
-     */
-    virtual ValueReference unsafeLookup(K key) const = 0;
+        for (K const& key : keys()) {
+            boost::variant<K> varKey = key;
+            results.emplace_back(boost::apply_visitor(visitor, varKey, unsafeLookup(key)));
+        }
+        return results;
+    }
 
-private:
-    /**
-     * Return the set of all keys, without type information.
-     *
-     * This method only differs from @ref keys in that it returns a set, not a list.
-     */
-    std::unordered_set<K> keySet() const {
-        auto rawKeys = keys();
-        return std::unordered_set<K>(rawKeys.begin(), rawKeys.end());
+    // No return value, non-const GenericMap
+    template <class Visitor, typename std::enable_if_t<std::is_void<_VisitorResult<Visitor>>::value, int> = 0>
+    void _apply(Visitor&& visitor) {
+        for (K const& key : keys()) {
+            boost::variant<K> varKey = key;
+            // Boost gets confused if we pass it a temporary variant
+            ValueReference ref = unsafeLookup(key);
+            boost::apply_visitor(visitor, varKey, ref);
+        }
+    }
+
+    // Return value, non-const GenericMap
+    template <class Visitor,
+              typename std::enable_if_t<!std::is_void<_VisitorResult<Visitor>>::value, int> = 0>
+    auto _apply(Visitor&& visitor) {
+        std::vector<_VisitorResult<Visitor>> results;
+        results.reserve(size());
+
+        for (K const& key : keys()) {
+            boost::variant<K> varKey = key;
+            // Boost gets confused if we pass it a temporary variant
+            ValueReference ref = unsafeLookup(key);
+            results.emplace_back(boost::apply_visitor(visitor, varKey, ref));
+        }
+        return results;
     }
 };
 

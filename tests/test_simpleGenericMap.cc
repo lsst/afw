@@ -72,13 +72,13 @@ public:
 };
 
 std::unique_ptr<SimpleGenericMap<int>> makeDerivedMap() {
-    static SimpleGenericMapFactory factory;
+    static SimpleGenericMapFactory const factory;
     using Map = SimpleGenericMap<int>;
     // Exception-safe because only makeGenericMap() can throw
     return std::unique_ptr<Map>(dynamic_cast<Map*>(factory.makeGenericMap().release()));
 }
 
-void checkIndependentCopy(SimpleGenericMap<int>& copy, SimpleGenericMap<int>& original) {
+void checkIndependentCopy(MutableGenericMap<int>& copy, MutableGenericMap<int>& original) {
     // Use BOOST_CHECK to avoid BOOST_TEST bug from GenericMap being unprintable
     BOOST_CHECK(original == copy);
 
@@ -100,8 +100,23 @@ BOOST_AUTO_TEST_CASE(Copy) {
     checkIndependentCopy(copy, *original);
 }
 
+BOOST_AUTO_TEST_CASE(CopyConvert) {
+    std::unique_ptr<MutableGenericMap<int>> original = makeDerivedMap();
+
+    SimpleGenericMap<int> copy(*original);
+    checkIndependentCopy(copy, *original);
+}
+
 BOOST_AUTO_TEST_CASE(CopyAssign) {
     auto original = makeDerivedMap();
+
+    SimpleGenericMap<int> copy;
+    copy = *original;
+    checkIndependentCopy(copy, *original);
+}
+
+BOOST_AUTO_TEST_CASE(CopyAssignConvert) {
+    std::unique_ptr<MutableGenericMap<int>> original = makeDerivedMap();
 
     SimpleGenericMap<int> copy;
     copy = *original;
@@ -140,6 +155,30 @@ BOOST_AUTO_TEST_CASE(MoveAssign) {
     BOOST_CHECK(backup == copy);
 
     checkIndependentMove(copy, *original);
+}
+
+BOOST_AUTO_TEST_CASE(IterationOrder) {
+    using namespace std::string_literals;
+    static SimpleGenericMapFactory const factory;
+    auto map = factory.makeMutableGenericMap();
+    auto const& keys = map->keys();
+
+    BOOST_REQUIRE(map->insert(makeKey<int>("firstKey"s), 42) == true);
+    BOOST_REQUIRE(map->insert(makeKey<std::string>("secondKey"s), "someValue"s) == true);
+    BOOST_REQUIRE(map->insert(makeKey<test::ComplexStorable>("thirdKey"s), test::ComplexStorable(-2.0)) ==
+                  true);
+    // Failed insert should not change iteration order
+    BOOST_REQUIRE(map->insert(makeKey<int>("firstKey"s), 0) == false);
+    BOOST_REQUIRE(map->insert(makeKey<std::string>("fourthKey"s), "anotherValue"s) == true);
+    // Failed insert should not change iteration order
+    BOOST_REQUIRE(map->insert(makeKey<double>("thirdKey"s), -2.0) == false);
+    BOOST_REQUIRE(map->insert(makeKey<bool>("fifthKey"s), false) == true);
+    BOOST_REQUIRE(map->erase(makeKey<std::string>("secondKey"s)) == true);
+    BOOST_REQUIRE(map->erase(makeKey<std::string>("fourthKey"s)) == true);
+    // A re-inserted key should not remember old position
+    BOOST_REQUIRE(map->insert(makeKey<std::string>("secondKey"s), "someValue"s) == true);
+
+    BOOST_TEST(keys == std::vector<std::string>({"firstKey"s, "thirdKey"s, "fifthKey"s, "secondKey"s}));
 }
 
 /// Boost::test initialization function

@@ -34,10 +34,6 @@ class GenericMapS:
         className = type(self).__name__
         return className + "({" + ", ".join("%r: %r" % (key, value) for key, value in self.items()) + "})"
 
-    def __iter__(self):
-        for key in self._keys():
-            yield key
-
     # Support equality with any Mapping, including dict
     # Not clear why Mapping.__eq__ doesn't work
     def __eq__(self, other):

@@ -38,7 +38,7 @@ PolymorphicValue::~PolymorphicValue() noexcept = default;
 
 PolymorphicValue::PolymorphicValue(PolymorphicValue const& other)
         : _value(other._value ? other._value->cloneStorable() : nullptr) {}
-PolymorphicValue::PolymorphicValue(PolymorphicValue&&) = default;  // other._value emptied
+PolymorphicValue::PolymorphicValue(PolymorphicValue&&) noexcept = default;  // other._value emptied
 
 PolymorphicValue& PolymorphicValue::operator=(PolymorphicValue const& other) {
     if (other._value) {
@@ -48,10 +48,15 @@ PolymorphicValue& PolymorphicValue::operator=(PolymorphicValue const& other) {
     }
     return *this;
 }
-PolymorphicValue& PolymorphicValue::operator=(PolymorphicValue&& other) {
+PolymorphicValue& PolymorphicValue::operator=(PolymorphicValue&& other) noexcept {
     using std::swap;
     swap(_value, other._value);
     return *this;
+}
+
+void PolymorphicValue::swap(PolymorphicValue& other) noexcept {
+    using std::swap;
+    swap(_value, other._value);
 }
 
 bool PolymorphicValue::empty() const noexcept { return !_value; }

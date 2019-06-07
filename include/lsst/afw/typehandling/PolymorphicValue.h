@@ -70,7 +70,7 @@ public:
      * @{
      */
     PolymorphicValue(PolymorphicValue const& other);
-    PolymorphicValue(PolymorphicValue&& other);
+    PolymorphicValue(PolymorphicValue&& other) noexcept;
 
     /** @} */
 
@@ -89,7 +89,10 @@ public:
      * @{
      */
     PolymorphicValue& operator=(PolymorphicValue const& other);
-    PolymorphicValue& operator=(PolymorphicValue&& other);
+    PolymorphicValue& operator=(PolymorphicValue&& other) noexcept;
+
+    /// Exchange the contents of this container and another.
+    void swap(PolymorphicValue& other) noexcept;
 
     /** @} */
 
@@ -141,6 +144,13 @@ private:
     std::shared_ptr<Storable> _value;
 };
 
+/**
+ * Swap specialization for PolymorphicValue.
+ *
+ * @relatesalso PolymorphicValue
+ */
+inline void swap(PolymorphicValue& lhs, PolymorphicValue& rhs) noexcept { lhs.swap(rhs); }
+
 }  // namespace typehandling
 }  // namespace afw
 }  // namespace lsst
@@ -159,6 +169,14 @@ struct hash<lsst::afw::typehandling::PolymorphicValue> {
     using result_type = size_t;
     size_t operator()(argument_type const& obj) const { return obj.hash_value(); }
 };
+
+/// Swap specialization for PolymorphicValue.
+template <>
+inline void swap(lsst::afw::typehandling::PolymorphicValue& lhs,
+                 lsst::afw::typehandling::PolymorphicValue& rhs) noexcept {
+    lhs.swap(rhs);
+}
+
 }  // namespace std
 
 #endif

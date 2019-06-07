@@ -65,13 +65,15 @@ namespace {
 template <typename K>
 class Publicist : public MutableGenericMap<K> {
 public:
-    using MutableGenericMap<K>::unsafeLookup;
+    using typename GenericMap<K>::ConstValueReference;
+    using GenericMap<K>::unsafeLookup;
     using MutableGenericMap<K>::unsafeErase;
 };
 
 template <typename K>
 py::object get(GenericMap<K>& self, K const& key) {
-    auto callable = &Publicist<K>::unsafeLookup;
+    auto callable = static_cast<typename Publicist<K>::ConstValueReference (GenericMap<K>::*)(K) const>(
+            &Publicist<K>::unsafeLookup);
     return py::cast((self.*callable)(key));
 };
 
@@ -121,11 +123,12 @@ void declareGenericMap(utils::python::WrapperCollection& wrappers, std::string c
                 // Prevent segfaults when assigning a key<Storable> to Python variable, then deleting from map
                 // No existing code depends on being able to modify an item stored by value
                 "key"_a, "default"_a = py::none(), py::return_value_policy::copy);
-        // __iter__ easier to implement in Python
+        cls.def("__iter__",
+                [](Class const& self) { return py::make_iterator(self.keys().begin(), self.keys().end()); },
+                py::keep_alive<0, 1>());
         cls.def("__len__", &Class::size);
         cls.def("__bool__", [](Class const& self) { return !self.empty(); });
-        cls.def("_keys", &Class::keys);  // Private to let a proper view be defined in Python
-        // keys easier to implement in Python
+        // Can't wrap keys directly because pybind11 always copies vectors, so it won't be a view
         // items easier to implement in Python
         // values easier to implement in Python
     });
