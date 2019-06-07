@@ -65,7 +65,7 @@ namespace {
 template <typename K>
 class Publicist : public MutableGenericMap<K> {
 public:
-    using GenericMap<K>::ConstValueReference;
+    using typename GenericMap<K>::ConstValueReference;
     using GenericMap<K>::unsafeLookup;
     using MutableGenericMap<K>::unsafeErase;
 };
