@@ -329,6 +329,16 @@ std::string SkyWcs::writeString() const {
     return os.str();
 }
 
+std::shared_ptr<typehandling::Storable> SkyWcs::cloneStorable() const {
+    return std::make_unique<SkyWcs>(*this);
+}
+
+std::string SkyWcs::toString() const { return "SkyWcs"; }
+
+bool SkyWcs::equals(typehandling::Storable const& other) const noexcept {
+    return singleClassEquals(*this, other);
+}
+
 std::string SkyWcs::getPersistenceName() const { return getSkyWcsPersistenceName(); }
 
 std::string SkyWcs::getPythonModule() const { return "lsst.afw.geom"; }
@@ -517,7 +527,7 @@ std::shared_ptr<TransformPoint2ToPoint2> getPixelToIntermediateWorldCoords(SkyWc
 }
 
 std::ostream& operator<<(std::ostream& os, SkyWcs const& wcs) {
-    os << "SkyWcs";
+    os << wcs.toString();
     return os;
 };
 

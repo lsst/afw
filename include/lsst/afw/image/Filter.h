@@ -39,7 +39,7 @@
 #include <memory>
 #include "lsst/base.h"
 #include "lsst/daf/base/PropertySet.h"
-
+#include "lsst/afw/typehandling/Storable.h"
 
 namespace lsst {
 namespace afw {
@@ -138,7 +138,7 @@ private:
 /**
  * Holds an integer identifier for an LSST filter.
  */
-class Filter final {
+class Filter final : public typehandling::Storable {
 public:
     static int const AUTO;
     static int const UNKNOWN;
@@ -177,7 +177,7 @@ public:
     bool operator!=(Filter const& rhs) const noexcept { return !(*this == rhs); }
 
     /// Return a hash of this object.
-    std::size_t hash_value() const noexcept;
+    std::size_t hash_value() const noexcept override;
 
     /**
      * Return a Filter's integral id
@@ -229,6 +229,23 @@ public:
      * Return a list of known filters
      */
     static std::vector<std::string> getNames();
+
+    /// Create a new Filter that is a copy of this one.
+    std::shared_ptr<typehandling::Storable> cloneStorable() const override;
+
+    /**
+     * Compare this object to another Storable.
+     *
+     * @returns `*this == other` if `other` is a Filter; otherwise `false`.
+     */
+    bool equals(typehandling::Storable const& other) const noexcept override;
+
+    bool isPersistable() const noexcept override;
+
+protected:
+    std::string getPersistenceName() const override;
+    std::string getPythonModule() const override;
+    void write(OutputArchiveHandle& handle) const override;
 
 private:
     typedef std::unordered_map<std::string, std::string const> AliasMap;

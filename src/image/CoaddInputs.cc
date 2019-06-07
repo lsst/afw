@@ -70,6 +70,10 @@ CoaddInputs::~CoaddInputs() = default;
 
 bool CoaddInputs::isPersistable() const noexcept { return true; }
 
+std::shared_ptr<typehandling::Storable> CoaddInputs::cloneStorable() const {
+    return std::make_unique<CoaddInputs>(*this);
+}
+
 std::string CoaddInputs::getPersistenceName() const { return "CoaddInputs"; }
 
 std::string CoaddInputs::getPythonModule() const { return "lsst.afw.image"; }

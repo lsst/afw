@@ -52,11 +52,6 @@ LSST_EXCEPTION_TYPE(UnsupportedOperationException, pex::exceptions::RuntimeError
  * optional, and may throw UnsupportedOperationException if they are not defined.
  *
  * @see StorableHelper
- *
- * @note All Storables are equality-comparable through operator==(Storable const&, Storable const&). This may
- * cause inconsistent behavior when Storable is used as a mixin in a class hierarchy with an existing equality
- * operator. Developers should take care to ensure the result is the same no matter which operator is called;
- * disambiguating calls may require adding an explicit overload for the derived class.
  */
 class Storable : public table::io::Persistable {
 public:
@@ -65,20 +60,23 @@ public:
     /**
      * Create a new object that is a copy of this one (optional operation).
      *
+     * This operation is required for Storables that are stored in GenericMap
+     * by value, but not for those stored by shared pointer.
+     *
      * @throws UnsupportedOperationException Thrown if this object is not cloneable.
+     *
+     * @note If this class supports a `clone` operation, the two should behave
+     *       identically except for the formal return type.
      */
-    virtual std::unique_ptr<Storable> clone() const {
-        throw LSST_EXCEPT(UnsupportedOperationException, "Cloning is not supported.");
-    }
+    // Return shared_ptr to work around https://github.com/pybind/pybind11/issues/1138
+    virtual std::shared_ptr<Storable> cloneStorable() const;
 
     /**
      * Create a string representation of this object (optional operation).
      *
      * @throws UnsupportedOperationException Thrown if this object does not have a string representation.
      */
-    virtual std::string toString() const {
-        throw LSST_EXCEPT(UnsupportedOperationException, "No string representation available.");
-    }
+    virtual std::string toString() const;
 
     /**
      * Return a hash of this object (optional operation).
@@ -87,9 +85,7 @@ public:
      *
      * @note Subclass authors are responsible for any associated specializations of std::hash.
      */
-    virtual std::size_t hash_value() const {
-        throw LSST_EXCEPT(UnsupportedOperationException, "Hashes are not supported.");
-    }
+    virtual std::size_t hash_value() const;
 
     /**
      * Compare this object to another Storable.
@@ -98,20 +94,54 @@ public:
      * method to give results consistent with `operator==` for all inputs that
      * are accepted by both.
      *
-     * @return This implementation always returns `false`.
+     * @returns This implementation returns whether the two objects are the same.
      *
      * @warning This method compares an object to any type of Storable,
      * although cross-class comparisons should usually return `false`. If
      * cross-class comparisons are valid, implementers should take care that
      * they are symmetric and will give the same result no matter what the
      * compile-time types of the left- and right-hand sides are.
+     *
+     * @see singleClassEquals
      */
-    virtual bool equals(Storable const& other) const noexcept { return false; }
+    virtual bool equals(Storable const& other) const noexcept;
+
+protected:
+    /**
+     * Test if a Storable is of a particular class and equal to another object.
+     *
+     * This method template simplifies implementations of @ref equals that
+     * delegate to `operator==` without supporting cross-class comparisons.
+     *
+     * @tparam T The class expected of the two objects to be compared.
+     * @param lhs, rhs The objects to compare. Note that `rhs` need not be
+     *                 a `T`, while `lhs` must be.
+     * @returns `true` if `rhs` is a `T` and `lhs == rhs`; `false` otherwise.
+     *
+     * @exceptsafe Provides the same level of exception safety as `operator==`.
+     *             Most implementations of `operator==` do not throw.
+     *
+     * @note This method template calls `operator==` with both arguments of
+     *       compile-time type `T const&`. Its use is *not* recommended if
+     *       there would be any ambiguity as to which `operator==` gets picked
+     *       by overload resolution.
+     *
+     * This method template is typically called from @ref equals as:
+     *
+     *     bool MyType::equals(Storable const& other) const noexcept {
+     *         return singleClassEquals(*this, other);
+     *     }
+     */
+    template <class T>
+    static bool singleClassEquals(T const& lhs, Storable const& rhs) {
+        auto typedRhs = dynamic_cast<T const*>(&rhs);
+        if (typedRhs != nullptr) {
+            return lhs == *typedRhs;
+        } else {
+            return false;
+        }
+    }
 };
-
-inline Storable::~Storable() {}
-
-/** @} */
 
 /**
  * Output operator for Storable.

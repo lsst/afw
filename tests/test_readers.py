@@ -223,7 +223,7 @@ class FitsReaderTestCase(lsst.utils.tests.TestCase):
         detector = DetectorWrapper().detector
         record = coaddInputs.ccds.addNew()
         record.setWcs(wcs)
-        record.setCalib(calib)
+        record.setPhotoCalib(calib)
         record.setPsf(psf)
         record.setValidPolygon(polygon)
         record.setApCorrMap(apCorrMap)
@@ -240,7 +240,7 @@ class FitsReaderTestCase(lsst.utils.tests.TestCase):
                 exposureIn.setMetadata(metadata)
                 exposureIn.setWcs(wcs)
                 exposureIn.setFilter(Filter("test_readers_filter"))
-                exposureIn.setCalib(calib)
+                exposureIn.setPhotoCalib(calib)
                 exposureIn.setPsf(psf)
                 exposureIn.getInfo().setValidPolygon(polygon)
                 exposureIn.getInfo().setApCorrMap(apCorrMap)

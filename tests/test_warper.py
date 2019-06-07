@@ -85,7 +85,7 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         originalFilter = afwImage.Filter("i")
         originalPhotoCalib = afwImage.PhotoCalib(1.0e5, 1.0e3)
         originalExposure.setFilter(originalFilter)
-        originalExposure.setCalib(originalPhotoCalib)
+        originalExposure.setPhotoCalib(originalPhotoCalib)
 
         warpedExposure1 = warper.warpExposure(
             destWcs=swarpedWcs, srcExposure=originalExposure)

@@ -59,14 +59,11 @@ class SimpleStorable : public Storable {
 public:
     virtual ~SimpleStorable() = default;
 
-    std::unique_ptr<Storable> clone() const override { return std::make_unique<SimpleStorable>(); }
+    std::shared_ptr<Storable> cloneStorable() const override { return std::make_unique<SimpleStorable>(); }
 
     std::string toString() const override { return "Simplest possible representation"; }
 
-    bool equals(Storable const& other) const noexcept override {
-        auto simpleOther = dynamic_cast<SimpleStorable const*>(&other);
-        return simpleOther != nullptr;
-    }
+    bool equals(Storable const& other) const noexcept override { return singleClassEquals(*this, other); }
     virtual bool operator==(SimpleStorable const& other) const { return true; }
     bool operator!=(SimpleStorable const& other) const { return !(*this == other); }
 };
@@ -80,7 +77,9 @@ public:
         return *this;
     }
 
-    std::unique_ptr<Storable> clone() const override { return std::make_unique<ComplexStorable>(storage); }
+    std::shared_ptr<Storable> cloneStorable() const override {
+        return std::make_unique<ComplexStorable>(storage);
+    }
 
     std::string toString() const override { return "ComplexStorable(" + std::to_string(storage) + ")"; }
 

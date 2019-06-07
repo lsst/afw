@@ -28,6 +28,7 @@
 #include "lsst/afw/geom/Transform.h"
 #include "lsst/geom/Box.h"
 #include "lsst/afw/table/io/Persistable.h"
+#include "lsst/afw/typehandling/Storable.h"
 
 namespace lsst {
 namespace afw {
@@ -56,7 +57,7 @@ namespace image {
  *  normalization expected/provided.
  */
 class TransmissionCurve : public table::io::PersistableFacade<TransmissionCurve>,
-                          public table::io::Persistable,
+                          public typehandling::Storable,
                           public std::enable_shared_from_this<TransmissionCurve> {
 public:
     /**

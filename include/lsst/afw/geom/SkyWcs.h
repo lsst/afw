@@ -39,6 +39,7 @@
 #include "lsst/afw/geom/Endpoint.h"
 #include "lsst/afw/geom/Transform.h"
 #include "lsst/afw/table/io/Persistable.h"
+#include "lsst/afw/typehandling/Storable.h"
 
 namespace lsst {
 namespace afw {
@@ -113,7 +114,7 @@ Eigen::Matrix2d makeCdMatrix(lsst::geom::Angle const &scale,
  *
  * The other frames are of type ast::Frame and have 2 axes.
  */
-class SkyWcs final : public table::io::PersistableFacade<SkyWcs>, public table::io::Persistable {
+class SkyWcs final : public table::io::PersistableFacade<SkyWcs>, public typehandling::Storable {
 public:
     SkyWcs(SkyWcs const &) = default;
     SkyWcs(SkyWcs &&) = default;
@@ -400,6 +401,21 @@ public:
 
     /// Serialize this SkyWcs to a string, using the same format as writeStream
     std::string writeString() const;
+
+    // Override methods required by afw::typehandling::Storable
+
+    /// Create a new SkyWcs that is a copy of this one.
+    std::shared_ptr<typehandling::Storable> cloneStorable() const override;
+
+    /// Create a string representation of this object.
+    std::string toString() const override;
+
+    /**
+     * Compare this object to another Storable.
+     *
+     * @returns `*this == other` if `other` is a SkyWcs; otherwise `false`.
+     */
+    bool equals(typehandling::Storable const &other) const noexcept override;
 
 protected:
     // Override methods required by afw::table::io::Persistable

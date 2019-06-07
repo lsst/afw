@@ -1,3 +1,4 @@
+// -*- LSST-C++ -*-
 /*
  * This file is part of afw.
  *
@@ -21,33 +22,30 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "pybind11/pybind11.h"
-
-#include "lsst/utils/python.h"
+#include <memory>
+#include <string>
 
 #include "lsst/afw/typehandling/Storable.h"
-#include "lsst/afw/typehandling/python.h"
-
-namespace py = pybind11;
-using namespace py::literals;
 
 namespace lsst {
 namespace afw {
 namespace typehandling {
 
-using PyStorable = py::class_<Storable, std::shared_ptr<Storable>, table::io::Persistable, StorableHelper<>>;
+Storable::~Storable() noexcept {}
 
-void wrapStorable(utils::python::WrapperCollection& wrappers) {
-    wrappers.addInheritanceDependency("lsst.afw.table.io");
-
-    wrappers.wrapType(PyStorable(wrappers.module, "Storable"), [](auto& mod, auto& cls) {
-        // Do not wrap methods inherited from Persistable
-        cls.def(py::init<>());  // Dummy constructor for pure-Python subclasses
-        // Do not wrap optional Storable methods; let subclasses do it as appropriate
-        cls.def("__eq__", [](Storable const& self, Storable const& other) { return self.equals(other); },
-                "other"_a);
-    });
+std::shared_ptr<Storable> Storable::cloneStorable() const {
+    throw LSST_EXCEPT(UnsupportedOperationException, "Cloning is not supported.");
 }
+
+std::string Storable::toString() const {
+    throw LSST_EXCEPT(UnsupportedOperationException, "No string representation available.");
+}
+
+std::size_t Storable::hash_value() const {
+    throw LSST_EXCEPT(UnsupportedOperationException, "Hashes are not supported.");
+}
+
+bool Storable::equals(Storable const& other) const noexcept { return this == &other; }
 
 }  // namespace typehandling
 }  // namespace afw

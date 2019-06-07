@@ -39,6 +39,7 @@
 #include "lsst/geom/Box.h"
 #include "lsst/afw/table/Source.h"
 #include "lsst/afw/table/io/Persistable.h"
+#include "lsst/afw/typehandling/Storable.h"
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/daf/base/PropertyList.h"
 #include "lsst/pex/exceptions/Exception.h"
@@ -112,7 +113,7 @@ inline void assertNonNegative(double value, std::string const &name) {
  * @f]
  * Note that this is independent of referenceFlux.
  */
-class PhotoCalib : public table::io::PersistableFacade<PhotoCalib>, public table::io::Persistable {
+class PhotoCalib final : public table::io::PersistableFacade<PhotoCalib>, public typehandling::Storable {
 public:
     // Allow move, but no copy
     PhotoCalib(PhotoCalib const &) = default;
@@ -478,8 +479,6 @@ public:
 
     bool isPersistable() const noexcept override { return true; }
 
-    friend std::ostream &operator<<(std::ostream &os, PhotoCalib const &photoCalib);
-
     /* Backwards compatibility with old Calib object */
 
     /// No-op: for backwards compatibility with Calib.
@@ -554,6 +553,20 @@ public:
                 "`makePhotoCalibFromCalibZeroPoint`.";
         throw LSST_EXCEPT(pex::exceptions::RuntimeError, msg);
     }
+
+    /// Create a new PhotoCalib that is a copy of this one.
+    std::shared_ptr<typehandling::Storable> cloneStorable() const override;
+
+    /// Create a string representation of this object.
+    std::string toString() const override;
+
+    /**
+     * Compare this object to another Storable.
+     *
+     * @returns `*this == other` if `other` is a PhotoCalib; otherwise `false`.
+     */
+    bool equals(typehandling::Storable const &other) const noexcept override;
+    // PhotoCalib equality comparable but intentionally not hashable
 
 protected:
     std::string getPersistenceName() const override;

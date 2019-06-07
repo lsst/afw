@@ -35,6 +35,7 @@
 #include "lsst/geom/SpherePoint.h"
 #include "lsst/afw/table/misc.h"  // for RecordId
 #include "lsst/afw/table/io/Persistable.h"
+#include "lsst/afw/typehandling/Storable.h"
 
 namespace lsst {
 namespace afw {
@@ -64,7 +65,7 @@ enum class RotType {
  *
  * VisitInfo is immutable.
  */
-class VisitInfo : public table::io::PersistableFacade<VisitInfo>, public table::io::Persistable {
+class VisitInfo : public table::io::PersistableFacade<VisitInfo>, public typehandling::Storable {
 public:
     /**
      * Construct a VisitInfo
@@ -118,7 +119,7 @@ public:
     bool operator!=(VisitInfo const &other) const { return !(*this == other); };
 
     /// Return a hash of this object.
-    std::size_t hash_value() const noexcept;
+    std::size_t hash_value() const noexcept override;
 
     /// get exposure ID
     table::RecordId getExposureId() const { return _exposureId; }
@@ -185,6 +186,19 @@ public:
      * zenith The angle is positive for objects East of the meridian, and negative for objects to the West.
      */
     lsst::geom::Angle getBoresightParAngle() const;
+
+    /// Create a new VisitInfo that is a copy of this one.
+    std::shared_ptr<typehandling::Storable> cloneStorable() const override;
+
+    /// Create a string representation of this object.
+    std::string toString() const override;
+
+    /**
+     * Compare this object to another Storable.
+     *
+     * @returns `*this == other` if `other` is a VisitInfo; otherwise `false`.
+     */
+    bool equals(typehandling::Storable const &other) const noexcept override;
 
 protected:
     std::string getPersistenceName() const override;

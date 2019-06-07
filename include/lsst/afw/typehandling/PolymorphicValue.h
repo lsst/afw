@@ -59,11 +59,39 @@ public:
     PolymorphicValue(Storable const& value);
     ~PolymorphicValue() noexcept;
 
+    /**
+     * Try to copy a PolymorphicValue.
+     *
+     * @param other the PolymorphicValue to copy.
+     *
+     * @throws UnsupportedOperationException Thrown if a copy is required and
+     *      the object in `other` does not implement Storable::cloneStorable.
+     *
+     * @{
+     */
     PolymorphicValue(PolymorphicValue const& other);
     PolymorphicValue(PolymorphicValue&& other);
 
+    /** @} */
+
+    /**
+     * Try to assign a PolymorphicValue.
+     *
+     * To preserve the run-time type of the object in `other`, this method
+     * swaps (and possibly copies) the Storables instead of relying on the
+     * `Storable`'s `operator=`.
+     *
+     * @param other the PolymorphicValue to overwrite this value with.
+     *
+     * @throws UnsupportedOperationException Thrown if a copy is required and
+     *      the object in `other` does not implement Storable::cloneStorable.
+     *
+     * @{
+     */
     PolymorphicValue& operator=(PolymorphicValue const& other);
     PolymorphicValue& operator=(PolymorphicValue&& other);
+
+    /** @} */
 
     /**
      * Check whether this object contains a Storable.
@@ -109,7 +137,8 @@ public:
     std::size_t hash_value() const;
 
 private:
-    std::unique_ptr<Storable> _value;
+    // unique_ptr would be more appropriate, but Storable::cloneStorable must return shared_ptr
+    std::shared_ptr<Storable> _value;
 };
 
 }  // namespace typehandling

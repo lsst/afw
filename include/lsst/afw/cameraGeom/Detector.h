@@ -32,6 +32,7 @@
 #include "lsst/afw/cameraGeom/CameraSys.h"
 #include "lsst/afw/cameraGeom/Orientation.h"
 #include "lsst/afw/cameraGeom/TransformMap.h"
+#include "lsst/afw/typehandling/Storable.h"
 
 namespace lsst {
 namespace afw {
@@ -58,7 +59,7 @@ enum DetectorType {
  * for instance it is not possible to construct one from a non-const catalog,
  * so I don't know how to construct one.
  */
-class Detector final : public table::io::PersistableFacade<Detector>, public table::io::Persistable {
+class Detector final : public table::io::PersistableFacade<Detector>, public typehandling::Storable {
 public:
     typedef ndarray::Array<float const, 2> CrosstalkMatrix;
 
