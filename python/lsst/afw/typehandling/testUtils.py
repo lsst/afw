@@ -37,7 +37,8 @@ class GenericMapTestBaseClass(lsst.utils.tests.TestCase):
     if they provide their own version.
 
     This class is not *quite* a generic Mapping testbed, because it assumes
-    that the map being tested only accepts keys of a particular type.
+    that the map being tested only accepts keys of a particular type, stored as
+    the `dtype` member.
     """
 
     class SimpleStorable(Storable):
@@ -127,13 +128,11 @@ class GenericMapTestBaseClass(lsst.utils.tests.TestCase):
     #   items
     #   values
 
-    def checkInitMapping(self, keyType, mapClass, contents, msg=""):
+    def checkInitMapping(self, mapClass, contents, msg=""):
         """Check initialization from a mapping.
 
         Parameters
         ----------
-        keyType : `type`
-            The type of key allowed by ``mapClass``.
         mapClass : `lsst.afw.typehandling.GenericMap`-type
             The class whose ``__init__`` method will be tested.
         contents : `Mapping`
@@ -141,26 +140,25 @@ class GenericMapTestBaseClass(lsst.utils.tests.TestCase):
         msg : `str`
             Error message suffix describing test parameters
         """
+        keyType = mapClass.dtype
         genericMap = mapClass(contents)
-        self.checkContents(keyType, genericMap, contents, msg=msg)
+        self.checkContents(genericMap, contents, msg=msg)
 
         extraContents = {key: value for key, value in contents.items()}  # contents need not define copy()
         extraKey = keyType(101)
         extraValue = 'Extra value'
         extraContents[extraKey] = extraValue
         genericMap = mapClass(contents, **{keyType(101): extraValue})
-        self.checkContents(keyType, genericMap, extraContents, msg=msg)
+        self.checkContents(genericMap, extraContents, msg=msg)
 
         with self.assertRaises(TypeError, msg=msg):
             mapClass({keyType(0): GenericMapTestBaseClass.NotAStorable()})
 
-    def checkInitPairs(self, keyType, mapClass, contents, msg=""):
+    def checkInitPairs(self, mapClass, contents, msg=""):
         """Check initialization from an iterable of pairs.
 
         Parameters
         ----------
-        keyType : `type`
-            The type of key allowed by ``mapClass``.
         mapClass: `lsst.afw.typehandling.GenericMap`-type
             The class whose ``__init__`` method will be tested.
         contents : `Mapping`
@@ -168,15 +166,16 @@ class GenericMapTestBaseClass(lsst.utils.tests.TestCase):
         msg : `str`
             Error message suffix describing test parameters
         """
+        keyType = mapClass.dtype
         genericMap = mapClass(contents.items())
-        self.checkContents(keyType, genericMap, contents, msg=msg)
+        self.checkContents(genericMap, contents, msg=msg)
 
         extraContents = {key: value for key, value in contents.items()}  # contents need not define copy()
         extraKey = keyType(101)
         extraValue = 'Extra value'
         extraContents[extraKey] = extraValue
         genericMap = mapClass(contents.items(), **{keyType(101): extraValue})
-        self.checkContents(keyType, genericMap, extraContents, msg=msg)
+        self.checkContents(genericMap, extraContents, msg=msg)
 
         with self.assertRaises(TypeError, msg=msg):
             mapClass([(keyType(0), GenericMapTestBaseClass.NotAStorable())])
@@ -195,12 +194,12 @@ class GenericMapTestBaseClass(lsst.utils.tests.TestCase):
             Error message suffix describing test parameters
         """
         genericMap = mapClass(**contents)
-        self.checkContents(str, genericMap, contents, msg=msg)
+        self.checkContents(genericMap, contents, msg=msg)
 
         with self.assertRaises(TypeError, msg=msg):
             mapClass(notAKey=GenericMapTestBaseClass.NotAStorable())
 
-    def checkFromKeysDefault(self, keyType, mapClass, keys, msg=""):
+    def checkFromKeysDefault(self, mapClass, keys, msg=""):
         """Check initialization using the ``fromkeys`` factory.
 
         Unlike `checkFromKeys`, this method lets ``fromkeys`` use its default
@@ -209,8 +208,6 @@ class GenericMapTestBaseClass(lsst.utils.tests.TestCase):
 
         Parameters
         ----------
-        keyType : `type`
-            The type of key allowed by ``mapClass``.
         mapClass: `lsst.afw.typehandling.GenericMap`-type
             The class whose ``fromkeys`` method will be tested.
         keys : `iterable`
@@ -220,15 +217,13 @@ class GenericMapTestBaseClass(lsst.utils.tests.TestCase):
         """
         genericMap = mapClass.fromkeys(keys)
         self.assertIsInstance(genericMap, mapClass, msg=msg)
-        self.checkContents(keyType, genericMap, dict.fromkeys(keys), msg=msg)
+        self.checkContents(genericMap, dict.fromkeys(keys), msg=msg)
 
-    def checkFromKeys(self, keyType, mapClass, keys, value, msg=""):
+    def checkFromKeys(self, mapClass, keys, value, msg=""):
         """Check initialization using the ``fromkeys`` factory.
 
         Parameters
         ----------
-        keyType : `type`
-            The type of key allowed by ``mapClass``.
         mapClass: `lsst.afw.typehandling.GenericMap`-type
             The class whose ``fromkeys`` method will be tested.
         keys : `iterable`
@@ -240,15 +235,13 @@ class GenericMapTestBaseClass(lsst.utils.tests.TestCase):
         """
         genericMap = mapClass.fromkeys(keys, value)
         self.assertIsInstance(genericMap, mapClass, msg=msg)
-        self.checkContents(keyType, genericMap, dict.fromkeys(keys, value), msg=msg)
+        self.checkContents(genericMap, dict.fromkeys(keys, value), msg=msg)
 
-    def checkContains(self, keyType, genericMap, contents, msg=""):
+    def checkContains(self, genericMap, contents, msg=""):
         """Check the contents of a GenericMap.
 
         Parameters
         ----------
-        keyType : `type`
-            The type of key allowed by ``mapClass``.
         genericMap : `lsst.afw.typehandling.GenericMap`
             The map to test.
         contents : `Mapping`
@@ -259,6 +252,7 @@ class GenericMapTestBaseClass(lsst.utils.tests.TestCase):
         for key in contents:
             self.assertIn(key, genericMap, msg=msg)
 
+        keyType = genericMap.dtype
         for key in range(30):
             if keyType(key) not in contents:
                 self.assertNotIn(keyType(key), genericMap, msg=msg)
@@ -267,13 +261,11 @@ class GenericMapTestBaseClass(lsst.utils.tests.TestCase):
         with self.assertRaises(TypeError):
             wrongType(0) in genericMap
 
-    def checkContents(self, keyType, genericMap, contents, msg=""):
+    def checkContents(self, genericMap, contents, msg=""):
         """Check the contents of a GenericMap.
 
         Parameters
         ----------
-        keyType : `type`
-            The type of key allowed by ``mapClass``.
         genericMap : `lsst.afw.typehandling.GenericMap`
             The map to test.
         contents : `Mapping`
@@ -284,6 +276,7 @@ class GenericMapTestBaseClass(lsst.utils.tests.TestCase):
         for key, value in contents.items():
             self.assertEqual(genericMap[key], value, msg=msg)
 
+        keyType = genericMap.dtype
         for key in (keyType(key) for key in range(30) if keyType(key) not in contents):
             with self.assertRaises(KeyError, msg=msg):
                 genericMap[key]
@@ -292,13 +285,11 @@ class GenericMapTestBaseClass(lsst.utils.tests.TestCase):
         with self.assertRaises(TypeError):
             genericMap[wrongType(0)]
 
-    def checkGet(self, keyType, genericMap, contents, msg=""):
+    def checkGet(self, genericMap, contents, msg=""):
         """Check that GenericMap.get works correctly.
 
         Parameters
         ----------
-        keyType : `type`
-            The type of key allowed by ``mapClass``.
         genericMap : `lsst.afw.typehandling.GenericMap`
             The map to test.
         contents : `Mapping`
@@ -311,6 +302,7 @@ class GenericMapTestBaseClass(lsst.utils.tests.TestCase):
             self.assertEqual(genericMap.get(key), value, msg=msg)
             self.assertEqual(genericMap.get(key, default), value, msg=msg)
 
+        keyType = genericMap.dtype
         for key in (keyType(key) for key in range(30) if keyType(key) not in contents):
             self.assertEqual(genericMap.get(key), None, msg=msg)
             self.assertEqual(genericMap.get(key, default), default, msg=msg)
@@ -413,13 +405,11 @@ class MutableGenericMapTestBaseClass(GenericMapTestBaseClass):
     #   clear
     #   update
 
-    def checkInsertItem(self, keyType, mapFactory, contents, msg=""):
+    def checkInsertItem(self, mapFactory, contents, msg=""):
         """Check element insertion in a GenericMap.
 
         Parameters
         ----------
-        keyType : `type`
-            The type of key allowed by ``mapClass``.
         mapFactory : callable
             A zero-argument callable that creates an empty
             `lsst.afw.typehandling.GenericMap` object of the type to be tested
@@ -438,6 +428,7 @@ class MutableGenericMapTestBaseClass(GenericMapTestBaseClass):
 
         self.assertEqual(dict(genericMap), dict(contents), msg=msg)
 
+        keyType = genericMap.dtype
         with self.assertRaises(TypeError, msg=msg):
             genericMap[keyType(0)] = GenericMapTestBaseClass.NotAStorable()
 
@@ -445,13 +436,11 @@ class MutableGenericMapTestBaseClass(GenericMapTestBaseClass):
         with self.assertRaises(TypeError):
             genericMap[wrongType(0)] = 0
 
-    def checkSetdefault(self, keyType, mapFactory, contents, msg=""):
+    def checkSetdefault(self, mapFactory, contents, msg=""):
         """Check that GenericMap.setdefault works correctly.
 
         Parameters
         ----------
-        keyType : `type`
-            The type of key allowed by ``mapClass``.
         mapFactory : callable
             A zero-argument callable that creates an empty
             `lsst.afw.typehandling.GenericMap` object of the type to be tested
@@ -462,6 +451,7 @@ class MutableGenericMapTestBaseClass(GenericMapTestBaseClass):
         """
         genericMap = mapFactory()
 
+        keyType = genericMap.dtype
         result = genericMap.setdefault(keyType(0))
         self.assertEqual(len(genericMap), 1, msg=msg)
         self.assertIsNone(result, msg=msg)
@@ -493,13 +483,11 @@ class MutableGenericMapTestBaseClass(GenericMapTestBaseClass):
             self.assertEqual(result, contents[key], msg=loopMsg)
             self.assertEqual(genericMap[key], contents[key], msg=loopMsg)
 
-    def checkUpdateMapping(self, keyType, mapFactory, contents, msg=""):
+    def checkUpdateMapping(self, mapFactory, contents, msg=""):
         """Check bulk insertion from a mapping into a GenericMap.
 
         Parameters
         ----------
-        keyType : `type`
-            The type of key allowed by ``mapClass``.
         mapFactory : callable
             A zero-argument callable that creates an empty
             `lsst.afw.typehandling.GenericMap` object of the type to be tested
@@ -514,6 +502,7 @@ class MutableGenericMapTestBaseClass(GenericMapTestBaseClass):
         genericMap.update(contents)
         self.assertEqual(dict(genericMap), dict(contents), msg=msg)
 
+        keyType = genericMap.dtype
         with self.assertRaises(TypeError, msg=msg):
             genericMap.update({keyType(0): GenericMapTestBaseClass.NotAStorable()})
 
@@ -521,13 +510,11 @@ class MutableGenericMapTestBaseClass(GenericMapTestBaseClass):
         with self.assertRaises(TypeError, msg=msg):
             genericMap.update({wrongType(0): 0})
 
-    def checkUpdatePairs(self, keyType, mapFactory, contents, msg=""):
+    def checkUpdatePairs(self, mapFactory, contents, msg=""):
         """Check bulk insertion from an iterable of pairs into a GenericMap.
 
         Parameters
         ----------
-        keyType : `type`
-            The type of key allowed by ``mapClass``.
         mapFactory : callable
             A zero-argument callable that creates an empty
             `lsst.afw.typehandling.GenericMap` object of the type to be tested
@@ -542,6 +529,7 @@ class MutableGenericMapTestBaseClass(GenericMapTestBaseClass):
         genericMap.update(contents.items())
         self.assertEqual(dict(genericMap), dict(contents), msg=msg)
 
+        keyType = genericMap.dtype
         with self.assertRaises(TypeError, msg=msg):
             genericMap.update([(keyType(0), GenericMapTestBaseClass.NotAStorable())])
 
@@ -554,8 +542,6 @@ class MutableGenericMapTestBaseClass(GenericMapTestBaseClass):
 
         Parameters
         ----------
-        keyType : `type`
-            The type of key allowed by ``mapClass``.
         mapFactory : callable
             A zero-argument callable that creates an empty
             `lsst.afw.typehandling.GenericMap` object of the type to be tested
@@ -574,19 +560,18 @@ class MutableGenericMapTestBaseClass(GenericMapTestBaseClass):
         with self.assertRaises(TypeError, msg=msg):
             genericMap.update(notAKey=GenericMapTestBaseClass.NotAStorable())
 
-    def checkReplaceItem(self, keyType, genericMap, msg=""):
+    def checkReplaceItem(self, genericMap, msg=""):
         """Check element replacement in a GenericMap.
 
         Parameters
         ----------
-        keyType : `type`
-            The type of key allowed by ``mapClass``.
         genericMap : `lsst.afw.typehandling.GenericMap`
             The map to test. Must be empty.
         msg : `str`
             Error message suffix describing test parameters
         """
         self.assertFalse(genericMap, msg=msg)
+        keyType = genericMap.dtype
         key = keyType(42)
 
         for value in self.getTestData(keyType).values():
@@ -600,13 +585,11 @@ class MutableGenericMapTestBaseClass(GenericMapTestBaseClass):
         with self.assertRaises(TypeError, msg=msg):
             genericMap[key] = GenericMapTestBaseClass.NotAStorable()
 
-    def checkRemoveItem(self, keyType, mapFactory, contents, msg=""):
+    def checkRemoveItem(self, mapFactory, contents, msg=""):
         """Check element removal from a GenericMap.
 
         Parameters
         ----------
-        keyType : `type`
-            The type of key allowed by ``mapClass``.
         mapFactory : callable
             A zero-argument callable that creates an empty
             `lsst.afw.typehandling.GenericMap` object of the type to be tested
@@ -617,6 +600,7 @@ class MutableGenericMapTestBaseClass(GenericMapTestBaseClass):
         """
         genericMap = self._fillMap(mapFactory, contents)
 
+        keyType = genericMap.dtype
         with self.assertRaises(KeyError, msg=msg):
             del genericMap[keyType(2019)]
 
@@ -633,13 +617,11 @@ class MutableGenericMapTestBaseClass(GenericMapTestBaseClass):
         with self.assertRaises(TypeError):
             del genericMap[wrongType(0)]
 
-    def checkPop(self, keyType, mapFactory, contents, msg=""):
+    def checkPop(self, mapFactory, contents, msg=""):
         """Check that GenericMap.pop works correctly.
 
         Parameters
         ----------
-        keyType : `type`
-            The type of key allowed by ``mapClass``.
         mapFactory : callable
             A zero-argument callable that creates an empty
             `lsst.afw.typehandling.GenericMap` object of the type to be tested
@@ -650,6 +632,7 @@ class MutableGenericMapTestBaseClass(GenericMapTestBaseClass):
         """
         genericMap = self._fillMap(mapFactory, contents)
 
+        keyType = genericMap.dtype
         with self.assertRaises(KeyError, msg=msg):
             genericMap.pop(keyType(2019))
 
