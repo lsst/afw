@@ -24,7 +24,7 @@ import unittest
 
 import lsst.utils.tests
 
-from lsst.afw.typehandling import SimpleGenericMapS
+from lsst.afw.typehandling import SimpleGenericMap
 from lsst.afw.typehandling.testUtils import MutableGenericMapTestBaseClass
 
 
@@ -42,12 +42,12 @@ class SimpleGenericMapTestSuite(MutableGenericMapTestBaseClass):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.targets = {(str, SimpleGenericMapS)}
+        cls.targets = {(str, SimpleGenericMap[str])}
         cls.examples = {
-            "SimpleGenericMapS(testData)": (str, SimpleGenericMapS, cls.getTestData(str)),
-            "SimpleGenericMapS(testKeys : 0)":
-                (str, SimpleGenericMapS, {key: 0 for key in cls.getTestData(str).keys()}),
-            "SimpleGenericMapS()": (str, SimpleGenericMapS, {}),
+            "SimpleGenericMap(testData(str))": (str, SimpleGenericMap[str], cls.getTestData(str)),
+            "SimpleGenericMap(testKeys(str) : 0)":
+                (str, SimpleGenericMap[str], {key: 0 for key in cls.getTestData(str).keys()}),
+            "SimpleGenericMap(dtype=str)": (str, SimpleGenericMap[str], {}),
         }
 
     def tearDown(self):
