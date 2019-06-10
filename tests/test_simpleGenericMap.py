@@ -54,8 +54,8 @@ class SimpleGenericMapTestSuite(MutableGenericMapTestBaseClass):
         pass
 
     def testClass(self):
-        self.assertTrue(issubclass(SimpleGenericMapS, MutableMapping))
         for (_, target) in self.targets:
+            self.assertTrue(issubclass(target, MutableMapping))
             self.assertIsInstance(target(), MutableMapping)
 
     def testInitKeywords(self):
