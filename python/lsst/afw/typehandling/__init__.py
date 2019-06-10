@@ -19,6 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from ._typehandling import *
+# Don't use wrapped GenericMapX templates directly, let _GenericMap rewrap them
+from ._typehandling import Storable
 from ._GenericMap import *
 from ._SimpleGenericMap import *
