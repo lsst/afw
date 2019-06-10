@@ -19,17 +19,33 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-__all__ = []
+__all__ = ["GenericMap", "MutableGenericMap"]
 
 from collections.abc import Mapping, MutableMapping
 
-from lsst.utils import continueClass
+from lsst.utils import TemplateMeta
 from ._typehandling import GenericMapS, MutableGenericMapS
 
-Mapping.register(GenericMapS)
 
-@continueClass  # noqa F811
-class GenericMapS:
+class GenericMap(metaclass=TemplateMeta):
+    """An abstract `~collections.abc.Mapping` for use when sharing a
+    map between C++ and Python.
+
+    For compatibility with C++, ``GenericMap`` has the following
+    restrictions:
+
+        - all keys must be of the same type
+        - values must be built-in types or subclasses of
+          `lsst.afw.typehandling.Storable`. Almost any user-defined class in
+          C++ or Python can have `~lsst.afw.typehandling.Storable` as a mixin.
+
+    As a safety precaution, `~lsst.afw.typehandling.Storable` objects that are
+    added from C++ may be copied when you retrieve them from Python, making it
+    impossible to modify them in-place. This issue does not affect objects that
+    are added from Python, or objects that are always passed by
+    :cpp:class:`shared_ptr` in C++.
+    """
+
     def __repr__(self):
         className = type(self).__name__
         return className + "({" + ", ".join("%r: %r" % (key, value) for key, value in self.items()) + "})"
@@ -54,10 +70,34 @@ class GenericMapS:
     items = Mapping.items
 
 
-MutableMapping.register(MutableGenericMapS)
+GenericMap.register(str, GenericMapS)
+Mapping.register(GenericMapS)
 
-@continueClass  # noqa F811
-class MutableGenericMapS:
+
+class MutableGenericMap(GenericMap):
+    """An abstract `~collections.abc.MutableMapping` for use when sharing a
+    map between C++ and Python.
+
+    For compatibility with C++, ``MutableGenericMap`` has the following
+    restrictions:
+
+        - all keys must be of the same type
+        - values must be built-in types or subclasses of
+          `lsst.afw.typehandling.Storable`. Almost any user-defined class in
+          C++ or Python can have `~lsst.afw.typehandling.Storable` as a mixin.
+
+    As a safety precaution, `~lsst.afw.typehandling.Storable` objects that are
+    added from C++ may be copied when you retrieve them from Python, making it
+    impossible to modify them in-place. This issue does not affect objects that
+    are added from Python, or objects that are always passed by
+    :cpp:class:`shared_ptr` in C++.
+
+    Notes
+    -----
+    Key-type specializations of ``MutableGenericMap`` are available as, e.g.,
+    ``MutableGenericMap[str]``.
+    """
+
     # Easier than making MutableGenericMap actually inherit from MutableMapping
     setdefault = MutableMapping.setdefault
     update = MutableMapping.update
@@ -73,3 +113,7 @@ class MutableGenericMapS:
                 return default
             else:
                 raise
+
+
+MutableGenericMap.register(str, MutableGenericMapS)
+MutableMapping.register(MutableGenericMapS)

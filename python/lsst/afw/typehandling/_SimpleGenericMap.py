@@ -21,11 +21,12 @@
 
 __all__ = ["SimpleGenericMap"]
 
-from lsst.utils import continueClass, TemplateMeta
+from lsst.utils import continueClass
 from ._typehandling import SimpleGenericMapS
+from ._GenericMap import MutableGenericMap
 
 
-class SimpleGenericMap(metaclass=TemplateMeta):
+class SimpleGenericMap(MutableGenericMap):
     """A `dict`-like `~collections.abc.MutableMapping` for use when sharing a
     map between C++ and Python.
 
