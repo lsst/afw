@@ -40,6 +40,4 @@ class SimpleGenericMapS:
 
     @classmethod
     def fromkeys(cls, iterable, value=None):
-        mapping = cls()
-        mapping.update({key: value for key in iterable})
-        return mapping
+        return cls({key: value for key in iterable})
