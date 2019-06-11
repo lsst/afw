@@ -103,6 +103,28 @@ class GenericMapTestBaseClass(lsst.utils.tests.TestCase):
         """
         return {keyClass(key): value for key, value in cls._testData.items()}
 
+    @staticmethod
+    def getValidKeys(mapClass):
+        """Return all keys suitable for a GenericMap.
+
+        Parameters
+        ----------
+        mapClass : `type`
+            A type object for a subclass of either `GenericMap` or a
+            key-specific specialization.
+
+        Returns
+        -------
+        keyTypes: `set` [`type`]
+            The types that can be used as keys. If ``mapClass`` is a
+            key-specific specialization, this set will contain exactly
+            one type.
+        """
+        try:
+            return {mapClass.dtype}
+        except AttributeError:
+            return {cls.dtype for cls in mapClass.__subclasses__()}
+
     def setUp(self):
         """Set up a test
 
@@ -140,19 +162,19 @@ class GenericMapTestBaseClass(lsst.utils.tests.TestCase):
         msg : `str`
             Error message suffix describing test parameters
         """
-        keyType = mapClass.dtype
-        genericMap = mapClass(contents)
-        self.checkContents(genericMap, contents, msg=msg)
+        for keyType in self.getValidKeys(mapClass):
+            genericMap = mapClass(contents)
+            self.checkContents(genericMap, contents, msg=msg)
 
-        extraContents = {key: value for key, value in contents.items()}  # contents need not define copy()
-        extraKey = keyType(101)
-        extraValue = 'Extra value'
-        extraContents[extraKey] = extraValue
-        genericMap = mapClass(contents, **{keyType(101): extraValue})
-        self.checkContents(genericMap, extraContents, msg=msg)
+            extraContents = {key: value for key, value in contents.items()}  # contents need not define copy()
+            extraKey = keyType(101)
+            extraValue = 'Extra value'
+            extraContents[extraKey] = extraValue
+            genericMap = mapClass(contents, **{keyType(101): extraValue})
+            self.checkContents(genericMap, extraContents, msg=msg)
 
-        with self.assertRaises(TypeError, msg=msg):
-            mapClass({keyType(0): GenericMapTestBaseClass.NotAStorable()})
+            with self.assertRaises(TypeError, msg=msg):
+                mapClass({keyType(0): GenericMapTestBaseClass.NotAStorable()})
 
     def checkInitPairs(self, mapClass, contents, msg=""):
         """Check initialization from an iterable of pairs.
@@ -166,19 +188,19 @@ class GenericMapTestBaseClass(lsst.utils.tests.TestCase):
         msg : `str`
             Error message suffix describing test parameters
         """
-        keyType = mapClass.dtype
-        genericMap = mapClass(contents.items())
-        self.checkContents(genericMap, contents, msg=msg)
+        for keyType in self.getValidKeys(mapClass):
+            genericMap = mapClass(contents.items())
+            self.checkContents(genericMap, contents, msg=msg)
 
-        extraContents = {key: value for key, value in contents.items()}  # contents need not define copy()
-        extraKey = keyType(101)
-        extraValue = 'Extra value'
-        extraContents[extraKey] = extraValue
-        genericMap = mapClass(contents.items(), **{keyType(101): extraValue})
-        self.checkContents(genericMap, extraContents, msg=msg)
+            extraContents = {key: value for key, value in contents.items()}  # contents need not define copy()
+            extraKey = keyType(101)
+            extraValue = 'Extra value'
+            extraContents[extraKey] = extraValue
+            genericMap = mapClass(contents.items(), **{keyType(101): extraValue})
+            self.checkContents(genericMap, extraContents, msg=msg)
 
-        with self.assertRaises(TypeError, msg=msg):
-            mapClass([(keyType(0), GenericMapTestBaseClass.NotAStorable())])
+            with self.assertRaises(TypeError, msg=msg):
+                mapClass([(keyType(0), GenericMapTestBaseClass.NotAStorable())])
 
     def checkInitKwargs(self, mapClass, contents, msg=""):
         """Check bulk insertion from keywords into a GenericMap.

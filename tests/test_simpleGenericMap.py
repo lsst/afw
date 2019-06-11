@@ -42,7 +42,8 @@ class SimpleGenericMapTestSuite(MutableGenericMapTestBaseClass):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.targets = {SimpleGenericMap[str]}
+        cls.genericConstructor = SimpleGenericMap  # Must be mapping-constructible
+        cls.targets = {SimpleGenericMap[str]}  # Must be default-constructible
         cls.examples = {
             "SimpleGenericMap(testData(str))": (SimpleGenericMap[str], cls.getTestData(str)),
             "SimpleGenericMap(testKeys(str) : 0)":
@@ -60,40 +61,59 @@ class SimpleGenericMapTestSuite(MutableGenericMapTestBaseClass):
 
     def testInitKeywords(self):
         for target in self.targets:
-            keyType = target.dtype
-            self.checkInitKwargs(target, self.getTestData(keyType), msg=str(target))
+            for keyType in self.getValidKeys(target):
+                self.checkInitKwargs(target, self.getTestData(keyType), msg=str(target))
 
     def testInitPairs(self):
-        for target in self.targets:
-            keyType = target.dtype
-            self.checkInitPairs(target, self.getTestData(keyType), msg=str(target))
+        for target in self.targets | {self.genericConstructor}:
+            for keyType in self.getValidKeys(target):
+                self.checkInitPairs(target, self.getTestData(keyType), msg=str(target))
 
     def testInitMapping(self):
+        for target in self.targets | {self.genericConstructor}:
+            for keyType in self.getValidKeys(target):
+                # Init from dict
+                self.checkInitMapping(target, self.getTestData(keyType), msg=str(target))
+                # Init from GenericMap
+                self.checkInitMapping(target, target(self.getTestData(keyType)),
+                                      msg=str(target))
+
+    def testUnknownKeys(self):
+        with self.assertRaises(TypeError):
+            self.genericConstructor()
+        # Should not raise
+        self.genericConstructor(dtype=str)
+
+    def testMixedKeys(self):
+        badData = {"What do you get if you multiply six by nine?": "Ultimate Question",
+                   42: "Ultimate Answer",
+                   }
+        for target in self.targets | {self.genericConstructor}:
+            with self.assertRaises(TypeError):
+                target(badData)
+            with self.assertRaises(TypeError):
+                target(badData.items())
         for target in self.targets:
-            keyType = target.dtype
-            # Init from dict
-            self.checkInitMapping(target, self.getTestData(keyType), msg=str(target))
-            # Init from GenericMap
-            self.checkInitMapping(target, self.makeMap(target, self.getTestData(keyType)),
-                                  msg=str(target))
+            with self.assertRaises(TypeError):
+                target(**badData)
 
     def testFromKeys(self):
         for target in self.targets:
-            keyType = target.dtype
-            keys = self.getTestData(keyType).keys()
-            for value in self.getTestData(keyType).values():
-                self.checkFromKeys(target, keys, value,
-                                   msg=" class=%s, value=%r" % (target, value))
-            self.checkFromKeysDefault(target, keys, msg=" class=%s, no value" % (target))
+            for keyType in self.getValidKeys(target):
+                keys = self.getTestData(keyType).keys()
+                for value in self.getTestData(keyType).values():
+                    self.checkFromKeys(target, keys, value,
+                                       msg=" class=%s, value=%r" % (target, value))
+                self.checkFromKeysDefault(target, keys, msg=" class=%s, no value" % (target))
 
     def testCopy(self):
         for label, (mappingType, contents) in self.examples.items():
-            keyType = mappingType.dtype
-            mapping1 = self.makeMap(mappingType, contents)
-            mapping2 = mapping1.copy()
-            self.assertEqual(mapping1, mapping2, msg="%s" % label)
-            mapping1[keyType(42)] = "A random value!"
-            self.assertNotEqual(mapping1, mapping2, msg="%s" % label)
+            for keyType in self.getValidKeys(mappingType):
+                mapping1 = self.makeMap(mappingType, contents)
+                mapping2 = mapping1.copy()
+                self.assertEqual(mapping1, mapping2, msg="%s" % label)
+                mapping1[keyType(42)] = "A random value!"
+                self.assertNotEqual(mapping1, mapping2, msg="%s" % label)
 
     def testEquality(self):
         for label1, (mappingType1, contents1) in self.examples.items():
@@ -144,32 +164,32 @@ class SimpleGenericMapTestSuite(MutableGenericMapTestBaseClass):
 
     def testInsertItem(self):
         for target in self.targets:
-            keyType = target.dtype
-            self.checkInsertItem(target, self.getTestData(keyType), msg=str(target))
+            for keyType in self.getValidKeys(target):
+                self.checkInsertItem(target, self.getTestData(keyType), msg=str(target))
 
     def testSetdefault(self):
         for target in self.targets:
-            keyType = target.dtype
-            self.checkSetdefault(target, self.getTestData(keyType), msg=str(target))
+            for keyType in self.getValidKeys(target):
+                self.checkSetdefault(target, self.getTestData(keyType), msg=str(target))
 
     def testUpdateMapping(self):
         for target in self.targets:
-            keyType = target.dtype
-            # Update from dict
-            self.checkUpdateMapping(target, self.getTestData(keyType), msg=str(target))
-            # Update from GenericMap
-            self.checkUpdateMapping(target, self.makeMap(target, self.getTestData(keyType)),
-                                    msg=str(target))
+            for keyType in self.getValidKeys(target):
+                # Update from dict
+                self.checkUpdateMapping(target, self.getTestData(keyType), msg=str(target))
+                # Update from GenericMap
+                self.checkUpdateMapping(target, self.makeMap(target, self.getTestData(keyType)),
+                                        msg=str(target))
 
     def testUpdatePairs(self):
         for target in self.targets:
-            keyType = target.dtype
-            self.checkUpdatePairs(target, self.getTestData(keyType), msg=str(target))
+            for keyType in self.getValidKeys(target):
+                self.checkUpdatePairs(target, self.getTestData(keyType), msg=str(target))
 
     def testUpdateKwargs(self):
         for target in self.targets:
-            keyType = target.dtype
-            self.checkUpdateKwargs(target, self.getTestData(keyType), msg=str(target))
+            for keyType in self.getValidKeys(target):
+                self.checkUpdateKwargs(target, self.getTestData(keyType), msg=str(target))
 
     def testReplaceItem(self):
         for target in self.targets:
@@ -177,23 +197,23 @@ class SimpleGenericMapTestSuite(MutableGenericMapTestBaseClass):
 
     def testRemoveItem(self):
         for target in self.targets:
-            keyType = target.dtype
-            self.checkRemoveItem(target, self.getTestData(keyType), msg=str(target))
+            for keyType in self.getValidKeys(target):
+                self.checkRemoveItem(target, self.getTestData(keyType), msg=str(target))
 
     def testPop(self):
         for target in self.targets:
-            keyType = target.dtype
-            self.checkPop(target, self.getTestData(keyType), msg=str(target))
+            for keyType in self.getValidKeys(target):
+                self.checkPop(target, self.getTestData(keyType), msg=str(target))
 
     def testPopitem(self):
         for target in self.targets:
-            keyType = target.dtype
-            self.checkPopitem(target, self.getTestData(keyType), msg=str(target))
+            for keyType in self.getValidKeys(target):
+                self.checkPopitem(target, self.getTestData(keyType), msg=str(target))
 
     def testClear(self):
         for target in self.targets:
-            keyType = target.dtype
-            self.checkClear(target, self.getTestData(keyType), msg=str(target))
+            for keyType in self.getValidKeys(target):
+                self.checkClear(target, self.getTestData(keyType), msg=str(target))
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):

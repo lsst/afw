@@ -23,10 +23,10 @@ __all__ = ["SimpleGenericMap"]
 
 from lsst.utils import continueClass
 from ._typehandling import SimpleGenericMapS
-from ._GenericMap import MutableGenericMap
+from ._GenericMap import MutableGenericMap, AutoKeyMeta
 
 
-class SimpleGenericMap(MutableGenericMap):
+class SimpleGenericMap(MutableGenericMap, metaclass=AutoKeyMeta):
     """A `dict`-like `~collections.abc.MutableMapping` for use when sharing a
     map between C++ and Python.
 
@@ -48,8 +48,9 @@ class SimpleGenericMap(MutableGenericMap):
     ----------
     mapping : `collections.abc.Mapping`, optional
     iterable : iterable, optional
-    dtype : `type`
-        The type of key the map accepts.
+    dtype : `type`, optional
+        The type of key the map accepts. Not required if ``mapping`` or
+        ``iterable`` is provided.
     **kwargs
         Aside from the ``dtype`` keyword, a ``SimpleGenericMap`` takes the same
         input arguments as `dict`.

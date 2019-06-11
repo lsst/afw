@@ -117,3 +117,65 @@ class MutableGenericMap(GenericMap):
 
 MutableGenericMap.register(str, MutableGenericMapS)
 MutableMapping.register(MutableGenericMapS)
+
+
+class AutoKeyMeta(TemplateMeta):
+    """A metaclass for abstract mappings whose key type is implied by their
+    constructor arguments.
+
+    This metaclass requires that the mapping have a `dict`-like constructor,
+    i.e., it takes a mapping or an iterable of key-value pairs as its first
+    positional parameter.
+
+    This class differs from `~lsst.utils.TemplateMeta` only in that the dtype
+    (or equivalent) constructor keyword is optional. If it is omitted, the
+    class will attempt to infer it from the first argument.
+    """
+
+    def __call__(cls, *args, **kwargs):  # noqa N805, non-self first param
+        if len(cls.TEMPLATE_PARAMS) != 1:
+            raise ValueError("AutoKeyMeta requires exactly one template parameter")
+        dtypeKey = cls.TEMPLATE_PARAMS[0]
+        dtype = kwargs.get(dtypeKey, None)
+
+        # Try to infer dtype if not provided
+        if dtype is None and len(args) >= 1:
+            dtype = cls._guessKeyType(args[0])
+            if dtype is not None:
+                kwargs[dtypeKey] = dtype
+
+        return super().__call__(*args, **kwargs)
+
+    def _guessKeyType(cls, inputData):  # noqa N805, non-self first param
+        """Try to infer the key type of a map from its input.
+
+        Parameters
+        ----------
+        inputData : `~collections.abc.Mapping` or iterable of pairs
+            Any object that can be passed to a `dict`-like constructor. Keys
+            are assumed homogeneous (if not, a
+            `~lsst.afw.typehandling.GenericMap` constructor will raise
+            `TypeError` no matter what key type, if any, is provided).
+
+        Returns
+        -------
+        keyType : `type`
+            The type of the keys in ``inputData``, or `None` if the type could
+            not be inferred.
+        """
+        if inputData:
+            firstKey = None
+            if isinstance(inputData, Mapping):
+                # mapping to copy
+                firstKey = iter(inputData.keys()).__next__()
+            elif not isinstance(inputData, str):
+                # iterable of key-value pairs
+                try:
+                    firstKey = iter(inputData).__next__()[0]
+                except TypeError:
+                    # Not an iterable of pairs
+                    pass
+            if firstKey:
+                return type(firstKey)
+        # Any other input is either empty or an invalid input to dict-like constructors
+        return None
