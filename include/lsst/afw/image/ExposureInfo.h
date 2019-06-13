@@ -243,14 +243,14 @@ public:
             std::shared_ptr<TransmissionCurve const> const& transmissionCurve =
                     std::shared_ptr<TransmissionCurve>());
 
-    /// Copy constructor; deep-copies all components except the metadata.
+    /// Copy constructor; shares all components except the filter.
     ExposureInfo(ExposureInfo const& other);
     ExposureInfo(ExposureInfo&& other);
 
-    /// Copy constructor; deep-copies everything, possibly including the metadata.
+    /// Copy constructor; shares everything but the filter and possibly the metadata.
     ExposureInfo(ExposureInfo const& other, bool copyMetadata);
 
-    /// Assignment; deep-copies all components except the metadata.
+    /// Assignment; shares all components except the filter.
     ExposureInfo& operator=(ExposureInfo const& other);
     ExposureInfo& operator=(ExposureInfo&& other);
 
