@@ -283,6 +283,30 @@ private:
     };
 
     /**
+     * Add a Persistable object to FITS data.
+     *
+     * @param[out] data the FITS output data to update
+     * @param[in] object the object to store
+     * @param[in] key the FITS header keyword to contain a unique ID for the object
+     * @param[in] comment the comment for ``key`` in the FITS header
+     *
+     * @return the unique ID for the object, as stored with ``key``
+     *
+     * @throws lsst::pex::exceptions::InvalidParameterError Thrown if ``key`` contains the "." character.
+     * @exceptsafe Does not provide exception safety; ``data`` may be corrupted in
+     *             the event of an exception. No other side effects.
+     *
+     * @{
+     */
+    static int _addToArchive(FitsWriteData& data, table::io::Persistable const& object, std::string key,
+                             std::string comment);
+
+    static int _addToArchive(FitsWriteData& data, std::shared_ptr<table::io::Persistable const> const& object,
+                             std::string key, std::string comment);
+
+    /** @} */
+
+    /**
      *  Start the process of writing an exposure to FITS.
      *
      *  @param[in]  xy0   The origin of the exposure associated with this object, used to

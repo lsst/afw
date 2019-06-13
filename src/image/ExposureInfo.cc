@@ -129,6 +129,23 @@ void ExposureInfo::initApCorrMap() { _apCorrMap = std::make_shared<ApCorrMap>();
 
 ExposureInfo::~ExposureInfo() = default;
 
+int ExposureInfo::_addToArchive(FitsWriteData& data, table::io::Persistable const& object, std::string key,
+                                std::string comment) {
+    int componentId = data.archive.put(object);
+    data.metadata->set(key, componentId, comment);
+    return componentId;
+}
+
+int ExposureInfo::_addToArchive(FitsWriteData& data,
+                                std::shared_ptr<table::io::Persistable const> const& object, std::string key,
+                                std::string comment) {
+    // Don't delegate to Persistable const& version because OutputArchive::put
+    // has special handling of shared_ptr
+    int componentId = data.archive.put(object);
+    data.metadata->set(key, componentId, comment);
+    return componentId;
+}
+
 ExposureInfo::FitsWriteData ExposureInfo::_startWriteFits(lsst::geom::Point2I const& xy0) const {
     FitsWriteData data;
 
@@ -149,37 +166,30 @@ ExposureInfo::FitsWriteData ExposureInfo::_startWriteFits(lsst::geom::Point2I co
     //
     data.metadata->set("AR_HDU", 5, "HDU (1-indexed) containing the archive used to store ancillary objects");
     if (hasCoaddInputs()) {
-        int coaddInputsId = data.archive.put(getCoaddInputs());
-        data.metadata->set("COADD_INPUTS_ID", coaddInputsId, "archive ID for coadd inputs catalogs");
+        _addToArchive(data, getCoaddInputs(), "COADD_INPUTS_ID", "archive ID for coadd inputs catalogs");
     }
     if (hasApCorrMap()) {
-        int apCorrMapId = data.archive.put(getApCorrMap());
-        data.metadata->set("AP_CORR_MAP_ID", apCorrMapId, "archive ID for aperture correction map");
+        _addToArchive(data, getApCorrMap(), "AP_CORR_MAP_ID", "archive ID for aperture correction map");
     }
     if (hasPsf() && getPsf()->isPersistable()) {
-        int psfId = data.archive.put(getPsf());
-        data.metadata->set("PSF_ID", psfId, "archive ID for the Exposure's main Psf");
+        _addToArchive(data, getPsf(), "PSF_ID", "archive ID for the Exposure's main Psf");
     }
     if (hasWcs() && getWcs()->isPersistable()) {
-        int wcsId = data.archive.put(getWcs());
-        data.metadata->set("SKYWCS_ID", wcsId, "archive ID for the Exposure's main Wcs");
+        _addToArchive(data, getWcs(), "SKYWCS_ID", "archive ID for the Exposure's main Wcs");
     }
     if (hasValidPolygon() && getValidPolygon()->isPersistable()) {
-        int polygonId = data.archive.put(getValidPolygon());
-        data.metadata->set("VALID_POLYGON_ID", polygonId, "archive ID for the Exposure's valid polygon");
+        _addToArchive(data, getValidPolygon(), "VALID_POLYGON_ID",
+                      "archive ID for the Exposure's valid polygon");
     }
     if (hasTransmissionCurve() && getTransmissionCurve()->isPersistable()) {
-        int transmissionCurveId = data.archive.put(getTransmissionCurve());
-        data.metadata->set("TRANSMISSION_CURVE_ID", transmissionCurveId,
-                           "archive ID for the Exposure's transmission curve");
+        _addToArchive(data, getTransmissionCurve(), "TRANSMISSION_CURVE_ID",
+                      "archive ID for the Exposure's transmission curve");
     }
     if (hasDetector() && getDetector()->isPersistable()) {
-        int detectorId = data.archive.put(getDetector());
-        data.metadata->set("DETECTOR_ID", detectorId, "archive ID for the Exposure's Detector");
+        _addToArchive(data, getDetector(), "DETECTOR_ID", "archive ID for the Exposure's Detector");
     }
     if (hasPhotoCalib()) {
-        int photoCalibId = data.archive.put(getPhotoCalib());
-        data.metadata->set("PHOTOCALIB_ID", photoCalibId, "archive ID for photometric calibration");
+        _addToArchive(data, getPhotoCalib(), "PHOTOCALIB_ID", "archive ID for photometric calibration");
     }
 
     // LSST convention is that Wcs is in pixel coordinates (i.e relative to bottom left
