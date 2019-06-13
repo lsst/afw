@@ -86,6 +86,14 @@ class FitsTestCase(lsst.utils.tests.TestCase):
         # was undefined
         self.assertAlmostEqual(metadata.getScalar("DOM-WND"), 4.8)
 
+    def testReadBlankKeywordComment(self):
+        """Read a header that uses blank keyword comments."""
+        testFile = os.path.join(testPath, "data", "ticket20143.fits")
+        metadata = lsst.afw.fits.readMetadata(testFile)
+
+        self.assertEqual("---- Checksums ----", metadata["COMMENT"])
+        self.assertNotIn("", metadata, "Check empty strings as keys")
+
     def testIgnoreKeywords(self):
         """Check that certain keywords are ignored in read/write of headers"""
         # May not appear at all in the FITS file (cfitsio doesn't write these by default)

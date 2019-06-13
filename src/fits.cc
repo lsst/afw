@@ -930,6 +930,12 @@ void MetadataIterationFunctor::operator()(std::string const &key, std::string co
         add(key, comment, "");
     } else if (key == "COMMENT" && !(strip && boost::regex_match(comment, fitsDefinitionCommentRegex))) {
         add(key, comment, "");
+    } else if (key.empty() && value.empty()) {
+        // This is a blank keyword comment. Since comments do not retain
+        // their position on read there is nothing to be gained by storing
+        // this in the PropertyList as a blank keyword. Therefore store
+        // them with the other comments.
+        add("COMMENT", comment, "");
     } else if (value.empty()) {
         // do nothing for empty values that are comments
         // Otherwise write null value to PropertySet
