@@ -31,6 +31,7 @@
 #include "lsst/afw/table/io/OutputArchive.h"
 #include "lsst/afw/image/CoaddInputs.h"
 #include "lsst/afw/image/VisitInfo.h"
+#include "lsst/afw/typehandling/GenericMap.h"
 
 namespace lsst {
 namespace afw {
@@ -344,6 +345,10 @@ private:
     std::shared_ptr<ApCorrMap> _apCorrMap;
     std::shared_ptr<image::VisitInfo const> _visitInfo;
     std::shared_ptr<TransmissionCurve const> _transmissionCurve;
+
+    // Class invariant: all values in _components are Storable or shared_ptr<Storable>
+    // Class invariant: all pointers in _components are not null
+    std::unique_ptr<typehandling::MutableGenericMap<std::string>> _components;
 };
 }  // namespace image
 }  // namespace afw

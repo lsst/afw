@@ -32,9 +32,12 @@
 #include "lsst/afw/cameraGeom/Detector.h"
 #include "lsst/afw/image/TransmissionCurve.h"
 #include "lsst/afw/fits.h"
+#include "lsst/afw/typehandling/SimpleGenericMap.h"
 
 namespace {
 LOG_LOGGER _log = LOG_GET("afw.image.ExposureInfo");
+
+using MapClass = lsst::afw::typehandling::SimpleGenericMap<std::string>;
 }  // namespace
 
 namespace lsst {
@@ -84,7 +87,8 @@ ExposureInfo::ExposureInfo(std::shared_ptr<geom::SkyWcs const> const& wcs,
           _coaddInputs(coaddInputs),
           _apCorrMap(_cloneApCorrMap(apCorrMap)),
           _visitInfo(visitInfo),
-          _transmissionCurve(transmissionCurve) {}
+          _transmissionCurve(transmissionCurve),
+          _components(std::make_unique<MapClass>()) {}
 
 ExposureInfo::ExposureInfo(ExposureInfo const& other) : ExposureInfo(other, false) {}
 
@@ -102,7 +106,9 @@ ExposureInfo::ExposureInfo(ExposureInfo const& other, bool copyMetadata)
           _coaddInputs(other._coaddInputs),
           _apCorrMap(_cloneApCorrMap(other._apCorrMap)),
           _visitInfo(other._visitInfo),
-          _transmissionCurve(other._transmissionCurve) {
+          _transmissionCurve(other._transmissionCurve),
+          // ExposureInfos can (historically) share objects, but should each have their own pointers to them
+          _components(std::make_unique<MapClass>(*(other._components))) {
     if (copyMetadata) _metadata = _metadata->deepCopy();
 }
 
@@ -119,6 +125,8 @@ ExposureInfo& ExposureInfo::operator=(ExposureInfo const& other) {
         _apCorrMap = _cloneApCorrMap(other._apCorrMap);
         _visitInfo = other._visitInfo;
         _transmissionCurve = other._transmissionCurve;
+        // ExposureInfos can (historically) share objects, but should each have their own pointers to them
+        _components = std::make_unique<MapClass>(*(other._components));
     }
     return *this;
 }
