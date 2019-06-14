@@ -186,10 +186,6 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
 
         afwDetect.Footprint()
 
-    def testId(self):
-        """Test uniqueness of IDs"""
-        self.assertNotEqual(self.foot.getId(), afwDetect.Footprint().getId())
-
     def testIntersectMask(self):
         bbox = lsst.geom.BoxI(lsst.geom.PointI(0, 0), lsst.geom.ExtentI(10))
         fp = afwDetect.Footprint(afwGeom.SpanSet(bbox))
@@ -324,7 +320,7 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
             foot.getRegion().getWidth(), foot.getRegion().getHeight()))
         idImage.set(0)
 
-        foot.spans.setImage(idImage, foot.getId())
+        foot.spans.setImage(idImage, 42)
 
         if display:
             disp = afwDisplay.Display(frame=2)
@@ -1143,8 +1139,8 @@ class FootprintSetTestCase(unittest.TestCase):
         idImage = afwImage.ImageU(self.ms.getDimensions())
         idImage.set(0)
 
-        for foot in objects:
-            foot.spans.setImage(idImage, foot.getId())
+        for i, foot in enumerate(objects):
+            foot.spans.setImage(idImage, i + 1)
 
         if False:
             afwDisplay.Display(frame=2).mtv(idImage, title=self._testMethodName + " image")
@@ -1152,8 +1148,7 @@ class FootprintSetTestCase(unittest.TestCase):
         for i in range(len(objects)):
             for sp in objects[i].getSpans():
                 for x in range(sp.getX0(), sp.getX1() + 1):
-                    self.assertEqual(idImage[x, sp.getY(), afwImage.LOCAL],
-                                     objects[i].getId())
+                    self.assertEqual(idImage[x, sp.getY(), afwImage.LOCAL], i + 1)
 
     def testFootprintSetImageId(self):
         """Check that we can insert a FootprintSet into an Image, setting relative IDs"""

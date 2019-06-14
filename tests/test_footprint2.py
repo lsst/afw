@@ -137,8 +137,8 @@ class FootprintSetTestCase(unittest.TestCase):
         idImage = afwImage.ImageU(self.im.getDimensions())
         idImage.set(0)
 
-        for foot in objects:
-            foot.spans.setImage(idImage, foot.getId())
+        for i, foot in enumerate(objects):
+            foot.spans.setImage(idImage, i + 1)
 
         if False:
             afwDisplay.Display(frame=2).mtv(idImage, title=self._testMethodName + " image")
@@ -146,8 +146,7 @@ class FootprintSetTestCase(unittest.TestCase):
         for i in range(len(objects)):
             for sp in objects[i].getSpans():
                 for x in range(sp.getX0(), sp.getX1() + 1):
-                    self.assertEqual(idImage[x, sp.getY(), afwImage.LOCAL],
-                                     objects[i].getId())
+                    self.assertEqual(idImage[x, sp.getY(), afwImage.LOCAL], i + 1)
 
     def testFootprintSetImageId(self):
         """Check that we can insert a FootprintSet into an Image, setting relative IDs"""
@@ -494,23 +493,10 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
             if npeak is None:
                 npeak = len(self.peaks[i])
 
-            if npeak != len(foot.getPeaks()):
-                print("RHL", foot.repr())
-                # print "RHL", [(p.repr().split(":")[0], p.getIx(), p.getIy())
-                # for p in foot.getPeaks()]
-                print("RHL", [(p.getId(), p.getIx(), p.getIy())
-                              for p in foot.getPeaks()])
-                print("RHL", [p[0:2] for p in self.peaks[i]])
-
             self.assertEqual(len(foot.getPeaks()), npeak)
 
             for j, p in enumerate(foot.getPeaks()):
                 trueX, trueY, peakVal = self.peaks[i][j]
-                if (p.getIx(), p.getIy()) != (trueX, trueY):
-                    print("RHL", [(pp.getId(), pp.getIx(), pp.getIy())
-                                  for pp in foot.getPeaks()])
-                    print("RHL", [pp[0:2] for pp in self.peaks[i]])
-
                 self.assertEqual((p.getIx(), p.getIy()), (trueX, trueY))
 
     def testSinglePeak(self):
