@@ -213,6 +213,89 @@ public:
     /// Set the exposure's transmission curve.
     void setTransmissionCurve(std::shared_ptr<TransmissionCurve const> tc) { _transmissionCurve = tc; }
 
+    /**
+     * Add a generic component to the ExposureInfo.
+     *
+     * If another component is already present under the key, it is
+     * overwritten. If a component of a different type is present under the
+     * same name, this method raises an exception.
+     *
+     * @tparam T a subclass of typehandling::Storable
+     *
+     * @param key a strongly typed identifier for the component
+     * @param object the object to add.
+     *
+     * @throws pex::exceptions::TypeError Thrown if a component of a
+     *      different type is present under the requested name.
+     * @throws pex::exceptions::RuntimeError Thrown if the insertion failed for
+     *      implementation-dependent reasons.
+     * @exceptsafe Provides basic exception safety (a pre-existing component
+     *             may be removed).
+     *
+     * @note if `object` is a null pointer, then `hasComponent(key)` shall
+     *       return `false` after this method returns. This is for
+     *       compatibility with old ExposureInfo idioms, which often use
+     *       assignment of null to indicate no data.
+     */
+    // non-shared_ptr components are incompatible with table::io,
+    // they may be supported later
+    template <class T>
+    void setComponent(typehandling::Key<std::string, std::shared_ptr<T>> const& key,
+                      std::shared_ptr<T> const& object) {
+        static_assert(std::is_base_of<typehandling::Storable, T>::value, "T must be a Storable");
+        // "No data" always represented internally by absent key-value pair, not by mapping to null
+        if (object != nullptr) {
+            _setStorableComponent(key, object);
+        } else {
+            removeComponent(key);
+        }
+    }
+
+    /**
+     * Test whether a generic component is defined.
+     *
+     * @param key a strongly typed identifier for the component
+     * @return `true` if there is a component with `key`, `false` otherwise
+     *
+     * @exceptsafe Provides strong exception safety.
+     */
+    template <class T>
+    bool hasComponent(typehandling::Key<std::string, T> const& key) const {
+        return _components->contains(key);
+    }
+
+    /**
+     * Retrieve a generic component from the ExposureInfo.
+     *
+     * @param key a strongly typed identifier for the component
+     * @return the component identified by that key, or a null pointer if no
+     *         such component exists.
+     *
+     * @exceptsafe Provides strong exception safety.
+     */
+    template <class T>
+    std::shared_ptr<T> getComponent(typehandling::Key<std::string, std::shared_ptr<T>> const& key) const {
+        try {
+            return _components->at(key);
+        } catch (pex::exceptions::OutOfRangeError const& e) {
+            return nullptr;
+        }
+    }
+
+    /**
+     * Clear a generic component from the ExposureInfo.
+     *
+     * @param key a strongly typed identifier for the component. Only
+     *            components of a compatible type are removed.
+     * @returns `true` if a component was removed, `false` otherwise.
+     *
+     * @exceptsafe Provides strong exception safety.
+     */
+    template <class T>
+    bool removeComponent(typehandling::Key<std::string, T> const& key) {
+        return _components->erase(key);
+    }
+
     /// Get the version of FITS serialization that this ExposureInfo understands.
     static int getFitsSerializationVersion();
 
@@ -334,6 +417,29 @@ private:
 
     static std::shared_ptr<ApCorrMap> _cloneApCorrMap(std::shared_ptr<ApCorrMap const> apCorrMap);
 
+    // Implementation of setComponent, assumes T extends Storable or T = shared_ptr<? extends Storable>
+    template <class T>
+    void _setStorableComponent(typehandling::Key<std::string, T> const& key, T const& object) {
+        if (_components->contains(key)) {
+            _components->erase(key);
+        } else if (_components->contains(key.getId())) {
+            std::stringstream buffer;
+            buffer << "Map has a key that conflicts with " << key;
+            throw LSST_EXCEPT(pex::exceptions::TypeError, buffer.str());
+        }
+        try {
+            bool success = _components->insert(key, object);
+            if (!success) {
+                throw LSST_EXCEPT(
+                        pex::exceptions::RuntimeError,
+                        "Insertion failed for unknown reasons. There may be something in the logs.");
+            }
+        } catch (std::exception const& e) {
+            std::throw_with_nested(
+                    LSST_EXCEPT(pex::exceptions::RuntimeError, "Insertion raised an exception."));
+        }
+    }
+
     std::shared_ptr<geom::SkyWcs const> _wcs;
     std::shared_ptr<detection::Psf> _psf;
     std::shared_ptr<PhotoCalib const> _photoCalib;
@@ -346,7 +452,9 @@ private:
     std::shared_ptr<image::VisitInfo const> _visitInfo;
     std::shared_ptr<TransmissionCurve const> _transmissionCurve;
 
-    // Class invariant: all values in _components are Storable or shared_ptr<Storable>
+    // Class invariant: all values in _components are shared_ptr<Storable>
+    // This is required for table::io persistence to work correctly;
+    //     other persistence frameworks may let us support other types
     // Class invariant: all pointers in _components are not null
     std::unique_ptr<typehandling::MutableGenericMap<std::string>> _components;
 };

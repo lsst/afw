@@ -79,6 +79,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         self.md = maskedImageMD
         self.psf = DummyPsf(2.0)
         self.detector = DetectorWrapper().detector
+        self.extras = {"misc": DummyPsf(3.5)}
 
         self.exposureBlank = afwImage.ExposureF()
         self.exposureMiOnly = afwImage.makeExposure(maskedImage)
@@ -98,6 +99,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         del self.wcs
         del self.psf
         del self.detector
+        del self.extras
 
         del self.exposureBlank
         del self.exposureMiOnly
@@ -252,6 +254,8 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         exposureInfo.setCoaddInputs(None)
         exposureInfo.setVisitInfo(None)
         exposureInfo.setApCorrMap(None)
+        for key in self.extras:
+            exposureInfo.setComponent(key, None)
 
     def testSetExposureInfo(self):
         exposureInfo = afwImage.ExposureInfo()
@@ -336,6 +340,17 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         self.assertTrue(exposure.hasPsf())
 
         exposure.setPsf(DummyPsf(1.0))  # we can reset the Psf
+
+        # extras next
+        info = exposure.getInfo()
+        for key, value in self.extras.items():
+            self.assertFalse(info.hasComponent(key))
+            self.assertIsNone(info.getComponent(key))
+            info.setComponent(key, value)
+            self.assertTrue(info.hasComponent(key))
+            self.assertEqual(info.getComponent(key), value)
+            info.removeComponent(key)
+            self.assertFalse(info.hasComponent(key))
 
         # Test that we can set the MaskedImage and WCS of an Exposure
         # that already has both
@@ -501,6 +516,13 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
             self.assertFalse(e2.getPsf())
         else:
             self.assertEqual(e1.getPsf().getValue(), e2.getPsf().getValue())
+        # Check extra components
+        i1 = e1.getInfo()
+        i2 = e2.getInfo()
+        for key in self.extras:
+            self.assertEqual(i1.hasComponent(key), i2.hasComponent(key))
+            if i1.hasComponent(key):
+                self.assertEqual(i1.getComponent(key), i2.getComponent(key))
 
     def testCopyExposure(self):
         """Copy an Exposure (maybe changing type)"""
@@ -510,6 +532,9 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         exposureU.setDetector(self.detector)
         exposureU.setFilter(afwImage.Filter("g"))
         exposureU.setPsf(DummyPsf(4.0))
+        infoU = exposureU.getInfo()
+        for key, value in self.extras.items():
+            infoU.setComponent(key, value)
 
         exposureF = exposureU.convertF()
         self.cmpExposure(exposureF, exposureU)

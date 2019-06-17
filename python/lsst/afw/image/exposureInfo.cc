@@ -34,6 +34,7 @@
 #include "lsst/afw/image/VisitInfo.h"
 #include "lsst/afw/image/TransmissionCurve.h"
 #include "lsst/afw/image/ExposureInfo.h"
+#include "lsst/afw/typehandling/Storable.h"
 
 namespace py = pybind11;
 using namespace py::literals;
@@ -44,6 +45,43 @@ namespace image {
 namespace {
 
 using PyExposureInfo = py::class_<ExposureInfo, std::shared_ptr<ExposureInfo>>;
+
+// Template methods where we can use pybind11's overload resolution (T is input)
+template <class T>
+void declareGenericMethods(PyExposureInfo &cls) {
+    using Class = PyExposureInfo::type;
+    cls.def("setComponent",
+            [](PyExposureInfo::type &self, std::string const &key, T const &object) {
+                self.setComponent(typehandling::makeKey<T>(key), object);
+            },
+            "key"_a, "object"_a);
+}
+// Template methods where we need to provide a unified interface (T is not input)
+void declareGenericMethodsMerged(PyExposureInfo &cls) {
+    using typehandling::Storable;
+    using Class = PyExposureInfo::type;
+    cls.def("hasComponent",
+            [](Class const &self, std::string const &key) {
+                return self.hasComponent(typehandling::makeKey<std::shared_ptr<Storable const>>(key));
+            },
+            "key"_a);
+    cls.def("getComponent",
+            [](Class const &self, std::string const &key) -> py::object {
+                auto sharedKey = typehandling::makeKey<std::shared_ptr<Storable const>>(key);
+                // Cascading if-elses to support other types in the future
+                if (self.hasComponent(sharedKey)) {
+                    return py::cast(self.getComponent(sharedKey));
+                } else {
+                    return py::none();
+                }
+            },
+            "key"_a);
+    cls.def("removeComponent",
+            [](Class &self, std::string const &key) {
+                self.removeComponent(typehandling::makeKey<std::shared_ptr<Storable const>>(key));
+            },
+            "key"_a);
+}
 
 PYBIND11_MODULE(exposureInfo, mod) {
     py::module::import("lsst.daf.base");
@@ -100,6 +138,9 @@ PYBIND11_MODULE(exposureInfo, mod) {
 
     cls.def("getFilter", &ExposureInfo::getFilter);
     cls.def("setFilter", &ExposureInfo::setFilter, "filter"_a);
+
+    declareGenericMethods<std::shared_ptr<typehandling::Storable const>>(cls);
+    declareGenericMethodsMerged(cls);
 
     // Deprecated versions
     cls.def("hasCalib", &ExposureInfo::hasCalib);
