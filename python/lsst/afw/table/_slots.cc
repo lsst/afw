@@ -68,7 +68,8 @@ void declareSlotDefinitionSubclass(WrapperCollection &wrappers, std::string cons
 }  // namespace
 
 void wrapSlots(WrapperCollection &wrappers) {
-    wrappers.addSignatureDependency("lsst.afw.geom.ellipses");
+    // TODO: uncomment once afw.geom uses WrapperCollection
+    // wrappers.addSignatureDependency("lsst.afw.geom.ellipses");
 
     declareSlotDefinition(wrappers);
     declareSlotDefinitionSubclass<FluxSlotDefinition>(wrappers, "Flux");

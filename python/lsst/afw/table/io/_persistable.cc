@@ -37,7 +37,8 @@ namespace io {
 using PyPersistable = py::class_<Persistable, std::shared_ptr<Persistable>>;
 
 void wrapPersistable(utils::python::WrapperCollection &wrappers) {
-    wrappers.addSignatureDependency("lsst.afw.fits");
+    // TODO: uncomment once afw.fits uses WrapperCollection
+    // wrappers.addSignatureDependency("lsst.afw.fits");
 
     wrappers.wrapType(PyPersistable(wrappers.module, "Persistable"), [](auto &mod, auto &cls) {
         cls.def("writeFits",

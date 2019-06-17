@@ -190,7 +190,8 @@ PySourceColumnView declareSourceColumnView(WrapperCollection &wrappers) {
 }  // namespace
 
 void wrapSource(WrapperCollection &wrappers) {
-    wrappers.addSignatureDependency("lsst.afw.geom.ellipses");
+    // TODO: uncomment once afw.geom uses WrapperCollection
+    // wrappers.addSignatureDependency("lsst.afw.geom.ellipses");
 
     // SourceFitsFlags enum values are used as integer masks, so wrap as attributes instead of an enum
     // static_cast is required to avoid an import error (py::cast and py::int_ do not work by themselves

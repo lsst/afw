@@ -614,7 +614,7 @@ class MultibandExposureTestCase(lsst.utils.tests.TestCase):
         filters = self.exposure.filters
         newExposure = MultibandExposure.fromExposures(filters, exposures)
         for exposure in newExposure.singles:
-            self.assertNotEqual(exposure.getPsf(), None)
+            self.assertIsNotNone(exposure.getPsf())
 
     def testFilterSlicing(self):
         _testMaskedImageFilters(self, self.exposure, ExposureF)

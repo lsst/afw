@@ -199,7 +199,8 @@ static void declareCovarianceMatrixKey(WrapperCollection &wrappers, const ::std:
 }  // namespace
 
 void wrapAggregates(WrapperCollection &wrappers) {
-    wrappers.addSignatureDependency("lsst.afw.geom.ellipses");
+    // TODO: uncomment once afw.geom uses WrapperCollection
+    // wrappers.addSignatureDependency("lsst.afw.geom.ellipses");
 
     wrappers.wrapType(py::enum_<CoordinateType>(wrappers.module, "CoordinateType"), [](auto &mod, auto &enm) {
         enm.value("PIXEL", CoordinateType::PIXEL);

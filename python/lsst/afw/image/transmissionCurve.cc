@@ -27,6 +27,7 @@
 
 #include "ndarray/pybind11.h"
 
+#include "lsst/afw/typehandling/Storable.h"
 #include "lsst/afw/image/TransmissionCurve.h"
 #include "lsst/afw/table/io/python.h"
 
@@ -39,7 +40,7 @@ namespace image {
 namespace {
 
 using PyTransmissionCurve =
-    py::class_<TransmissionCurve, std::shared_ptr<TransmissionCurve>>;
+        py::class_<TransmissionCurve, std::shared_ptr<TransmissionCurve>, typehandling::Storable>;
 
 PyTransmissionCurve declare(py::module & mod) {
     return PyTransmissionCurve(mod, "TransmissionCurve");
@@ -80,6 +81,8 @@ void define(PyTransmissionCurve & cls) {
 }
 
 PYBIND11_MODULE(transmissionCurve, mod) {
+    // import inheritance dependencies
+    py::module::import("lsst.afw.typehandling");
     // then declare classes
     auto cls = declare(mod);
     // then import dependencies used in method signatures
