@@ -473,7 +473,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
 
             psf = readExposure.getPsf()
             self.assertIsNotNone(psf)
-            self.assertEqual(psf.getValue(), self.psf.getValue())
+            self.assertEqual(psf, self.psf)
 
     def checkWcs(self, parentExposure, subExposure):
         """Compare WCS at corner points of a sub-exposure and its parent exposure
@@ -515,7 +515,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         if not e1.getPsf():
             self.assertFalse(e2.getPsf())
         else:
-            self.assertEqual(e1.getPsf().getValue(), e2.getPsf().getValue())
+            self.assertEqual(e1.getPsf(), e2.getPsf())
         # Check extra components
         i1 = e1.getInfo()
         i2 = e2.getInfo()

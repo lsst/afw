@@ -147,4 +147,7 @@ PYBIND11_MODULE(testTableArchivesLib, mod) {
     cls.def("resized", &DummyPsf::resized);
     cls.def("isPersistable", &DummyPsf::isPersistable);
     cls.def("getValue", &DummyPsf::getValue);
+    cls.def("__eq__",
+            [](DummyPsf const& self, DummyPsf const& other) { return self.getValue() == other.getValue(); },
+            py::is_operator());
 }
