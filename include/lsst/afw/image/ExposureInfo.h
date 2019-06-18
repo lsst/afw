@@ -415,6 +415,14 @@ private:
      */
     void _finishWriteFits(fits::Fits& fitsfile, FitsWriteData const& data) const;
 
+    /**
+     * GenericMap visitor for saving Storable objects
+     *
+     * Consistent with ExposureInfo's original behavior, any Storables that are
+     * not persistable are silently ignored.
+     */
+    class StorablePersister;
+
     static std::shared_ptr<ApCorrMap> _cloneApCorrMap(std::shared_ptr<ApCorrMap const> apCorrMap);
 
     // Implementation of setComponent, assumes T extends Storable or T = shared_ptr<? extends Storable>

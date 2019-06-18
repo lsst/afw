@@ -215,6 +215,13 @@ HDU 0
      -
      - Archive ID for the Exposure's valid polygon
 
+   * - ``ARCHIVE_ID_[name]``
+     - int
+     -
+     - `getComponent("[name]")`
+
+       Archive ID for an arbitrary Exposure component
+
 HDUs 1 to 3
 ===========
 

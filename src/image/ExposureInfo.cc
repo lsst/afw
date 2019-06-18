@@ -154,6 +154,40 @@ int ExposureInfo::_addToArchive(FitsWriteData& data,
     return componentId;
 }
 
+class ExposureInfo::StorablePersister final {
+public:
+    explicit StorablePersister(FitsWriteData& data) : data(data) {}
+
+    void operator()(std::string key, std::shared_ptr<typehandling::Storable const> const& object) {
+        if (object && object->isPersistable()) {
+            std::string comment = _getHeaderComment(key);
+            // Store archive ID in two header keys:
+            //     - old-style key for backwards compatibility,
+            //     - and new-style key because it's much safer to parse
+            int id = _addToArchive(data, object, _getOldHeaderKey(key), comment);
+            data.metadata->set(_getNewHeaderKey(key), id, comment);
+        }
+    }
+
+    template <typename T>
+    void operator()(std::string key, T const&) {
+        std::stringstream buffer;
+        buffer << "ExposureInfo::_components may only contain shared_ptr<Storable> values. "
+               << "Invalid key: " << key;
+        throw LSST_EXCEPT(pex::exceptions::LogicError, buffer.str());
+    }
+
+private:
+    std::string _getOldHeaderKey(std::string mapKey) { return mapKey + "_ID"; }
+    std::string _getNewHeaderKey(std::string mapKey) { return "ARCHIVE_ID_" + mapKey; }
+
+    std::string _getHeaderComment(std::string mapKey) {
+        return "archive ID for generic component '" + mapKey + "'";
+    }
+
+    FitsWriteData& data;
+};
+
 ExposureInfo::FitsWriteData ExposureInfo::_startWriteFits(lsst::geom::Point2I const& xy0) const {
     FitsWriteData data;
 
@@ -199,6 +233,7 @@ ExposureInfo::FitsWriteData ExposureInfo::_startWriteFits(lsst::geom::Point2I co
     if (hasPhotoCalib()) {
         _addToArchive(data, getPhotoCalib(), "PHOTOCALIB_ID", "archive ID for photometric calibration");
     }
+    _components->apply(StorablePersister(data));
 
     // LSST convention is that Wcs is in pixel coordinates (i.e relative to bottom left
     // corner of parent image, if any). The Wcs/Fits convention is that the Wcs is in

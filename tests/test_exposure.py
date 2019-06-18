@@ -458,6 +458,10 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         photoCalib = afwImage.PhotoCalib(1e-10, 1e-12)
         mainExposure.setPhotoCalib(photoCalib)
 
+        mainInfo = mainExposure.getInfo()
+        for key, value in self.extras.items():
+            mainInfo.setComponent(key, value)
+
         with lsst.utils.tests.getTempFilePath(".fits") as tmpFile:
             mainExposure.writeFits(tmpFile)
 
@@ -470,6 +474,10 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
                              readExposure.getFilter().getName())
 
             self.assertEqual(photoCalib, readExposure.getPhotoCalib())
+
+            readInfo = readExposure.getInfo()
+            for key, value in self.extras.items():
+                self.assertEqual(value, readInfo.getComponent(key))
 
             psf = readExposure.getPsf()
             self.assertIsNotNone(psf)
