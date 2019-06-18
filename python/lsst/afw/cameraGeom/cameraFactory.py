@@ -76,8 +76,10 @@ def addDetectorBuilderFromConfig(cameraBuilder, detectorConfig, amplifiers, foca
         )
     )
 
-    for ampBuilder in amplifiers:
-        detectorBuilder.append(ampBuilder)
+    for amp in amplifiers:
+        #        import pdb
+        #        pdb.set_trace()
+        detectorBuilder.append(amp.rebuild())
 
     transforms = makeTransformDict(detectorConfig.transformDict.transforms)
 
