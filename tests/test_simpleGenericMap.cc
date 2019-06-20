@@ -53,6 +53,7 @@ public:
      * * `KEY3: VALUE3`
      * * `KEY4: std::shared_ptr<>(VALUE4)`
      * * `KEY5: VALUE5`
+     * * `KEY6: VALUE6`
      */
     virtual std::unique_ptr<GenericMap<int>> makeGenericMap() const {
         auto map = std::make_unique<SimpleGenericMap<int>>();
@@ -62,6 +63,7 @@ public:
         map->insert(test::KEY3, test::VALUE3);
         map->insert(test::KEY4, std::make_shared<test::SimpleStorable>(test::VALUE4));
         map->insert(test::KEY5, test::VALUE5);
+        map->insert(test::KEY6, test::VALUE6);
         return map;
     }
 

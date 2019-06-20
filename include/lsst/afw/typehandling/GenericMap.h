@@ -594,6 +594,10 @@ private:
         try {
             auto foo = unsafeLookup(key.getId());
             auto pointer = boost::get<std::shared_ptr<Storable> const&>(foo);
+            if (pointer == nullptr) {  // dynamic_cast not helpful
+                return nullptr;
+            }
+
             std::shared_ptr<T> typedPointer = std::dynamic_pointer_cast<T>(pointer);
             // shared_ptr can be empty without being null. dynamic_pointer_cast
             // only promises result of failed cast is empty, so test for that
@@ -661,6 +665,9 @@ private:
         auto foo = unsafeLookup(key.getId());
         try {
             auto pointer = boost::get<std::shared_ptr<Storable> const&>(foo);
+            if (pointer == nullptr) {  // Can't confirm type with dynamic_cast
+                return true;
+            }
             std::shared_ptr<T> typedPointer = std::dynamic_pointer_cast<T>(pointer);
             // shared_ptr can be empty without being null. dynamic_pointer_cast
             // only promises result of failed cast is empty, so test for that
