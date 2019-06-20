@@ -222,10 +222,10 @@ constexpr bool IS_SMART_PTR<T, std::enable_if_t<std::is_object<typename T::eleme
  * A GenericMap may contain primitive types, strings, Storable, and shared pointers to Storable as
  * values. It does not support unique pointers to Storable because such pointers are read destructively. For
  * safety reasons, it may not contain references, C-style pointers, or arrays to any type. Due to
- * implementation restrictions, `const` types (particularly pointers to `const` Storable) are not
+ * implementation restrictions, `const` types (except pointers to `const` Storable) are not
  * currently supported.
  */
-// TODO: const keys should be possible in C++17 with std::variant
+// TODO: correctly handling const vs. non-const keys should be possible in C++17 with std::variant
 template <typename K>
 class GenericMap {
 public:
@@ -415,7 +415,7 @@ public:
      *      * either `double` or `double const&`
      *      * `std::string const&`
      *      * `Storable const&`
-     *      * `std::shared_ptr<Storable>`
+     *      * `std::shared_ptr<Storable const>`
      *
      * @note This implementation calls @ref keys, then calls @ref unsafeLookup
      *       for each key before passing the result to `visitor`.
@@ -440,7 +440,7 @@ public:
      *             std::cout << "," << std::endl;
      *         }
      *
-     *         void operator()(K const& key, std::shared_ptr<Storable> value) {
+     *         void operator()(K const& key, std::shared_ptr<Storable const> value) {
      *             if (value != nullptr) {
      *                 operator()(key, *value);
      *             } else {
@@ -500,7 +500,7 @@ protected:
      * Keys of any subclass of Storable are implemented using PolymorphicValue to preserve type.
      */
     using StorableType = boost::variant<bool, std::int32_t, std::int64_t, float, double, std::string,
-                                        PolymorphicValue, std::shared_ptr<Storable>>;
+                                        PolymorphicValue, std::shared_ptr<Storable const>>;
 
     /**
      * A type-agnostic reference to the value stored inside the map.
@@ -589,11 +589,11 @@ private:
     // shared_ptr<Storable>
     template <typename T, typename std::enable_if_t<std::is_base_of<Storable, T>::value, int> = 0>
     std::shared_ptr<T> _at(Key<K, std::shared_ptr<T>> const& key) const {
-        static_assert(!std::is_const<T>::value,
-                      "Due to implementation constraints, const keys are not supported.");
+        static_assert(std::is_const<T>::value,
+                      "Due to implementation constraints, pointers to non-const are not supported.");
         try {
             auto foo = unsafeLookup(key.getId());
-            auto pointer = boost::get<std::shared_ptr<Storable> const&>(foo);
+            auto pointer = boost::get<std::shared_ptr<Storable const> const&>(foo);
             if (pointer == nullptr) {  // dynamic_cast not helpful
                 return nullptr;
             }
@@ -657,6 +657,8 @@ private:
     // shared_ptr<Storable>
     template <typename T, typename std::enable_if_t<std::is_base_of<Storable, T>::value, int> = 0>
     bool _contains(Key<K, std::shared_ptr<T>> const& key) const {
+        static_assert(std::is_const<T>::value,
+                      "Due to implementation constraints, pointers to non-const are not supported.");
         // Avoid actually getting and casting an object, if at all possible
         if (!contains(key.getId())) {
             return false;
@@ -664,7 +666,7 @@ private:
 
         auto foo = unsafeLookup(key.getId());
         try {
-            auto pointer = boost::get<std::shared_ptr<Storable> const&>(foo);
+            auto pointer = boost::get<std::shared_ptr<Storable const> const&>(foo);
             if (pointer == nullptr) {  // Can't confirm type with dynamic_cast
                 return true;
             }

@@ -61,7 +61,7 @@ public:
         map->insert(test::KEY1, test::VALUE1);
         map->insert<double>(test::KEY2, test::VALUE2);
         map->insert(test::KEY3, test::VALUE3);
-        map->insert(test::KEY4, std::make_shared<test::SimpleStorable>(test::VALUE4));
+        map->insert(test::KEY4, std::make_shared<test::SimpleStorable const>(test::VALUE4));
         map->insert(test::KEY5, test::VALUE5);
         map->insert(test::KEY6, test::VALUE6);
         return map;

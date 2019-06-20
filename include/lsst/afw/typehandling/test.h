@@ -120,12 +120,12 @@ auto const KEY2 = makeKey<double>(2);
 int const VALUE2 = VALUE1;
 auto const KEY3 = makeKey<std::string>(3);
 std::string const VALUE3 = "How many roads must a man walk down?";
-auto const KEY4 = makeKey<std::shared_ptr<SimpleStorable>>(4);
+auto const KEY4 = makeKey<std::shared_ptr<SimpleStorable const>>(4);
 auto const VALUE4 = SimpleStorable();
 auto const KEY5 = makeKey<ComplexStorable>(5);
 auto const VALUE5 = ComplexStorable(-100.0);
-auto const KEY6 = makeKey<std::shared_ptr<Storable>>(6);
-auto const VALUE6 = std::shared_ptr<Storable>();
+auto const KEY6 = makeKey<std::shared_ptr<Storable const>>(6);
+auto const VALUE6 = std::shared_ptr<Storable const>();
 }  // namespace
 
 /**
@@ -262,7 +262,9 @@ BOOST_TEST_CASE_TEMPLATE_FUNCTION(TestConstVisitor, GenericMapFactory) {
         void operator()(int, double value) { results.push_back(universalToString(value)); }
         void operator()(int, std::string const& value) { results.push_back(universalToString(value)); }
         void operator()(int, Storable const& value) { results.push_back(universalToString(value)); }
-        void operator()(int, std::shared_ptr<Storable> value) { results.push_back(universalToString(value)); }
+        void operator()(int, std::shared_ptr<Storable const> value) {
+            results.push_back(universalToString(value));
+        }
     } printer;
     map->apply(printer);
     BOOST_REQUIRE(printer.results.size() == expected.size());
@@ -302,7 +304,7 @@ BOOST_TEST_CASE_TEMPLATE_FUNCTION(TestModifyingVoidVisitor, GenericMapFactory) {
                 *complexStorable = 42;
             }
         }
-        void operator()(int, std::shared_ptr<Storable>) {}
+        void operator()(int, std::shared_ptr<Storable const>) {}
     } grower;
     map->apply(grower);
     std::vector<int> newKeys = map->keys();
@@ -358,7 +360,7 @@ BOOST_TEST_CASE_TEMPLATE_FUNCTION(TestModifyingReturningVisitor, GenericMapFacto
             }
             return key;
         }
-        int operator()(int key, std::shared_ptr<Storable>) { return key; }
+        int operator()(int key, std::shared_ptr<Storable const>) { return key; }
     } grower;
     std::vector<int> editedKeys = map->apply(grower);
     BOOST_TEST(editedKeys == originalKeys);
@@ -391,11 +393,11 @@ BOOST_TEST_CASE_TEMPLATE_FUNCTION(TestMutableEquals, GenericMapFactory) {
     map2->insert(primitiveKey, 42);
     BOOST_CHECK(*map1 == *map2);
 
-    auto sharedKey = makeKey<std::shared_ptr<SimpleStorable>>("shared"s);
-    auto common = std::make_shared<SimpleStorable>(VALUE4);
+    auto sharedKey = makeKey<std::shared_ptr<SimpleStorable const>>("shared"s);
+    auto common = std::make_shared<SimpleStorable const>(VALUE4);
     map1->insert(sharedKey, common);
     BOOST_CHECK(*map1 != *map2);
-    map2->insert(sharedKey, std::make_shared<SimpleStorable>(VALUE4));
+    map2->insert(sharedKey, std::make_shared<SimpleStorable const>(VALUE4));
     BOOST_CHECK(*map1 != *map2);
     map2->erase(sharedKey);
     map2->insert(sharedKey, common);
@@ -407,10 +409,10 @@ BOOST_TEST_CASE_TEMPLATE_FUNCTION(TestMutableEquals, GenericMapFactory) {
     map2->insert(storableKey, VALUE5);
     BOOST_CHECK(*map1 == *map2);
 
-    auto nullKey = makeKey<std::shared_ptr<ComplexStorable>>("null"s);
-    map1->insert(nullKey, std::static_pointer_cast<ComplexStorable>(VALUE6));
+    auto nullKey = makeKey<std::shared_ptr<ComplexStorable const>>("null"s);
+    map1->insert(nullKey, std::static_pointer_cast<ComplexStorable const>(VALUE6));
     BOOST_CHECK(*map1 != *map2);
-    map2->insert(nullKey, std::static_pointer_cast<ComplexStorable>(VALUE6));
+    map2->insert(nullKey, std::static_pointer_cast<ComplexStorable const>(VALUE6));
     BOOST_CHECK(*map1 == *map2);
 }
 
@@ -480,8 +482,8 @@ BOOST_TEST_CASE_TEMPLATE_FUNCTION(TestContains, GenericMapFactory) {
     BOOST_TEST(demoMap->contains(makeKey<Storable>(KEY5.getId())));
 
     BOOST_TEST(demoMap->contains(KEY6));
-    BOOST_TEST(demoMap->contains(makeKey<std::shared_ptr<SimpleStorable>>(KEY6.getId())));
-    BOOST_TEST(demoMap->contains(makeKey<std::shared_ptr<ComplexStorable>>(KEY6.getId())));
+    BOOST_TEST(demoMap->contains(makeKey<std::shared_ptr<SimpleStorable const>>(KEY6.getId())));
+    BOOST_TEST(demoMap->contains(makeKey<std::shared_ptr<ComplexStorable const>>(KEY6.getId())));
 }
 
 BOOST_TEST_CASE_TEMPLATE_FUNCTION(TestKeys, GenericMapFactory) {
@@ -640,26 +642,27 @@ BOOST_TEST_CASE_TEMPLATE_FUNCTION(TestInsertStorable, GenericMapFactory) {
 
     ComplexStorable object(3.1416);
     BOOST_TEST(demoMap->insert<Storable>(makeKey<Storable>("foo"s), object) == true);
-    BOOST_TEST(demoMap->insert(makeKey<std::shared_ptr<ComplexStorable>>("bar"s),
-                               std::make_shared<ComplexStorable>(3.141)) == true);
+    BOOST_TEST(demoMap->insert(makeKey<std::shared_ptr<ComplexStorable const>>("bar"s),
+                               std::make_shared<ComplexStorable const>(3.141)) == true);
     BOOST_TEST(demoMap->insert<Storable>(makeKey<Storable>("foo"s), SimpleStorable()) == false);
-    BOOST_TEST(demoMap->insert(makeKey<std::shared_ptr<SimpleStorable>>("bar"s),
-                               std::make_shared<SimpleStorable>()) == false);
-    BOOST_TEST(demoMap->insert(makeKey<std::shared_ptr<SimpleStorable>>("null"s),
-                               std::make_shared<SimpleStorable>()) == true);
+    BOOST_TEST(demoMap->insert(makeKey<std::shared_ptr<SimpleStorable const>>("bar"s),
+                               std::make_shared<SimpleStorable const>()) == false);
+    BOOST_TEST(demoMap->insert(makeKey<std::shared_ptr<SimpleStorable const>>("null"s),
+                               std::make_shared<SimpleStorable const>()) == true);
 
     BOOST_TEST(!demoMap->empty());
     BOOST_TEST(demoMap->size() == 3);
     BOOST_TEST(demoMap->contains("foo"s));
     BOOST_TEST(demoMap->contains(makeKey<Storable>("foo"s)));
-    BOOST_TEST(demoMap->contains(makeKey<std::shared_ptr<ComplexStorable>>("bar"s)));
-    BOOST_TEST(demoMap->contains(makeKey<std::shared_ptr<SimpleStorable>>("null"s)));
+    BOOST_TEST(demoMap->contains(makeKey<std::shared_ptr<ComplexStorable const>>("bar"s)));
+    BOOST_TEST(demoMap->contains(makeKey<std::shared_ptr<SimpleStorable const>>("null"s)));
 
     // ComplexStorable::operator== is asymmetric
     BOOST_TEST(object == demoMap->at(makeKey<SimpleStorable>("foo"s)));
     object = ComplexStorable(1.4);
     BOOST_TEST(object != demoMap->at(makeKey<SimpleStorable>("foo"s)));
-    BOOST_TEST(*(demoMap->at(makeKey<std::shared_ptr<ComplexStorable>>("bar"s))) == ComplexStorable(3.141));
+    BOOST_TEST(*(demoMap->at(makeKey<std::shared_ptr<ComplexStorable const>>("bar"s))) ==
+               ComplexStorable(3.141));
 }
 
 BOOST_TEST_CASE_TEMPLATE_FUNCTION(TestInterleavedInserts, GenericMapFactory) {
