@@ -29,4 +29,3 @@ Python API reference
 
 .. automodapi:: lsst.afw.typehandling
    :no-main-docstr:
-   :skip: UnsupportedOperationException

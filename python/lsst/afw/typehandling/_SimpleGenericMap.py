@@ -19,10 +19,48 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-__all__ = []
+__all__ = ["SimpleGenericMap"]
 
 from lsst.utils import continueClass
 from ._typehandling import SimpleGenericMapS
+from ._GenericMap import MutableGenericMap, AutoKeyMeta
+
+
+class SimpleGenericMap(MutableGenericMap, metaclass=AutoKeyMeta):
+    """A `dict`-like `~collections.abc.MutableMapping` for use when sharing a
+    map between C++ and Python.
+
+    For compatibility with C++, ``SimpleGenericMap`` has the following
+    restrictions:
+
+        - all keys must be of the same type
+        - values must be built-in types or subclasses of
+          `lsst.afw.typehandling.Storable`. Almost any user-defined class in
+          C++ or Python can have `~lsst.afw.typehandling.Storable` as a mixin.
+
+    As a safety precaution, `~lsst.afw.typehandling.Storable` objects that are
+    added from C++ may be copied when you retrieve them from Python, making it
+    impossible to modify them in-place. This issue does not affect objects that
+    are added from Python, or objects that are always passed by
+    :cpp:class:`shared_ptr` in C++.
+
+    Parameters
+    ----------
+    mapping : `collections.abc.Mapping`, optional
+    iterable : iterable, optional
+    dtype : `type`, optional
+        The type of key the map accepts. Not required if ``mapping`` or
+        ``iterable`` is provided.
+    **kwargs
+        Aside from the ``dtype`` keyword, a ``SimpleGenericMap`` takes the same
+        input arguments as `dict`.
+    """
+    @classmethod
+    def fromkeys(cls, iterable, value=None):
+        return cls({key: value for key in iterable})
+
+
+SimpleGenericMap.register(str, SimpleGenericMapS)
 
 
 # pybind11-generated constructor, can only create empty map
@@ -37,9 +75,3 @@ class SimpleGenericMapS:
             self.update(source, **kwargs)
         else:
             self.update(**kwargs)
-
-    @classmethod
-    def fromkeys(cls, iterable, value=None):
-        mapping = cls()
-        mapping.update({key: value for key in iterable})
-        return mapping
