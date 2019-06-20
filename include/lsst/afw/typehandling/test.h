@@ -465,11 +465,21 @@ BOOST_TEST_CASE_TEMPLATE_FUNCTION(TestKeys, GenericMapFactory) {
     static GenericMapFactory const factory;
     std::unique_ptr<GenericMap<int> const> demoMap = factory.makeGenericMap();
     auto orderedKeys = demoMap->keys();
-    // GenericMaps don't have an iteration order yet
+    // GenericMap allows keys in any order, so just check they're the same
     std::set<int> keys(orderedKeys.begin(), orderedKeys.end());
 
     BOOST_TEST(keys == std::set<int>({KEY0.getId(), KEY1.getId(), KEY2.getId(), KEY3.getId(), KEY4.getId(),
                                       KEY5.getId()}));
+}
+
+BOOST_TEST_CASE_TEMPLATE_FUNCTION(TestKeyOrder, GenericMapFactory) {
+    static GenericMapFactory const factory;
+    std::unique_ptr<GenericMap<int> const> demoMap = factory.makeGenericMap();
+    auto keys = demoMap->keys();
+
+    std::vector<int> iterOrder;
+    demoMap->apply([&iterOrder](int key, auto value) { iterOrder.push_back(key); });
+    BOOST_TEST(keys == iterOrder);
 }
 
 BOOST_TEST_CASE_TEMPLATE_FUNCTION(TestClearIdempotent, GenericMapFactory) {
@@ -709,6 +719,7 @@ void addGenericMapTestCases(boost::unit_test::test_suite* const suite) {
     suite->add(BOOST_TEST_CASE_TEMPLATE(TestWeakContains, factories));
     suite->add(BOOST_TEST_CASE_TEMPLATE(TestContains, factories));
     suite->add(BOOST_TEST_CASE_TEMPLATE(TestKeys, factories));
+    suite->add(BOOST_TEST_CASE_TEMPLATE(TestKeyOrder, factories));
     suite->add(BOOST_TEST_CASE_TEMPLATE(TestConstVisitor, factories));
     suite->add(BOOST_TEST_CASE_TEMPLATE(TestModifyingVoidVisitor, factories));
     suite->add(BOOST_TEST_CASE_TEMPLATE(TestModifyingReturningVisitor, factories));
