@@ -344,12 +344,10 @@ void declareSchemaType(py::module &mod) {
     PyKey<T> clsKey(mod, ("Key" + suffix).c_str());
     mod.attr("_Key")[pySuffix] = clsKey;
     clsKey.def(py::init<>());
-    clsKey.def(
-            "__eq__", [](Key<T> const &self, Key<T> const &other) -> bool { return self == other; },
-            py::is_operator());
-    clsKey.def(
-            "__ne__", [](Key<T> const &self, Key<T> const &other) -> bool { return self != other; },
-            py::is_operator());
+    clsKey.def("__eq__", [](Key<T> const &self, Key<T> const &other) -> bool { return self == other; },
+               py::is_operator());
+    clsKey.def("__ne__", [](Key<T> const &self, Key<T> const &other) -> bool { return self != other; },
+               py::is_operator());
     clsKey.def("isValid", &Key<T>::isValid);
     clsKey.def("getOffset", &Key<T>::getOffset);
     utils::python::addOutputOp(clsKey, "__str__");
@@ -437,13 +435,10 @@ void declareSchema(py::module &mod) {
     cls.def(py::init<>());
     cls.def(py::init<Schema const &>());
     cls.def("__getitem__", [](Schema &self, std::string const &name) { return self[name]; });
-    cls.def(
-            "__eq__", [](Schema const &self, Schema const &other) { return self == other; },
+    cls.def("__eq__", [](Schema const &self, Schema const &other) { return self == other; },
             py::is_operator());
-    cls.def(
-            "__ne__", [](Schema const &self, Schema const &other) { return self != other; },
+    cls.def("__ne__", [](Schema const &self, Schema const &other) { return self != other; },
             py::is_operator());
-    cls.def("getCitizen", &Schema::getCitizen, py::return_value_policy::reference_internal);
     cls.def("getRecordSize", &Schema::getRecordSize);
     cls.def("getFieldCount", &Schema::getFieldCount);
     cls.def("getFlagFieldCount", &Schema::getFlagFieldCount);

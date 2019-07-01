@@ -114,9 +114,7 @@ private:
     PersistenceHelper() :
         schema(),
         detector(schema.addField<int>("detector", "archive ID of Detector in a DetectorCollection"))
-    {
-        schema.getCitizen().markPersistent();
-    }
+    {}
 
     PersistenceHelper(PersistenceHelper const &) = delete;
     PersistenceHelper(PersistenceHelper &&) = delete;

@@ -39,9 +39,7 @@ private:
             : schema(),
               sigma1(schema.addField<double>("sigma1", "sigma along axis 1")),
               sigma2(schema.addField<double>("sigma2", "sigma along axis 2")),
-              angle(schema.addField<double>("angle", "angle of axis 1 in rad (along x=0, y=pi/2)")) {
-        schema.getCitizen().markPersistent();
-    }
+              angle(schema.addField<double>("angle", "angle of axis 1 in rad (along x=0, y=pi/2)")) {}
 };
 
 // Singleton persistence schema for 2-d circular DoubleGaussians
@@ -70,9 +68,7 @@ private:
             : schema(),
               sigma1(schema.addField<double>("sigma1", "sigma of first Gaussian")),
               sigma2(schema.addField<double>("sigma2", "sigma of second Gaussian")),
-              ampl2(schema.addField<double>("ampl2", "peak of second Gaussian relative to peak of first")) {
-        schema.getCitizen().markPersistent();
-    }
+              ampl2(schema.addField<double>("ampl2", "peak of second Gaussian relative to peak of first")) {}
 };
 
 // Persistence schema for 2-d polynomials; not a singleton because it depends on the order.

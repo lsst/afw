@@ -229,9 +229,7 @@ private:
                       "image", "image pixels for HeavyFootprint", "count")),
               mask(schema.addField<afw::table::Array<MaskPixelT>>("mask", "mask pixels for HeavyFootprint")),
               variance(schema.addField<afw::table::Array<VariancePixelT>>(
-                      "variance", "variance pixels for HeavyFootprint", "count^2")) {
-        schema.getCitizen().markPersistent();
-    }
+                      "variance", "variance pixels for HeavyFootprint", "count^2")) {}
 };
 
 // These suffix-computing structs are used to compute the string name associated with a HeavyFootprint

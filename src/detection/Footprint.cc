@@ -36,14 +36,11 @@ template std::shared_ptr<detection::Footprint> table::io::PersistableFacade<
 namespace detection {
 
 Footprint::Footprint(std::shared_ptr<geom::SpanSet> inputSpans, lsst::geom::Box2I const& region)
-        : daf::base::Citizen(typeid(this)),
-          _spans(inputSpans),
-          _peaks(PeakTable::makeMinimalSchema()),
-          _region(region) {}
+        : _spans(inputSpans), _peaks(PeakTable::makeMinimalSchema()), _region(region) {}
 
 Footprint::Footprint(std::shared_ptr<geom::SpanSet> inputSpans, afw::table::Schema const& peakSchema,
                      lsst::geom::Box2I const& region)
-        : daf::base::Citizen(typeid(this)), _spans(inputSpans), _peaks(peakSchema), _region(region) {}
+        : _spans(inputSpans), _peaks(peakSchema), _region(region) {}
 
 void Footprint::setSpans(std::shared_ptr<geom::SpanSet> otherSpanSet) { _spans = otherSpanSet; }
 
@@ -216,9 +213,7 @@ private:
             : spanSchema(),
               spanY(spanSchema.addField<int>("y", "The row of the span", "pixel")),
               spanX0(spanSchema.addField<int>("x0", "First column of span (inclusive)", "pixel")),
-              spanX1(spanSchema.addField<int>("x1", "Second column of span (inclusive)", "pixel")) {
-        spanSchema.getCitizen().markPersistent();
-    }
+              spanX1(spanSchema.addField<int>("x1", "Second column of span (inclusive)", "pixel")) {}
 };
 
 std::pair<afw::table::Schema&, table::Key<int>&> spanSetPersistenceHelper() {
@@ -228,7 +223,6 @@ std::pair<afw::table::Schema&, table::Key<int>&> spanSetPersistenceHelper() {
     if (initialize) {
         idKey = spanSetIdSchema.addField<int>("id", "id of the SpanSet catalog");
         initialize = false;
-        spanSetIdSchema.getCitizen().markPersistent();
     }
     std::pair<afw::table::Schema&, table::Key<int>&> returnPair(spanSetIdSchema, idKey);
     return returnPair;

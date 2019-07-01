@@ -51,34 +51,30 @@ namespace image {
 template <typename ImageT, typename MaskT, typename VarianceT>
 Exposure<ImageT, MaskT, VarianceT>::Exposure(unsigned int width, unsigned int height,
                                              std::shared_ptr<geom::SkyWcs const> wcs)
-        : daf::base::Citizen(typeid(this)), _maskedImage(width, height), _info(new ExposureInfo(wcs)) {}
+        : _maskedImage(width, height), _info(new ExposureInfo(wcs)) {}
 
 template <typename ImageT, typename MaskT, typename VarianceT>
 Exposure<ImageT, MaskT, VarianceT>::Exposure(lsst::geom::Extent2I const &dimensions,
                                              std::shared_ptr<geom::SkyWcs const> wcs)
-        : daf::base::Citizen(typeid(this)), _maskedImage(dimensions), _info(new ExposureInfo(wcs)) {}
+        : _maskedImage(dimensions), _info(new ExposureInfo(wcs)) {}
 
 template <typename ImageT, typename MaskT, typename VarianceT>
 Exposure<ImageT, MaskT, VarianceT>::Exposure(lsst::geom::Box2I const &bbox,
                                              std::shared_ptr<geom::SkyWcs const> wcs)
-        : daf::base::Citizen(typeid(this)), _maskedImage(bbox), _info(new ExposureInfo(wcs)) {}
+        : _maskedImage(bbox), _info(new ExposureInfo(wcs)) {}
 
 template <typename ImageT, typename MaskT, typename VarianceT>
 Exposure<ImageT, MaskT, VarianceT>::Exposure(MaskedImageT &maskedImage,
                                              std::shared_ptr<geom::SkyWcs const> wcs)
-        : daf::base::Citizen(typeid(this)), _maskedImage(maskedImage), _info(new ExposureInfo(wcs)) {}
+        : _maskedImage(maskedImage), _info(new ExposureInfo(wcs)) {}
 
 template <typename ImageT, typename MaskT, typename VarianceT>
 Exposure<ImageT, MaskT, VarianceT>::Exposure(MaskedImageT &maskedImage, std::shared_ptr<ExposureInfo> info)
-        : daf::base::Citizen(typeid(this)),
-          _maskedImage(maskedImage),
-          _info(info ? info : std::make_shared<ExposureInfo>()) {}
+        : _maskedImage(maskedImage), _info(info ? info : std::make_shared<ExposureInfo>()) {}
 
 template <typename ImageT, typename MaskT, typename VarianceT>
 Exposure<ImageT, MaskT, VarianceT>::Exposure(Exposure const &src, bool const deep)
-        : daf::base::Citizen(typeid(this)),
-          _maskedImage(src.getMaskedImage(), deep),
-          _info(new ExposureInfo(*src.getInfo(), deep)) {}
+        : _maskedImage(src.getMaskedImage(), deep), _info(new ExposureInfo(*src.getInfo(), deep)) {}
 // Delegate to copy-constructor for backwards compatibility
 template <typename ImageT, typename MaskT, typename VarianceT>
 Exposure<ImageT, MaskT, VarianceT>::Exposure(Exposure &&src) : Exposure(src) {}
@@ -86,14 +82,13 @@ Exposure<ImageT, MaskT, VarianceT>::Exposure(Exposure &&src) : Exposure(src) {}
 template <typename ImageT, typename MaskT, typename VarianceT>
 Exposure<ImageT, MaskT, VarianceT>::Exposure(Exposure const &src, lsst::geom::Box2I const &bbox,
                                              ImageOrigin const origin, bool const deep)
-        : daf::base::Citizen(typeid(this)),
-          _maskedImage(src.getMaskedImage(), bbox, origin, deep),
+        : _maskedImage(src.getMaskedImage(), bbox, origin, deep),
           _info(new ExposureInfo(*src.getInfo(), deep)) {}
 
 template <typename ImageT, typename MaskT, typename VarianceT>
 Exposure<ImageT, MaskT, VarianceT>::Exposure(std::string const &fileName, lsst::geom::Box2I const &bbox,
                                              ImageOrigin origin, bool conformMasks, bool allowUnsafe)
-        : daf::base::Citizen(typeid(this)), _maskedImage(), _info(new ExposureInfo()) {
+        : _maskedImage(), _info(new ExposureInfo()) {
     ExposureFitsReader reader(fileName);
     *this = reader.read<ImageT, MaskT, VarianceT>(bbox, origin, conformMasks, allowUnsafe);
 }
@@ -101,15 +96,14 @@ Exposure<ImageT, MaskT, VarianceT>::Exposure(std::string const &fileName, lsst::
 template <typename ImageT, typename MaskT, typename VarianceT>
 Exposure<ImageT, MaskT, VarianceT>::Exposure(fits::MemFileManager &manager, lsst::geom::Box2I const &bbox,
                                              ImageOrigin origin, bool conformMasks, bool allowUnsafe)
-        : daf::base::Citizen(typeid(this)), _maskedImage(), _info(new ExposureInfo()) {
+        : _maskedImage(), _info(new ExposureInfo()) {
     ExposureFitsReader reader(manager);
     *this = reader.read<ImageT, MaskT, VarianceT>(bbox, origin, conformMasks, allowUnsafe);
 }
 
 template <typename ImageT, typename MaskT, typename VarianceT>
 Exposure<ImageT, MaskT, VarianceT>::Exposure(fits::Fits &fitsFile, lsst::geom::Box2I const &bbox,
-                                             ImageOrigin origin, bool conformMasks, bool allowUnsafe)
-        : daf::base::Citizen(typeid(this)) {
+                                             ImageOrigin origin, bool conformMasks, bool allowUnsafe) {
     ExposureFitsReader reader(&fitsFile);
     *this = reader.read<ImageT, MaskT, VarianceT>(bbox, origin, conformMasks, allowUnsafe);
 }

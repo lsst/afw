@@ -68,7 +68,7 @@ void declareMaskFromFootprintList(py::module &mod) {
 
 PYBIND11_MODULE(footprint, mod) {
     /* Footprint Constructors */
-    py::class_<Footprint, std::shared_ptr<Footprint>, daf::base::Citizen> clsFootprint(mod, "Footprint");
+    py::class_<Footprint, std::shared_ptr<Footprint>> clsFootprint(mod, "Footprint");
     clsFootprint.def(py::init<std::shared_ptr<geom::SpanSet>, lsst::geom::Box2I const &>(), "inputSpans"_a,
                      "region"_a = lsst::geom::Box2I());
 
@@ -99,17 +99,20 @@ PYBIND11_MODULE(footprint, mod) {
     clsFootprint.def("setRegion", &Footprint::setRegion);
     clsFootprint.def("clipTo", &Footprint::clipTo);
     clsFootprint.def("contains", &Footprint::contains);
-    clsFootprint.def("transform", (std::shared_ptr<Footprint> (Footprint::*)(
-                                          std::shared_ptr<geom::SkyWcs>, std::shared_ptr<geom::SkyWcs>,
-                                          lsst::geom::Box2I const &, bool) const) &
-                                          Footprint::transform,
+    clsFootprint.def("transform",
+                     (std::shared_ptr<Footprint>(Footprint::*)(std::shared_ptr<geom::SkyWcs>,
+                                                               std::shared_ptr<geom::SkyWcs>,
+                                                               lsst::geom::Box2I const &, bool) const) &
+                             Footprint::transform,
                      "source"_a, "target"_a, "region"_a, "doClip"_a = true);
-    clsFootprint.def("transform", (std::shared_ptr<Footprint> (Footprint::*)(
-                                          lsst::geom::LinearTransform const &, lsst::geom::Box2I const &, bool) const) &
-                                          Footprint::transform);
-    clsFootprint.def("transform", (std::shared_ptr<Footprint> (Footprint::*)(
-                                          lsst::geom::AffineTransform const &, lsst::geom::Box2I const &, bool) const) &
-                                          Footprint::transform);
+    clsFootprint.def("transform",
+                     (std::shared_ptr<Footprint>(Footprint::*)(lsst::geom::LinearTransform const &,
+                                                               lsst::geom::Box2I const &, bool) const) &
+                             Footprint::transform);
+    clsFootprint.def("transform",
+                     (std::shared_ptr<Footprint>(Footprint::*)(lsst::geom::AffineTransform const &,
+                                                               lsst::geom::Box2I const &, bool) const) &
+                             Footprint::transform);
     clsFootprint.def("transform",
                      (std::shared_ptr<Footprint>(Footprint::*)(geom::TransformPoint2ToPoint2 const &,
                                                                lsst::geom::Box2I const &, bool) const) &
@@ -153,6 +156,6 @@ PYBIND11_MODULE(footprint, mod) {
     mod.def("mergeFootprints", &mergeFootprints);
     mod.def("footprintToBBoxList", &footprintToBBoxList);
 }
-}
-}
-}  // close lsst::afw::detection
+}  // namespace detection
+}  // namespace afw
+}  // namespace lsst

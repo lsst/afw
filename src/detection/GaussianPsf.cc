@@ -67,9 +67,7 @@ private:
             : schema(),
               dimensions(afw::table::PointKey<int>::addFields(schema, "dimensions",
                                                               "width/height of realization of Psf", "pixel")),
-              sigma(schema.addField<double>("sigma", "radius of Gaussian", "pixel")) {
-        schema.getCitizen().markPersistent();
-    }
+              sigma(schema.addField<double>("sigma", "radius of Gaussian", "pixel")) {}
 };
 
 class GaussianPsfFactory : public afw::table::io::PersistableFactory {

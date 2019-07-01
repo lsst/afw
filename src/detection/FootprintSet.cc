@@ -771,7 +771,7 @@ static void findFootprints(
 template <typename ImagePixelT>
 FootprintSet::FootprintSet(image::Image<ImagePixelT> const &img, Threshold const &threshold,
                            int const npixMin, bool const setPeaks)
-        : daf::base::Citizen(typeid(this)), _footprints(new FootprintList()), _region(img.getBBox()) {
+        : _footprints(new FootprintList()), _region(img.getBBox()) {
     typedef float VariancePixelT;
 
     findFootprints<ImagePixelT, image::MaskPixel, VariancePixelT, ThresholdLevel_traits>(
@@ -783,7 +783,7 @@ FootprintSet::FootprintSet(image::Image<ImagePixelT> const &img, Threshold const
 
 template <typename MaskPixelT>
 FootprintSet::FootprintSet(image::Mask<MaskPixelT> const &msk, Threshold const &threshold, int const npixMin)
-        : daf::base::Citizen(typeid(this)), _footprints(new FootprintList()), _region(msk.getBBox()) {
+        : _footprints(new FootprintList()), _region(msk.getBBox()) {
     switch (threshold.getType()) {
         case Threshold::BITMASK:
             findFootprints<MaskPixelT, MaskPixelT, float, ThresholdBitmask_traits>(
@@ -807,8 +807,7 @@ template <typename ImagePixelT, typename MaskPixelT>
 FootprintSet::FootprintSet(const image::MaskedImage<ImagePixelT, MaskPixelT> &maskedImg,
                            Threshold const &threshold, std::string const &planeName, int const npixMin,
                            bool const setPeaks)
-        : daf::base::Citizen(typeid(this)),
-          _footprints(new FootprintList()),
+        : _footprints(new FootprintList()),
           _region(lsst::geom::Point2I(maskedImg.getX0(), maskedImg.getY0()),
                   lsst::geom::Extent2I(maskedImg.getWidth(), maskedImg.getHeight())) {
     typedef typename image::MaskedImage<ImagePixelT, MaskPixelT>::Variance::Pixel VariancePixelT;
@@ -847,10 +846,9 @@ FootprintSet::FootprintSet(const image::MaskedImage<ImagePixelT, MaskPixelT> &ma
 }
 
 FootprintSet::FootprintSet(lsst::geom::Box2I region)
-        : daf::base::Citizen(typeid(this)), _footprints(std::make_shared<FootprintList>()), _region(region) {}
+        : _footprints(std::make_shared<FootprintList>()), _region(region) {}
 
-FootprintSet::FootprintSet(FootprintSet const &rhs)
-        : daf::base::Citizen(typeid(this)), _footprints(new FootprintList), _region(rhs._region) {
+FootprintSet::FootprintSet(FootprintSet const &rhs) : _footprints(new FootprintList), _region(rhs._region) {
     _footprints->reserve(rhs._footprints->size());
     for (FootprintSet::FootprintList::const_iterator ptr = rhs._footprints->begin(),
                                                      end = rhs._footprints->end();
@@ -889,7 +887,7 @@ void FootprintSet::setRegion(lsst::geom::Box2I const &region) {
 }
 
 FootprintSet::FootprintSet(FootprintSet const &rhs, int r, bool isotropic)
-        : daf::base::Citizen(typeid(this)), _footprints(new FootprintList), _region(rhs._region) {
+        : _footprints(new FootprintList), _region(rhs._region) {
     if (r == 0) {
         FootprintSet fs = rhs;
         swap(fs);  // Swap the new FootprintSet into place
@@ -905,7 +903,7 @@ FootprintSet::FootprintSet(FootprintSet const &rhs, int r, bool isotropic)
 }
 
 FootprintSet::FootprintSet(FootprintSet const &rhs, int ngrow, FootprintControl const &ctrl)
-        : daf::base::Citizen(typeid(this)), _footprints(new FootprintList), _region(rhs._region) {
+        : _footprints(new FootprintList), _region(rhs._region) {
     if (ngrow == 0) {
         FootprintSet fs = rhs;
         swap(fs);  // Swap the new FootprintSet into place
@@ -920,23 +918,18 @@ FootprintSet::FootprintSet(FootprintSet const &rhs, int ngrow, FootprintControl 
 }
 
 FootprintSet::FootprintSet(FootprintSet const &fs1, FootprintSet const &fs2, bool const)
-        : daf::base::Citizen(typeid(this)), _footprints(new FootprintList()), _region(fs1._region) {
+        : _footprints(new FootprintList()), _region(fs1._region) {
     _region.include(fs2._region);
     throw LSST_EXCEPT(pex::exceptions::LogicError, "NOT IMPLEMENTED");
 }
 
-std::shared_ptr<image::Image<FootprintIdPixel>> FootprintSet::insertIntoImage(bool const relativeIDs) const {
+std::shared_ptr<image::Image<FootprintIdPixel>> FootprintSet::insertIntoImage() const {
     auto im = std::make_shared<image::Image<FootprintIdPixel>>(_region);
     *im = 0;
 
     FootprintIdPixel id = 0;
     for (auto const &fIter : *_footprints) {
-        if (relativeIDs) {
-            id++;
-        } else {
-            id = fIter->getId();
-        }
-
+        id++;
         fIter->getSpans()->applyFunctor(setIdImage<FootprintIdPixel>(id), *im);
     }
 
@@ -964,9 +957,9 @@ void FootprintSet::makeSources(afw::table::SourceCatalog &cat) const {
     }
 }
 
-//
-// Explicit instantiations
-//
+    //
+    // Explicit instantiations
+    //
 
 #ifndef DOXYGEN
 

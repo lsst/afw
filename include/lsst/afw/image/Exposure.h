@@ -69,7 +69,7 @@ namespace image {
  */
 template <typename ImageT, typename MaskT = lsst::afw::image::MaskPixel,
           typename VarianceT = lsst::afw::image::VariancePixel>
-class Exposure : public lsst::daf::base::Citizen {
+class Exposure {
 public:
     typedef MaskedImage<ImageT, MaskT, VarianceT> MaskedImageT;
 
@@ -189,9 +189,7 @@ public:
     Exposure(Exposure<OtherPixelT, MaskT, VarianceT> const& rhs,  ///< Input Exposure
              const bool deep                                      ///< Must be true; needed to disambiguate
              )
-            : lsst::daf::base::Citizen(typeid(this)),
-              _maskedImage(rhs.getMaskedImage(), deep),
-              _info(new ExposureInfo(*rhs.getInfo(), deep)) {
+            : _maskedImage(rhs.getMaskedImage(), deep), _info(new ExposureInfo(*rhs.getInfo(), deep)) {
         if (not deep) {
             throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                               "Exposure's converting copy constructor must make a deep copy");

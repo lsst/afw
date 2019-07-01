@@ -41,7 +41,6 @@
 #include "boost/functional/hash.hpp"
 
 #include "lsst/daf/base.h"
-#include "lsst/daf/base/Citizen.h"
 #include "lsst/geom.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/log/Log.h"
@@ -57,9 +56,7 @@ namespace lsst {
 namespace afw {
 namespace image {
 
-namespace {
-
-}  // namespace
+namespace {}  // namespace
 
 template <typename MaskPixelT>
 void Mask<MaskPixelT>::_initializePlanes(MaskPlaneDict const& planeDefs) {
@@ -250,7 +247,6 @@ void Mask<MaskPixelT>::writeFits(fits::Fits& fitsfile, fits::ImageWriteOptions c
 }
 
 #endif  // !DOXYGEN
-
 
 template <typename MaskPixelT>
 std::string Mask<MaskPixelT>::interpret(MaskPixelT value) {

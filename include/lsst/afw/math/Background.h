@@ -29,7 +29,6 @@
  */
 #include <boost/preprocessor/seq.hpp>
 #include <memory>
-#include "lsst/daf/base/Citizen.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/geom/Box.h"
 #include "lsst/afw/math/Statistics.h"
@@ -236,7 +235,7 @@ private:
 /**
  * A virtual base class to evaluate %image background levels
  */
-class Background : public daf::base::Citizen {
+class Background {
 protected:
     /**
      * Constructor for Background

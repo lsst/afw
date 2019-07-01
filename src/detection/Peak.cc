@@ -148,7 +148,6 @@ PeakTable::MinimalSchema::MinimalSchema() {
     ix = schema.addField<int>("i_x", "column position of highest pixel", "pixel");
     iy = schema.addField<int>("i_y", "row position of highest pixel", "pixel");
     peakValue = schema.addField<float>("peakValue", "value of [smoothed] image at peak position", "count");
-    schema.getCitizen().markPersistent();
 }
 
 PeakTable::MinimalSchema& PeakTable::getMinimalSchema() {

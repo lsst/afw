@@ -115,10 +115,4 @@ int main(int argc, char **argv) {
         resMaskedImage.writeFits(outImagePath);
         std::cout << "Saved convolved image as " << outImagePath << std::endl;
     }
-
-    // Check for memory leaks
-    if (lsst::daf::base::Citizen::census(0) != 0) {
-        std::cerr << "Leaked memory blocks:" << std::endl;
-        lsst::daf::base::Citizen::census(std::cerr);
-    }
 }

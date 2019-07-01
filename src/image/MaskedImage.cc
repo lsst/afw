@@ -47,8 +47,7 @@ namespace image {
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(unsigned int width, unsigned int height,
                                                                   MaskPlaneDict const& planeDict)
-        : daf::base::Citizen(typeid(this)),
-          _image(new Image(width, height)),
+        : _image(new Image(width, height)),
           _mask(new Mask(width, height, planeDict)),
           _variance(new Variance(width, height)) {
     *_image = 0;
@@ -59,8 +58,7 @@ MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(unsigned int w
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(lsst::geom::Extent2I const& dimensions,
                                                                   MaskPlaneDict const& planeDict)
-        : daf::base::Citizen(typeid(this)),
-          _image(new Image(dimensions)),
+        : _image(new Image(dimensions)),
           _mask(new Mask(dimensions, planeDict)),
           _variance(new Variance(dimensions)) {
     *_image = 0;
@@ -71,10 +69,7 @@ MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(lsst::geom::Ex
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(lsst::geom::Box2I const& bbox,
                                                                   MaskPlaneDict const& planeDict)
-        : daf::base::Citizen(typeid(this)),
-          _image(new Image(bbox)),
-          _mask(new Mask(bbox, planeDict)),
-          _variance(new Variance(bbox)) {
+        : _image(new Image(bbox)), _mask(new Mask(bbox, planeDict)), _variance(new Variance(bbox)) {
     *_image = 0;
     *_mask = 0x0;
     *_variance = 0;
@@ -87,7 +82,7 @@ MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
         std::shared_ptr<daf::base::PropertySet> imageMetadata,
         std::shared_ptr<daf::base::PropertySet> maskMetadata,
         std::shared_ptr<daf::base::PropertySet> varianceMetadata, bool allowUnsafe)
-        : daf::base::Citizen(typeid(this)), _image(), _mask(), _variance() {
+        : _image(), _mask(), _variance() {
     MaskedImageFitsReader reader(fileName);
     *this = reader.read<ImagePixelT, MaskPixelT, VariancePixelT>(bbox, origin, conformMasks, needAllHdus,
                                                                  allowUnsafe);
@@ -111,9 +106,8 @@ MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
         lsst::geom::Box2I const& bbox, ImageOrigin origin, bool conformMasks, bool needAllHdus,
         std::shared_ptr<daf::base::PropertySet> imageMetadata,
         std::shared_ptr<daf::base::PropertySet> maskMetadata,
-        std::shared_ptr<daf::base::PropertySet> varianceMetadata,
-        bool allowUnsafe)
-        : daf::base::Citizen(typeid(this)), _image(), _mask(), _variance() {
+        std::shared_ptr<daf::base::PropertySet> varianceMetadata, bool allowUnsafe)
+        : _image(), _mask(), _variance() {
     MaskedImageFitsReader reader(manager);
     *this = reader.read<ImagePixelT, MaskPixelT, VariancePixelT>(bbox, origin, conformMasks, needAllHdus,
                                                                  allowUnsafe);
@@ -137,9 +131,8 @@ MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
         ImageOrigin origin, bool conformMasks, bool needAllHdus,
         std::shared_ptr<daf::base::PropertySet> imageMetadata,
         std::shared_ptr<daf::base::PropertySet> maskMetadata,
-        std::shared_ptr<daf::base::PropertySet> varianceMetadata,
-        bool allowUnsafe)
-        : daf::base::Citizen(typeid(this)), _image(), _mask(), _variance() {
+        std::shared_ptr<daf::base::PropertySet> varianceMetadata, bool allowUnsafe)
+        : _image(), _mask(), _variance() {
     MaskedImageFitsReader reader(&fitsFile);
     *this = reader.read<ImagePixelT, MaskPixelT, VariancePixelT>(bbox, origin, conformMasks, needAllHdus,
                                                                  allowUnsafe);
@@ -160,13 +153,13 @@ MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(ImagePtr image, MaskPtr mask,
                                                                   VariancePtr variance)
-        : daf::base::Citizen(typeid(this)), _image(image), _mask(mask), _variance(variance) {
+        : _image(image), _mask(mask), _variance(variance) {
     conformSizes();
 }
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(MaskedImage const& rhs, bool deep)
-        : daf::base::Citizen(typeid(this)), _image(rhs._image), _mask(rhs._mask), _variance(rhs._variance) {
+        : _image(rhs._image), _mask(rhs._mask), _variance(rhs._variance) {
     if (deep) {
         _image = std::shared_ptr<Image>(new Image(*rhs.getImage(), deep));
         _mask = std::shared_ptr<Mask>(new Mask(*rhs.getMask(), deep));
@@ -186,8 +179,7 @@ MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(MaskedImage co
                                                                   ImageOrigin const origin, bool deep
 
                                                                   )
-        : daf::base::Citizen(typeid(this)),
-          _image(new Image(*rhs.getImage(), bbox, origin, deep)),
+        : _image(new Image(*rhs.getImage(), bbox, origin, deep)),
           _mask(rhs._mask ? new Mask(*rhs.getMask(), bbox, origin, deep) : static_cast<Mask*>(NULL)),
           _variance(rhs._variance ? new Variance(*rhs.getVariance(), bbox, origin, deep)
                                   : static_cast<Variance*>(NULL)) {

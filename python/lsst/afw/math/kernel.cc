@@ -25,7 +25,7 @@
 #include <pybind11/stl.h>
 
 #include "lsst/afw/math/Kernel.h"
-#include "lsst/afw/table/io/python.h" // for addPersistableMethods
+#include "lsst/afw/table/io/python.h"  // for addPersistableMethods
 
 namespace py = pybind11;
 
@@ -80,8 +80,8 @@ PYBIND11_MODULE(kernel, mod) {
 
     clsFixedKernel.def(py::init<>());
     clsFixedKernel.def(py::init<lsst::afw::image::Image<Kernel::Pixel> const &>(), "image"_a);
-    clsFixedKernel.def(py::init<lsst::afw::math::Kernel const &, lsst::geom::Point2D const &>(),
-                       "kernel"_a, "pos"_a);
+    clsFixedKernel.def(py::init<lsst::afw::math::Kernel const &, lsst::geom::Point2D const &>(), "kernel"_a,
+                       "pos"_a);
     clsFixedKernel.def("clone", &FixedKernel::clone);
     clsFixedKernel.def("resized", &FixedKernel::resized, "width"_a, "height"_a);
     clsFixedKernel.def("toString", &FixedKernel::toString, "prefix"_a = "");
@@ -91,7 +91,7 @@ PYBIND11_MODULE(kernel, mod) {
     py::class_<AnalyticKernel, std::shared_ptr<AnalyticKernel>, Kernel> clsAnalyticKernel(mod,
                                                                                           "AnalyticKernel");
     clsAnalyticKernel.def(py::init<>());
-    // Workaround for NullSpatialFunction and py::arg not playing well with Citizen
+    // Workaround for NullSpatialFunction and py::arg not playing well with Citizen (TODO: no longer needed?)
     clsAnalyticKernel.def(py::init<int, int, AnalyticKernel::KernelFunction const &>(), "width"_a, "height"_a,
                           "kernelFunction"_a);
     clsAnalyticKernel.def(
@@ -147,7 +147,7 @@ PYBIND11_MODULE(kernel, mod) {
             mod, "SeparableKernel");
 
     clsSeparableKernel.def(py::init<>());
-    // Workaround for NullSpatialFunction and py::arg not playing well with Citizen
+    // Workaround for NullSpatialFunction and py::arg not playing well with Citizen (TODO: no longer needed?)
     clsSeparableKernel.def(py::init<int, int, SeparableKernel::KernelFunction const &,
                                     SeparableKernel::KernelFunction const &>(),
                            "width"_a, "height"_a, "kernelColFunction"_a, "kernelRowFunction"_a);

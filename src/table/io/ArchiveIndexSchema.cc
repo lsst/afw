@@ -34,9 +34,7 @@ ArchiveIndexSchema::ArchiveIndexSchema()
                                             MAX_NAME_LENGTH)),
           module(schema.addField<std::string>(
                   "module", "Python module that should be imported to register the object's factory",
-                  MAX_MODULE_LENGTH)) {
-    schema.getCitizen().markPersistent();
-}
+                  MAX_MODULE_LENGTH)) {}
 }  // namespace io
 }  // namespace table
 }  // namespace afw

@@ -186,10 +186,6 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
 
         afwDetect.Footprint()
 
-    def testId(self):
-        """Test uniqueness of IDs"""
-        self.assertNotEqual(self.foot.getId(), afwDetect.Footprint().getId())
-
     def testIntersectMask(self):
         bbox = lsst.geom.BoxI(lsst.geom.PointI(0, 0), lsst.geom.ExtentI(10))
         fp = afwDetect.Footprint(afwGeom.SpanSet(bbox))
@@ -269,12 +265,6 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(bbox.getMaxX(), x0 + w - 1)
         self.assertEqual(bbox.getMaxY(), y0 + h - 1)
 
-        if False:
-            idImage = afwImage.ImageU(w, h)
-            idImage.set(0)
-            foot.insertIntoImage(idImage, foot.getId(), bbox)
-            afwDisplay.Display(frame=2).mtv(idImage, title=self._testMethodName + " image")
-
     def testGetBBox(self):
         """Check that Footprint.getBBox() returns a copy"""
         x0, y0, w, h = 9, 10, 7, 4
@@ -288,25 +278,6 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
 
         self.assertEqual(bbox.getMinX(), x0 + dx)
         self.assertEqual(foot.getBBox().getMinX(), x0)
-
-    def testFootprintFromCircle(self):
-        """Create an elliptical Footprint"""
-        ellipse = afwGeom.Ellipse(afwGeomEllipses.Axes(6, 6, 0),
-                                  lsst.geom.Point2D(9, 15))
-        spanSet = afwGeom.SpanSet.fromShape(ellipse)
-        foot = afwDetect.Footprint(spanSet,
-                                   lsst.geom.Box2I(lsst.geom.Point2I(0, 0),
-                                                   lsst.geom.Extent2I(20, 30)))
-
-        idImage = afwImage.ImageU(
-            lsst.geom.Extent2I(foot.getRegion().getWidth(),
-                               foot.getRegion().getHeight()))
-        idImage.set(0)
-
-        foot.spans.setImage(idImage, foot.getId())
-
-        if False:
-            afwDisplay.Display(frame=2).mtv(idImage, title=self._testMethodName + " image")
 
     def testFootprintFromEllipse(self):
         """Create an elliptical Footprint"""
@@ -324,7 +295,7 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
             foot.getRegion().getWidth(), foot.getRegion().getHeight()))
         idImage.set(0)
 
-        foot.spans.setImage(idImage, foot.getId())
+        foot.spans.setImage(idImage, 42)
 
         if display:
             disp = afwDisplay.Display(frame=2)
@@ -545,19 +516,6 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
 
             bbox2 = foot2.getBBox()
 
-            if False and display:
-                idImage = afwImage.ImageU(width, height)
-                idImage.set(0)
-
-                i = 1
-                for foot in [foot1, foot2]:
-                    foot.insertIntoImage(idImage, i)
-                    i += 1
-
-                metricImage = afwImage.ImageF("foo.fits")
-                afwDisplay.Display(frame=1).mtv(metricImage, title=self._testMethodName + ": Metric image")
-                afwDisplay.Display(frame=0).mtv(idImage, title=self._testMethodName + " image")
-
             # check bbox2
             self.assertEqual(bbox2.getMinX(), x0 - ngrow)
             self.assertEqual(bbox2.getWidth(), width + 2*ngrow)
@@ -647,9 +605,6 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         im.set(0)                       # clear image
         for obj in self.objects:
             obj.insert(im)
-
-        if False and display:
-            afwDisplay.Display(frame=0).mtv(mi, title=self._testMethodName + " image")
 
         ds = afwDetect.FootprintSet(mi, afwDetect.Threshold(15))
 
@@ -932,17 +887,6 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
             # merged == a1 | a2.
             self.assertTrue(np.all(m == np.maximum(a1, a2)))
 
-        if False:
-            import matplotlib
-            matplotlib.use('Agg')
-            import pylab as plt
-            plt.clf()
-            for i, im1 in enumerate(ims):
-                plt.subplot(4, 1, i + 1)
-                plt.imshow(im1.getArray(), interpolation='nearest', origin='lower')
-                plt.axis([0, 100, 0, 20])
-            plt.savefig('merge2.png')
-
     def testPeakSort(self):
         spanSet = afwGeom.SpanSet(lsst.geom.Box2I(lsst.geom.Point2I(0, 0),
                                                   lsst.geom.Point2I(10, 10)))
@@ -1071,9 +1015,6 @@ class FootprintSetTestCase(unittest.TestCase):
         for obj in self.objects:
             obj.insert(im)
 
-        if False and display:
-            afwDisplay.Display(frame=0).mtv(im, title=self._testMethodName + " image")
-
     def tearDown(self):
         del self.ms
 
@@ -1143,24 +1084,20 @@ class FootprintSetTestCase(unittest.TestCase):
         idImage = afwImage.ImageU(self.ms.getDimensions())
         idImage.set(0)
 
-        for foot in objects:
-            foot.spans.setImage(idImage, foot.getId())
-
-        if False:
-            afwDisplay.Display(frame=2).mtv(idImage, title=self._testMethodName + " image")
+        for i, foot in enumerate(objects):
+            foot.spans.setImage(idImage, i + 1)
 
         for i in range(len(objects)):
             for sp in objects[i].getSpans():
                 for x in range(sp.getX0(), sp.getX1() + 1):
-                    self.assertEqual(idImage[x, sp.getY(), afwImage.LOCAL],
-                                     objects[i].getId())
+                    self.assertEqual(idImage[x, sp.getY(), afwImage.LOCAL], i + 1)
 
     def testFootprintSetImageId(self):
         """Check that we can insert a FootprintSet into an Image, setting relative IDs"""
         ds = afwDetect.FootprintSet(self.ms, afwDetect.Threshold(10))
         objects = ds.getFootprints()
 
-        idImage = ds.insertIntoImage(True)
+        idImage = ds.insertIntoImage()
         if display:
             afwDisplay.Display(frame=2).mtv(idImage, title=self._testMethodName + " image")
 
@@ -1277,9 +1214,6 @@ class NaNFootprintSetTestCase(unittest.TestCase):
 
         # connects the two objects with value==20 together if NaN is detected
         im[9, 6, afwImage.LOCAL] = self.NaN
-
-        if False and display:
-            afwDisplay.Display(frame=0).mtv(im, title=self._testMethodName + " image")
 
     def tearDown(self):
         del self.ms

@@ -148,7 +148,6 @@ AmpInfoTable::MinimalSchema::MinimalSchema() {
     rawPrescanBBoxExtent =
             PointKey<int>::addFields(schema, "raw_prescanbbox_extent",
                                      "usable (horizontal) prescan bbox on raw image, extent", "pixel");
-    schema.getCitizen().markPersistent();
 }
 
 AmpInfoTable::MinimalSchema &AmpInfoTable::getMinimalSchema() {

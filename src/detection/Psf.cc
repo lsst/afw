@@ -13,7 +13,7 @@ namespace lsst {
 namespace afw {
 
 template std::shared_ptr<detection::Psf> table::io::PersistableFacade<detection::Psf>::dynamicCast(
-        std::shared_ptr<table::io::Persistable> const&);
+        std::shared_ptr<table::io::Persistable> const &);
 
 namespace detection {
 namespace detail {
@@ -69,7 +69,7 @@ bool isPointNull(lsst::geom::Point2D const &p) { return std::isnan(p.getX()) && 
 
 }  // namespace
 
-Psf::Psf(bool isFixed, std::size_t capacity) : daf::base::Citizen(typeid(this)), _isFixed(isFixed) {
+Psf::Psf(bool isFixed, std::size_t capacity) : _isFixed(isFixed) {
     _imageCache = std::make_unique<PsfCache>(capacity);
     _kernelImageCache = std::make_unique<PsfCache>(capacity);
 }
@@ -79,8 +79,7 @@ Psf::~Psf() = default;
 Psf::Psf(Psf const &other) : Psf(other._isFixed, other.getCacheCapacity()) {}
 
 Psf::Psf(Psf &&other)
-        : daf::base::Citizen(std::move(other)),
-          _isFixed(other._isFixed),
+        : _isFixed(other._isFixed),
           _imageCache(std::move(other._imageCache)),
           _kernelImageCache(std::move(other._kernelImageCache)) {}
 

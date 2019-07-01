@@ -34,7 +34,6 @@
 
 #include "boost/mpl/or.hpp"
 
-#include "lsst/daf/base/Citizen.h"
 #include "lsst/geom.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/Utils.h"
@@ -109,9 +108,7 @@ namespace math {
  *
  * @ingroup afw
  */
-class Kernel : public lsst::daf::base::Citizen,
-               public afw::table::io::PersistableFacade<Kernel>,
-               public afw::table::io::Persistable {
+class Kernel : public afw::table::io::PersistableFacade<Kernel>, public afw::table::io::Persistable {
 public:
     typedef double Pixel;
     typedef std::shared_ptr<lsst::afw::math::Function2<double>> SpatialFunctionPtr;

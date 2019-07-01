@@ -324,70 +324,6 @@ try:
 
     PrintEigenCommand()
 
-    class CitizenPrinter:
-        "Print a Citizen"
-
-        def __init__(self, val):
-            self.val = val
-
-        def to_string(self):
-            sentinel = int(self.val["_sentinel"].cast(
-                gdb.lookup_type("unsigned int")))
-            return "{%s %d 0x%x}" % (self.val.address, self.val["_CitizenId"], sentinel)
-
-    class PrintCitizenCommand(gdb.Command):
-        """Print a Citizen
-    Usage: show citizen <obj>
-    """
-
-        def __init__(self):
-            super(PrintCitizenCommand, self).__init__("show citizen",
-                                                      gdb.COMMAND_DATA,
-                                                      gdb.COMPLETE_SYMBOL)
-
-        def invoke(self, args, fromTty):
-            self.dont_repeat()
-
-            parser = GdbOptionParser("show citizen")
-            if False:
-                parser.add_option("object", help="The object in question")
-
-                opts = parser.parse_args(args)
-                if opts.help:
-                    return
-            else:
-                opts, args = parser.parse_args(args)
-                if opts.help:
-                    return
-
-                if not args:
-                    raise gdb.GdbError("Please specify an object")
-                opts.object = args.pop(0)
-
-                if args:
-                    raise gdb.GdbError(
-                        "Unrecognised trailing arguments: %s" % " ".join(args))
-
-            var = gdb.parse_and_eval(opts.object)
-            if re.search(r"shared_ptr<", str(var.type)):
-                var = var["px"]
-
-            if var.type.code != gdb.TYPE_CODE_PTR:
-                var = var.address
-
-            citizen = var.dynamic_cast(gdb.lookup_type(
-                "lsst::daf::base::Citizen").pointer())
-
-            if not citizen:
-                raise gdb.GdbError(
-                    "Failed to cast %s to Citizen -- is it a subclass?" % opts.object)
-
-            citizen = citizen.dereference()
-
-            print(citizen)
-
-    PrintCitizenCommand()
-
     # afw
 
     class BaseSourceAttributesPrinter:
@@ -898,9 +834,6 @@ try:
 
     def build_daf_base_dictionary():
         printer = gdb.printing.RegexpCollectionPrettyPrinter("daf::base")
-
-        printer.add_printer('lsst::daf::base::Citizen',
-                            'lsst::daf::base::Citizen', CitizenPrinter)
 
         return printer
 

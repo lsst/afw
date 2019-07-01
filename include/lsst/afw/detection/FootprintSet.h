@@ -50,7 +50,7 @@ typedef std::uint64_t FootprintIdPixel;
 /**
  * A set of Footprints, associated with a MaskedImage
  */
-class FootprintSet : public lsst::daf::base::Citizen {
+class FootprintSet {
 public:
     /// The FootprintSet's set of Footprint%s
     typedef std::vector<std::shared_ptr<Footprint>> FootprintList;
@@ -192,10 +192,9 @@ public:
     /**
      * Return an Image with pixels set to the Footprint%s in the FootprintSet
      *
-     * @param relativeIDs Use IDs starting at 0 (rather than the ones in the Footprint%s)
      * @returns an std::shared_ptr<image::Image>
      */
-    std::shared_ptr<image::Image<FootprintIdPixel>> insertIntoImage(const bool relativeIDs) const;
+    std::shared_ptr<image::Image<FootprintIdPixel>> insertIntoImage() const;
 
     template <typename MaskPixelT>
     void setMask(image::Mask<MaskPixelT>* mask,  ///< Set bits in the mask

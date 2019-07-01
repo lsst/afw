@@ -97,9 +97,6 @@ class FootprintSetTestCase(unittest.TestCase):
         for obj in self.objects:
             obj.insert(self.im)
 
-        if False and display:
-            afwDisplay.Display(frame=0).mtv(self.im, title=self._testMethodName + " image")
-
     def tearDown(self):
         del self.im
 
@@ -137,24 +134,20 @@ class FootprintSetTestCase(unittest.TestCase):
         idImage = afwImage.ImageU(self.im.getDimensions())
         idImage.set(0)
 
-        for foot in objects:
-            foot.spans.setImage(idImage, foot.getId())
-
-        if False:
-            afwDisplay.Display(frame=2).mtv(idImage, title=self._testMethodName + " image")
+        for i, foot in enumerate(objects):
+            foot.spans.setImage(idImage, i + 1)
 
         for i in range(len(objects)):
             for sp in objects[i].getSpans():
                 for x in range(sp.getX0(), sp.getX1() + 1):
-                    self.assertEqual(idImage[x, sp.getY(), afwImage.LOCAL],
-                                     objects[i].getId())
+                    self.assertEqual(idImage[x, sp.getY(), afwImage.LOCAL], i + 1)
 
     def testFootprintSetImageId(self):
         """Check that we can insert a FootprintSet into an Image, setting relative IDs"""
         ds = afwDetect.FootprintSet(self.im, afwDetect.Threshold(10))
         objects = ds.getFootprints()
 
-        idImage = ds.insertIntoImage(True)
+        idImage = ds.insertIntoImage()
         if display:
             afwDisplay.Display(frame=2).mtv(idImage, title=self._testMethodName + " image")
 
@@ -415,9 +408,6 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
             for x, y, I in obj:
                 self.im.getImage()[x, y, afwImage.LOCAL] = I
 
-        if False and display:
-            afwDisplay.Display(frame=0).mtv(self.im, title=self._testMethodName + " image")
-
     def setUp(self):
         self.im, self.fs = None, None
 
@@ -494,23 +484,10 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
             if npeak is None:
                 npeak = len(self.peaks[i])
 
-            if npeak != len(foot.getPeaks()):
-                print("RHL", foot.repr())
-                # print "RHL", [(p.repr().split(":")[0], p.getIx(), p.getIy())
-                # for p in foot.getPeaks()]
-                print("RHL", [(p.getId(), p.getIx(), p.getIy())
-                              for p in foot.getPeaks()])
-                print("RHL", [p[0:2] for p in self.peaks[i]])
-
             self.assertEqual(len(foot.getPeaks()), npeak)
 
             for j, p in enumerate(foot.getPeaks()):
                 trueX, trueY, peakVal = self.peaks[i][j]
-                if (p.getIx(), p.getIy()) != (trueX, trueY):
-                    print("RHL", [(pp.getId(), pp.getIx(), pp.getIy())
-                                  for pp in foot.getPeaks()])
-                    print("RHL", [pp[0:2] for pp in self.peaks[i]])
-
                 self.assertEqual((p.getIx(), p.getIy()), (trueX, trueY))
 
     def testSinglePeak(self):

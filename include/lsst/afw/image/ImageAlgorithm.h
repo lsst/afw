@@ -40,7 +40,6 @@
 #include "lsst/afw/image/lsstGil.h"
 #include "lsst/afw/image/ImageUtils.h"
 #include "lsst/daf/base.h"
-#include "lsst/daf/base/Citizen.h"
 #include "lsst/pex/exceptions.h"
 
 namespace lsst {

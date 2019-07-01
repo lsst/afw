@@ -42,8 +42,7 @@ namespace math {
 
 template <typename ImageT>
 Background::Background(ImageT const& img, BackgroundControl const& bgCtrl)
-        : lsst::daf::base::Citizen(typeid(this)),
-          _imgBBox(img.getBBox()),
+        : _imgBBox(img.getBBox()),
           _bctrl(new BackgroundControl(bgCtrl)),
           _asUsedInterpStyle(Interpolate::UNKNOWN),
           _asUsedUndersampleStyle(THROW_EXCEPTION),
@@ -68,8 +67,7 @@ Background::Background(ImageT const& img, BackgroundControl const& bgCtrl)
 }
 
 Background::Background(lsst::geom::Box2I const imageBBox, int const nx, int const ny)
-        : lsst::daf::base::Citizen(typeid(this)),
-          _imgBBox(imageBBox),
+        : _imgBBox(imageBBox),
           _bctrl(new BackgroundControl(nx, ny)),
           _asUsedInterpStyle(Interpolate::UNKNOWN),
           _asUsedUndersampleStyle(THROW_EXCEPTION),

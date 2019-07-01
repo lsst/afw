@@ -28,7 +28,6 @@
 
 #include <memory>
 
-#include "lsst/daf/base/Citizen.h"
 #include "lsst/utils/CacheFwd.h"
 #include "lsst/afw/geom/ellipses/Quadrupole.h"
 #include "lsst/afw/math/Kernel.h"
@@ -73,8 +72,7 @@ struct PsfCacheKey;
  *  or meas::algorithms::KernelPsf, as these will provide default implementions for
  *  several member functions.
  */
-class Psf : public daf::base::Citizen,
-            public afw::table::io::PersistableFacade<Psf>,
+class Psf : public afw::table::io::PersistableFacade<Psf>,
             public afw::typehandling::Storable {
     static lsst::geom::Point2D makeNullPoint() {
         return lsst::geom::Point2D(std::numeric_limits<double>::quiet_NaN());

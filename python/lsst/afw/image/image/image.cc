@@ -40,7 +40,7 @@ namespace image {
 namespace {
 
 template <typename PixelT>
-using PyImageBase = py::class_<ImageBase<PixelT>, std::shared_ptr<ImageBase<PixelT>>, daf::base::Citizen>;
+using PyImageBase = py::class_<ImageBase<PixelT>, std::shared_ptr<ImageBase<PixelT>>>;
 
 template <typename PixelT>
 using PyImage = py::class_<Image<PixelT>, std::shared_ptr<Image<PixelT>>, ImageBase<PixelT>>;

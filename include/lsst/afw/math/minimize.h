@@ -32,7 +32,6 @@
 #include <memory>
 #include "Minuit2/FCNBase.h"
 
-#include "lsst/daf/base/Citizen.h"
 #include "lsst/afw/math/Function.h"
 
 namespace lsst {

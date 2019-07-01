@@ -1,24 +1,24 @@
 /*
-* LSST Data Management System
-* Copyright 2008-2016  AURA/LSST.
-*
-* This product includes software developed by the
-* LSST Project (http://www.lsst.org/).
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the LSST License Statement and
-* the GNU General Public License along with this program.  If not,
-* see <https://www.lsstcorp.org/LegalNotices/>.
-*/
+ * LSST Data Management System
+ * Copyright 2008-2016  AURA/LSST.
+ *
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
+ * see <https://www.lsstcorp.org/LegalNotices/>.
+ */
 
 #include <pybind11/pybind11.h>
 //#include <pybind11/operators.h>
@@ -45,16 +45,18 @@ void declareMakeHeavy(PyClass &cls) {
     //    mimg, HeavyFootprintCtrl const* ctrl) {
     //            return self.makeHeavy(mimg, ctrl);
     //            });
-    cls.def("makeHeavy", (void (FootprintSet::*)(image::MaskedImage<PixelT, image::MaskPixel> const &,
-                                                 HeavyFootprintCtrl const *)) &
-                                 FootprintSet::makeHeavy<PixelT, image::MaskPixel>,
+    cls.def("makeHeavy",
+            (void (FootprintSet::*)(image::MaskedImage<PixelT, image::MaskPixel> const &,
+                                    HeavyFootprintCtrl const *)) &
+                    FootprintSet::makeHeavy<PixelT, image::MaskPixel>,
             "mimg"_a, "ctrl"_a = nullptr);
 }
 
 template <typename PixelT, typename PyClass>
 void declareSetMask(PyClass &cls) {
-    cls.def("setMask", (void (FootprintSet::*)(image::Mask<PixelT> *, std::string const &)) &
-                               FootprintSet::setMask<PixelT>,
+    cls.def("setMask",
+            (void (FootprintSet::*)(image::Mask<PixelT> *, std::string const &)) &
+                    FootprintSet::setMask<PixelT>,
             "mask"_a, "planeName"_a);
 }
 
@@ -80,8 +82,7 @@ void declareTemplatedMembers(PyClass &cls) {
 PYBIND11_MODULE(footprintSet, mod) {
     py::module::import("lsst.afw.detection.footprint");
 
-    py::class_<FootprintSet, std::shared_ptr<FootprintSet>, lsst::daf::base::Citizen> clsFootprintSet(
-            mod, "FootprintSet");
+    py::class_<FootprintSet, std::shared_ptr<FootprintSet>> clsFootprintSet(mod, "FootprintSet");
 
     declareTemplatedMembers<std::uint16_t>(clsFootprintSet);
     declareTemplatedMembers<int>(clsFootprintSet);
@@ -125,6 +126,6 @@ PYBIND11_MODULE(footprintSet, mod) {
 
     /* Member types and enums */
 }
-}
-}
-}  // lsst::afw::detection
+}  // namespace detection
+}  // namespace afw
+}  // namespace lsst

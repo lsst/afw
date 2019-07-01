@@ -86,9 +86,7 @@ private:
             : schema(),
               name(schema.addField<std::string>("name", "name of the aperture correction",
                                                 ApCorrMap::MAX_NAME_LENGTH)),
-              field(schema.addField<int>("field", "archive ID of the BoundedField object")) {
-        schema.getCitizen().markPersistent();
-    }
+              field(schema.addField<int>("field", "archive ID of the BoundedField object")) {}
 };
 
 class ApCorrMapFactory : public table::io::PersistableFactory {

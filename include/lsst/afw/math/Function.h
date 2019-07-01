@@ -34,7 +34,6 @@
 
 #include "boost/format.hpp"
 
-#include "lsst/daf/base/Citizen.h"
 #include "lsst/pex/exceptions.h"
 
 #include "lsst/afw/table/io/Persistable.h"
@@ -81,8 +80,7 @@ bool constexpr IS_NOTHROW_INIT = noexcept(static_cast<T>(1.0));
  * @ingroup afw
  */
 template <typename ReturnT>
-class Function : public lsst::daf::base::Citizen,
-                 public afw::table::io::PersistableFacade<Function<ReturnT>>,
+class Function : public afw::table::io::PersistableFacade<Function<ReturnT>>,
                  public afw::table::io::Persistable {
 public:
     /**
@@ -91,13 +89,13 @@ public:
      * The function parameters are initialized to 0.
      */
     explicit Function(unsigned int nParams)  ///< number of function parameters
-            : lsst::daf::base::Citizen(typeid(this)), _params(nParams), _isCacheValid(false) {}
+            : _params(nParams), _isCacheValid(false) {}
 
     /**
      * Construct a Function given the function parameters.
      */
     explicit Function(std::vector<double> const& params)  ///< function parameters
-            : lsst::daf::base::Citizen(typeid(this)), _params(params), _isCacheValid(false) {}
+            : _params(params), _isCacheValid(false) {}
 
     Function(Function const&) = default;
     Function(Function&&) = default;
@@ -190,7 +188,7 @@ protected:
     std::string getPythonModule() const override { return "lsst.afw.math"; }
 
     /* Default constructor: intended only for serialization */
-    explicit Function() : lsst::daf::base::Citizen(typeid(this)), _params(0), _isCacheValid(false) {}
+    explicit Function() : _params(0), _isCacheValid(false) {}
 };
 
 /**
@@ -448,7 +446,9 @@ public:
     }
 
 private:
-    ReturnT operator()(double) const noexcept(IS_NOTHROW_INIT<ReturnT>) override { return static_cast<ReturnT>(0); }
+    ReturnT operator()(double) const noexcept(IS_NOTHROW_INIT<ReturnT>) override {
+        return static_cast<ReturnT>(0);
+    }
 };
 
 /**

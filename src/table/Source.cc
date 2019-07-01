@@ -405,7 +405,6 @@ void SourceTable::handleAliasChange(std::string const &alias) {
 SourceTable::MinimalSchema::MinimalSchema() {
     schema = SimpleTable::makeMinimalSchema();
     parent = schema.addField<RecordId>("parent", "unique ID of parent source");
-    schema.getCitizen().markPersistent();
 }
 
 SourceTable::MinimalSchema &SourceTable::getMinimalSchema() {

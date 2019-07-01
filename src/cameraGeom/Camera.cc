@@ -173,7 +173,6 @@ private:
                                                       "", 0)),
         transformMap(schema.addField<int>("transformMap", "archive ID for Camera's TransformMap"))
     {
-        schema.getCitizen().markPersistent();
     }
 
     PersistenceHelper(PersistenceHelper const &) = delete;

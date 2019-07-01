@@ -116,9 +116,7 @@ struct DeltaFunctionKernelPersistenceHelper : public Kernel::PersistenceHelper {
 private:
     explicit DeltaFunctionKernelPersistenceHelper()
             : Kernel::PersistenceHelper(0),
-              pixel(table::PointKey<int>::addFields(schema, "pixel", "position of nonzero pixel", "pixel")) {
-        schema.getCitizen().markPersistent();
-    }
+              pixel(table::PointKey<int>::addFields(schema, "pixel", "position of nonzero pixel", "pixel")) {}
 };
 
 }  // namespace

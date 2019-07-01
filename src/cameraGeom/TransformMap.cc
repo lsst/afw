@@ -140,10 +140,7 @@ private:
         from(connectionSchema.addField<int>("from", "AST ID of the Frame this transform maps from.", "")),
         to(connectionSchema.addField<int>("to", "AST ID of the Frame this transform maps to.", "")),
         transform(connectionSchema.addField<int>("transform", "Archive ID of the transform.", ""))
-    {
-        sysSchema.getCitizen().markPersistent();
-        connectionSchema.getCitizen().markPersistent();
-    }
+    {}
 
     PersistenceHelper(PersistenceHelper const &) = delete;
     PersistenceHelper(PersistenceHelper &&) = delete;
