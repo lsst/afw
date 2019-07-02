@@ -13,3 +13,4 @@ modules:
   - "lsst.afw.image"
   - "lsst.afw.math"
   - "lsst.afw.table"
+  - "lsst.afw.typehandling"
