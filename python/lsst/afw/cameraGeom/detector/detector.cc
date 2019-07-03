@@ -89,6 +89,7 @@ void declareDetectorBase(py::module & mod) {
     cls.def("getName", &DetectorBase::getName);
     cls.def("getId", &DetectorBase::getId);
     cls.def("getType", &DetectorBase::getType);
+    cls.def("getDetectorType", &DetectorBase::getType);
     cls.def("getPhysicalType", &DetectorBase::getPhysicalType);
     cls.def("getSerial", &DetectorBase::getSerial);
     cls.def("getBBox", &DetectorBase::getBBox);
@@ -140,6 +141,7 @@ void declareDetectorBuilder(PyDetector & parent) {
     PyDetectorBuilder cls(parent, "Builder");
     cls.def("setBBox", &Detector::Builder::setBBox);
     cls.def("setType", &Detector::Builder::setType);
+    cls.def("setDetectorType", &Detector::Builder::setType);
     cls.def("setSerial", &Detector::Builder::setSerial);
     cls.def("setPhysicalType", &Detector::Builder::setPhysicalType);
     cls.def("setCrosstalk", &Detector::Builder::setCrosstalk);

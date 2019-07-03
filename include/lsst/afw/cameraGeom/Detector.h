@@ -122,6 +122,7 @@ public:
     /// The "native" coordinate system of this detector.
     CameraSys getNativeCoordSys() const { return CameraSys(PIXELS, getName()); }
 
+
 protected:
 
     /// Simple struct containing all simple fields.
@@ -369,6 +370,7 @@ public:
 
     /** Set the purpose type of this detector. */
     void setType(DetectorType type) { _fields.type = type; }
+    void setDetectorType(DetectorType type) { _fields.type = type; }
 
     /** Set the detector serial "number". */
     void setSerial(std::string const & serial) { _fields.serial = serial; }

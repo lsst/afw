@@ -21,9 +21,10 @@
 
 __all__ = []
 
-from lsst.utils import TemplateMeta
+# import lsst.afw.cameraGeom as afwGeom
+from lsst.utils import continueClass, TemplateMeta
 from ..detector import Detector
-from .detectorCollection import DetectorCollectionDetectorBase
+from .detectorCollection import DetectorCollectionDetectorBase, DetectorCollectionBuilderBase
 
 
 class DetectorCollectionBase(metaclass=TemplateMeta):  # noqa: F811
@@ -54,3 +55,26 @@ class DetectorCollectionBase(metaclass=TemplateMeta):  # noqa: F811
 
 
 DetectorCollectionBase.register(Detector, DetectorCollectionDetectorBase)
+
+
+@continueClass  # noqa: F811
+class DetectorCollectionBuilderBase():
+
+    def fromDict(self, inputDict, translationDict=None):
+        if translationDict is not None:
+            for key in translationDict.keys():
+                if key in inputDict:
+                    alias = translationDict[key]
+                    inputDict[alias] = inputDict[key]
+
+        self.setName(inputDict.get('name', "Undefined Camera"))
+        #        self.setPlateScale(inputDict.get('plateScale', 1.0))
+        #        self.setNativeSys(afwGeom.FOCAL_PLANE)  # This is fixed somewhere.
+        #        self.setTransforms(inputDict('transformDict', None))
+        #        import pdb
+        #        pdb.set_trace()
+
+        if 'CCDs' in inputDict:
+            for name, ccd in inputDict['CCDs'].items():
+                detBuilder = self.add(name, ccd['id'])
+                detBuilder.fromDict(ccd)

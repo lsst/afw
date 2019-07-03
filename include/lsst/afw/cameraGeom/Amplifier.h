@@ -43,6 +43,15 @@ enum class ReadoutCorner {
 };
 
 /**
+ * Assembly state of the amplifier, used to identify bounding boxes and component existence.
+ */
+enum class AssemblyState {
+    RAW,
+    ENGINEERING,
+    SCIENCE,
+};
+
+/**
  *  Geometry and electronic information about raw amplifier images
  *
  *  The Amplifier class itself is an abstract base class that provides no
@@ -149,6 +158,12 @@ public:
     [[deprecated("Amplifier objects always have raw information.")]]
     bool getHasRawInfo() const { return true; }
 
+    /// Assembly state of the amplifier.
+    AssemblyState getAssemblyState() const { return getFields().assemblyState; }
+
+    /// Bounding box of the science data, regardless of assembly state.
+    lsst::geom::Box2I getDataBBox() const { return getFields().dataBBox; }
+
     /**
      *  Bounding box of all amplifier pixels on untrimmed, assembled raw
      *  image.
@@ -186,16 +201,52 @@ public:
     lsst::geom::Box2I getRawHorizontalOverscanBBox() const { return getFields().rawHorizontalOverscanBBox; }
 
     /**
+     * The bounding box of horizontal overscan pixels in the assembled,
+     * untrimmed raw image.
+     */
+    lsst::geom::Box2I getRawSerialOverscanBBox() const { return getFields().rawHorizontalOverscanBBox; }
+
+    /**
      * The bounding box of vertical overscan pixels in the assembled,
      * untrimmed raw image.
      */
     lsst::geom::Box2I getRawVerticalOverscanBBox() const { return getFields().rawVerticalOverscanBBox; }
 
     /**
+     * The bounding box of vertical overscan pixels in the assembled,
+     * untrimmed raw image.
+     */
+    lsst::geom::Box2I getRawParallelOverscanBBox() const { return getFields().rawVerticalOverscanBBox; }
+
+    /**
      * The bounding box of (horizontal) prescan pixels in the assembled,
      * untrimmed raw image.
      */
-    lsst::geom::Box2I getRawPrescanBBox() const { return getFields().rawPrescanBBox; }
+    lsst::geom::Box2I getRawPrescanBBox() const { return getFields().rawHorizontalPrescanBBox; }
+
+    /**
+     * The bounding box of (horizontal) prescan pixels in the assembled,
+     * untrimmed raw image.
+     */
+    lsst::geom::Box2I getRawSerialPrescanBBox() const { return getFields().rawHorizontalPrescanBBox; }
+
+    /**
+     * The bounding box of (horizontal) prescan pixels in the assembled,
+     * untrimmed raw image.
+     */
+    lsst::geom::Box2I getRawHorizontalPrescanBBox() const { return getFields().rawHorizontalPrescanBBox; }
+
+    /**
+     * The bounding box of vertical prescan pixels in the assembled,
+     * untrimmed raw image.
+     */
+    lsst::geom::Box2I getRawParallelPrescanBBox() const { return getFields().rawVerticalPrescanBBox; }
+
+    /**
+     * The bounding box of vertical prescan pixels in the assembled,
+     * untrimmed raw image.
+     */
+    lsst::geom::Box2I getRawVerticalPrescanBBox() const { return getFields().rawVerticalPrescanBBox; }
 
 protected:
 
@@ -212,14 +263,18 @@ protected:
         double linearityThreshold;
         double linearityMaximum;
         std::string linearityUnits;
+        AssemblyState assemblyState;
         lsst::geom::Box2I rawBBox;
-        lsst::geom::Box2I rawDataBBox;
+        bool perAmpData = true;
         bool rawFlipX = false;
         bool rawFlipY = false;
         lsst::geom::Extent2I rawXYOffset;
         lsst::geom::Box2I rawHorizontalOverscanBBox;
         lsst::geom::Box2I rawVerticalOverscanBBox;
-        lsst::geom::Box2I rawPrescanBBox;
+        lsst::geom::Box2I rawHorizontalPrescanBBox;
+        lsst::geom::Box2I rawVerticalPrescanBBox;
+        lsst::geom::Box2I rawDataBBox;
+        lsst::geom::Box2I dataBBox;
     };
 
     Amplifier() = default;
@@ -317,6 +372,9 @@ public:
     /// @copydoc Amplifier::getLinearityUnits
     void setLinearityUnits(std::string const & units) { _fields.linearityUnits = units; }
 
+    /// @copydoc Amplifier::getAssemblyState
+    void setAssemblyState(AssemblyState assemblyState) { _fields.assemblyState = assemblyState; }
+
     /// @copydoc Amplifier::getRawBBox
     void setRawBBox(lsst::geom::Box2I const &bbox) { _fields.rawBBox = bbox; }
 
@@ -342,9 +400,29 @@ public:
         _fields.rawVerticalOverscanBBox = bbox;
     }
 
-    /// @copydoc Amplifier::getRawPrescanBBox
+    /// @copydoc Amplifier::getRawHorizontalPrescanBBox
     void setRawPrescanBBox(lsst::geom::Box2I const &bbox) {
-        _fields.rawPrescanBBox = bbox;
+        _fields.rawHorizontalPrescanBBox = bbox;
+    }
+
+    /// @copydoc Amplifier::getRawHorizontalPrescanBBox
+    void setRawHorizontalPrescanBBox(lsst::geom::Box2I const &bbox) {
+        _fields.rawHorizontalPrescanBBox = bbox;
+    }
+
+    /// @copydoc Amplifier::getRawHorizontalOverscanBBox
+    void setRawSerialOverscanBBox(lsst::geom::Box2I const &bbox) {
+        _fields.rawHorizontalOverscanBBox = bbox;
+    }
+
+    /// @copydoc Amplifier::getRawVerticalOverscanBBox
+    void setRawParallelOverscanBBox(lsst::geom::Box2I const &bbox) {
+        _fields.rawVerticalOverscanBBox = bbox;
+    }
+
+    /// @copydoc Amplifier::getRawVerticalPrescanBBox
+    void setRawVerticalPrescanBBox(lsst::geom::Box2I const &bbox) {
+        _fields.rawVerticalPrescanBBox = bbox;
     }
 
 protected:

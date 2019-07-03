@@ -128,7 +128,7 @@ struct RecordSchemaHelper {
     table::PointKey<int> rawXYOffset;
     AmpInfoBoxKey rawHorizontalOverscanBBox;
     AmpInfoBoxKey rawVerticalOverscanBBox;
-    AmpInfoBoxKey rawPrescanBBox;
+    AmpInfoBoxKey rawHorizontalPrescanBBox;
     table::Key<double> linearityThreshold;
     table::Key<double> linearityMaximum;
     table::Key<std::string> linearityUnits;
@@ -157,7 +157,7 @@ struct RecordSchemaHelper {
         rawXYOffset(schema["raw_xyoffset"]),
         rawHorizontalOverscanBBox(schema["raw_horizontaloverscanbbox"]),
         rawVerticalOverscanBBox(schema["raw_verticaloverscanbbox"]),
-        rawPrescanBBox(schema["raw_prescanbbox"])
+        rawHorizontalPrescanBBox(schema["raw_prescanbbox"])
     {
         auto setKeyIfPresent = [this](auto & key, std::string const & name) {
             try {
@@ -218,7 +218,7 @@ private:
         rawVerticalOverscanBBox(
             AmpInfoBoxKey::addFields(schema, "raw_verticaloverscanbbox",
                                      "usable vertical overscan region raw image", "pixel")),
-        rawPrescanBBox(
+        rawHorizontalPrescanBBox(
             AmpInfoBoxKey::addFields(schema, "raw_prescanbbox",
                                      "usable (horizontal) prescan bbox on raw image", "pixel")),
         linearityThreshold(schema.addField<double>("linearityThreshold", "TODO! NEVER DOCUMENTED")),
@@ -292,8 +292,7 @@ Amplifier::Builder Amplifier::Builder::fromRecord(table::BaseRecord const & reco
     result.setRawXYOffset(lsst::geom::Extent2I(record.get(helper.rawXYOffset)));
     result.setRawHorizontalOverscanBBox(record.get(helper.rawHorizontalOverscanBBox));
     result.setRawVerticalOverscanBBox(record.get(helper.rawVerticalOverscanBBox));
-    result.setRawHorizontalOverscanBBox(record.get(helper.rawHorizontalOverscanBBox));
-    result.setRawPrescanBBox(record.get(helper.rawPrescanBBox));
+    result.setRawHorizontalPrescanBBox(record.get(helper.rawHorizontalPrescanBBox));
     // Set not-always-present fields only when present.  While it's usually
     // preferable to use the public setter methods (as above), passing member
     // function pointers through the lambda below is sufficiently unpleasant
@@ -326,7 +325,7 @@ void Amplifier::toRecord(table::BaseRecord & record) const {
     record.set(helper.rawXYOffset, lsst::geom::Point2I(fields.rawXYOffset));
     record.set(helper.rawHorizontalOverscanBBox, fields.rawHorizontalOverscanBBox);
     record.set(helper.rawVerticalOverscanBBox, fields.rawVerticalOverscanBBox);
-    record.set(helper.rawPrescanBBox, fields.rawPrescanBBox);
+    record.set(helper.rawHorizontalPrescanBBox, fields.rawHorizontalPrescanBBox);
     // Set not-always-present fields only when present.
     auto setIfValid = [this, &record](auto value, auto & key) {
         if (key.isValid()) {

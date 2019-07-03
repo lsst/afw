@@ -22,8 +22,9 @@
 
 # Camera object below is the same one exported by the pybind11 camera
 # module, so we don't need to re-export it here.
-__all__ = []
+__all__ = ['Camera']
 
+# import lsst.afw.cameraGeom as afwGeom
 from lsst.utils import continueClass, doImport
 from .camera import Camera
 
@@ -55,3 +56,20 @@ class Camera:
     def telescopeDiameter(self):
         cls = doImport(self.getPupilFactoryName())
         return cls.telescopeDiameter
+
+    # def fromDict(self, inputDict, translationDict=None):
+    #     if translationDict is not None:
+    #         for key in translationDict.keys():
+    #             if key in inputDict:
+    #                 alias = translationDict[key]
+    #                 inputDict[alias] = inputDict[key]
+
+    #     self.setName(inputDict.get('name', "Undefined Camera"))
+    #     #        self.setPlateScale(inputDict.get('plateScale', 1.0))
+    #     # self.setNativeSys(afwGeom.FOCAL_PLANE)  # This is fixed somewhere.
+    #     # self.setTransforms(inputDict('transformDict', None))
+
+    #     if 'ccds' in inputDict:
+    #         for ccd in inputDict['ccds']:
+    #             detBuilder = self.add(ccd['name'], ccd['id'])
+    #             detBuilder.fromDict(ccd)

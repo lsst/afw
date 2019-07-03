@@ -45,6 +45,10 @@ PyAmplifier declarePyAmplifier(py::module & mod) {
         .value("LR", ReadoutCorner::LR)
         .value("UR", ReadoutCorner::UR)
         .value("UL", ReadoutCorner::UL);
+    py::enum_<AssemblyState>(mod, "AssemblyState")
+        .value("RAW", AssemblyState::RAW)
+        .value("ENGINEERING", AssemblyState::ENGINEERING)
+        .value("SCIENCE", AssemblyState::SCIENCE);
     PyAmplifier cls(mod, "Amplifier");
     cls.def_static("getRecordSchema", &Amplifier::getRecordSchema);
     cls.def("toRecord", &Amplifier::toRecord);
@@ -69,7 +73,14 @@ PyAmplifier declarePyAmplifier(py::module & mod) {
     cls.def("getRawXYOffset", &Amplifier::getRawXYOffset);
     cls.def("getRawHorizontalOverscanBBox", &Amplifier::getRawHorizontalOverscanBBox);
     cls.def("getRawVerticalOverscanBBox", &Amplifier::getRawVerticalOverscanBBox);
+    cls.def("getRawHorizontalPrescanBBox", &Amplifier::getRawHorizontalPrescanBBox);
+    cls.def("getRawVerticalPrescanBBox", &Amplifier::getRawVerticalPrescanBBox);
+    cls.def("getRawSerialOverscanBBox", &Amplifier::getRawSerialOverscanBBox);
+    cls.def("getRawParallelOverscanBBox", &Amplifier::getRawParallelOverscanBBox);
+    cls.def("getRawSerialPrescanBBox", &Amplifier::getRawSerialPrescanBBox);
+    cls.def("getRawParallelPrescanBBox", &Amplifier::getRawParallelPrescanBBox);
     cls.def("getRawPrescanBBox", &Amplifier::getRawPrescanBBox);
+
     return cls;
 }
 
@@ -106,6 +117,10 @@ void declarePyAmplifierBuilder(PyAmplifier & parent) {
     cls.def("setRawXYOffset", &Amplifier::Builder::setRawXYOffset, "offset"_a);
     cls.def("setRawHorizontalOverscanBBox", &Amplifier::Builder::setRawHorizontalOverscanBBox, "bbox"_a);
     cls.def("setRawVerticalOverscanBBox", &Amplifier::Builder::setRawVerticalOverscanBBox, "bbox"_a);
+    cls.def("setRawHorizontalPrescanBBox", &Amplifier::Builder::setRawHorizontalPrescanBBox, "bbox"_a);
+    cls.def("setRawVerticalPrescanBBox", &Amplifier::Builder::setRawVerticalPrescanBBox, "bbox"_a);
+    cls.def("setRawSerialOverscanBBox", &Amplifier::Builder::setRawSerialOverscanBBox, "bbox"_a);
+    cls.def("setRawParallelOverscanBBox", &Amplifier::Builder::setRawParallelOverscanBBox, "bbox"_a);
     cls.def("setRawPrescanBBox", &Amplifier::Builder::setRawPrescanBBox, "bbox"_a);
 }
 

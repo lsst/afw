@@ -225,7 +225,7 @@ public:
     /// Set the name of the camera.
     void setName(std::string const & name) { _name = name; }
 
-    /// @copydoc Camera::getPupilFactoryName.
+    /// @copydoc Camera::getPupilFactoryName
     std::string getPupilFactoryName() const { return _pupilFactoryName; }
 
     /// Set the fully-qualified name of the Python class that provides this Camera's PupilFactory.
