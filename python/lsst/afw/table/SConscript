@@ -1,4 +1,4 @@
-## -*- python -*-
+# -*- python -*-
 from lsst.sconsUtils import scripts
 scripts.BasicSConscript.pybind11(
     ['aliasMap/aliasMap',
@@ -16,6 +16,6 @@ scripts.BasicSConscript.pybind11(
      'exposure/exposure',
      'idFactory',
      'wcsUtils',
-    ],
+     ],
     addUnderscore=False,
 )
