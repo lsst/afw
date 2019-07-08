@@ -22,7 +22,7 @@ import numpy as np
 
 from lsst.utils import continueClass, TemplateMeta
 from .base import BaseRecord, BaseCatalog
-from ..schema import Key
+from .._schema import Key
 
 
 __all__ = ["Catalog"]

@@ -24,7 +24,7 @@ __all__ = ["SimpleMatch", "ReferenceMatch", "SourceMatch", "clone", "matchCls", 
 import numpy as np
 
 from ..base import BaseCatalog
-from ..schema import Schema
+from .._schema import Schema
 from .match import SimpleMatch, ReferenceMatch, SourceMatch
 
 

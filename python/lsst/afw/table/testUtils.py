@@ -21,7 +21,7 @@
 
 import lsst.utils.tests
 import difflib
-from .schema import Schema
+from ._schema import Schema
 
 __all__ = ["assertSchemasEqual", "diffSchemas", "joinWords"]
 

@@ -27,8 +27,8 @@ import os.path
 import numpy as np
 
 import lsst.pex.exceptions as pexExcept
-from .schema import Schema
-from .schemaMapper import SchemaMapper
+from ._schema import Schema
+from ._schemaMapper import SchemaMapper
 from .base import BaseCatalog
 from .simple import SimpleCatalog, SimpleTable
 from .source import SourceCatalog, SourceTable

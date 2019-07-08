@@ -20,8 +20,8 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from ._table import *
-from .aliasMap import *
-from .schema import *
+from ._aliasMap import *
+from ._schema import *
 from .baseColumnView import *
 from .base import *
 from .idFactory import *

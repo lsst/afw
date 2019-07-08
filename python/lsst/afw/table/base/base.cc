@@ -166,7 +166,6 @@ PyBaseTable declareBaseTable(py::module &mod) {
 }
 
 PYBIND11_MODULE(base, mod) {
-    py::module::import("lsst.afw.table.schema");
     py::module::import("lsst.afw.table.baseColumnView");
 
     auto clsBaseTable = declareBaseTable(mod);

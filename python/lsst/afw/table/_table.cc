@@ -34,8 +34,15 @@ namespace table {
 
 using utils::python::WrapperCollection;
 
+void wrapAliasMap(WrapperCollection&);
+void wrapSchema(WrapperCollection&);
+void wrapSchemaMapper(WrapperCollection&);
+
 PYBIND11_MODULE(_table, mod) {
     WrapperCollection wrappers(mod, "lsst.afw.table");
+    wrapAliasMap(wrappers);
+    wrapSchema(wrappers);
+    wrapSchemaMapper(wrappers);
     wrappers.finish();
 }
 

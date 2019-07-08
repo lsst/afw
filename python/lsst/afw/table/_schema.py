@@ -30,7 +30,7 @@ import astropy.units
 import lsst.geom
 from lsst.utils import continueClass, TemplateMeta
 
-from .schema import _Key, _Field, _SchemaItem, Schema
+from ._table import _Key, _Field, _SchemaItem, Schema
 
 # Objects we prefer to use over the C++ string name for
 # Key/Field/SchemaItem types.

@@ -19,5 +19,24 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from .schema import *
-from .schemaContinued import *
+__all__ = []
+
+from lsst.utils import continueClass
+from ._table import AliasMap
+
+
+@continueClass  # noqa: F811
+class AliasMap:
+
+    def keys(self):
+        """Return an iterator over AliasMap keys"""
+        for key, value in self.items():
+            yield key
+
+    def values(self):
+        """Return an iterator over AliasMap values"""
+        for key, value in self.items():
+            yield value
+
+    def __iter__(self):
+        return self.keys()

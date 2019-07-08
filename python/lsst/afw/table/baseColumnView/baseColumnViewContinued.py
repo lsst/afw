@@ -24,7 +24,7 @@ __all__ = []  # importing this module adds methods to BaseColumnView
 import numpy as np
 
 from lsst.utils import continueClass
-from ..schema import KeyFlag
+from .._table import KeyFlag
 from .baseColumnView import _BaseColumnViewBase
 
 # We can't call this "BaseColumnView" because that's the typedef for

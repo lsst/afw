@@ -24,8 +24,8 @@ __all__ = []  # import only for the side effects
 import lsst.pex.exceptions
 from lsst.utils import continueClass
 
-from ..schema import Field, Schema
-from .schemaMapper import SchemaMapper
+from ._schema import Field, Schema
+from ._table import SchemaMapper
 
 
 @continueClass  # noqa: F811
