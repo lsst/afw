@@ -3,7 +3,6 @@ from lsst.sconsUtils import scripts
 scripts.BasicSConscript.pybind11(
     ['_table',
      'base/base',
-     'baseColumnView/baseColumnView',
      'arrays/arrays',
      'aggregates/aggregates',
      'slots',
@@ -20,9 +19,9 @@ scripts.BasicSConscript.pybind11(
         '_table': ['_aliasMap.cc',
                    '_schema.cc',
                    '_schemaMapper.cc',
+                   '_baseColumnView.cc',
                    ],
         'base/base': [],
-        'baseColumnView/baseColumnView': [],
         'arrays/arrays': [],
         'aggregates/aggregates': [],
         'slots': [],
