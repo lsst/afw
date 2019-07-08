@@ -1,7 +1,8 @@
 # -*- python -*-
 from lsst.sconsUtils import scripts
 scripts.BasicSConscript.pybind11(
-    ['aliasMap/aliasMap',
+    ['_table',
+     'aliasMap/aliasMap',
      'schema/schema',
      'schemaMapper/schemaMapper',
      'base/base',
@@ -17,5 +18,23 @@ scripts.BasicSConscript.pybind11(
      'idFactory',
      'wcsUtils',
      ],
+    extraSrc={
+        '_table': [],
+        'aliasMap/aliasMap': [],
+        'schema/schema': [],
+        'schemaMapper/schemaMapper': [],
+        'base/base': [],
+        'baseColumnView/baseColumnView': [],
+        'arrays/arrays': [],
+        'aggregates/aggregates': [],
+        'slots': [],
+        'simple/simple': [],
+        'source/source': [],
+        'match/match': [],
+        'ampInfo/ampInfo': [],
+        'exposure/exposure': [],
+        'idFactory': [],
+        'wcsUtils': [],
+    },
     addUnderscore=False,
 )
