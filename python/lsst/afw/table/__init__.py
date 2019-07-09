@@ -24,10 +24,8 @@ from ._aliasMap import *
 from ._schema import *
 from ._baseColumnView import *
 from ._base import *
-from .idFactory import *
-from .aggregates import *
-from .arrays import *
-from .slots import *
+from ._aggregates import *
+from ._arrays import *
 from .simple import *
 from .source import *
 from .ampInfo import *

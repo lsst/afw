@@ -24,7 +24,9 @@ __all__ = ["PointKey", "CovarianceMatrixKey"]
 import numpy as np
 
 from lsst.utils import TemplateMeta
-from . import aggregates
+from ._table import Point2IKey, Point2DKey, \
+    CovarianceMatrix2fKey, CovarianceMatrix3fKey, CovarianceMatrix4fKey, CovarianceMatrixXfKey, \
+    CovarianceMatrix2dKey, CovarianceMatrix3dKey, CovarianceMatrix4dKey, CovarianceMatrixXdKey
 
 
 class PointKey(metaclass=TemplateMeta):
@@ -32,8 +34,8 @@ class PointKey(metaclass=TemplateMeta):
     TEMPLATE_DEFAULTS = (None, 2)
 
 
-PointKey.register((np.int32, 2), aggregates.Point2IKey)
-PointKey.register((np.float64, 2), aggregates.Point2DKey)
+PointKey.register((np.int32, 2), Point2IKey)
+PointKey.register((np.float64, 2), Point2DKey)
 
 
 # Because Boxes aren't templates themselves, we don't expose the fact that
@@ -45,13 +47,13 @@ class CovarianceMatrixKey(metaclass=TemplateMeta):
     TEMPLATE_PARAMS = ("dtype", "dim")
 
 
-CovarianceMatrixKey.register((np.float32, 2), aggregates.CovarianceMatrix2fKey)
-CovarianceMatrixKey.register((np.float32, 3), aggregates.CovarianceMatrix3fKey)
-CovarianceMatrixKey.register((np.float32, 4), aggregates.CovarianceMatrix4fKey)
+CovarianceMatrixKey.register((np.float32, 2), CovarianceMatrix2fKey)
+CovarianceMatrixKey.register((np.float32, 3), CovarianceMatrix3fKey)
+CovarianceMatrixKey.register((np.float32, 4), CovarianceMatrix4fKey)
 CovarianceMatrixKey.register(
-    (np.float32, None), aggregates.CovarianceMatrixXfKey)
-CovarianceMatrixKey.register((np.float64, 2), aggregates.CovarianceMatrix2dKey)
-CovarianceMatrixKey.register((np.float64, 3), aggregates.CovarianceMatrix3dKey)
-CovarianceMatrixKey.register((np.float64, 4), aggregates.CovarianceMatrix4dKey)
+    (np.float32, None), CovarianceMatrixXfKey)
+CovarianceMatrixKey.register((np.float64, 2), CovarianceMatrix2dKey)
+CovarianceMatrixKey.register((np.float64, 3), CovarianceMatrix3dKey)
+CovarianceMatrixKey.register((np.float64, 4), CovarianceMatrix4dKey)
 CovarianceMatrixKey.register(
-    (np.float64, None), aggregates.CovarianceMatrixXdKey)
+    (np.float64, None), CovarianceMatrixXdKey)

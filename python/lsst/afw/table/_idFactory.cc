@@ -24,38 +24,26 @@
 #include "pybind11/pybind11.h"
 
 #include "lsst/utils/python.h"
+#include "lsst/afw/table/IdFactory.h"
 
 namespace py = pybind11;
-using namespace pybind11::literals;
+using namespace py::literals;
 
 namespace lsst {
 namespace afw {
 namespace table {
 
-using utils::python::WrapperCollection;
+using PyIdFactory = py::class_<IdFactory, std::shared_ptr<IdFactory>>;
 
-void wrapAggregates(WrapperCollection&);
-void wrapAliasMap(WrapperCollection&);
-void wrapArrays(WrapperCollection&);
-void wrapBase(WrapperCollection&);
-void wrapBaseColumnView(WrapperCollection&);
-void wrapIdFactory(WrapperCollection&);
-void wrapSchema(WrapperCollection&);
-void wrapSchemaMapper(WrapperCollection&);
-void wrapSlots(WrapperCollection&);
-
-PYBIND11_MODULE(_table, mod) {
-    WrapperCollection wrappers(mod, "lsst.afw.table");
-    wrapAliasMap(wrappers);
-    wrapSchema(wrappers);
-    wrapSchemaMapper(wrappers);
-    wrapBaseColumnView(wrappers);
-    wrapBase(wrappers);
-    wrapIdFactory(wrappers);
-    wrapArrays(wrappers);
-    wrapAggregates(wrappers);
-    wrapSlots(wrappers);
-    wrappers.finish();
+void wrapIdFactory(utils::python::WrapperCollection& wrappers) {
+    wrappers.wrapType(PyIdFactory(wrappers.module, "IdFactory"), [](auto& mod, auto& cls) {
+        cls.def("__call__", &IdFactory::operator());
+        cls.def("notify", &IdFactory::notify, "id"_a);
+        cls.def("clone", &IdFactory::clone);
+        cls.def_static("makeSimple", IdFactory::makeSimple);
+        cls.def_static("makeSource", IdFactory::makeSource, "expId"_a, "reserved"_a);
+        cls.def_static("computeReservedFromMaxBits", IdFactory::computeReservedFromMaxBits, "maxBits"_a);
+    });
 }
 
 }  // namespace table

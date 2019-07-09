@@ -19,5 +19,17 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from .aggregates import *
-from .aggregatesContinued import *
+__all__ = ["ArrayKey"]
+
+import numpy as np
+
+from lsst.utils import TemplateMeta
+from ._table import ArrayFKey, ArrayDKey
+
+
+class ArrayKey(metaclass=TemplateMeta):
+    pass
+
+
+ArrayKey.register(np.float32, ArrayFKey)
+ArrayKey.register(np.float64, ArrayDKey)

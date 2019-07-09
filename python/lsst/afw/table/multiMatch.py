@@ -24,7 +24,7 @@ import numpy
 
 import lsst.geom
 from ._schemaMapper import SchemaMapper
-from .aggregates import CoordKey
+from ._table import CoordKey
 from .source import SourceRecord
 
 
