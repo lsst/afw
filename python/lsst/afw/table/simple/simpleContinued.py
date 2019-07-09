@@ -21,7 +21,7 @@
 
 __all__ = []  # import this module only for its side effects
 
-from ..base import Catalog
+from .._base import Catalog
 from .simple import SimpleCatalog
 
 Catalog.register("Simple", SimpleCatalog)

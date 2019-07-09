@@ -182,7 +182,6 @@ static void declareCovarianceMatrixKey(py::module &mod, const ::std::string &suf
 
 PYBIND11_MODULE(aggregates, mod) {
     py::module::import("lsst.afw.geom.ellipses");
-    py::module::import("lsst.afw.table.base");
     py::enum_<CoordinateType>(mod, "CoordinateType")
             .value("PIXEL", CoordinateType::PIXEL)
             .value("CELESTIAL", CoordinateType::CELESTIAL)

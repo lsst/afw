@@ -23,7 +23,7 @@ from ._table import *
 from ._aliasMap import *
 from ._schema import *
 from ._baseColumnView import *
-from .base import *
+from ._base import *
 from .idFactory import *
 from .aggregates import *
 from .arrays import *

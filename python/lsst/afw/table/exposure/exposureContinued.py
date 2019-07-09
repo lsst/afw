@@ -25,7 +25,7 @@ from deprecated.sphinx import deprecated
 
 from lsst.utils import continueClass
 
-from ..base import Catalog
+from .._base import Catalog
 from .exposure import ExposureCatalog, ExposureRecord
 
 

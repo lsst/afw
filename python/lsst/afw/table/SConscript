@@ -2,7 +2,6 @@
 from lsst.sconsUtils import scripts
 scripts.BasicSConscript.pybind11(
     ['_table',
-     'base/base',
      'arrays/arrays',
      'aggregates/aggregates',
      'slots',
@@ -20,8 +19,8 @@ scripts.BasicSConscript.pybind11(
                    '_schema.cc',
                    '_schemaMapper.cc',
                    '_baseColumnView.cc',
+                   '_base.cc',
                    ],
-        'base/base': [],
         'arrays/arrays': [],
         'aggregates/aggregates': [],
         'slots': [],

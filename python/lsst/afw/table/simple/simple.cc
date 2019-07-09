@@ -85,7 +85,6 @@ PySimpleTable declareSimpleTable(py::module &mod) {
 
 PYBIND11_MODULE(simple, mod) {
     py::module::import("lsst.afw.coord");  // needed, but why? Perhaps can be removed after RFC-460
-    py::module::import("lsst.afw.table.base");
     py::module::import("lsst.afw.table.idFactory");
 
     auto clsSimpleRecord = declareSimpleRecord(mod);

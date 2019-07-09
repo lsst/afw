@@ -21,7 +21,7 @@
 
 __all__ = ["ReadoutCornerValNameDict", "ReadoutCornerNameValDict"]
 
-from ..base import Catalog
+from .._base import Catalog
 from .ampInfo import AmpInfoCatalog, LL, LR, UR, UL
 
 Catalog.register("AmpInfo", AmpInfoCatalog)

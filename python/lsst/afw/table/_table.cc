@@ -35,6 +35,7 @@ namespace table {
 using utils::python::WrapperCollection;
 
 void wrapAliasMap(WrapperCollection&);
+void wrapBase(WrapperCollection&);
 void wrapBaseColumnView(WrapperCollection&);
 void wrapSchema(WrapperCollection&);
 void wrapSchemaMapper(WrapperCollection&);
@@ -45,6 +46,7 @@ PYBIND11_MODULE(_table, mod) {
     wrapSchema(wrappers);
     wrapSchemaMapper(wrappers);
     wrapBaseColumnView(wrappers);
+    wrapBase(wrappers);
     wrappers.finish();
 }
 

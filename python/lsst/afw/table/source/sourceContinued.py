@@ -22,7 +22,7 @@
 __all__ = []
 
 from lsst.utils import continueClass
-from ..base import Catalog
+from .._base import Catalog
 from .source import SourceCatalog, SourceTable
 
 Catalog.register("Source", SourceCatalog)

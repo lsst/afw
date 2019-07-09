@@ -89,8 +89,6 @@ void declareArrayKey(py::module &mod, std::string const &suffix) {
 };
 
 PYBIND11_MODULE(arrays, mod) {
-    py::module::import("lsst.afw.table.base");
-
     declareArrayKey<float>(mod, "F");
     declareArrayKey<double>(mod, "D");
 }
