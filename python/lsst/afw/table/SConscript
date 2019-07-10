@@ -2,8 +2,6 @@
 from lsst.sconsUtils import scripts
 scripts.BasicSConscript.pybind11(
     ['_table',
-     'match/match',
-     'wcsUtils',
      ],
     extraSrc={
         # Need .cc here or Scons will look for the wrong file type
@@ -20,9 +18,9 @@ scripts.BasicSConscript.pybind11(
                    '_source.cc',
                    '_ampInfo.cc',
                    '_exposure.cc',
+                   '_match.cc',
+                   '_wcsUtils.cc',
                    ],
-        'match/match': [],
-        'wcsUtils': [],
     },
     addUnderscore=False,
 )

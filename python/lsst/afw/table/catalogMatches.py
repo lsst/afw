@@ -33,7 +33,7 @@ from ._base import BaseCatalog
 from ._table import SimpleTable
 from ._simple import SimpleCatalog
 from ._source import SourceCatalog, SourceTable
-from .match import ReferenceMatch
+from ._match import ReferenceMatch
 
 from lsst.utils import getPackageDir
 

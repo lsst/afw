@@ -23,9 +23,9 @@ __all__ = ["SimpleMatch", "ReferenceMatch", "SourceMatch", "clone", "matchCls", 
 
 import numpy as np
 
-from .._base import BaseCatalog
-from .._schema import Schema
-from .match import SimpleMatch, ReferenceMatch, SourceMatch
+from ._base import BaseCatalog
+from ._schema import Schema
+from ._table import SimpleMatch, ReferenceMatch, SourceMatch
 
 
 def __repr__(self):  # noqa: N807

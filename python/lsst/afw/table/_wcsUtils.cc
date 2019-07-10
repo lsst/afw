@@ -21,9 +21,18 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <memory>
+#include <vector>
+
 #include "pybind11/pybind11.h"
+#include "pybind11/stl.h"
 
 #include "lsst/utils/python.h"
+
+#include "lsst/afw/table/fwd.h"
+#include "lsst/afw/table/Simple.h"
+#include "lsst/afw/table/Source.h"
+#include "lsst/afw/table/wcsUtils.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -34,40 +43,30 @@ namespace table {
 
 using utils::python::WrapperCollection;
 
-void wrapAggregates(WrapperCollection&);
-void wrapAliasMap(WrapperCollection&);
-void wrapAmpInfo(WrapperCollection&);
-void wrapArrays(WrapperCollection&);
-void wrapBase(WrapperCollection&);
-void wrapBaseColumnView(WrapperCollection&);
-void wrapExposure(WrapperCollection&);
-void wrapIdFactory(WrapperCollection&);
-void wrapMatch(WrapperCollection&);
-void wrapSchema(WrapperCollection&);
-void wrapSchemaMapper(WrapperCollection&);
-void wrapSimple(WrapperCollection&);
-void wrapSlots(WrapperCollection&);
-void wrapSource(WrapperCollection&);
-void wrapWcsUtils(WrapperCollection&);
+namespace {
 
-PYBIND11_MODULE(_table, mod) {
-    WrapperCollection wrappers(mod, "lsst.afw.table");
-    wrapAliasMap(wrappers);
-    wrapSchema(wrappers);
-    wrapSchemaMapper(wrappers);
-    wrapBaseColumnView(wrappers);
-    wrapBase(wrappers);
-    wrapIdFactory(wrappers);
-    wrapArrays(wrappers);
-    wrapAggregates(wrappers);
-    wrapSlots(wrappers);
-    wrapSimple(wrappers);
-    wrapSource(wrappers);
-    wrapAmpInfo(wrappers);
-    wrapExposure(wrappers);
-    wrapMatch(wrappers);
-    wrapWcsUtils(wrappers);
-    wrappers.finish();
+template <typename ReferenceCollection>
+void declareUpdateRefCentroids(WrapperCollection &wrappers) {
+    wrappers.wrap([](auto &mod) {
+        mod.def("updateRefCentroids", updateRefCentroids<ReferenceCollection>, "wcs"_a, "refList"_a);
+    });
+}
+
+template <typename SourceCollection>
+void declareUpdateSourceCoords(WrapperCollection &wrappers) {
+    wrappers.wrap([](auto &mod) {
+        mod.def("updateSourceCoords", updateSourceCoords<SourceCollection>, "wcs"_a, "sourceList"_a);
+    });
+}
+
+}  // namespace
+
+void wrapWcsUtils(WrapperCollection &wrappers) {
+    declareUpdateRefCentroids<std::vector<std::shared_ptr<lsst::afw::table::SimpleRecord>>>(wrappers);
+    declareUpdateRefCentroids<lsst::afw::table::SimpleCatalog>(wrappers);
+
+    declareUpdateSourceCoords<std::vector<std::shared_ptr<lsst::afw::table::SourceRecord>>>(wrappers);
+    declareUpdateSourceCoords<lsst::afw::table::SourceCatalog>(wrappers);
 }
 
 }  // namespace table

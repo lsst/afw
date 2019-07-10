@@ -30,7 +30,6 @@ from ._simple import *
 from ._source import *
 from ._ampInfo import *
 from ._exposure import *
-from .match import *
+from ._match import *
 from .catalogMatches import *
-from .wcsUtils import *
 from .multiMatch import *
