@@ -407,7 +407,16 @@ public:
     /// Create a new SkyWcs that is a copy of this one.
     std::shared_ptr<typehandling::Storable> cloneStorable() const override;
 
-    /// Create a string representation of this object.
+    /**
+     * Create a string representation of this object.
+     *
+     * An example of the output might look like this (note the newlines):
+     *
+     *     FITS standard SkyWcs:
+     *     Sky Origin: (0.000000, +45.000000)
+     *     Pixel Origin: (100, 100)
+     *     Pixel Scale: 1 arcsec/pixel
+     */
     std::string toString() const override;
 
     /**
@@ -619,9 +628,7 @@ std::shared_ptr<TransformPoint2ToPoint2> getPixelToIntermediateWorldCoords(SkyWc
                                                                            bool simplify = true);
 
 /**
- * Print a SkyWcs to an ostream
- *
- * For now it just prints "SkyWcs"; eventually it would be nice to have a summary
+ * Print a SkyWcs to an ostream (delegates to SkyWcs.toString()).
  */
 std::ostream &operator<<(std::ostream &os, SkyWcs const &wcs);
 

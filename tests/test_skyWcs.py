@@ -545,6 +545,15 @@ class SimpleSkyWcsTestCase(SkyWcsBaseTestCase):
             # Most projections only seem to agree to within 1e-4 in the round trip test
             self.assertSkyWcsAstropyWcsAlmostEqual(skyWcs=skyWcs, astropyWcs=astropyWcs, bbox=bbox)
 
+    def testStr(self):
+        """Test that we can get something coherent when printing a SkyWcs.
+        """
+        cdMatrix = makeCdMatrix(scale=self.scale)
+        skyWcs = makeSkyWcs(crpix=self.crpix, crval=self.crvalList[0], cdMatrix=cdMatrix)
+        self.assertIn(f"Sky Origin: {self.crvalList[0]}", str(skyWcs))
+        self.assertIn(f"Pixel Origin: {self.crpix}", str(skyWcs))
+        self.assertIn(f"Pixel Scale: ", str(skyWcs))
+
 
 class MetadataWcsTestCase(SkyWcsBaseTestCase):
     """Test metadata constructor of SkyWcs

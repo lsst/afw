@@ -334,7 +334,26 @@ std::shared_ptr<typehandling::Storable> SkyWcs::cloneStorable() const {
     return std::make_unique<SkyWcs>(*this);
 }
 
-std::string SkyWcs::toString() const { return "SkyWcs"; }
+std::string SkyWcs::toString() const {
+    std::ostringstream os;
+    if (isFits()) {
+        os << "FITS standard SkyWcs:";
+    } else {
+        os << "Non-standard SkyWcs (Frames: ";
+        // Print the frames in index order (frames are numbered from 1).
+        std::string delimiter = "";
+        for (size_t i = 1; i <= getFrameDict()->getAllDomains().size(); ++i) {
+            os << delimiter << getFrameDict()->getFrame(i)->getDomain();
+            delimiter = ", ";
+        }
+        os << "): ";
+    }
+    std::string delimiter = "\n";
+    os << delimiter << "Sky Origin: " << getSkyOrigin();
+    os << delimiter << "Pixel Origin: " << getPixelOrigin();
+    os << delimiter << "Pixel Scale: " << getPixelScale().asArcseconds() << " arcsec/pixel";
+    return os.str();
+}
 
 bool SkyWcs::equals(typehandling::Storable const& other) const noexcept {
     return singleClassEquals(*this, other);
