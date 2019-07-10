@@ -1,6 +1,4 @@
 /*
- * This file is part of afw.
- *
  * Developed for the LSST Data Management System.
  * This product includes software developed by the LSST Project
  * (https://www.lsst.org).
@@ -25,24 +23,33 @@
 
 #include "lsst/utils/python.h"
 
+#include "lsst/afw/table/io/Persistable.h"
+#include "lsst/afw/fits.h"
+
 namespace py = pybind11;
-using namespace pybind11::literals;
+using namespace py::literals;
 
 namespace lsst {
 namespace afw {
 namespace table {
 namespace io {
 
-using utils::python::WrapperCollection;
+using PyPersistable = py::class_<Persistable, std::shared_ptr<Persistable>>;
 
-void wrapFits(WrapperCollection&);
-void wrapPersistable(WrapperCollection&);
+void wrapPersistable(utils::python::WrapperCollection &wrappers) {
+    wrappers.addSignatureDependency("lsst.afw.fits");
 
-PYBIND11_MODULE(_io, mod) {
-    WrapperCollection wrappers(mod, "lsst.afw.table.io");
-    wrapPersistable(wrappers);
-    wrapFits(wrappers);
-    wrappers.finish();
+    wrappers.wrapType(PyPersistable(wrappers.module, "Persistable"), [](auto &mod, auto &cls) {
+        cls.def("writeFits",
+                (void (Persistable::*)(std::string const &, std::string const &) const) &
+                        Persistable::writeFits,
+                "fileName"_a, "mode"_a = "w");
+        cls.def("writeFits",
+                (void (Persistable::*)(fits::MemFileManager &, std::string const &) const) &
+                        Persistable::writeFits,
+                "manager"_a, "mode"_a = "w");
+        cls.def("isPersistable", &Persistable::isPersistable);
+    });
 }
 
 }  // namespace io
