@@ -36,9 +36,11 @@ using utils::python::WrapperCollection;
 
 void wrapAggregates(WrapperCollection&);
 void wrapAliasMap(WrapperCollection&);
+void wrapAmpInfo(WrapperCollection&);
 void wrapArrays(WrapperCollection&);
 void wrapBase(WrapperCollection&);
 void wrapBaseColumnView(WrapperCollection&);
+void wrapExposure(WrapperCollection&);
 void wrapIdFactory(WrapperCollection&);
 void wrapSchema(WrapperCollection&);
 void wrapSchemaMapper(WrapperCollection&);
@@ -59,6 +61,8 @@ PYBIND11_MODULE(_table, mod) {
     wrapSlots(wrappers);
     wrapSimple(wrappers);
     wrapSource(wrappers);
+    wrapAmpInfo(wrappers);
+    wrapExposure(wrappers);
     wrappers.finish();
 }
 

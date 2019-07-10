@@ -3,8 +3,6 @@ from lsst.sconsUtils import scripts
 scripts.BasicSConscript.pybind11(
     ['_table',
      'match/match',
-     'ampInfo/ampInfo',
-     'exposure/exposure',
      'wcsUtils',
      ],
     extraSrc={
@@ -20,10 +18,10 @@ scripts.BasicSConscript.pybind11(
                    '_slots.cc',
                    '_simple.cc',
                    '_source.cc',
+                   '_ampInfo.cc',
+                   '_exposure.cc',
                    ],
         'match/match': [],
-        'ampInfo/ampInfo': [],
-        'exposure/exposure': [],
         'wcsUtils': [],
     },
     addUnderscore=False,

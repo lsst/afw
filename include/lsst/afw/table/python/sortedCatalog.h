@@ -52,7 +52,7 @@ you must call addCatalogMethods on the class object in Python.
 @param[in] isBase Whether this instantiation is only being used as a base class (used to set the class name).
 
 */
-// TODO: remove once all catalogs have been rewrapped with WrapperCollection
+// TODO: remove once PeakCatalog has been rewrapped with WrapperCollection
 template <typename Record>
 PySortedCatalog<Record> declareSortedCatalog(pybind11::module &mod, std::string const &name,
                                              bool isBase = false) {

@@ -19,25 +19,18 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-__all__ = []  # import this module only for its side effects
+__all__ = ["ReadoutCornerValNameDict", "ReadoutCornerNameValDict"]
 
-from deprecated.sphinx import deprecated
+from ._base import Catalog
+from ._table import AmpInfoCatalog, LL, LR, UR, UL
 
-from lsst.utils import continueClass
+Catalog.register("AmpInfo", AmpInfoCatalog)
 
-from .._base import Catalog
-from .exposure import ExposureCatalog, ExposureRecord
-
-
-@continueClass  # noqa: F811
-class ExposureRecord:
-    @deprecated(reason="Replaced with getPhotoCalib (will be removed after v18)", category=FutureWarning)
-    def getCalib(self, *args, **kwargs):
-        return self._getCalib(*args, **kwargs)
-
-    @deprecated(reason="Replaced with setPhotoCalib (will be removed after v18)", category=FutureWarning)
-    def setCalib(self, *args, **kwargs):
-        self._setCalib(*args, **kwargs)
-
-
-Catalog.register("Exposure", ExposureCatalog)
+ReadoutCornerValNameDict = {
+    LL: "LL",
+    LR: "LR",
+    UR: "UR",
+    UL: "UL",
+}
+ReadoutCornerNameValDict = {val: key for key, val in
+                            ReadoutCornerValNameDict.items()}

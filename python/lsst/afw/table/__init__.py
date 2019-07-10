@@ -28,8 +28,8 @@ from ._aggregates import *
 from ._arrays import *
 from ._simple import *
 from ._source import *
-from .ampInfo import *
-from .exposure import *
+from ._ampInfo import *
+from ._exposure import *
 from .match import *
 from .catalogMatches import *
 from .wcsUtils import *

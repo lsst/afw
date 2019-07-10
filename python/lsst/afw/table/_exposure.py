@@ -19,5 +19,25 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from .ampInfo import *
-from .ampInfoContinued import *
+__all__ = []  # import this module only for its side effects
+
+from deprecated.sphinx import deprecated
+
+from lsst.utils import continueClass
+
+from ._base import Catalog
+from ._table import ExposureCatalog, ExposureRecord
+
+
+@continueClass  # noqa: F811
+class ExposureRecord:
+    @deprecated(reason="Replaced with getPhotoCalib (will be removed after v18)", category=FutureWarning)
+    def getCalib(self, *args, **kwargs):
+        return self._getCalib(*args, **kwargs)
+
+    @deprecated(reason="Replaced with setPhotoCalib (will be removed after v18)", category=FutureWarning)
+    def setCalib(self, *args, **kwargs):
+        self._setCalib(*args, **kwargs)
+
+
+Catalog.register("Exposure", ExposureCatalog)

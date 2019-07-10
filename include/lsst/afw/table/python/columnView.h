@@ -47,7 +47,7 @@ Declare member and static functions for a given instantiation of lsst::afw::tabl
 @param[in] name   Name prefix of the record type, e.g. "Base" or "Simple".
 @param[in] isBase Whether this instantiation is only being used as a base class (used to set the class name).
 */
-// TODO: remove once all catalogs have been rewrapped with WrapperCollection
+// TODO: remove once PeakCatalog has been rewrapped with WrapperCollection
 template <typename Record>
 PyColumnView<Record> declareColumnView(pybind11::module& mod, std::string const& name, bool isBase = false) {
     std::string fullName;
