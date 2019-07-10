@@ -165,7 +165,6 @@ PyExposureCatalog declareExposureCatalog(py::module &mod) {
 }  // anonymous namespace
 
 PYBIND11_MODULE(exposure, mod) {
-    py::module::import("lsst.afw.table.simple");
     py::module::import("lsst.afw.geom");
     // afw.image and afw.detection cannot be imported due to circular dependencies
 

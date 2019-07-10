@@ -24,8 +24,7 @@ import numpy
 
 import lsst.geom
 from ._schemaMapper import SchemaMapper
-from ._table import CoordKey
-from .source import SourceRecord
+from ._table import CoordKey, SourceRecord
 
 
 class MultiMatch:

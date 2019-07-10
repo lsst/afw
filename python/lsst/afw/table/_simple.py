@@ -19,5 +19,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from .simple import *
-from .simpleContinued import *
+__all__ = []  # import this module only for its side effects
+
+from ._base import Catalog
+from ._table import SimpleCatalog
+
+Catalog.register("Simple", SimpleCatalog)

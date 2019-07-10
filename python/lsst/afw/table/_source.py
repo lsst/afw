@@ -22,8 +22,8 @@
 __all__ = []
 
 from lsst.utils import continueClass
-from .._base import Catalog
-from .source import SourceCatalog, SourceTable
+from ._base import Catalog
+from ._table import SourceCatalog, SourceTable
 
 Catalog.register("Source", SourceCatalog)
 

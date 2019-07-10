@@ -26,8 +26,8 @@ from ._baseColumnView import *
 from ._base import *
 from ._aggregates import *
 from ._arrays import *
-from .simple import *
-from .source import *
+from ._simple import *
+from ._source import *
 from .ampInfo import *
 from .exposure import *
 from .match import *

@@ -2,8 +2,6 @@
 from lsst.sconsUtils import scripts
 scripts.BasicSConscript.pybind11(
     ['_table',
-     'simple/simple',
-     'source/source',
      'match/match',
      'ampInfo/ampInfo',
      'exposure/exposure',
@@ -20,9 +18,9 @@ scripts.BasicSConscript.pybind11(
                    '_arrays.cc',
                    '_aggregates.cc',
                    '_slots.cc',
+                   '_simple.cc',
+                   '_source.cc',
                    ],
-        'simple/simple': [],
-        'source/source': [],
         'match/match': [],
         'ampInfo/ampInfo': [],
         'exposure/exposure': [],

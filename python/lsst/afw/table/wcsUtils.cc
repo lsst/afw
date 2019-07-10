@@ -50,9 +50,6 @@ void declareUpdateSourceCoords(py::module &mod) {
 }
 
 PYBIND11_MODULE(wcsUtils, mod) {
-    py::module::import("lsst.afw.table.simple");
-    py::module::import("lsst.afw.table.source");
-
     declareUpdateRefCentroids<std::vector<std::shared_ptr<lsst::afw::table::SimpleRecord>>>(mod);
     declareUpdateRefCentroids<lsst::afw::table::SimpleCatalog>(mod);
 

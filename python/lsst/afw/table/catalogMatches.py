@@ -30,8 +30,9 @@ import lsst.pex.exceptions as pexExcept
 from ._schema import Schema
 from ._schemaMapper import SchemaMapper
 from ._base import BaseCatalog
-from .simple import SimpleCatalog, SimpleTable
-from .source import SourceCatalog, SourceTable
+from ._table import SimpleTable
+from ._simple import SimpleCatalog
+from ._source import SourceCatalog, SourceTable
 from .match import ReferenceMatch
 
 from lsst.utils import getPackageDir

@@ -42,7 +42,9 @@ void wrapBaseColumnView(WrapperCollection&);
 void wrapIdFactory(WrapperCollection&);
 void wrapSchema(WrapperCollection&);
 void wrapSchemaMapper(WrapperCollection&);
+void wrapSimple(WrapperCollection&);
 void wrapSlots(WrapperCollection&);
+void wrapSource(WrapperCollection&);
 
 PYBIND11_MODULE(_table, mod) {
     WrapperCollection wrappers(mod, "lsst.afw.table");
@@ -55,6 +57,8 @@ PYBIND11_MODULE(_table, mod) {
     wrapArrays(wrappers);
     wrapAggregates(wrappers);
     wrapSlots(wrappers);
+    wrapSimple(wrappers);
+    wrapSource(wrappers);
     wrappers.finish();
 }
 
