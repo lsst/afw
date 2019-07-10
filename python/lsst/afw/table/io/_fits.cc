@@ -19,8 +19,9 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-
 #include "pybind11/pybind11.h"
+
+#include "lsst/utils/python.h"
 
 #include "lsst/afw/table/io/FitsSchemaInputMapper.h"
 
@@ -32,14 +33,15 @@ namespace afw {
 namespace table {
 namespace io {
 
-PYBIND11_MODULE(fits, mod) {
-
-    mod.def("setPreppedRowsFactor", [](std::size_t n) { FitsSchemaInputMapper::PREPPED_ROWS_FACTOR = n; });
-    mod.def("getPreppedRowsFactor", []() { return FitsSchemaInputMapper::PREPPED_ROWS_FACTOR; });
-
+void wrapFits(utils::python::WrapperCollection& wrappers) {
+    wrappers.wrap([](auto& mod) {
+        mod.def("setPreppedRowsFactor",
+                [](std::size_t n) { FitsSchemaInputMapper::PREPPED_ROWS_FACTOR = n; });
+        mod.def("getPreppedRowsFactor", []() { return FitsSchemaInputMapper::PREPPED_ROWS_FACTOR; });
+    });
 }
 
-}
-}
-}
-}  // namespace lsst::afw::table::io
+}  // namespace io
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst

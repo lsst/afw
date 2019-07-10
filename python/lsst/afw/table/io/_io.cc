@@ -35,8 +35,11 @@ namespace io {
 
 using utils::python::WrapperCollection;
 
+void wrapFits(WrapperCollection&);
+
 PYBIND11_MODULE(_io, mod) {
     WrapperCollection wrappers(mod, "lsst.afw.table.io");
+    wrapFits(wrappers);
     wrappers.finish();
 }
 

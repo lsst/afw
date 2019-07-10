@@ -21,4 +21,3 @@
 
 from ._io import *
 from .persistable import *
-from .fits import *
