@@ -1,3 +1,7 @@
 # -*- python -*-
 from lsst.sconsUtils import scripts
-scripts.BasicSConscript.pybind11(['persistable', 'fits'], addUnderscore=False)
+scripts.BasicSConscript.pybind11(
+    ['_io', 'persistable', 'fits'],
+    # Need .cc here or Scons will look for the wrong file type
+    extraSrc={'_io': [], 'persistable': [], 'fits': []},
+    addUnderscore=False)
