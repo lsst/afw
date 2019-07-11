@@ -34,8 +34,11 @@ namespace detection {
 
 using utils::python::WrapperCollection;
 
+void wrapPsf(WrapperCollection&);
+
 PYBIND11_MODULE(_detection, mod) {
     WrapperCollection wrappers(mod, "lsst.afw.detection");
+    wrapPsf(wrappers);
     wrappers.finish();
 }
 

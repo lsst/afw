@@ -3,7 +3,6 @@ import lsst.afw.table.io
 import lsst.afw.image
 from lsst.afw.geom import Span
 
-from .psf import *
 from .footprint import *
 from .footprintSet import *
 from .threshold import *
