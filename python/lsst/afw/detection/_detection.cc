@@ -39,6 +39,7 @@ void wrapFootprintCtrl(WrapperCollection&);
 void wrapFootprintMerge(WrapperCollection&);
 void wrapFootprintSet(WrapperCollection&);
 void wrapGaussianPsf(WrapperCollection&);
+void wrapHeavyFootprint(WrapperCollection&);
 void wrapPeak(WrapperCollection&);
 void wrapPsf(WrapperCollection&);
 void wrapThreshold(WrapperCollection&);
@@ -53,6 +54,7 @@ PYBIND11_MODULE(_detection, mod) {
     wrapFootprintMerge(wrappers);
     wrapPeak(wrappers);
     wrapGaussianPsf(wrappers);
+    wrapHeavyFootprint(wrappers);
     wrappers.finish();
 }
 

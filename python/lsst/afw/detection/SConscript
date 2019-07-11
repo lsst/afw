@@ -1,7 +1,6 @@
 # -*- python -*-
 from lsst.sconsUtils import scripts
-scripts.BasicSConscript.pybind11(['_detection',
-                                  'heavyFootprint'],
+scripts.BasicSConscript.pybind11(['_detection'],
                                  # Need .cc here or Scons will look for the wrong file type
                                  extraSrc={'_detection': ['_psf.cc',
                                                           '_footprintCtrl.cc',
@@ -11,7 +10,7 @@ scripts.BasicSConscript.pybind11(['_detection',
                                                           '_footprintMerge.cc',
                                                           '_peak.cc',
                                                           '_gaussianPsf.cc',
+                                                          '_heavyFootprint.cc',
                                                           ],
-                                           'heavyFootprint': [],
                                            },
                                  addUnderscore=False)
