@@ -38,6 +38,7 @@ void wrapFootprint(WrapperCollection&);
 void wrapFootprintCtrl(WrapperCollection&);
 void wrapFootprintMerge(WrapperCollection&);
 void wrapFootprintSet(WrapperCollection&);
+void wrapPeak(WrapperCollection&);
 void wrapPsf(WrapperCollection&);
 void wrapThreshold(WrapperCollection&);
 
@@ -49,6 +50,7 @@ PYBIND11_MODULE(_detection, mod) {
     wrapThreshold(wrappers);
     wrapFootprintSet(wrappers);
     wrapFootprintMerge(wrappers);
+    wrapPeak(wrappers);
     wrappers.finish();
 }
 

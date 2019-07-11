@@ -1,9 +1,11 @@
 /*
- * LSST Data Management System
- * Copyright 2008-2016  AURA/LSST.
+ * This file is part of afw.
  *
- * This product includes software developed by the
- * LSST Project (http://www.lsst.org/).
+ * Developed for the LSST Data Management System.
+ * This product includes software developed by the LSST Project
+ * (https://www.lsst.org).
+ * See the COPYRIGHT file at the top-level directory of this distribution
+ * for details of code ownership.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,17 +17,14 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the LSST License Statement and
- * the GNU General Public License along with this program.  If not,
- * see <https://www.lsstcorp.org/LegalNotices/>.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #include "pybind11/pybind11.h"
 
 #include <memory>
 #include <sstream>
-
-//#include <pybind11/stl.h>
 
 #include "lsst/utils/python.h"
 
@@ -60,8 +59,8 @@ void declarePeakRecord(PyPeakRecord &cls) {
     cls.def("setIx", &PeakRecord::setIx);
     cls.def("setIy", &PeakRecord::setIy);
     cls.def("getI", &PeakRecord::getI);
-    cls.def("getCentroid", (lsst::geom::Point2I (PeakRecord::*)(bool) const) & PeakRecord::getCentroid);
-    cls.def("getCentroid", (lsst::geom::Point2D (PeakRecord::*)() const) & PeakRecord::getCentroid);
+    cls.def("getCentroid", (lsst::geom::Point2I(PeakRecord::*)(bool) const) & PeakRecord::getCentroid);
+    cls.def("getCentroid", (lsst::geom::Point2D(PeakRecord::*)() const) & PeakRecord::getCentroid);
     cls.def("getFx", &PeakRecord::getFx);
     cls.def("getFy", &PeakRecord::getFy);
     cls.def("setFx", &PeakRecord::setFx);
@@ -80,7 +79,7 @@ void declarePeakTable(PyPeakTable &cls) {
     cls.def_static("make", &PeakTable::make, "schema"_a, "forceNew"_a = false);
     cls.def_static("makeMinimalSchema", &PeakTable::makeMinimalSchema);
     cls.def_static("checkSchema", &PeakTable::checkSchema, "schema"_a);
-    cls.def("getIdFactory", (std::shared_ptr<table::IdFactory> (PeakTable::*)()) & PeakTable::getIdFactory);
+    cls.def("getIdFactory", (std::shared_ptr<table::IdFactory>(PeakTable::*)()) & PeakTable::getIdFactory);
     cls.def("setIdFactory", &PeakTable::setIdFactory, "factory"_a);
     cls.def_static("getIdKey", &PeakTable::getIdKey);
     cls.def_static("getIxKey", &PeakTable::getIxKey);
@@ -90,25 +89,25 @@ void declarePeakTable(PyPeakTable &cls) {
     cls.def_static("getPeakValueKey", &PeakTable::getPeakValueKey);
     cls.def("clone", &PeakTable::clone);
     cls.def("makeRecord", &PeakTable::makeRecord);
-    cls.def("copyRecord", (std::shared_ptr<PeakRecord> (PeakTable::*)(afw::table::BaseRecord const &)) &
+    cls.def("copyRecord", (std::shared_ptr<PeakRecord>(PeakTable::*)(afw::table::BaseRecord const &)) &
                                   PeakTable::copyRecord);
-    cls.def("copyRecord", (std::shared_ptr<PeakRecord> (PeakTable::*)(afw::table::BaseRecord const &,
-                                                                      afw::table::SchemaMapper const &)) &
+    cls.def("copyRecord", (std::shared_ptr<PeakRecord>(PeakTable::*)(afw::table::BaseRecord const &,
+                                                                     afw::table::SchemaMapper const &)) &
                                   PeakTable::copyRecord);
 }
 
-}  // lsst::afw::detection::<anonymous>
+}  // namespace
 
-PYBIND11_MODULE(peak, mod) {
-    /* Module level */
-    PyPeakRecord clsPeakRecord(mod, "PeakRecord");
-    PyPeakTable clsPeakTable(mod, "PeakTable");
+void wrapPeak(utils::python::WrapperCollection &wrappers) {
+    wrappers.addInheritanceDependency("lsst.afw.table");
 
-    /* Members */
-    declarePeakRecord(clsPeakRecord);
-    declarePeakTable(clsPeakTable);
-    auto clsPeakColumnView = table::python::declareColumnView<PeakRecord>(mod, "Peak");
-    auto clsPeakCatalog = table::python::declareCatalog<PeakRecord>(mod, "Peak");
+    auto clsPeakRecord = wrappers.wrapType(PyPeakRecord(wrappers.module, "PeakRecord"),
+                                           [](auto &mod, auto &cls) { declarePeakRecord(cls); });
+    auto clsPeakTable = wrappers.wrapType(PyPeakTable(wrappers.module, "PeakTable"),
+                                          [](auto &mod, auto &cls) { declarePeakTable(cls); });
+
+    auto clsPeakColumnView = table::python::declareColumnView<PeakRecord>(wrappers, "Peak");
+    auto clsPeakCatalog = table::python::declareCatalog<PeakRecord>(wrappers, "Peak");
 
     clsPeakRecord.attr("Table") = clsPeakTable;
     clsPeakRecord.attr("ColumnView") = clsPeakColumnView;
@@ -120,6 +119,7 @@ PYBIND11_MODULE(peak, mod) {
     clsPeakCatalog.attr("Table") = clsPeakTable;
     clsPeakCatalog.attr("ColumnView") = clsPeakColumnView;
 }
-}
-}
-}  // lsst::afw::detection
+
+}  // namespace detection
+}  // namespace afw
+}  // namespace lsst
