@@ -21,39 +21,35 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "pybind11/pybind11.h"
+#include <pybind11/pybind11.h>
+
+#include "lsst/afw/table/io/python.h"  // for addPersistableMethods
+#include "lsst/afw/detection/GaussianPsf.h"
 
 #include "lsst/utils/python.h"
 
 namespace py = pybind11;
-using namespace pybind11::literals;
+using namespace py::literals;
 
 namespace lsst {
 namespace afw {
 namespace detection {
 
-using utils::python::WrapperCollection;
+void wrapGaussianPsf(utils::python::WrapperCollection& wrappers) {
+    wrappers.wrapType(
+            py::class_<GaussianPsf, std::shared_ptr<GaussianPsf>, Psf>(wrappers.module, "GaussianPsf"),
+            [](auto& mod, auto& cls) {
+                table::io::python::addPersistableMethods<GaussianPsf>(cls);
 
-void wrapFootprint(WrapperCollection&);
-void wrapFootprintCtrl(WrapperCollection&);
-void wrapFootprintMerge(WrapperCollection&);
-void wrapFootprintSet(WrapperCollection&);
-void wrapGaussianPsf(WrapperCollection&);
-void wrapPeak(WrapperCollection&);
-void wrapPsf(WrapperCollection&);
-void wrapThreshold(WrapperCollection&);
+                cls.def(py::init<int, int, double>(), "width"_a, "height"_a, "sigma"_a);
+                cls.def(py::init<lsst::geom::Extent2I const&, double>(), "dimensions"_a, "sigma"_a);
 
-PYBIND11_MODULE(_detection, mod) {
-    WrapperCollection wrappers(mod, "lsst.afw.detection");
-    wrapPsf(wrappers);
-    wrapFootprintCtrl(wrappers);
-    wrapFootprint(wrappers);
-    wrapThreshold(wrappers);
-    wrapFootprintSet(wrappers);
-    wrapFootprintMerge(wrappers);
-    wrapPeak(wrappers);
-    wrapGaussianPsf(wrappers);
-    wrappers.finish();
+                cls.def("clone", &GaussianPsf::clone);
+                cls.def("resized", &GaussianPsf::resized, "width"_a, "height"_a);
+                cls.def("getDimensions", &GaussianPsf::getDimensions);
+                cls.def("getSigma", &GaussianPsf::getSigma);
+                cls.def("isPersistable", &GaussianPsf::isPersistable);
+            });
 }
 
 }  // namespace detection
