@@ -39,30 +39,6 @@ using PyColumnView =
         pybind11::class_<ColumnViewT<Record>, std::shared_ptr<ColumnViewT<Record>>, BaseColumnView>;
 
 /**
-Declare member and static functions for a given instantiation of lsst::afw::table::ColumnViewT<RecordT>.
-
-@tparam Record  Record type, e.g. BaseRecord or SimpleRecord.
-
-@param[in] mod    Module object class will be added to.
-@param[in] name   Name prefix of the record type, e.g. "Base" or "Simple".
-@param[in] isBase Whether this instantiation is only being used as a base class (used to set the class name).
-*/
-// TODO: remove once PeakCatalog has been rewrapped with WrapperCollection
-template <typename Record>
-PyColumnView<Record> declareColumnView(pybind11::module& mod, std::string const& name, bool isBase = false) {
-    std::string fullName;
-    if (isBase) {
-        fullName = "_" + name + "ColumnViewBase";
-    } else {
-        fullName = name + "ColumnView";
-    }
-    PyColumnView<Record> cls(mod, fullName.c_str());
-    cls.def("getTable", &ColumnViewT<Record>::getTable);
-    cls.def_property_readonly("table", &ColumnViewT<Record>::getTable);
-    return cls;
-};
-
-/**
  * Declare member and static functions for a given instantiation of lsst::afw::table::ColumnViewT<RecordT>.
  *
  * @tparam Record  Record type, e.g. BaseRecord or SimpleRecord.
