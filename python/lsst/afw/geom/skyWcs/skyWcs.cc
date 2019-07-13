@@ -36,6 +36,7 @@
 #include "lsst/afw/geom/Transform.h"
 #include "lsst/afw/geom/SkyWcs.h"
 #include "lsst/afw/table/io/python.h"  // for addPersistableMethods
+#include "lsst/utils/python.h"
 
 namespace py = pybind11;
 using namespace py::literals;
@@ -149,6 +150,10 @@ PYBIND11_MODULE(skyWcs, mod) {
     // Do not wrap readStream or writeStream because C++ streams are not easy to wrap.
     cls.def_static("readString", &SkyWcs::readString);
     cls.def("writeString", &SkyWcs::writeString);
+
+    utils::python::addOutputOp(cls, "__str__");
+    // For repr, we could instead call writeString for the very long AST Frame/Mapping output.
+    utils::python::addOutputOp(cls, "__repr__");
 }
 
 }  // namespace
