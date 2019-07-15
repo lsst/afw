@@ -93,9 +93,9 @@ class ImageScalingTestCase(lsst.utils.tests.TestCase):
         self.highValue = 789  # Value for high pixel
         self.lowValue = 123  # Value for low pixel
         self.maskedValue = 12345  # Value for masked pixel (to throw off statistics)
-        self.highPixel = lsst.afw.geom.Point2I(1, 1)  # Location of high pixel
-        self.lowPixel = lsst.afw.geom.Point2I(2, 2)  # Location of low pixel
-        self.maskedPixel = lsst.afw.geom.Point2I(3, 3)  # Location of masked pixel
+        self.highPixel = lsst.geom.Point2I(1, 1)  # Location of high pixel
+        self.lowPixel = lsst.geom.Point2I(2, 2)  # Location of low pixel
+        self.maskedPixel = lsst.geom.Point2I(3, 3)  # Location of masked pixel
         self.badMask = "BAD"  # Mask plane to set for masked pixel
         self.stdev = 5.0  # Noise stdev to add to image
 

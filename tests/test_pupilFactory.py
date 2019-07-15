@@ -25,7 +25,7 @@ import numpy as np
 import lsst.utils.tests
 import lsst.afw.image as afwImage
 import lsst.afw.cameraGeom as afwCameraGeom
-from lsst.afw.geom import degrees
+from lsst.geom import degrees
 
 
 class PupilFactoryTestCase(lsst.utils.tests.TestCase):
