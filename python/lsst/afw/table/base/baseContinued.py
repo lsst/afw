@@ -1,9 +1,10 @@
+# This file is part of afw.
 #
-# LSST Data Management System
-# Copyright 2017 LSST/AURA.
-#
-# This product includes software developed by the
-# LSST Project (http://www.lsst.org/).
+# Developed for the LSST Data Management System.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org).
+# See the COPYRIGHT file at the top-level directory of this distribution
+# for details of code ownership.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,16 +16,14 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
-# You should have received a copy of the LSST License Statement and
-# the GNU General Public License along with this program.  If not,
-# see <http://www.lsstcorp.org/LegalNotices/>.
-#
-
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import numpy as np
 
 from lsst.utils import continueClass, TemplateMeta
 from .base import BaseRecord, BaseCatalog
 from ..schema import Key
+
 
 __all__ = ["Catalog"]
 
@@ -41,33 +40,28 @@ class BaseRecord:
 
         Parameters
         ----------
-
         items : `dict`
             The result of a call to self.schema.extract(); this will be used
             instead of doing any new matching, and allows the pattern matching
             to be reused to extract values from multiple records.  This
             keyword is incompatible with any position arguments and the regex,
             sub, and ordered keyword arguments.
-
         split : `bool`
-            If True, fields with named subfields (e.g. points) will be split
+            If `True`, fields with named subfields (e.g. points) will be split
             into separate items in the dict; instead of {"point":
             lsst.geom.Point2I(2,3)}, for instance, you'd get {"point.x":
-            2, "point.y": 3}. Default is False.
-
+            2, "point.y": 3}. Default is `False`.
         regex : `str` or `re` pattern object
             A regular expression to be used in addition to any glob patterns
             passed as positional arguments.  Note that this will be compared
             with re.match, not re.search.
-
         sub : `str`
             A replacement string (see `re.MatchObject.expand`) used to set the
             dictionary keys of any fields matched by regex.
-
         ordered : `bool`
             If `True`, a `collections.OrderedDict` will be returned instead of
             a standard dict, with the order corresponding to the definition
-            order of the `Schema`. `Default is False`.
+            order of the `Schema`. Default is `False`.
         """
         d = kwds.pop("items", None)
         split = kwds.pop("split", False)
@@ -105,7 +99,7 @@ class Catalog(metaclass=TemplateMeta):
 
     def __getitem__(self, key):
         """Return the record at index key if key is an integer,
-        return a column if key is a string field name or Key,
+        return a column if `key` is a string field name or Key,
         or return a subset of the catalog if key is a slice
         or boolean NumPy array.
         """
@@ -140,9 +134,9 @@ class Catalog(metaclass=TemplateMeta):
             return self._getitem_(key)
 
     def __setitem__(self, key, value):
-        """
-        If ``key`` is an integer, set ``catalog[key]`` to ``value``. Otherwise select column ``key``
-        and set it to ``value``.
+        """If ``key`` is an integer, set ``catalog[key]`` to
+        ``value``. Otherwise select column ``key`` and set it to
+        ``value``.
         """
         self._columns = None
         if isinstance(key, Key) or isinstance(key, str):
@@ -174,8 +168,19 @@ class Catalog(metaclass=TemplateMeta):
         return self._addNew()
 
     def cast(self, type_, deep=False):
-        """Return a copy of the catalog with the given type, optionally
-        cloning the table and deep-copying all records if deep==True.
+        """Return a copy of the catalog with the given type.
+
+        Parameters
+        ----------
+        type_ :
+            Type of catalog to return.
+        deep : `bool`, optional
+            If `True`, clone the table and deep copy all records.
+
+        Returns
+        -------
+        copy :
+            Copy of catalog with the requested type.
         """
         if deep:
             table = self.table.clone()
@@ -195,11 +200,15 @@ class Catalog(metaclass=TemplateMeta):
     def extend(self, iterable, deep=False, mapper=None):
         """Append all records in the given iterable to the catalog.
 
-        Arguments:
-          iterable ------ any Python iterable containing records
-          deep ---------- if True, the records will be deep-copied; ignored
-                          if mapper is not None (that always implies True).
-          mapper -------- a SchemaMapper object used to translate records
+        Parameters
+        ----------
+        iterable :
+            Any Python iterable containing records.
+        deep : `bool`, optional
+            If `True`, the records will be deep-copied; ignored if
+            mapper is not `None` (that always implies `True`).
+        mapper : `lsst.afw.table.schemaMapper.SchemaMapper`, optional
+            Used to translate records.
         """
         self._columns = None
         # We can't use isinstance here, because the SchemaMapper symbol isn't available
@@ -226,21 +235,37 @@ class Catalog(metaclass=TemplateMeta):
         return lsst.afw.fits.reduceToFits(self)
 
     def asAstropy(self, cls=None, copy=False, unviewable="copy"):
-        """!Return an astropy.table.Table (or subclass thereof) view into this catalog.
+        """Return an astropy.table.Table (or subclass thereof) view into this catalog.
 
-        @param[in]   cls        Table subclass to use; None implies astropy.table.Table itself.
-                                Use astropy.table.QTable to get Quantity columns.
+        Parameters
+        ----------
+        cls :
+            Table subclass to use; `None` implies `astropy.table.Table`
+            itself.  Use `astropy.table.QTable` to get Quantity columns.
+        copy : bool, optional
+            If `True`, copy data from the LSST catalog to the astropy
+            table.  Not copying is usually faster, but can keep memory
+            from being freed if columns are later removed from the
+            Astropy view.
+        unviewable : `str`, optional
+            One of the following options (which is ignored if
+            copy=`True` ), indicating how to handle field types (`str`
+            and `Flag`) for which views cannot be constructed:
+                - 'copy' (default): copy only the unviewable fields.
+                - 'raise': raise ValueError if unviewable fields are present.
+                - 'skip': do not include unviewable fields in the Astropy Table.
 
-        @param[in]  copy        Whether to copy data from the LSST catalog to the astropy table.
-                                Not copying is usually faster, but can keep memory from being
-                                freed if columns are later removed from the Astropy view.
+        Returns
+        -------
+        cls : `astropy.table.Table`
+            Astropy view into the catalog.
 
-        @param[in]  unviewable  One of the following options, indicating how to handle field types
-                                (string and Flag) for which views cannot be constructed:
-                                  - 'copy' (default): copy only the unviewable fields.
-                                  - 'raise': raise ValueError if unviewable fields are present.
-                                  - 'skip': do not include unviewable fields in the Astropy Table.
-                                This option is ignored if copy=True.
+        Raises
+        ------
+        ValueError
+            Raised if the `unviewable` option is not a known value, or
+            if the option is 'raise' and an uncopyable field is found.
+
         """
         import astropy.table
         if cls is None:
@@ -303,7 +328,7 @@ class Catalog(metaclass=TemplateMeta):
         """
         This custom dir is necessary due to the custom getattr below.
         Without it, not all of the methods available are returned with dir.
-        See DM-7199
+        See DM-7199.
         """
         def recursive_get_class_dir(cls):
             """

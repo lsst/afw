@@ -1,9 +1,10 @@
+# This file is part of afw.
 #
-# LSST Data Management System
-# Copyright 2017 LSST/AURA.
-#
-# This product includes software developed by the
-# LSST Project (http://www.lsst.org/).
+# Developed for the LSST Data Management System.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org).
+# See the COPYRIGHT file at the top-level directory of this distribution
+# for details of code ownership.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,10 +16,8 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
-# You should have received a copy of the LSST License Statement and
-# the GNU General Public License along with this program.  If not,
-# see <http://www.lsstcorp.org/LegalNotices/>.
-#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 __all__ = []  # import only for the side effects
 
@@ -38,24 +37,30 @@ class SchemaMapper:
 
         Parameters
         ----------
-        field : str,Field
-            The string name of the Field, or a fully-constructed Field object.
-            If the latter, all other arguments besides doReplace are ignored.
-        type\n : str,type
+        field : `str` or `~lsst.afw.table.Field`
+            The string name of the `Field`, or a fully-constructed
+            `Field` object.  If the latter, all other arguments
+            besides doReplace are ignored.
+        type : `str`
             The type of field to create.  Valid types are the keys of the
             afw.table.Field dictionary.
-        doc : str
+        doc : `str`
             Documentation for the field.
-        unit : str
+        unit : `str`
             Units for the field, or an empty string if unitless.
-        size : int
+        size : `int`
             Size of the field; valid for string and array fields only.
-        doReplace : bool
+        doReplace : `bool`
             If a field with this name already exists, replace it instead of
             raising pex.exceptions.InvalidParameterError.
-        parse_strict : str
+        parse_strict : `str`
             One of 'raise' (default), 'warn', or 'strict', indicating how to
             handle unrecognized unit strings.  See also astropy.units.Unit.
+
+        Returns
+        -------
+        key : `~lsst.afw.table.Key`
+            The key of the field added.
         """
         if isinstance(field, str):
             field = Field[type](field, doc=doc, units=units,
@@ -67,17 +72,22 @@ class SchemaMapper:
 
         Parameters
         ----------
-        input : Key
-            A Key from the input schema whose values will be mapped to the new
+        input : `~lsst.afw.table.Key`
+            A `Key` from the input schema whose values will be mapped to the new
             field.
-        output : str,Field
-            A Field object that describes the new field to be added to the
+        output : `str` or `~lsst.afw.table.Field`
+            A `Field` object that describes the new field to be added to the
             output schema, or the name of the field (with documentation and
             units copied from the input schema).  May be None to copy everything
             from the input schema.
-        doReplace : bool
+        doReplace : `bool`
             If a field with this name already exists in the output schema,
-            replace it instead of raising pex.exceptions.InvalidParameterError.
+            replace it instead of raising `pex.exceptions.InvalidParameterError`.
+
+        Returns
+        -------
+        key : `~lsst.afw.table.Key`
+            The key for the new mapped field.
         """
         # Workaround for calling positional arguments; avoids an API change during pybind11 conversion,
         # but we should just make that change and encourage using kwargs in the

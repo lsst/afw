@@ -1,9 +1,10 @@
+# This file is part of afw.
 #
-# LSST Data Management System
-# Copyright 2017 LSST/AURA.
-#
-# This product includes software developed by the
-# LSST Project (http://www.lsst.org/).
+# Developed for the LSST Data Management System.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org).
+# See the COPYRIGHT file at the top-level directory of this distribution
+# for details of code ownership.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,10 +16,8 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
-# You should have received a copy of the LSST License Statement and
-# the GNU General Public License along with this program.  If not,
-# see <http://www.lsstcorp.org/LegalNotices/>.
-#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 __all__ = []  # importing this module adds methods to BaseColumnView
 
@@ -37,10 +36,19 @@ from .baseColumnView import _BaseColumnViewBase
 class _BaseColumnViewBase:
 
     def getBits(self, keys=None):
-        """Get the bits associated with the specified keys
+        """Get the bits associated with the specified keys.
 
-        Unlike the C++ version, each key may be a field name or a key,
-        and if keys is None then all bits are returned.
+        Parameters
+        ----------
+        key : `str`
+            Key to retrieve. Unlike the C++ version, each key may be a
+            field name or a key, and if keys is `None` then all bits
+            are returned.
+
+        Returns
+        -------
+        bits : `int`
+             Integer array of the requested bitmask.
         """
         if keys is None:
             return self.getAllBits()
@@ -74,6 +82,21 @@ class _BaseColumnViewBase:
     def get_bool_array(self, key):
         """Get the value of a flag column as a boolean array; key must be a
         key object or the name of a field.
+
+        Parameters
+        ----------
+        key : `lsst.afw.table.KeyFlag`
+            Flag column to search for.
+
+        Returns
+        -------
+        value : `list` of `bool`
+            Array of booleans corresponding to the flag.
+
+        Raises
+        ------
+        TypeError
+            Raised if the key is not a KeyFlag.
         """
         if isinstance(key, KeyFlag):
             return self[key]
@@ -97,41 +120,58 @@ class _BaseColumnViewBase:
         dimension of the covariance matrix.  String fields are silently
         ignored.
 
-        Additional Keyword Arguments
-        ----------------------------
-        items : `list` The result of a call to self.schema.extract(); this
-            will be used instead of doing any new matching, and allows the
-            pattern matching to be reused to extract values from multiple
-            records.  This keyword is incompatible with any position arguments
-            and the regex, sub, and ordered keyword arguments.
+        Parameters
+        ----------
+        patterns : Array of `str`
+            List of glob patterns to use to select field names.
+        kwds : `dict`
+            Dictionary of additional keyword arguments.  May contain:
+            - ``items`` : `list`
+                The result of a call to self.schema.extract(); this
+                will be used instead of doing any new matching, and
+                allows the pattern matching to be reused to extract
+                values from multiple records.  This keyword is
+                incompatible with any position arguments and the
+                regex, sub, and ordered keyword arguments.
+            - ``where`` : array index expression
+                Any expression that can be passed as indices to a
+                NumPy array, including slices, boolean arrays, and
+                index arrays, that will be used to index each column
+                array.  This is applied before arrays are copied when
+                copy is True, so if the indexing results in an
+                implicit copy no unnecessary second copy is performed.
+            - ``copy`` : `bool`
+                If True, the returned arrays will be contiguous copies
+                rather than strided views into the catalog.  This
+                ensures that the lifetime of the catalog is not tied
+                to the lifetime of a particular catalog, and it also
+                may improve the performance if the array is used
+                repeatedly. Default is False.
+            - ``regex`` : `str` or `re` pattern
+                A regular expression to be used in addition to any
+                glob patterns passed as positional arguments.  Note
+                that this will be compared with re.match, not
+                re.search.
+            - ``sub`` : `str`
+                A replacement string (see re.MatchObject.expand) used
+                to set the dictionary keys of any fields matched by
+                regex.
+            - ``ordered`` : `bool`
+                If True, a collections.OrderedDict will be returned
+                instead of a standard dict, with the order
+                corresponding to the definition order of the
+                Schema. Default is False.
 
-        where : array index expression
-            Any expression that can be passed as indices to a NumPy array,
-            including slices, boolean arrays, and index arrays, that will be
-            used to index each column array.  This is applied before arrays
-            are copied when copy is True, so if the indexing results in an
-            implicit copy no unnecessary second copy is performed.
+        Returns
+        -------
+        d : `dict`
+            Dictionary of extracted name-column array sets.
 
-        copy : `bool`
-            If True, the returned arrays will be contiguous copies rather than
-            strided views into the catalog.  This ensures that the lifetime of
-            the catalog is not tied to the lifetime of a particular catalog,
-            and it also may improve the performance if the array is used
-            repeatedly. Default is False.
-
-        regex : `str` or `re` pattern
-            A regular expression to be used in addition to any glob patterns
-            passed as positional arguments.  Note that this will be compared
-            with re.match, not re.search.
-
-        sub : `str`
-            A replacement string (see re.MatchObject.expand) used to set the
-            dictionary keys of any fields matched by regex.
-
-        ordered : `bool`
-            If True, a collections.OrderedDict will be returned instead of a
-            standard dict, with the order corresponding to the definition
-            order of the Schema. Default is False.
+        Raises
+        ------
+        ValueError
+            Raised if a list of ``items`` is supplied with additional
+            keywords.
         """
         copy = kwds.pop("copy", False)
         where = kwds.pop("where", None)

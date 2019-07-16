@@ -1,9 +1,10 @@
+# This file is part of afw.
 #
-# LSST Data Management System
-# Copyright 2017 LSST/AURA.
-#
-# This product includes software developed by the
-# LSST Project (http://www.lsst.org/).
+# Developed for the LSST Data Management System.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org).
+# See the COPYRIGHT file at the top-level directory of this distribution
+# for details of code ownership.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,10 +16,10 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
-# You should have received a copy of the LSST License Statement and
-# the GNU General Public License along with this program.  If not,
-# see <http://www.lsstcorp.org/LegalNotices/>.
-#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+__all__ = ["SimpleMatch", "ReferenceMatch", "SourceMatch", "clone", "matchCls", "packMatches"]
 
 import numpy as np
 
@@ -113,13 +114,25 @@ def packMatches(matches):
     - second: the ID of the second source record in each match
     - distance: the distance of each match
 
-    @param[in] matches  Sequence of matches, typically of type SimpleMatch, ReferenceMatch or SourceMatch.
-        Each element must support: `.first.getId()`->int, `.second.getId()->int` and `.distance->float`.
-    @return a catalog of matches.
+    Parameters
+    ----------
+    matches :
+        Sequence of matches, typically of type SimpleMatch,
+        ReferenceMatch or SourceMatch.  Each element must support:
+        `.first.getId()`->int, `.second.getId()->int` and
+        `.distance->float`.
 
-    @note this pure python implementation exists because SWIG could not easily be used to wrap
-    the overloaded C++ functions, so this was written and tested. It might be practical
-    to wrap the overloaded C++ functions with pybind11, but there didn't seem much point.
+    Returns
+    -------
+    result :
+        The catalog of matches.
+
+    Notes
+    -----
+    This pure python implementation exists as a historical artifact
+    related to SWIG limitations. It might be practical to wrap the
+    overloaded C++ functions with pybind11, but there didn't seem much
+    point.
     """
     schema = Schema()
     outKey1 = schema.addField("first", type=np.int64,

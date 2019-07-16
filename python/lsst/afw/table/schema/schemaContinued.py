@@ -1,9 +1,10 @@
+# This file is part of afw.
 #
-# LSST Data Management System
-# Copyright 2017 LSST/AURA.
-#
-# This product includes software developed by the
-# LSST Project (http://www.lsst.org/).
+# Developed for the LSST Data Management System.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org).
+# See the COPYRIGHT file at the top-level directory of this distribution
+# for details of code ownership.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,10 +16,8 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
-# You should have received a copy of the LSST License Statement and
-# the GNU General Public License along with this program.  If not,
-# see <http://www.lsstcorp.org/LegalNotices/>.
-#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 __all__ = ["Key", "Field", "SchemaItem"]
 
@@ -93,6 +92,11 @@ class Schema:
 
     def getOrderedNames(self):
         """Return a list of field names in the order the fields were added to the Schema.
+
+        Returns
+        -------
+        names : `List`
+            Field names in order they were added to the Schema.
         """
         names = []
 
@@ -110,6 +114,12 @@ class Schema:
 
     def checkUnits(self, parse_strict='raise'):
         """Check that all units in the Schema are valid Astropy unit strings.
+
+        Parameters
+        ----------
+        parse_strict : `str`, optional
+            One of 'raise' (default), 'warn', or 'strict', indicating how to
+            handle unrecognized unit strings.  See also astropy.units.Unit.
         """
         def func(item):
             astropy.units.Unit(item.field.getUnits(),
@@ -122,24 +132,29 @@ class Schema:
 
         Parameters
         ----------
-        field : str,Field
+        field : `str` or `Field`
             The string name of the Field, or a fully-constructed Field object.
             If the latter, all other arguments besides doReplace are ignored.
-        type\n : str,type
+        type : `str`, optional
             The type of field to create.  Valid types are the keys of the
             afw.table.Field dictionary.
-        doc : str
+        doc : `str`
             Documentation for the field.
-        unit : str
+        unit : `str`
             Units for the field, or an empty string if unitless.
-        size : int
+        size : `int`
             Size of the field; valid for string and array fields only.
-        doReplace : bool
+        doReplace : `bool`
             If a field with this name already exists, replace it instead of
             raising pex.exceptions.InvalidParameterError.
-        parse_strict : str
+        parse_strict : `str`
             One of 'raise' (default), 'warn', or 'strict', indicating how to
             handle unrecognized unit strings.  See also astropy.units.Unit.
+
+        Returns
+        -------
+        result :
+            Result of the `Field` addition.
         """
         if isinstance(field, str):
             field = Field[type](field, doc=doc, units=units,
@@ -147,28 +162,45 @@ class Schema:
         return field._addTo(self, doReplace)
 
     def extract(self, *patterns, **kwds):
-        """
-        Extract a dictionary of {<name>: <schema-item>} in which the field names
+        """Extract a dictionary of {<name>: <schema-item>} in which the field names
         match the given shell-style glob pattern(s).
 
         Any number of glob patterns may be passed; the result will be the union of all
         the result of each glob considered separately.
 
-        Additional Keyword Arguments
-        ----------------------------
-        regex : `str` or `re` pattern
-            A regular expression to be used in addition to any glob patterns
-            passed as positional arguments.  Note that this will be compared
-            with re.match, not re.search.
+        Parameters
+        ----------
+        patterns : Array of `str`
+            List of glob patterns to use to select field names.
+        kwds : `dict`
+            Dictionary of additional keyword arguments.  May contain:
+            - ``regex`` : `str` or `re` pattern
+                A regular expression to be used in addition to any
+                glob patterns passed as positional arguments.  Note
+                that this will be compared with re.match, not
+                re.search.
+             - ``sub`` : `str`
+                A replacement string (see re.MatchObject.expand) used
+                to set the dictionary keys of any fields matched by
+                regex.
+            - ``ordered`` : `bool`, optional
+                If True, a collections.OrderedDict will be returned
+                instead of a standard dict, with the order
+                corresponding to the definition order of the
+                Schema. Default is False.
 
-        sub : `str`
-            A replacement string (see re.MatchObject.expand) used to set the
-            dictionary keys of any fields matched by regex.
+        Returns
+        -------
+        d : `dict`
+            Dictionary of extracted name-schema item sets.
 
-        ordered : `bool`
-            If True, a collections.OrderedDict will be returned instead of a
-            standard dict, with the order corresponding to the definition
-            order of the Schema. Default is False.
+        Raises
+        ------
+        ValueError
+            Raised if the `sub` keyword argument is invalid without
+            the `regex` argument.
+
+            Also raised if an unknown keyword argument is supplied.
         """
         if kwds.pop("ordered", False):
             d = collections.OrderedDict()

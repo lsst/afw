@@ -1,9 +1,10 @@
+# This file is part of afw.
 #
-# LSST Data Management System
-# Copyright 2017 LSST/AURA.
-#
-# This product includes software developed by the
-# LSST Project (http://www.lsst.org/).
+# Developed for the LSST Data Management System.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org).
+# See the COPYRIGHT file at the top-level directory of this distribution
+# for details of code ownership.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,10 +16,8 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
-# You should have received a copy of the LSST License Statement and
-# the GNU General Public License along with this program.  If not,
-# see <http://www.lsstcorp.org/LegalNotices/>.
-#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 __all__ = []
 
@@ -43,6 +42,18 @@ class SourceCatalog:
         Additional Catalogs or sequences whose elements correspond in order to the records
         of self (i.e. zip(self, *args) is valid) will be subset using the same slice object
         used on self, and these subsets will be returned along with the subset of self.
+
+        Parameters
+        ----------
+        parent : `int`
+            ID of the parent to get children for.
+        args : `~lsst.afw.table.Catalog`
+            Additional catalogs to subset for the childrens to return.
+
+        Returns
+        -------
+        children : iterable of `~lsst.afw.table.SourceRecord`
+            Children sources.
         """
         if not self.isSorted(SourceTable.getParentKey()):
             raise AssertionError(
