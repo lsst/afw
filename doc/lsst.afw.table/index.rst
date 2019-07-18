@@ -34,22 +34,10 @@ Python API reference
 ====================
 
 .. automodapi:: lsst.afw.table
+   :no-main-docstr:
 
-.. automodapi:: lsst.afw.table.base
-.. automodapi:: lsst.afw.table.ampInfo
-.. automodapi:: lsst.afw.table.exposure
 .. automodapi:: lsst.afw.table.io
-.. automodapi:: lsst.afw.table.match
-.. automodapi:: lsst.afw.table.aggregates
-.. automodapi:: lsst.afw.table.aliasMap
-.. automodapi:: lsst.afw.table.arrays
-.. automodapi:: lsst.afw.table.baseColumnView
-.. automodapi:: lsst.afw.table.schema
-.. automodapi:: lsst.afw.table.schemaMapper
-.. automodapi:: lsst.afw.table.simple
-.. automodapi:: lsst.afw.table.source
+   :no-main-docstr:
 
-.. automodapi:: lsst.afw.table.multiMatch
-.. automodapi:: lsst.afw.table.catalogMatches
 .. automodapi:: lsst.afw.table.testUtils
-
+   :no-main-docstr:
