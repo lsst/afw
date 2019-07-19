@@ -720,7 +720,7 @@ BOOST_AUTO_TEST_CASE(SpanSet_testFunctor) {
 
     // Check on the point input of a functor
     std::vector<lsst::geom::Point2I> capturedPoints;
-    capturedPoints.reserve(SSShape->getArea());
+    capturedPoints.resize(SSShape->getArea());
     SSShape->applyFunctor([](lsst::geom::Point2I point, lsst::geom::Point2I& out) { out = point; },
                           capturedPoints.begin());
 
