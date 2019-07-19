@@ -315,8 +315,6 @@ public:
     void setPsf(std::shared_ptr<lsst::afw::detection::Psf const> psf) { _info->setPsf(psf); }
 
     /// Return the Exposure's Psf object
-    std::shared_ptr<lsst::afw::detection::Psf> getPsf() { return _info->getPsf(); }
-    /// Return the Exposure's Psf object
     std::shared_ptr<lsst::afw::detection::Psf const> getPsf() const { return _info->getPsf(); }
 
     /// Does this Exposure have a Psf?

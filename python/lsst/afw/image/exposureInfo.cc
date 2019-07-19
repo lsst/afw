@@ -155,6 +155,7 @@ PYBIND11_MODULE(exposureInfo, mod) {
     cls.def("getMetadata", &ExposureInfo::getMetadata);
     cls.def("setMetadata", &ExposureInfo::setMetadata, "metadata"_a);
 
+    cls.attr("KEY_PSF") = ExposureInfo::KEY_PSF.getId();
     cls.def("hasPsf", &ExposureInfo::hasPsf);
     cls.def("getPsf", &ExposureInfo::getPsf);
     cls.def("setPsf",

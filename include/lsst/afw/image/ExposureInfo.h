@@ -68,8 +68,6 @@ class TransmissionCurve;
  *  The constness semantics of the things held by ExposureInfo are admittedly a bit of a mess,
  *  but they're that way to preserve backwards compatibility for now.  Eventually I'd like to make
  *  a lot of these things immutable, but in the meantime, here's the summary:
- *   - Psf is held by non-const pointer, and you can get a non-const pointer via a
- *     non-const member function accessor and a const pointer via a const member function accessor.
  *   - PhotoCalib is held by const pointer and only returned by const pointer (it's immutable).
  *   - Detector is held by const pointer and only returned by const pointer (but if you're
  *     in Python, SWIG will have casted all that constness away).
@@ -91,6 +89,8 @@ class ExposureInfo final {
 public:
     /// Standard key for looking up the Wcs.
     static typehandling::Key<std::string, std::shared_ptr<geom::SkyWcs const>> const KEY_WCS;
+    /// Standard key for looking up the point-spread function.
+    static typehandling::Key<std::string, std::shared_ptr<detection::Psf const>> const KEY_PSF;
 
     /// Does this exposure have a Wcs?
     bool hasWcs() const;
@@ -149,17 +149,13 @@ public:
     void setMetadata(std::shared_ptr<daf::base::PropertySet> metadata) { _metadata = metadata; }
 
     /// Does this exposure have a Psf?
-    bool hasPsf() const { return static_cast<bool>(_psf); }
+    bool hasPsf() const;
 
     /// Return the exposure's point-spread function
-    std::shared_ptr<detection::Psf> getPsf() const { return _psf; }
+    std::shared_ptr<detection::Psf const> getPsf() const;
 
     /// Set the exposure's point-spread function
-    void setPsf(std::shared_ptr<detection::Psf const> psf) {
-        // Psfs are immutable, so this is always safe; it'd be better to always just pass around
-        // const or non-const pointers, instead of both, but this is more backwards-compatible.
-        _psf = std::const_pointer_cast<detection::Psf>(psf);
-    }
+    void setPsf(std::shared_ptr<detection::Psf const> psf);
 
     /// Does this exposure have a valid Polygon
     bool hasValidPolygon() const { return static_cast<bool>(_validPolygon); }
@@ -452,7 +448,6 @@ private:
         }
     }
 
-    std::shared_ptr<detection::Psf> _psf;
     std::shared_ptr<PhotoCalib const> _photoCalib;
     std::shared_ptr<cameraGeom::Detector const> _detector;
     std::shared_ptr<geom::polygon::Polygon const> _validPolygon;

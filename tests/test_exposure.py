@@ -856,6 +856,8 @@ class ExposureInfoTestCase(lsst.utils.tests.TestCase):
         cls = type(self.exposureInfo)
         self._checkAlias(self.exposureInfo, cls.KEY_WCS, self.wcs,
                          self.exposureInfo.hasWcs, self.exposureInfo.getWcs)
+        self._checkAlias(self.exposureInfo, cls.KEY_PSF, self.psf,
+                         self.exposureInfo.hasPsf, self.exposureInfo.getPsf)
 
     def testCopy(self):
         # Test that ExposureInfos have independently settable state
