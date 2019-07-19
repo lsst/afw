@@ -34,6 +34,8 @@
 #include "lsst/afw/fits.h"
 #include "lsst/afw/typehandling/SimpleGenericMap.h"
 
+using namespace std::string_literals;
+
 namespace {
 LOG_LOGGER _log = LOG_GET("afw.image.ExposureInfo");
 
@@ -43,6 +45,15 @@ using MapClass = lsst::afw::typehandling::SimpleGenericMap<std::string>;
 namespace lsst {
 namespace afw {
 namespace image {
+
+// Important: do *not* change the keys' strings; doing so will break compatibility with old FITS files
+
+typehandling::Key<std::string, std::shared_ptr<geom::SkyWcs const>> const ExposureInfo::KEY_WCS =
+        typehandling::makeKey<std::shared_ptr<geom::SkyWcs const>>("SKYWCS"s);
+
+bool ExposureInfo::hasWcs() const { return hasComponent(KEY_WCS); }
+std::shared_ptr<geom::SkyWcs const> ExposureInfo::getWcs() const { return getComponent(KEY_WCS); }
+void ExposureInfo::setWcs(std::shared_ptr<geom::SkyWcs const> wcs) { setComponent(KEY_WCS, wcs); }
 
 int ExposureInfo::getFitsSerializationVersion() {
     // Version history:
@@ -76,8 +87,7 @@ ExposureInfo::ExposureInfo(std::shared_ptr<geom::SkyWcs const> const& wcs,
                            std::shared_ptr<ApCorrMap> const& apCorrMap,
                            std::shared_ptr<image::VisitInfo const> const& visitInfo,
                            std::shared_ptr<TransmissionCurve const> const& transmissionCurve)
-        : _wcs(wcs),
-          _psf(std::const_pointer_cast<detection::Psf>(psf)),
+        : _psf(std::const_pointer_cast<detection::Psf>(psf)),
           _photoCalib(photoCalib),
           _detector(detector),
           _validPolygon(polygon),
@@ -88,7 +98,9 @@ ExposureInfo::ExposureInfo(std::shared_ptr<geom::SkyWcs const> const& wcs,
           _apCorrMap(_cloneApCorrMap(apCorrMap)),
           _visitInfo(visitInfo),
           _transmissionCurve(transmissionCurve),
-          _components(std::make_unique<MapClass>()) {}
+          _components(std::make_unique<MapClass>()) {
+    setWcs(wcs);
+}
 
 ExposureInfo::ExposureInfo(ExposureInfo const& other) : ExposureInfo(other, false) {}
 
@@ -96,8 +108,7 @@ ExposureInfo::ExposureInfo(ExposureInfo const& other) : ExposureInfo(other, fals
 ExposureInfo::ExposureInfo(ExposureInfo&& other) : ExposureInfo(other) {}
 
 ExposureInfo::ExposureInfo(ExposureInfo const& other, bool copyMetadata)
-        : _wcs(other._wcs),
-          _psf(other._psf),
+        : _psf(other._psf),
           _photoCalib(other._photoCalib),
           _detector(other._detector),
           _validPolygon(other._validPolygon),
@@ -114,7 +125,6 @@ ExposureInfo::ExposureInfo(ExposureInfo const& other, bool copyMetadata)
 
 ExposureInfo& ExposureInfo::operator=(ExposureInfo const& other) {
     if (&other != this) {
-        _wcs = other._wcs;
         _psf = other._psf;
         _photoCalib = other._photoCalib;
         _detector = other._detector;
@@ -215,9 +225,6 @@ ExposureInfo::FitsWriteData ExposureInfo::_startWriteFits(lsst::geom::Point2I co
     }
     if (hasPsf() && getPsf()->isPersistable()) {
         _addToArchive(data, getPsf(), "PSF_ID", "archive ID for the Exposure's main Psf");
-    }
-    if (hasWcs() && getWcs()->isPersistable()) {
-        _addToArchive(data, getWcs(), "SKYWCS_ID", "archive ID for the Exposure's main Wcs");
     }
     if (hasValidPolygon() && getValidPolygon()->isPersistable()) {
         _addToArchive(data, getValidPolygon(), "VALID_POLYGON_ID",

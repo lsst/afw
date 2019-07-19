@@ -813,6 +813,64 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         return [corner for corner in cutoutBox.getCorners() if corner in imageBox]
 
 
+class ExposureInfoTestCase(lsst.utils.tests.TestCase):
+    def setUp(self):
+        super().setUp()
+
+        afwImage.Filter.reset()
+        afwImage.FilterProperty.reset()
+        defineFilter("g", 470.0)
+
+        self.wcs = afwGeom.makeSkyWcs(lsst.geom.Point2D(0.0, 0.0),
+                                      lsst.geom.SpherePoint(2.0, 34.0, lsst.geom.degrees),
+                                      np.identity(2),
+                                      )
+        self.psf = DummyPsf(2.0)
+        self.detector = DetectorWrapper().detector
+
+        self.exposureInfo = afwImage.ExposureInfo()
+        gFilter = afwImage.Filter("g")
+        self.exposureInfo.setFilter(gFilter)
+
+    def _checkAlias(self, exposureInfo, key, value, has, get):
+        self.assertFalse(has())
+        self.assertFalse(exposureInfo.hasComponent(key))
+        self.assertIsNone(get())
+        self.assertIsNone(exposureInfo.getComponent(key))
+
+        self.exposureInfo.setComponent(key, value)
+        self.assertTrue(has())
+        self.assertTrue(exposureInfo.hasComponent(key))
+        self.assertIsNotNone(get())
+        self.assertIsNotNone(exposureInfo.getComponent(key))
+        self.assertEqual(get(), value)
+        self.assertEqual(exposureInfo.getComponent(key), value)
+
+        self.exposureInfo.removeComponent(key)
+        self.assertFalse(has())
+        self.assertFalse(exposureInfo.hasComponent(key))
+        self.assertIsNone(get())
+        self.assertIsNone(exposureInfo.getComponent(key))
+
+    def testAliases(self):
+        cls = type(self.exposureInfo)
+        self._checkAlias(self.exposureInfo, cls.KEY_WCS, self.wcs,
+                         self.exposureInfo.hasWcs, self.exposureInfo.getWcs)
+
+    def testCopy(self):
+        # Test that ExposureInfos have independently settable state
+        copy = afwImage.ExposureInfo(self.exposureInfo, True)
+        self.assertEqual(self.exposureInfo.getWcs(), copy.getWcs())
+
+        newWcs = afwGeom.makeSkyWcs(lsst.geom.Point2D(-23.0, 8.0),
+                                    lsst.geom.SpherePoint(0.0, 0.0, lsst.geom.degrees),
+                                    np.identity(2),
+                                    )
+        copy.setWcs(newWcs)
+        self.assertEqual(copy.getWcs(), newWcs)
+        self.assertNotEqual(self.exposureInfo.getWcs(), copy.getWcs())
+
+
 class ExposureNoAfwdataTestCase(lsst.utils.tests.TestCase):
     """Tests of Exposure that don't require afwdata.
 

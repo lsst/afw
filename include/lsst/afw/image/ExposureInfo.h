@@ -68,7 +68,7 @@ class TransmissionCurve;
  *  The constness semantics of the things held by ExposureInfo are admittedly a bit of a mess,
  *  but they're that way to preserve backwards compatibility for now.  Eventually I'd like to make
  *  a lot of these things immutable, but in the meantime, here's the summary:
- *   - Wcs and Psf are held by non-const pointer, and you can get a non-const pointer via a
+ *   - Psf is held by non-const pointer, and you can get a non-const pointer via a
  *     non-const member function accessor and a const pointer via a const member function accessor.
  *   - PhotoCalib is held by const pointer and only returned by const pointer (it's immutable).
  *   - Detector is held by const pointer and only returned by const pointer (but if you're
@@ -77,6 +77,7 @@ class TransmissionCurve;
  *   - VisitInfo is immutable and is held by a const ptr and has a setter and getter.
  *   - Metadata is held by non-const pointer, and you can get a non-const pointer via a const
  *     member function accessor (i.e. constness is not propagated).
+ *   - all other types are only accessible through non-const pointers
  *
  *  The setter for Wcs clones its input arguments (this is a departure from the
  *  previous behavior for Wcs but it's safer w.r.t. aliasing and it matches the old
@@ -88,14 +89,17 @@ class TransmissionCurve;
  */
 class ExposureInfo final {
 public:
+    /// Standard key for looking up the Wcs.
+    static typehandling::Key<std::string, std::shared_ptr<geom::SkyWcs const>> const KEY_WCS;
+
     /// Does this exposure have a Wcs?
-    bool hasWcs() const { return static_cast<bool>(_wcs); }
+    bool hasWcs() const;
 
     /// Return the WCS of the exposure
-    std::shared_ptr<geom::SkyWcs const> getWcs() const { return _wcs; }
+    std::shared_ptr<geom::SkyWcs const> getWcs() const;
 
     /// Set the WCS of the exposure
-    void setWcs(std::shared_ptr<geom::SkyWcs const> wcs) { _wcs = wcs; }
+    void setWcs(std::shared_ptr<geom::SkyWcs const> wcs);
 
     /// Does this exposure have Detector information?
     bool hasDetector() const { return static_cast<bool>(_detector); }
@@ -448,7 +452,6 @@ private:
         }
     }
 
-    std::shared_ptr<geom::SkyWcs const> _wcs;
     std::shared_ptr<detection::Psf> _psf;
     std::shared_ptr<PhotoCalib const> _photoCalib;
     std::shared_ptr<cameraGeom::Detector const> _detector;

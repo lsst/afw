@@ -120,6 +120,7 @@ PYBIND11_MODULE(exposureInfo, mod) {
     cls.def(py::init<ExposureInfo, bool>(), "other"_a, "copyMetadata"_a);
 
     /* Members */
+    cls.attr("KEY_WCS") = ExposureInfo::KEY_WCS.getId();
     cls.def("hasWcs", &ExposureInfo::hasWcs);
     cls.def("getWcs", (std::shared_ptr<geom::SkyWcs>(ExposureInfo::*)()) & ExposureInfo::getWcs);
     cls.def("setWcs", &ExposureInfo::setWcs, "wcs"_a);
