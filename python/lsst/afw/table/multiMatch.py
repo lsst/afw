@@ -23,9 +23,8 @@ import collections.abc
 import numpy
 
 import lsst.geom
-from .schemaMapper import SchemaMapper
-from .aggregates import CoordKey
-from .source import SourceRecord
+from ._schemaMapper import SchemaMapper
+from ._table import CoordKey, SourceRecord
 
 
 class MultiMatch:

@@ -19,17 +19,18 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from ._table import *
-from ._aliasMap import *
-from ._schema import *
-from ._baseColumnView import *
-from ._base import *
-from ._aggregates import *
-from ._arrays import *
-from ._simple import *
-from ._source import *
-from ._ampInfo import *
-from ._exposure import *
-from ._match import *
-from .catalogMatches import *
-from .multiMatch import *
+__all__ = ["ReadoutCornerValNameDict", "ReadoutCornerNameValDict"]
+
+from ._base import Catalog
+from ._table import AmpInfoCatalog, LL, LR, UR, UL
+
+Catalog.register("AmpInfo", AmpInfoCatalog)
+
+ReadoutCornerValNameDict = {
+    LL: "LL",
+    LR: "LR",
+    UR: "UR",
+    UL: "UL",
+}
+ReadoutCornerNameValDict = {val: key for key, val in
+                            ReadoutCornerValNameDict.items()}

@@ -2,7 +2,7 @@
 #
 # Developed for the LSST Data Management System.
 # This product includes software developed by the LSST Project
-# (https://www.lsst.org).
+# (http://www.lsst.org).
 # See the COPYRIGHT file at the top-level directory of this distribution
 # for details of code ownership.
 #
@@ -17,19 +17,11 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from ._table import *
-from ._aliasMap import *
-from ._schema import *
-from ._baseColumnView import *
-from ._base import *
-from ._aggregates import *
-from ._arrays import *
-from ._simple import *
-from ._source import *
-from ._ampInfo import *
-from ._exposure import *
-from ._match import *
-from .catalogMatches import *
-from .multiMatch import *
+__all__ = []  # import this module only for its side effects
+
+from lsst.afw.table import Catalog
+from ._detection import PeakCatalog
+
+Catalog.register("Peak", PeakCatalog)

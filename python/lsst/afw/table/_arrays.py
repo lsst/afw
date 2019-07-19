@@ -19,17 +19,17 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from ._table import *
-from ._aliasMap import *
-from ._schema import *
-from ._baseColumnView import *
-from ._base import *
-from ._aggregates import *
-from ._arrays import *
-from ._simple import *
-from ._source import *
-from ._ampInfo import *
-from ._exposure import *
-from ._match import *
-from .catalogMatches import *
-from .multiMatch import *
+__all__ = ["ArrayKey"]
+
+import numpy as np
+
+from lsst.utils import TemplateMeta
+from ._table import ArrayFKey, ArrayDKey
+
+
+class ArrayKey(metaclass=TemplateMeta):
+    pass
+
+
+ArrayKey.register(np.float32, ArrayFKey)
+ArrayKey.register(np.float64, ArrayDKey)

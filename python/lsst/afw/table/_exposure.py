@@ -19,17 +19,25 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from ._table import *
-from ._aliasMap import *
-from ._schema import *
-from ._baseColumnView import *
-from ._base import *
-from ._aggregates import *
-from ._arrays import *
-from ._simple import *
-from ._source import *
-from ._ampInfo import *
-from ._exposure import *
-from ._match import *
-from .catalogMatches import *
-from .multiMatch import *
+__all__ = []  # import this module only for its side effects
+
+from deprecated.sphinx import deprecated
+
+from lsst.utils import continueClass
+
+from ._base import Catalog
+from ._table import ExposureCatalog, ExposureRecord
+
+
+@continueClass  # noqa: F811
+class ExposureRecord:
+    @deprecated(reason="Replaced with getPhotoCalib (will be removed after v18)", category=FutureWarning)
+    def getCalib(self, *args, **kwargs):
+        return self._getCalib(*args, **kwargs)
+
+    @deprecated(reason="Replaced with setPhotoCalib (will be removed after v18)", category=FutureWarning)
+    def setCalib(self, *args, **kwargs):
+        self._setCalib(*args, **kwargs)
+
+
+Catalog.register("Exposure", ExposureCatalog)

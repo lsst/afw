@@ -19,17 +19,24 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from ._table import *
-from ._aliasMap import *
-from ._schema import *
-from ._baseColumnView import *
-from ._base import *
-from ._aggregates import *
-from ._arrays import *
-from ._simple import *
-from ._source import *
-from ._ampInfo import *
-from ._exposure import *
-from ._match import *
-from .catalogMatches import *
-from .multiMatch import *
+__all__ = []
+
+from lsst.utils import continueClass
+from ._table import AliasMap
+
+
+@continueClass  # noqa: F811
+class AliasMap:
+
+    def keys(self):
+        """Return an iterator over AliasMap keys"""
+        for key, value in self.items():
+            yield key
+
+    def values(self):
+        """Return an iterator over AliasMap values"""
+        for key, value in self.items():
+            yield value
+
+    def __iter__(self):
+        return self.keys()

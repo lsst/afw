@@ -1,21 +1,26 @@
-## -*- python -*-
+# -*- python -*-
 from lsst.sconsUtils import scripts
 scripts.BasicSConscript.pybind11(
-    ['aliasMap/aliasMap',
-     'schema/schema',
-     'schemaMapper/schemaMapper',
-     'base/base',
-     'baseColumnView/baseColumnView',
-     'arrays/arrays',
-     'aggregates/aggregates',
-     'slots',
-     'simple/simple',
-     'source/source',
-     'match/match',
-     'ampInfo/ampInfo',
-     'exposure/exposure',
-     'idFactory',
-     'wcsUtils',
-    ],
+    ['_table',
+     ],
+    extraSrc={
+        # Need .cc here or Scons will look for the wrong file type
+        '_table': ['_aliasMap.cc',
+                   '_schema.cc',
+                   '_schemaMapper.cc',
+                   '_baseColumnView.cc',
+                   '_base.cc',
+                   '_idFactory.cc',
+                   '_arrays.cc',
+                   '_aggregates.cc',
+                   '_slots.cc',
+                   '_simple.cc',
+                   '_source.cc',
+                   '_ampInfo.cc',
+                   '_exposure.cc',
+                   '_match.cc',
+                   '_wcsUtils.cc',
+                   ],
+    },
     addUnderscore=False,
 )

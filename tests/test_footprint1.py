@@ -89,14 +89,14 @@ class Object:
 class SpanTestCase(unittest.TestCase):
 
     def testLessThan(self):
-        span1 = afwDetect.Span(42, 0, 100)
-        span2 = afwDetect.Span(41, 0, 100)
-        span3 = afwDetect.Span(43, 0, 100)
-        span4 = afwDetect.Span(42, -100, 100)
-        span5 = afwDetect.Span(42, 100, 200)
-        span6 = afwDetect.Span(42, 0, 10)
-        span7 = afwDetect.Span(42, 0, 200)
-        span8 = afwDetect.Span(42, 0, 100)
+        span1 = afwGeom.Span(42, 0, 100)
+        span2 = afwGeom.Span(41, 0, 100)
+        span3 = afwGeom.Span(43, 0, 100)
+        span4 = afwGeom.Span(42, -100, 100)
+        span5 = afwGeom.Span(42, 100, 200)
+        span6 = afwGeom.Span(42, 0, 10)
+        span7 = afwGeom.Span(42, 0, 200)
+        span8 = afwGeom.Span(42, 0, 100)
 
         # Cannot use assertLess and friends here
         # because Span only has operator <
@@ -178,7 +178,7 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
 
     def testToString(self):
         y, x0, x1 = 10, 100, 101
-        s = afwDetect.Span(y, x0, x1)
+        s = afwGeom.Span(y, x0, x1)
         self.assertEqual(s.toString(), toString(y, x0, x1))
 
     def testGC(self):

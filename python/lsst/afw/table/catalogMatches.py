@@ -27,12 +27,13 @@ import os.path
 import numpy as np
 
 import lsst.pex.exceptions as pexExcept
-from .schema import Schema
-from .schemaMapper import SchemaMapper
-from .base import BaseCatalog
-from .simple import SimpleCatalog, SimpleTable
-from .source import SourceCatalog, SourceTable
-from .match import ReferenceMatch
+from ._schema import Schema
+from ._schemaMapper import SchemaMapper
+from ._base import BaseCatalog
+from ._table import SimpleTable
+from ._simple import SimpleCatalog
+from ._source import SourceCatalog, SourceTable
+from ._match import ReferenceMatch
 
 from lsst.utils import getPackageDir
 
