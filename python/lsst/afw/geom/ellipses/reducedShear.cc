@@ -47,6 +47,6 @@ PYBIND11_MODULE(reducedShear, mod) {
     cls.def("normalize", &ReducedShear::normalize);
     cls.def("getName", &ReducedShear::getName);
     cls.def("__repr__", [](ReducedShear const& self) {
-        return py::str("%s(%g, %g)").format(self.getName(), self.getE1(), self.getE2());
+        return py::str("{}({}, {})").format(self.getName(), self.getE1(), self.getE2());
     });
 }

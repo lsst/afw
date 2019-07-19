@@ -79,9 +79,9 @@ void declareSeparable(py::module &mod, const std::string &suffix) {
     cls.def("transformInPlace",
             [](Class &self, lsst::geom::LinearTransform const &t) { self.transform(t).inPlace(); });
     cls.def("__str__",
-            [](Class &self) { return py::str("(%s, %s)").format(self.getEllipticity(), self.getRadius()); });
+            [](Class &self) { return py::str("({}, {})").format(self.getEllipticity(), self.getRadius()); });
     cls.def("__repr__", [](Class &self) {
-        return py::str("Separable(%r, %r)").format(self.getEllipticity(), self.getRadius());
+        return py::str("Separable({}, {})").format(self.getEllipticity(), self.getRadius());
     });
 }
 
