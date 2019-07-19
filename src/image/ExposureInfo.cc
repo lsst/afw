@@ -62,6 +62,17 @@ bool ExposureInfo::hasPsf() const { return hasComponent(KEY_PSF); }
 std::shared_ptr<detection::Psf const> ExposureInfo::getPsf() const { return getComponent(KEY_PSF); }
 void ExposureInfo::setPsf(std::shared_ptr<detection::Psf const> psf) { setComponent(KEY_PSF, psf); }
 
+typehandling::Key<std::string, std::shared_ptr<PhotoCalib const>> const ExposureInfo::KEY_PHOTO_CALIB =
+        typehandling::makeKey<std::shared_ptr<PhotoCalib const>>("PHOTOCALIB"s);
+
+bool ExposureInfo::hasPhotoCalib() const { return hasComponent(KEY_PHOTO_CALIB); }
+std::shared_ptr<PhotoCalib const> ExposureInfo::getPhotoCalib() const {
+    return getComponent(KEY_PHOTO_CALIB);
+}
+void ExposureInfo::setPhotoCalib(std::shared_ptr<PhotoCalib const> photoCalib) {
+    setComponent(KEY_PHOTO_CALIB, photoCalib);
+}
+
 int ExposureInfo::getFitsSerializationVersion() {
     // Version history:
     // unversioned and 0: photometric calibration via Calib, WCS via SkyWcs using AST.
@@ -94,8 +105,7 @@ ExposureInfo::ExposureInfo(std::shared_ptr<geom::SkyWcs const> const& wcs,
                            std::shared_ptr<ApCorrMap> const& apCorrMap,
                            std::shared_ptr<image::VisitInfo const> const& visitInfo,
                            std::shared_ptr<TransmissionCurve const> const& transmissionCurve)
-        : _photoCalib(photoCalib),
-          _detector(detector),
+        : _detector(detector),
           _validPolygon(polygon),
           _filter(filter),
           _metadata(metadata ? metadata
@@ -107,6 +117,7 @@ ExposureInfo::ExposureInfo(std::shared_ptr<geom::SkyWcs const> const& wcs,
           _components(std::make_unique<MapClass>()) {
     setWcs(wcs);
     setPsf(psf);
+    setPhotoCalib(photoCalib);
 }
 
 ExposureInfo::ExposureInfo(ExposureInfo const& other) : ExposureInfo(other, false) {}
@@ -115,8 +126,7 @@ ExposureInfo::ExposureInfo(ExposureInfo const& other) : ExposureInfo(other, fals
 ExposureInfo::ExposureInfo(ExposureInfo&& other) : ExposureInfo(other) {}
 
 ExposureInfo::ExposureInfo(ExposureInfo const& other, bool copyMetadata)
-        : _photoCalib(other._photoCalib),
-          _detector(other._detector),
+        : _detector(other._detector),
           _validPolygon(other._validPolygon),
           _filter(other._filter),
           _metadata(other._metadata),
@@ -131,7 +141,6 @@ ExposureInfo::ExposureInfo(ExposureInfo const& other, bool copyMetadata)
 
 ExposureInfo& ExposureInfo::operator=(ExposureInfo const& other) {
     if (&other != this) {
-        _photoCalib = other._photoCalib;
         _detector = other._detector;
         _validPolygon = other._validPolygon;
         _filter = other._filter;
@@ -238,9 +247,6 @@ ExposureInfo::FitsWriteData ExposureInfo::_startWriteFits(lsst::geom::Point2I co
     }
     if (hasDetector() && getDetector()->isPersistable()) {
         _addToArchive(data, getDetector(), "DETECTOR_ID", "archive ID for the Exposure's Detector");
-    }
-    if (hasPhotoCalib()) {
-        _addToArchive(data, getPhotoCalib(), "PHOTOCALIB_ID", "archive ID for photometric calibration");
     }
     _components->apply(StorablePersister(data));
 

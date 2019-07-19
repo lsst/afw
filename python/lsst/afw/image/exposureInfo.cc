@@ -148,6 +148,7 @@ PYBIND11_MODULE(exposureInfo, mod) {
     cls.def("getCalib", &ExposureInfo::getCalib);
     cls.def("setCalib", &ExposureInfo::setCalib, "calib"_a);
 
+    cls.attr("KEY_PHOTO_CALIB") = ExposureInfo::KEY_PHOTO_CALIB.getId();
     cls.def("hasPhotoCalib", &ExposureInfo::hasPhotoCalib);
     cls.def("getPhotoCalib", &ExposureInfo::getPhotoCalib);
     cls.def("setPhotoCalib", &ExposureInfo::setPhotoCalib, "photoCalib"_a);

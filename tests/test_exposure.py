@@ -825,6 +825,7 @@ class ExposureInfoTestCase(lsst.utils.tests.TestCase):
                                       lsst.geom.SpherePoint(2.0, 34.0, lsst.geom.degrees),
                                       np.identity(2),
                                       )
+        self.photoCalib = afwImage.PhotoCalib(1.5)
         self.psf = DummyPsf(2.0)
         self.detector = DetectorWrapper().detector
 
@@ -858,6 +859,8 @@ class ExposureInfoTestCase(lsst.utils.tests.TestCase):
                          self.exposureInfo.hasWcs, self.exposureInfo.getWcs)
         self._checkAlias(self.exposureInfo, cls.KEY_PSF, self.psf,
                          self.exposureInfo.hasPsf, self.exposureInfo.getPsf)
+        self._checkAlias(self.exposureInfo, cls.KEY_PHOTO_CALIB, self.photoCalib,
+                         self.exposureInfo.hasPhotoCalib, self.exposureInfo.getPhotoCalib)
 
     def testCopy(self):
         # Test that ExposureInfos have independently settable state

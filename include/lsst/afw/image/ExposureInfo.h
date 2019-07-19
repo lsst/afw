@@ -68,7 +68,6 @@ class TransmissionCurve;
  *  The constness semantics of the things held by ExposureInfo are admittedly a bit of a mess,
  *  but they're that way to preserve backwards compatibility for now.  Eventually I'd like to make
  *  a lot of these things immutable, but in the meantime, here's the summary:
- *   - PhotoCalib is held by const pointer and only returned by const pointer (it's immutable).
  *   - Detector is held by const pointer and only returned by const pointer (but if you're
  *     in Python, SWIG will have casted all that constness away).
  *   - Filter is held and returned by value.
@@ -91,6 +90,8 @@ public:
     static typehandling::Key<std::string, std::shared_ptr<geom::SkyWcs const>> const KEY_WCS;
     /// Standard key for looking up the point-spread function.
     static typehandling::Key<std::string, std::shared_ptr<detection::Psf const>> const KEY_PSF;
+    /// Standard key for looking up the photometric calibration.
+    static typehandling::Key<std::string, std::shared_ptr<PhotoCalib const>> const KEY_PHOTO_CALIB;
 
     /// Does this exposure have a Wcs?
     bool hasWcs() const;
@@ -117,29 +118,29 @@ public:
     void setFilter(Filter const& filter) { _filter = filter; }
 
     /// Does this exposure have a photometric calibration?
-    bool hasPhotoCalib() const { return static_cast<bool>(_photoCalib); }
+    bool hasPhotoCalib() const;
 
     /// Return the exposure's photometric calibration
-    std::shared_ptr<PhotoCalib const> getPhotoCalib() const { return _photoCalib; }
+    std::shared_ptr<PhotoCalib const> getPhotoCalib() const;
 
     /// Set the Exposure's PhotoCalib object
-    void setPhotoCalib(std::shared_ptr<PhotoCalib const> photoCalib) { _photoCalib = photoCalib; }
+    void setPhotoCalib(std::shared_ptr<PhotoCalib const> photoCalib);
 
     /// Does this exposure have a photometric calibration?
     [[deprecated("Replaced with hasPhotoCalib (will be removed in 18.0)")]] bool hasCalib() const {
-        return static_cast<bool>(_photoCalib);
+        return hasPhotoCalib();
     }
 
     /// Return the exposure's photometric calibration
     [[deprecated("Replaced with getPhotoCalib (will be removed in 18.0)")]] std::shared_ptr<PhotoCalib const>
     getCalib() const {
-        return _photoCalib;
+        return getPhotoCalib();
     }
 
     /// Set the Exposure's PhotoCalib object
     [[deprecated("Replaced with setPhotoCalib (will be removed in 18.0)")]] void setCalib(
             std::shared_ptr<PhotoCalib const> photoCalib) {
-        _photoCalib = photoCalib;
+        setPhotoCalib(photoCalib);
     }
 
     /// Return flexible metadata
@@ -448,7 +449,6 @@ private:
         }
     }
 
-    std::shared_ptr<PhotoCalib const> _photoCalib;
     std::shared_ptr<cameraGeom::Detector const> _detector;
     std::shared_ptr<geom::polygon::Polygon const> _validPolygon;
     Filter _filter;
