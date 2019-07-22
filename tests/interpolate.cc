@@ -26,12 +26,11 @@
 #include <cmath>
 #include <vector>
 
-#define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE Interpolate
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-variable"
-#include "boost/test/unit_test.hpp"
+#include "boost/test/included/unit_test.hpp"
 #pragma clang diagnostic pop
 #include "lsst/afw/math/Interpolate.h"
 

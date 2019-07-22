@@ -22,12 +22,11 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-#define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE TransformCpp
 
 #include <array>
 
-#include "boost/test/unit_test.hpp"
+#include "boost/test/included/unit_test.hpp"
 
 #include "lsst/afw/geom/Transform.h"
 

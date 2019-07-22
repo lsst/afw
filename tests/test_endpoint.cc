@@ -22,10 +22,9 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-#define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE EndpointCpp
 
-#include "boost/test/unit_test.hpp"
+#include "boost/test/included/unit_test.hpp"
 
 #include <string>
 #include <vector>

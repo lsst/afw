@@ -19,12 +19,11 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE KeyCpp
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-variable"
-#include "boost/test/unit_test.hpp"
+#include "boost/test/included/unit_test.hpp"
 #pragma clang diagnostic pop
 
 #include "lsst/utils/tests.h"
