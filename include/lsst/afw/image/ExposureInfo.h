@@ -97,6 +97,8 @@ public:
             KEY_VALID_POLYGON;
     /// Standard key for looking up coadd provenance catalogs.
     static typehandling::Key<std::string, std::shared_ptr<CoaddInputs const>> const KEY_COADD_INPUTS;
+    /// Standard key for looking up the aperture correction map.
+    static typehandling::Key<std::string, std::shared_ptr<ApCorrMap const>> const KEY_AP_CORR_MAP;
 
     /// Does this exposure have a Wcs?
     bool hasWcs() const;
@@ -173,16 +175,13 @@ public:
     void setValidPolygon(std::shared_ptr<geom::polygon::Polygon const> polygon);
 
     /// Return true if the exposure has an aperture correction map
-    bool hasApCorrMap() const { return static_cast<bool>(_apCorrMap); }
+    bool hasApCorrMap() const;
 
     /// Return the exposure's aperture correction map (null pointer if !hasApCorrMap())
-    std::shared_ptr<ApCorrMap> getApCorrMap() { return _apCorrMap; }
-
-    /// Return the exposure's aperture correction map (null pointer if !hasApCorrMap())
-    std::shared_ptr<ApCorrMap const> getApCorrMap() const { return _apCorrMap; }
+    std::shared_ptr<ApCorrMap const> getApCorrMap() const;
 
     /// Set the exposure's aperture correction map (null pointer if !hasApCorrMap())
-    void setApCorrMap(std::shared_ptr<ApCorrMap> apCorrMap) { _apCorrMap = apCorrMap; }
+    void setApCorrMap(std::shared_ptr<ApCorrMap const> apCorrMap);
 
     /**
      *  Set the exposure's aperture correction map to a new, empty map
@@ -456,7 +455,6 @@ private:
 
     Filter _filter;
     std::shared_ptr<daf::base::PropertySet> _metadata;
-    std::shared_ptr<ApCorrMap> _apCorrMap;
     std::shared_ptr<image::VisitInfo const> _visitInfo;
     std::shared_ptr<TransmissionCurve const> _transmissionCurve;
 

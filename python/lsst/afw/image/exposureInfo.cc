@@ -183,6 +183,7 @@ PYBIND11_MODULE(exposureInfo, mod) {
             },
             "polygon"_a);
 
+    cls.attr("KEY_AP_CORR_MAP") = ExposureInfo::KEY_AP_CORR_MAP.getId();
     cls.def("hasApCorrMap", &ExposureInfo::hasApCorrMap);
     cls.def("getApCorrMap", (std::shared_ptr<ApCorrMap>(ExposureInfo::*)()) & ExposureInfo::getApCorrMap);
     cls.def("setApCorrMap", &ExposureInfo::setApCorrMap, "apCorrMap"_a);

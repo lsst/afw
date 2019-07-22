@@ -831,6 +831,7 @@ class ExposureInfoTestCase(lsst.utils.tests.TestCase):
         self.polygon = afwGeom.Polygon(lsst.geom.Box2D(lsst.geom.Point2D(0.0, 0.0),
                                                        lsst.geom.Point2D(25.0, 20.0)))
         self.coaddInputs = afwImage.CoaddInputs()
+        self.apCorrMap = afwImage.ApCorrMap()
 
         self.exposureInfo = afwImage.ExposureInfo()
         gFilter = afwImage.Filter("g")
@@ -870,6 +871,8 @@ class ExposureInfoTestCase(lsst.utils.tests.TestCase):
                          self.exposureInfo.hasValidPolygon, self.exposureInfo.getValidPolygon)
         self._checkAlias(self.exposureInfo, cls.KEY_COADD_INPUTS, self.coaddInputs,
                          self.exposureInfo.hasCoaddInputs, self.exposureInfo.getCoaddInputs)
+        self._checkAlias(self.exposureInfo, cls.KEY_AP_CORR_MAP, self.apCorrMap,
+                         self.exposureInfo.hasApCorrMap, self.exposureInfo.getApCorrMap)
 
     def testCopy(self):
         # Test that ExposureInfos have independently settable state
