@@ -170,6 +170,7 @@ PYBIND11_MODULE(exposureInfo, mod) {
             },
             "psf"_a);
 
+    cls.attr("KEY_VALID_POLYGON") = ExposureInfo::KEY_VALID_POLYGON.getId();
     cls.def("hasValidPolygon", &ExposureInfo::hasValidPolygon);
     cls.def("getValidPolygon", &ExposureInfo::getValidPolygon);
     cls.def("setValidPolygon",
@@ -187,6 +188,7 @@ PYBIND11_MODULE(exposureInfo, mod) {
     cls.def("setApCorrMap", &ExposureInfo::setApCorrMap, "apCorrMap"_a);
     cls.def("initApCorrMap", &ExposureInfo::initApCorrMap);
 
+    cls.attr("KEY_COADD_INPUTS") = ExposureInfo::KEY_COADD_INPUTS.getId();
     cls.def("hasCoaddInputs", &ExposureInfo::hasCoaddInputs);
     cls.def("getCoaddInputs", &ExposureInfo::getCoaddInputs);
     cls.def("setCoaddInputs", &ExposureInfo::setCoaddInputs, "coaddInputs"_a);

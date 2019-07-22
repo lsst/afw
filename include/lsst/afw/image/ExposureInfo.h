@@ -92,6 +92,9 @@ public:
     static typehandling::Key<std::string, std::shared_ptr<PhotoCalib const>> const KEY_PHOTO_CALIB;
     /// Standard key for looking up the detector information.
     static typehandling::Key<std::string, std::shared_ptr<cameraGeom::Detector const>> const KEY_DETECTOR;
+    /// Standard key for looking up the valid polygon.
+    static typehandling::Key<std::string, std::shared_ptr<geom::polygon::Polygon const>> const
+            KEY_VALID_POLYGON;
 
     /// Does this exposure have a Wcs?
     bool hasWcs() const;
@@ -159,13 +162,13 @@ public:
     void setPsf(std::shared_ptr<detection::Psf const> psf);
 
     /// Does this exposure have a valid Polygon
-    bool hasValidPolygon() const { return static_cast<bool>(_validPolygon); }
+    bool hasValidPolygon() const;
 
     /// Return the valid Polygon
-    std::shared_ptr<geom::polygon::Polygon const> getValidPolygon() const { return _validPolygon; }
+    std::shared_ptr<geom::polygon::Polygon const> getValidPolygon() const;
 
     /// Set the exposure's valid Polygon
-    void setValidPolygon(std::shared_ptr<geom::polygon::Polygon const> polygon) { _validPolygon = polygon; }
+    void setValidPolygon(std::shared_ptr<geom::polygon::Polygon const> polygon);
 
     /// Return true if the exposure has an aperture correction map
     bool hasApCorrMap() const { return static_cast<bool>(_apCorrMap); }
@@ -449,7 +452,6 @@ private:
         }
     }
 
-    std::shared_ptr<geom::polygon::Polygon const> _validPolygon;
     Filter _filter;
     std::shared_ptr<daf::base::PropertySet> _metadata;
     std::shared_ptr<CoaddInputs> _coaddInputs;
