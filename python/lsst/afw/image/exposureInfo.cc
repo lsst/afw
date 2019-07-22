@@ -198,6 +198,7 @@ PYBIND11_MODULE(exposureInfo, mod) {
     cls.def("getVisitInfo", &ExposureInfo::getVisitInfo);
     cls.def("setVisitInfo", &ExposureInfo::setVisitInfo, "visitInfo"_a);
 
+    cls.attr("KEY_TRANSMISSION_CURVE") = ExposureInfo::KEY_TRANSMISSION_CURVE.getId();
     cls.def("hasTransmissionCurve", &ExposureInfo::hasTransmissionCurve);
     cls.def("getTransmissionCurve", &ExposureInfo::getTransmissionCurve);
     cls.def("setTransmissionCurve", &ExposureInfo::setTransmissionCurve, "transmissionCurve"_a);

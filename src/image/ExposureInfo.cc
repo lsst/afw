@@ -116,6 +116,18 @@ void ExposureInfo::setApCorrMap(std::shared_ptr<ApCorrMap const> apCorrMap) {
     setComponent(KEY_AP_CORR_MAP, apCorrMap);
 }
 
+typehandling::Key<std::string, std::shared_ptr<TransmissionCurve const>> const
+        ExposureInfo::KEY_TRANSMISSION_CURVE =
+                typehandling::makeKey<std::shared_ptr<TransmissionCurve const>>("TRANSMISSION_CURVE"s);
+
+bool ExposureInfo::hasTransmissionCurve() const { return hasComponent(KEY_TRANSMISSION_CURVE); }
+std::shared_ptr<TransmissionCurve const> ExposureInfo::getTransmissionCurve() const {
+    return getComponent(KEY_TRANSMISSION_CURVE);
+}
+void ExposureInfo::setTransmissionCurve(std::shared_ptr<TransmissionCurve const> tc) {
+    setComponent(KEY_TRANSMISSION_CURVE, tc);
+}
+
 int ExposureInfo::getFitsSerializationVersion() {
     // Version history:
     // unversioned and 0: photometric calibration via Calib, WCS via SkyWcs using AST.
@@ -152,7 +164,6 @@ ExposureInfo::ExposureInfo(std::shared_ptr<geom::SkyWcs const> const& wcs,
           _metadata(metadata ? metadata
                              : std::shared_ptr<daf::base::PropertySet>(new daf::base::PropertyList())),
           _visitInfo(visitInfo),
-          _transmissionCurve(transmissionCurve),
           _components(std::make_unique<MapClass>()) {
     setWcs(wcs);
     setPsf(psf);
@@ -161,6 +172,7 @@ ExposureInfo::ExposureInfo(std::shared_ptr<geom::SkyWcs const> const& wcs,
     setValidPolygon(polygon);
     setCoaddInputs(coaddInputs);
     setApCorrMap(_cloneApCorrMap(apCorrMap));
+    setTransmissionCurve(transmissionCurve);
 }
 
 ExposureInfo::ExposureInfo(ExposureInfo const& other) : ExposureInfo(other, false) {}
@@ -172,7 +184,6 @@ ExposureInfo::ExposureInfo(ExposureInfo const& other, bool copyMetadata)
         : _filter(other._filter),
           _metadata(other._metadata),
           _visitInfo(other._visitInfo),
-          _transmissionCurve(other._transmissionCurve),
           // ExposureInfos can (historically) share objects, but should each have their own pointers to them
           _components(std::make_unique<MapClass>(*(other._components))) {
     if (copyMetadata) _metadata = _metadata->deepCopy();
@@ -183,7 +194,6 @@ ExposureInfo& ExposureInfo::operator=(ExposureInfo const& other) {
         _filter = other._filter;
         _metadata = other._metadata;
         _visitInfo = other._visitInfo;
-        _transmissionCurve = other._transmissionCurve;
         // ExposureInfos can (historically) share objects, but should each have their own pointers to them
         _components = std::make_unique<MapClass>(*(other._components));
     }
@@ -266,10 +276,6 @@ ExposureInfo::FitsWriteData ExposureInfo::_startWriteFits(lsst::geom::Point2I co
     // this is still the case so we're setting AR_HDU to 5 == 4 + 1
     //
     data.metadata->set("AR_HDU", 5, "HDU (1-indexed) containing the archive used to store ancillary objects");
-    if (hasTransmissionCurve() && getTransmissionCurve()->isPersistable()) {
-        _addToArchive(data, getTransmissionCurve(), "TRANSMISSION_CURVE_ID",
-                      "archive ID for the Exposure's transmission curve");
-    }
     _components->apply(StorablePersister(data));
 
     // LSST convention is that Wcs is in pixel coordinates (i.e relative to bottom left

@@ -99,6 +99,9 @@ public:
     static typehandling::Key<std::string, std::shared_ptr<CoaddInputs const>> const KEY_COADD_INPUTS;
     /// Standard key for looking up the aperture correction map.
     static typehandling::Key<std::string, std::shared_ptr<ApCorrMap const>> const KEY_AP_CORR_MAP;
+    /// Standard key for looking up the transmission curve.
+    static typehandling::Key<std::string, std::shared_ptr<TransmissionCurve const>> const
+            KEY_TRANSMISSION_CURVE;
 
     /// Does this exposure have a Wcs?
     bool hasWcs() const;
@@ -210,13 +213,13 @@ public:
     void setVisitInfo(std::shared_ptr<image::VisitInfo const> const visitInfo) { _visitInfo = visitInfo; }
 
     /// Does this exposure have a transmission curve?
-    bool hasTransmissionCurve() const { return static_cast<bool>(_transmissionCurve); }
+    bool hasTransmissionCurve() const;
 
     /// Return the exposure's transmission curve.
-    std::shared_ptr<TransmissionCurve const> getTransmissionCurve() const { return _transmissionCurve; }
+    std::shared_ptr<TransmissionCurve const> getTransmissionCurve() const;
 
     /// Set the exposure's transmission curve.
-    void setTransmissionCurve(std::shared_ptr<TransmissionCurve const> tc) { _transmissionCurve = tc; }
+    void setTransmissionCurve(std::shared_ptr<TransmissionCurve const> tc);
 
     /**
      * Add a generic component to the ExposureInfo.
@@ -456,7 +459,6 @@ private:
     Filter _filter;
     std::shared_ptr<daf::base::PropertySet> _metadata;
     std::shared_ptr<image::VisitInfo const> _visitInfo;
-    std::shared_ptr<TransmissionCurve const> _transmissionCurve;
 
     // Class invariant: all values in _components are shared_ptr<Storable>
     // This is required for table::io persistence to work correctly;

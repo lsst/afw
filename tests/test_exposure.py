@@ -832,6 +832,7 @@ class ExposureInfoTestCase(lsst.utils.tests.TestCase):
                                                        lsst.geom.Point2D(25.0, 20.0)))
         self.coaddInputs = afwImage.CoaddInputs()
         self.apCorrMap = afwImage.ApCorrMap()
+        self.transmissionCurve = afwImage.TransmissionCurve.makeIdentity()
 
         self.exposureInfo = afwImage.ExposureInfo()
         gFilter = afwImage.Filter("g")
@@ -873,6 +874,8 @@ class ExposureInfoTestCase(lsst.utils.tests.TestCase):
                          self.exposureInfo.hasCoaddInputs, self.exposureInfo.getCoaddInputs)
         self._checkAlias(self.exposureInfo, cls.KEY_AP_CORR_MAP, self.apCorrMap,
                          self.exposureInfo.hasApCorrMap, self.exposureInfo.getApCorrMap)
+        self._checkAlias(self.exposureInfo, cls.KEY_TRANSMISSION_CURVE, self.transmissionCurve,
+                         self.exposureInfo.hasTransmissionCurve, self.exposureInfo.getTransmissionCurve)
 
     def testCopy(self):
         # Test that ExposureInfos have independently settable state
