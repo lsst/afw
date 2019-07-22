@@ -95,6 +95,8 @@ public:
     /// Standard key for looking up the valid polygon.
     static typehandling::Key<std::string, std::shared_ptr<geom::polygon::Polygon const>> const
             KEY_VALID_POLYGON;
+    /// Standard key for looking up coadd provenance catalogs.
+    static typehandling::Key<std::string, std::shared_ptr<CoaddInputs const>> const KEY_COADD_INPUTS;
 
     /// Does this exposure have a Wcs?
     bool hasWcs() const;
@@ -191,13 +193,13 @@ public:
     void initApCorrMap();
 
     /// Does this exposure have coadd provenance catalogs?
-    bool hasCoaddInputs() const { return static_cast<bool>(_coaddInputs); }
+    bool hasCoaddInputs() const;
 
     /// Set the exposure's coadd provenance catalogs.
-    void setCoaddInputs(std::shared_ptr<CoaddInputs> coaddInputs) { _coaddInputs = coaddInputs; }
+    void setCoaddInputs(std::shared_ptr<CoaddInputs const> coaddInputs);
 
     /// Return a pair of catalogs that record the inputs, if this Exposure is a coadd (otherwise null).
-    std::shared_ptr<CoaddInputs> getCoaddInputs() const { return _coaddInputs; }
+    std::shared_ptr<CoaddInputs const> getCoaddInputs() const;
 
     /// Return the exposure's visit info
     std::shared_ptr<image::VisitInfo const> getVisitInfo() const { return _visitInfo; }
@@ -454,7 +456,6 @@ private:
 
     Filter _filter;
     std::shared_ptr<daf::base::PropertySet> _metadata;
-    std::shared_ptr<CoaddInputs> _coaddInputs;
     std::shared_ptr<ApCorrMap> _apCorrMap;
     std::shared_ptr<image::VisitInfo const> _visitInfo;
     std::shared_ptr<TransmissionCurve const> _transmissionCurve;

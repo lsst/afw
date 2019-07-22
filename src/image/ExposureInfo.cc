@@ -96,6 +96,17 @@ void ExposureInfo::setValidPolygon(std::shared_ptr<geom::polygon::Polygon const>
     setComponent(KEY_VALID_POLYGON, polygon);
 }
 
+typehandling::Key<std::string, std::shared_ptr<CoaddInputs const>> const ExposureInfo::KEY_COADD_INPUTS =
+        typehandling::makeKey<std::shared_ptr<CoaddInputs const>>("COADD_INPUTS"s);
+
+bool ExposureInfo::hasCoaddInputs() const { return hasComponent(KEY_COADD_INPUTS); }
+void ExposureInfo::setCoaddInputs(std::shared_ptr<CoaddInputs const> coaddInputs) {
+    setComponent(KEY_COADD_INPUTS, coaddInputs);
+}
+std::shared_ptr<CoaddInputs const> ExposureInfo::getCoaddInputs() const {
+    return getComponent(KEY_COADD_INPUTS);
+}
+
 int ExposureInfo::getFitsSerializationVersion() {
     // Version history:
     // unversioned and 0: photometric calibration via Calib, WCS via SkyWcs using AST.
@@ -131,7 +142,6 @@ ExposureInfo::ExposureInfo(std::shared_ptr<geom::SkyWcs const> const& wcs,
         : _filter(filter),
           _metadata(metadata ? metadata
                              : std::shared_ptr<daf::base::PropertySet>(new daf::base::PropertyList())),
-          _coaddInputs(coaddInputs),
           _apCorrMap(_cloneApCorrMap(apCorrMap)),
           _visitInfo(visitInfo),
           _transmissionCurve(transmissionCurve),
@@ -141,6 +151,7 @@ ExposureInfo::ExposureInfo(std::shared_ptr<geom::SkyWcs const> const& wcs,
     setPhotoCalib(photoCalib);
     setDetector(detector);
     setValidPolygon(polygon);
+    setCoaddInputs(coaddInputs);
 }
 
 ExposureInfo::ExposureInfo(ExposureInfo const& other) : ExposureInfo(other, false) {}
@@ -151,7 +162,6 @@ ExposureInfo::ExposureInfo(ExposureInfo&& other) : ExposureInfo(other) {}
 ExposureInfo::ExposureInfo(ExposureInfo const& other, bool copyMetadata)
         : _filter(other._filter),
           _metadata(other._metadata),
-          _coaddInputs(other._coaddInputs),
           _apCorrMap(_cloneApCorrMap(other._apCorrMap)),
           _visitInfo(other._visitInfo),
           _transmissionCurve(other._transmissionCurve),
@@ -164,7 +174,6 @@ ExposureInfo& ExposureInfo::operator=(ExposureInfo const& other) {
     if (&other != this) {
         _filter = other._filter;
         _metadata = other._metadata;
-        _coaddInputs = other._coaddInputs;
         _apCorrMap = _cloneApCorrMap(other._apCorrMap);
         _visitInfo = other._visitInfo;
         _transmissionCurve = other._transmissionCurve;
@@ -250,9 +259,6 @@ ExposureInfo::FitsWriteData ExposureInfo::_startWriteFits(lsst::geom::Point2I co
     // this is still the case so we're setting AR_HDU to 5 == 4 + 1
     //
     data.metadata->set("AR_HDU", 5, "HDU (1-indexed) containing the archive used to store ancillary objects");
-    if (hasCoaddInputs()) {
-        _addToArchive(data, getCoaddInputs(), "COADD_INPUTS_ID", "archive ID for coadd inputs catalogs");
-    }
     if (hasApCorrMap()) {
         _addToArchive(data, getApCorrMap(), "AP_CORR_MAP_ID", "archive ID for aperture correction map");
     }
