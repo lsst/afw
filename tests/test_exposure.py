@@ -861,6 +861,8 @@ class ExposureInfoTestCase(lsst.utils.tests.TestCase):
                          self.exposureInfo.hasPsf, self.exposureInfo.getPsf)
         self._checkAlias(self.exposureInfo, cls.KEY_PHOTO_CALIB, self.photoCalib,
                          self.exposureInfo.hasPhotoCalib, self.exposureInfo.getPhotoCalib)
+        self._checkAlias(self.exposureInfo, cls.KEY_DETECTOR, self.detector,
+                         self.exposureInfo.hasDetector, self.exposureInfo.getDetector)
 
     def testCopy(self):
         # Test that ExposureInfos have independently settable state

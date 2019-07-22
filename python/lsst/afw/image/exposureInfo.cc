@@ -125,6 +125,7 @@ PYBIND11_MODULE(exposureInfo, mod) {
     cls.def("getWcs", (std::shared_ptr<geom::SkyWcs>(ExposureInfo::*)()) & ExposureInfo::getWcs);
     cls.def("setWcs", &ExposureInfo::setWcs, "wcs"_a);
 
+    cls.attr("KEY_DETECTOR") = ExposureInfo::KEY_DETECTOR.getId();
     cls.def("hasDetector", &ExposureInfo::hasDetector);
     cls.def("getDetector", &ExposureInfo::getDetector);
     cls.def("setDetector",

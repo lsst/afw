@@ -68,8 +68,6 @@ class TransmissionCurve;
  *  The constness semantics of the things held by ExposureInfo are admittedly a bit of a mess,
  *  but they're that way to preserve backwards compatibility for now.  Eventually I'd like to make
  *  a lot of these things immutable, but in the meantime, here's the summary:
- *   - Detector is held by const pointer and only returned by const pointer (but if you're
- *     in Python, SWIG will have casted all that constness away).
  *   - Filter is held and returned by value.
  *   - VisitInfo is immutable and is held by a const ptr and has a setter and getter.
  *   - Metadata is held by non-const pointer, and you can get a non-const pointer via a const
@@ -92,6 +90,8 @@ public:
     static typehandling::Key<std::string, std::shared_ptr<detection::Psf const>> const KEY_PSF;
     /// Standard key for looking up the photometric calibration.
     static typehandling::Key<std::string, std::shared_ptr<PhotoCalib const>> const KEY_PHOTO_CALIB;
+    /// Standard key for looking up the detector information.
+    static typehandling::Key<std::string, std::shared_ptr<cameraGeom::Detector const>> const KEY_DETECTOR;
 
     /// Does this exposure have a Wcs?
     bool hasWcs() const;
@@ -103,13 +103,13 @@ public:
     void setWcs(std::shared_ptr<geom::SkyWcs const> wcs);
 
     /// Does this exposure have Detector information?
-    bool hasDetector() const { return static_cast<bool>(_detector); }
+    bool hasDetector() const;
 
     /// Return the exposure's Detector information
-    std::shared_ptr<cameraGeom::Detector const> getDetector() const { return _detector; }
+    std::shared_ptr<cameraGeom::Detector const> getDetector() const;
 
     /// Set the exposure's Detector information
-    void setDetector(std::shared_ptr<cameraGeom::Detector const> detector) { _detector = detector; }
+    void setDetector(std::shared_ptr<cameraGeom::Detector const> detector);
 
     /// Return the exposure's filter
     Filter getFilter() const { return _filter; }
@@ -449,7 +449,6 @@ private:
         }
     }
 
-    std::shared_ptr<cameraGeom::Detector const> _detector;
     std::shared_ptr<geom::polygon::Polygon const> _validPolygon;
     Filter _filter;
     std::shared_ptr<daf::base::PropertySet> _metadata;

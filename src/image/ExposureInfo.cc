@@ -73,6 +73,17 @@ void ExposureInfo::setPhotoCalib(std::shared_ptr<PhotoCalib const> photoCalib) {
     setComponent(KEY_PHOTO_CALIB, photoCalib);
 }
 
+typehandling::Key<std::string, std::shared_ptr<cameraGeom::Detector const>> const ExposureInfo::KEY_DETECTOR =
+        typehandling::makeKey<std::shared_ptr<cameraGeom::Detector const>>("DETECTOR"s);
+
+bool ExposureInfo::hasDetector() const { return hasComponent(KEY_DETECTOR); }
+std::shared_ptr<cameraGeom::Detector const> ExposureInfo::getDetector() const {
+    return getComponent(KEY_DETECTOR);
+}
+void ExposureInfo::setDetector(std::shared_ptr<cameraGeom::Detector const> detector) {
+    setComponent(KEY_DETECTOR, detector);
+}
+
 int ExposureInfo::getFitsSerializationVersion() {
     // Version history:
     // unversioned and 0: photometric calibration via Calib, WCS via SkyWcs using AST.
@@ -105,8 +116,7 @@ ExposureInfo::ExposureInfo(std::shared_ptr<geom::SkyWcs const> const& wcs,
                            std::shared_ptr<ApCorrMap> const& apCorrMap,
                            std::shared_ptr<image::VisitInfo const> const& visitInfo,
                            std::shared_ptr<TransmissionCurve const> const& transmissionCurve)
-        : _detector(detector),
-          _validPolygon(polygon),
+        : _validPolygon(polygon),
           _filter(filter),
           _metadata(metadata ? metadata
                              : std::shared_ptr<daf::base::PropertySet>(new daf::base::PropertyList())),
@@ -118,6 +128,7 @@ ExposureInfo::ExposureInfo(std::shared_ptr<geom::SkyWcs const> const& wcs,
     setWcs(wcs);
     setPsf(psf);
     setPhotoCalib(photoCalib);
+    setDetector(detector);
 }
 
 ExposureInfo::ExposureInfo(ExposureInfo const& other) : ExposureInfo(other, false) {}
@@ -126,8 +137,7 @@ ExposureInfo::ExposureInfo(ExposureInfo const& other) : ExposureInfo(other, fals
 ExposureInfo::ExposureInfo(ExposureInfo&& other) : ExposureInfo(other) {}
 
 ExposureInfo::ExposureInfo(ExposureInfo const& other, bool copyMetadata)
-        : _detector(other._detector),
-          _validPolygon(other._validPolygon),
+        : _validPolygon(other._validPolygon),
           _filter(other._filter),
           _metadata(other._metadata),
           _coaddInputs(other._coaddInputs),
@@ -141,7 +151,6 @@ ExposureInfo::ExposureInfo(ExposureInfo const& other, bool copyMetadata)
 
 ExposureInfo& ExposureInfo::operator=(ExposureInfo const& other) {
     if (&other != this) {
-        _detector = other._detector;
         _validPolygon = other._validPolygon;
         _filter = other._filter;
         _metadata = other._metadata;
@@ -244,9 +253,6 @@ ExposureInfo::FitsWriteData ExposureInfo::_startWriteFits(lsst::geom::Point2I co
     if (hasTransmissionCurve() && getTransmissionCurve()->isPersistable()) {
         _addToArchive(data, getTransmissionCurve(), "TRANSMISSION_CURVE_ID",
                       "archive ID for the Exposure's transmission curve");
-    }
-    if (hasDetector() && getDetector()->isPersistable()) {
-        _addToArchive(data, getDetector(), "DETECTOR_ID", "archive ID for the Exposure's Detector");
     }
     _components->apply(StorablePersister(data));
 
