@@ -31,28 +31,38 @@ namespace geom {
 namespace ellipses {
 
 PixelRegion::PixelRegion(Ellipse const& ellipse)
-        : _center(ellipse.getCenter()), _bbox(ellipse.computeBBox(), lsst::geom::Box2I::EXPAND) {
+        : _bbox(ellipse.computeBBox(), lsst::geom::Box2I::EXPAND) {
     Quadrupole::Matrix q = Quadrupole(ellipse.getCore()).getMatrix();
-    _detQ = q(0, 0) * q(1, 1) - q(0, 1) * q(0, 1);
-    _invQxx = q(1, 1) / _detQ;
-    _alpha = q(0, 1) / _detQ / _invQxx;  // == -invQxy / invQxx
-    if (std::isnan(_alpha)) {
-        _alpha = 0.0;
+    double const detQ = q(0, 0) * q(1, 1) - q(0, 1) * q(0, 1);
+    double const invQxx = q(1, 1) / detQ;
+    double alpha = q(0, 1) / detQ / invQxx;  // == -invQxy / invQxx
+    if (std::isnan(alpha)) {
+        alpha = 0.0;
+    }
+    lsst::geom::Point2D const center = ellipse.getCenter();
+    int const yEnd = _bbox.getEndY();
+    for (int y = _bbox.getBeginY(); y != yEnd; ++y) {
+        double yt = y - center.getY();
+        double d = invQxx - yt * yt / detQ;
+        double x0 = center.getX() + yt * alpha;
+        double x1 = x0;
+        if (d > 0.0) {
+            d = std::sqrt(d) / invQxx;
+            x0 -= d;
+            x1 += d;
+        }  // Note that we return an empty span when d <= 0.0 or d is NaN.
+        _spans.emplace_back(y, std::ceil(x0), std::floor(x1));
     }
 }
 
 Span const PixelRegion::getSpanAt(int y) const {
-    double yt = y - _center.getY();
-    double d = _invQxx - yt * yt / _detQ;
-    double x0 = _center.getX() + yt * _alpha;
-    double x1 = x0;
-    if (d > 0.0) {
-        d = std::sqrt(d) / _invQxx;
-        x0 -= d;
-        x1 += d;
-    }  // Note that we return an empty span when d <= 0.0 or d is NaN.
-    return Span(y, std::ceil(x0), std::floor(x1));
+    int i = y - _bbox.getBeginY();
+    if (i < 0 || std::size_t(i) >= _spans.size()) {
+        return Span(y, 0, -1);
+    }
+    return _spans[i];
 }
+
 }  // namespace ellipses
 }  // namespace geom
 }  // namespace afw
