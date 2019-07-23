@@ -37,7 +37,10 @@ class EllipseTestCase(lsst.utils.tests.TestCase):
         np.random.seed(500)
         self.cores = [
             lsst.afw.geom.ellipses.Axes(4, 3, 1),
-            lsst.afw.geom.ellipses.Quadrupole(5, 3, -1)
+            lsst.afw.geom.ellipses.Quadrupole(5, 3, -1),
+            # ellipse below is a line segment at 45-degrees
+            lsst.afw.geom.ellipses.Quadrupole(ixx=99.99999763706363, iyy=99.99999763706357,
+                                              ixy=99.99999763706),
         ]
         self.classes = [lsst.afw.geom.ellipses.Axes,
                         lsst.afw.geom.ellipses.Quadrupole]
@@ -91,7 +94,7 @@ class EllipseTestCase(lsst.utils.tests.TestCase):
                     core.clone().getParameterVector(), core.getParameterVector())
                 self.assertIsNot(core, core.clone())
                 self.assertFloatsAlmostEqual(lsst.afw.geom.ellipses.Ellipse(ellipse).getParameterVector(),
-                                            ellipse.getParameterVector())
+                                             ellipse.getParameterVector())
                 self.assertIsNot(ellipse, lsst.afw.geom.ellipses.Ellipse(ellipse))
 
     def testTransform(self):
@@ -117,6 +120,7 @@ class EllipseTestCase(lsst.utils.tests.TestCase):
                     for point in span:
                         adjusted = point - bbox.getMin()
                         array[adjusted.getY(), adjusted.getX()] = True
+                    self.assertLessEqual(span.getMinX(), span.getMaxX())
                 gt = e.getGridTransform()
                 for i in range(bbox.getBeginY(), bbox.getEndY()):
                     for j in range(bbox.getBeginX(), bbox.getEndX()):
@@ -130,6 +134,15 @@ class EllipseTestCase(lsst.utils.tests.TestCase):
                         else:
                             self.assertGreater(
                                 r, 1.0, "Point %s is outside region but r=%f" % (point, r))
+                # Another ellipse at a different position, specifically to
+                # reproduce the problem on DM-20246.
+                e = lsst.afw.geom.Ellipse(core, lsst.geom.Point2D(100, 100))
+                region = lsst.afw.geom.ellipses.PixelRegion(e)
+                bbox = region.getBBox()
+                for span in region:
+                    self.assertLessEqual(span.getMinX(), span.getMaxX())
+                    self.assertTrue(bbox.contains(span.getMin()))
+                    self.assertTrue(bbox.contains(span.getMax()))
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
