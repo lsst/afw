@@ -38,9 +38,13 @@ class EllipseTestCase(lsst.utils.tests.TestCase):
         self.cores = [
             lsst.afw.geom.ellipses.Axes(4, 3, 1),
             lsst.afw.geom.ellipses.Quadrupole(5, 3, -1),
-            # ellipse below is a line segment at 45-degrees
+            # A line segment at 45-degrees:
             lsst.afw.geom.ellipses.Quadrupole(ixx=99.99999763706363, iyy=99.99999763706357,
                                               ixy=99.99999763706),
+            # A horizontal line segment:
+            lsst.afw.geom.ellipses.Quadrupole(5.0, 0.0, 0.0),
+            # A vertical line segment:
+            lsst.afw.geom.ellipses.Quadrupole(0.0, 7.0, 0.0),
         ]
         self.classes = [lsst.afw.geom.ellipses.Axes,
                         lsst.afw.geom.ellipses.Quadrupole]
