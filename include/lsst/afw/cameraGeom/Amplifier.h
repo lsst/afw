@@ -43,6 +43,14 @@ enum class ReadoutCorner {
 };
 
 /**
+ * Assembly state of the amplifier, used to identify bounding boxes and component existence.
+ */
+enum class AssemblyState {
+    RAW,
+    SCIENCE,
+};
+
+/**
  *  Geometry and electronic information about raw amplifier images
  *
  *  The Amplifier class itself is an abstract base class that provides no
