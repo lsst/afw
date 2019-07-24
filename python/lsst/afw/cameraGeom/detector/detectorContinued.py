@@ -20,13 +20,33 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-__all__ = ["Detector"]
+__all__ = ["DetectorBase", "DetectorTypeValNameDict", "DetectorTypeNameValDict"]
 
 from lsst.utils import continueClass
-from .detector import Detector
+from .detector import DetectorBase, DetectorType
+
+DetectorTypeValNameDict = {
+    DetectorType.SCIENCE: "SCIENCE",
+    DetectorType.FOCUS: "FOCUS",
+    DetectorType.GUIDER: "GUIDER",
+    DetectorType.WAVEFRONT: "WAVEFRONT",
+}
+
+DetectorTypeNameValDict = {val: key for key, val in
+                           DetectorTypeValNameDict.items()}
 
 
 @continueClass  # noqa: F811
-class Detector:
+class DetectorBase:
     def __iter__(self):
         return (self[i] for i in range(len(self)))
+
+    def fromConfig(self, config=None, numAmps=1):
+        if config is not None:
+            self.setSerial(config.serial)
+            self.setType(DetectorType(config.detectorType))
+            self.setPhysicalType(config.physicalType)
+            self.setBBox(config.getBBox())
+            self.setPixelSize(config.getPixelSize())
+            self.setOrientation(config.getOrientation())
+            self.setCrosstalk(config.getCrosstalk(numAmps))
