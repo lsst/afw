@@ -23,6 +23,8 @@ __all__ = ["CameraConfig", "DetectorConfig"]
 
 import numpy as np
 import lsst.pex.config as pexConfig
+import lsst.geom as geom
+from .orientation import Orientation
 from .transformConfig import TransformMapConfig
 
 
@@ -75,14 +77,52 @@ class DetectorConfig(pexConfig.Config):
         optional=True
     )
 
+    # Accessors to get "compiled" versions of parameters.
     def getCrosstalk(self, numAmps):
         """Return a 2-D numpy array of crosstalk coefficients of the proper shape"""
         if not self.crosstalk:
             return None
+
+        # CZW: Should this be here, or is obs_lsst just not setting numAmps correctly?
+        if numAmps != int(np.sqrt(len(self.crosstalk))):
+            numAmps = int(np.sqrt(len(self.crosstalk)))
         try:
             return np.array(self.crosstalk, dtype=np.float32).reshape((numAmps, numAmps))
         except Exception as e:
             raise RuntimeError("Cannot reshape 'crosstalk' coefficients to square matrix: %s" % (e,))
+
+    def getBBox(self):
+        """Return the detector bounding box from the separate box endpoint
+        values.
+        """
+        return geom.BoxI(geom.PointI(self.bbox_x0, self.bbox_y0),
+                         geom.PointI(self.bbox_x1, self.bbox_y1))
+
+    def getOffset(self):
+        """Return the detector offset as a Point2D from the separate config
+        values.
+        """
+        return geom.Point2D(self.offset_x, self.offset_y)
+
+    def getRefPos(self):
+        """Return the detector reference position as a Point2D from the
+        separate config values.
+        """
+        return geom.Point2D(self.refpos_x, self.refpos_y)
+
+    def getOrientation(self):
+        """Return the cameraGeom.Orientation() object defined by the
+        configuration values.
+        """
+        return Orientation(self.getOffset(), self.getRefPos(),
+                           geom.Angle(self.yawDeg, geom.degrees),
+                           geom.Angle(self.pitchDeg, geom.degrees),
+                           geom.Angle(self.rollDeg, geom.degrees))
+
+    def getPixelSize(self):
+        """Return the pixel size as an Extent2D from the separate values.
+        """
+        return geom.Extent2D(self.pixelSize_x, self.pixelSize_y)
 
 
 class CameraConfig(pexConfig.Config):

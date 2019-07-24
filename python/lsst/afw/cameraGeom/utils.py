@@ -36,6 +36,7 @@ from lsst.afw.fits import FitsError
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
+import lsst.afw.cameraGeom as afwCameraGeom
 import lsst.daf.base as dafBase
 import lsst.log
 import lsst.pex.exceptions as pexExceptions
@@ -219,18 +220,18 @@ def makeImageFromAmp(amp, imValue=None, imageFactory=afwImage.ImageU, markSize=1
         img.set(imValue)
     # Set the first pixel read to a different value
     markbbox = lsst.geom.Box2I()
-    if amp.getReadoutCorner() == 0:
+    if amp.getReadoutCorner() == afwCameraGeom.ReadoutCorner.LL:
         markbbox.include(dbbox.getMin())
         markbbox.include(dbbox.getMin() + lsst.geom.Extent2I(markSize, markSize))
-    elif amp.getReadoutCorner() == 1:
+    elif amp.getReadoutCorner() == afwCameraGeom.ReadoutCorner.LR:
         cornerPoint = lsst.geom.Point2I(dbbox.getMaxX(), dbbox.getMinY())
         markbbox.include(cornerPoint)
         markbbox.include(cornerPoint + lsst.geom.Extent2I(-markSize, markSize))
-    elif amp.getReadoutCorner() == 2:
+    elif amp.getReadoutCorner() == afwCameraGeom.ReadoutCorner.UR:
         cornerPoint = lsst.geom.Point2I(dbbox.getMax())
         markbbox.include(cornerPoint)
         markbbox.include(cornerPoint + lsst.geom.Extent2I(-markSize, -markSize))
-    elif amp.getReadoutCorner() == 3:
+    elif amp.getReadoutCorner() == afwCameraGeom.ReadoutCorner.UL:
         cornerPoint = lsst.geom.Point2I(dbbox.getMinX(), dbbox.getMaxY())
         markbbox.include(cornerPoint)
         markbbox.include(cornerPoint + lsst.geom.Extent2I(markSize, -markSize))

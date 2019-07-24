@@ -96,6 +96,7 @@ void declareTransformMap(py::module & mod) {
         "pointList"_a, "fromSys"_a, "toSys"_a
     );
     cls.def("getTransform", &TransformMap::getTransform, "fromSys"_a, "toSys"_a);
+    cls.def("listConnections", &TransformMap::getConnections);
 
     table::io::python::addPersistableMethods(cls);
 

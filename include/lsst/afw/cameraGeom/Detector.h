@@ -181,7 +181,7 @@ protected:
 class Detector final :
     public DetectorBase,
     public table::io::PersistableFacade<Detector>,
-    public table::io::Persistable
+    public typehandling::Storable
 {
 public:
 

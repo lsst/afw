@@ -19,13 +19,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-__all__ = ["makeCameraFromPath", "makeCameraFromAmpLists"]
+__all__ = ["addDetectorBuilderFromConfig", "addDetectorFromConfig",
+           "makeCameraFromPath", "makeCameraFromAmpLists"]
 
 import os.path
-import lsst.geom
 from lsst.afw.table import BaseCatalog
 from .cameraGeomLib import FOCAL_PLANE, FIELD_ANGLE, PIXELS, TAN_PIXELS, ACTUAL_PIXELS, CameraSys, \
-    DetectorType, Orientation, Amplifier
+    Amplifier
 from .camera import Camera
 from .makePixelToTanPixel import makePixelToTanPixel
 from .pupil import PupilFactory
@@ -64,17 +64,7 @@ def addDetectorBuilderFromConfig(cameraBuilder, detectorConfig, amplifiers, foca
         associated with the given camera builder object.
     """
     detectorBuilder = cameraBuilder.add(detectorConfig.name, detectorConfig.id)
-    detectorBuilder.setType(DetectorType(detectorConfig.detectorType))
-    detectorBuilder.setSerial(detectorConfig.serial)
-    detectorBuilder.setPhysicalType(detectorConfig.physicalType)
-    detectorBuilder.setOrientation(makeOrientation(detectorConfig))
-    detectorBuilder.setPixelSize(lsst.geom.Extent2D(detectorConfig.pixelSize_x, detectorConfig.pixelSize_y))
-    detectorBuilder.setBBox(
-        lsst.geom.Box2I(
-            minimum=lsst.geom.Point2I(detectorConfig.bbox_x0, detectorConfig.bbox_y0),
-            maximum=lsst.geom.Point2I(detectorConfig.bbox_x1, detectorConfig.bbox_y1),
-        )
-    )
+    detectorBuilder.fromConfig(detectorConfig)
 
     for ampBuilder in amplifiers:
         detectorBuilder.append(ampBuilder)
@@ -90,8 +80,6 @@ def addDetectorBuilderFromConfig(cameraBuilder, detectorConfig, amplifiers, foca
     detectorNativeSysPrefix = cameraSysMap.get(detectorConfig.transformDict.nativeSys, PIXELS)
     assert detectorNativeSysPrefix == PIXELS, "Detectors with nativeSys != PIXELS are not supported."
 
-    for toSys, transform in transforms.items():
-        detectorBuilder.setTransformFromPixelsTo(toSys, transform)
     tanPixSys = CameraSys(TAN_PIXELS, detectorConfig.name)
     transforms[tanPixSys] = makePixelToTanPixel(
         bbox=detectorBuilder.getBBox(),
@@ -99,8 +87,17 @@ def addDetectorBuilderFromConfig(cameraBuilder, detectorConfig, amplifiers, foca
         focalPlaneToField=focalPlaneToField,
         pixelSizeMm=detectorBuilder.getPixelSize(),
     )
+
+    for toSys, transform in transforms.items():
+        detectorBuilder.setTransformFromPixelsTo(toSys, transform)
+
     detectorBuilder.setCrosstalk(detectorConfig.getCrosstalk(len(amplifiers)))
+
     return detectorBuilder
+
+
+def addDetectorFromConfig(cameraBuilder, detectorConfig, amplifiers, focalPlaneToField):
+    return addDetectorBuilderFromConfig(cameraBuilder, detectorConfig, amplifiers, focalPlaneToField)
 
 
 def makeOrientation(detectorConfig):
@@ -116,12 +113,7 @@ def makeOrientation(detectorConfig):
     orientation : `lsst.afw.cameraGeom.Orientation`
         Location and rotation of the Detector.
     """
-    offset = lsst.geom.Point2D(detectorConfig.offset_x, detectorConfig.offset_y)
-    refPos = lsst.geom.Point2D(detectorConfig.refpos_x, detectorConfig.refpos_y)
-    yaw = lsst.geom.Angle(detectorConfig.yawDeg, lsst.geom.degrees)
-    pitch = lsst.geom.Angle(detectorConfig.pitchDeg, lsst.geom.degrees)
-    roll = lsst.geom.Angle(detectorConfig.rollDeg, lsst.geom.degrees)
-    return Orientation(offset, refPos, yaw, pitch, roll)
+    return detectorConfig.getOrientation()
 
 
 def makeTransformDict(transformConfigDict):
@@ -173,7 +165,7 @@ def makeCameraFromPath(cameraConfig, ampInfoPath, shortNameFunc,
         shortName = shortNameFunc(detectorConfig.name)
         ampCatPath = os.path.join(ampInfoPath, shortName + ".fits")
         catalog = BaseCatalog.readFits(ampCatPath)
-        ampListDict[detectorConfig.name] = [Amplifier.Builder.fromRecord(record).finish()
+        ampListDict[detectorConfig.name] = [Amplifier.Builder.fromRecord(record)
                                             for record in catalog]
 
     return makeCameraFromAmpLists(cameraConfig, ampListDict, pupilFactoryClass)

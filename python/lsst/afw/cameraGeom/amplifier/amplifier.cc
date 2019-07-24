@@ -45,6 +45,9 @@ PyAmplifier declarePyAmplifier(py::module & mod) {
         .value("LR", ReadoutCorner::LR)
         .value("UR", ReadoutCorner::UR)
         .value("UL", ReadoutCorner::UL);
+    py::enum_<AssemblyState>(mod, "AssemblyState")
+        .value("RAW", AssemblyState::RAW)
+        .value("SCIENCE", AssemblyState::SCIENCE);
     PyAmplifier cls(mod, "Amplifier");
     cls.def_static("getRecordSchema", &Amplifier::getRecordSchema);
     cls.def("toRecord", &Amplifier::toRecord);

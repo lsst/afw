@@ -47,7 +47,7 @@ namespace cameraGeom {
 namespace {
 
 using PyDetectorBase = py::class_<DetectorBase, std::shared_ptr<DetectorBase>>;
-using PyDetector = py::class_<Detector, DetectorBase, std::shared_ptr<Detector>>;
+using PyDetector = py::class_<Detector, DetectorBase, std::shared_ptr<Detector>, typehandling::Storable>;
 using PyDetectorBuilder = py::class_<Detector::Builder, DetectorBase, std::shared_ptr<Detector::Builder>>;
 using PyDetectorPartialRebuilder = py::class_<Detector::PartialRebuilder, Detector::Builder,
                                               std::shared_ptr<Detector::PartialRebuilder>>;
@@ -111,6 +111,7 @@ void declareDetectorPartialRebuilder(PyDetector & parent);
 void declareDetectorInCameraBuilder(PyDetector & parent);
 
 void declareDetector(py::module & mod) {
+    py::module::import("lsst.afw.typehandling");
     PyDetector cls(mod, "Detector");
     declareDetectorBuilder(cls);
     declareDetectorPartialRebuilder(cls);
