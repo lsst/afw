@@ -25,7 +25,9 @@ import os.path
 import lsst.geom
 from lsst.afw.table import BaseCatalog
 from .cameraGeomLib import FOCAL_PLANE, FIELD_ANGLE, PIXELS, TAN_PIXELS, ACTUAL_PIXELS, CameraSys, \
-    DetectorType, Orientation, Amplifier
+    Orientation, Amplifier
+#    DetectorType,
+
 from .camera import Camera
 from .makePixelToTanPixel import makePixelToTanPixel
 from .pupil import PupilFactory
@@ -64,21 +66,11 @@ def addDetectorBuilderFromConfig(cameraBuilder, detectorConfig, amplifiers, foca
         associated with the given camera builder object.
     """
     detectorBuilder = cameraBuilder.add(detectorConfig.name, detectorConfig.id)
-    detectorBuilder.setType(DetectorType(detectorConfig.detectorType))
-    detectorBuilder.setSerial(detectorConfig.serial)
-    detectorBuilder.setPhysicalType(detectorConfig.physicalType)
-    detectorBuilder.setOrientation(makeOrientation(detectorConfig))
-    detectorBuilder.setPixelSize(lsst.geom.Extent2D(detectorConfig.pixelSize_x, detectorConfig.pixelSize_y))
-    detectorBuilder.setBBox(
-        lsst.geom.Box2I(
-            minimum=lsst.geom.Point2I(detectorConfig.bbox_x0, detectorConfig.bbox_y0),
-            maximum=lsst.geom.Point2I(detectorConfig.bbox_x1, detectorConfig.bbox_y1),
-        )
-    )
+
+    print(detectorBuilder)
+    detectorBuilder.fromDict(detectorConfig.toDict())
 
     for amp in amplifiers:
-        #        import pdb
-        #        pdb.set_trace()
         detectorBuilder.append(amp.rebuild())
 
     transforms = makeTransformDict(detectorConfig.transformDict.transforms)
@@ -145,6 +137,7 @@ def makeTransformDict(transformConfigDict):
     transforms : `dict`
         A dict of CameraSys or CameraSysPrefix: lsst.afw.geom.Transform
     """
+    print("CZW: This should never run.")
     resMap = dict()
     if transformConfigDict is not None:
         for key in transformConfigDict:
@@ -215,9 +208,12 @@ def makeCameraFromAmpLists(cameraConfig, ampListDict,
     assert nativeSys == FOCAL_PLANE, "Cameras with nativeSys != FOCAL_PLANE are not supported."
 
     cameraBuilder = Camera.Builder(cameraConfig.name)
+    print("MCFAL:", cameraBuilder)
+    # import pdb
+    # pdb.set_trace()
     cameraBuilder.setPupilFactoryClass(pupilFactoryClass)
 
-    transformDict = makeTransformDict(cameraConfig.transformDict.transforms)
+    transformDict = cameraConfig.transformDict.transformsToDict()
     focalPlaneToField = transformDict[FIELD_ANGLE]
 
     for toSys, transform in transformDict.items():

@@ -53,10 +53,16 @@ class Amplifier:
             Raised if the Assembly State is not listed/is not handled.
         """
         myState = self.getAssemblyState()
-        if myState == AssemblyState.RAW:
+        if myState == AssemblyState.SPLIT:
             return self.getRawDataBBox()
+        elif myState == AssemblyState.RAW:
+            bbox = self.getRawDataBBox()
+            bbox.shift(self.getRawXYOffset())
+            return bbox
         elif myState == AssemblyState.ENGINEERING:
-            return self.getRawDataBBox()
+            bbox = self.getRawDataBBox()
+            bbox.shift(self.getRawXYOffset())
+            return bbox
         elif myState == AssemblyState.SCIENCE:
             return self.getBBox()
         else:
@@ -66,7 +72,9 @@ class Amplifier:
         """Return a consistent bounding box accessor for the science data
         region, rotated such that the ReadoutCorner = LL.
 
-        CZW: This may not yield something usable. :(
+        CZW: This may not yield something usable. :(  It's possible we'll want
+             to return a image view that has been properly indexed to be useful,
+             not a BBox at all.
 
         Returns
         -------
@@ -99,12 +107,6 @@ class Amplifier:
                     alias = translationDict[key]
                     inputDict[alias] = inputDict[key]
 
-        # CZW:
-        #        print(inputDict)
-        #        print(inputDict.keys())
-        #        import pdb
-        #        pdb.set_trace()
-
         self.setName(inputDict.get('name', "Undefined Amplifier"))
         self.setGain(inputDict.get('gain', 1.0))
         self.setReadNoise(inputDict.get('readNoise', 0.0))
@@ -113,6 +115,7 @@ class Amplifier:
         self.setReadoutCorner(ReadoutCornerNameValDict.get(inputDict.get('readCorner', 0)))
 
         # Linearity is a special case
+        print("PRE", self.getLinearityType(), self.getLinearityCoeffs())
         if 'linearityCoeffs' in inputDict.keys():
             self.setLinearityCoeffs([float(val) for val in inputDict['linearityCoeffs']])
         self.setLinearityType(inputDict.get('linearityType', "PROPORTIONAL"))
@@ -120,8 +123,10 @@ class Amplifier:
         self.setLinearityMaximum(inputDict.get('linearityMax', self.getSaturation()))
         self.setLinearityUnits("DN")  # This likely never will be set.
         if self.getLinearityType() == "PROPORTIONAL":
-            self.setLinearityCoeffs([float(self.getLinearityThreshold()), float(self.getLinearityMaximum()),
+            self.setLinearityCoeffs([float(self.getLinearityThreshold()),
+                                     float(self.getLinearityMaximum()),
                                      float('nan'), float('nan')])
+        print("POST", self.getLinearityType(), self.getLinearityCoeffs())
 
         # Set up geometries
         ix, iy = inputDict.get('ixy', (0, 0))

@@ -31,13 +31,36 @@ _SliceDict = {
 }
 
 
-def _insertPixelChunk(outView, inView, amplifier, hasArrays):
-    # For the sake of simplicity and robustness, this code does not short-circuit the case flipX=flipY=False.
-    # However, it would save a bit of time, including the cost of making numpy array views.
-    # If short circuiting is wanted, do it here.
+def _insertPixelChunk(outView, inView, amplifier, hasArrays, refAmplifier=None):
+    """Copy pixels to outView from inView, respecting amplifier flips.
 
-    xSlice = _SliceDict[amplifier.getRawFlipX()]
-    ySlice = _SliceDict[amplifier.getRawFlipY()]
+    Parameters
+    ----------
+    outView : `lsst.afw.image.Image`
+       Image to copy to.
+    inView : `lsst.afw.image.Image`
+       Image to copy from.
+    amplifier : `lsst.afw.cameraGeom.Amplifier`
+       Amplifier for input geometry.
+    hasArrays : `bool`
+       Are there multiple image arrays to copy?
+    refAmplifier : `lsst.afw.cameraGeom.Amplifier`, optional
+       Amplifier to match the orientation of
+
+    Notes
+    -----
+    For the sake of simplicity and robustness, this code does not
+    short-circuit the case flipX=flipY=False.  However, it would save
+    a bit of time, including the cost of making numpy array views.  If
+    short circuiting is wanted, do it here.
+    """
+    if refAmplifier is None:
+        xSlice = _SliceDict[amplifier.getRawFlipX()]
+        ySlice = _SliceDict[amplifier.getRawFlipY()]
+    else:
+        xSlice = _SliceDict[amplifier.getRawFlipX() ^ refAmplifier.getRawFlipX()]
+        ySlice = _SliceDict[amplifier.getRawFlipY() ^ refAmplifier.getRawFlipY()]
+
     if hasArrays:
         # MaskedImage
         inArrList = inView.getArrays()
@@ -49,6 +72,46 @@ def _insertPixelChunk(outView, inView, amplifier, hasArrays):
     for inArr, outArr in zip(inArrList, outArrList):
         # y,x because numpy arrays are transposed w.r.t. afw Images
         outArr[:] = inArr[ySlice, xSlice]
+
+# def amplifierViewAsReference(rawImage, amplifier, refAmplifier):
+#     outView = rawImage.Factory(amplifier.getBBox())
+#     xSlice = _SliceDict[amplifier.getRawFlipX() ^ refAmplifier.getRawFlipX()]
+#     ySlice = _SliceDict[amplifier.getRawFlipY() ^ refAmplifier.getRawFlipY()]
+
+#     if hasattr(rawImage, "getArrays"):
+
+# def assembleAmplifier(destImage, rawImage, amplifier, assemblyState, repair=False):
+#     """Assemble an image to the desired assembly state.
+
+#     Parameters
+#     ----------
+#     destImage : `lsst.afw.image.Image`
+#        Output image.
+#     rawImage : `lsst.afw.image.Image`
+#        Input image (same type as destImage).
+#     amplifier : `lsst.afw.cameraGeom.Amplifier`
+#        Amplifier with input camera geometry.
+#     assemblyState : `lsst.afw.cameraGeom.AssemblyState`
+#        State to assemble the destImage.
+#     repair : `bool`, optional
+#        Attempt to fix inconsistent geometry information.
+#     """
+#     currentAssemblyState = amplifier.getAssemblyState()
+#     if assemblyState == currentAssemblyState:
+#         destImage = rawImage
+#         return amplifier
+#     elif assemblyState < currentAssemblyState:
+#         raise f"Cannot assemble amplifier to earlier state: {assemblyState} {amplifier.getAssemblyState()}"
+#     else:
+#         outAmp = amplifier.rebuild()
+#         if currentAssemblyState == AssemblyState.SPLIT:
+#             if assemblyState == AssemblyState.RAW:
+#                 assembleAmplifierRawImage(destImage, rawImage, amplifier)
+#             elif assemblyState == AssemblyState.SCIENCE:
+#                 assembleAmplifierImage(destImage, rawImage, amplifier)
+#         elif currentAssemblyState == AssemblyState.RAW:
+#             if assemblyState == AssemblyState.SCIENCE:
+#                 assembleAmplifierImage(destImage, rawImage, amplifier)
 
 
 def assembleAmplifierImage(destImage, rawImage, amplifier):

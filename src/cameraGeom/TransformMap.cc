@@ -300,7 +300,7 @@ private:
                                                        "Camera coordinate system detector name.", "", 0)),
         transform(schema.addField<int>("transform", "Archive ID of the transform.", ""))
     {
-        schema.getCitizen().markPersistent();
+//        schema.getCitizen().markPersistent();
     }
 
     PersistenceHelper(PersistenceHelper const &) = delete;

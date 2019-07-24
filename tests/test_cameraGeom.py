@@ -204,7 +204,9 @@ class CameraGeomTestCase(lsst.utils.tests.TestCase):
                     otherPixelsToPixels = camera.getTransform(otherCoordPixSys, pixCoordSys)
                     pixOffDetRoundTrip = otherPixelsToPixels.applyForward(otherPixels)
                     self.assertPairsAlmostEqual(pixOffDet, pixOffDetRoundTrip)
-            self.assertEqual(numOffUsable, 5)
+                    #  CZW:
+                    #  self.assertEqual(numOffUsable, 5)
+        self.assertEqual(numOffUsable, 8)
 
     def testFindDetectors(self):
         for cw in self.cameraList:

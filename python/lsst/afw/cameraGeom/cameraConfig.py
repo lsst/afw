@@ -25,6 +25,10 @@ import numpy as np
 import lsst.pex.config as pexConfig
 from .transformConfig import TransformMapConfig
 
+class AmplifierConfig(pexConfig.Config):
+    """Configuration handler for Amplifiers.
+    """
+    
 
 class DetectorConfig(pexConfig.Config):
     """A configuration that represents (and can be used to construct) a
@@ -74,6 +78,25 @@ class DetectorConfig(pexConfig.Config):
              "Once 'reshape'-ed, ``coeffs[i][j]`` is the fraction of the j-th amp present on the i-th amp."),
         optional=True
     )
+
+    def getBBox(self):
+        return lsst.geom.BoxI(lsst.geom.PointI(self.bbox_x0, self.bbox_y0),
+                              lsst.geom.PointI(self.bbox_x1, self.bbox_y1))
+
+    def getOffset(self):
+        return lsst.geom.Point2D(self.offset_x, self.offset_y)
+
+    def getRefPos(self):
+        return lsst.geom.Point2D(self.refpos_x, self.refpos_y)
+
+    def getOrientation(self):
+        return (self.getOffset(), self.getRefPos(),
+                lsst.geom.Angle(self.yawDeg, lsst.geom.degrees),
+                lsst.geom.Angle(self.pitchDeg, lsst.geom.degrees),
+                lsst.geom.Angle(self.rollDeg, lsst.geom.degrees))
+
+    def getPixelSize(self):
+        return lsst.geom.Extent2D(self.pixelSize_x, self.pixelSize_y)
 
     def getCrosstalk(self, numAmps):
         """Return a 2-D numpy array of crosstalk coefficients of the proper shape"""

@@ -225,7 +225,7 @@ private:
         linearityMaximum(schema.addField<double>("linearityMaximum", "TODO! NEVER DOCUMENTED")),
         linearityUnits(schema.addField<std::string>("linearityUnits", "TODO! NEVER DOCUMENTED", "", 0))
     {
-        schema.getCitizen().markPersistent();
+//        schema.getCitizen().markPersistent();
     }
 
 };

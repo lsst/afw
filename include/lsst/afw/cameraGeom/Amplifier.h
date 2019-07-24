@@ -46,6 +46,8 @@ enum class ReadoutCorner {
  * Assembly state of the amplifier, used to identify bounding boxes and component existence.
  */
 enum class AssemblyState {
+    UNKNOWN,
+    SPLIT,
     RAW,
     ENGINEERING,
     SCIENCE,

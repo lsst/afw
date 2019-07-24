@@ -22,9 +22,12 @@
 __all__ = []
 
 # import lsst.afw.cameraGeom as afwGeom
+import os.path
 from lsst.utils import continueClass, TemplateMeta
+from ..amplifier import Amplifier
 from ..detector import Detector
 from .detectorCollection import DetectorCollectionDetectorBase, DetectorCollectionBuilderBase
+from ...table import BaseCatalog
 
 
 class DetectorCollectionBase(metaclass=TemplateMeta):  # noqa: F811
@@ -68,13 +71,54 @@ class DetectorCollectionBuilderBase():
                     inputDict[alias] = inputDict[key]
 
         self.setName(inputDict.get('name', "Undefined Camera"))
-        #        self.setPlateScale(inputDict.get('plateScale', 1.0))
-        #        self.setNativeSys(afwGeom.FOCAL_PLANE)  # This is fixed somewhere.
-        #        self.setTransforms(inputDict('transformDict', None))
-        #        import pdb
-        #        pdb.set_trace()
 
+        import pdb
+        pdb.set_trace()
+        if 'transformDict' in inputDict:
+            setTransforms(self, inputDict['transformDict'])
+
+        print("CZW: Define Camera to sky transforms.")
         if 'CCDs' in inputDict:
             for name, ccd in inputDict['CCDs'].items():
                 detBuilder = self.add(name, ccd['id'])
                 detBuilder.fromDict(ccd)
+        elif 'detectorList' in inputDict:
+            for detInd, ccd in inputDict['detectorList'].items():
+                name = ccd['name']
+                detBuilder = self.add(name, ccd['id'])
+                detBuilder.fromDict(ccd)
+
+        # We need to manually load amplifier data for each detector.
+        if 'ampInfoPath' in inputDict:
+            cameraNameMap = self.getNameMap()
+            for detName, detector in cameraNameMap.items():
+                detName.replace(" ", "_")  # GetShortCcdName
+                ampCatPath = os.path.join(inputDict['ampInfoPath'], detName + ".fits")
+                catalog = BaseCatalog.readFits(ampCatPath)
+                for record in catalog:
+                    amp = Amplifier.Builder.fromRecord(record)
+                    detector.append(amp)
+
+        # Transforms
+
+
+def setTransforms(cameraBuilder, transformDict):
+    from ..cameraGeomLib import FIELD_ANGLE, FOCAL_PLANE, PIXELS, TAN_PIXELS, ACTUAL_PIXELS
+    from lsst.afw.cameraGeom.transformConfig import transformDictFromYaml
+    cameraSysList = [FIELD_ANGLE, FOCAL_PLANE, PIXELS, TAN_PIXELS, ACTUAL_PIXELS]
+    cameraSysMap = dict((sys.getSysName(), sys) for sys in cameraSysList)
+
+    nativeSysName = transformDict['nativeSys']
+    nativeSys = cameraSysMap.get(nativeSysName, FOCAL_PLANE)
+    assert nativeSys == FOCAL_PLANE, "Received incorrect nativeSys"
+
+    import pdb
+    pdb.set_trace()
+    print("CZW:")
+    transformDict = transformDictFromYaml(transformDict.get('plateScale', 1.0), transformDict)
+    focalPlaneToField = transformDict[FIELD_ANGLE]
+
+    for toSys, transform in transformDict.items():
+        cameraBuilder.setTransformFromFocalPlaneTo(toSys, transform)
+
+    return focalPlaneToField
