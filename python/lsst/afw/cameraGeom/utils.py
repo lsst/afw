@@ -30,7 +30,6 @@ __all__ = ['prepareWcsData', 'plotFocalPlane', 'makeImageFromAmp', 'calcRawCcdBB
 
 import math
 import numpy
-import warnings
 
 import lsst.geom
 from lsst.afw.fits import FitsError
@@ -736,7 +735,7 @@ def showAmp(amp, imageSource=FakeImageDataSource(isTrimmed=False), display=None,
                     bbox, borderWidth=borderWidth, ctype=ctype, display=display)
 
 
-def showCcd(ccd, imageSource=FakeImageDataSource(), display=None, frame=None, overlay=True,
+def showCcd(ccd, imageSource=FakeImageDataSource(), display=None, overlay=True,
             imageFactory=afwImage.ImageF, binSize=1, inCameraCoords=False):
     """Show a CCD on display.
 
@@ -748,8 +747,6 @@ def showCcd(ccd, imageSource=FakeImageDataSource(), display=None, frame=None, ov
         Source to get ccd images.  Must have a ``getCcdImage()`` method.
     display : `lsst.afw.display.Display`
         image display to use.
-    frame : `None`
-        frame ID on which to display. **Deprecated** in v12.
     overlay : `bool`
         Show amp bounding boxes on the displayed image?
     imageFactory : callable like `lsst.afw.image.Image`
@@ -759,11 +756,7 @@ def showCcd(ccd, imageSource=FakeImageDataSource(), display=None, frame=None, ov
     inCameraCoords : `bool`
         Show the Detector in camera coordinates?
     """
-    if frame is not None:
-        warnings.warn("The frame kwarg is deprecated; use the `lsst.afw.display` system instead.",
-                      DeprecationWarning)
-
-    display = _getDisplayFromDisplayOrFrame(display, frame)
+    display = _getDisplayFromDisplayOrFrame(display)
 
     ccdOrigin = lsst.geom.Point2I(0, 0)
     nQuarter = 0
@@ -935,7 +928,7 @@ def makeImageFromCamera(camera, detectorNameList=None, background=numpy.nan, buf
 
 
 def showCamera(camera, imageSource=FakeImageDataSource(), imageFactory=afwImage.ImageF,
-               detectorNameList=None, binSize=10, bufferSize=10, frame=None, overlay=True, title="",
+               detectorNameList=None, binSize=10, bufferSize=10, overlay=True, title="",
                showWcs=None, ctype=afwDisplay.GREEN, textSize=1.25, originAtCenter=True, display=None,
                **kwargs):
     """Show a Camera on display, with the specified display.
@@ -960,8 +953,6 @@ def showCamera(camera, imageSource=FakeImageDataSource(), imageFactory=afwImage.
         Bin the image by this factor in both dimensions.
     bufferSize : `int`
         Size of border in binned pixels to make around the camera image.
-    frame : `None`
-        specify image display. **Deprecated** in v12.
     overlay : `bool`
         Overlay Detector IDs and boundaries?
     title : `str`
@@ -985,11 +976,7 @@ def showCamera(camera, imageSource=FakeImageDataSource(), imageFactory=afwImage.
     image : `lsst.afw.image.Image`
         The mosaic image.
     """
-    if frame is not None:
-        warnings.warn("The frame kwarg is deprecated; use the `lsst.afw.display` system instead.",
-                      DeprecationWarning)
-
-    display = _getDisplayFromDisplayOrFrame(display, frame)
+    display = _getDisplayFromDisplayOrFrame(display)
 
     if binSize < 1:
         binSize = 1

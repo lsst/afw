@@ -25,7 +25,7 @@ import unittest
 import numpy as np
 import astropy.io.fits
 import lsst.utils.tests
-from lsst.afw.geom import Box2I, Point2I
+from lsst.geom import Box2I, Point2I
 from lsst.afw.fits import ImageCompressionOptions, ImageScalingOptions, ImageWriteOptions
 import lsst.afw.image as afwImage
 

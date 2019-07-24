@@ -28,7 +28,7 @@ import numpy as np
 import lsst.utils.tests
 import lsst.pex.exceptions
 from lsst.daf.base import DateTime, PropertySet, PropertyList
-from lsst.afw.geom import Angle, degrees, SpherePoint
+from lsst.geom import Angle, degrees, SpherePoint
 from lsst.afw.coord import Observatory, Weather
 import lsst.afw.image as afwImage
 

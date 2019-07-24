@@ -29,8 +29,8 @@ import lsst.afw.geom as afwGeom
 class GeomAliasesTestCase(lsst.utils.tests.TestCase):
 
     def testAngleAliases(self):
-        self.assertIs(afwGeom.Angle, lsst.geom.Angle)
-        self.assertIs(afwGeom.AngleUnit, lsst.geom.AngleUnit)
+        with self.assertWarns(FutureWarning):
+            self.assertEqual(afwGeom.Angle(1), lsst.geom.Angle(1))
 
         self.assertIs(afwGeom.radians, lsst.geom.radians)
         self.assertIs(afwGeom.degrees, lsst.geom.degrees)
@@ -46,40 +46,65 @@ class GeomAliasesTestCase(lsst.utils.tests.TestCase):
         self.assertIs(afwGeom.INVSQRTPI, lsst.geom.INVSQRTPI)
         self.assertIs(afwGeom.ROOT2, lsst.geom.ROOT2)
 
-        self.assertIs(afwGeom.degToRad, lsst.geom.degToRad)
-        self.assertIs(afwGeom.radToDeg, lsst.geom.radToDeg)
-        self.assertIs(afwGeom.radToArcsec, lsst.geom.radToArcsec)
-        self.assertIs(afwGeom.radToMas, lsst.geom.radToMas)
-        self.assertIs(afwGeom.arcsecToRad, lsst.geom.arcsecToRad)
-        self.assertIs(afwGeom.masToRad, lsst.geom.masToRad)
+        with self.assertWarns(FutureWarning):
+            self.assertEqual(afwGeom.degToRad(1), lsst.geom.degToRad(1))
+        with self.assertWarns(FutureWarning):
+            self.assertEqual(afwGeom.radToDeg(1), lsst.geom.radToDeg(1))
+        with self.assertWarns(FutureWarning):
+            self.assertEqual(afwGeom.radToArcsec(1), lsst.geom.radToArcsec(1))
+        with self.assertWarns(FutureWarning):
+            self.assertEqual(afwGeom.radToMas(1), lsst.geom.radToMas(1))
+        with self.assertWarns(FutureWarning):
+            self.assertEqual(afwGeom.arcsecToRad(1), lsst.geom.arcsecToRad(1))
+        with self.assertWarns(FutureWarning):
+            self.assertEqual(afwGeom.masToRad(1), lsst.geom.masToRad(1))
 
     def testCoordAliases(self):
-        self.assertIs(afwGeom.ExtentI, lsst.geom.ExtentI)
-        self.assertIs(afwGeom.Extent2I, lsst.geom.Extent2I)
-        self.assertIs(afwGeom.Extent3I, lsst.geom.Extent3I)
+        with self.assertWarns(FutureWarning):
+            self.assertIsInstance(afwGeom.ExtentI(), lsst.geom.ExtentI)
+        with self.assertWarns(FutureWarning):
+            self.assertIsInstance(afwGeom.Extent2I(), lsst.geom.Extent2I)
+        with self.assertWarns(FutureWarning):
+            self.assertIsInstance(afwGeom.Extent3I(), lsst.geom.Extent3I)
 
-        self.assertIs(afwGeom.ExtentD, lsst.geom.ExtentD)
-        self.assertIs(afwGeom.Extent2D, lsst.geom.Extent2D)
-        self.assertIs(afwGeom.Extent3D, lsst.geom.Extent3D)
+        with self.assertWarns(FutureWarning):
+            self.assertIsInstance(afwGeom.ExtentD(), lsst.geom.ExtentD)
+        with self.assertWarns(FutureWarning):
+            self.assertIsInstance(afwGeom.Extent2D(), lsst.geom.Extent2D)
+        with self.assertWarns(FutureWarning):
+            self.assertIsInstance(afwGeom.Extent3D(), lsst.geom.Extent3D)
 
-        self.assertIs(afwGeom.PointI, lsst.geom.PointI)
-        self.assertIs(afwGeom.Point2I, lsst.geom.Point2I)
-        self.assertIs(afwGeom.Point3I, lsst.geom.Point3I)
+        with self.assertWarns(FutureWarning):
+            self.assertIsInstance(afwGeom.PointI(), lsst.geom.PointI)
+        with self.assertWarns(FutureWarning):
+            self.assertIsInstance(afwGeom.Point2I(), lsst.geom.Point2I)
+        with self.assertWarns(FutureWarning):
+            self.assertIsInstance(afwGeom.Point3I(), lsst.geom.Point3I)
 
-        self.assertIs(afwGeom.PointD, lsst.geom.PointD)
-        self.assertIs(afwGeom.Point2D, lsst.geom.Point2D)
-        self.assertIs(afwGeom.Point3D, lsst.geom.Point3D)
+        with self.assertWarns(FutureWarning):
+            self.assertIsInstance(afwGeom.PointD(), lsst.geom.PointD)
+        with self.assertWarns(FutureWarning):
+            self.assertIsInstance(afwGeom.Point2D(), lsst.geom.Point2D)
+        with self.assertWarns(FutureWarning):
+            self.assertIsInstance(afwGeom.Point3D(), lsst.geom.Point3D)
 
     def testOtherAliases(self):
-        self.assertIs(afwGeom.BoxI, lsst.geom.BoxI)
-        self.assertIs(afwGeom.BoxI, lsst.geom.Box2I)
-        self.assertIs(afwGeom.BoxD, lsst.geom.BoxD)
-        self.assertIs(afwGeom.BoxD, lsst.geom.Box2D)
+        with self.assertWarns(FutureWarning):
+            self.assertIsInstance(afwGeom.BoxI(), lsst.geom.BoxI)
+        with self.assertWarns(FutureWarning):
+            self.assertIsInstance(afwGeom.BoxI(), lsst.geom.Box2I)
+        with self.assertWarns(FutureWarning):
+            self.assertIsInstance(afwGeom.BoxD(), lsst.geom.BoxD)
+        with self.assertWarns(FutureWarning):
+            self.assertIsInstance(afwGeom.BoxD(), lsst.geom.Box2D)
 
-        self.assertIs(afwGeom.SpherePoint, lsst.geom.SpherePoint)
+        with self.assertWarns(FutureWarning):
+            self.assertIsInstance(afwGeom.SpherePoint(), lsst.geom.SpherePoint)
 
-        self.assertIs(afwGeom.AffineTransform, lsst.geom.AffineTransform)
-        self.assertIs(afwGeom.LinearTransform, lsst.geom.LinearTransform)
+        with self.assertWarns(FutureWarning):
+            self.assertIsInstance(afwGeom.AffineTransform(), lsst.geom.AffineTransform)
+        with self.assertWarns(FutureWarning):
+            self.assertIsInstance(afwGeom.LinearTransform(), lsst.geom.LinearTransform)
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):

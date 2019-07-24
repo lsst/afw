@@ -25,8 +25,8 @@ import numpy as np
 from numpy.testing import assert_allclose
 import lsst.utils.tests
 from lsst.daf.base import PropertyList
-from lsst.afw.geom import (Point2D, Point2I, Extent2I, Box2D, Box2I,
-                           SipApproximation, makeSkyWcs, getPixelToIntermediateWorldCoords)
+from lsst.geom import Point2D, Point2I, Extent2I, Box2D, Box2I
+from lsst.afw.geom import SipApproximation, makeSkyWcs, getPixelToIntermediateWorldCoords
 
 
 def makePropertyListFromDict(md):

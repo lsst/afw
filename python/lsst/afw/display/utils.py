@@ -154,12 +154,12 @@ class Mosaic:
         return len(self.images)
 
     def makeMosaic(self, images=None, display="deferToFrame", mode=None,
-                   background=None, title="", frame=None):
+                   background=None, title=""):
         """Return a mosaic of all the images provided.
 
         If none are specified, use the list accumulated with `Mosaic.append()`.
 
-        If display or frame (deprecated) is specified, display the mosaic
+        If display is specified, display the mosaic
         """
 
         if images:
@@ -244,7 +244,7 @@ class Mosaic:
 
             smosaic[:] = im
 
-        display = _getDisplayFromDisplayOrFrame(display, frame)
+        display = _getDisplayFromDisplayOrFrame(display)
         if display:
             display.mtv(mosaic, title=title)
 

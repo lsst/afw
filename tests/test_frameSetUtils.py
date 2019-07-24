@@ -3,7 +3,8 @@ import unittest
 from astropy.coordinates import SkyCoord
 
 import astshim as ast
-from lsst.afw.geom import arcseconds, degrees, radians, Point2D, SpherePoint, makeCdMatrix
+from lsst.geom import arcseconds, degrees, radians, Point2D, SpherePoint
+from lsst.afw.geom import makeCdMatrix
 from lsst.afw.geom.detail import readFitsWcs, readLsstSkyWcs, getPropertyListFromFitsChan
 from lsst.afw.geom.wcsUtils import makeSimpleWcsMetadata
 import lsst.utils.tests

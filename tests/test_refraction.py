@@ -25,10 +25,9 @@ from astropy import units
 import numpy as np
 import unittest
 
-from lsst.afw.geom import Angle
+from lsst.geom import Angle, degrees
 from lsst.afw.coord import Observatory, Weather
 from lsst.afw.coord.refraction import refraction, differentialRefraction
-from lsst.afw.geom import degrees
 import lsst.utils.tests
 
 

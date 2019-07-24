@@ -39,8 +39,8 @@ from lsst.daf.base import DateTime, PropertySet
 import lsst.geom
 import lsst.afw.table
 from lsst.afw.coord import Observatory, Weather
-from lsst.afw.geom import arcseconds, degrees, radians, Point2D, Extent2D, Box2D, \
-    makeSkyWcs, Polygon, SpherePoint
+from lsst.geom import arcseconds, degrees, radians, Point2D, Extent2D, Box2D, SpherePoint
+from lsst.afw.geom import Polygon, makeSkyWcs
 import lsst.afw.image
 import lsst.afw.detection
 from lsst.afw.cameraGeom.testUtils import DetectorWrapper
