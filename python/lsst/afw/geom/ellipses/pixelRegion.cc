@@ -20,9 +20,7 @@
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 
-#include <pybind11/pybind11.h>
-//#include <pybind11/operators.h>
-//#include <pybind11/stl.h>
+#include "pybind11/pybind11.h"
 
 #include "lsst/afw/geom/ellipses/PixelRegion.h"
 
@@ -37,7 +35,7 @@ PYBIND11_MODULE(pixelRegion, mod) {
     clsPixelRegion.def(py::init<Ellipse const &>());
 
     /* Members */
-    clsPixelRegion.def("getBBox", &PixelRegion::getBBox);
+    clsPixelRegion.def("getBBox", &PixelRegion::getBBox, py::return_value_policy::copy);
     clsPixelRegion.def("getSpanAt", &PixelRegion::getSpanAt);
     clsPixelRegion.def("__iter__",
                        [](const PixelRegion &self) { return py::make_iterator(self.begin(), self.end()); },

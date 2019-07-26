@@ -24,7 +24,7 @@
 #ifndef LSST_AFW_GEOM_ELLIPSES_PixelRegion_h_INCLUDED
 #define LSST_AFW_GEOM_ELLIPSES_PixelRegion_h_INCLUDED
 
-#include "boost/iterator/iterator_facade.hpp"
+#include <vector>
 
 #include "lsst/geom/Box.h"
 #include "lsst/afw/geom/Span.h"
@@ -35,68 +35,63 @@ namespace afw {
 namespace geom {
 namespace ellipses {
 
+/**
+ *  A pixelized region containing all pixels whose centers are within an
+ *  Ellipse.
+ *
+ *  The pixel region for an ellipse may be larger or smaller in area than
+ *  the ellipse itself, depending on the details of where pixel centers land,
+ *  and it may be empty even if the area of the ellipse is nonzero.
+ */
 class PixelRegion final {
 public:
-    class Iterator;
 
-    Iterator begin() const;
-    Iterator end() const;
+    /// Iterator type used by begin() and end().
+    using Iterator = std::vector<Span>::const_iterator;
 
-    lsst::geom::Box2I const& getBBox() const { return _bbox; }
-
-    Span const getSpanAt(int y) const;
-
+    /// Construct a PixelRegion from an Ellipse.
     explicit PixelRegion(Ellipse const& ellipse);
 
+    //@{
+    /// PixelRegion is copy and move constructable and assignable.
     PixelRegion(PixelRegion const&) = default;
     PixelRegion(PixelRegion&&) = default;
     PixelRegion& operator=(PixelRegion const&) = default;
     PixelRegion& operator=(PixelRegion&&) = default;
     ~PixelRegion() = default;
+    //@}
+
+    //@{
+    /**
+     *  Iterator range over Spans whose pixels are within the Ellipse.
+     */
+    Iterator begin() const { return _spans.begin(); }
+    Iterator end() const { return _spans.end(); }
+    //@}
+
+    /**
+     * Return the bounding box of the pixel region.
+     *
+     * This is guaranteed to be the smallest box that includes all Spans.  It
+     * has no guaranteed relationship with the Ellipse's direct
+     * (floating-point) bounding box as computed by Ellipse::computeBBox(), and
+     * may be empty even if the Ellipse's bounding box is not.
+     */
+    lsst::geom::Box2I const& getBBox() const { return _bbox; }
+
+    /**
+     * Return the span at the given y coordinate value.
+     *
+     * @throws lsst::pex::exceptions::OutOfRangeError Thrown if y is not
+     *      within the y bounds of getBBox().
+     */
+    Span const getSpanAt(int y) const;
 
 private:
-    lsst::geom::Point2D _center;
-    double _detQ;
-    double _invQxx;
-    double _alpha;
+    std::vector<Span> _spans;
     lsst::geom::Box2I _bbox;
 };
 
-class PixelRegion::Iterator : public boost::iterator_facade<PixelRegion::Iterator, Span const,
-                                                            boost::random_access_traversal_tag> {
-public:
-    explicit Iterator(Span const& s = Span(0, 0, 0), PixelRegion const* region = NULL)
-            : _s(s), _region(region) {}
-
-    Iterator(Iterator const&) = default;
-    Iterator(Iterator&&) = default;
-    Iterator& operator=(Iterator const&) = default;
-    Iterator& operator=(Iterator&&) = default;
-    ~Iterator() = default;
-
-private:
-    friend class boost::iterator_core_access;
-
-    Span const& dereference() const { return _s; }
-
-    void increment() { _s = _region->getSpanAt(_s.getY() + 1); }
-
-    void decrement() { _s = _region->getSpanAt(_s.getY() - 1); }
-
-    void advance(int n) { _s = _region->getSpanAt(_s.getY() + n); }
-
-    bool equal(Iterator const& other) const { return _s == other._s; }
-
-    int distance_to(Iterator const& other) const { return other._s.getY() - _s.getY(); }
-
-    Span _s;
-    PixelRegion const* _region;
-};
-
-inline PixelRegion::Iterator PixelRegion::begin() const {
-    return Iterator(getSpanAt(_bbox.getBeginY()), this);
-}
-inline PixelRegion::Iterator PixelRegion::end() const { return Iterator(getSpanAt(_bbox.getEndY()), this); }
 }  // namespace ellipses
 }  // namespace geom
 }  // namespace afw

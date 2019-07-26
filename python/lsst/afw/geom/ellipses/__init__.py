@@ -40,19 +40,20 @@ class EllipseMatplotlibInterface:
     """An interface for drawing the ellipse using matplotlib.
 
     This is typically initiated by calling Ellipse.plot(), which
-    adds the interface as the matplotlib attribute of the ellipse
-    object (this can be deleted later if desired).
+    returns an instance of this class.
     """
 
     def __init__(self, ellipse, scale=1.0, **kwds):
         import matplotlib.patches
+        import weakref
+        import numpy as np
         self.__ellipse = weakref.proxy(ellipse)
         self.scale = float(scale)
         core = Axes(self.__ellipse.getCore())
         core.scale(2.0 * scale)
         self.patch = matplotlib.patches.Ellipse(
             (self.__ellipse.getCenter().getX(), self.__ellipse.getCenter().getY()),
-            core.getA(), core.getB(), core.getTheta() * 180.0 / numpy.pi,
+            core.getA(), core.getB(), core.getTheta() * 180.0 / np.pi,
             **kwds
         )
 
@@ -63,11 +64,12 @@ class EllipseMatplotlibInterface:
         """Update the matplotlib representation to the current ellipse parameters.
         """
         import matplotlib.patches
+        import numpy as np
         core = _agl.Axes(self.__ellipse.getCore())
         core.scale(2.0 * scale)
         new_patch = matplotlib.patches.Ellipse(
             (self.__ellipse.getCenter().getX(), self.__ellipse.getCenter().getY()),
-            core.a, core.b, core.theta * 180.0 / numpy.pi
+            core.a, core.b, core.theta * 180.0 / np.pi
         )
         new_patch.update_from(self.patch)
         axes = self.patch.get_axes()
@@ -90,25 +92,35 @@ def Ellipse_plot(self, axes=None, scale=1.0, show=True, rescale=True, **kwds):
     matplotlib.patches.Patch constructor are also accepted
     ('facecolor', 'linestyle', etc.)
 
-    Arguments:
-    axes -------- A matplotlib.axes.Axes object, or None to use
-    matplotlib.pyplot.gca().
-    scale ------- Scale the displayed ellipse by this factor.
-    show -------- If True, update the figure automatically.  Set
-    to False for batch processing.
-    rescale ----- If True, rescale the axes.
+    Parameters
+    ----------
+    axes : `matplotlib.axes.Axes`, optional
+        Axes to plot on.  Defaults to matplotlib.pyplot.gca().
+    scale : `float`, optional
+        Scale the displayed ellipse by this factor.
+    show : `bool`, optional
+        If True, update the figure automatically.  Set to False for batch
+        processing.
+    rescale : `bool`, optional
+        If True, rescale the axes.
+
+    Returns
+    -------
+    interface : `EllipseMatplotlibInterface`
+        An object that allows the matplotlib patch to be updated when the
+        ellipse modified.
     """
     import matplotlib.pyplot
-    self.matplotlib = self.MatplotlibInterface(self, scale, **kwds)
+    interface = self.MatplotlibInterface(self, scale, **kwds)
     if axes is None:
         axes = matplotlib.pyplot.gca()
-    axes.add_patch(self.matplotlib.patch)
+    axes.add_patch(interface.patch)
     if rescale:
         axes.autoscale_view()
     if show:
         axes.figure.canvas.draw()
-    return self.matplotlib.patch
+    return interface
 
 
-# Ellipse.MatplotlibInterface = EllipseMatplotlibInterface
-# Ellipse.plot = Ellipse_plot
+Ellipse.MatplotlibInterface = EllipseMatplotlibInterface
+Ellipse.plot = Ellipse_plot

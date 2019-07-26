@@ -47,6 +47,6 @@ PYBIND11_MODULE(conformalShear, mod) {
     cls.def("normalize", &ConformalShear::normalize);
     cls.def("getName", &ConformalShear::getName);
     cls.def("__repr__", [](ConformalShear const& self) {
-        return py::str("%s(%g, %g)").format(self.getName(), self.getE1(), self.getE2());
+        return py::str("{}({}, {})").format(self.getName(), self.getE1(), self.getE2());
     });
 }

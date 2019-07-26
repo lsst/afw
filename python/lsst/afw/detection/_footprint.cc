@@ -152,7 +152,7 @@ void wrapFootprint(WrapperCollection &wrappers) {
 
                 cls.def_property("spans", &Footprint::getSpans, &Footprint::setSpans);
                 cls.def_property_readonly("peaks", (PeakCatalog & (Footprint::*)()) & Footprint::getPeaks,
-                                          py::return_value_policy::reference);
+                                          py::return_value_policy::reference_internal);
 
                 cls.def("__contains__", [](Footprint const &self, lsst::geom::Point2I const &point) -> bool {
                     return self.contains(point);
