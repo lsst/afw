@@ -4,8 +4,8 @@
 FITS metadata for lsst.afw.image Exposures
 ##########################################
 
-`ExposureInfo` and contents such as `Calib` and `VisitInfo` can be stored as FITS header keywords.
-The catalog schemas are described in ``ExposureInfo.cc``, ``Calib.cc``, and ``VisitInfo.cc``.
+`ExposureInfo` and contents such as `Filter` and `VisitInfo` can be stored as FITS header keywords.
+The catalog schemas are described in ``ExposureInfo.cc``, ``Filter.cc``, and ``VisitInfo.cc``.
 This page describes the equivalent FITS header keywords.
 
 HDU 0
@@ -177,20 +177,6 @@ HDU 0
      - `VisitInfo.getWeather`
 
        Relative humidity.
-
-   * - ``FLUXMAG0``
-     - float
-     - ADU
-     - `Calib.getFluxMag0`
-
-       Flux of a zero-magnitude object.
-
-   * - ``FLUXMAG0ERR``
-     - float
-     - ADU
-     - `Calib.getFluxMag0Err`
-
-       Error in the flux of a zero-magnitude object.
 
    * - ``FILTER``
      - str
