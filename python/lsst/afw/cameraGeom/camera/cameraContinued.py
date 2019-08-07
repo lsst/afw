@@ -22,8 +22,9 @@
 
 # Camera object below is the same one exported by the pybind11 camera
 # module, so we don't need to re-export it here.
-__all__ = []
+__all__ = ()
 
+import numpy as np
 from lsst.utils import continueClass, doImport
 from .camera import Camera
 
@@ -55,3 +56,17 @@ class Camera:
     def telescopeDiameter(self):
         cls = doImport(self.getPupilFactoryName())
         return cls.telescopeDiameter
+
+    def computeFocalRadius(self):
+        """Compute the maximum radius on the focal plane of the corners of all
+        detectors in this camera.
+
+        Returns
+        -------
+        focalRadius : `float`
+            Maximum focal plane radius in FOCAL_PLANE units.
+        """
+        radii = []
+        for corner in self.getFpBBox().getCorners():
+            radii.append(np.hypot(*corner))
+        return np.max(radii)
