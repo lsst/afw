@@ -209,15 +209,15 @@ public:
     FilterFactory(std::string const& name) : afw::table::io::PersistableFactory(name) {}
 };
 
-std::string getPersistenceName() { return "Filter"; }
+std::string _getPersistenceName() { return "Filter"; }
 
-FilterFactory registration(getPersistenceName());
+FilterFactory registration(_getPersistenceName());
 
 }  // namespace
 
 bool Filter::isPersistable() const noexcept { return true; }
 
-std::string Filter::getPersistenceName() const { return getPersistenceName(); }
+std::string Filter::getPersistenceName() const { return _getPersistenceName(); }
 
 std::string Filter::getPythonModule() const { return "lsst.afw.image"; };
 

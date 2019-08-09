@@ -31,6 +31,7 @@
 #include "lsst/afw/table/io/OutputArchive.h"
 #include "lsst/afw/image/CoaddInputs.h"
 #include "lsst/afw/image/VisitInfo.h"
+#include "lsst/afw/typehandling/GenericMap.h"
 
 namespace lsst {
 namespace afw {
@@ -67,15 +68,11 @@ class TransmissionCurve;
  *  The constness semantics of the things held by ExposureInfo are admittedly a bit of a mess,
  *  but they're that way to preserve backwards compatibility for now.  Eventually I'd like to make
  *  a lot of these things immutable, but in the meantime, here's the summary:
- *   - Wcs and Psf are held by non-const pointer, and you can get a non-const pointer via a
- *     non-const member function accessor and a const pointer via a const member function accessor.
- *   - PhotoCalib is held by const pointer and only returned by const pointer (it's immutable).
- *   - Detector is held by const pointer and only returned by const pointer (but if you're
- *     in Python, SWIG will have casted all that constness away).
  *   - Filter is held and returned by value.
  *   - VisitInfo is immutable and is held by a const ptr and has a setter and getter.
  *   - Metadata is held by non-const pointer, and you can get a non-const pointer via a const
  *     member function accessor (i.e. constness is not propagated).
+ *   - all other types are only accessible through non-const pointers
  *
  *  The setter for Wcs clones its input arguments (this is a departure from the
  *  previous behavior for Wcs but it's safer w.r.t. aliasing and it matches the old
@@ -87,23 +84,42 @@ class TransmissionCurve;
  */
 class ExposureInfo final {
 public:
+    /// Standard key for looking up the Wcs.
+    static typehandling::Key<std::string, std::shared_ptr<geom::SkyWcs const>> const KEY_WCS;
+    /// Standard key for looking up the point-spread function.
+    static typehandling::Key<std::string, std::shared_ptr<detection::Psf const>> const KEY_PSF;
+    /// Standard key for looking up the photometric calibration.
+    static typehandling::Key<std::string, std::shared_ptr<PhotoCalib const>> const KEY_PHOTO_CALIB;
+    /// Standard key for looking up the detector information.
+    static typehandling::Key<std::string, std::shared_ptr<cameraGeom::Detector const>> const KEY_DETECTOR;
+    /// Standard key for looking up the valid polygon.
+    static typehandling::Key<std::string, std::shared_ptr<geom::polygon::Polygon const>> const
+            KEY_VALID_POLYGON;
+    /// Standard key for looking up coadd provenance catalogs.
+    static typehandling::Key<std::string, std::shared_ptr<CoaddInputs const>> const KEY_COADD_INPUTS;
+    /// Standard key for looking up the aperture correction map.
+    static typehandling::Key<std::string, std::shared_ptr<ApCorrMap const>> const KEY_AP_CORR_MAP;
+    /// Standard key for looking up the transmission curve.
+    static typehandling::Key<std::string, std::shared_ptr<TransmissionCurve const>> const
+            KEY_TRANSMISSION_CURVE;
+
     /// Does this exposure have a Wcs?
-    bool hasWcs() const { return static_cast<bool>(_wcs); }
+    bool hasWcs() const;
 
     /// Return the WCS of the exposure
-    std::shared_ptr<geom::SkyWcs const> getWcs() const { return _wcs; }
+    std::shared_ptr<geom::SkyWcs const> getWcs() const;
 
     /// Set the WCS of the exposure
-    void setWcs(std::shared_ptr<geom::SkyWcs const> wcs) { _wcs = wcs; }
+    void setWcs(std::shared_ptr<geom::SkyWcs const> wcs);
 
     /// Does this exposure have Detector information?
-    bool hasDetector() const { return static_cast<bool>(_detector); }
+    bool hasDetector() const;
 
     /// Return the exposure's Detector information
-    std::shared_ptr<cameraGeom::Detector const> getDetector() const { return _detector; }
+    std::shared_ptr<cameraGeom::Detector const> getDetector() const;
 
     /// Set the exposure's Detector information
-    void setDetector(std::shared_ptr<cameraGeom::Detector const> detector) { _detector = detector; }
+    void setDetector(std::shared_ptr<cameraGeom::Detector const> detector);
 
     /// Return the exposure's filter
     Filter getFilter() const { return _filter; }
@@ -112,29 +128,29 @@ public:
     void setFilter(Filter const& filter) { _filter = filter; }
 
     /// Does this exposure have a photometric calibration?
-    bool hasPhotoCalib() const { return static_cast<bool>(_photoCalib); }
+    bool hasPhotoCalib() const;
 
     /// Return the exposure's photometric calibration
-    std::shared_ptr<PhotoCalib const> getPhotoCalib() const { return _photoCalib; }
+    std::shared_ptr<PhotoCalib const> getPhotoCalib() const;
 
     /// Set the Exposure's PhotoCalib object
-    void setPhotoCalib(std::shared_ptr<PhotoCalib const> photoCalib) { _photoCalib = photoCalib; }
+    void setPhotoCalib(std::shared_ptr<PhotoCalib const> photoCalib);
 
     /// Does this exposure have a photometric calibration?
     [[deprecated("Replaced with hasPhotoCalib (will be removed in 18.0)")]] bool hasCalib() const {
-        return static_cast<bool>(_photoCalib);
+        return hasPhotoCalib();
     }
 
     /// Return the exposure's photometric calibration
     [[deprecated("Replaced with getPhotoCalib (will be removed in 18.0)")]] std::shared_ptr<PhotoCalib const>
     getCalib() const {
-        return _photoCalib;
+        return getPhotoCalib();
     }
 
     /// Set the Exposure's PhotoCalib object
     [[deprecated("Replaced with setPhotoCalib (will be removed in 18.0)")]] void setCalib(
             std::shared_ptr<PhotoCalib const> photoCalib) {
-        _photoCalib = photoCalib;
+        setPhotoCalib(photoCalib);
     }
 
     /// Return flexible metadata
@@ -144,38 +160,31 @@ public:
     void setMetadata(std::shared_ptr<daf::base::PropertySet> metadata) { _metadata = metadata; }
 
     /// Does this exposure have a Psf?
-    bool hasPsf() const { return static_cast<bool>(_psf); }
+    bool hasPsf() const;
 
     /// Return the exposure's point-spread function
-    std::shared_ptr<detection::Psf> getPsf() const { return _psf; }
+    std::shared_ptr<detection::Psf const> getPsf() const;
 
     /// Set the exposure's point-spread function
-    void setPsf(std::shared_ptr<detection::Psf const> psf) {
-        // Psfs are immutable, so this is always safe; it'd be better to always just pass around
-        // const or non-const pointers, instead of both, but this is more backwards-compatible.
-        _psf = std::const_pointer_cast<detection::Psf>(psf);
-    }
+    void setPsf(std::shared_ptr<detection::Psf const> psf);
 
     /// Does this exposure have a valid Polygon
-    bool hasValidPolygon() const { return static_cast<bool>(_validPolygon); }
+    bool hasValidPolygon() const;
 
     /// Return the valid Polygon
-    std::shared_ptr<geom::polygon::Polygon const> getValidPolygon() const { return _validPolygon; }
+    std::shared_ptr<geom::polygon::Polygon const> getValidPolygon() const;
 
     /// Set the exposure's valid Polygon
-    void setValidPolygon(std::shared_ptr<geom::polygon::Polygon const> polygon) { _validPolygon = polygon; }
+    void setValidPolygon(std::shared_ptr<geom::polygon::Polygon const> polygon);
 
     /// Return true if the exposure has an aperture correction map
-    bool hasApCorrMap() const { return static_cast<bool>(_apCorrMap); }
+    bool hasApCorrMap() const;
 
     /// Return the exposure's aperture correction map (null pointer if !hasApCorrMap())
-    std::shared_ptr<ApCorrMap> getApCorrMap() { return _apCorrMap; }
-
-    /// Return the exposure's aperture correction map (null pointer if !hasApCorrMap())
-    std::shared_ptr<ApCorrMap const> getApCorrMap() const { return _apCorrMap; }
+    std::shared_ptr<ApCorrMap const> getApCorrMap() const;
 
     /// Set the exposure's aperture correction map (null pointer if !hasApCorrMap())
-    void setApCorrMap(std::shared_ptr<ApCorrMap> apCorrMap) { _apCorrMap = apCorrMap; }
+    void setApCorrMap(std::shared_ptr<ApCorrMap const> apCorrMap);
 
     /**
      *  Set the exposure's aperture correction map to a new, empty map
@@ -186,13 +195,13 @@ public:
     void initApCorrMap();
 
     /// Does this exposure have coadd provenance catalogs?
-    bool hasCoaddInputs() const { return static_cast<bool>(_coaddInputs); }
+    bool hasCoaddInputs() const;
 
     /// Set the exposure's coadd provenance catalogs.
-    void setCoaddInputs(std::shared_ptr<CoaddInputs> coaddInputs) { _coaddInputs = coaddInputs; }
+    void setCoaddInputs(std::shared_ptr<CoaddInputs const> coaddInputs);
 
     /// Return a pair of catalogs that record the inputs, if this Exposure is a coadd (otherwise null).
-    std::shared_ptr<CoaddInputs> getCoaddInputs() const { return _coaddInputs; }
+    std::shared_ptr<CoaddInputs const> getCoaddInputs() const;
 
     /// Return the exposure's visit info
     std::shared_ptr<image::VisitInfo const> getVisitInfo() const { return _visitInfo; }
@@ -204,13 +213,96 @@ public:
     void setVisitInfo(std::shared_ptr<image::VisitInfo const> const visitInfo) { _visitInfo = visitInfo; }
 
     /// Does this exposure have a transmission curve?
-    bool hasTransmissionCurve() const { return static_cast<bool>(_transmissionCurve); }
+    bool hasTransmissionCurve() const;
 
     /// Return the exposure's transmission curve.
-    std::shared_ptr<TransmissionCurve const> getTransmissionCurve() const { return _transmissionCurve; }
+    std::shared_ptr<TransmissionCurve const> getTransmissionCurve() const;
 
     /// Set the exposure's transmission curve.
-    void setTransmissionCurve(std::shared_ptr<TransmissionCurve const> tc) { _transmissionCurve = tc; }
+    void setTransmissionCurve(std::shared_ptr<TransmissionCurve const> tc);
+
+    /**
+     * Add a generic component to the ExposureInfo.
+     *
+     * If another component is already present under the key, it is
+     * overwritten. If a component of a different type is present under the
+     * same name, this method raises an exception.
+     *
+     * @tparam T a subclass of typehandling::Storable
+     *
+     * @param key a strongly typed identifier for the component
+     * @param object the object to add.
+     *
+     * @throws pex::exceptions::TypeError Thrown if a component of a
+     *      different type is present under the requested name.
+     * @throws pex::exceptions::RuntimeError Thrown if the insertion failed for
+     *      implementation-dependent reasons.
+     * @exceptsafe Provides basic exception safety (a pre-existing component
+     *             may be removed).
+     *
+     * @note if `object` is a null pointer, then `hasComponent(key)` shall
+     *       return `false` after this method returns. This is for
+     *       compatibility with old ExposureInfo idioms, which often use
+     *       assignment of null to indicate no data.
+     */
+    // non-shared_ptr components are incompatible with table::io,
+    // they may be supported later
+    template <class T>
+    void setComponent(typehandling::Key<std::string, std::shared_ptr<T>> const& key,
+                      std::shared_ptr<T> const& object) {
+        static_assert(std::is_base_of<typehandling::Storable, T>::value, "T must be a Storable");
+        // "No data" always represented internally by absent key-value pair, not by mapping to null
+        if (object != nullptr) {
+            _setStorableComponent(key, object);
+        } else {
+            removeComponent(key);
+        }
+    }
+
+    /**
+     * Test whether a generic component is defined.
+     *
+     * @param key a strongly typed identifier for the component
+     * @return `true` if there is a component with `key`, `false` otherwise
+     *
+     * @exceptsafe Provides strong exception safety.
+     */
+    template <class T>
+    bool hasComponent(typehandling::Key<std::string, T> const& key) const {
+        return _components->contains(key);
+    }
+
+    /**
+     * Retrieve a generic component from the ExposureInfo.
+     *
+     * @param key a strongly typed identifier for the component
+     * @return the component identified by that key, or a null pointer if no
+     *         such component exists.
+     *
+     * @exceptsafe Provides strong exception safety.
+     */
+    template <class T>
+    std::shared_ptr<T> getComponent(typehandling::Key<std::string, std::shared_ptr<T>> const& key) const {
+        try {
+            return _components->at(key);
+        } catch (pex::exceptions::OutOfRangeError const& e) {
+            return nullptr;
+        }
+    }
+
+    /**
+     * Clear a generic component from the ExposureInfo.
+     *
+     * @param key a strongly typed identifier for the component. Only
+     *            components of a compatible type are removed.
+     * @returns `true` if a component was removed, `false` otherwise.
+     *
+     * @exceptsafe Provides strong exception safety.
+     */
+    template <class T>
+    bool removeComponent(typehandling::Key<std::string, T> const& key) {
+        return _components->erase(key);
+    }
 
     /// Get the version of FITS serialization that this ExposureInfo understands.
     static int getFitsSerializationVersion();
@@ -243,14 +335,14 @@ public:
             std::shared_ptr<TransmissionCurve const> const& transmissionCurve =
                     std::shared_ptr<TransmissionCurve>());
 
-    /// Copy constructor; deep-copies all components except the metadata.
+    /// Copy constructor; shares all components except the filter.
     ExposureInfo(ExposureInfo const& other);
     ExposureInfo(ExposureInfo&& other);
 
-    /// Copy constructor; deep-copies everything, possibly including the metadata.
+    /// Copy constructor; shares everything but the filter and possibly the metadata.
     ExposureInfo(ExposureInfo const& other, bool copyMetadata);
 
-    /// Assignment; deep-copies all components except the metadata.
+    /// Assignment; shares all components except the filter.
     ExposureInfo& operator=(ExposureInfo const& other);
     ExposureInfo& operator=(ExposureInfo&& other);
 
@@ -283,6 +375,30 @@ private:
     };
 
     /**
+     * Add a Persistable object to FITS data.
+     *
+     * @param[out] data the FITS output data to update
+     * @param[in] object the object to store
+     * @param[in] key the FITS header keyword to contain a unique ID for the object
+     * @param[in] comment the comment for ``key`` in the FITS header
+     *
+     * @return the unique ID for the object, as stored with ``key``
+     *
+     * @throws lsst::pex::exceptions::InvalidParameterError Thrown if ``key`` contains the "." character.
+     * @exceptsafe Does not provide exception safety; ``data`` may be corrupted in
+     *             the event of an exception. No other side effects.
+     *
+     * @{
+     */
+    static int _addToArchive(FitsWriteData& data, table::io::Persistable const& object, std::string key,
+                             std::string comment);
+
+    static int _addToArchive(FitsWriteData& data, std::shared_ptr<table::io::Persistable const> const& object,
+                             std::string key, std::string comment);
+
+    /** @} */
+
+    /**
      *  Start the process of writing an exposure to FITS.
      *
      *  @param[in]  xy0   The origin of the exposure associated with this object, used to
@@ -307,19 +423,48 @@ private:
      */
     void _finishWriteFits(fits::Fits& fitsfile, FitsWriteData const& data) const;
 
+    /**
+     * GenericMap visitor for saving Storable objects
+     *
+     * Consistent with ExposureInfo's original behavior, any Storables that are
+     * not persistable are silently ignored.
+     */
+    class StorablePersister;
+
     static std::shared_ptr<ApCorrMap> _cloneApCorrMap(std::shared_ptr<ApCorrMap const> apCorrMap);
 
-    std::shared_ptr<geom::SkyWcs const> _wcs;
-    std::shared_ptr<detection::Psf> _psf;
-    std::shared_ptr<PhotoCalib const> _photoCalib;
-    std::shared_ptr<cameraGeom::Detector const> _detector;
-    std::shared_ptr<geom::polygon::Polygon const> _validPolygon;
+    // Implementation of setComponent, assumes T extends Storable or T = shared_ptr<? extends Storable>
+    template <class T>
+    void _setStorableComponent(typehandling::Key<std::string, T> const& key, T const& object) {
+        if (_components->contains(key)) {
+            _components->erase(key);
+        } else if (_components->contains(key.getId())) {
+            std::stringstream buffer;
+            buffer << "Map has a key that conflicts with " << key;
+            throw LSST_EXCEPT(pex::exceptions::TypeError, buffer.str());
+        }
+        try {
+            bool success = _components->insert(key, object);
+            if (!success) {
+                throw LSST_EXCEPT(
+                        pex::exceptions::RuntimeError,
+                        "Insertion failed for unknown reasons. There may be something in the logs.");
+            }
+        } catch (std::exception const& e) {
+            std::throw_with_nested(
+                    LSST_EXCEPT(pex::exceptions::RuntimeError, "Insertion raised an exception."));
+        }
+    }
+
     Filter _filter;
     std::shared_ptr<daf::base::PropertySet> _metadata;
-    std::shared_ptr<CoaddInputs> _coaddInputs;
-    std::shared_ptr<ApCorrMap> _apCorrMap;
     std::shared_ptr<image::VisitInfo const> _visitInfo;
-    std::shared_ptr<TransmissionCurve const> _transmissionCurve;
+
+    // Class invariant: all values in _components are shared_ptr<Storable>
+    // This is required for table::io persistence to work correctly;
+    //     other persistence frameworks may let us support other types
+    // Class invariant: all pointers in _components are not null
+    std::unique_ptr<typehandling::MutableGenericMap<std::string>> _components;
 };
 }  // namespace image
 }  // namespace afw

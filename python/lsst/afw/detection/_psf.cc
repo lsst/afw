@@ -30,6 +30,7 @@
 #include "lsst/geom/Point.h"
 #include "lsst/afw/image/Color.h"
 #include "lsst/afw/table/io/python.h"  // for addPersistableMethods
+#include "lsst/afw/typehandling/Storable.h"
 #include "lsst/afw/detection/Psf.h"
 
 namespace py = pybind11;
@@ -44,12 +45,14 @@ auto const NullPoint = lsst::geom::Point2D(std::numeric_limits<double>::quiet_Na
 }
 
 void wrapPsf(utils::python::WrapperCollection& wrappers) {
+    wrappers.addInheritanceDependency("lsst.afw.typehandling");
     wrappers.addSignatureDependency("lsst.afw.geom.ellipses");
     wrappers.addSignatureDependency("lsst.afw.image");
     wrappers.addSignatureDependency("lsst.afw.fits");
 
     auto clsPsf = wrappers.wrapType(
-            py::class_<Psf, std::shared_ptr<Psf>>(wrappers.module, "Psf"), [](auto& mod, auto& cls) {
+            py::class_<Psf, std::shared_ptr<Psf>, typehandling::Storable>(wrappers.module, "Psf"),
+            [](auto& mod, auto& cls) {
                 table::io::python::addPersistableMethods<Psf>(cls);
 
                 cls.def("clone", &Psf::clone);

@@ -177,9 +177,10 @@ PyExposureCatalog declareExposureCatalog(WrapperCollection &wrappers) {
 }  // anonymous namespace
 
 void wrapExposure(WrapperCollection &wrappers) {
-    wrappers.addSignatureDependency("lsst.afw.geom");
-    // TODO: afw.image and afw.detection cannot be imported due to circular dependencies
-    // until at least afw.image uses WrapperCollection in DM-20703
+    // wrappers.addSignatureDependency("lsst.afw.geom");
+    // TODO: afw.geom, afw.image, and afw.detection cannot be imported due to
+    // circular dependencies until at least afw.image uses WrapperCollection
+    // in DM-20703
 
     auto clsExposureRecord = declareExposureRecord(wrappers);
     auto clsExposureTable = declareExposureTable(wrappers);

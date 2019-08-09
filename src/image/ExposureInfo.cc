@@ -32,14 +32,101 @@
 #include "lsst/afw/cameraGeom/Detector.h"
 #include "lsst/afw/image/TransmissionCurve.h"
 #include "lsst/afw/fits.h"
+#include "lsst/afw/typehandling/SimpleGenericMap.h"
+
+using namespace std::string_literals;
 
 namespace {
 LOG_LOGGER _log = LOG_GET("afw.image.ExposureInfo");
+
+using MapClass = lsst::afw::typehandling::SimpleGenericMap<std::string>;
 }  // namespace
 
 namespace lsst {
 namespace afw {
 namespace image {
+
+// Important: do *not* change the keys' strings; doing so will break compatibility with old FITS files
+
+typehandling::Key<std::string, std::shared_ptr<geom::SkyWcs const>> const ExposureInfo::KEY_WCS =
+        typehandling::makeKey<std::shared_ptr<geom::SkyWcs const>>("SKYWCS"s);
+
+bool ExposureInfo::hasWcs() const { return hasComponent(KEY_WCS); }
+std::shared_ptr<geom::SkyWcs const> ExposureInfo::getWcs() const { return getComponent(KEY_WCS); }
+void ExposureInfo::setWcs(std::shared_ptr<geom::SkyWcs const> wcs) { setComponent(KEY_WCS, wcs); }
+
+typehandling::Key<std::string, std::shared_ptr<detection::Psf const>> const ExposureInfo::KEY_PSF =
+        typehandling::makeKey<std::shared_ptr<detection::Psf const>>("PSF"s);
+
+bool ExposureInfo::hasPsf() const { return hasComponent(KEY_PSF); }
+std::shared_ptr<detection::Psf const> ExposureInfo::getPsf() const { return getComponent(KEY_PSF); }
+void ExposureInfo::setPsf(std::shared_ptr<detection::Psf const> psf) { setComponent(KEY_PSF, psf); }
+
+typehandling::Key<std::string, std::shared_ptr<PhotoCalib const>> const ExposureInfo::KEY_PHOTO_CALIB =
+        typehandling::makeKey<std::shared_ptr<PhotoCalib const>>("PHOTOCALIB"s);
+
+bool ExposureInfo::hasPhotoCalib() const { return hasComponent(KEY_PHOTO_CALIB); }
+std::shared_ptr<PhotoCalib const> ExposureInfo::getPhotoCalib() const {
+    return getComponent(KEY_PHOTO_CALIB);
+}
+void ExposureInfo::setPhotoCalib(std::shared_ptr<PhotoCalib const> photoCalib) {
+    setComponent(KEY_PHOTO_CALIB, photoCalib);
+}
+
+typehandling::Key<std::string, std::shared_ptr<cameraGeom::Detector const>> const ExposureInfo::KEY_DETECTOR =
+        typehandling::makeKey<std::shared_ptr<cameraGeom::Detector const>>("DETECTOR"s);
+
+bool ExposureInfo::hasDetector() const { return hasComponent(KEY_DETECTOR); }
+std::shared_ptr<cameraGeom::Detector const> ExposureInfo::getDetector() const {
+    return getComponent(KEY_DETECTOR);
+}
+void ExposureInfo::setDetector(std::shared_ptr<cameraGeom::Detector const> detector) {
+    setComponent(KEY_DETECTOR, detector);
+}
+
+typehandling::Key<std::string, std::shared_ptr<geom::polygon::Polygon const>> const
+        ExposureInfo::KEY_VALID_POLYGON =
+                typehandling::makeKey<std::shared_ptr<geom::polygon::Polygon const>>("VALID_POLYGON"s);
+
+bool ExposureInfo::hasValidPolygon() const { return hasComponent(KEY_VALID_POLYGON); }
+std::shared_ptr<geom::polygon::Polygon const> ExposureInfo::getValidPolygon() const {
+    return getComponent(KEY_VALID_POLYGON);
+}
+void ExposureInfo::setValidPolygon(std::shared_ptr<geom::polygon::Polygon const> polygon) {
+    setComponent(KEY_VALID_POLYGON, polygon);
+}
+
+typehandling::Key<std::string, std::shared_ptr<CoaddInputs const>> const ExposureInfo::KEY_COADD_INPUTS =
+        typehandling::makeKey<std::shared_ptr<CoaddInputs const>>("COADD_INPUTS"s);
+
+bool ExposureInfo::hasCoaddInputs() const { return hasComponent(KEY_COADD_INPUTS); }
+void ExposureInfo::setCoaddInputs(std::shared_ptr<CoaddInputs const> coaddInputs) {
+    setComponent(KEY_COADD_INPUTS, coaddInputs);
+}
+std::shared_ptr<CoaddInputs const> ExposureInfo::getCoaddInputs() const {
+    return getComponent(KEY_COADD_INPUTS);
+}
+
+typehandling::Key<std::string, std::shared_ptr<ApCorrMap const>> const ExposureInfo::KEY_AP_CORR_MAP =
+        typehandling::makeKey<std::shared_ptr<ApCorrMap const>>("AP_CORR_MAP"s);
+
+bool ExposureInfo::hasApCorrMap() const { return hasComponent(KEY_AP_CORR_MAP); }
+std::shared_ptr<ApCorrMap const> ExposureInfo::getApCorrMap() const { return getComponent(KEY_AP_CORR_MAP); }
+void ExposureInfo::setApCorrMap(std::shared_ptr<ApCorrMap const> apCorrMap) {
+    setComponent(KEY_AP_CORR_MAP, apCorrMap);
+}
+
+typehandling::Key<std::string, std::shared_ptr<TransmissionCurve const>> const
+        ExposureInfo::KEY_TRANSMISSION_CURVE =
+                typehandling::makeKey<std::shared_ptr<TransmissionCurve const>>("TRANSMISSION_CURVE"s);
+
+bool ExposureInfo::hasTransmissionCurve() const { return hasComponent(KEY_TRANSMISSION_CURVE); }
+std::shared_ptr<TransmissionCurve const> ExposureInfo::getTransmissionCurve() const {
+    return getComponent(KEY_TRANSMISSION_CURVE);
+}
+void ExposureInfo::setTransmissionCurve(std::shared_ptr<TransmissionCurve const> tc) {
+    setComponent(KEY_TRANSMISSION_CURVE, tc);
+}
 
 int ExposureInfo::getFitsSerializationVersion() {
     // Version history:
@@ -73,72 +160,102 @@ ExposureInfo::ExposureInfo(std::shared_ptr<geom::SkyWcs const> const& wcs,
                            std::shared_ptr<ApCorrMap> const& apCorrMap,
                            std::shared_ptr<image::VisitInfo const> const& visitInfo,
                            std::shared_ptr<TransmissionCurve const> const& transmissionCurve)
-        : _wcs(wcs),
-          _psf(std::const_pointer_cast<detection::Psf>(psf)),
-          _photoCalib(photoCalib),
-          _detector(detector),
-          _validPolygon(polygon),
-          _filter(filter),
+        : _filter(filter),
           _metadata(metadata ? metadata
                              : std::shared_ptr<daf::base::PropertySet>(new daf::base::PropertyList())),
-          _coaddInputs(coaddInputs),
-          _apCorrMap(_cloneApCorrMap(apCorrMap)),
           _visitInfo(visitInfo),
-          _transmissionCurve(transmissionCurve) {}
+          _components(std::make_unique<MapClass>()) {
+    setWcs(wcs);
+    setPsf(psf);
+    setPhotoCalib(photoCalib);
+    setDetector(detector);
+    setValidPolygon(polygon);
+    setCoaddInputs(coaddInputs);
+    setApCorrMap(_cloneApCorrMap(apCorrMap));
+    setTransmissionCurve(transmissionCurve);
+}
 
-ExposureInfo::ExposureInfo(ExposureInfo const& other)
-        : _wcs(other._wcs),
-          _psf(other._psf),
-          _photoCalib(other._photoCalib),
-          _detector(other._detector),
-          _validPolygon(other._validPolygon),
-          _filter(other._filter),
-          _metadata(other._metadata),
-          _coaddInputs(other._coaddInputs),
-          _apCorrMap(_cloneApCorrMap(other._apCorrMap)),
-          _visitInfo(other._visitInfo),
-          _transmissionCurve(other._transmissionCurve) {}
+ExposureInfo::ExposureInfo(ExposureInfo const& other) : ExposureInfo(other, false) {}
 
 // Delegate to copy-constructor for backwards compatibility
 ExposureInfo::ExposureInfo(ExposureInfo&& other) : ExposureInfo(other) {}
 
 ExposureInfo::ExposureInfo(ExposureInfo const& other, bool copyMetadata)
-        : _wcs(other._wcs),
-          _psf(other._psf),
-          _photoCalib(other._photoCalib),
-          _detector(other._detector),
-          _validPolygon(other._validPolygon),
-          _filter(other._filter),
+        : _filter(other._filter),
           _metadata(other._metadata),
-          _coaddInputs(other._coaddInputs),
-          _apCorrMap(_cloneApCorrMap(other._apCorrMap)),
           _visitInfo(other._visitInfo),
-          _transmissionCurve(other._transmissionCurve) {
+          // ExposureInfos can (historically) share objects, but should each have their own pointers to them
+          _components(std::make_unique<MapClass>(*(other._components))) {
     if (copyMetadata) _metadata = _metadata->deepCopy();
 }
 
 ExposureInfo& ExposureInfo::operator=(ExposureInfo const& other) {
     if (&other != this) {
-        _wcs = other._wcs;
-        _psf = other._psf;
-        _photoCalib = other._photoCalib;
-        _detector = other._detector;
-        _validPolygon = other._validPolygon;
         _filter = other._filter;
         _metadata = other._metadata;
-        _coaddInputs = other._coaddInputs;
-        _apCorrMap = _cloneApCorrMap(other._apCorrMap);
         _visitInfo = other._visitInfo;
-        _transmissionCurve = other._transmissionCurve;
+        // ExposureInfos can (historically) share objects, but should each have their own pointers to them
+        _components = std::make_unique<MapClass>(*(other._components));
     }
     return *this;
 }
 // Delegate to copy-assignment for backwards compatibility
 ExposureInfo& ExposureInfo::operator=(ExposureInfo&& other) { return *this = other; }
 
-void ExposureInfo::initApCorrMap() { _apCorrMap = std::make_shared<ApCorrMap>(); }
+void ExposureInfo::initApCorrMap() { setApCorrMap(std::make_shared<ApCorrMap>()); }
 
 ExposureInfo::~ExposureInfo() = default;
+
+int ExposureInfo::_addToArchive(FitsWriteData& data, table::io::Persistable const& object, std::string key,
+                                std::string comment) {
+    int componentId = data.archive.put(object);
+    data.metadata->set(key, componentId, comment);
+    return componentId;
+}
+
+int ExposureInfo::_addToArchive(FitsWriteData& data,
+                                std::shared_ptr<table::io::Persistable const> const& object, std::string key,
+                                std::string comment) {
+    // Don't delegate to Persistable const& version because OutputArchive::put
+    // has special handling of shared_ptr
+    int componentId = data.archive.put(object);
+    data.metadata->set(key, componentId, comment);
+    return componentId;
+}
+
+class ExposureInfo::StorablePersister final {
+public:
+    explicit StorablePersister(FitsWriteData& data) : data(data) {}
+
+    void operator()(std::string key, std::shared_ptr<typehandling::Storable const> const& object) {
+        if (object && object->isPersistable()) {
+            std::string comment = _getHeaderComment(key);
+            // Store archive ID in two header keys:
+            //     - old-style key for backwards compatibility,
+            //     - and new-style key because it's much safer to parse
+            int id = _addToArchive(data, object, _getOldHeaderKey(key), comment);
+            data.metadata->set(_getNewHeaderKey(key), id, comment);
+        }
+    }
+
+    template <typename T>
+    void operator()(std::string key, T const&) {
+        std::stringstream buffer;
+        buffer << "ExposureInfo::_components may only contain shared_ptr<Storable> values. "
+               << "Invalid key: " << key;
+        throw LSST_EXCEPT(pex::exceptions::LogicError, buffer.str());
+    }
+
+private:
+    std::string _getOldHeaderKey(std::string mapKey) { return mapKey + "_ID"; }
+    std::string _getNewHeaderKey(std::string mapKey) { return "ARCHIVE_ID_" + mapKey; }
+
+    std::string _getHeaderComment(std::string mapKey) {
+        return "archive ID for generic component '" + mapKey + "'";
+    }
+
+    FitsWriteData& data;
+};
 
 ExposureInfo::FitsWriteData ExposureInfo::_startWriteFits(lsst::geom::Point2I const& xy0) const {
     FitsWriteData data;
@@ -159,39 +276,7 @@ ExposureInfo::FitsWriteData ExposureInfo::_startWriteFits(lsst::geom::Point2I co
     // this is still the case so we're setting AR_HDU to 5 == 4 + 1
     //
     data.metadata->set("AR_HDU", 5, "HDU (1-indexed) containing the archive used to store ancillary objects");
-    if (hasCoaddInputs()) {
-        int coaddInputsId = data.archive.put(getCoaddInputs());
-        data.metadata->set("COADD_INPUTS_ID", coaddInputsId, "archive ID for coadd inputs catalogs");
-    }
-    if (hasApCorrMap()) {
-        int apCorrMapId = data.archive.put(getApCorrMap());
-        data.metadata->set("AP_CORR_MAP_ID", apCorrMapId, "archive ID for aperture correction map");
-    }
-    if (hasPsf() && getPsf()->isPersistable()) {
-        int psfId = data.archive.put(getPsf());
-        data.metadata->set("PSF_ID", psfId, "archive ID for the Exposure's main Psf");
-    }
-    if (hasWcs() && getWcs()->isPersistable()) {
-        int wcsId = data.archive.put(getWcs());
-        data.metadata->set("SKYWCS_ID", wcsId, "archive ID for the Exposure's main Wcs");
-    }
-    if (hasValidPolygon() && getValidPolygon()->isPersistable()) {
-        int polygonId = data.archive.put(getValidPolygon());
-        data.metadata->set("VALID_POLYGON_ID", polygonId, "archive ID for the Exposure's valid polygon");
-    }
-    if (hasTransmissionCurve() && getTransmissionCurve()->isPersistable()) {
-        int transmissionCurveId = data.archive.put(getTransmissionCurve());
-        data.metadata->set("TRANSMISSION_CURVE_ID", transmissionCurveId,
-                           "archive ID for the Exposure's transmission curve");
-    }
-    if (hasDetector() && getDetector()->isPersistable()) {
-        int detectorId = data.archive.put(getDetector());
-        data.metadata->set("DETECTOR_ID", detectorId, "archive ID for the Exposure's Detector");
-    }
-    if (hasPhotoCalib()) {
-        int photoCalibId = data.archive.put(getPhotoCalib());
-        data.metadata->set("PHOTOCALIB_ID", photoCalibId, "archive ID for photometric calibration");
-    }
+    _components->apply(StorablePersister(data));
 
     // LSST convention is that Wcs is in pixel coordinates (i.e relative to bottom left
     // corner of parent image, if any). The Wcs/Fits convention is that the Wcs is in

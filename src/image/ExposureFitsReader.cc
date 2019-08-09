@@ -38,6 +38,16 @@ namespace {
 
 LOG_LOGGER _log = LOG_GET("afw.image.fits.ExposureFitsReader");
 
+template <typename T, std::size_t N>
+bool _contains(std::array<T, N> const& array, T const& value) {
+    for (T const& element : array) {
+        if (element == value) {
+            return true;
+        }
+    }
+    return false;
+}
+
 }  // namespace
 
 class ExposureFitsReader::MetadataReader {
@@ -148,6 +158,7 @@ public:
             --_hdu;  // Switch from FITS 1-indexed convention to LSST 0-indexed convention.
             _state = ArchiveState::PRESENT;
         }
+        // Read in traditional components using old-style IDs, for backwards compatibility
         _ids[PSF] = popInt("PSF_ID");
         _ids[WCS] = popInt("SKYWCS_ID");
         _ids[COADD_INPUTS] = popInt("COADD_INPUTS_ID");
@@ -156,14 +167,74 @@ public:
         _ids[TRANSMISSION_CURVE] = popInt("TRANSMISSION_CURVE_ID");
         _ids[DETECTOR] = popInt("DETECTOR_ID");
         _ids[PHOTOCALIB] = popInt("PHOTOCALIB_ID");
+
+        // "Extra" components use a different keyword convention to avoid collisions with non-persistence IDs
+        std::vector<std::string> toStrip;
+        for (std::string const& headerKey : metadata) {
+            static std::string const PREFIX = "ARCHIVE_ID_";
+            if (headerKey.substr(0, PREFIX.size()) == PREFIX) {
+                std::string componentName = headerKey.substr(PREFIX.size());
+                int archiveId = metadata.get<int>(headerKey);
+                if (!_contains(_ids, archiveId)) {
+                    _extraIds.emplace(componentName, archiveId);
+                }
+                toStrip.push_back(headerKey);
+                toStrip.push_back(componentName + "_ID");  // strip corresponding old-style ID, if it exists
+            }
+        }
+        for (std::string const& key : toStrip) {
+            metadata.remove(key);
+        }
     }
 
+    /**
+     * Read a known component, if available.
+     *
+     * @param fitsFile The file from which to read the component. Must match
+     *                 the metadata used to construct this object.
+     * @param c The component to read. Must be convertible to ``T``.
+     *
+     * @return The desired component, or ``nullptr`` if the file could not be read.
+     */
     template <typename T>
     std::shared_ptr<T> readComponent(afw::fits::Fits* fitsFile, Component c) {
         if (!_ensureLoaded(fitsFile)) {
             return nullptr;
         }
         return _archive.get<T>(_ids[c]);
+    }
+
+    /**
+     * Read the components that are stored using arbitrary-component support.
+     *
+     * @param fitsFile The file from which to read the components. Must match
+     *                 the metadata used to construct this object.
+     *
+     * @return a map from string IDs to components, or an empty map if the
+     *         file could not be read.
+     */
+    std::map<std::string, std::shared_ptr<table::io::Persistable>> readExtraComponents(
+            afw::fits::Fits* fitsFile) {
+        std::map<std::string, std::shared_ptr<table::io::Persistable>> result;
+
+        if (!_ensureLoaded(fitsFile)) {
+            return result;
+        }
+
+        // Not safe to call getAll if a component cannot be unpersisted
+        // Instead, look for the archives registered in the metadata
+        for (auto const& keyValue : _extraIds) {
+            std::string componentName = keyValue.first;
+            int archiveId = keyValue.second;
+
+            try {
+                result.emplace(componentName, _archive.get(archiveId));
+            } catch (pex::exceptions::NotFoundError const& err) {
+                LOGLS_WARN(_log,
+                           "Could not read component " << componentName << "; skipping: " << err.what());
+            }
+        }
+        return result;
     }
 
 private:
@@ -186,6 +257,7 @@ private:
     ArchiveState _state = ArchiveState::UNKNOWN;
     table::io::InputArchive _archive;
     std::array<int, N_ARCHIVE_COMPONENTS> _ids = {0};
+    std::map<std::string, int> _extraIds;
 };
 
 ExposureFitsReader::ExposureFitsReader(std::string const& fileName) : _maskedImageReader(fileName) {}
@@ -275,6 +347,11 @@ std::shared_ptr<cameraGeom::Detector> ExposureFitsReader::readDetector() {
     return _archiveReader->readComponent<cameraGeom::Detector>(_getFitsFile(), ArchiveReader::DETECTOR);
 }
 
+std::map<std::string, std::shared_ptr<table::io::Persistable>> ExposureFitsReader::readExtraComponents() {
+    _ensureReaders();
+    return _archiveReader->readExtraComponents(_getFitsFile());
+}
+
 std::shared_ptr<ExposureInfo> ExposureFitsReader::readExposureInfo() {
     auto result = std::make_shared<ExposureInfo>();
     result->setMetadata(readMetadata());
@@ -332,6 +409,17 @@ std::shared_ptr<ExposureInfo> ExposureFitsReader::readExposureInfo() {
             msg += " ; using WCS from FITS header";
         }
         LOGLS_WARN(_log, msg);
+    }
+    for (auto keyValue : readExtraComponents()) {
+        using StorablePtr = std::shared_ptr<typehandling::Storable const>;
+        std::string key = keyValue.first;
+        StorablePtr object = std::dynamic_pointer_cast<StorablePtr::element_type>(keyValue.second);
+
+        if (object.use_count() > 0) {  // Failed cast guarantees empty pointer, but not a null one
+            result->setComponent(typehandling::makeKey<StorablePtr>(key), object);
+        } else {
+            LOGLS_WARN(_log, "Data corruption: generic component " << key << " is not a Storable; skipping.");
+        }
     }
     return result;
 }  // namespace image

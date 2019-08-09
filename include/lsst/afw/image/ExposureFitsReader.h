@@ -140,6 +140,9 @@ public:
     /// Read the Exposure's detector.
     std::shared_ptr<cameraGeom::Detector> readDetector();
 
+    /// Read the Exposure's non-standard components
+    std::map<std::string, std::shared_ptr<table::io::Persistable>> readExtraComponents();
+
     /// Read the ExposureInfo containing all non-image components.
     std::shared_ptr<ExposureInfo> readExposureInfo();
 

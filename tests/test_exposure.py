@@ -79,6 +79,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         self.md = maskedImageMD
         self.psf = DummyPsf(2.0)
         self.detector = DetectorWrapper().detector
+        self.extras = {"misc": DummyPsf(3.5)}
 
         self.exposureBlank = afwImage.ExposureF()
         self.exposureMiOnly = afwImage.makeExposure(maskedImage)
@@ -98,6 +99,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         del self.wcs
         del self.psf
         del self.detector
+        del self.extras
 
         del self.exposureBlank
         del self.exposureMiOnly
@@ -252,6 +254,8 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         exposureInfo.setCoaddInputs(None)
         exposureInfo.setVisitInfo(None)
         exposureInfo.setApCorrMap(None)
+        for key in self.extras:
+            exposureInfo.setComponent(key, None)
 
     def testSetExposureInfo(self):
         exposureInfo = afwImage.ExposureInfo()
@@ -336,6 +340,17 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         self.assertTrue(exposure.hasPsf())
 
         exposure.setPsf(DummyPsf(1.0))  # we can reset the Psf
+
+        # extras next
+        info = exposure.getInfo()
+        for key, value in self.extras.items():
+            self.assertFalse(info.hasComponent(key))
+            self.assertIsNone(info.getComponent(key))
+            info.setComponent(key, value)
+            self.assertTrue(info.hasComponent(key))
+            self.assertEqual(info.getComponent(key), value)
+            info.removeComponent(key)
+            self.assertFalse(info.hasComponent(key))
 
         # Test that we can set the MaskedImage and WCS of an Exposure
         # that already has both
@@ -443,6 +458,10 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         photoCalib = afwImage.PhotoCalib(1e-10, 1e-12)
         mainExposure.setPhotoCalib(photoCalib)
 
+        mainInfo = mainExposure.getInfo()
+        for key, value in self.extras.items():
+            mainInfo.setComponent(key, value)
+
         with lsst.utils.tests.getTempFilePath(".fits") as tmpFile:
             mainExposure.writeFits(tmpFile)
 
@@ -456,9 +475,13 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
 
             self.assertEqual(photoCalib, readExposure.getPhotoCalib())
 
+            readInfo = readExposure.getInfo()
+            for key, value in self.extras.items():
+                self.assertEqual(value, readInfo.getComponent(key))
+
             psf = readExposure.getPsf()
             self.assertIsNotNone(psf)
-            self.assertEqual(psf.getValue(), self.psf.getValue())
+            self.assertEqual(psf, self.psf)
 
     def checkWcs(self, parentExposure, subExposure):
         """Compare WCS at corner points of a sub-exposure and its parent exposure
@@ -500,7 +523,14 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         if not e1.getPsf():
             self.assertFalse(e2.getPsf())
         else:
-            self.assertEqual(e1.getPsf().getValue(), e2.getPsf().getValue())
+            self.assertEqual(e1.getPsf(), e2.getPsf())
+        # Check extra components
+        i1 = e1.getInfo()
+        i2 = e2.getInfo()
+        for key in self.extras:
+            self.assertEqual(i1.hasComponent(key), i2.hasComponent(key))
+            if i1.hasComponent(key):
+                self.assertEqual(i1.getComponent(key), i2.getComponent(key))
 
     def testCopyExposure(self):
         """Copy an Exposure (maybe changing type)"""
@@ -510,6 +540,9 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         exposureU.setDetector(self.detector)
         exposureU.setFilter(afwImage.Filter("g"))
         exposureU.setPsf(DummyPsf(4.0))
+        infoU = exposureU.getInfo()
+        for key, value in self.extras.items():
+            infoU.setComponent(key, value)
 
         exposureF = exposureU.convertF()
         self.cmpExposure(exposureF, exposureU)
@@ -778,6 +811,84 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
             The corners that are drawn from the original image.
         """
         return [corner for corner in cutoutBox.getCorners() if corner in imageBox]
+
+
+class ExposureInfoTestCase(lsst.utils.tests.TestCase):
+    def setUp(self):
+        super().setUp()
+
+        afwImage.Filter.reset()
+        afwImage.FilterProperty.reset()
+        defineFilter("g", 470.0)
+
+        self.wcs = afwGeom.makeSkyWcs(lsst.geom.Point2D(0.0, 0.0),
+                                      lsst.geom.SpherePoint(2.0, 34.0, lsst.geom.degrees),
+                                      np.identity(2),
+                                      )
+        self.photoCalib = afwImage.PhotoCalib(1.5)
+        self.psf = DummyPsf(2.0)
+        self.detector = DetectorWrapper().detector
+        self.polygon = afwGeom.Polygon(lsst.geom.Box2D(lsst.geom.Point2D(0.0, 0.0),
+                                                       lsst.geom.Point2D(25.0, 20.0)))
+        self.coaddInputs = afwImage.CoaddInputs()
+        self.apCorrMap = afwImage.ApCorrMap()
+        self.transmissionCurve = afwImage.TransmissionCurve.makeIdentity()
+
+        self.exposureInfo = afwImage.ExposureInfo()
+        gFilter = afwImage.Filter("g")
+        self.exposureInfo.setFilter(gFilter)
+
+    def _checkAlias(self, exposureInfo, key, value, has, get):
+        self.assertFalse(has())
+        self.assertFalse(exposureInfo.hasComponent(key))
+        self.assertIsNone(get())
+        self.assertIsNone(exposureInfo.getComponent(key))
+
+        self.exposureInfo.setComponent(key, value)
+        self.assertTrue(has())
+        self.assertTrue(exposureInfo.hasComponent(key))
+        self.assertIsNotNone(get())
+        self.assertIsNotNone(exposureInfo.getComponent(key))
+        self.assertEqual(get(), value)
+        self.assertEqual(exposureInfo.getComponent(key), value)
+
+        self.exposureInfo.removeComponent(key)
+        self.assertFalse(has())
+        self.assertFalse(exposureInfo.hasComponent(key))
+        self.assertIsNone(get())
+        self.assertIsNone(exposureInfo.getComponent(key))
+
+    def testAliases(self):
+        cls = type(self.exposureInfo)
+        self._checkAlias(self.exposureInfo, cls.KEY_WCS, self.wcs,
+                         self.exposureInfo.hasWcs, self.exposureInfo.getWcs)
+        self._checkAlias(self.exposureInfo, cls.KEY_PSF, self.psf,
+                         self.exposureInfo.hasPsf, self.exposureInfo.getPsf)
+        self._checkAlias(self.exposureInfo, cls.KEY_PHOTO_CALIB, self.photoCalib,
+                         self.exposureInfo.hasPhotoCalib, self.exposureInfo.getPhotoCalib)
+        self._checkAlias(self.exposureInfo, cls.KEY_DETECTOR, self.detector,
+                         self.exposureInfo.hasDetector, self.exposureInfo.getDetector)
+        self._checkAlias(self.exposureInfo, cls.KEY_VALID_POLYGON, self.polygon,
+                         self.exposureInfo.hasValidPolygon, self.exposureInfo.getValidPolygon)
+        self._checkAlias(self.exposureInfo, cls.KEY_COADD_INPUTS, self.coaddInputs,
+                         self.exposureInfo.hasCoaddInputs, self.exposureInfo.getCoaddInputs)
+        self._checkAlias(self.exposureInfo, cls.KEY_AP_CORR_MAP, self.apCorrMap,
+                         self.exposureInfo.hasApCorrMap, self.exposureInfo.getApCorrMap)
+        self._checkAlias(self.exposureInfo, cls.KEY_TRANSMISSION_CURVE, self.transmissionCurve,
+                         self.exposureInfo.hasTransmissionCurve, self.exposureInfo.getTransmissionCurve)
+
+    def testCopy(self):
+        # Test that ExposureInfos have independently settable state
+        copy = afwImage.ExposureInfo(self.exposureInfo, True)
+        self.assertEqual(self.exposureInfo.getWcs(), copy.getWcs())
+
+        newWcs = afwGeom.makeSkyWcs(lsst.geom.Point2D(-23.0, 8.0),
+                                    lsst.geom.SpherePoint(0.0, 0.0, lsst.geom.degrees),
+                                    np.identity(2),
+                                    )
+        copy.setWcs(newWcs)
+        self.assertEqual(copy.getWcs(), newWcs)
+        self.assertNotEqual(self.exposureInfo.getWcs(), copy.getWcs())
 
 
 class ExposureNoAfwdataTestCase(lsst.utils.tests.TestCase):

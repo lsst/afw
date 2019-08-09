@@ -34,6 +34,7 @@
 #include "lsst/afw/image/VisitInfo.h"
 #include "lsst/afw/image/TransmissionCurve.h"
 #include "lsst/afw/image/ExposureInfo.h"
+#include "lsst/afw/typehandling/Storable.h"
 
 namespace py = pybind11;
 using namespace py::literals;
@@ -44,6 +45,43 @@ namespace image {
 namespace {
 
 using PyExposureInfo = py::class_<ExposureInfo, std::shared_ptr<ExposureInfo>>;
+
+// Template methods where we can use pybind11's overload resolution (T is input)
+template <class T>
+void declareGenericMethods(PyExposureInfo &cls) {
+    using Class = PyExposureInfo::type;
+    cls.def("setComponent",
+            [](PyExposureInfo::type &self, std::string const &key, T const &object) {
+                self.setComponent(typehandling::makeKey<T>(key), object);
+            },
+            "key"_a, "object"_a);
+}
+// Template methods where we need to provide a unified interface (T is not input)
+void declareGenericMethodsMerged(PyExposureInfo &cls) {
+    using typehandling::Storable;
+    using Class = PyExposureInfo::type;
+    cls.def("hasComponent",
+            [](Class const &self, std::string const &key) {
+                return self.hasComponent(typehandling::makeKey<std::shared_ptr<Storable const>>(key));
+            },
+            "key"_a);
+    cls.def("getComponent",
+            [](Class const &self, std::string const &key) -> py::object {
+                auto sharedKey = typehandling::makeKey<std::shared_ptr<Storable const>>(key);
+                // Cascading if-elses to support other types in the future
+                if (self.hasComponent(sharedKey)) {
+                    return py::cast(self.getComponent(sharedKey));
+                } else {
+                    return py::none();
+                }
+            },
+            "key"_a);
+    cls.def("removeComponent",
+            [](Class &self, std::string const &key) {
+                self.removeComponent(typehandling::makeKey<std::shared_ptr<Storable const>>(key));
+            },
+            "key"_a);
+}
 
 PYBIND11_MODULE(exposureInfo, mod) {
     py::module::import("lsst.daf.base");
@@ -82,10 +120,12 @@ PYBIND11_MODULE(exposureInfo, mod) {
     cls.def(py::init<ExposureInfo, bool>(), "other"_a, "copyMetadata"_a);
 
     /* Members */
+    cls.attr("KEY_WCS") = ExposureInfo::KEY_WCS.getId();
     cls.def("hasWcs", &ExposureInfo::hasWcs);
     cls.def("getWcs", (std::shared_ptr<geom::SkyWcs>(ExposureInfo::*)()) & ExposureInfo::getWcs);
     cls.def("setWcs", &ExposureInfo::setWcs, "wcs"_a);
 
+    cls.attr("KEY_DETECTOR") = ExposureInfo::KEY_DETECTOR.getId();
     cls.def("hasDetector", &ExposureInfo::hasDetector);
     cls.def("getDetector", &ExposureInfo::getDetector);
     cls.def("setDetector",
@@ -101,11 +141,15 @@ PYBIND11_MODULE(exposureInfo, mod) {
     cls.def("getFilter", &ExposureInfo::getFilter);
     cls.def("setFilter", &ExposureInfo::setFilter, "filter"_a);
 
+    declareGenericMethods<std::shared_ptr<typehandling::Storable const>>(cls);
+    declareGenericMethodsMerged(cls);
+
     // Deprecated versions
     cls.def("hasCalib", &ExposureInfo::hasCalib);
     cls.def("getCalib", &ExposureInfo::getCalib);
     cls.def("setCalib", &ExposureInfo::setCalib, "calib"_a);
 
+    cls.attr("KEY_PHOTO_CALIB") = ExposureInfo::KEY_PHOTO_CALIB.getId();
     cls.def("hasPhotoCalib", &ExposureInfo::hasPhotoCalib);
     cls.def("getPhotoCalib", &ExposureInfo::getPhotoCalib);
     cls.def("setPhotoCalib", &ExposureInfo::setPhotoCalib, "photoCalib"_a);
@@ -113,6 +157,7 @@ PYBIND11_MODULE(exposureInfo, mod) {
     cls.def("getMetadata", &ExposureInfo::getMetadata);
     cls.def("setMetadata", &ExposureInfo::setMetadata, "metadata"_a);
 
+    cls.attr("KEY_PSF") = ExposureInfo::KEY_PSF.getId();
     cls.def("hasPsf", &ExposureInfo::hasPsf);
     cls.def("getPsf", &ExposureInfo::getPsf);
     cls.def("setPsf",
@@ -125,6 +170,7 @@ PYBIND11_MODULE(exposureInfo, mod) {
             },
             "psf"_a);
 
+    cls.attr("KEY_VALID_POLYGON") = ExposureInfo::KEY_VALID_POLYGON.getId();
     cls.def("hasValidPolygon", &ExposureInfo::hasValidPolygon);
     cls.def("getValidPolygon", &ExposureInfo::getValidPolygon);
     cls.def("setValidPolygon",
@@ -137,11 +183,13 @@ PYBIND11_MODULE(exposureInfo, mod) {
             },
             "polygon"_a);
 
+    cls.attr("KEY_AP_CORR_MAP") = ExposureInfo::KEY_AP_CORR_MAP.getId();
     cls.def("hasApCorrMap", &ExposureInfo::hasApCorrMap);
     cls.def("getApCorrMap", (std::shared_ptr<ApCorrMap>(ExposureInfo::*)()) & ExposureInfo::getApCorrMap);
     cls.def("setApCorrMap", &ExposureInfo::setApCorrMap, "apCorrMap"_a);
     cls.def("initApCorrMap", &ExposureInfo::initApCorrMap);
 
+    cls.attr("KEY_COADD_INPUTS") = ExposureInfo::KEY_COADD_INPUTS.getId();
     cls.def("hasCoaddInputs", &ExposureInfo::hasCoaddInputs);
     cls.def("getCoaddInputs", &ExposureInfo::getCoaddInputs);
     cls.def("setCoaddInputs", &ExposureInfo::setCoaddInputs, "coaddInputs"_a);
@@ -150,6 +198,7 @@ PYBIND11_MODULE(exposureInfo, mod) {
     cls.def("getVisitInfo", &ExposureInfo::getVisitInfo);
     cls.def("setVisitInfo", &ExposureInfo::setVisitInfo, "visitInfo"_a);
 
+    cls.attr("KEY_TRANSMISSION_CURVE") = ExposureInfo::KEY_TRANSMISSION_CURVE.getId();
     cls.def("hasTransmissionCurve", &ExposureInfo::hasTransmissionCurve);
     cls.def("getTransmissionCurve", &ExposureInfo::getTransmissionCurve);
     cls.def("setTransmissionCurve", &ExposureInfo::setTransmissionCurve, "transmissionCurve"_a);

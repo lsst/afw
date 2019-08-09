@@ -25,6 +25,7 @@
 #include "lsst/afw/table/io/python.h"  // for addPersistableMethods
 #include "lsst/afw/table/Schema.h"
 #include "lsst/afw/table/Exposure.h"
+#include "lsst/afw/typehandling/Storable.h"
 #include "lsst/afw/image/CoaddInputs.h"
 
 namespace py = pybind11;
@@ -35,10 +36,11 @@ namespace afw {
 namespace image {
 namespace {
 
-using PyCoaddInputs = py::class_<CoaddInputs, std::shared_ptr<CoaddInputs>>;
+using PyCoaddInputs = py::class_<CoaddInputs, std::shared_ptr<CoaddInputs>, typehandling::Storable>;
 
 PYBIND11_MODULE(coaddInputs, mod) {
     /* Module level */
+    py::module::import("lsst.afw.typehandling");
 
     PyCoaddInputs cls(mod, "CoaddInputs");
 

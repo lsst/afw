@@ -96,7 +96,7 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
     def comparePsfs(self, psf1, psf2):
         self.assertIsNotNone(psf1)
         self.assertIsNotNone(psf2)
-        self.assertEqual(psf1.getValue(), psf2.getValue())
+        self.assertEqual(psf1, psf2)
 
     def setUp(self):
         np.random.seed(1)

@@ -33,6 +33,7 @@
 #include "lsst/geom.h"
 #include "lsst/afw/table/AmpInfo.h"
 #include "lsst/afw/table/io/python.h"
+#include "lsst/afw/typehandling/Storable.h"
 #include "lsst/afw/cameraGeom/Detector.h"
 #include "lsst/afw/cameraGeom/TransformMap.h"
 
@@ -77,7 +78,8 @@ void declare2SysMethods(PyClass &cls) {
 
 PYBIND11_MODULE(detector, mod) {
     /* Module level */
-    py::class_<Detector, std::shared_ptr<Detector>> cls(mod, "Detector");
+    py::module::import("lsst.afw.typehandling");
+    py::class_<Detector, std::shared_ptr<Detector>, typehandling::Storable> cls(mod, "Detector");
 
     /* Member types and enums */
     py::enum_<DetectorType>(mod, "DetectorType")
