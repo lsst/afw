@@ -20,5 +20,6 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
+import lsst.base.cppimport
 import lsst.utils
 from .version import *
