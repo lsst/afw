@@ -29,6 +29,7 @@ from deprecated.sphinx import deprecated
 from lsst.utils import TemplateMeta
 
 from ..slicing import supportSlicing
+from ..disableArithmetic import disableImageArithmetic
 from ..image.fitsIoWithOptions import imageReadFitsWithOptions, exposureWriteFitsWithOptions
 from .exposure import ExposureI, ExposureF, ExposureD, ExposureU, ExposureL
 
@@ -121,3 +122,4 @@ Exposure.alias("L", ExposureL)
 
 for cls in set(Exposure.values()):
     supportSlicing(cls)
+    disableImageArithmetic(cls)
