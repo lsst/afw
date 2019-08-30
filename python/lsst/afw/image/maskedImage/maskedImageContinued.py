@@ -28,6 +28,7 @@ from lsst.utils import TemplateMeta
 
 from ..image.fitsIoWithOptions import imageReadFitsWithOptions, exposureWriteFitsWithOptions
 from ..slicing import supportSlicing
+from ..disableArithmetic import disableImageArithmetic
 from .maskedImage import MaskedImageI, MaskedImageF, MaskedImageD, MaskedImageU, MaskedImageL
 
 
@@ -127,3 +128,4 @@ MaskedImage.alias("L", MaskedImageL)
 
 for cls in set(MaskedImage.values()):
     supportSlicing(cls)
+    disableImageArithmetic(cls)

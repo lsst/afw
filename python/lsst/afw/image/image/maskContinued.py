@@ -28,6 +28,7 @@ from lsst.utils import TemplateMeta
 from .fitsIoWithOptions import imageReadFitsWithOptions, imageWriteFitsWithOptions
 from .image import MaskX
 from ..slicing import supportSlicing
+from ..disableArithmetic import disableMaskArithmetic
 
 MaskPixel = np.int32
 
@@ -56,3 +57,4 @@ Mask.alias("X", MaskX)
 
 for cls in (MaskX, ):
     supportSlicing(cls)
+    disableMaskArithmetic(cls)

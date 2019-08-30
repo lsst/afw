@@ -26,6 +26,7 @@ import numpy as np
 from lsst.utils import TemplateMeta
 
 from ..slicing import supportSlicing
+from ..disableArithmetic import disableImageArithmetic
 from .fitsIoWithOptions import imageReadFitsWithOptions, imageWriteFitsWithOptions
 from .image import ImageI, ImageF, ImageD, ImageU, ImageL
 from .image import DecoratedImageI, DecoratedImageF, DecoratedImageD, DecoratedImageU, DecoratedImageL
@@ -87,6 +88,8 @@ DecoratedImage.alias("L", DecoratedImageL)
 
 for cls in set(Image.values()):
     supportSlicing(cls)
+    disableImageArithmetic(cls)
 
 for cls in set(DecoratedImage.values()):
     supportSlicing(cls)
+    disableImageArithmetic(cls)
