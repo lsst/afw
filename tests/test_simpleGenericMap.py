@@ -225,6 +225,7 @@ class SimpleGenericMapCppTestSuite(lsst.utils.tests.TestCase):
                      'string': 'neither a number nor NaN',
                      }
         self.pymap = SimpleGenericMap(self.data)
+        self.cppmap = cppLib.makeInitialMap()
 
     def testPythonValues(self):
         """Check that built-in types added in Python are visible in C++.
@@ -234,6 +235,15 @@ class SimpleGenericMapCppTestSuite(lsst.utils.tests.TestCase):
         # Ensure the test isn't giving false negatives
         with self.assertRaises(pexExcept.NotFoundError):
             cppLib.assertKeyValue(self.pymap, "NotAKey", 42)
+
+    def testCppValues(self):
+        """Check that built-in types added in C++ are visible in Python.
+        """
+        for key, value in self.data.items():
+            self.assertIn(key, self.cppmap)
+            self.assertEqual(value, self.cppmap[key], msg="key=" + key)
+        # Ensure the test isn't giving false negatives
+        self.assertNotIn("NotAKey", self.cppmap)
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):

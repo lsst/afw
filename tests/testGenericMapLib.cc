@@ -29,10 +29,12 @@
 #include "lsst/pex/exceptions.h"
 
 #include "lsst/afw/typehandling/GenericMap.h"
+#include "lsst/afw/typehandling/SimpleGenericMap.h"
 #include "lsst/afw/typehandling/Storable.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
+using namespace std::string_literals;
 
 namespace lsst {
 namespace afw {
@@ -72,6 +74,23 @@ void assertKeyValue(GenericMap<std::string> const& map, std::string const& key, 
     }
 }
 
+/**
+ * Create a MutableGenericMap that can be passed to Python for testing.
+ *
+ * @returns a map containing the state `{"one": 1, "pi": 3.1415927,
+ *          "string": "neither a number nor NaN"}`. This state is hardcoded
+ *          into the Python test code, and should be changed with caution.
+ */
+std::shared_ptr<MutableGenericMap<std::string>> makeInitialMap() {
+    auto map = std::make_unique<SimpleGenericMap<std::string>>();
+    // TODO: workaround for DM-21268
+    map->insert("one", std::int64_t(1));
+    map->insert("pi", 3.1415927);
+    // TODO: workaround for DM-21216
+    map->insert("string", "neither a number nor NaN"s);
+    return map;
+}
+
 }  // namespace
 
 namespace {
@@ -90,9 +109,11 @@ void declareAnyTypeFunctions(py::module& mod) {
 PYBIND11_MODULE(testGenericMapLib, mod) {
     py::module::import("lsst.afw.typehandling");
 
-    declareAnyTypeFunctions<long>(mod);
+    declareAnyTypeFunctions<std::int64_t>(mod);
     declareAnyTypeFunctions<double>(mod);
     declareAnyTypeFunctions<std::string>(mod);
+
+    mod.def("makeInitialMap", &makeInitialMap);
 }
 
 }  // namespace typehandling
