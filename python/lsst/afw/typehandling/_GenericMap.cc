@@ -169,10 +169,11 @@ void declareMutableGenericMap(utils::python::WrapperCollection& wrappers, std::s
                           // Don't rewrap members of GenericMap
                           declareMutableGenericMapTypedMethods<std::shared_ptr<Storable>>(cls);
                           declareMutableGenericMapTypedMethods<bool>(cls);
+                          // TODO: int32 and float are suppressed for now, see DM-21268
+                          declareMutableGenericMapTypedMethods<std::int64_t>(cls);  // chosen for builtins.int
                           declareMutableGenericMapTypedMethods<std::int32_t>(cls);
-                          declareMutableGenericMapTypedMethods<std::int64_t>(cls);
+                          declareMutableGenericMapTypedMethods<double>(cls);  // chosen for builtins.float
                           declareMutableGenericMapTypedMethods<float>(cls);
-                          declareMutableGenericMapTypedMethods<double>(cls);
                           declareMutableGenericMapTypedMethods<std::string>(cls);
                           cls.def("__delitem__",
                                   [](Class& self, K const& key) {

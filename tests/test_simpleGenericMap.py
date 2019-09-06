@@ -23,9 +23,11 @@ from collections.abc import MutableMapping
 import unittest
 
 import lsst.utils.tests
+import lsst.pex.exceptions as pexExcept
 
 from lsst.afw.typehandling import SimpleGenericMap
 from lsst.afw.typehandling.testUtils import MutableGenericMapTestBaseClass
+import testGenericMapLib as cppLib
 
 
 class SimpleGenericMapTestSuite(MutableGenericMapTestBaseClass):
@@ -214,6 +216,24 @@ class SimpleGenericMapTestSuite(MutableGenericMapTestBaseClass):
         for target in self.targets:
             for keyType in self.getValidKeys(target):
                 self.checkClear(target, self.getTestData(keyType), msg=str(target))
+
+
+class SimpleGenericMapCppTestSuite(lsst.utils.tests.TestCase):
+    def setUp(self):
+        self.data = {'one': 1,
+                     'pi': 3.1415927,
+                     'string': 'neither a number nor NaN',
+                     }
+        self.pymap = SimpleGenericMap(self.data)
+
+    def testPythonValues(self):
+        """Check that built-in types added in Python are visible in C++.
+        """
+        for key, value in self.data.items():
+            cppLib.assertKeyValue(self.pymap, key, value)
+        # Ensure the test isn't giving false negatives
+        with self.assertRaises(pexExcept.NotFoundError):
+            cppLib.assertKeyValue(self.pymap, "NotAKey", 42)
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
