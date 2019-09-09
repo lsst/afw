@@ -91,6 +91,31 @@ std::shared_ptr<MutableGenericMap<std::string>> makeInitialMap() {
     return map;
 }
 
+/**
+ * Change the values in a GenericMap.
+ *
+ * @param testmap the map to update. Assumed to be in the state created by
+ *                makeInitialMap.
+ *
+ * This function performs changes equivalent to the following Python:
+ *
+ *     testmap['answer'] = 42
+ *     testmap['pi'] = 3.0
+ *     testmap['string'] = False
+ *
+ * This difference is hardcoded into the Python test code, and should be
+ * changed with caution.
+ */
+void makeCppUpdates(MutableGenericMap<std::string>& testmap) {
+    // TODO: workaround for DM-21268
+    testmap.insert("answer", std::int64_t(42));
+
+    testmap.at(makeKey<double>("pi"s)) = 3.0;
+
+    testmap.erase(makeKey<std::string>("string"s));
+    testmap.insert("string", false);
+}
+
 }  // namespace
 
 namespace {
@@ -115,6 +140,7 @@ PYBIND11_MODULE(testGenericMapLib, mod) {
     declareAnyTypeFunctions<std::string>(mod);
 
     mod.def("makeInitialMap", &makeInitialMap);
+    mod.def("makeCppUpdates", &makeCppUpdates, "testmap"_a);
 }
 
 }  // namespace typehandling

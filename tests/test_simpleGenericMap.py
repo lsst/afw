@@ -267,6 +267,26 @@ class SimpleGenericMapCppTestSuite(lsst.utils.tests.TestCase):
         self._checkPythonUpdates(self.pymap, msg='map=pymap')
         self._checkPythonUpdates(self.cppmap, msg='map=cppmap')
 
+    def _checkCppUpdates(self, testmap, msg=''):
+        for key, value in self.data.items():
+            self.assertIn(key, testmap, msg=msg)
+            self.assertEqual(value, testmap[key], msg='key=' + key + ', ' + msg)
+            cppLib.assertKeyValue(testmap, key, value)
+        cppLib.makeCppUpdates(testmap)
+
+        for key, value in {'answer': 42, 'pi': 3.0, 'string': False}.items():
+            # Test both Python and C++ state
+            self.assertIn(key, testmap, msg=msg)
+            self.assertEqual(value, testmap[key], msg='key=' + key + ', ' + msg)
+            cppLib.assertKeyValue(testmap, key, value)
+
+    def testCppUpdates(self):
+        """Check that changes to built-in types made in C++ are visible in
+        both languages.
+        """
+        self._checkCppUpdates(self.pymap, msg='map=pymap')
+        self._checkCppUpdates(self.cppmap, msg='map=cppmap')
+
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
     pass
