@@ -109,6 +109,7 @@ void declareAnyTypeFunctions(py::module& mod) {
 PYBIND11_MODULE(testGenericMapLib, mod) {
     py::module::import("lsst.afw.typehandling");
 
+    declareAnyTypeFunctions<bool>(mod);
     declareAnyTypeFunctions<std::int64_t>(mod);
     declareAnyTypeFunctions<double>(mod);
     declareAnyTypeFunctions<std::string>(mod);
