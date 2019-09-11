@@ -237,7 +237,11 @@ public:
     /**
      * Return a reference to the mapped value of the element with key equal to `key`.
      *
-     * @tparam T the type of the element mapped to `key`
+     * @tparam T the type of the element mapped to `key`. It may be the exact
+     *           type of the element, if known, or any type to which its
+     *           references or pointers can be implicitly converted (e.g.,
+     *           a superclass). For example, references to built-in types are
+     *           not convertible, so you can't retrieve an `int` with `T=long`.
      * @param key the key of the element to find
      *
      * @return a reference to the `T` mapped to `key`, if one exists
