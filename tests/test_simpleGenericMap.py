@@ -287,6 +287,32 @@ class SimpleGenericMapCppTestSuite(lsst.utils.tests.TestCase):
         self._checkCppUpdates(self.pymap, msg='map=pymap')
         self._checkCppUpdates(self.cppmap, msg='map=cppmap')
 
+    def _checkPythonStorableUpdates(self, testmap, msg=''):
+        cppLib.addCppStorable(testmap)
+        self.assertIn('cppValue', testmap, msg=msg)
+        self.assertEqual(testmap['cppValue'], cppLib.CppStorable('value'), msg=msg)
+        self.assertIn('cppPointer', testmap, msg=msg)
+        self.assertEqual(testmap['cppPointer'], cppLib.CppStorable('pointer'), msg=msg)
+
+        # should have no effect because pybind11 copies Storable values for safety
+        testmap['cppValue'].value = 'new_value'
+        testmap['cppPointer'].value = 'extra_pointy'
+
+        for key, value in {'cppValue': cppLib.CppStorable('value'),
+                           'cppPointer': cppLib.CppStorable('extra_pointy'),
+                           }.items():
+            # Test both Python and C++ state
+            self.assertIn(key, testmap, msg=msg)
+            self.assertEqual(value, testmap[key], msg='key=' + key + ', ' + msg)
+            cppLib.assertKeyValue(testmap, key, value)
+
+    def testPythonStorableUpdates(self):
+        """Check that changes to Storables made in Python are visible in
+        both languages.
+        """
+        self._checkPythonStorableUpdates(self.pymap, msg='map=pymap')
+        self._checkPythonStorableUpdates(self.cppmap, msg='map=cppmap')
+
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
     pass

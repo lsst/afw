@@ -78,6 +78,32 @@ private:
 };
 
 /**
+ * Test whether a map contains a strongly typed key.
+ *
+ * @param map The map to test
+ * @param key The key to test.
+ *
+ * @throws pex::exceptions::NotFoundError Thrown if the key is not present in
+ *      the map.
+ *
+ * @{
+ */
+template <typename T>
+void _assertKey(GenericMap<std::string> const& map, Key<std::string, T> const& key) {
+    using lsst::pex::exceptions::NotFoundError;
+
+    if (!map.contains(key.getId())) {
+        throw LSST_EXCEPT(NotFoundError, "Map does not contain key " + key.getId());
+    }
+
+    if (!map.contains(key)) {
+        std::stringstream buffer;
+        buffer << "Map maps " << key.getId() << " to a different type than " << key;
+        throw LSST_EXCEPT(NotFoundError, buffer.str());
+    }
+}
+
+/**
  * Test whether a map contains a key-value pair.
  *
  * @param map The map to test
@@ -85,21 +111,15 @@ private:
  *
  * @throws pex::exceptions::NotFoundError Thrown if the key is not present in
  *      the map, or maps to a different value.
+ *
+ * @{
  */
 template <typename T>
 void assertKeyValue(GenericMap<std::string> const& map, std::string const& key, T const& value) {
     using lsst::pex::exceptions::NotFoundError;
 
-    if (!map.contains(key)) {
-        throw LSST_EXCEPT(NotFoundError, "Map does not contain key " + key);
-    }
-
     auto typedKey = makeKey<T>(key);
-    if (!map.contains(typedKey)) {
-        std::stringstream buffer;
-        buffer << "Map maps " << key << " to a different type than " << typedKey;
-        throw LSST_EXCEPT(NotFoundError, buffer.str());
-    }
+    _assertKey(map, typedKey);
 
     T const& mapValue = map.at(typedKey);
     if (mapValue != value) {
@@ -108,6 +128,39 @@ void assertKeyValue(GenericMap<std::string> const& map, std::string const& key, 
         throw LSST_EXCEPT(NotFoundError, buffer.str());
     }
 }
+
+// This specialization may be called for values that are *either* Storable or shared_ptr<Storable>,
+// because there is no way to distinguish them from Python
+template <>
+void assertKeyValue(GenericMap<std::string> const& map, std::string const& key, Storable const& value) {
+    using lsst::pex::exceptions::NotFoundError;
+
+    // Non-owning pointer; can't use reference because we can't initialize it yet
+    Storable const* mapValue = nullptr;
+    try {
+        auto typedKey = makeKey<Storable>(key);
+        _assertKey(map, typedKey);
+        mapValue = &(map.at(typedKey));
+    } catch (NotFoundError const&) {
+        auto typedKey = makeKey<std::shared_ptr<Storable const>>(key);
+        _assertKey(map, typedKey);
+        mapValue = map.at(typedKey).get();
+    }
+
+    if (!mapValue) {
+        std::stringstream buffer;
+        buffer << "Map maps " << key << " to null pointer, expected " << value;
+        throw LSST_EXCEPT(NotFoundError, buffer.str());
+    }
+
+    if (!mapValue->equals(value)) {
+        std::stringstream buffer;
+        buffer << "Map maps " << key << " to " << *mapValue << ", expected " << value;
+        throw LSST_EXCEPT(NotFoundError, buffer.str());
+    }
+}
+
+/** @} */
 
 /**
  * Test whether a CppStorable contains a specific value.
@@ -167,6 +220,24 @@ void makeCppUpdates(MutableGenericMap<std::string>& testmap) {
     testmap.insert("string", false);
 }
 
+/**
+ * Insert two Storable objects into a GenericMap.
+ *
+ * @param testmap The map object to update.
+ *
+ * This function adds two extra key-value pairs:
+ *
+ * * `"cppValue" -> CppStorable("value")`
+ * * `"cppPointer" -> shared_ptr(CppStorable("pointer"))`
+ *
+ * These pairs are hardcoded into the Python test code, and should be changed
+ * with caution.
+ */
+void addCppStorable(MutableGenericMap<std::string>& testmap) {
+    testmap.insert("cppValue", CppStorable("value"));
+    testmap.insert("cppPointer", std::make_shared<CppStorable>("pointer"));
+}
+
 }  // namespace
 
 namespace {
@@ -189,10 +260,12 @@ PYBIND11_MODULE(testGenericMapLib, mod) {
     declareAnyTypeFunctions<std::int64_t>(mod);
     declareAnyTypeFunctions<double>(mod);
     declareAnyTypeFunctions<std::string>(mod);
+    declareAnyTypeFunctions<Storable>(mod);
     mod.def("assertCppValue", &assertCppValue, "storable"_a, "value"_a);
 
     mod.def("makeInitialMap", &makeInitialMap);
     mod.def("makeCppUpdates", &makeCppUpdates, "testmap"_a);
+    mod.def("addCppStorable", &addCppStorable, "testmap"_a);
 
     py::class_<CppStorable, std::shared_ptr<CppStorable>, Storable> cls(mod, "CppStorable");
     cls.def(py::init<std::string>());

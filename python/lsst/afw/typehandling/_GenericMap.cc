@@ -74,7 +74,18 @@ template <typename K>
 py::object get(GenericMap<K>& self, K const& key) {
     auto callable = static_cast<typename Publicist<K>::ConstValueReference (GenericMap<K>::*)(K) const>(
             &Publicist<K>::unsafeLookup);
-    return py::cast((self.*callable)(key));
+    auto variant = (self.*callable)(key);
+
+    // py::cast can't convert PolymorphicValue to Storable; do it by hand
+    PolymorphicValue const* storableHolder = boost::get<PolymorphicValue const&>(&variant);
+    if (storableHolder) {
+        Storable const& value = *storableHolder;
+        // Prevent segfaults when assigning a Key<Storable> to Python variable, then deleting from map
+        // No existing code depends on being able to modify an item stored by value
+        return py::cast(value.cloneStorable());
+    } else {
+        return py::cast(variant);
+    }
 };
 
 template <typename K>
@@ -109,9 +120,7 @@ void declareGenericMap(utils::python::WrapperCollection& wrappers, std::string c
                         std::throw_with_nested(py::key_error(buffer.str()));
                     }
                 },
-                // Prevent segfaults when assigning a key<Storable> to Python variable, then deleting from map
-                // No existing code depends on being able to modify an item stored by value
-                "key"_a, py::return_value_policy::copy);
+                "key"_a);
         cls.def("get",
                 [](Class& self, K const& key, py::object const& def) {
                     try {
