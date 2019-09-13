@@ -176,7 +176,7 @@ void declareMutableGenericMap(utils::python::WrapperCollection& wrappers, std::s
     wrappers.wrapType(PyClass(wrappers.module, className.c_str(), docstring.c_str()),
                       [](auto& mod, auto& cls) {
                           // Don't rewrap members of GenericMap
-                          declareMutableGenericMapTypedMethods<std::shared_ptr<Storable>>(cls);
+                          declareMutableGenericMapTypedMethods<std::shared_ptr<Storable const>>(cls);
                           declareMutableGenericMapTypedMethods<bool>(cls);
                           // TODO: int32 and float are suppressed for now, see DM-21268
                           declareMutableGenericMapTypedMethods<std::int64_t>(cls);  // chosen for builtins.int

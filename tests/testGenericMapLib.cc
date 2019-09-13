@@ -179,6 +179,42 @@ void assertCppValue(CppStorable const& storable, std::string const& value) {
 }
 
 /**
+ * Test whether a Storable defined in Python can be correctly retrieved from a GenericMap.
+ *
+ * @param map The map to test.
+ * @param key The key to look up. Assumed to map to a shared_ptr<Storable>.
+ * @param repr The expected string representation of the value.
+ */
+void assertPythonStorable(GenericMap<std::string> const& map, std::string const& key,
+                          std::string const& repr) {
+    auto const obj = map.at(makeKey<std::shared_ptr<Storable const>>(key));
+
+    std::stringstream stringForm;
+    stringForm << *obj;
+    if (stringForm.str() != repr) {
+        std::stringstream buffer;
+        buffer << "Map maps " << key << " to " << *obj << ", expected " << repr;
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, buffer.str());
+    }
+}
+
+/**
+ * Test whether a Storable defined in Python can be correctly read.
+ *
+ * @param storable the Storable, of a Python-only implementation class.
+ * @param repr The expected string representation of the value.
+ */
+void assertPythonStorable(Storable const& storable, std::string const& repr) {
+    std::stringstream stringForm;
+    stringForm << storable;
+    if (stringForm.str() != repr) {
+        std::stringstream buffer;
+        buffer << "Given " << storable << ", expected " << repr;
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, buffer.str());
+    }
+}
+
+/**
  * Create a MutableGenericMap that can be passed to Python for testing.
  *
  * @returns a map containing the state `{"one": 1, "pi": 3.1415927,
@@ -262,6 +298,13 @@ PYBIND11_MODULE(testGenericMapLib, mod) {
     declareAnyTypeFunctions<std::string>(mod);
     declareAnyTypeFunctions<Storable>(mod);
     mod.def("assertCppValue", &assertCppValue, "storable"_a, "value"_a);
+    mod.def("assertPythonStorable",
+            py::overload_cast<Storable const&, std::string const&>(&assertPythonStorable), "storable"_a,
+            "repr"_a);
+    mod.def("assertPythonStorable",
+            py::overload_cast<GenericMap<std::string> const&, std::string const&, std::string const&>(
+                    &assertPythonStorable),
+            "testmap"_a, "key"_a, "repr"_a);
 
     mod.def("makeInitialMap", &makeInitialMap);
     mod.def("makeCppUpdates", &makeCppUpdates, "testmap"_a);

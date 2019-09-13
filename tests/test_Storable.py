@@ -78,6 +78,7 @@ class PythonStorableTestSuite(lsst.utils.tests.TestCase):
 
     def testRepr(self):
         self.assertEqual(repr(self.testbed), "DemoStorable([42])")
+        cppLib.assertPythonStorable(self.testbed, "DemoStorable([42])")
 
     def testHash(self):
         with self.assertRaises(TypeError):

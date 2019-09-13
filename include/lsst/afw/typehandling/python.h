@@ -49,6 +49,8 @@ namespace typehandling {
 template <class Base = Storable>
 class StorableHelper : public Base {
 public:
+    using Base::Base;
+
     // Can't wrap clone(); PYBIND11_OVERLOAD chokes on unique_ptr return type
 
     std::string toString() const override {
@@ -59,7 +61,6 @@ public:
         PYBIND11_OVERLOAD_NAME(std::size_t, Base, "__hash__", hash_value, );
     }
 
-protected:
     bool equals(Base const& other) const noexcept override {
         PYBIND11_OVERLOAD_NAME(bool, Base, "__eq__", equals, other);
     }

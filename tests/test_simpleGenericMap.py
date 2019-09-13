@@ -25,7 +25,7 @@ import unittest
 import lsst.utils.tests
 import lsst.pex.exceptions as pexExcept
 
-from lsst.afw.typehandling import SimpleGenericMap
+from lsst.afw.typehandling import SimpleGenericMap, Storable
 from lsst.afw.typehandling.testUtils import MutableGenericMapTestBaseClass
 import testGenericMapLib as cppLib
 
@@ -218,6 +218,28 @@ class SimpleGenericMapTestSuite(MutableGenericMapTestBaseClass):
                 self.checkClear(target, self.getTestData(keyType), msg=str(target))
 
 
+class PyStorable(Storable):
+    """A Storable with simple, mutable state.
+
+    Parameters
+    ----------
+    value
+        A value to be stored inside the object. Affects the object's string
+        representation. Two PyStorables are equal if and only if their
+        internal values are the same.
+    """
+
+    def __init__(self, value):
+        Storable.__init__(self)  # pybind11 discourages using super()
+        self.value = value
+
+    def __repr__(self):
+        return repr(self.value)
+
+    def __eq__(self, other):
+        return self.value == other.value
+
+
 class SimpleGenericMapCppTestSuite(lsst.utils.tests.TestCase):
     def setUp(self):
         self.data = {'one': 1,
@@ -312,6 +334,28 @@ class SimpleGenericMapCppTestSuite(lsst.utils.tests.TestCase):
         """
         self._checkPythonStorableUpdates(self.pymap, msg='map=pymap')
         self._checkPythonStorableUpdates(self.cppmap, msg='map=cppmap')
+
+    def _checkCppStorableRead(self, testmap, msg=''):
+        # WARNING: the Python variables holding PyStorable must survive to the end of the test
+        # This is a known bug in pybind11; see DM-21314
+        storableData = {'answer': PyStorable(42),
+                        'question': PyStorable('Unknown'),
+                        }
+        testmap.update(storableData)
+
+        for key, value in storableData.items():
+            self.assertIn(key, testmap, msg=msg)
+            self.assertEqual(value, testmap[key], msg='key=' + key + ', ' + msg)
+            # Exercise C++ equality operator
+            cppLib.assertKeyValue(testmap, key, PyStorable(value.value))
+            # Exercise C++ string representation
+            cppLib.assertPythonStorable(testmap, key, repr(value))
+
+    def testCppStorableRead(self):
+        """Check that Storables made in Python are visible in both languages.
+        """
+        self._checkCppStorableRead(self.pymap, msg='map=pymap')
+        self._checkCppStorableRead(self.cppmap, msg='map=cppmap')
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
