@@ -258,6 +258,12 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
                                      photoCalib.magnitudeToInstFlux(mag, self.pointXShift),
                                      rtol=1e-15)
 
+        # test getLocalCalibration.
+        meas = photoCalib.instFluxToNanojansky(self.instFlux1, self.instFluxErr1, self.pointXShift)
+        localCalib = photoCalib.getLocalCalibration(self.pointXShift)
+        flux = localCalib * self.instFlux1
+        self.assertAlmostEqual(meas.value, flux)
+
         # test the deprecated interfaces that behave like the old Calib object
         self.checkDeprecatedCalibInterface(photoCalib)
 

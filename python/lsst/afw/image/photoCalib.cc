@@ -155,6 +155,7 @@ PYBIND11_MODULE(photoCalib, mod) {
     cls.def("getCalibrationMean", &PhotoCalib::getCalibrationMean);
     cls.def("getCalibrationErr", &PhotoCalib::getCalibrationErr);
     cls.def("getInstFluxAtZeroMagnitude", &PhotoCalib::getInstFluxAtZeroMagnitude);
+    cls.def("getLocalCalibration", &PhotoCalib::getLocalCalibration, "point"_a);
 
     cls.def("computeScaledCalibration", &PhotoCalib::computeScaledCalibration);
     cls.def("computeScalingTo", &PhotoCalib::computeScalingTo);

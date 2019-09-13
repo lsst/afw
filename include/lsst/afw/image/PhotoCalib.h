@@ -434,6 +434,24 @@ public:
     double getInstFluxAtZeroMagnitude() const { return utils::referenceFlux / _calibrationMean; }
 
     /**
+     * Get the local calibration at a point.
+     *
+     * This value is defined such that:
+     * @f[
+     *   instFluxToNanojansky(instFlux, point) == localCalibration * inst
+     * @f]
+     *
+     * Use getCalibrationErr() to get the spatially constant error on the calibration.
+     *
+     * @param[in]  point      The position that magnitude is to be converted at.
+     *
+     * @see getCalibrationMean(), getCalibrationErr()
+     *
+     * @returns     The local calibration at a point.
+     */
+    double getLocalCalibration(lsst::geom::Point<double, 2> const &point) const { return evaluate(point); }
+
+    /**
      * Calculates the spatially-variable calibration, normalized by the mean in the valid domain.
      *
      * This value is defined, for instFlux at (x,y), such that:
