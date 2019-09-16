@@ -256,8 +256,9 @@ BOOST_TEST_CASE_TEMPLATE_FUNCTION(TestConstVisitor, GenericMapFactory) {
 
         // Local classes can't have method templates
         void operator()(int, bool value) { results.push_back(universalToString(value)); }
-        void operator()(int, std::int32_t const& value) { results.push_back(universalToString(value)); }
-        void operator()(int, std::int64_t value) { results.push_back(universalToString(value)); }
+        void operator()(int, int const& value) { results.push_back(universalToString(value)); }
+        void operator()(int, long value) { results.push_back(universalToString(value)); }
+        void operator()(int, long long value) { results.push_back(universalToString(value)); }
         void operator()(int, float const& value) { results.push_back(universalToString(value)); }
         void operator()(int, double value) { results.push_back(universalToString(value)); }
         void operator()(int, std::string const& value) { results.push_back(universalToString(value)); }
@@ -293,8 +294,9 @@ BOOST_TEST_CASE_TEMPLATE_FUNCTION(TestModifyingVoidVisitor, GenericMapFactory) {
     public:
         // Local classes can't have method templates
         void operator()(int, bool& value) { value = !value; }
-        void operator()(int, std::int32_t& value) { value *= 2; }
-        void operator()(int, std::int64_t& value) { value *= 2; }
+        void operator()(int, int& value) { value *= 2; }
+        void operator()(int, long& value) { value *= 2; }
+        void operator()(int, long long& value) { value *= 2; }
         void operator()(int, float& value) { value *= 2; }
         void operator()(int, double& value) { value *= 2; }
         void operator()(int, std::string& value) { value += "Appendix"; }
@@ -333,11 +335,15 @@ BOOST_TEST_CASE_TEMPLATE_FUNCTION(TestModifyingReturningVisitor, GenericMapFacto
             value = !value;
             return key;
         }
-        int operator()(int key, std::int32_t& value) {
+        int operator()(int key, int& value) {
             value *= 2;
             return key;
         }
-        int operator()(int key, std::int64_t& value) {
+        int operator()(int key, long& value) {
+            value *= 2;
+            return key;
+        }
+        int operator()(int key, long long& value) {
             value *= 2;
             return key;
         }

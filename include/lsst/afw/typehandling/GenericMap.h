@@ -26,7 +26,6 @@
 #define LSST_AFW_TYPEHANDLING_GENERICMAP_H
 
 #include <algorithm>
-#include <cstdint>
 #include <functional>
 #include <ostream>
 #include <memory>
@@ -409,8 +408,9 @@ public:
      * type (which may be `void`). Through any combination of overloading or
      * templates, the visitor must accept values of the following types:
      *      * either `bool` or `bool const&`
-     *      * either `std::int32_t` or `std::int32_t const&`
-     *      * either `std::int64_t` or `std::int64_t const&`
+     *      * either `int` or `int const&`
+     *      * either `long` or `long const&`
+     *      * either `long long` or `long long const&`
      *      * either `float` or `float const&`
      *      * either `double` or `double const&`
      *      * `std::string const&`
@@ -499,7 +499,9 @@ protected:
      *
      * Keys of any subclass of Storable are implemented using PolymorphicValue to preserve type.
      */
-    using StorableType = boost::variant<bool, std::int32_t, std::int64_t, float, double, std::string,
+    // Use int, long, long long instead of int32_t, int64_t because C++ doesn't
+    // consider signed integers of the same length but different names equivalent
+    using StorableType = boost::variant<bool, int, long, long long, float, double, std::string,
                                         PolymorphicValue, std::shared_ptr<Storable const>>;
 
     /**
