@@ -274,6 +274,25 @@ void addCppStorable(MutableGenericMap<std::string>& testmap) {
     testmap.insert("cppPointer", std::make_shared<CppStorable>("pointer"));
 }
 
+/**
+ * Store and retrieve a Storable in C++.
+ *
+ * To avoid cluttering testGenericMapLib with a special holder class, this
+ * function conflates two actions. When called with a Storable, it puts a
+ * pointer to it in internal storage. When called with no arguments, it
+ * returns the pointer it has been keeping.
+ *
+ * @param storable The Storable to assign to the pointer [optional].
+ * @returns The currently held pointer.
+ */
+std::shared_ptr<Storable> keepStaticStorable(std::shared_ptr<Storable> storable = nullptr) {
+    static std::shared_ptr<Storable> longLived = nullptr;
+    if (storable) {
+        longLived = storable;
+    }
+    return longLived;
+}
+
 }  // namespace
 
 namespace {
@@ -309,6 +328,7 @@ PYBIND11_MODULE(testGenericMapLib, mod) {
     mod.def("makeInitialMap", &makeInitialMap);
     mod.def("makeCppUpdates", &makeCppUpdates, "testmap"_a);
     mod.def("addCppStorable", &addCppStorable, "testmap"_a);
+    mod.def("keepStaticStorable", &keepStaticStorable, "storable"_a = nullptr);
 
     py::class_<CppStorable, std::shared_ptr<CppStorable>, Storable> cls(mod, "CppStorable");
     cls.def(py::init<std::string>());

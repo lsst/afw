@@ -20,6 +20,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import copy
+import gc
 import unittest
 
 import lsst.utils.tests
@@ -87,6 +88,17 @@ class PythonStorableTestSuite(lsst.utils.tests.TestCase):
     def testEq(self):
         self.assertEqual(self.testbed, DemoStorable([42]))
         self.assertNotEqual(self.testbed, DemoStorable(0))
+
+    @unittest.skip("TODO: Fix this bug in DM-21314")
+    def testGarbageCollection(self):
+        cppLib.keepStaticStorable(DemoStorable(3))
+
+        gc.collect()
+
+        retrieved = cppLib.keepStaticStorable()
+        self.assertIsInstance(retrieved, Storable)
+        self.assertIsInstance(retrieved, DemoStorable)
+        self.assertEqual(retrieved, DemoStorable(3))
 
 
 class CppStorableTestSuite(lsst.utils.tests.TestCase):
