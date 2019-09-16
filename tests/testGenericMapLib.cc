@@ -42,6 +42,41 @@ namespace typehandling {
 
 namespace {
 
+/// A Storable with simple, mutable state.
+class CppStorable : public Storable {
+public:
+    explicit CppStorable(std::string const& value) : Storable(), value(value) {}
+
+    CppStorable(CppStorable const&) = default;
+    CppStorable(CppStorable&&) = default;
+    CppStorable& operator=(CppStorable const&) = default;
+    CppStorable& operator=(CppStorable&&) = default;
+    ~CppStorable() noexcept = default;
+
+    /**
+     * Two CppStorables are equal if and only if their internal states are equal.
+     *
+     * @{
+     */
+    bool operator==(CppStorable const& other) const noexcept { return value == other.value; }
+    bool operator!=(CppStorable const& other) const noexcept { return !(*this == other); }
+
+    /** @} */
+
+    /// Assign a new value to this object
+    void reset(std::string const& value) { this->value = value; }
+    /// Retrieve the value in this object
+    std::string const& get() const noexcept { return value; }
+
+    // Storable methods
+    std::shared_ptr<Storable> cloneStorable() const override { return std::make_shared<CppStorable>(*this); }
+    std::string toString() const override { return value; }
+    bool equals(Storable const& other) const noexcept override { return singleClassEquals(*this, other); }
+
+private:
+    std::string value;
+};
+
 /**
  * Test whether a map contains a key-value pair.
  *
@@ -71,6 +106,22 @@ void assertKeyValue(GenericMap<std::string> const& map, std::string const& key, 
         std::stringstream buffer;
         buffer << "Map maps " << typedKey << " to " << mapValue << ", expected " << value;
         throw LSST_EXCEPT(NotFoundError, buffer.str());
+    }
+}
+
+/**
+ * Test whether a CppStorable contains a specific value.
+ *
+ * @param storable the storable to test
+ * @param value the expected internal string
+ */
+void assertCppValue(CppStorable const& storable, std::string const& value) {
+    using lsst::pex::exceptions::RuntimeError;
+
+    if (storable.get() != value) {
+        std::stringstream buffer;
+        buffer << "CppStorable contains " << storable << ", expected " << value;
+        throw LSST_EXCEPT(RuntimeError, buffer.str());
     }
 }
 
@@ -138,9 +189,18 @@ PYBIND11_MODULE(testGenericMapLib, mod) {
     declareAnyTypeFunctions<std::int64_t>(mod);
     declareAnyTypeFunctions<double>(mod);
     declareAnyTypeFunctions<std::string>(mod);
+    mod.def("assertCppValue", &assertCppValue, "storable"_a, "value"_a);
 
     mod.def("makeInitialMap", &makeInitialMap);
     mod.def("makeCppUpdates", &makeCppUpdates, "testmap"_a);
+
+    py::class_<CppStorable, std::shared_ptr<CppStorable>, Storable> cls(mod, "CppStorable");
+    cls.def(py::init<std::string>());
+    cls.def("__eq__", &CppStorable::operator==, py::is_operator());
+    cls.def("__ne__", &CppStorable::operator!=, py::is_operator());
+    cls.def_property("value", &CppStorable::get, &CppStorable::reset);
+    cls.def("__str__", &CppStorable::toString);
+    cls.def("__repr__", &CppStorable::toString);
 }
 
 }  // namespace typehandling

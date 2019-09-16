@@ -25,6 +25,7 @@ import unittest
 import lsst.utils.tests
 
 from lsst.afw.typehandling import Storable
+import testGenericMapLib as cppLib
 
 
 class DemoStorable(Storable):
@@ -53,7 +54,7 @@ class DemoStorable(Storable):
         return self._state == other._state
 
 
-class PointyStorableTestSuite(lsst.utils.tests.TestCase):
+class PythonStorableTestSuite(lsst.utils.tests.TestCase):
 
     def setUp(self):
         self.aList = [42]
@@ -85,6 +86,25 @@ class PointyStorableTestSuite(lsst.utils.tests.TestCase):
     def testEq(self):
         self.assertEqual(self.testbed, DemoStorable([42]))
         self.assertNotEqual(self.testbed, DemoStorable(0))
+
+
+class CppStorableTestSuite(lsst.utils.tests.TestCase):
+
+    def setUp(self):
+        self.initstr = "Just a string"
+        self.testbed = cppLib.CppStorable(self.initstr)
+
+    def testNewValue(self):
+        """Test a Python-side state change in both C++ and Python.
+        """
+        self.assertEqual(self.testbed.value, self.initstr)
+        cppLib.assertCppValue(self.testbed, self.initstr)
+
+        newstr = "Stringly typed"
+        self.testbed.value = newstr
+
+        self.assertEqual(self.testbed.value, newstr)
+        cppLib.assertCppValue(self.testbed, newstr)
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
