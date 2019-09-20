@@ -23,7 +23,7 @@
  */
 
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE GenericMapCpp
+#define BOOST_TEST_MODULE GenericMapKeyCpp
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-variable"
 #include "boost/test/unit_test.hpp"
@@ -35,7 +35,7 @@
 #include "lsst/utils/tests.h"
 
 #include "lsst/afw/math/ChebyshevBoundedField.h"
-#include "lsst/afw/typehandling/GenericMap.h"
+#include "lsst/afw/typehandling/Key.h"
 
 using namespace std::string_literals;
 
