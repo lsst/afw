@@ -1,7 +1,7 @@
 # -*- python -*-
 from lsst.sconsUtils import scripts, env, targets
 
-pybind11_test_modules = ['testTableArchivesLib']
+pybind11_test_modules = ['testTableArchivesLib', 'testGenericMapLib']
 
 scripts.BasicSConscript.pybind11(pybind11_test_modules, addUnderscore=False)
 
@@ -11,7 +11,6 @@ if afwdataDir:
     env["ENV"]["AFWDATA_DIR"] = afwdataDir
 
 scripts.BasicSConscript.tests(pyList=[],
-                              noBuildList=[name + '.cc' for name in pybind11_test_modules],
-                              ignoreList=[name + '.py' for name in pybind11_test_modules])
+                              noBuildList=[name + '.cc' for name in pybind11_test_modules])
 
 env.Clean(targets["tests"], "#testTable.fits")

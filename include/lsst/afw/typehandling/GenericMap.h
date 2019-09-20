@@ -26,7 +26,6 @@
 #define LSST_AFW_TYPEHANDLING_GENERICMAP_H
 
 #include <algorithm>
-#include <cstdint>
 #include <functional>
 #include <ostream>
 #include <memory>
@@ -238,7 +237,11 @@ public:
     /**
      * Return a reference to the mapped value of the element with key equal to `key`.
      *
-     * @tparam T the type of the element mapped to `key`
+     * @tparam T the type of the element mapped to `key`. It may be the exact
+     *           type of the element, if known, or any type to which its
+     *           references or pointers can be implicitly converted (e.g.,
+     *           a superclass). For example, references to built-in types are
+     *           not convertible, so you can't retrieve an `int` with `T=long`.
      * @param key the key of the element to find
      *
      * @return a reference to the `T` mapped to `key`, if one exists
@@ -409,8 +412,9 @@ public:
      * type (which may be `void`). Through any combination of overloading or
      * templates, the visitor must accept values of the following types:
      *      * either `bool` or `bool const&`
-     *      * either `std::int32_t` or `std::int32_t const&`
-     *      * either `std::int64_t` or `std::int64_t const&`
+     *      * either `int` or `int const&`
+     *      * either `long` or `long const&`
+     *      * either `long long` or `long long const&`
      *      * either `float` or `float const&`
      *      * either `double` or `double const&`
      *      * `std::string const&`
@@ -499,7 +503,9 @@ protected:
      *
      * Keys of any subclass of Storable are implemented using PolymorphicValue to preserve type.
      */
-    using StorableType = boost::variant<bool, std::int32_t, std::int64_t, float, double, std::string,
+    // Use int, long, long long instead of int32_t, int64_t because C++ doesn't
+    // consider signed integers of the same length but different names equivalent
+    using StorableType = boost::variant<bool, int, long, long long, float, double, std::string,
                                         PolymorphicValue, std::shared_ptr<Storable const>>;
 
     /**

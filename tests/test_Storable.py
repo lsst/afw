@@ -20,11 +20,13 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import copy
+import gc
 import unittest
 
 import lsst.utils.tests
 
 from lsst.afw.typehandling import Storable
+import testGenericMapLib as cppLib
 
 
 class DemoStorable(Storable):
@@ -53,7 +55,7 @@ class DemoStorable(Storable):
         return self._state == other._state
 
 
-class PointyStorableTestSuite(lsst.utils.tests.TestCase):
+class PythonStorableTestSuite(lsst.utils.tests.TestCase):
 
     def setUp(self):
         self.aList = [42]
@@ -77,6 +79,7 @@ class PointyStorableTestSuite(lsst.utils.tests.TestCase):
 
     def testRepr(self):
         self.assertEqual(repr(self.testbed), "DemoStorable([42])")
+        cppLib.assertPythonStorable(self.testbed, "DemoStorable([42])")
 
     def testHash(self):
         with self.assertRaises(TypeError):
@@ -85,6 +88,36 @@ class PointyStorableTestSuite(lsst.utils.tests.TestCase):
     def testEq(self):
         self.assertEqual(self.testbed, DemoStorable([42]))
         self.assertNotEqual(self.testbed, DemoStorable(0))
+
+    @unittest.skip("TODO: Fix this bug in DM-21314")
+    def testGarbageCollection(self):
+        cppLib.keepStaticStorable(DemoStorable(3))
+
+        gc.collect()
+
+        retrieved = cppLib.keepStaticStorable()
+        self.assertIsInstance(retrieved, Storable)
+        self.assertIsInstance(retrieved, DemoStorable)
+        self.assertEqual(retrieved, DemoStorable(3))
+
+
+class CppStorableTestSuite(lsst.utils.tests.TestCase):
+
+    def setUp(self):
+        self.initstr = "Just a string"
+        self.testbed = cppLib.CppStorable(self.initstr)
+
+    def testNewValue(self):
+        """Test a Python-side state change in both C++ and Python.
+        """
+        self.assertEqual(self.testbed.value, self.initstr)
+        cppLib.assertCppValue(self.testbed, self.initstr)
+
+        newstr = "Stringly typed"
+        self.testbed.value = newstr
+
+        self.assertEqual(self.testbed.value, newstr)
+        cppLib.assertCppValue(self.testbed, newstr)
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):

@@ -23,9 +23,11 @@ from collections.abc import MutableMapping
 import unittest
 
 import lsst.utils.tests
+import lsst.pex.exceptions as pexExcept
 
-from lsst.afw.typehandling import SimpleGenericMap
+from lsst.afw.typehandling import SimpleGenericMap, Storable
 from lsst.afw.typehandling.testUtils import MutableGenericMapTestBaseClass
+import testGenericMapLib as cppLib
 
 
 class SimpleGenericMapTestSuite(MutableGenericMapTestBaseClass):
@@ -214,6 +216,146 @@ class SimpleGenericMapTestSuite(MutableGenericMapTestBaseClass):
         for target in self.targets:
             for keyType in self.getValidKeys(target):
                 self.checkClear(target, self.getTestData(keyType), msg=str(target))
+
+
+class PyStorable(Storable):
+    """A Storable with simple, mutable state.
+
+    Parameters
+    ----------
+    value
+        A value to be stored inside the object. Affects the object's string
+        representation. Two PyStorables are equal if and only if their
+        internal values are the same.
+    """
+
+    def __init__(self, value):
+        Storable.__init__(self)  # pybind11 discourages using super()
+        self.value = value
+
+    def __repr__(self):
+        return repr(self.value)
+
+    def __eq__(self, other):
+        return self.value == other.value
+
+
+class SimpleGenericMapCppTestSuite(lsst.utils.tests.TestCase):
+    def setUp(self):
+        self.data = {'one': 1,
+                     'pi': 3.1415927,
+                     'string': 'neither a number nor NaN',
+                     }
+        self.pymap = SimpleGenericMap(self.data)
+        self.cppmap = cppLib.makeInitialMap()
+
+    def testPythonValues(self):
+        """Check that built-in types added in Python are visible in C++.
+        """
+        for key, value in self.data.items():
+            cppLib.assertKeyValue(self.pymap, key, value)
+        # Ensure the test isn't giving false negatives
+        with self.assertRaises(pexExcept.NotFoundError):
+            cppLib.assertKeyValue(self.pymap, "NotAKey", 42)
+
+    def testCppValues(self):
+        """Check that built-in types added in C++ are visible in Python.
+        """
+        for key, value in self.data.items():
+            self.assertIn(key, self.cppmap)
+            self.assertEqual(value, self.cppmap[key], msg="key=" + key)
+        # Ensure the test isn't giving false negatives
+        self.assertNotIn("NotAKey", self.cppmap)
+
+    def _checkPythonUpdates(self, testmap, msg=''):
+        for key, value in self.data.items():
+            self.assertIn(key, testmap, msg=msg)
+            self.assertEqual(value, testmap[key], msg='key=' + key + ', ' + msg)
+            cppLib.assertKeyValue(testmap, key, value)
+        testmap['answer'] = 42  # New key-value pair
+        testmap['pi'] = 3.0  # Replace `float` with `float`
+        testmap['string'] = False  # Replace `str` with `bool`
+
+        for key, value in {'answer': 42, 'pi': 3.0, 'string': False}.items():
+            # Test both Python and C++ state
+            self.assertIn(key, testmap, msg=msg)
+            self.assertEqual(value, testmap[key], msg='key=' + key + ', ' + msg)
+            cppLib.assertKeyValue(testmap, key, value)
+
+    def testPythonUpdates(self):
+        """Check that changes to built-in types made in Python are visible in
+        both languages.
+        """
+        self._checkPythonUpdates(self.pymap, msg='map=pymap')
+        self._checkPythonUpdates(self.cppmap, msg='map=cppmap')
+
+    def _checkCppUpdates(self, testmap, msg=''):
+        for key, value in self.data.items():
+            self.assertIn(key, testmap, msg=msg)
+            self.assertEqual(value, testmap[key], msg='key=' + key + ', ' + msg)
+            cppLib.assertKeyValue(testmap, key, value)
+        cppLib.makeCppUpdates(testmap)
+
+        for key, value in {'answer': 42, 'pi': 3.0, 'string': False}.items():
+            # Test both Python and C++ state
+            self.assertIn(key, testmap, msg=msg)
+            self.assertEqual(value, testmap[key], msg='key=' + key + ', ' + msg)
+            cppLib.assertKeyValue(testmap, key, value)
+
+    def testCppUpdates(self):
+        """Check that changes to built-in types made in C++ are visible in
+        both languages.
+        """
+        self._checkCppUpdates(self.pymap, msg='map=pymap')
+        self._checkCppUpdates(self.cppmap, msg='map=cppmap')
+
+    def _checkPythonStorableUpdates(self, testmap, msg=''):
+        cppLib.addCppStorable(testmap)
+        self.assertIn('cppValue', testmap, msg=msg)
+        self.assertEqual(testmap['cppValue'], cppLib.CppStorable('value'), msg=msg)
+        self.assertIn('cppPointer', testmap, msg=msg)
+        self.assertEqual(testmap['cppPointer'], cppLib.CppStorable('pointer'), msg=msg)
+
+        # should have no effect because pybind11 copies Storable values for safety
+        testmap['cppValue'].value = 'new_value'
+        testmap['cppPointer'].value = 'extra_pointy'
+
+        for key, value in {'cppValue': cppLib.CppStorable('value'),
+                           'cppPointer': cppLib.CppStorable('extra_pointy'),
+                           }.items():
+            # Test both Python and C++ state
+            self.assertIn(key, testmap, msg=msg)
+            self.assertEqual(value, testmap[key], msg='key=' + key + ', ' + msg)
+            cppLib.assertKeyValue(testmap, key, value)
+
+    def testPythonStorableUpdates(self):
+        """Check that changes to Storables made in Python are visible in
+        both languages.
+        """
+        self._checkPythonStorableUpdates(self.pymap, msg='map=pymap')
+        self._checkPythonStorableUpdates(self.cppmap, msg='map=cppmap')
+
+    def _checkCppStorableRead(self, testmap, msg=''):
+        # WARNING: the Python variables holding PyStorable must survive to the end of the test
+        # This is a known bug in pybind11; see DM-21314
+        storableData = {'answer': PyStorable(42),
+                        'question': PyStorable('Unknown'),
+                        }
+        testmap.update(storableData)
+
+        for key, value in storableData.items():
+            self.assertIn(key, testmap, msg=msg)
+            self.assertEqual(value, testmap[key], msg='key=' + key + ', ' + msg)
+            # Exercise C++ equality operator
+            cppLib.assertKeyValue(testmap, key, PyStorable(value.value))
+            # Exercise C++ string representation
+            cppLib.assertPythonStorable(testmap, key, repr(value))
+
+    def testCppStorableRead(self):
+        """Check that Storables made in Python are visible in both languages.
+        """
+        self._checkCppStorableRead(self.pymap, msg='map=pymap')
+        self._checkCppStorableRead(self.cppmap, msg='map=cppmap')
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
