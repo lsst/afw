@@ -32,6 +32,8 @@
 
 #include "boost/core/demangle.hpp"
 
+#include "lsst/afw/typehandling/detail/type_traits.h"
+
 namespace lsst {
 namespace afw {
 namespace typehandling {
@@ -71,6 +73,28 @@ public:
     Key(Key&&) = default;
     Key& operator=(Key const&) = delete;
     Key& operator=(Key&&) = delete;
+
+    /**
+     * Convert a key to a different key that could retrieve the same values.
+     *
+     * @tparam U The value type being converted from. Smart pointer keys are
+     *           convertible if and only if the corresponding pointers are;
+     *           other keys are convertible if and only if their value
+     *           references are (consistent with pointers being retrieved by
+     *           value and other types by reference).
+     *
+     * @param other
+     *
+     * @note This constructor is intended to support implicit conversions.
+     */
+    template <typename U>
+    Key(Key<K, U> other) : id(other.getId()) {
+        static_assert((!detail::IS_SMART_PTR<U> && !detail::IS_SMART_PTR<V> &&
+                       std::is_convertible<U&, V&>::value) ||
+                              (detail::IS_SMART_PTR<U> && detail::IS_SMART_PTR<V> &&
+                               std::is_convertible<U, V>::value),
+                      "Implicit conversion of Keys whose types are not implicitly convertible.");
+    }
 
     /**
      * Return the identifier of this field.

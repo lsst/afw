@@ -43,6 +43,9 @@ namespace lsst {
 namespace afw {
 namespace typehandling {
 
+class Base {};
+class Derived : public Base {};
+
 // TODO: use templated test cases to streamline and generalize some of these tests
 
 BOOST_AUTO_TEST_CASE(KeyCopies) {
@@ -144,6 +147,52 @@ BOOST_AUTO_TEST_CASE(KeyHash) {
     using TestKey = Key<std::string, int>;
     utils::assertHashesEqual(TestKey("foo"s), TestKey("foo"s));
     utils::assertHashesEqual(TestKey("bar"s), makeKey<int>("bar"s));
+}
+
+BOOST_AUTO_TEST_CASE(KeyConvertPrimitives) {
+    auto doubleKey = makeKey<double>("a"s);
+    // Key<std::string, int> intKey = doubleKey;  // Does not compile; double&->int&
+    Key<std::string, double const> constKey = doubleKey;
+    // Key<std::string, double> doubleKey2 = constKey;  // Does not compile; lose const
+
+    BOOST_TEST(doubleKey != constKey);
+    BOOST_TEST(doubleKey.getId() == constKey.getId());
+}
+
+BOOST_AUTO_TEST_CASE(KeyConvertObjects) {
+    auto baseKey = makeKey<Base>(42);
+    // Key<int, Derived> downcastKey = baseKey;  // Does not compile; base->derived
+    Key<int, Base const> constBaseKey = baseKey;
+    // Key<int, Base> baseKey2 = constBaseKey;  // Does not compile; lose const
+    auto derivedKey = makeKey<Derived const>(44);
+    Key<int, Base const> upcastKey = derivedKey;
+    // Key<int, Base> upcastKey2 = derivedKey;  // Does not compile; lose const
+
+    BOOST_TEST(baseKey != constBaseKey);
+    BOOST_TEST(baseKey.getId() == constBaseKey.getId());
+    BOOST_TEST(upcastKey != derivedKey);
+    BOOST_TEST(upcastKey.getId() == derivedKey.getId());
+}
+
+BOOST_AUTO_TEST_CASE(KeyConvertPointers) {
+    using std::shared_ptr;
+
+    auto derivedKey = makeKey<shared_ptr<Derived>>(42);
+    Key<int, shared_ptr<Base>> upcastKey = derivedKey;
+    Key<int, shared_ptr<Derived const>> constDerivedKey = derivedKey;
+    Key<int, shared_ptr<Base const> const> constBaseKey = derivedKey;
+    // Key<int, shared_ptr<Derived const>> downcastKey = constBaseKey;  // Does not compile; base->derived
+    // Key<int, shared_ptr<Base>> baseKey2 = constBaseKey;           // Does not compile; lose const
+    Key<int, shared_ptr<Base const>> constBaseKey2 = constBaseKey;  // Ok; implies copy of pointer
+
+    BOOST_TEST(derivedKey != upcastKey);
+    BOOST_TEST(derivedKey.getId() == upcastKey.getId());
+    BOOST_TEST(derivedKey != constDerivedKey);
+    BOOST_TEST(derivedKey.getId() == constDerivedKey.getId());
+    BOOST_TEST(derivedKey != constBaseKey);
+    BOOST_TEST(derivedKey.getId() == constBaseKey.getId());
+    BOOST_TEST(constBaseKey2 != constBaseKey);
+    BOOST_TEST(constBaseKey2.getId() == constBaseKey.getId());
 }
 
 }  // namespace typehandling
