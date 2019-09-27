@@ -36,6 +36,7 @@
 #include "boost/variant.hpp"
 
 #include "lsst/pex/exceptions.h"
+#include "lsst/afw/typehandling/detail/type_traits.h"
 #include "lsst/afw/typehandling/Key.h"
 #include "lsst/afw/typehandling/Storable.h"
 #include "lsst/afw/typehandling/PolymorphicValue.h"
@@ -43,13 +44,6 @@
 namespace lsst {
 namespace afw {
 namespace typehandling {
-
-// Test for smart pointers as "any type with an element_type member"
-// Second template parameter is a dummy to let us do some metaprogramming
-template <typename, typename = void>
-constexpr bool IS_SMART_PTR = false;
-template <typename T>
-constexpr bool IS_SMART_PTR<T, std::enable_if_t<std::is_object<typename T::element_type>::value>> = true;
 
 /**
  * Interface for a heterogeneous map.
@@ -110,13 +104,13 @@ public:
      *
      * @{
      */
-    template <typename T, typename std::enable_if_t<!IS_SMART_PTR<T>, int> = 0>
+    template <typename T, typename std::enable_if_t<!detail::IS_SMART_PTR<T>, int> = 0>
     T& at(Key<K, T> const& key) {
         // Both casts are safe; see Effective C++, Item 3
         return const_cast<T&>(static_cast<const GenericMap&>(*this).at(key));
     }
 
-    template <typename T, typename std::enable_if_t<!IS_SMART_PTR<T>, int> = 0>
+    template <typename T, typename std::enable_if_t<!detail::IS_SMART_PTR<T>, int> = 0>
     T const& at(Key<K, T> const& key) const {
         // Delegate to private methods to hide further special-casing of T
         return _at(key);
