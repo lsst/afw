@@ -101,6 +101,7 @@ class MakeLimitedFitsHeaderTestCase(lsst.utils.tests.TestCase):
             ("LONGSTR", "skip this item because the formatted value "
                 "is too long: longer than 80 characters "),
             ("ASTRING1", "value for string"),
+            ("ANAN", float("NaN"))
         ]
         for name, value in dataList:
             metadata.set(name, value)
@@ -117,6 +118,7 @@ class MakeLimitedFitsHeaderTestCase(lsst.utils.tests.TestCase):
             "LONGFLT = 0.0089626337538440005",
             "ANUNDEF =",
             "ASTRING1= 'value for string'",
+            "ANAN    =",
         ]
         expectedHeader = "".join("%-80s" % val for val in expectedLines)
 

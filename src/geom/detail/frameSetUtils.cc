@@ -27,6 +27,9 @@
 #include <set>
 #include <sstream>
 #include <vector>
+#include <cmath>
+
+#include "boost/format.hpp"
 
 #include "astshim.h"
 
@@ -40,6 +43,7 @@
 #include "lsst/daf/base/PropertyList.h"
 #include "lsst/daf/base/PropertySet.h"
 #include "lsst/pex/exceptions.h"
+#include "lsst/log/Log.h"
 
 namespace lsst {
 namespace afw {
@@ -347,10 +351,21 @@ ast::FitsChan getFitsChanFromPropertyList(daf::base::PropertySet& metadata,
                 fc.setFitsI(name, static_cast<int>(metadata.get<std::uint8_t>(name)));
             } else if (type == typeid(int)) {
                 fc.setFitsI(name, metadata.get<int>(name));
-            } else if (type == typeid(double)) {
-                fc.setFitsF(name, metadata.get<double>(name));
-            } else if (type == typeid(float)) {
-                fc.setFitsF(name, static_cast<double>(metadata.get<float>(name)));
+            } else if (type == typeid(double) || type == typeid(float)) {
+                double value;
+                if (type == typeid(double)) {
+                    value = metadata.get<double>(name);
+                } else {
+                    value = static_cast<double>(metadata.get<float>(name));
+                }
+                // NaN is not allowed in a FitsChan (or in FITS)
+                if (!std::isnan(value)) {
+                    fc.setFitsF(name, value);
+                } else {
+                    // Treat it like an undefined value but warn about it
+                    LOGLS_WARN("afw.geom.frameSetUtils",
+                               boost::format("Found NaN in metadata item '%s'") % name);
+                }
             } else if (type == typeid(std::string)) {
                 std::string str = metadata.get<std::string>(name);
                 // No support for long strings yet so skip those

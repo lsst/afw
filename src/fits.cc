@@ -66,10 +66,28 @@ std::string makeLimitedFitsHeaderImpl(std::vector<std::string> const &paramNames
         } else if (type == typeid(int)) {
             out += (boost::format("%20d") % metadata.get<int>(name)).str();
         } else if (type == typeid(double)) {
-            // use G because FITS wants uppercase E for exponents
-            out += (boost::format("%#20.17G") % metadata.get<double>(name)).str();
+            double value = metadata.get<double>(name);
+            if (!std::isnan(value)) {
+                // use G because FITS wants uppercase E for exponents
+                out += (boost::format("%#20.17G") % value).str();
+            } else {
+                LOGLS_WARN("afw.fits",
+                           boost::format("In %s, found NaN in metadata item '%s'") %
+                                         BOOST_CURRENT_FUNCTION % name);
+                // Convert it to FITS undefined
+                out += " ";
+            }
         } else if (type == typeid(float)) {
-            out += (boost::format("%#20.15G") % metadata.get<float>(name)).str();
+            float value = metadata.get<float>(name);
+            if (!std::isnan(value)) {
+                out += (boost::format("%#20.15G") % value).str();
+            } else {
+                LOGLS_WARN("afw.fits",
+                           boost::format("In %s, found NaN in metadata item '%s'") %
+                                         BOOST_CURRENT_FUNCTION % name);
+                // Convert it to FITS undefined
+                out += " ";
+            }
         } else if (type == typeid(std::nullptr_t)) {
             out += " ";
         } else if (type == typeid(std::string)) {
