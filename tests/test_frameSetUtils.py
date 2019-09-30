@@ -73,6 +73,18 @@ class FrameSetUtilsTestCase(lsst.utils.tests.TestCase):
             metadata.getScalar("CRPIX2") + metadata.getScalar("CRVAL2A") - 1,
         )
 
+    def testIgnoreNan(self):
+        """Test that NaN in a property list does not crash the WCS extraction.
+        """
+        metadata = self.makeMetadata()
+        metadata["ISNAN"] = float("NaN")
+
+        # This will issue a warning from C++ but that warning can not be
+        # redirected to python logging machinery.
+        # This code causes a SIGABRT without DM-21355 implemented
+        frameSet1 = readFitsWcs(metadata, strip=False)
+        self.assertEqual(type(frameSet1), ast.FrameSet)
+
     def testReadFitsWcsStripMetadata(self):
         metadata = self.makeMetadata()
         nKeys = len(metadata.toList())
