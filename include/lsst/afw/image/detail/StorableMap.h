@@ -25,8 +25,11 @@
 #ifndef LSST_AFW_IMAGE_DETAIL_STORABLEMAP_H
 #define LSST_AFW_IMAGE_DETAIL_STORABLEMAP_H
 
+#include <exception>
 #include <memory>
+#include <sstream>
 #include <string>
+#include <type_traits>
 #include <unordered_map>
 #include <utility>
 
@@ -65,6 +68,10 @@ public:
     using pointer = value_type*;
     using const_pointer = value_type const*;
 
+    template <typename V>
+    using Key = lsst::afw::typehandling::Key<std::string, V>;
+    using Storable = lsst::afw::typehandling::Storable;
+
     StorableMap();
     StorableMap(StorableMap const& other);
     StorableMap(StorableMap&& other);
@@ -85,6 +92,51 @@ public:
      * @see std::map::map
      */
     StorableMap(std::initializer_list<value_type> init);
+
+    /**
+     * Return a the mapped value of the element with key equal to `key`.
+     *
+     * @tparam T the type of the element mapped to `key`. It may be the exact
+     *           type of the element, if known, or any type to which its
+     *           pointers can be implicitly converted (e.g., a superclass).
+     * @param key the key of the element to find
+     *
+     * @return a pointer to the `T` mapped to `key`, if one exists
+     *
+     * @throws pex::exceptions::OutOfRangeError Thrown if the map does not
+     *         have a `T` with the specified key.
+     * @exceptsafe Provides strong exception safety.
+     */
+    template <typename T>
+    std::shared_ptr<T> at(Key<std::shared_ptr<T>> const& key) const {
+        static_assert(std::is_base_of<Storable, T>::value,
+                      "Can only retrieve pointers to subclasses of Storable.");
+        static_assert(std::is_const<T>::value,
+                      "Due to implementation constraints, pointers to non-const are not supported.");
+        try {
+            // unordered_map::at(Key<Storable>) does not do any type-checking.
+            mapped_type const& pointer = _contents.at(key);
+
+            // Null pointer stored; skip dynamic_cast because won't change result.
+            if (pointer == nullptr) {
+                return nullptr;
+            }
+
+            std::shared_ptr<T> typedPointer = std::dynamic_pointer_cast<T>(pointer);
+            // shared_ptr can be empty without being null. dynamic_pointer_cast
+            // only promises result of failed cast is empty, so test for that.
+            if (typedPointer.use_count() > 0) {
+                return typedPointer;
+            } else {
+                std::stringstream message;
+                message << "Key " << key << " not found, but a key labeled " << key.getId() << " is present.";
+                throw LSST_EXCEPT(pex::exceptions::OutOfRangeError, message.str());
+            }
+        } catch (std::out_of_range const&) {
+            std::throw_with_nested(LSST_EXCEPT(pex::exceptions::OutOfRangeError,
+                                               "No key labeled " + key.getId() + " found."));
+        }
+    }
 
     /// Return the number of key-value pairs in the map.
     size_type size() const noexcept;

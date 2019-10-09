@@ -119,6 +119,33 @@ unique_ptr<StorableMap const> makePrefilledMap() {
 
 }  // namespace
 
+BOOST_AUTO_TEST_CASE(TestAt) {
+    auto demoMap = makePrefilledMap();
+
+    BOOST_TEST(demoMap->at(KEY_SIMPLE) == VALUE_SIMPLE);
+
+    BOOST_TEST(demoMap->at(KEY_COMPLEX) == VALUE_COMPLEX);
+    BOOST_TEST(demoMap->at(typehandling::makeKey<shared_ptr<typehandling::Storable const>>(
+                       KEY_COMPLEX.getId())) == VALUE_COMPLEX);
+
+    BOOST_TEST(demoMap->at(KEY_NULL) == VALUE_NULL);
+
+    BOOST_TEST(demoMap->at(KEY_MIXED) == VALUE_MIXED);
+    using ExactType = std::decay_t<decltype(VALUE_MIXED)>;
+    BOOST_TEST(demoMap->at(typehandling::makeKey<ExactType>(KEY_MIXED.getId())) == VALUE_MIXED);
+
+    BOOST_CHECK_THROW(
+            demoMap->at(typehandling::makeKey<shared_ptr<ComplexStorable const>>(KEY_SIMPLE.getId())),
+            pex::exceptions::OutOfRangeError);
+    BOOST_CHECK_THROW(demoMap->at(KEY_BAD), pex::exceptions::OutOfRangeError);
+
+    // None of these should compile, because they're not shared pointers to Storable const.
+    // demoMap->at(typehandling::makeKey<int>("InvalidKey"s));
+    // demoMap->at(typehandling::makeKey<SimpleStorable>("InvalidKey"s));
+    // demoMap->at(typehandling::makeKey<shared_ptr<SimpleStorable>>("InvalidKey"s));
+    // demoMap->at(typehandling::makeKey<shared_ptr<string const>>("InvalidKey"s));
+}
+
 BOOST_AUTO_TEST_CASE(TestEquals) {
     auto map1 = makePrefilledMap();
 
