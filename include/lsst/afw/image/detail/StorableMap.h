@@ -173,6 +173,44 @@ public:
     bool contains(std::string const& key) const;
 
     /**
+     * Return `true` if this map contains a mapping for the specified key.
+     *
+     * This is equivalent to testing whether `at(key)` would succeed.
+     *
+     * @tparam T the type of element being tested for
+     * @param key the key to search for
+     *
+     * @return `true` if this map contains a mapping from the specified key to
+     *         a `T`.
+     *
+     * @exceptsafe Provides strong exception safety.
+     *
+     */
+    template <typename T>
+    bool contains(Key<std::shared_ptr<T>> const& key) const {
+        static_assert(std::is_base_of<Storable, T>::value,
+                      "Can only retrieve pointers to subclasses of Storable.");
+        static_assert(std::is_const<T>::value,
+                      "Due to implementation constraints, pointers to non-const are not supported.");
+        if (_contents.count(key) > 0) {
+            // unordered_map::at(Key<Storable>) does not do any type-checking.
+            mapped_type const& pointer = _contents.at(key);
+
+            // Null pointer stored; dynamic_cast will always return null.
+            if (pointer == nullptr) {
+                return true;
+            }
+
+            std::shared_ptr<T> typedPointer = std::dynamic_pointer_cast<T>(pointer);
+            // shared_ptr can be empty without being null. dynamic_pointer_cast
+            // only promises result of failed cast is empty, so test for that.
+            return typedPointer.use_count() > 0;
+        } else {
+            return false;
+        }
+    }
+
+    /**
      * Test for map equality.
      *
      * Two StorableMap objects are considered equal if they map the same keys
