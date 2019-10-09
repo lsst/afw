@@ -288,6 +288,24 @@ public:
         return result;
     }
 
+    /**
+     * Remove the mapping for a key from this map, if it exists.
+     *
+     * @tparam T the type of value the key maps to
+     * @param key the key to remove
+     *
+     * @return `true` if `key` was removed, `false` if it was not present.
+     */
+    template <typename T>
+    bool erase(Key<T> const& key) noexcept {
+        // unordered_map::erase(Key<Storable>) does no type checking.
+        if (this->contains(key)) {
+            return _contents.erase(key) > 0;
+        } else {
+            return false;
+        }
+    }
+
 private:
     std::unordered_map<key_type, mapped_type> _contents;
 };
