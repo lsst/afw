@@ -231,6 +231,63 @@ public:
      */
     void clear() noexcept;
 
+    /**
+     * Insert an element into the map, if the map doesn't already contain a
+     * mapping with the same or a conflicting key.
+     *
+     * @tparam T the type of value to insert
+     * @param key the key to insert
+     * @param value the value to insert
+     *
+     * @return `true` if the insertion took place, `false` otherwise.
+     *
+     * @exceptsafe Provides strong exception safety.
+     *
+     * @note It is possible for a key with a value type other than `T` to
+     *       prevent insertion. Callers can safely assume
+     *       `this->contains(key.getId())` as a postcondition, but not
+     *       `this->contains(key)`.
+     */
+    template <typename T>
+    bool insert(Key<std::shared_ptr<T>> const& key, std::shared_ptr<T> const& value) {
+        static_assert(std::is_base_of<Storable, T>::value,
+                      "Can only store shared pointers to subclasses of Storable.");
+        static_assert(std::is_const<T>::value,
+                      "Due to implementation constraints, pointers to non-const are not supported.");
+        // unordered_map uses Key<shared_ptr<Storable>> internally, so
+        // any key with the same ID will block emplacement.
+        return _contents.emplace(key, value).second;
+    }
+
+    /**
+     * Insert an element into the map, if the map doesn't already contain a
+     * mapping with a conflicting key.
+     *
+     * @tparam T the type of value to insert (will not compile unless shared
+     *           pointer to a subclass of `Storable`)
+     * @param key the key to insert
+     * @param value the value to insert
+     *
+     * @return A pair consisting of a strongly-typed key for the value and a
+     *         flag that is `true` if the insertion took place and
+     *         `false` otherwise.
+     *
+     * @exceptsafe Provides strong exception safety.
+     *
+     * @warning The type of the compiler-generated key may be surprising.
+     *          Callers should save the returned key if they wish to retrieve
+     *          the value later.
+     */
+    template <typename T>
+    std::pair<Key<T>, bool> insert(std::string const& key, T const& value) {
+        auto strongKey = typehandling::makeKey<T>(key);
+        // Construct return value in advance, so that exception from
+        // copying/moving Key is atomic.
+        auto result = std::make_pair(strongKey, false);
+        result.second = insert(strongKey, value);
+        return result;
+    }
+
 private:
     std::unordered_map<key_type, mapped_type> _contents;
 };

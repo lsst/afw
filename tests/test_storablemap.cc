@@ -170,12 +170,129 @@ BOOST_AUTO_TEST_CASE(TestWeakContains) {
     BOOST_TEST(!demoMap->contains(KEY_BAD.getId()));
 }
 
+BOOST_AUTO_TEST_CASE(TestContains) {
+    auto demoMap = makePrefilledMap();
+
+    BOOST_TEST(demoMap->contains(KEY_SIMPLE));
+    BOOST_TEST(
+            !demoMap->contains(typehandling::makeKey<shared_ptr<OtherStorable const>>(KEY_SIMPLE.getId())));
+    BOOST_TEST(
+            !demoMap->contains(typehandling::makeKey<shared_ptr<ComplexStorable const>>(KEY_SIMPLE.getId())));
+
+    BOOST_TEST(demoMap->contains(KEY_COMPLEX));
+    BOOST_TEST(demoMap->contains(
+            typehandling::makeKey<shared_ptr<typehandling::Storable const>>(KEY_COMPLEX.getId())));
+
+    BOOST_TEST(demoMap->contains(KEY_NULL));
+    // While KEY_NULL did not insert ComplexStorable, the value is nullptr, which is valid shared_ptr<Complex>
+    BOOST_TEST(demoMap->contains(typehandling::makeKey<shared_ptr<ComplexStorable const>>(KEY_NULL.getId())));
+
+    BOOST_TEST(demoMap->contains(KEY_MIXED));
+    using ExactType = std::decay_t<decltype(VALUE_MIXED)>;
+    BOOST_TEST(demoMap->contains(typehandling::makeKey<ExactType>(KEY_MIXED.getId())));
+
+    BOOST_TEST(!demoMap->contains(KEY_BAD));
+
+    // None of these should compile, because they're not shared pointers to Storable const.
+    // demoMap->contains(typehandling::makeKey<int>("InvalidKey"s));
+    // demoMap->contains(typehandling::makeKey<SimpleStorable>("InvalidKey"s));
+    // demoMap->contains(typehandling::makeKey<shared_ptr<SimpleStorable>>("InvalidKey"s));
+    // demoMap->contains(typehandling::makeKey<shared_ptr<string const>>("InvalidKey"s));
+}
+
 BOOST_AUTO_TEST_CASE(TestClearIdempotent) {
     auto demoMap = make_unique<StorableMap>();
 
     BOOST_TEST_REQUIRE(demoMap->empty());
     demoMap->clear();
     BOOST_TEST(demoMap->empty());
+}
+
+BOOST_AUTO_TEST_CASE(TestClear) {
+    auto demoMap = make_unique<StorableMap>();
+
+    demoMap->insert(typehandling::makeKey<shared_ptr<ComplexStorable const>>("prime"s),
+                    make_shared<ComplexStorable const>(3.0));
+    demoMap->insert(typehandling::makeKey<shared_ptr<SimpleStorable const>>("foo"s),
+                    make_shared<SimpleStorable const>());
+
+    BOOST_TEST_REQUIRE(!demoMap->empty());
+    demoMap->clear();
+    BOOST_TEST(demoMap->empty());
+}
+
+BOOST_AUTO_TEST_CASE(TestInsertStorable) {
+    auto demoMap = make_unique<StorableMap>();
+
+    BOOST_TEST_REQUIRE(demoMap->empty());
+
+    auto pointer = make_shared<ComplexStorable>(3.1416);
+    BOOST_TEST(demoMap->insert<typehandling::Storable const>(
+                       typehandling::makeKey<shared_ptr<typehandling::Storable const>>("foo"s), pointer) ==
+               true);
+    BOOST_TEST(demoMap->insert(typehandling::makeKey<shared_ptr<ComplexStorable const>>("bar"s),
+                               make_shared<ComplexStorable const>(2.72)) == true);
+    BOOST_TEST(demoMap->insert<typehandling::Storable const>(
+                       typehandling::makeKey<shared_ptr<typehandling::Storable const>>("foo"s),
+                       make_shared<SimpleStorable>()) == false);
+    BOOST_TEST(demoMap->insert(typehandling::makeKey<shared_ptr<SimpleStorable const>>("bar"s),
+                               make_shared<SimpleStorable const>()) == false);
+    BOOST_TEST(demoMap->insert(typehandling::makeKey<shared_ptr<SimpleStorable const>>("null"s),
+                               make_shared<SimpleStorable const>()) == true);
+
+    BOOST_TEST(!demoMap->empty());
+    BOOST_TEST(demoMap->size() == 3);
+    BOOST_TEST(demoMap->contains("foo"s));
+    BOOST_TEST(demoMap->contains(typehandling::makeKey<shared_ptr<typehandling::Storable const>>("foo"s)));
+    BOOST_TEST(demoMap->contains(typehandling::makeKey<shared_ptr<ComplexStorable const>>("bar"s)));
+    BOOST_TEST(demoMap->contains(typehandling::makeKey<shared_ptr<SimpleStorable const>>("null"s)));
+
+    // ComplexStorable::operator== is asymmetric
+    BOOST_TEST(*pointer == *(demoMap->at(typehandling::makeKey<shared_ptr<SimpleStorable const>>("foo"s))));
+    pointer.reset(new ComplexStorable(1.4));
+    BOOST_TEST(*pointer != *(demoMap->at(typehandling::makeKey<shared_ptr<SimpleStorable const>>("foo"s))));
+    BOOST_TEST(ComplexStorable(3.1416) ==
+               *(demoMap->at(typehandling::makeKey<shared_ptr<SimpleStorable const>>("foo"s))));
+    BOOST_TEST(*(demoMap->at(typehandling::makeKey<shared_ptr<ComplexStorable const>>("bar"s))) ==
+               ComplexStorable(2.72));
+
+    // None of these should compile, because they're not shared pointers to Storable const.
+    // demoMap->insert(typehandling::makeKey<int>("InvalidKey"s), 42);
+    // demoMap->insert(typehandling::makeKey<SimpleStorable>("InvalidKey"s), SimpleStorable());
+    // demoMap->insert(typehandling::makeKey<shared_ptr<SimpleStorable>>("InvalidKey"s),
+    //                 make_shared<SimpleStorable>());
+    // demoMap->insert(typehandling::makeKey<shared_ptr<string const>>("InvalidKey"s),
+    //                 make_shared<string const>("Pointy string"));
+    // demoMap->insert("InvalidKey"s, 42);
+    // demoMap->insert("InvalidKey"s, SimpleStorable());
+    // demoMap->insert("InvalidKey"s, make_shared<SimpleStorable>());
+    // demoMap->insert("InvalidKey"s, make_shared<string const>("Pointy string"));
+}
+
+BOOST_AUTO_TEST_CASE(TestInterleavedInserts) {
+    auto demoMap = make_unique<StorableMap>();
+
+    BOOST_TEST_REQUIRE(demoMap->empty());
+
+    BOOST_TEST(demoMap->insert("key1"s, make_shared<SimpleStorable const>()).second == true);
+    BOOST_TEST(demoMap->insert("key1"s, make_shared<ComplexStorable const>(1.0)).second == false);
+    BOOST_TEST(demoMap->insert<typehandling::Storable const>(
+                       typehandling::makeKey<shared_ptr<typehandling::Storable const>>("key2"s),
+                       make_shared<SimpleStorable>()) == true);
+    BOOST_TEST(demoMap->insert("key3"s, make_shared<ComplexStorable const>(3.0)).second == true);
+    BOOST_TEST(demoMap->insert("key4"s, make_shared<ComplexStorable const>(42.0)).second == true);
+    BOOST_TEST(demoMap->insert("key3"s, make_shared<OtherStorable const>()).second == false);
+
+    BOOST_TEST(!demoMap->empty());
+    BOOST_TEST(demoMap->size() == 4);
+    BOOST_TEST(*(demoMap->at(typehandling::makeKey<shared_ptr<ComplexStorable const>>("key4"s))) ==
+               ComplexStorable(42.0));
+    BOOST_TEST(*(demoMap->at(typehandling::makeKey<shared_ptr<SimpleStorable const>>("key1"s))) ==
+               SimpleStorable());
+    BOOST_TEST(*(demoMap->at(typehandling::makeKey<shared_ptr<ComplexStorable const>>("key3"s))) ==
+               ComplexStorable(3.0));
+    BOOST_TEST(*(demoMap->at(typehandling::makeKey<shared_ptr<SimpleStorable const>>("key2"s))) ==
+               SimpleStorable());
 }
 
 }  // namespace detail
