@@ -252,7 +252,7 @@ public:
         static_assert(std::is_base_of<typehandling::Storable, T>::value, "T must be a Storable");
         // "No data" always represented internally by absent key-value pair, not by mapping to null
         if (object != nullptr) {
-            _setStorableComponent(key, object);
+            _setComponent(key, object);
         } else {
             removeComponent(key);
         }
@@ -426,7 +426,8 @@ private:
 
     // Implementation of setComponent
     template <class T>
-    void _setStorableComponent(typehandling::Key<std::string, T> const& key, T const& object) {
+    void _setComponent(typehandling::Key<std::string, std::shared_ptr<T>> const& key,
+                       std::shared_ptr<T> const& object) {
         if (_components->contains(key)) {
             _components->erase(key);
         } else if (_components->contains(key.getId())) {
