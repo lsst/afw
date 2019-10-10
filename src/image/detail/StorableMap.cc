@@ -53,6 +53,16 @@ bool StorableMap::operator==(StorableMap const& other) const noexcept { return _
 
 void StorableMap::clear() noexcept { _contents.clear(); }
 
+StorableMap::const_iterator StorableMap::begin() const noexcept {
+    return StorableMap::const_iterator(_contents.begin());
+}
+StorableMap::const_iterator StorableMap::end() const noexcept {
+    return StorableMap::const_iterator(_contents.end());
+};
+
+StorableMap::iterator StorableMap::begin() noexcept { return StorableMap::iterator(_contents.begin()); };
+StorableMap::iterator StorableMap::end() noexcept { return StorableMap::iterator(_contents.end()); };
+
 }  // namespace detail
 }  // namespace image
 }  // namespace afw

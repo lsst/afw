@@ -68,6 +68,17 @@ public:
     using pointer = value_type*;
     using const_pointer = value_type const*;
 
+private:
+    using _Impl = std::unordered_map<key_type, mapped_type>;
+
+public:
+    // These definitions may be replaced with adapters if we need
+    // StorableMap's iterators to behave differently from _Impl's.
+    using const_iterator = _Impl::const_iterator;
+    using iterator = _Impl::iterator;
+    using reverse_iterator = std::reverse_iterator<iterator>;
+    using const_reverse_iterator = std::reverse_iterator<const_iterator>;
+
     template <typename V>
     using Key = lsst::afw::typehandling::Key<std::string, V>;
     using Storable = lsst::afw::typehandling::Storable;
@@ -306,8 +317,36 @@ public:
         }
     }
 
+    /**
+     * Return an iterator to the first element of the map.
+     *
+     * @return An iterator that dereferences to a value_type, i.e. a pair of
+     *         `const` Key and shared pointer to `const` Storable.
+     *
+     * @{
+     */
+    iterator begin() noexcept;
+    const_iterator begin() const noexcept;
+    const_iterator cbegin() const noexcept { return begin(); }
+
+    /** @} */
+
+    /**
+     * Return an iterator to the element past the end of the map.
+     *
+     * @return An iterator that dereferences to a value_type, i.e. a pair of
+     *         `const` Key and shared pointer to `const` Storable.
+     *
+     * @{
+     */
+    iterator end() noexcept;
+    const_iterator end() const noexcept;
+    const_iterator cend() const noexcept { return end(); }
+
+    /** @} */
+
 private:
-    std::unordered_map<key_type, mapped_type> _contents;
+    _Impl _contents;
 };
 
 }  // namespace detail

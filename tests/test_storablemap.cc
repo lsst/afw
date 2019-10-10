@@ -381,6 +381,51 @@ BOOST_AUTO_TEST_CASE(TestInsertEraseInsert) {
                ComplexStorable(PI));
 }
 
+BOOST_AUTO_TEST_CASE(TestIteration) {
+    // Copy to get a non-const map.
+    StorableMap map = *makePrefilledMap();
+
+    shared_ptr<typehandling::Storable const> dummy = make_shared<OtherStorable>();
+
+    for (auto& keyValue : map) {
+        auto& value = keyValue.second;
+
+        if (value == nullptr) {
+            value = dummy;
+        }
+    }
+
+    for (auto it = begin(map); it != end(map); ++it) {
+        auto& key = it->first;
+        auto& value = it->second;
+
+        if (key == KEY_NULL) {
+            BOOST_TEST(value == dummy);
+        } else {
+            BOOST_TEST(value != dummy);
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(TestConstIteration) {
+    unique_ptr<StorableMap const> map = makePrefilledMap();
+
+    unordered_map<string, string> expected({make_pair(KEY_SIMPLE.getId(), VALUE_SIMPLE->toString()),
+                                            make_pair(KEY_COMPLEX.getId(), VALUE_COMPLEX->toString()),
+                                            make_pair(KEY_NULL.getId(), "null"),
+                                            make_pair(KEY_MIXED.getId(), VALUE_MIXED->toString())});
+
+    unordered_map<string, string> result;
+    for (auto it = cbegin(*map); it != cend(*map); ++it) {
+        auto const& key = it->first;
+        auto const& value = it->second;
+
+        result.emplace(key.getId(), value ? value->toString() : "null");
+    }
+
+    BOOST_TEST(expected == result);
+}
+
 }  // namespace detail
 }  // namespace image
 }  // namespace afw
