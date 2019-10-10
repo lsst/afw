@@ -32,7 +32,7 @@
 #include "lsst/afw/table/io/OutputArchive.h"
 #include "lsst/afw/image/CoaddInputs.h"
 #include "lsst/afw/image/VisitInfo.h"
-#include "lsst/afw/typehandling/GenericMap.h"
+#include "lsst/afw/image/detail/StorableMap.h"
 
 namespace lsst {
 namespace afw {
@@ -246,8 +246,6 @@ public:
      *       compatibility with old ExposureInfo idioms, which often use
      *       assignment of null to indicate no data.
      */
-    // non-shared_ptr components are incompatible with table::io,
-    // they may be supported later
     template <class T>
     void setComponent(typehandling::Key<std::string, std::shared_ptr<T>> const& key,
                       std::shared_ptr<T> const& object) {
@@ -424,17 +422,9 @@ private:
      */
     void _finishWriteFits(fits::Fits& fitsfile, FitsWriteData const& data) const;
 
-    /**
-     * GenericMap visitor for saving Storable objects
-     *
-     * Consistent with ExposureInfo's original behavior, any Storables that are
-     * not persistable are silently ignored.
-     */
-    class StorablePersister;
-
     static std::shared_ptr<ApCorrMap> _cloneApCorrMap(std::shared_ptr<ApCorrMap const> apCorrMap);
 
-    // Implementation of setComponent, assumes T extends Storable or T = shared_ptr<? extends Storable>
+    // Implementation of setComponent
     template <class T>
     void _setStorableComponent(typehandling::Key<std::string, T> const& key, T const& object) {
         if (_components->contains(key)) {
@@ -461,11 +451,8 @@ private:
     std::shared_ptr<daf::base::PropertySet> _metadata;
     std::shared_ptr<image::VisitInfo const> _visitInfo;
 
-    // Class invariant: all values in _components are shared_ptr<Storable>
-    // This is required for table::io persistence to work correctly;
-    //     other persistence frameworks may let us support other types
     // Class invariant: all pointers in _components are not null
-    std::unique_ptr<typehandling::MutableGenericMap<std::string>> _components;
+    std::unique_ptr<detail::StorableMap> _components;
 };
 }  // namespace image
 }  // namespace afw

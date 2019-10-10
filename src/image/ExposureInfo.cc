@@ -33,14 +33,13 @@
 #include "lsst/afw/cameraGeom/Detector.h"
 #include "lsst/afw/image/TransmissionCurve.h"
 #include "lsst/afw/fits.h"
-#include "lsst/afw/typehandling/SimpleGenericMap.h"
 
 using namespace std::string_literals;
 
 namespace {
 LOG_LOGGER _log = LOG_GET("afw.image.ExposureInfo");
 
-using MapClass = lsst::afw::typehandling::SimpleGenericMap<std::string>;
+using MapClass = lsst::afw::image::detail::StorableMap;
 }  // namespace
 
 namespace lsst {
@@ -224,39 +223,15 @@ int ExposureInfo::_addToArchive(FitsWriteData& data,
     return componentId;
 }
 
-class ExposureInfo::StorablePersister final {
-public:
-    explicit StorablePersister(FitsWriteData& data) : data(data) {}
+// Standardized strings for _startWriteFits
+namespace {
+std::string _getOldHeaderKey(std::string mapKey) { return mapKey + "_ID"; }
+std::string _getNewHeaderKey(std::string mapKey) { return "ARCHIVE_ID_" + mapKey; }
 
-    void operator()(std::string key, std::shared_ptr<typehandling::Storable const> const& object) {
-        if (object && object->isPersistable()) {
-            std::string comment = _getHeaderComment(key);
-            // Store archive ID in two header keys:
-            //     - old-style key for backwards compatibility,
-            //     - and new-style key because it's much safer to parse
-            int id = _addToArchive(data, object, _getOldHeaderKey(key), comment);
-            data.metadata->set(_getNewHeaderKey(key), id, comment);
-        }
-    }
-
-    template <typename T>
-    void operator()(std::string key, T const&) {
-        std::stringstream buffer;
-        buffer << "ExposureInfo::_components may only contain shared_ptr<Storable> values. "
-               << "Invalid key: " << key;
-        throw LSST_EXCEPT(pex::exceptions::LogicError, buffer.str());
-    }
-
-private:
-    std::string _getOldHeaderKey(std::string mapKey) { return mapKey + "_ID"; }
-    std::string _getNewHeaderKey(std::string mapKey) { return "ARCHIVE_ID_" + mapKey; }
-
-    std::string _getHeaderComment(std::string mapKey) {
-        return "archive ID for generic component '" + mapKey + "'";
-    }
-
-    FitsWriteData& data;
-};
+std::string _getHeaderComment(std::string mapKey) {
+    return "archive ID for generic component '" + mapKey + "'";
+}
+}  // namespace
 
 ExposureInfo::FitsWriteData ExposureInfo::_startWriteFits(lsst::geom::Point2I const& xy0) const {
     FitsWriteData data;
@@ -277,7 +252,19 @@ ExposureInfo::FitsWriteData ExposureInfo::_startWriteFits(lsst::geom::Point2I co
     // this is still the case so we're setting AR_HDU to 5 == 4 + 1
     //
     data.metadata->set("AR_HDU", 5, "HDU (1-indexed) containing the archive used to store ancillary objects");
-    _components->apply(StorablePersister(data));
+    for (auto const& keyValue : *_components) {
+        std::string const& key = keyValue.first.getId();
+        std::shared_ptr<typehandling::Storable const> const& object = keyValue.second;
+
+        if (object && object->isPersistable()) {
+            std::string comment = _getHeaderComment(key);
+            // Store archive ID in two header keys:
+            //     - old-style key for backwards compatibility,
+            //     - and new-style key because it's much safer to parse
+            int id = _addToArchive(data, object, _getOldHeaderKey(key), comment);
+            data.metadata->set(_getNewHeaderKey(key), id, comment);
+        }
+    }
 
     // LSST convention is that Wcs is in pixel coordinates (i.e relative to bottom left
     // corner of parent image, if any). The Wcs/Fits convention is that the Wcs is in
