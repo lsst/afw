@@ -32,13 +32,3 @@ ReadoutCornerValNameDict = {
 }
 ReadoutCornerNameValDict = {val: key for key, val in
                             ReadoutCornerValNameDict.items()}
-
-
-@continueClass  # noqa: F811
-class Amplifier:
-    def getDataBBox(self):
-        myState = self.getAssemblyState()
-        if myState == AssemblyState.SCIENCE:
-            return self.getBBox()
-        else:
-            return self.getRawDataBBox()
