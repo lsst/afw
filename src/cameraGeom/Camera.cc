@@ -31,35 +31,6 @@ namespace cameraGeom {
 
 namespace {
 
-/**
- * Get a transform from one TransformMap
- *
- * `fromSys` and `toSys` must both be present in the same TransformMap, but that TransformMap may be from
- *    any detector or this camera object.
- *
- * @param[in] fromSys  Camera coordinate system of input points
- * @param[in] toSys  Camera coordinate system of returned points
- * @returns an afw::geom::TransformPoint2ToPoint2 that transforms from `fromSys` to `toSys` in the forward
- *    direction
- *
- * @throws lsst::pex::exceptions::InvalidParameter if no transform is available.  This includes the case that
- *    `fromSys` specifies a known detector and `toSys` specifies any other detector (known or unknown)
- * @throws KeyError if an unknown detector is specified
- */
-std::shared_ptr<afw::geom::TransformPoint2ToPoint2> getTransformFromOneTransformMap(
-    Camera const &camera, CameraSys const &fromSys, CameraSys const &toSys) {
-
-    if (fromSys.hasDetectorName()) {
-        auto det = camera[fromSys.getDetectorName()];
-        return det->getTransformMap()->getTransform(fromSys, toSys);
-    } else if (toSys.hasDetectorName()) {
-        auto det = camera[toSys.getDetectorName()];
-        return det->getTransformMap()->getTransform(fromSys, toSys);
-    } else {
-        return camera.getTransformMap()->getTransform(fromSys, toSys);
-    }
-}
-
 // Set this as a function to ensure FOCAL_PLANE is defined before use.
 CameraSys const getNativeCameraSys() { return FOCAL_PLANE; }
 
@@ -73,14 +44,12 @@ Camera::Builder Camera::rebuild() const {
 
 Camera::DetectorList Camera::findDetectors(lsst::geom::Point2D const &point,
                                            CameraSys const &cameraSys) const {
-    auto transform = getTransformFromOneTransformMap(*this, cameraSys, getNativeCameraSys());
-    auto nativePoint = transform->applyForward(point);
+    auto nativePoint = transform(point, cameraSys, getNativeCameraSys());
 
     DetectorList detectorList;
     for (auto const &item : getIdMap()) {
         auto detector = item.second;
-        auto nativeToPixels = detector->getTransform(getNativeCameraSys(), PIXELS);
-        auto pointPixels = nativeToPixels->applyForward(nativePoint);
+        auto pointPixels = detector->transform(nativePoint, getNativeCameraSys(), PIXELS);
         if (lsst::geom::Box2D(detector->getBBox()).contains(pointPixels)) {
             detectorList.push_back(std::move(detector));
         }
