@@ -172,6 +172,8 @@ PyBaseTable declareBaseTable(WrapperCollection &wrappers) {
 }  // namespace
 
 void wrapBase(WrapperCollection &wrappers) {
+    wrappers.addSignatureDependency("lsst.daf.base");
+
     auto clsBaseTable = declareBaseTable(wrappers);
     auto clsBaseRecord = declareBaseRecord(wrappers);
     auto clsBaseCatalog = table::python::declareCatalog<BaseRecord>(wrappers, "Base");
