@@ -112,7 +112,7 @@ public:
               _maskPropagationThresholds() {
         try {
             _noGoodPixelsMask = lsst::afw::image::Mask<>::getPlaneBitMask("NO_DATA");
-        } catch (lsst::pex::exceptions::InvalidParameterError) {
+        } catch (lsst::pex::exceptions::InvalidParameterError const &) {
             ;  // Mask has no NO_DATA plane defined
         }
 
