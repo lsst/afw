@@ -78,7 +78,6 @@ class DetectorConfig(pexConfig.Config):
     )
 
     # Accessors to get "compiled" versions of parameters.
-    @property
     def getCrosstalk(self, numAmps):
         """Return a 2-D numpy array of crosstalk coefficients of the proper shape"""
         if not self.crosstalk:
@@ -92,7 +91,7 @@ class DetectorConfig(pexConfig.Config):
             raise RuntimeError("Cannot reshape 'crosstalk' coefficients to square matrix: %s" % (e,))
 
     @property
-    def getBBox(self):
+    def bbox(self):
         """Return the detector bounding box from the separate box endpoint
         values.
         """
@@ -100,31 +99,31 @@ class DetectorConfig(pexConfig.Config):
                          geom.PointI(self.bbox_x1, self.bbox_y1))
 
     @property
-    def getOffset(self):
+    def offset(self):
         """Return the detector offset as a Point2D from the separate config
         values.
         """
         return geom.Point2D(self.offset_x, self.offset_y)
 
     @property
-    def getRefPos(self):
+    def refPos(self):
         """Return the detector reference position as a Point2D from the
         separate config values.
         """
         return geom.Point2D(self.refpos_x, self.refpos_y)
 
     @property
-    def getOrientation(self):
+    def orientation(self):
         """Return the cameraGeom.Orientation() object defined by the
         configuration values.
         """
-        return Orientation(self.getOffset, self.getRefPos,
+        return Orientation(self.offset, self.refPos,
                            geom.Angle(self.yawDeg, geom.degrees),
                            geom.Angle(self.pitchDeg, geom.degrees),
                            geom.Angle(self.rollDeg, geom.degrees))
 
     @property
-    def getPixelSize(self):
+    def pixelSize(self):
         """Return the pixel size as an Extent2D from the separate values.
         """
         return geom.Extent2D(self.pixelSize_x, self.pixelSize_y)
