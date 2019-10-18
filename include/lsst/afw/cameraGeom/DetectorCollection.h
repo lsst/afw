@@ -124,7 +124,7 @@ protected:
     /**
      * Add a detector to the collection.
      *
-     * @param[in] New detector to add to the collection.
+     * @param[in] detector  New detector to add to the collection.
      *
      * @throw pex::exceptions::RuntimeError  Thrown if the ID and/or name
      *     conflict with those of detectors already in the collection.

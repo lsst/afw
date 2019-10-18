@@ -803,7 +803,7 @@ def getCcdInCamBBoxList(ccdList, binSize, pixelSize_o, origin):
 
     Returns
     -------
-    boxList : `list` of `lsst.geom.Box2I`
+    boxList : `list` [`lsst.geom.Box2I`]
         A list of bounding boxes in camera pixel coordinates.
     """
     boxList = []
@@ -869,7 +869,7 @@ def makeImageFromCamera(camera, detectorNameList=None, background=numpy.nan, buf
     ----------
     camera : `lsst.afw.cameraGeom.Camera`
         Camera object to use to make the image.
-    detectorNameList : `list` of `str`
+    detectorNameList : `list` [`str`]
         List of detector names from ``camera`` to use in building the image.
         Use all Detectors if `None`.
     background : `float`
@@ -947,7 +947,7 @@ def showCamera(camera, imageSource=FakeImageDataSource(), imageFactory=afwImage.
         Source to get ccd images.  Must have a ``getCcdImage()`` method.
     imageFactory : `lsst.afw.image.Image`
         Type of image to make
-    detectorNameList : `list` of `str` or `None`
+    detectorNameList : `list` [`str`] or `None`
         List of detector names from `camera` to use in building the image.
         Use all Detectors if `None`.
     binSize : `int`

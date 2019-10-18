@@ -223,10 +223,15 @@ private:
         rawPrescanBBox(
             AmpInfoBoxKey::addFields(schema, "raw_prescanbbox",
                                      "usable (horizontal) prescan bbox on raw image", "pixel")),
-        linearityThreshold(schema.addField<double>("linearityThreshold", "TODO! NEVER DOCUMENTED")),
-        linearityMaximum(schema.addField<double>("linearityMaximum", "TODO! NEVER DOCUMENTED")),
-        linearityUnits(schema.addField<std::string>("linearityUnits", "TODO! NEVER DOCUMENTED", "", 0))
-    {}
+        linearityThreshold(schema.addField<double>("linearityThreshold",
+                                                   "Minimum ADU level to apply linearity.")),
+        linearityMaximum(schema.addField<double>("linearityMaximum",
+                                                 "Maximum ADU level to apply linearity.")),
+        linearityUnits(schema.addField<std::string>("linearityUnits",
+                                                    "Input units for linearity relation.", "", 0))
+    {
+
+    }
 
 };
 

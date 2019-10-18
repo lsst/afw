@@ -126,7 +126,7 @@ def makeTransformDict(transformConfigDict):
 
     Returns
     -------
-    transforms : `dict`
+    transforms : `dict` [`CameraSys` or `CameraSysPrefix`, `lsst.afw.geom.Transform`]
         A dict of CameraSys or CameraSysPrefix: lsst.afw.geom.Transform
     """
     resMap = dict()
