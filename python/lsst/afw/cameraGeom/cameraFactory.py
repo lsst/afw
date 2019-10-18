@@ -19,7 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-__all__ = ["addDetectorBuilderFromConfig", "addDetectorFromConfig",
+__all__ = ["addDetectorBuilderFromConfig",
            "makeCameraFromPath", "makeCameraFromAmpLists"]
 
 import os.path
@@ -94,26 +94,6 @@ def addDetectorBuilderFromConfig(cameraBuilder, detectorConfig, amplifiers, foca
     detectorBuilder.setCrosstalk(detectorConfig.getCrosstalk(len(amplifiers)))
 
     return detectorBuilder
-
-
-def addDetectorFromConfig(cameraBuilder, detectorConfig, amplifiers, focalPlaneToField):
-    return addDetectorBuilderFromConfig(cameraBuilder, detectorConfig, amplifiers, focalPlaneToField)
-
-
-def makeOrientation(detectorConfig):
-    """Make an Orientation instance from a detector config
-
-    Parameters
-    ----------
-    detectorConfig : `lsst.pex.config.Config`
-        Configuration for this detector.
-
-    Returns
-    -------
-    orientation : `lsst.afw.cameraGeom.Orientation`
-        Location and rotation of the Detector.
-    """
-    return detectorConfig.getOrientation()
 
 
 def makeTransformDict(transformConfigDict):
