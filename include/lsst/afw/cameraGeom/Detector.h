@@ -383,7 +383,7 @@ public:
     /**
      * Set the detector's physical type.
      *
-     * @copydetail DetectorBase::getPhysicalType
+     * @copydetails DetectorBase::getPhysicalType
      */
     void setPhysicalType(std::string const & physicalType) { _fields.physicalType = physicalType; }
 

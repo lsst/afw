@@ -83,7 +83,6 @@ class DetectorConfig(pexConfig.Config):
         if not self.crosstalk:
             return None
 
-        # CZW: Should this be here, or is obs_lsst just not setting numAmps correctly?
         if numAmps != int(np.sqrt(len(self.crosstalk))):
             numAmps = int(np.sqrt(len(self.crosstalk)))
         try:

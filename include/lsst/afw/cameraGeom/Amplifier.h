@@ -144,13 +144,18 @@ public:
     /// Name of linearity parameterization.
     std::string getLinearityType() const { return getFields().linearityType; }
 
-    /// # TODO! NEVER DOCUMENTED!
+    /** Level in ADU above which linearity should be applied.  This should
+     *  be set to 0.0 if no other value is known.
+     */
     double getLinearityThreshold() const { return getFields().linearityThreshold; }
 
-    /// # TODO! NEVER DOCUMENTED!
+    /**
+     *  Level in ADU above which the linearity relation is poorly defined.
+     *  Should be set to the saturation level if no other value is known.
+     */
     double getLinearityMaximum() const { return getFields().linearityMaximum; }
 
-    /// # TODO! NEVER DOCUMENTED!
+    /// Units for the input to the linearity relation (DN).
     std::string getLinearityUnits() const { return getFields().linearityUnits; }
 
     /// Does this table have raw amplifier information?
