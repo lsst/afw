@@ -866,6 +866,13 @@ Schema FitsSchemaInputMapper::finalize() {
         }
     }
     _impl->asList().clear();
+    if (_impl->schema.getRecordSize() <= 0) {
+        throw LSST_EXCEPT(
+            pex::exceptions::LengthError,
+            (boost::format("Non-positive record size: %d; file is corrupt or invalid.") %
+            _impl->schema.getRecordSize()).str()
+        );
+    }
     _impl->nRowsToPrep = std::max(PREPPED_ROWS_FACTOR / _impl->schema.getRecordSize(), std::size_t(1));
     return _impl->schema;
 }
