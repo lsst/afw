@@ -65,7 +65,7 @@ public:
      *
      * @see makeKey
      */
-    constexpr Key(K id) : id(id) {}
+    constexpr explicit Key(K id) : id(id) {}
 
     Key(Key const&) = default;
     Key(Key&&) = default;
