@@ -47,8 +47,6 @@ namespace typehandling {
  * Key objects are equality-comparable, hashable, sortable, or printable if and only if `K` is comparable,
  * hashable, sortable, or printable, respectively. Key can be used in compile-time expressions if and only
  * if `K` can (in particular, `Key<std::string, V>` cannot).
- *
- * @note Objects of this type are immutable.
  */
 template <typename K, typename V>
 class Key final {
@@ -71,8 +69,8 @@ public:
 
     Key(Key const&) = default;
     Key(Key&&) = default;
-    Key& operator=(Key const&) = delete;
-    Key& operator=(Key&&) = delete;
+    Key& operator=(Key const&) = default;
+    Key& operator=(Key&&) = default;
 
     /**
      * Convert a key to a different key that could retrieve the same values.
@@ -152,7 +150,7 @@ public:
 
 private:
     /** The logical key. */
-    K const id;
+    K id;
 };
 
 /**
