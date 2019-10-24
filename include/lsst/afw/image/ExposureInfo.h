@@ -1,10 +1,12 @@
 // -*- LSST-C++ -*- // fixed format comment for emacs
 /*
- * LSST Data Management System
- * Copyright 2008-2013 LSST Corporation.
+ * This file is part of afw.
  *
- * This product includes software developed by the
- * LSST Project (http://www.lsst.org/).
+ * Developed for the LSST Data Management System.
+ * This product includes software developed by the LSST Project
+ * (https://www.lsst.org).
+ * See the COPYRIGHT file at the top-level directory of this distribution
+ * for details of code ownership.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,9 +18,8 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the LSST License Statement and
- * the GNU General Public License along with this program.  If not,
- * see <http://www.lsstcorp.org/LegalNotices/>.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #ifndef LSST_AFW_IMAGE_ExposureInfo_h_INCLUDED
@@ -31,7 +32,7 @@
 #include "lsst/afw/table/io/OutputArchive.h"
 #include "lsst/afw/image/CoaddInputs.h"
 #include "lsst/afw/image/VisitInfo.h"
-#include "lsst/afw/typehandling/GenericMap.h"
+#include "lsst/afw/image/detail/StorableMap.h"
 
 namespace lsst {
 namespace afw {
@@ -245,15 +246,13 @@ public:
      *       compatibility with old ExposureInfo idioms, which often use
      *       assignment of null to indicate no data.
      */
-    // non-shared_ptr components are incompatible with table::io,
-    // they may be supported later
     template <class T>
     void setComponent(typehandling::Key<std::string, std::shared_ptr<T>> const& key,
                       std::shared_ptr<T> const& object) {
         static_assert(std::is_base_of<typehandling::Storable, T>::value, "T must be a Storable");
         // "No data" always represented internally by absent key-value pair, not by mapping to null
         if (object != nullptr) {
-            _setStorableComponent(key, object);
+            _setComponent(key, object);
         } else {
             removeComponent(key);
         }
@@ -423,19 +422,12 @@ private:
      */
     void _finishWriteFits(fits::Fits& fitsfile, FitsWriteData const& data) const;
 
-    /**
-     * GenericMap visitor for saving Storable objects
-     *
-     * Consistent with ExposureInfo's original behavior, any Storables that are
-     * not persistable are silently ignored.
-     */
-    class StorablePersister;
-
     static std::shared_ptr<ApCorrMap> _cloneApCorrMap(std::shared_ptr<ApCorrMap const> apCorrMap);
 
-    // Implementation of setComponent, assumes T extends Storable or T = shared_ptr<? extends Storable>
+    // Implementation of setComponent
     template <class T>
-    void _setStorableComponent(typehandling::Key<std::string, T> const& key, T const& object) {
+    void _setComponent(typehandling::Key<std::string, std::shared_ptr<T>> const& key,
+                       std::shared_ptr<T> const& object) {
         if (_components->contains(key)) {
             _components->erase(key);
         } else if (_components->contains(key.getId())) {
@@ -460,11 +452,8 @@ private:
     std::shared_ptr<daf::base::PropertySet> _metadata;
     std::shared_ptr<image::VisitInfo const> _visitInfo;
 
-    // Class invariant: all values in _components are shared_ptr<Storable>
-    // This is required for table::io persistence to work correctly;
-    //     other persistence frameworks may let us support other types
     // Class invariant: all pointers in _components are not null
-    std::unique_ptr<typehandling::MutableGenericMap<std::string>> _components;
+    std::unique_ptr<detail::StorableMap> _components;
 };
 }  // namespace image
 }  // namespace afw
