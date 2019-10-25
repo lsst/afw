@@ -58,7 +58,7 @@ def prepareWcsData(wcs, amp, isTrimmed=True):
     wcs : `lsst.afw.geom.SkyWcs`
         The WCS object to start from.
     amp : `lsst.afw.table.AmpInfoRecord`
-        Amp object to use
+        Amp object to use.
     isTrimmed : `bool`
         Is the image to which the WCS refers trimmed of non-imaging pixels?
 
@@ -454,8 +454,26 @@ class ButlerImage(FakeImageDataSource):
         return im
 
     def getCcdImage(self, ccd, imageFactory=afwImage.ImageF, binSize=1, asMaskedImage=False):
-        """Return an image of the specified ccd, and also the (possibly updated) ccd"""
+        """Return an image of the specified ccd, and the (possibly updated) ccd
 
+        Parameters
+        ----------
+        ccd : `lsst.afw.cameraGeom.Detector`
+            Detector from which to create an image.
+        imageFactory : callable like `lsst.afw.image.Image`, optional
+            Type of image to build.  Default is `lsst.afw.image.ImageF`.
+        binSize : `int`, optional
+            Bin the image by this factor in both dimensions. Default is 1.
+        asMaskedImage : `bool`, optional
+            Whether to return the image as an `lsst.afw.image.MaskedImage`
+            (otherwise the image is returned an `lsst.afw.image.Image`).
+            Default is `False`.
+
+        Returns
+        -------
+        ccdImage : `lsst.afw.image.Image`
+            Image of the entire ``ccd`` binned by factor ``binSize``.
+        """
         log = lsst.log.Log.getLogger("afw.cameraGeom.utils.ButlerImage")
 
         if self.isTrimmed:
@@ -516,34 +534,38 @@ class ButlerImage(FakeImageDataSource):
 
 def rawCallback(im, ccd=None, imageSource=None,
                 correctGain=False, subtractBias=False, convertToFloat=False, obeyNQuarter=True):
-    """A callback function that may or may not subtract bias/correct gain/trim
-    a raw image.
+    """Callback function to handle raw images
+
+    Depending on the parameters, the returned image may be truly "raw" or be
+    any combination of bias subtracted/gain corrected/trimmed.
 
     Parameters
     ----------
     im : `lsst.afw.image.Image` or `lsst.afw.image.MaskedImage` or `lsst.afw.image.Exposure`
-       An image of a chip, ready to be binned and maybe rotated.
+        An image of a chip, ready to be binned and maybe rotated.
     ccd : `lsst.afw.cameraGeom.Detector` or `None`
-        The Detector; if `None` assume that im is an exposure and extract its Detector.
+        The Detector; if `None` assume that ``im`` is an exposure and extract its
+        Detector.
     imageSource : `FakeImageDataSource` or `None`
         Source to get ccd images.  Must have a `getCcdImage()` method.
-    correctGain : `bool`
-        Correct each amplifier for its gain?
-    subtractBias : `bool`
-        Subtract the bias from each amplifier?
-    convertToFloat : `bool`
-        Convert ``im`` to floating point if possible.
-    obeyNQuarter : `bool`
-        Obey nQuarter from the Detector (default: True)
+    correctGain : `bool`, optional
+        Correct each amplifier for its gain?  Default is `False`.
+    subtractBias : `bool`, optional
+        Subtract the bias from each amplifier?  Default is `False`.
+    convertToFloat : `bool`, optional
+        Convert ``im`` to floating point if possible.  Default is `False`.
+    obeyNQuarter : `bool`, optional
+        Obey nQuarter from the Detector. Default is `True`.
 
     Returns
     -------
-    image : `lsst.afw.image.Image` like
+    ccdImage : `lsst.afw.image.Image` like
         The constructed image (type returned by ``im.Factory``).
 
     Notes
     -----
-    If imageSource is derived from ButlerImage, imageSource.butler is available.
+    If ``imageSource`` is derived from ButlerImage, imageSource.butler is
+    available.
     """
     if ccd is None:
         ccd = im.getDetector()
@@ -792,7 +814,7 @@ def getCcdInCamBBoxList(ccdList, binSize, pixelSize_o, origin):
 
     Parameters
     ----------
-    ccdList : `lsst.afw.cameraGeom.Detector`
+    ccdList : `list` [`lsst.afw.cameraGeom.Detector`]
         List of Detector.
     binSize : `int`
         Bin the image by this factor in both dimensions.
@@ -869,19 +891,21 @@ def makeImageFromCamera(camera, detectorNameList=None, background=numpy.nan, buf
     ----------
     camera : `lsst.afw.cameraGeom.Camera`
         Camera object to use to make the image.
-    detectorNameList : `list` [`str`]
+    detectorNameList : `list` [`str`], optional
         List of detector names from ``camera`` to use in building the image.
-        Use all Detectors if `None`.
-    background : `float`
-        Value to use where there is no Detector.
-    bufferSize : `int`
+        Use all detectors in the ``camera`` if `None`.  Default is `None`.
+    background : `float`, optional
+        Value to use where there is no detector.  Default is `numpy.nan`.
+    bufferSize : `int`, optional
         Size of border in binned pixels to make around the camera image.
-    imageSource : `FakeImageDataSource` or `None`
+        Default is 10.
+    imageSource : `FakeImageDataSource` or `None`, optional
         Source to get ccd images.  Must have a ``getCcdImage()`` method.
-    imageFactory : callable like `lsst.afw.image.Image`
-        Type of image to build.
-    binSize : `int`
-        Bin the image by this factor in both dimensions.
+        Default is `lsst.afw.cameraGeom.utils.FakeImageDataSource`.
+    imageFactory : callable like `lsst.afw.image.Image`, optional
+        Type of image to build.  Default is `lsst.afw.image.ImageU`.
+    binSize : `int`, optional
+        Bin the image by this factor in both dimensions.  Default is 1.
 
     Returns
     -------
@@ -923,7 +947,8 @@ def makeImageFromCamera(camera, detectorNameList=None, background=numpy.nan, buf
         try:
             imView[:] = im
         except pexExceptions.LengthError as e:
-            log.error("Unable to fit image for detector \"%s\" into image of camera: %s" % (det.getName(), e))
+            log.error("Unable to fit image for detector \"%s\" (id: %s into image of camera: %s" %
+                      (det.getName(), det.getId(), e))
 
     return camIm
 
