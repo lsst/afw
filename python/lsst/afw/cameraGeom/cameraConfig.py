@@ -78,7 +78,6 @@ class DetectorConfig(pexConfig.Config):
     )
 
     # Accessors to get "compiled" versions of parameters.
-    @property
     def getCrosstalk(self, numAmps):
         """Return a 2-D numpy array of crosstalk coefficients of the proper shape"""
         if not self.crosstalk:
