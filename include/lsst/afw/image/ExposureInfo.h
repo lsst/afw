@@ -137,23 +137,6 @@ public:
     /// Set the Exposure's PhotoCalib object
     void setPhotoCalib(std::shared_ptr<PhotoCalib const> photoCalib);
 
-    /// Does this exposure have a photometric calibration?
-    [[deprecated("Replaced with hasPhotoCalib (will be removed in 18.0)")]] bool hasCalib() const {
-        return hasPhotoCalib();
-    }
-
-    /// Return the exposure's photometric calibration
-    [[deprecated("Replaced with getPhotoCalib (will be removed in 18.0)")]] std::shared_ptr<PhotoCalib const>
-    getCalib() const {
-        return getPhotoCalib();
-    }
-
-    /// Set the Exposure's PhotoCalib object
-    [[deprecated("Replaced with setPhotoCalib (will be removed in 18.0)")]] void setCalib(
-            std::shared_ptr<PhotoCalib const> photoCalib) {
-        setPhotoCalib(photoCalib);
-    }
-
     /// Return flexible metadata
     std::shared_ptr<daf::base::PropertySet> getMetadata() const { return _metadata; }
 

@@ -36,7 +36,6 @@ from .transmissionCurve import *
 from .exposureInfo import *
 from .exposure import *
 from .photoCalib import *
-from .photoCalibContinued import *
 from .imagePca import *
 from .imageUtils import *
 from .readMetadata import *

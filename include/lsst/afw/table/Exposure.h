@@ -142,16 +142,6 @@ public:
     std::shared_ptr<image::PhotoCalib const> getPhotoCalib() const { return _photoCalib; }
     void setPhotoCalib(std::shared_ptr<image::PhotoCalib const> photoCalib) { _photoCalib = photoCalib; }
 
-    [[deprecated("Replaced with getPhotoCalib (will be removed in 18.0)")]] std::shared_ptr<
-            image::PhotoCalib const>
-    getCalib() const {
-        return _photoCalib;
-    }
-    [[deprecated("Replaced with setPhotoCalib (will be removed in 18.0)")]] void setCalib(
-            std::shared_ptr<image::PhotoCalib const> photoCalib) {
-        _photoCalib = photoCalib;
-    }
-
     std::shared_ptr<image::ApCorrMap const> getApCorrMap() const { return _apCorrMap; }
     void setApCorrMap(std::shared_ptr<image::ApCorrMap const> apCorrMap) { _apCorrMap = apCorrMap; }
 

@@ -105,10 +105,6 @@ PyExposure<PixelT> declareExposure(py::module &mod, const std::string &suffix) {
     cls.def("getFilter", &ExposureT::getFilter);
     cls.def("setFilter", &ExposureT::setFilter, "filter"_a);
 
-    // Deprecated methods
-    cls.def("_getCalib", &ExposureT::getCalib);
-    cls.def("_setCalib", &ExposureT::setCalib, "photoCalib"_a);
-
     cls.def("getPhotoCalib", &ExposureT::getPhotoCalib);
     cls.def("setPhotoCalib", &ExposureT::setPhotoCalib, "photoCalib"_a);
     cls.def("getPsf", (std::shared_ptr<detection::Psf>(ExposureT::*)()) & ExposureT::getPsf);
