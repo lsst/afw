@@ -24,8 +24,8 @@ Support for displaying cameraGeom objects.
 """
 
 __all__ = ['prepareWcsData', 'plotFocalPlane', 'makeImageFromAmp', 'calcRawCcdBBox', 'makeImageFromCcd',
-           'FakeImageDataSource', 'ButlerImage', 'rawCallback', 'overlayCcdBoxes',
-           'showAmp', 'showCcd', 'getCcdInCamBBoxList', 'getCameraImageBBox',
+           'FakeImageDataSource', 'ButlerImage', 'rawCallback', 'applyExternalPhotoCalibCallback',
+           'overlayCcdBoxes', 'showAmp', 'showCcd', 'getCcdInCamBBoxList', 'getCameraImageBBox',
            'makeImageFromCamera', 'showCamera', 'makeFocalPlaneWcs', 'findAmp']
 
 import math
@@ -482,11 +482,13 @@ class ButlerImage(FakeImageDataSource):
             bbox = calcRawCcdBBox(ccd)
 
         im = None
+        dataId = dict()
         if self.butler is not None:
             err = None
             for dataId in [dict(detector=ccd.getId()), dict(ccd=ccd.getId()), dict(ccd=ccd.getName())]:
                 try:
                     im = self.butler.get(self.type, dataId, **self.kwargs)
+                    self.kwargs.update(dataId)  # used by applyExternalPhotoCalibCallback if set
                 except FitsError as e:  # no point trying another dataId
                     err = IOError(e.args[0].split('\n')[0])  # It's a very chatty error
                     break
@@ -528,6 +530,8 @@ class ButlerImage(FakeImageDataSource):
                 im = imageFactory(*bbox.getDimensions())
             else:
                 allowRotate = False     # the callback was responsible for any rotations
+        for key in dataId.keys():
+            self.kwargs.pop(key, None)  # pop after use by applyExternalPhotoCalibCallback if set
 
         return self._prepareImage(ccd, im, binSize, allowRotate=allowRotate), ccd
 
@@ -607,6 +611,80 @@ def rawCallback(im, ccd=None, imageSource=None,
         ccdImage = afwMath.rotateImageBy90(ccdImage, nQuarter)
 
     return ccdImage
+
+
+def applyExternalPhotoCalibCallback(im, ccd=None, imageSource=None, photoCalibType="jointcal",
+                                    obeyNQuarter=True):
+    """Callback to apply an external photometric calibration to the ccd image
+
+    Parameters
+    ----------
+    im : `lsst.afw.image.Image` or `lsst.afw.image.MaskedImage`
+        The image of the ccd to which the photoCalib is to be applied.
+    ccd : `lsst.afw.cameraGeom.Detector` or `None`, optional
+        The detector; if `None` and ``obeyNQuarter`` is `True`, the ``kwargs``
+        of ``imageSource`` will be used to attempt to create a detector.
+        Default is `None`.
+    imageSource : `lsst.afw.cameraGeom.utils.ButlerImage`
+        Must have a `lsst.daf.persistence.Butler` instance.
+    photoCalibType : `str`, optional
+        The butler-recognized datatype of the uber-calibration to apply.
+        Currently, the only options are "jointcal", "fgcmcal", and
+        "fgcmcal_tract" (but, to date, the latter two are still undergoing
+        integration testing and only for obs_subaru).  Default is "jointcal".
+    obeyNQuarter : `bool`, optional
+        Obey nQuarter from the detector.  Default is `True`.
+
+    Returns
+    -------
+    calibratedImage : `lsst.afw.image.Image` or `lsst.afw.image.MaskedImage`
+        The image with the photoCalib applied.  The return type will match
+        that of ``im``.
+
+    Raises
+    ------
+    `RuntimeError`
+        If ``im`` is an unknown type OR if ``obeyNQuarter`` was requested but
+        no detector could be established from which to obtain the appropriate
+        nQuarter value.
+    """
+    if isinstance(im, afwImage.MaskedImage):
+        maskedImage = im
+    elif isinstance(im, afwImage.Image):  # Create a dummy mask image to make sure we can apply the photoCalib
+        imDimensions = im.getDimensions()  # numpy array axes are transposed w.r.t afwImage
+        npShape = (imDimensions[1], imDimensions[0])
+        mask = numpy.zeros(npShape, dtype=numpy.int32)
+        variance = numpy.ones(npShape, dtype=numpy.float32)
+        maskedImage = afwImage.basicUtils.makeMaskedImageFromArrays(im.array, mask, variance)
+    else:
+        raise RuntimeError("Unknown type for im: {:}.  Must be one of lsst.afw.image.Image or "
+                           "lsst.afw.image.MaskedImage".format(type(im)))
+
+    dataRef = imageSource.butler.dataRef(imageSource.type, **imageSource.kwargs)
+    photoCalib = dataRef.get(photoCalibType + "_photoCalib")
+    calibratedImage = photoCalib.calibrateImage(maskedImage)
+    calibratedImage /= photoCalib.getCalibrationMean()  # keeps it on same "scale" as the calexp
+    calibratedImage = calibratedImage.image if isinstance(im, afwImage.Image) else calibratedImage
+
+    if obeyNQuarter:
+        possibleCcdFieldNames = ["detector", "ccd"]
+        if ccd is None:
+            if hasattr(im, 'getDetector'):
+                ccd = im.getDetector()
+            else:
+                camera = imageSource.butler.get("camera")
+                for ccdId in possibleCcdFieldNames:
+                    if ccdId in imageSource.kwargs:
+                        ccd = camera[int(imageSource.kwargs[ccdId])]
+                        break
+        if ccd is None:
+            raise RuntimeError("obeyNQuarter requested, but no ccd provided and could not identify "
+                               "ccdId, i.e. none of {:} found in imageSource.kwargs: {:}".
+                               format(possibleCcdFieldNames, imageSource.kwargs))
+        nQuarter = ccd.getOrientation().getNQuarter()
+        calibratedImage = afwMath.rotateImageBy90(calibratedImage, nQuarter)
+
+    return calibratedImage
 
 
 def overlayCcdBoxes(ccd, untrimmedCcdBbox=None, nQuarter=0,
@@ -880,7 +958,8 @@ def getCameraImageBBox(camBbox, pixelSize, bufferSize):
 
 
 def makeImageFromCamera(camera, detectorNameList=None, background=numpy.nan, bufferSize=10,
-                        imageSource=FakeImageDataSource(), imageFactory=afwImage.ImageU, binSize=1):
+                        imageSource=FakeImageDataSource(), imageFactory=afwImage.ImageU, binSize=1,
+                        asMaskedImage=False):
     """Make an Image of a Camera.
 
     Put each detector's image in the correct location and orientation on the
@@ -939,13 +1018,13 @@ def makeImageFromCamera(camera, detectorNameList=None, background=numpy.nan, buf
 
     boxList = getCcdInCamBBoxList(ccdList, binSize, pixelSize_o, origin)
     for det, bbox in zip(ccdList, boxList):
-        im = imageSource.getCcdImage(det, imageFactory, binSize)[0]
+        im = imageSource.getCcdImage(det, imageFactory, binSize, asMaskedImage=asMaskedImage)[0]
         if im is None:
             continue
 
         imView = camIm.Factory(camIm, bbox, afwImage.LOCAL)
         try:
-            imView[:] = im
+            imView[:] = im.getImage() if asMaskedImage and not isinstance(im, type(imView)) else im
         except pexExceptions.LengthError as e:
             log.error("Unable to fit image for detector \"%s\" (id: %s into image of camera: %s" %
                       (det.getName(), det.getId(), e))
