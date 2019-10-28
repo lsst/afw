@@ -22,6 +22,8 @@
 
 __all__ = ["getSipMatrixFromMetadata", "makeDistortedTanWcs", "computePixelToDistortedPixel"]
 
+from deprecated.sphinx import deprecated
+
 import lsst.geom
 from ..transformFactory import linearizeTransform, makeTransform
 from ..skyWcs import makeModifiedWcs
@@ -59,6 +61,8 @@ def getSipMatrixFromMetadata(metadata, name):
     return arr
 
 
+@deprecated(reason="Camera geometry-based SkyWcs are now set when reading raws. To be removed after v20.",
+            category=FutureWarning)
 def makeDistortedTanWcs(tanWcs, pixelToFocalPlane, focalPlaneToFieldAngle):
     """Compute a WCS that includes a model of optical distortion.
 
