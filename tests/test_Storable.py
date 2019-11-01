@@ -89,7 +89,6 @@ class PythonStorableTestSuite(lsst.utils.tests.TestCase):
         self.assertEqual(self.testbed, DemoStorable([42]))
         self.assertNotEqual(self.testbed, DemoStorable(0))
 
-    @unittest.skip("TODO: Fix this bug in DM-21314")
     def testGarbageCollection(self):
         cppLib.keepStaticStorable(DemoStorable(3))
 
