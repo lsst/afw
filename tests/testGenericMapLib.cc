@@ -295,6 +295,14 @@ std::shared_ptr<Storable> keepStaticStorable(std::shared_ptr<Storable> storable 
     return longLived;
 }
 
+/**
+ * Copy a Storable in C++.
+ *
+ * @param input The Storable to copy.
+ * @returns An identical but independent Storable.
+ */
+std::shared_ptr<Storable> duplicate(std::shared_ptr<Storable> input) { return input->cloneStorable(); }
+
 }  // namespace
 
 namespace {
@@ -333,6 +341,7 @@ PYBIND11_MODULE(testGenericMapLib, mod) {
     mod.def("makeCppUpdates", &makeCppUpdates, "testmap"_a);
     mod.def("addCppStorable", &addCppStorable, "testmap"_a);
     mod.def("keepStaticStorable", &keepStaticStorable, "storable"_a = nullptr);
+    mod.def("duplicate", &duplicate, "input"_a);
 
     py::class_<CppStorable, PySharedPtr<CppStorable>, Storable, StorableHelper<CppStorable>> cls(
             mod, "CppStorable");

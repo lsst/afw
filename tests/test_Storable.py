@@ -80,9 +80,16 @@ class PythonStorableTestSuite(lsst.utils.tests.TestCase):
         self.assertIsNot(deep, self.testbed)
         self.assertEqual(deep, self.testbed)
 
+        cpp = cppLib.duplicate(self.testbed)
+        self.assertIsInstance(cpp, Storable)
+        self.assertIsInstance(cpp, DemoStorable)
+        self.assertIsNot(cpp, self.testbed)
+        self.assertEqual(cpp, self.testbed)
+
         self.aList.append(43)
         self.assertEqual(shallow, DemoStorable([42, 43]))
         self.assertEqual(deep, DemoStorable([42]))
+        self.assertEqual(cpp, DemoStorable([42]))
 
     def testStr(self):
         self.assertEqual(str(self.testbed), "value = [42]")

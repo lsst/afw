@@ -51,7 +51,12 @@ class StorableHelper : public Base {
 public:
     using Base::Base;
 
-    // Can't wrap clone(); PYBIND11_OVERLOAD chokes on unique_ptr return type
+    std::shared_ptr<Storable> cloneStorable() const override {
+        /* __deepcopy__ takes an optional dict, but PYBIND11_OVERLOAD_* won't
+         * compile unless you give it arguments that work for the C++ method
+         */
+        PYBIND11_OVERLOAD_NAME(std::shared_ptr<Storable>, Base, "__deepcopy__", cloneStorable, );
+    }
 
     std::string toString() const override {
         PYBIND11_OVERLOAD_NAME(std::string, Base, "__repr__", toString, );
