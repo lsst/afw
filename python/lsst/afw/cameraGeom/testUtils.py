@@ -28,12 +28,14 @@ import numpy as np
 import lsst.utils
 import lsst.geom
 import lsst.afw.geom as afwGeom
-import lsst.afw.table as afwTable
 from lsst.utils.tests import inTestCase
-from .cameraGeomLib import PIXELS, TAN_PIXELS, FIELD_ANGLE, FOCAL_PLANE, SCIENCE, ACTUAL_PIXELS, \
-    CameraSys, Detector, Orientation
+from .cameraSys import CameraSys, PIXELS, TAN_PIXELS, FIELD_ANGLE, FOCAL_PLANE, ACTUAL_PIXELS
+from .orientation import Orientation
+from .amplifier import Amplifier, ReadoutCorner
+from .camera import Camera
+from .detector import DetectorType
 from .cameraConfig import DetectorConfig, CameraConfig
-from .cameraFactory import makeCameraFromCatalogs
+from .cameraFactory import makeCameraFromAmpLists
 from .makePixelToTanPixel import makePixelToTanPixel
 from .transformConfig import TransformMapConfig
 
@@ -85,7 +87,7 @@ class DetectorWrapper:
     def __init__(self,
                  name="detector 1",
                  id=1,
-                 detType=SCIENCE,
+                 detType=DetectorType.SCIENCE,
                  serial="xkcd722",
                  bbox=None,    # do not use mutable objects as defaults
                  numAmps=3,
@@ -97,6 +99,7 @@ class DetectorWrapper:
                  crosstalk=None,
                  modFunc=None,
                  physicalType="CCD",
+                 cameraBuilder=None
                  ):
         # note that (0., 0.) for the reference position is the center of the
         # first pixel
@@ -110,19 +113,8 @@ class DetectorWrapper:
         self.pixelSize = lsst.geom.Extent2D(*pixelSize)
         self.ampExtent = lsst.geom.Extent2I(*ampExtent)
         self.plateScale = float(plateScale)
-        self.radialDistortion = float(radialDistortion)
-        schema = afwTable.AmpInfoTable.makeMinimalSchema()
-        self.ampInfo = afwTable.AmpInfoCatalog(schema)
-        for i in range(numAmps):
-            record = self.ampInfo.addNew()
-            ampName = "amp %d" % (i + 1,)
-            record.setName(ampName)
-            record.setBBox(lsst.geom.Box2I(lsst.geom.Point2I(-1, 1), self.ampExtent))
-            record.setGain(1.71234e3)
-            record.setReadNoise(0.521237e2)
-            record.setReadoutCorner(afwTable.LL)
-            record.setHasRawInfo(False)
         self.orientation = orientation
+        self.radialDistortion = float(radialDistortion)
 
         # compute TAN_PIXELS transform
         pScaleRad = lsst.geom.arcsecToRad(self.plateScale)
@@ -135,31 +127,45 @@ class DetectorWrapper:
             focalPlaneToField=focalPlaneToField,
             pixelSizeMm=self.pixelSize,
         )
-
+        tanPixelSys = CameraSys(TAN_PIXELS, self.name)
+        actualPixelSys = CameraSys(ACTUAL_PIXELS, self.name)
         self.transMap = {
             FOCAL_PLANE: self.orientation.makePixelFpTransform(self.pixelSize),
-            CameraSys(TAN_PIXELS, self.name): pixelToTanPixel,
-            CameraSys(ACTUAL_PIXELS, self.name): afwGeom.makeRadialTransform([0, 0.95, 0.01]),
+            tanPixelSys: pixelToTanPixel,
+            actualPixelSys: afwGeom.makeRadialTransform([0, 0.95, 0.01]),
         }
         if crosstalk is None:
             crosstalk = [[0.0 for _ in range(numAmps)] for _ in range(numAmps)]
         self.crosstalk = crosstalk
         self.physicalType = physicalType
+        if cameraBuilder is None:
+            cameraBuilder = Camera.Builder("CameraForDetectorWrapper")
+        self.ampList = []
+        for i in range(numAmps):
+            ampBuilder = Amplifier.Builder()
+            ampName = "amp %d" % (i + 1,)
+            ampBuilder.setName(ampName)
+            ampBuilder.setBBox(lsst.geom.Box2I(lsst.geom.Point2I(-1, 1), self.ampExtent))
+            ampBuilder.setGain(1.71234e3)
+            ampBuilder.setReadNoise(0.521237e2)
+            ampBuilder.setReadoutCorner(ReadoutCorner.LL)
+            self.ampList.append(ampBuilder)
         if modFunc:
             modFunc(self)
-        self.detector = Detector(
-            self.name,
-            self.id,
-            self.type,
-            self.serial,
-            self.bbox,
-            self.ampInfo,
-            self.orientation,
-            self.pixelSize,
-            self.transMap,
-            np.array(self.crosstalk, dtype=np.float32),
-            self.physicalType,
-        )
+        detectorBuilder = cameraBuilder.add(self.name, self.id)
+        detectorBuilder.setType(self.type)
+        detectorBuilder.setSerial(self.serial)
+        detectorBuilder.setPhysicalType(self.physicalType)
+        detectorBuilder.setBBox(self.bbox)
+        detectorBuilder.setOrientation(self.orientation)
+        detectorBuilder.setPixelSize(self.pixelSize)
+        detectorBuilder.setTransformFromPixelsTo(tanPixelSys, self.transMap[tanPixelSys])
+        detectorBuilder.setTransformFromPixelsTo(actualPixelSys, self.transMap[actualPixelSys])
+        detectorBuilder.setCrosstalk(np.array(self.crosstalk, dtype=np.float32))
+        for ampBuilder in self.ampList:
+            detectorBuilder.append(ampBuilder)
+        camera = cameraBuilder.finish()
+        self.detector = camera[self.name]
 
 
 class CameraWrapper:
@@ -191,12 +197,13 @@ class CameraWrapper:
         self.radialDistortion = float(radialDistortion)
         self.detectorNameList = []
         self.detectorIdList = []
-        self.ampInfoDict = {}
+        self.ampDataDict = {}   # ampData[Dict]: raw dictionaries of test data fields
 
-        self.camConfig, self.ampCatalogDict = self.makeTestRepositoryItems(
+        # ampList[Dict]: actual cameraGeom.Amplifier objects
+        self.camConfig, self.ampListDict = self.makeTestRepositoryItems(
             isLsstLike)
-        self.camera = makeCameraFromCatalogs(
-            self.camConfig, self.ampCatalogDict)
+        self.camera = makeCameraFromAmpLists(
+            self.camConfig, self.ampListDict)
 
     @property
     def nDetectors(self):
@@ -245,8 +252,8 @@ class CameraWrapper:
             self.detectorIdList.append(detectorId)
         return detectorConfigs
 
-    def makeAmpCatalogs(self, ampFile, isLsstLike=False):
-        """Construct a dict of AmpInfoCatalog, one per detector.
+    def makeAmpLists(self, ampFile, isLsstLike=False):
+        """Construct a dict of list of Amplifer, one list per detector.
 
         Parameters
         ----------
@@ -257,65 +264,61 @@ class CameraWrapper:
             if False then there is one raw image per detector.
         """
         readoutMap = {
-            'LL': afwTable.ReadoutCorner.LL,
-            'LR': afwTable.ReadoutCorner.LR,
-            'UR': afwTable.ReadoutCorner.UR,
-            'UL': afwTable.ReadoutCorner.UL,
+            'LL': ReadoutCorner.LL,
+            'LR': ReadoutCorner.LR,
+            'UR': ReadoutCorner.UR,
+            'UL': ReadoutCorner.UL,
         }
-        amps = []
+        ampDataList = []
         with open(ampFile) as fh:
             names = fh.readline().rstrip().lstrip("#").split("|")
             for l in fh:
                 els = l.rstrip().split("|")
                 ampProps = dict([(name, el) for name, el in zip(names, els)])
-                amps.append(ampProps)
-        ampTablesDict = {}
-        schema = afwTable.AmpInfoTable.makeMinimalSchema()
-        linThreshKey = schema.addField('linearityThreshold', type=np.float64)
-        linMaxKey = schema.addField('linearityMaximum', type=np.float64)
-        linUnitsKey = schema.addField('linearityUnits', type=str, size=9)
-        self.ampInfoDict = {}
-        for amp in amps:
-            if amp['ccd_name'] in ampTablesDict:
-                ampCatalog = ampTablesDict[amp['ccd_name']]
-                self.ampInfoDict[amp['ccd_name']]['namps'] += 1
+                ampDataList.append(ampProps)
+        ampListDict = {}
+        self.ampDataDict = {}
+        for ampData in ampDataList:
+            if ampData['ccd_name'] in ampListDict:
+                ampList = ampListDict[ampData['ccd_name']]
+                self.ampDataDict[ampData['ccd_name']]['namps'] += 1
             else:
-                ampCatalog = afwTable.AmpInfoCatalog(schema)
-                ampTablesDict[amp['ccd_name']] = ampCatalog
-                self.ampInfoDict[amp['ccd_name']] = {'namps': 1, 'linInfo': {}}
-            record = ampCatalog.addNew()
-            bbox = lsst.geom.Box2I(lsst.geom.Point2I(int(amp['trimmed_xmin']),
-                                                     int(amp['trimmed_ymin'])),
-                                   lsst.geom.Point2I(int(amp['trimmed_xmax']),
-                                                     int(amp['trimmed_ymax'])))
-            rawBbox = lsst.geom.Box2I(lsst.geom.Point2I(int(amp['raw_xmin']),
-                                                        int(amp['raw_ymin'])),
-                                      lsst.geom.Point2I(int(amp['raw_xmax']),
-                                                        int(amp['raw_ymax'])))
+                ampList = []
+                ampListDict[ampData['ccd_name']] = ampList
+                self.ampDataDict[ampData['ccd_name']] = {'namps': 1, 'linInfo': {}}
+            builder = Amplifier.Builder()
+            bbox = lsst.geom.Box2I(lsst.geom.Point2I(int(ampData['trimmed_xmin']),
+                                                     int(ampData['trimmed_ymin'])),
+                                   lsst.geom.Point2I(int(ampData['trimmed_xmax']),
+                                                     int(ampData['trimmed_ymax'])))
+            rawBbox = lsst.geom.Box2I(lsst.geom.Point2I(int(ampData['raw_xmin']),
+                                                        int(ampData['raw_ymin'])),
+                                      lsst.geom.Point2I(int(ampData['raw_xmax']),
+                                                        int(ampData['raw_ymax'])))
             rawDataBbox = lsst.geom.Box2I(
-                lsst.geom.Point2I(int(amp['raw_data_xmin']),
-                                  int(amp['raw_data_ymin'])),
-                lsst.geom.Point2I(int(amp['raw_data_xmax']),
-                                  int(amp['raw_data_ymax'])))
+                lsst.geom.Point2I(int(ampData['raw_data_xmin']),
+                                  int(ampData['raw_data_ymin'])),
+                lsst.geom.Point2I(int(ampData['raw_data_xmax']),
+                                  int(ampData['raw_data_ymax'])))
             rawHOverscanBbox = lsst.geom.Box2I(
-                lsst.geom.Point2I(int(amp['hoscan_xmin']),
-                                  int(amp['hoscan_ymin'])),
-                lsst.geom.Point2I(int(amp['hoscan_xmax']),
-                                  int(amp['hoscan_ymax'])))
+                lsst.geom.Point2I(int(ampData['hoscan_xmin']),
+                                  int(ampData['hoscan_ymin'])),
+                lsst.geom.Point2I(int(ampData['hoscan_xmax']),
+                                  int(ampData['hoscan_ymax'])))
             rawVOverscanBbox = lsst.geom.Box2I(
-                lsst.geom.Point2I(int(amp['voscan_xmin']),
-                                  int(amp['voscan_ymin'])),
-                lsst.geom.Point2I(int(amp['voscan_xmax']),
-                                  int(amp['voscan_ymax'])))
+                lsst.geom.Point2I(int(ampData['voscan_xmin']),
+                                  int(ampData['voscan_ymin'])),
+                lsst.geom.Point2I(int(ampData['voscan_xmax']),
+                                  int(ampData['voscan_ymax'])))
             rawPrescanBbox = lsst.geom.Box2I(
-                lsst.geom.Point2I(int(amp['pscan_xmin']),
-                                  int(amp['pscan_ymin'])),
-                lsst.geom.Point2I(int(amp['pscan_xmax']),
-                                  int(amp['pscan_ymax'])))
-            xoffset = int(amp['x_offset'])
-            yoffset = int(amp['y_offset'])
-            flipx = bool(int(amp['flipx']))
-            flipy = bool(int(amp['flipy']))
+                lsst.geom.Point2I(int(ampData['pscan_xmin']),
+                                  int(ampData['pscan_ymin'])),
+                lsst.geom.Point2I(int(ampData['pscan_xmax']),
+                                  int(ampData['pscan_ymax'])))
+            xoffset = int(ampData['x_offset'])
+            yoffset = int(ampData['y_offset'])
+            flipx = bool(int(ampData['flipx']))
+            flipy = bool(int(ampData['flipy']))
             readcorner = 'LL'
             if not isLsstLike:
                 offext = lsst.geom.Extent2I(xoffset, yoffset)
@@ -354,33 +357,31 @@ class CameraWrapper:
                 xoffset = 0
                 yoffset = 0
             offset = lsst.geom.Extent2I(xoffset, yoffset)
-            record.setBBox(bbox)
-            record.setRawXYOffset(offset)
-            record.setName(str(amp['name']))
-            record.setReadoutCorner(readoutMap[readcorner])
-            record.setGain(float(amp['gain']))
-            record.setReadNoise(float(amp['readnoise']))
-            record.setLinearityCoeffs([float(amp['lin_coeffs']), ])
-            record.setLinearityType(str(amp['lin_type']))
-            record.setHasRawInfo(True)
-            record.setRawFlipX(flipx)
-            record.setRawFlipY(flipy)
-            record.setRawBBox(rawBbox)
-            record.setRawDataBBox(rawDataBbox)
-            record.setRawHorizontalOverscanBBox(rawHOverscanBbox)
-            record.setRawVerticalOverscanBBox(rawVOverscanBbox)
-            record.setRawPrescanBBox(rawPrescanBbox)
-            record.set(linThreshKey, float(amp['lin_thresh']))
-            record.set(linMaxKey, float(amp['lin_max']))
-            record.set(linUnitsKey, str(amp['lin_units']))
-            # The current schema assumes third order coefficients
-            saveCoeffs = (float(amp['lin_coeffs']),)
-            saveCoeffs += (np.nan, np.nan, np.nan)
-            self.ampInfoDict[amp['ccd_name']]['linInfo'][amp['name']] = \
-                {'lincoeffs': saveCoeffs, 'lintype': str(amp['lin_type']),
-                 'linthresh': float(amp['lin_thresh']), 'linmax': float(amp['lin_max']),
-                 'linunits': str(amp['lin_units'])}
-        return ampTablesDict
+            builder.setBBox(bbox)
+            builder.setRawXYOffset(offset)
+            builder.setName(str(ampData['name']))
+            builder.setReadoutCorner(readoutMap[readcorner])
+            builder.setGain(float(ampData['gain']))
+            builder.setReadNoise(float(ampData['readnoise']))
+            linCoeffs = np.array([float(ampData['lin_coeffs']), ], dtype=float)
+            builder.setLinearityCoeffs(linCoeffs)
+            builder.setLinearityType(str(ampData['lin_type']))
+            builder.setRawFlipX(flipx)
+            builder.setRawFlipY(flipy)
+            builder.setRawBBox(rawBbox)
+            builder.setRawDataBBox(rawDataBbox)
+            builder.setRawHorizontalOverscanBBox(rawHOverscanBbox)
+            builder.setRawVerticalOverscanBBox(rawVOverscanBbox)
+            builder.setRawPrescanBBox(rawPrescanBbox)
+            builder.setLinearityThreshold(float(ampData['lin_thresh']))
+            builder.setLinearityMaximum(float(ampData['lin_max']))
+            builder.setLinearityUnits(str(ampData['lin_units']))
+            self.ampDataDict[ampData['ccd_name']]['linInfo'][ampData['name']] = \
+                {'lincoeffs': linCoeffs, 'lintype': str(ampData['lin_type']),
+                 'linthresh': float(ampData['lin_thresh']), 'linmax': float(ampData['lin_max']),
+                 'linunits': str(ampData['lin_units'])}
+            ampList.append(builder)
+        return ampListDict
 
     def makeTestRepositoryItems(self, isLsstLike=False):
         """Make camera config and amp catalog dictionary, using default
@@ -395,7 +396,7 @@ class CameraWrapper:
         detFile = os.path.join(self._afwTestDataDir, "testCameraDetectors.dat")
         detectorConfigs = self.makeDetectorConfigs(detFile)
         ampFile = os.path.join(self._afwTestDataDir, "testCameraAmps.dat")
-        ampCatalogDict = self.makeAmpCatalogs(ampFile, isLsstLike=isLsstLike)
+        ampListDict = self.makeAmpLists(ampFile, isLsstLike=isLsstLike)
         camConfig = CameraConfig()
         camConfig.name = "testCamera%s"%('LSST' if isLsstLike else 'SC')
         camConfig.detectorList = dict((i, detConfig)
@@ -413,7 +414,7 @@ class CameraWrapper:
         tmc.nativeSys = FOCAL_PLANE.getSysName()
         tmc.transforms = {FIELD_ANGLE.getSysName(): tConfig}
         camConfig.transformDict = tmc
-        return camConfig, ampCatalogDict
+        return camConfig, ampListDict
 
 
 @inTestCase

@@ -17,6 +17,7 @@ Registry& getRegistry() {
 }
 
 static FitsReader const baseFitsReader("BASE");
+static FitsReader const ampInfoFitsReader("AMPINFO");
 
 }  // namespace
 

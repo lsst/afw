@@ -19,15 +19,5 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-__all__ = ['DetectorTypeValNameDict', 'DetectorTypeNameValDict']
-
-from .detector import DetectorType
-
-DetectorTypeValNameDict = {
-    DetectorType.SCIENCE: "SCIENCE",
-    DetectorType.FOCUS: "FOCUS",
-    DetectorType.GUIDER: "GUIDER",
-    DetectorType.WAVEFRONT: "WAVEFRONT",
-}
-DetectorTypeNameValDict = {val: key for key, val in
-                           DetectorTypeValNameDict.items()}
+from .amplifier import *
+from .amplifierContinued import *

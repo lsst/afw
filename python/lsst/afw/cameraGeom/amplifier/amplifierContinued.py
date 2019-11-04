@@ -21,16 +21,14 @@
 
 __all__ = ["ReadoutCornerValNameDict", "ReadoutCornerNameValDict"]
 
-from ._base import Catalog
-from ._table import AmpInfoCatalog, LL, LR, UR, UL
+from .amplifier import ReadoutCorner
 
-Catalog.register("AmpInfo", AmpInfoCatalog)
 
 ReadoutCornerValNameDict = {
-    LL: "LL",
-    LR: "LR",
-    UR: "UR",
-    UL: "UL",
+    ReadoutCorner.LL: "LL",
+    ReadoutCorner.LR: "LR",
+    ReadoutCorner.UR: "UR",
+    ReadoutCorner.UL: "UL",
 }
 ReadoutCornerNameValDict = {val: key for key, val in
                             ReadoutCornerValNameDict.items()}

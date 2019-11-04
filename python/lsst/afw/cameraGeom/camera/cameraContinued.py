@@ -1,3 +1,4 @@
+# This file is part of afw.
 #
 # Developed for the LSST Data Management System.
 # This product includes software developed by the LSST Project
@@ -17,8 +18,6 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-#
-
 
 # Camera object below is the same one exported by the pybind11 camera
 # module, so we don't need to re-export it here.

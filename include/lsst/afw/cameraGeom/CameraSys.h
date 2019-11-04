@@ -98,14 +98,16 @@ public:
                        )
             : _sysName(sysPrefix.getSysName()), _detectorName(detectorName){};
 
-    /// default constructor so SWIG can wrap a vector of pairs containing these
-    CameraSys() : _sysName("?"), _detectorName(){};
-
     ~CameraSys() noexcept = default;
     CameraSys(CameraSys const &) = default;
     CameraSys(CameraSys &&) noexcept = default;
     CameraSys &operator=(CameraSys const &) = default;
     CameraSys &operator=(CameraSys &&) noexcept = default;
+
+    void swap(CameraSys & other) noexcept {
+        std::swap(_sysName, other._sysName);
+        std::swap(_detectorName, other._detectorName);
+    }
 
     /**
      * Get coordinate system name
@@ -151,6 +153,11 @@ private:
     std::string _sysName;       ///< coordinate system name
     std::string _detectorName;  ///< detector name; "" if not a detector-specific coordinate system
 };
+
+inline void swap(CameraSys & a, CameraSys & b) {
+    a.swap(b);
+}
+
 
 // *** Standard camera coordinate systems ***
 
@@ -219,6 +226,11 @@ std::ostream &operator<<(std::ostream &os, CameraSys const &cameraSys);
 }  // namespace lsst
 
 namespace std {
+
+inline void swap(lsst::afw::cameraGeom::CameraSys & a, lsst::afw::cameraGeom::CameraSys & b) noexcept {
+    a.swap(b);
+}
+
 template <>
 struct hash<lsst::afw::cameraGeom::CameraSysPrefix> {
     using argument_type = lsst::afw::cameraGeom::CameraSysPrefix;
