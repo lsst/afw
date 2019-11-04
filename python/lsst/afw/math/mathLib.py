@@ -36,6 +36,7 @@ from .chebyshevBoundedField import *
 from .chebyshevBoundedFieldConfig import ChebyshevBoundedFieldConfig
 from .transformBoundedField import *
 from .pixelScaleBoundedField import *
+from .pixelAreaBoundedField import *
 from .productBoundedField import *
 from .leastSquares import *
 from .random import *
