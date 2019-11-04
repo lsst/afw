@@ -26,11 +26,13 @@
 #include <memory>
 #include <sstream>
 
+#include "lsst/utils/python/PySharedPtr.h"
 #include "lsst/pex/exceptions.h"
 
 #include "lsst/afw/typehandling/GenericMap.h"
 #include "lsst/afw/typehandling/SimpleGenericMap.h"
 #include "lsst/afw/typehandling/Storable.h"
+#include "lsst/afw/typehandling/python.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -309,6 +311,8 @@ void declareAnyTypeFunctions(py::module& mod) {
 }  // namespace
 
 PYBIND11_MODULE(testGenericMapLib, mod) {
+    using lsst::utils::python::PySharedPtr;
+
     py::module::import("lsst.afw.typehandling");
 
     declareAnyTypeFunctions<bool>(mod);
@@ -330,7 +334,8 @@ PYBIND11_MODULE(testGenericMapLib, mod) {
     mod.def("addCppStorable", &addCppStorable, "testmap"_a);
     mod.def("keepStaticStorable", &keepStaticStorable, "storable"_a = nullptr);
 
-    py::class_<CppStorable, std::shared_ptr<CppStorable>, Storable> cls(mod, "CppStorable");
+    py::class_<CppStorable, PySharedPtr<CppStorable>, Storable, StorableHelper<CppStorable>> cls(
+            mod, "CppStorable");
     cls.def(py::init<std::string>());
     cls.def("__eq__", &CppStorable::operator==, py::is_operator());
     cls.def("__ne__", &CppStorable::operator!=, py::is_operator());

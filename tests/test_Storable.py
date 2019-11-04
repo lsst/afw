@@ -32,6 +32,7 @@ import testGenericMapLib as cppLib
 class DemoStorable(Storable):
     """Test that we can inherit from Storable in Python.
     """
+
     def __init__(self, state):
         super().__init__()
         self._state = state
@@ -53,6 +54,15 @@ class DemoStorable(Storable):
 
     def __eq__(self, other):
         return self._state == other._state
+
+
+class SpecializedStorable(cppLib.CppStorable):
+    """Test that we can inherit from C++ subclasses of Storable that
+    are not Storable itself.
+    """
+
+    def __repr__(self):
+        return "Pythonic " + super().__repr__()
 
 
 class PythonStorableTestSuite(lsst.utils.tests.TestCase):
@@ -98,6 +108,18 @@ class PythonStorableTestSuite(lsst.utils.tests.TestCase):
         self.assertIsInstance(retrieved, Storable)
         self.assertIsInstance(retrieved, DemoStorable)
         self.assertEqual(retrieved, DemoStorable(3))
+
+    def testInheritedGarbageCollection(self):
+        cppLib.keepStaticStorable(SpecializedStorable("Foo"))
+
+        gc.collect()
+
+        retrieved = cppLib.keepStaticStorable()
+        self.assertIsInstance(retrieved, Storable)
+        self.assertIsInstance(retrieved, cppLib.CppStorable)
+        self.assertIsInstance(retrieved, SpecializedStorable)
+        self.assertEqual(repr(retrieved), "Pythonic Foo")
+        cppLib.assertPythonStorable(retrieved, "Pythonic Foo")
 
 
 class CppStorableTestSuite(lsst.utils.tests.TestCase):

@@ -61,7 +61,7 @@ public:
         PYBIND11_OVERLOAD_NAME(std::size_t, Base, "__hash__", hash_value, );
     }
 
-    bool equals(Base const& other) const noexcept override {
+    bool equals(Storable const& other) const noexcept override {
         PYBIND11_OVERLOAD_NAME(bool, Base, "__eq__", equals, other);
     }
 };
