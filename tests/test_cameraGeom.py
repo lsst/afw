@@ -323,7 +323,6 @@ class CameraGeomTestCase(lsst.utils.tests.TestCase):
             with self.assertRaises(pexExcept.InvalidParameterError):
                 camera.transform(point, FOCAL_PLANE, CameraSys("pixels", "invalid"))
 
-    @unittest.expectedFailure
     def testDetectorCollectionPersistence(self):
         """Test that we can round-trip a DetectorCollection through FITS I/O.
         """
@@ -336,7 +335,6 @@ class CameraGeomTestCase(lsst.utils.tests.TestCase):
                 collectionOut = DetectorCollection.readFits(filename)
             self.assertDetectorCollectionsEqual(collectionIn, collectionOut)
 
-    @unittest.expectedFailure
     def testCameraPersistence(self):
         """Test that we can round-trip a Camera through FITS I/O.
         """

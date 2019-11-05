@@ -329,6 +329,9 @@ void Amplifier::toRecord(table::BaseRecord & record) const {
     record.set(helper.saturation, fields.saturation);
     record.set(helper.suspectLevel, fields.suspectLevel);
     record.set(helper.readoutCorner, static_cast<int>(fields.readoutCorner));
+    ndarray::Array<double, 1, 1> coeffs = ndarray::copy(fields.linearityCoeffs);
+    record.set(helper.linearityCoeffs, coeffs);
+    record.set(helper.linearityType, fields.linearityType);
     record.set(helper.rawBBox, fields.rawBBox);
     record.set(helper.rawDataBBox, fields.rawDataBBox);
     record.set(helper.rawFlipX, fields.rawFlipX);
