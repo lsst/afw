@@ -90,6 +90,8 @@ class ChebyshevBoundedFieldTestCase(lsst.utils.tests.TestCase):
 
         array = np.arange(self.bbox.getArea(), dtype=np.float32).reshape(self.bbox.getDimensions())
         self.image = lsst.afw.image.ImageF(array)
+        self.fields = [lsst.afw.math.ChebyshevBoundedField(self.bbox, coeffs) for _, coeffs in self.cases]
+        self.product = lsst.afw.math.ProductBoundedField(self.fields)
 
     def tearDown(self):
         del self.bbox
@@ -143,6 +145,18 @@ class ChebyshevBoundedFieldTestCase(lsst.utils.tests.TestCase):
                                          rtol=factor*1E-13)
             self.assertFloatsEqual(
                 scaled.getCoefficients(), factor*field.getCoefficients())
+
+    def testProductEvaluate(self):
+        """Test that ProductBoundedField.evaluate is equivalent to multiplying
+        its nested BoundedFields.
+        """
+        zFlat1 = self.product.evaluate(self.xFlat, self.yFlat)
+        zFlat2 = np.array([self.product.evaluate(x, y) for x, y in zip(self.xFlat, self.yFlat)])
+        self.assertFloatsAlmostEqual(zFlat1, zFlat2)
+        zFlat3 = np.ones(zFlat1.shape, dtype=float)
+        for field in self.fields:
+            zFlat3 *= field.evaluate(self.xFlat, self.yFlat)
+        self.assertFloatsAlmostEqual(zFlat1, zFlat3)
 
     def testMultiplyImage(self):
         """Test Multiplying in place an image.
@@ -355,8 +369,8 @@ class ChebyshevBoundedFieldTestCase(lsst.utils.tests.TestCase):
                     outField2.getCoefficients(), coefficients, rtol=1E-7, atol=1E-7)
 
     def testPersistence(self):
-        """Test that we can fit 1-d arrays produced by a ChebyshevBoundedField and
-        get the same coefficients back.
+        """Test that we can round-trip a ChebyshevBoundedField through
+        persistence.
         """
         boxD = lsst.geom.Box2D(self.bbox)
         nPoints = 50
@@ -381,6 +395,15 @@ class ChebyshevBoundedFieldTestCase(lsst.utils.tests.TestCase):
             inField.writeFits(filename)
             outField = lsst.afw.math.ChebyshevBoundedField.readFits(filename)
             self.assertEqual(inField.getBBox(), outField.getBBox())
+
+    def testProductPersistence(self):
+        """Test that we can round-trip a ProductBoundedField through
+        persistence.
+        """
+        with lsst.utils.tests.getTempFilePath(".fits") as filename:
+            self.product.writeFits(filename)
+            out = lsst.afw.math.ProductBoundedField.readFits(filename)
+            self.assertEqual(self.product, out)
 
     def testTruncate(self):
         """Test that truncate() works as expected.
