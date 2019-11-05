@@ -279,7 +279,7 @@ ExposureInfo::FitsWriteData ExposureInfo::_startWriteFits(lsst::geom::Point2I co
         std::shared_ptr<daf::base::PropertyList> wcsMetadata;
         try {
             wcsMetadata = newWcs->getFitsMetadata(true);
-        } catch (pex::exceptions::RuntimeError) {
+        } catch (pex::exceptions::RuntimeError const&) {
             // cannot represent this WCS as FITS-WCS; don't write its metadata
         }
         if (wcsMetadata) {

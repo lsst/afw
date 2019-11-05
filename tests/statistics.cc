@@ -260,7 +260,7 @@ BOOST_AUTO_TEST_CASE(StatisticsTestImages,
         std::string afwdata_dir;
         try {
             afwdata_dir = lsst::utils::getPackageDir("afwdata");
-        } catch (lsst::pex::exceptions::NotFoundError) {
+        } catch (lsst::pex::exceptions::NotFoundError const&) {
             cerr << "Skipping: Test requires afwdata to be available" << endl;
             return;
         }

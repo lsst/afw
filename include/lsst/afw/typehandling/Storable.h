@@ -51,7 +51,9 @@ LSST_EXCEPTION_TYPE(UnsupportedOperationException, pex::exceptions::RuntimeError
  * Storable may be subclassed by either C++ or Python classes. Many operations defined by Storable are
  * optional, and may throw UnsupportedOperationException if they are not defined.
  *
- * @see StorableHelper
+ * @note Any C++ subclass `X` of Storable that supports Python subclasses must
+ *       have a %pybind11 wrapper that uses `StorableHelper<X>` (or a subclass)
+ *       and lsst::utils::python::PySharedPtr.
  */
 class Storable : public table::io::Persistable {
 public:
@@ -67,6 +69,9 @@ public:
      *
      * @note If this class supports a `clone` operation, the two should behave
      *       identically except for the formal return type.
+     *
+     * @note When called on Python classes, this method delegates to
+     *       `__deepcopy__` if it exists.
      */
     // Return shared_ptr to work around https://github.com/pybind/pybind11/issues/1138
     virtual std::shared_ptr<Storable> cloneStorable() const;
@@ -75,6 +80,9 @@ public:
      * Create a string representation of this object (optional operation).
      *
      * @throws UnsupportedOperationException Thrown if this object does not have a string representation.
+     *
+     * @note When called on Python classes, this method delegates to
+     *       `__repr__`.
      */
     virtual std::string toString() const;
 
@@ -83,7 +91,11 @@ public:
      *
      * @throws UnsupportedOperationException Thrown if this object is not hashable.
      *
-     * @note Subclass authors are responsible for any associated specializations of std::hash.
+     * @note C++ subclass authors are responsible for any associated
+     *       specializations of std::hash.
+     *
+     * @note When called on Python classes, this method delegates to `__hash__`
+     *       if it exists.
      */
     virtual std::size_t hash_value() const;
 
@@ -103,6 +115,9 @@ public:
      * compile-time types of the left- and right-hand sides are.
      *
      * @see singleClassEquals
+     *
+     * @note When called on Python classes, this method delegates to `__eq__`
+     *       if it exists.
      */
     virtual bool equals(Storable const& other) const noexcept;
 

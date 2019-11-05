@@ -89,7 +89,7 @@ void checkExtType(ImageBaseFitsReader const & reader, std::shared_ptr<daf::base:
                                reader.getFileName() % reader.getHdu() % expected % exttype));
         }
         metadata->remove("EXTTYPE");
-    } catch (pex::exceptions::NotFoundError) {
+    } catch (pex::exceptions::NotFoundError const&) {
         LOGL_WARN("afw.image.MaskedImageFitsReader", "Expected extension type not found: %s",
                   expected.c_str());
     }

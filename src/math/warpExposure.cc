@@ -301,7 +301,7 @@ int warpImage(DestImageT &destImage, SrcImageT const &srcImage,
     std::shared_ptr<SeparableKernel> warpingKernelPtr = control.getWarpingKernel();
     try {
         warpingKernelPtr->shrinkBBox(srcImage.getBBox(image::LOCAL));
-    } catch (lsst::pex::exceptions::InvalidParameterError) {
+    } catch (lsst::pex::exceptions::InvalidParameterError const&) {
         for (int y = 0, height = destImage.getHeight(); y < height; ++y) {
             for (typename DestImageT::x_iterator destPtr = destImage.row_begin(y), end = destImage.row_end(y);
                  destPtr != end; ++destPtr) {

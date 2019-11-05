@@ -173,7 +173,7 @@ string GetGFilenamePath(int argc, char **argv) {
             // inImagePath = dataDir + "/data/fpC-002570-r6-0199_sub.fits"; //Also works - this one was not
             // used at all in the previous avatar of this test.
             inImagePath = dataDir + "/data/fpC-005902-r6-0677_sub.fits";
-        } catch (lsst::pex::exceptions::NotFoundError) {
+        } catch (lsst::pex::exceptions::NotFoundError const&) {
             cerr << "Usage: maskedImage1 [inputBaseName1] [inputBaseName2] [outputBaseName1] "
                     "[outputBaseName2]"
                  << endl;

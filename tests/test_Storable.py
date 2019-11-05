@@ -32,6 +32,7 @@ import testGenericMapLib as cppLib
 class DemoStorable(Storable):
     """Test that we can inherit from Storable in Python.
     """
+
     def __init__(self, state):
         super().__init__()
         self._state = state
@@ -55,6 +56,15 @@ class DemoStorable(Storable):
         return self._state == other._state
 
 
+class SpecializedStorable(cppLib.CppStorable):
+    """Test that we can inherit from C++ subclasses of Storable that
+    are not Storable itself.
+    """
+
+    def __repr__(self):
+        return "Pythonic " + super().__repr__()
+
+
 class PythonStorableTestSuite(lsst.utils.tests.TestCase):
 
     def setUp(self):
@@ -70,9 +80,16 @@ class PythonStorableTestSuite(lsst.utils.tests.TestCase):
         self.assertIsNot(deep, self.testbed)
         self.assertEqual(deep, self.testbed)
 
+        cpp = cppLib.duplicate(self.testbed)
+        self.assertIsInstance(cpp, Storable)
+        self.assertIsInstance(cpp, DemoStorable)
+        self.assertIsNot(cpp, self.testbed)
+        self.assertEqual(cpp, self.testbed)
+
         self.aList.append(43)
         self.assertEqual(shallow, DemoStorable([42, 43]))
         self.assertEqual(deep, DemoStorable([42]))
+        self.assertEqual(cpp, DemoStorable([42]))
 
     def testStr(self):
         self.assertEqual(str(self.testbed), "value = [42]")
@@ -89,7 +106,6 @@ class PythonStorableTestSuite(lsst.utils.tests.TestCase):
         self.assertEqual(self.testbed, DemoStorable([42]))
         self.assertNotEqual(self.testbed, DemoStorable(0))
 
-    @unittest.skip("TODO: Fix this bug in DM-21314")
     def testGarbageCollection(self):
         cppLib.keepStaticStorable(DemoStorable(3))
 
@@ -99,6 +115,18 @@ class PythonStorableTestSuite(lsst.utils.tests.TestCase):
         self.assertIsInstance(retrieved, Storable)
         self.assertIsInstance(retrieved, DemoStorable)
         self.assertEqual(retrieved, DemoStorable(3))
+
+    def testInheritedGarbageCollection(self):
+        cppLib.keepStaticStorable(SpecializedStorable("Foo"))
+
+        gc.collect()
+
+        retrieved = cppLib.keepStaticStorable()
+        self.assertIsInstance(retrieved, Storable)
+        self.assertIsInstance(retrieved, cppLib.CppStorable)
+        self.assertIsInstance(retrieved, SpecializedStorable)
+        self.assertEqual(repr(retrieved), "Pythonic Foo")
+        cppLib.assertPythonStorable(retrieved, "Pythonic Foo")
 
 
 class CppStorableTestSuite(lsst.utils.tests.TestCase):

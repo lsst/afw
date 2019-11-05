@@ -61,7 +61,7 @@ int main(int argc, char **argv) {
         try {
             std::string dataDir = lsst::utils::getPackageDir("afwdata");
             inImagePath = dataDir + "/ImSim/calexp/v85408556-fr/R23/S11.fits";
-        } catch (lsst::pex::exceptions::NotFoundError) {
+        } catch (lsst::pex::exceptions::NotFoundError const&) {
             std::cerr << "Usage: timeWcs [fitsFile [nIter]]" << std::endl;
             std::cerr << "fitsFile is the path to an exposure" << std::endl;
             std::cerr << "nIter (default " << DefNIter << ") is the number of iterations" << std::endl;
