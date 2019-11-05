@@ -450,6 +450,30 @@ def assertTransformMapsEqual(self, map1, map2, **kwds):
 
 
 @inTestCase
+def assertAmplifiersEqual(self, amp1, amp2):
+    self.assertEqual(amp1.getName(), amp2.getName())
+    self.assertEqual(amp1.getBBox(), amp2.getBBox())
+    self.assertEqual(amp1.getGain(), amp2.getGain())
+    self.assertEqual(amp1.getReadNoise(), amp2.getReadNoise())
+    self.assertEqual(amp1.getSaturation(), amp2.getSaturation())
+    self.assertEqual(amp1.getReadoutCorner(), amp2.getReadoutCorner())
+    self.assertEqual(amp1.getSuspectLevel(), amp2.getSuspectLevel())
+    self.assertEqual(amp1.getLinearityCoeffs().shape, amp2.getLinearityCoeffs().shape)
+    self.assertFloatsEqual(amp1.getLinearityCoeffs(), amp2.getLinearityCoeffs())
+    self.assertEqual(amp1.getLinearityType(), amp2.getLinearityType())
+    self.assertEqual(amp1.getLinearityThreshold(), amp2.getLinearityThreshold())
+    self.assertEqual(amp1.getLinearityMaximum(), amp2.getLinearityMaximum())
+    self.assertEqual(amp1.getLinearityUnits(), amp2.getLinearityUnits())
+    self.assertEqual(amp1.getRawBBox(), amp2.getRawBBox())
+    self.assertEqual(amp1.getRawDataBBox(), amp2.getRawDataBBox())
+    self.assertEqual(amp1.getRawFlipX(), amp2.getRawFlipX())
+    self.assertEqual(amp1.getRawFlipY(), amp2.getRawFlipY())
+    self.assertEqual(amp1.getRawHorizontalOverscanBBox(), amp2.getRawHorizontalOverscanBBox())
+    self.assertEqual(amp1.getRawVerticalOverscanBBox(), amp2.getRawVerticalOverscanBBox())
+    self.assertEqual(amp1.getRawPrescanBBox(), amp2.getRawPrescanBBox())
+
+
+@inTestCase
 def assertDetectorsEqual(self, detector1, detector2, **kwds):
     """Compare two Detectors.
     """
@@ -468,6 +492,9 @@ def assertDetectorsEqual(self, detector1, detector2, **kwds):
     self.assertEqual(orientationIn.getRoll(), orientationOut.getRoll())
     self.assertFloatsEqual(detector1.getCrosstalk(), detector2.getCrosstalk())
     self.assertTransformMapsEqual(detector1.getTransformMap(), detector2.getTransformMap(), **kwds)
+    self.assertEqual(len(detector1.getAmplifiers()), len(detector2.getAmplifiers()))
+    for amp1, amp2 in zip(detector1.getAmplifiers(), detector2.getAmplifiers()):
+        self.assertAmplifiersEqual(amp1, amp2)
 
 
 @inTestCase
