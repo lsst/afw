@@ -510,7 +510,7 @@ public:
         int tableVersion = 1;
         try {
             catalogs.front().getSchema().find<double>(EXPTIME_FIELD_NAME);
-        } catch (pex::exceptions::NotFoundError) {
+        } catch (pex::exceptions::NotFoundError const&) {
             tableVersion = CALIB_TABLE_CURRENT_VERSION;
         }
 

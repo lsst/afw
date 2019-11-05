@@ -57,7 +57,7 @@ int main(int argc, char **argv) {
         try {
             std::string dataDir = lsst::utils::getPackageDir("afwdata");
             inImagePath = dataDir + "/data/medexp.fits";
-        } catch (lsst::pex::exceptions::NotFoundError) {
+        } catch (lsst::pex::exceptions::NotFoundError const&) {
             std::cerr << "Usage: wcsTest [fitsFile]" << std::endl;
             std::cerr << "fitsFile is the path to an exposure" << std::endl;
             std::cerr << "\nError: setup afwdata or specify fitsFile.\n" << std::endl;

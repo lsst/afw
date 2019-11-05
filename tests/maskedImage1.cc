@@ -46,7 +46,7 @@ int test(int argc, char **argv) {
                                                                  // twice in the previous avatar.
             outImagePath1 = "tests/file:maskedImage1_output_1.fits";
             outImagePath2 = "tests/file:maskedImage1_output_2.fits";
-        } catch (lsst::pex::exceptions::NotFoundError) {
+        } catch (lsst::pex::exceptions::NotFoundError const&) {
             cerr << "Usage: inputBaseName1 inputBaseName2 outputBaseName1  outputBaseName2" << endl;
             cerr << "Warning: tests not run! Setup afwdata if you wish to use the default fitsFile." << endl;
             return EXIT_SUCCESS;

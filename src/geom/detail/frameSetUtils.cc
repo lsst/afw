@@ -106,7 +106,7 @@ std::shared_ptr<ast::FrameSet> readFitsWcs(daf::base::PropertySet& metadata, boo
     std::shared_ptr<ast::Object> obj;
     try {
         obj = channel.read();
-    } catch (std::runtime_error) {
+    } catch (std::runtime_error const&) {
         throw LSST_EXCEPT(pex::exceptions::TypeError, "The metadata does not describe an AST object");
     }
 

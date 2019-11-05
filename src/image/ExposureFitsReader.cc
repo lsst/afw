@@ -70,7 +70,7 @@ public:
         // Try to read WCS from image metadata, and if found, strip the keywords used
         try {
             wcs = afw::geom::makeSkyWcs(*imageMetadata, true);
-        } catch (lsst::pex::exceptions::TypeError) {
+        } catch (lsst::pex::exceptions::TypeError const&) {
             LOGLS_DEBUG(_log, "No WCS found in FITS metadata");
         }
         if (wcs && any(xy0.ne(lsst::geom::Point2I(0, 0)))) {

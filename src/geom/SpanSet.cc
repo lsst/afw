@@ -919,7 +919,7 @@ void SpanSet::setImage(image::Image<ImageT>& image, ImageT val, lsst::geom::Box2
         } else {
             applyFunctor(setterFunc, image, val);
         }
-    } catch (pex::exceptions::OutOfRangeError e) {
+    } catch (pex::exceptions::OutOfRangeError const&) {
         throw LSST_EXCEPT(pex::exceptions::OutOfRangeError,
                           "Footprint Bounds Outside image, set doClip to true");
     }
