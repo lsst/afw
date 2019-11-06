@@ -438,7 +438,6 @@ class ButlerImage(FakeImageDataSource):
         self.type = type
         self.butler = butler
         self.kwargs = kwargs
-        self.isRaw = False
         self.background = background
         self.verbose = verbose
         self.callback = callback
