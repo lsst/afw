@@ -64,9 +64,6 @@ class ChebyshevBoundedField:
 
         bbox = boundedField.getBBox()
 
-        xStepSize = (bbox.getMaxX() - bbox.getMinX()) / nStepX
-        yStepSize = (bbox.getMaxY() - bbox.getMinY()) / nStepY
-
         xSteps = np.linspace(bbox.getMinX(), bbox.getMaxX(), nStepX)
         ySteps = np.linspace(bbox.getMinY(), bbox.getMaxY(), nStepY)
 
