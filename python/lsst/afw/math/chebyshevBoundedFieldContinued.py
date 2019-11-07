@@ -26,6 +26,7 @@ from .chebyshevBoundedField import ChebyshevBoundedField, ChebyshevBoundedFieldC
 
 __all__ = []  # import this module only for its side effects
 
+
 @continueClass  # noqa: F811
 class ChebyshevBoundedField:
     @classmethod
