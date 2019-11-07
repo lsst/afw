@@ -144,11 +144,6 @@ PYBIND11_MODULE(exposureInfo, mod) {
     declareGenericMethods<std::shared_ptr<typehandling::Storable const>>(cls);
     declareGenericMethodsMerged(cls);
 
-    // Deprecated versions
-    cls.def("hasCalib", &ExposureInfo::hasCalib);
-    cls.def("getCalib", &ExposureInfo::getCalib);
-    cls.def("setCalib", &ExposureInfo::setCalib, "calib"_a);
-
     cls.attr("KEY_PHOTO_CALIB") = ExposureInfo::KEY_PHOTO_CALIB.getId();
     cls.def("hasPhotoCalib", &ExposureInfo::hasPhotoCalib);
     cls.def("getPhotoCalib", &ExposureInfo::getPhotoCalib);

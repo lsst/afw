@@ -300,17 +300,6 @@ public:
     /// Return the Exposure's PhotoCalib object
     std::shared_ptr<PhotoCalib const> getPhotoCalib() const { return _info->getPhotoCalib(); }
 
-    /// Set the Exposure's Calib object
-    [[deprecated("Replaced with setPhotoCalib (will be removed in 18.0)")]] void setCalib(
-            std::shared_ptr<PhotoCalib> photoCalib) {
-        _info->setPhotoCalib(photoCalib);
-    }
-    /// Return the Exposure's Calib object
-    [[deprecated("Replaced with getPhotoCalib (will be removed in 18.0)")]] std::shared_ptr<PhotoCalib const>
-    getCalib() const {
-        return _info->getPhotoCalib();
-    }
-
     /// Set the Exposure's Psf
     void setPsf(std::shared_ptr<lsst::afw::detection::Psf const> psf) { _info->setPsf(psf); }
 
