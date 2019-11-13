@@ -45,6 +45,7 @@ from .rotateBBoxBy90 import rotateBBoxBy90
 from .assembleImage import assembleAmplifierImage, assembleAmplifierRawImage
 from .cameraGeomLib import FIELD_ANGLE, FOCAL_PLANE
 from lsst.afw.display.utils import _getDisplayFromDisplayOrFrame
+from lsst.afw.cameraGeom import DetectorType
 
 import lsst.afw.display as afwDisplay
 import lsst.afw.display.utils as displayUtils
@@ -146,7 +147,8 @@ def plotFocalPlane(camera, fieldSizeDeg_x=0, fieldSizeDeg_y=None, dx=0.1, dy=0.1
         else:
             pcolors.append('k')
 
-    colorMap = {0: 'b', 1: 'y', 2: 'g', 3: 'r'}
+    colorMap = {DetectorType.SCIENCE: 'b', DetectorType.FOCUS: 'y',
+                DetectorType.GUIDER: 'g', DetectorType.WAVEFRONT: 'r'}
 
     patches = []
     colors = []
@@ -374,7 +376,7 @@ class FakeImageDataSource:
             The constructed image.
         """
         ccdImage = makeImageFromCcd(det, isTrimmed=self.isTrimmed, showAmpGain=self.showAmpGain,
-                                imageFactory=imageFactory, binSize=binSize)
+                                    imageFactory=imageFactory, binSize=binSize)
         return afwMath.rotateImageBy90(ccdImage, det.getOrientation().getNQuarter()), det
 
     def getAmpImage(self, amp, imageFactory):
