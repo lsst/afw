@@ -50,3 +50,11 @@ from .background import *
 from .background import *
 import lsst.afw.image.pixel  # for SinglePixel, needed by the warping functions
 from .warpExposure import *
+
+from lsst.utils import deprecate_pybind11 as _deprecate_pybind11  # don't pollute package namespace
+
+# Removal ticket is DM-22192
+PixelScaleBoundedField = _deprecate_pybind11(
+    PixelScaleBoundedField,
+    reason="Replaced by PixelAreaBoundedField; will be removed prior to release 20."
+)
