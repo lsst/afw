@@ -373,8 +373,9 @@ class FakeImageDataSource:
         ccdImage : `lsst.afw.image.Image`
             The constructed image.
         """
-        return makeImageFromCcd(det, isTrimmed=self.isTrimmed, showAmpGain=self.showAmpGain,
-                                imageFactory=imageFactory, binSize=binSize), det
+        ccdImage = makeImageFromCcd(det, isTrimmed=self.isTrimmed, showAmpGain=self.showAmpGain,
+                                imageFactory=imageFactory, binSize=binSize)
+        return afwMath.rotateImageBy90(ccdImage, det.getOrientation().getNQuarter()), det
 
     def getAmpImage(self, amp, imageFactory):
         """Return an amp segment image.
