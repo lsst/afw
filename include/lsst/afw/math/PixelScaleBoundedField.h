@@ -44,7 +44,9 @@ namespace math {
  *
  * Typically used to move an image or source flux between surface brightness and fluence space.
  */
-class PixelScaleBoundedField : public BoundedField {
+// Removal ticket is DM-22192.
+class [[deprecated("Replaced by PixelAreaBoundedField; will be removed prior to release 20.")]]
+    PixelScaleBoundedField : public BoundedField {
 public:
     /**
      *  Create a PixelScaleBoundedField from a bounding box and SkyWcs.
