@@ -26,7 +26,16 @@
 from lsst.utils import deprecate_pybind11
 
 # for backwards compatibility make lsst.geom public symbols available in lsst.afw.geom
-from lsst.geom import *
+# DO NOT import * here, or new geom classes will break the docs
+from lsst.geom import (
+    AffineTransform, Angle, AngleUnit, Box2D, Box2I, BoxD, BoxI, CoordinateExpr, CoordinateExpr2,
+    CoordinateExpr3, Extent, Extent2D, Extent2I, Extent3D, Extent3I, ExtentBase2D, ExtentBase2I,
+    ExtentBase3D, ExtentBase3I, ExtentD, ExtentI, LinearTransform, Point, Point2D, Point2I, Point3D,
+    Point3I, PointBase2D, PointBase2I, PointBase3D, PointBase3I, PointD, PointI, SpherePoint, arcsecToRad,
+    averageSpherePoint, degToRad, isAngle, makeAffineTransformFromTriple, masToRad, radToArcsec, radToDeg,
+    radToMas, radians, degrees, hours, arcminutes, arcseconds, milliarcseconds, PI, TWOPI, HALFPI,
+    ONE_OVER_PI, SQRTPI, INVSQRTPI, ROOT2
+)
 
 # But we deprecate the usages of these aliases
 # Constants (like geom.PI) and units (geom.arcseconds) can not be wrapped
