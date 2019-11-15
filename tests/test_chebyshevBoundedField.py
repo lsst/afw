@@ -371,8 +371,8 @@ class ChebyshevBoundedFieldTestCase(lsst.utils.tests.TestCase):
                 self.assertFloatsAlmostEqual(
                     outField2.getCoefficients(), coefficients, rtol=1E-7, atol=1E-7)
 
-    def testApproxBoundedField(self):
-        """Test the approxBoundedField instantiation with the example of
+    def testApproximate(self):
+        """Test the approximate instantiation with the example of
         fitting a PixelAreaBoundedField to reasonable precision.
         """
 
@@ -386,7 +386,7 @@ class ChebyshevBoundedFieldTestCase(lsst.utils.tests.TestCase):
 
         pixelAreaField = lsst.afw.math.PixelAreaBoundedField(bbox, skyWcs,
                                                              unit=lsst.geom.arcseconds)
-        approxField = lsst.afw.math.ChebyshevBoundedField.approxBoundedField(pixelAreaField)
+        approxField = lsst.afw.math.ChebyshevBoundedField.approximate(pixelAreaField)
 
         # Choose random points to test rather than a grid to ensure that
         # we are not using the same gridded points as used for the

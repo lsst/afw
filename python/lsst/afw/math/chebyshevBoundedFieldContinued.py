@@ -30,9 +30,9 @@ __all__ = []  # import this module only for its side effects
 @continueClass  # noqa: F811
 class ChebyshevBoundedField:
     @classmethod
-    def approxBoundedField(cls, boundedField,
-                           orderX=3, orderY=3,
-                           nStepX=100, nStepY=100):
+    def approximate(cls, boundedField,
+                    orderX=3, orderY=3,
+                    nStepX=100, nStepY=100):
         """
         Approximate a bounded field as a ChebyshevBoundedField.
 
