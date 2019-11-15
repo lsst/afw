@@ -28,6 +28,7 @@ or
    pytest test_chebyshevBoundedField.py
 """
 
+import os
 import unittest
 
 import numpy as np
@@ -37,7 +38,9 @@ import lsst.pex.exceptions
 import lsst.geom
 import lsst.afw.image
 import lsst.afw.math
+import lsst.afw.geom
 
+testPath = os.path.abspath(os.path.dirname(__file__))
 
 CHEBYSHEV_T = [
     lambda x: x**0,
@@ -367,6 +370,40 @@ class ChebyshevBoundedFieldTestCase(lsst.utils.tests.TestCase):
                                                                     array, weights, ctrl)
                 self.assertFloatsAlmostEqual(
                     outField2.getCoefficients(), coefficients, rtol=1E-7, atol=1E-7)
+
+    def testApproxBoundedField(self):
+        """Test the approxBoundedField instantiation with the example of
+        fitting a PixelAreaBoundedField to reasonable precision.
+        """
+
+        # This HSC-R band wcs was chosen arbitrarily from the edge of
+        # field-of-view (ccd 4) for the w_2019_38 processing of RC2 as it
+        # represents the typical use case of the approxBoundedField method.
+        skyWcs = lsst.afw.geom.SkyWcs.readFits(os.path.join(testPath,
+                                                            "data/jointcal_wcs-0034772-004.fits"))
+        bbox = lsst.geom.Box2I(lsst.geom.Point2I(0, 0),
+                               lsst.geom.Point2I(2047, 4175))
+
+        pixelAreaField = lsst.afw.math.PixelAreaBoundedField(bbox, skyWcs,
+                                                             unit=lsst.geom.arcseconds)
+        approxField = lsst.afw.math.ChebyshevBoundedField.approxBoundedField(pixelAreaField)
+
+        # Choose random points to test rather than a grid to ensure that
+        # we are not using the same gridded points as used for the
+        # approximation.
+        np.random.seed(seed=1000)
+        xTest = np.random.uniform(low=0.0, high=bbox.getMaxX(), size=10000)
+        yTest = np.random.uniform(low=0.0, high=bbox.getMaxY(), size=10000)
+
+        # The evaluation of approxField is ~80x faster than the
+        # evaluation of pixelAreaField.
+        expect = pixelAreaField.evaluate(xTest, yTest)
+        result = approxField.evaluate(xTest, yTest)
+
+        # The approximation is good to the 1e-7 level (absolute)
+        self.assertFloatsAlmostEqual(result, expect, atol=1e-7)
+        # and to the 1e-5 level (relative).  This is < 0.01 mmag.
+        self.assertFloatsAlmostEqual(result, expect, rtol=1e-5)
 
     def testPersistence(self):
         """Test that we can round-trip a ChebyshevBoundedField through
