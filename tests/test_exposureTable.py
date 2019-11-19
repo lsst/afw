@@ -35,7 +35,7 @@ import numpy as np
 
 import lsst.utils.tests
 import lsst.pex.exceptions
-from lsst.daf.base import DateTime, PropertySet
+from lsst.daf.base import DateTime, PropertySet, PropertyList
 import lsst.geom
 import lsst.afw.table
 from lsst.afw.coord import Observatory, Weather
@@ -104,6 +104,9 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
         self.ka = schema.addField("a", type=np.float64, doc="doc for a")
         self.kb = schema.addField("b", type=np.int64, doc="doc for b")
         self.cat = lsst.afw.table.ExposureCatalog(schema)
+        self.plist = PropertyList()
+        self.plist['VALUE'] = 1.0
+        self.cat.setMetadata(self.plist)
         self.wcs = self.createWcs()
         self.psf = DummyPsf(2.0)
         self.bbox0 = lsst.geom.Box2I(
@@ -189,6 +192,11 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
             self.assertIsNone(cat1[1].getVisitInfo())
             self.assertIsNone(cat1[0].getDetector())
             self.assertDetectorsEqual(cat1[1].getDetector(), self.detector)
+            # We are not checking for plist equality because reading from
+            # fits may add extra keys; for this test we care that the
+            # keys we set are properly round-tripped.
+            for key in self.plist:
+                self.assertEqual(self.plist[key], cat1.getMetadata()[key])
 
     def testGeometry(self):
         bigBox = lsst.geom.Box2D(lsst.geom.Box2I(self.bbox0))

@@ -228,6 +228,8 @@ void ExposureFitsWriter::_writeTable(std::shared_ptr<BaseTable const> const &t, 
     }
     _mapper = _helper.makeWriteMapper(inTable->getSchema());
     std::shared_ptr<BaseTable> outTable = BaseTable::make(_mapper.getOutputSchema());
+    // Put the metadata from inTable in outTable
+    outTable->setMetadata(inTable->getMetadata());
     io::FitsWriter::_writeTable(outTable, nRows);
     _fits->writeKey("AFW_TYPE", "EXPOSURE", "Tells lsst::afw to load this as an Exposure table.");
     _fits->writeKey(EXPOSURE_TABLE_VERSION_KEY, EXPOSURE_TABLE_CURRENT_VERSION, "Exposure table version");
