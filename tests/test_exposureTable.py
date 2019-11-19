@@ -192,7 +192,10 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
             self.assertIsNone(cat1[1].getVisitInfo())
             self.assertIsNone(cat1[0].getDetector())
             self.assertDetectorsEqual(cat1[1].getDetector(), self.detector)
-            for key in self.plist.keys():
+            # We are not checking for plist equality because reading from
+            # fits may add extra keys; for this test we care that the
+            # keys we set are properly round-tripped.
+            for key in self.plist:
                 self.assertEqual(self.plist[key], cat1.getMetadata()[key])
 
     def testGeometry(self):
