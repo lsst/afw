@@ -239,14 +239,22 @@ public:
      *
      * @deprecated Use getCtr instead
      */
-    inline int getCtrX() const { return _ctrX; }
+    [[deprecated("Use `getCtr` instead. To be removed after 20.0.0.")]]  // DM-22276
+            inline int
+            getCtrX() const {
+        return _ctrX;
+    }
 
     /**
      * Return y index of kernel's center
      *
      * @deprecated Use getCtr instead
      */
-    inline int getCtrY() const { return _ctrY; }
+    [[deprecated("Use `getCtr` instead. To be removed after 20.0.0.")]]  // DM-22276
+            inline int
+            getCtrY() const {
+        return _ctrY;
+    }
 
     /**
      * return parent bounding box, with XY0 = -center
@@ -335,7 +343,9 @@ public:
      *
      * @deprecated Use setCtr instead
      */
-    inline void setCtrX(int ctrX) {
+    [[deprecated("Use `setCtr` instead. To be removed after 20.0.0.")]]  // DM-22276
+            inline void
+            setCtrX(int ctrX) {
         _ctrX = ctrX;
         _setKernelXY();
     }
@@ -345,7 +355,9 @@ public:
      *
      * @deprecated Use setCtr instead
      */
-    inline void setCtrY(int ctrY) {
+    [[deprecated("Use `setCtr` instead. To be removed after 20.0.0.")]]  // DM-22276
+            inline void
+            setCtrY(int ctrY) {
         _ctrY = ctrY;
         _setKernelXY();
     }

@@ -20,5 +20,5 @@ scripts.BasicSConscript.pybind11(['function',
                                   'approximate',
                                   'background/background',
                                   'warpExposure',
-                                  'kernel'],
+                                  'kernel/kernel'],
                                  addUnderscore=False)
