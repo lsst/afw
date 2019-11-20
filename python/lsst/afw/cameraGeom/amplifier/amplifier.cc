@@ -64,7 +64,7 @@ PyAmplifier declarePyAmplifier(py::module & mod) {
     cls.def("getLinearityThreshold", &Amplifier::getLinearityThreshold);
     cls.def("getLinearityMaximum", &Amplifier::getLinearityMaximum);
     cls.def("getLinearityUnits", &Amplifier::getLinearityUnits);
-    cls.def("getHasRawInfo", &Amplifier::getHasRawInfo);  // TODO: deprecate
+    cls.def("getHasRawInfo", &Amplifier::getHasRawInfo);  // TODO: deprecate, DM-21711
     cls.def("getRawBBox", &Amplifier::getRawBBox);
     cls.def("getRawDataBBox", &Amplifier::getRawDataBBox);
     cls.def("getRawFlipX", &Amplifier::getRawFlipX);
