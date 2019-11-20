@@ -23,9 +23,11 @@ __all__ = ["SimpleMatch", "ReferenceMatch", "SourceMatch", "clone", "matchCls", 
 
 import numpy as np
 
+from lsst.utils.deprecated import deprecate_pybind11
+
 from ._base import BaseCatalog
 from ._schema import Schema
-from ._table import SimpleMatch, ReferenceMatch, SourceMatch
+from ._table import SimpleMatch, ReferenceMatch, SourceMatch, matchXy, matchRaDec
 
 
 def __repr__(self):  # noqa: N807
@@ -149,3 +151,11 @@ def packMatches(matches):
         record.set(outKey2, match.second.getId())
         record.set(keyD, match.distance)
     return result
+
+
+matchXy = deprecate_pybind11(
+    matchXy,
+    reason="Overloads that don't use `MatchControl` are deprecated. To be removed after 20.0.0.")
+matchRaDec = deprecate_pybind11(
+    matchRaDec,
+    reason="Overloads that don't use `MatchControl` are deprecated. To be removed after 20.0.0.")
