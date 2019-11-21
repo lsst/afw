@@ -83,8 +83,8 @@ public:
     /**
      *  Construct from a compound Key< Array<T> >
      *
-     *  Key< Array<T> > is now deprecated in favor of ArrayKey; this factory function is intended to
-     *  aid in the transition.
+     *  Key< Array<T> > is needed in some cases, but ArrayKey should be preferred in new code when possible.
+     *  This converting constructor is intended to aid compatibility between the two.
      */
     explicit ArrayKey(Key<Array<T> > const& other) noexcept;
 
