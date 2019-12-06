@@ -134,6 +134,8 @@ class TestGroupView(lsst.utils.tests.TestCase):
         """
         allMatches = afwTable.GroupView.build(self.matchedCatalog)
         self.assertTrue(len(allMatches) > 0)
+        testIds = [el for el in allMatches]
+        self.assertEqual(testIds, list(allMatches.ids))
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
