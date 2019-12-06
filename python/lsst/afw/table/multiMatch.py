@@ -259,7 +259,7 @@ class GroupView(collections.abc.Mapping):
         return len(self.ids)
 
     def __iter__(self):
-        return self.ids
+        return iter(self.ids)
 
     def __getitem__(self, key):
         index = numpy.searchsorted(self.ids, key)
