@@ -71,10 +71,8 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         """
         W, H = 2, 99
         image = afwImage.ImageF(lsst.geom.Extent2I(W, H))
-        bgCtrl = afwMath.BackgroundControl(afwMath.Interpolate.LINEAR)
-        bgCtrl.setNxSample(2)
         NY = 10
-        bgCtrl.setNySample(NY)
+        bgCtrl = afwMath.BackgroundControl(2, NY)
         for y in range(H):
             for x in range(W):
                 B = 89
@@ -83,7 +81,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
                 else:
                     image[x, y, afwImage.LOCAL] = B + (y-B)*-1.
         bobj = afwMath.makeBackground(image, bgCtrl)
-        back = bobj.getImageF()
+        back = bobj.getImageF(afwMath.Interpolate.LINEAR)
 
         for iy, by in zip([image[0, y, afwImage.LOCAL] for y in range(H)],
                           [back[0, y, afwImage.LOCAL] for y in range(H)]):
@@ -99,7 +97,8 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         bgCtrl.getStatisticsControl().setNumSigmaClip(3)
         back = afwMath.makeBackground(self.image, bgCtrl)
 
-        self.assertEqual(back.getPixel(xcen, ycen), self.val)
+        with self.assertWarns(FutureWarning):
+            self.assertEqual(back.getPixel(xcen, ycen), self.val)
 
     @unittest.skipIf(AfwdataDir is None, "afwdata not setup")
     def testBackgroundTestImages(self):
@@ -124,25 +123,17 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
             naxis2 = img.getHeight()
 
             # create a background control object
-            bctrl = afwMath.BackgroundControl(afwMath.Interpolate.AKIMA_SPLINE)
-            bctrl.setNxSample(5)
-            bctrl.setNySample(5)
+            bctrl = afwMath.BackgroundControl(5, 5)
 
-            # run the background constructor and call the getPixel() and
-            # getImage() functions.
+            # run the background constructor and call the getImage() function.
             backobj = afwMath.makeBackground(img, bctrl)
 
             pixPerSubimage = img.getWidth()*img.getHeight() / \
                 (bctrl.getNxSample()*bctrl.getNySample())
             stdevInterp = reqStdev/math.sqrt(pixPerSubimage)
 
-            # test getPixel()
-            testval = backobj.getPixel(naxis1//2, naxis2//2)
-            self.assertAlmostEqual(testval/centerValue, 1, places=7)
-            self.assertLess(abs(testval - reqMean), 2*stdevInterp)
-
             # test getImage() by checking the center pixel
-            bimg = backobj.getImageF()
+            bimg = backobj.getImageF(afwMath.Interpolate.AKIMA_SPLINE)
             testImgval = bimg[naxis1//2, naxis2//2, afwImage.LOCAL]
             self.assertLess(abs(testImgval - reqMean), 2*stdevInterp)
 
@@ -162,7 +153,6 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
 
         # check corner, edge, and center pixels
         bctrl = afwMath.BackgroundControl(10, 10)
-        bctrl.setInterpStyle(afwMath.Interpolate.CUBIC_SPLINE)
         bctrl.setNxSample(6)
         bctrl.setNySample(6)
         # large enough to entirely avoid clipping
@@ -196,7 +186,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         ypixels = [0, ny//2, ny - 1]
         for xpix in xpixels:
             for ypix in ypixels:
-                testval = backobj.getPixel(xpix, ypix)
+                testval = backobj.getImageF(afwMath.Interpolate.CUBIC_SPLINE)[xpix, ypix, afwImage.LOCAL]
                 self.assertAlmostEqual(testval/rampimg[xpix, ypix, afwImage.LOCAL], 1, 6)
 
         # Test pickle
@@ -230,19 +220,14 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
             AfwdataDir, "DC3a-Sim", "sci", "v5-e0", "v5-e0-c011-a00.sci.fits")
         mimg = afwImage.MaskedImageF(imagePath)
         binsize = 512
-        bctrl = afwMath.BackgroundControl("NATURAL_SPLINE")
-
-        # note: by default undersampleStyle is THROW_EXCEPTION
-        bctrl.setUndersampleStyle(afwMath.REDUCE_INTERP_ORDER)
-
         nx = int(mimg.getWidth()/binsize) + 1
         ny = int(mimg.getHeight()/binsize) + 1
+        bctrl = afwMath.BackgroundControl(nx, ny)
 
-        bctrl.setNxSample(nx)
-        bctrl.setNySample(ny)
         image = mimg.getImage()
         backobj = afwMath.makeBackground(image, bctrl)
-        image -= backobj.getImageF()
+        # note: by default undersampleStyle is THROW_EXCEPTION
+        image -= backobj.getImageF("NATURAL_SPLINE", "REDUCE_INTERP_ORDER")
 
     def testTicket1781(self):
         """Test an unusual-sized image"""
@@ -251,9 +236,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
 
         parabimg = self.getParabolaImage(nx, ny)
 
-        bctrl = afwMath.BackgroundControl(afwMath.Interpolate.CUBIC_SPLINE)
-        bctrl.setNxSample(16)
-        bctrl.setNySample(4)
+        bctrl = afwMath.BackgroundControl(16, 4)
         bctrl.getStatisticsControl().setNumSigmaClip(10.0)
         bctrl.getStatisticsControl().setNumIter(1)
         afwMath.makeBackground(parabimg, bctrl)
@@ -266,9 +249,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         parabimg = self.getParabolaImage(nx, ny)
 
         # check corner, edge, and center pixels
-        bctrl = afwMath.BackgroundControl(afwMath.Interpolate.CUBIC_SPLINE)
-        bctrl.setNxSample(24)
-        bctrl.setNySample(24)
+        bctrl = afwMath.BackgroundControl(24, 24)
         bctrl.getStatisticsControl().setNumSigmaClip(10.0)
         bctrl.getStatisticsControl().setNumIter(1)
         backobj = afwMath.makeBackground(parabimg, bctrl)
@@ -278,7 +259,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         ypixels = [segmentCenter, ny//2, ny - segmentCenter]
         for xpix in xpixels:
             for ypix in ypixels:
-                testval = backobj.getPixel(bctrl.getInterpStyle(), xpix, ypix)
+                testval = backobj.getImageF(afwMath.Interpolate.CUBIC_SPLINE)[xpix, ypix]
                 realval = parabimg[xpix, ypix, afwImage.LOCAL]
                 # quadratic terms skew the averages of the subimages and the clipped mean for
                 # a subimage != value of center pixel.  1/20 counts on a 10000 count sky
@@ -295,9 +276,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
                                         lsst.geom.Point2I(2079, 4609)),
                         afwImage.LOCAL)
 
-        bctrl = afwMath.BackgroundControl(afwMath.Interpolate.AKIMA_SPLINE)
-        bctrl.setNxSample(16)
-        bctrl.setNySample(16)
+        bctrl = afwMath.BackgroundControl(16, 16)
         bctrl.getStatisticsControl().setNumSigmaClip(3.0)
         bctrl.getStatisticsControl().setNumIter(2)
         backobj = afwMath.makeBackground(mi.getImage(), bctrl)
@@ -306,7 +285,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
             afwDisplay.Display(frame=0).mtv(mi, title=self._testMethodName + " image")
 
         im = mi.getImage()
-        im -= backobj.getImageF()
+        im -= backobj.getImageF(afwMath.Interpolate.AKIMA_SPLINE)
 
         if debugMode:
             afwDisplay.Display(frame=1).mtv(mi, title=self._testMethodName + " image-back")
@@ -336,7 +315,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
             bctrl = afwMath.BackgroundControl(
                 mi.getWidth()//128, mi.getHeight()//128)
             backobj = afwMath.makeBackground(mi.getImage(), bctrl)
-            bgImage = backobj.getImageF()
+            bgImage = backobj.getImageF(afwMath.Interpolate.AKIMA_SPLINE)
             self.assertEqual(bgImage.getBBox(), mi.getBBox())
             bgImageList.append(bgImage)
 
@@ -364,12 +343,12 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         subBBox = lsst.geom.Box2I(lsst.geom.Point2I(1000, 3000),
                                   lsst.geom.Extent2I(100, 100))
 
-        bgFullImage = backobj.getImageF()
+        bgFullImage = backobj.getImageF(afwMath.Interpolate.AKIMA_SPLINE)
         self.assertEqual(bgFullImage.getBBox(), mi.getBBox())
 
         subFullArr = afwImage.ImageF(bgFullImage, subBBox).getArray()
 
-        bgSubImage = backobj.getImageF(subBBox, bctrl.getInterpStyle())
+        bgSubImage = backobj.getImageF(subBBox, afwMath.Interpolate.AKIMA_SPLINE)
         subArr = bgSubImage.getArray()
 
         # the pixels happen to be identical but it is safer not to rely on
@@ -411,7 +390,6 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
 
         # make a background control object
         bctrl = afwMath.BackgroundControl(10, 10)
-        bctrl.setInterpStyle(afwMath.Interpolate.CUBIC_SPLINE)
         bctrl.setNxSample(3)
         bctrl.setNySample(3)
 
@@ -419,15 +397,11 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         # linear
         bctrl.setNxSample(2)
         bctrl.setNySample(2)
-        bctrl.setUndersampleStyle("REDUCE_INTERP_ORDER")
         backobj = afwMath.makeBackground(img, bctrl)
         # Need to interpolate background to discover what we actually needed
-        backobj.getImageF()
+        backobj.getImageF(afwMath.Interpolate.CUBIC_SPLINE, afwMath.UndersampleStyle.REDUCE_INTERP_ORDER)
         self.assertEqual(backobj.getAsUsedInterpStyle(),
                          afwMath.Interpolate.LINEAR)
-
-        # put interp style back up to cspline and see if it throws an exception
-        bctrl.setUndersampleStyle("THROW_EXCEPTION")
 
         def tst(img, bctrl):
             backobj = afwMath.makeBackground(img, bctrl)
@@ -451,7 +425,6 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
 
         # make a background control object
         bctrl = afwMath.BackgroundControl(10, 10)
-        bctrl.setInterpStyle(afwMath.Interpolate.CONSTANT)
         bctrl.setNxSample(1)
         bctrl.setNySample(1)
         bctrl.setUndersampleStyle(afwMath.THROW_EXCEPTION)
@@ -461,7 +434,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         ypixels = [0, ny//2, ny - 1]
         for xpix in xpixels:
             for ypix in ypixels:
-                testval = backobj.getPixel(bctrl.getInterpStyle(), xpix, ypix)
+                testval = backobj.getImageF(afwMath.Interpolate.CONSTANT)[xpix, ypix]
                 self.assertAlmostEqual(testval/mean, 1)
 
     def testAdjustLevel(self):
@@ -470,20 +443,20 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         im = afwImage.ImageF(40, 40)
         im.set(sky)
         nx, ny = im.getWidth()//2, im.getHeight()//2
-        bctrl = afwMath.BackgroundControl("LINEAR", nx, ny)
+        bctrl = afwMath.BackgroundControl(nx, ny)
         bkd = afwMath.makeBackground(im, bctrl)
 
         self.assertEqual(
-            afwMath.makeStatistics(bkd.getImageF(), afwMath.MEAN).getValue(),
+            afwMath.makeStatistics(bkd.getImageF("LINEAR"), afwMath.MEAN).getValue(),
             sky)
 
         delta = 123
         bkd += delta
         self.assertEqual(
-            afwMath.makeStatistics(bkd.getImageF(), afwMath.MEAN).getValue(),
+            afwMath.makeStatistics(bkd.getImageF("LINEAR"), afwMath.MEAN).getValue(),
             sky + delta)
         bkd -= delta
-        self.assertEqual(afwMath.makeStatistics(bkd.getImageF(), afwMath.MEAN).getValue(),
+        self.assertEqual(afwMath.makeStatistics(bkd.getImageF("LINEAR"), afwMath.MEAN).getValue(),
                          sky)
 
     def testNaNFromMaskedImage(self):
@@ -736,10 +709,9 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
 
         # try regular interpolated image (the default)
         bgCtrl = afwMath.BackgroundControl(6, 6)
-        bgCtrl.setInterpStyle(afwMath.Interpolate.AKIMA_SPLINE)
         bgCtrl.setUndersampleStyle(afwMath.REDUCE_INTERP_ORDER)
         bkgd = afwMath.makeBackground(img, bgCtrl)
-        interpImage = bkgd.getImageF()
+        interpImage = bkgd.getImageF(afwMath.Interpolate.AKIMA_SPLINE)
 
         with lsst.utils.tests.getTempFilePath("_bgi.fits") as bgiFile, \
                 lsst.utils.tests.getTempFilePath("_bga.fits") as bgaFile:
@@ -752,7 +724,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
             approxOrder = 2
             actrl = afwMath.ApproximateControl(approxStyle, approxOrder)
             bkgd.getBackgroundControl().setApproximateControl(actrl)
-            approxImage = bkgd.getImageF()
+            approxImage = bkgd.getImageF(afwMath.Interpolate.AKIMA_SPLINE)
             bglApprox = afwMath.BackgroundList()
             bglApprox.append(bkgd)
             bglApprox.writeFits(bgaFile)

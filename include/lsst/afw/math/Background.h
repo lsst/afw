@@ -548,7 +548,9 @@ public:
     [[deprecated("Use `getImage` instead. To be removed after 20.0.0.")]]  // DM-22276
             double
             getPixel(int const x, int const y) const {
-        return getPixel(_bctrl->getInterpStyle(), x, y);
+        // I think this should be LOCAL because the original getPixel used 0-based indices
+        return getImage<float>(_bctrl->getInterpStyle(), _bctrl->getUndersampleStyle())
+                ->get(lsst::geom::Point2I(x, y), image::LOCAL);
     }
     /**
      * Return the image of statistical quantities extracted from the image

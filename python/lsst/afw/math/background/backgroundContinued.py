@@ -19,11 +19,29 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import warnings
+
 from lsst.utils import continueClass
 from lsst.utils.deprecated import deprecate_pybind11
 from .background import Background, BackgroundControl, BackgroundMI
+from ..interpolate import Interpolate
 
 __all__ = []  # import this module only for its side effects
+
+
+@continueClass  # noqa: F811
+class BackgroundControl:
+    _init = BackgroundControl.__init__
+
+    def __init__(self, *args, **kwargs):
+        # This constructor called dozens of times; warn only for invalid use
+        if (args and (isinstance(args[0], str) or isinstance(args[0], Interpolate.Style))) \
+                or "style" in kwargs:
+            warnings.warn('Call to deprecated method __init__. (Overloads that take a ``style`` parameter '
+                          'are deprecated; the style must be passed to `Background.getImageF` instead. '
+                          'To be removed after 20.0.0.)',
+                          FutureWarning, stacklevel=2)
+        self._init(*args, **kwargs)
 
 
 @continueClass  # noqa: F811
@@ -32,15 +50,17 @@ class Background:
         """Pickling"""
         return self.__class__, (self.getImageBBox(), self.getStatsImage())
 
+    _getImageF = Background.getImageF
 
-BackgroundControl.__init__ = deprecate_pybind11(
-    BackgroundControl.__init__,
-    reason='Overloads that take a ``style`` parameter are deprecated; the style must be '
-           'passed to `Background.getImageF` instead. To be removed after 20.0.0.')
-Background.getImageF = deprecate_pybind11(
-    Background.getImageF,
-    reason='Zero-argument overload is deprecated; use one that takes an ``interpStyle`` instead. '
-           'To be removed after 20.0.0.')
+    def getImageF(self, *args, **kwargs):
+        # This method called hundreds of times; warn only for invalid use
+        if not args and not kwargs:
+            warnings.warn('Call to deprecated method getImageF(). (Zero-argument overload is deprecated; '
+                          'use one that takes an ``interpStyle`` instead. To be removed after 20.0.0.)',
+                          FutureWarning, stacklevel=2)
+        return self._getImageF(*args, **kwargs)
+
+
 BackgroundControl.getInterpStyle = deprecate_pybind11(
     BackgroundControl.getInterpStyle,
     reason='Replaced by passing style to `Background.getImageF`. To be removed after 20.0.0.')

@@ -73,13 +73,10 @@ int main() {
         }
     }
 
-    // declare a background control object for a natural spline
-    math::BackgroundControl bgCtrl(math::Interpolate::NATURAL_SPLINE);
+    // declare a background control object with 10x10 samples
+    math::BackgroundControl bgCtrl(10, 10);
 
-    // could also use a string! (commented-out, but will work)
-    // math::BackgroundControl bgCtrl("NATURAL_SPLINE");
-
-    // we can control the background estimate
+    // we can change the background estimate
     bgCtrl.setNxSample(5);
     bgCtrl.setNySample(5);
 
@@ -90,9 +87,11 @@ int main() {
     // initialize a background object
     std::shared_ptr<math::Background> back = math::makeBackground(img, bgCtrl);
 
-    // can get an individual pixel or a whole frame.
-    float const MID = std::dynamic_pointer_cast<math::BackgroundMI>(back)->getPixel(xcen, ycen);
-    std::shared_ptr<ImageF> bg = back->getImage<ImageF::Pixel>();
+    // can get an interpolated frame. We use a natural spline.
+    std::shared_ptr<ImageF> bg = back->getImage<ImageF::Pixel>(math::Interpolate::NATURAL_SPLINE);
+    float const MID = (*bg)(xcen, ycen);
+    // could also use a string! (commented-out, but will work)
+    // std::shared_ptr<ImageF> bg = back->getImage<ImageF::Pixel>("NATURAL_SPLINE");
 
     // create a background-subtracted image
     ImageF sub(img.getDimensions());

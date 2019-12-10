@@ -202,7 +202,7 @@ class BackgroundList:
 
             bkgd = afwMath.BackgroundMI(imageBBox, statsImage)
             bctrl = bkgd.getBackgroundControl()
-            bctrl.setInterpStyle(interpStyle)
+            bctrl.setInterpStyle(interpStyle)  # can't remove because other code might call old getImageF
             bctrl.setUndersampleStyle(undersampleStyle)
             actrl = afwMath.ApproximateControl(approxStyle, approxOrderX, approxOrderY, approxWeighting)
             bctrl.setApproximateControl(actrl)
@@ -221,15 +221,9 @@ class BackgroundList:
         for (bkgd, interpStyle, undersampleStyle, approxStyle,
              approxOrderX, approxOrderY, approxWeighting) in self:
             if not bkgdImage:
-                if approxStyle != afwMath.ApproximateControl.UNKNOWN:
-                    bkgdImage = bkgd.getImageF()
-                else:
-                    bkgdImage = bkgd.getImageF(interpStyle, undersampleStyle)
+                bkgdImage = bkgd.getImageF(interpStyle, undersampleStyle)
             else:
-                if approxStyle != afwMath.ApproximateControl.UNKNOWN:
-                    bkgdImage += bkgd.getImageF()
-                else:
-                    bkgdImage += bkgd.getImageF(interpStyle, undersampleStyle)
+                bkgdImage += bkgd.getImageF(interpStyle, undersampleStyle)
 
         return bkgdImage
 
