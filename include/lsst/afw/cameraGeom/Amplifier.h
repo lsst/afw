@@ -210,6 +210,30 @@ public:
      */
     lsst::geom::Box2I getRawPrescanBBox() const { return getFields().rawPrescanBBox; }
 
+    /**
+     * The bounding box of serial overscan pixels (equivalent to horizontal
+     * overscan pixels) in the assembled, untrimmed raw image. This duplicates
+     * the getRawHorizontalOverscanBBox method for legacy reasons.
+     */
+    lsst::geom::Box2I getRawSerialOverscanBBox() const { return getFields().rawHorizontalOverscanBBox; }
+
+    /**
+     * The bounding box of parallel overscan pixels (equivalent to vertical
+     * overscan pixels) in the assembled, untrimmed raw image. This duplicates
+     * the getRawVerticalOverscanBBox method for legacy reasons.
+     */
+    lsst::geom::Box2I getRawParallelOverscanBBox() const { return getFields().rawVerticalOverscanBBox; }
+
+    /**
+     * The bounding box of horizontal/serial prescan pixels in the assembled,
+     * untrimmed raw image. This duplicates the getRawPrescanBBox method for
+     * legacy reasons.
+     */
+    lsst::geom::Box2I getRawSerialPrescanBBox() const { return getFields().rawPrescanBBox; }
+
+    /// @copydoc Amplifier::getRawSerialPrescanBBox
+    lsst::geom::Box2I getRawHorizontalPrescanBBox() const { return getFields().rawPrescanBBox; }
+
 protected:
 
     struct Fields {
@@ -360,6 +384,26 @@ public:
 
     /// @copydoc Amplifier::getRawPrescanBBox
     void setRawPrescanBBox(lsst::geom::Box2I const &bbox) {
+        _fields.rawPrescanBBox = bbox;
+    }
+
+    /// @copydoc Amplifier::getRawSerialOverscanBBox
+    void setRawSerialOverscanBBox(lsst::geom::Box2I const &bbox) {
+        _fields.rawHorizontalOverscanBBox = bbox;
+    }
+
+    /// @copydoc Amplifier::getRawParallelOverscanBBox
+    void setRawParallelOverscanBBox(lsst::geom::Box2I const &bbox) {
+        _fields.rawVerticalOverscanBBox = bbox;
+    }
+
+    /// @copydoc Amplifier::getRawSerialPrescanBBox
+    void setRawSerialPrescanBBox(lsst::geom::Box2I const &bbox) {
+        _fields.rawPrescanBBox = bbox;
+    }
+
+    /// @copydoc Amplifier::getRawHorizontalPrescanBBox
+    void setRawHorizontalPrescanBBox(lsst::geom::Box2I const &bbox) {
         _fields.rawPrescanBBox = bbox;
     }
 
