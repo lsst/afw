@@ -674,7 +674,8 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
                                        approxStyle, approxOrderX, approxOrderY, approxWeighting))
             else:
                 # Relies on having called getImage; deprecated
-                backgroundList.append(bkgd)
+                with self.assertWarns(FutureWarning):
+                    backgroundList.append(bkgd)
 
         def assertBackgroundList(bgl):
             self.assertEqual(len(bgl), 2)  # check that len() works
@@ -708,15 +709,18 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         img = self.getParabolaImage(256, 256)
 
         # try regular interpolated image (the default)
+        interpStyle = afwMath.Interpolate.AKIMA_SPLINE
+        undersampleStyle = afwMath.REDUCE_INTERP_ORDER
         bgCtrl = afwMath.BackgroundControl(6, 6)
-        bgCtrl.setUndersampleStyle(afwMath.REDUCE_INTERP_ORDER)
+        bgCtrl.setUndersampleStyle(undersampleStyle)
         bkgd = afwMath.makeBackground(img, bgCtrl)
-        interpImage = bkgd.getImageF(afwMath.Interpolate.AKIMA_SPLINE)
+        interpImage = bkgd.getImageF(interpStyle)
 
         with lsst.utils.tests.getTempFilePath("_bgi.fits") as bgiFile, \
                 lsst.utils.tests.getTempFilePath("_bga.fits") as bgaFile:
             bglInterp = afwMath.BackgroundList()
-            bglInterp.append(bkgd)
+            bglInterp.append((bkgd, interpStyle, undersampleStyle,
+                              afwMath.ApproximateControl.UNKNOWN, 0, 0, True))
             bglInterp.writeFits(bgiFile)
 
             # try an approx background
@@ -724,9 +728,10 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
             approxOrder = 2
             actrl = afwMath.ApproximateControl(approxStyle, approxOrder)
             bkgd.getBackgroundControl().setApproximateControl(actrl)
-            approxImage = bkgd.getImageF(afwMath.Interpolate.AKIMA_SPLINE)
+            approxImage = bkgd.getImageF(interpStyle)
             bglApprox = afwMath.BackgroundList()
-            bglApprox.append(bkgd)
+            bglApprox.append((bkgd, interpStyle, undersampleStyle,
+                              approxStyle, approxOrder, approxOrder, True))
             bglApprox.writeFits(bgaFile)
 
             # take a difference and make sure the two are very similar
@@ -781,7 +786,8 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
                                            astyle, approxOrderX, approxOrderY, approxWeighting))
                 else:
                     # Relies on having called getImage; deprecated
-                    backgroundList.append(bkgd)
+                    with self.assertWarns(FutureWarning):
+                        backgroundList.append(bkgd)
 
                 backImage += bkgd.getImageF(interpStyle, undersampleStyle)
 
