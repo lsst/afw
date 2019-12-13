@@ -73,6 +73,10 @@ PyAmplifier declarePyAmplifier(py::module & mod) {
     cls.def("getRawHorizontalOverscanBBox", &Amplifier::getRawHorizontalOverscanBBox);
     cls.def("getRawVerticalOverscanBBox", &Amplifier::getRawVerticalOverscanBBox);
     cls.def("getRawPrescanBBox", &Amplifier::getRawPrescanBBox);
+    cls.def("getRawSerialOverscanBBox", &Amplifier::getRawSerialOverscanBBox);
+    cls.def("getRawParallelOverscanBBox", &Amplifier::getRawParallelOverscanBBox);
+    cls.def("getRawSerialPrescanBBox", &Amplifier::getRawSerialPrescanBBox);
+    cls.def("getRawHorizontalPrescanBBox", &Amplifier::getRawHorizontalPrescanBBox);
     return cls;
 }
 
@@ -110,6 +114,10 @@ void declarePyAmplifierBuilder(PyAmplifier & parent) {
     cls.def("setRawHorizontalOverscanBBox", &Amplifier::Builder::setRawHorizontalOverscanBBox, "bbox"_a);
     cls.def("setRawVerticalOverscanBBox", &Amplifier::Builder::setRawVerticalOverscanBBox, "bbox"_a);
     cls.def("setRawPrescanBBox", &Amplifier::Builder::setRawPrescanBBox, "bbox"_a);
+    cls.def("setRawSerialOverscanBBox", &Amplifier::Builder::setRawSerialOverscanBBox, "bbox"_a);
+    cls.def("setRawParallelOverscanBBox", &Amplifier::Builder::setRawParallelOverscanBBox, "bbox"_a);
+    cls.def("setRawSerialPrescanBBox", &Amplifier::Builder::setRawSerialPrescanBBox, "bbox"_a);
+    cls.def("setRawHorizontalPrescanBBox", &Amplifier::Builder::setRawHorizontalPrescanBBox, "bbox"_a);
 }
 
 PYBIND11_MODULE(amplifier, mod) {

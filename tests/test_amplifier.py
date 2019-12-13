@@ -88,9 +88,44 @@ class AmplifierTestCase(unittest.TestCase):
         self.assertEqual(rawVerticalOverscanBBox,
                          amplifier.getRawVerticalOverscanBBox())
         self.assertEqual(rawPrescanBBox, amplifier.getRawPrescanBBox())
+        self.assertEqual(rawHorizontalOverscanBBox,
+                         amplifier.getRawSerialOverscanBBox())
+        self.assertEqual(rawVerticalOverscanBBox,
+                         amplifier.getRawParallelOverscanBBox())
+        self.assertEqual(rawPrescanBBox, amplifier.getRawSerialPrescanBBox())
+        self.assertEqual(rawPrescanBBox,
+                         amplifier.getRawHorizontalPrescanBBox())
         self.assertEqual(rawFlipX, amplifier.getRawFlipX())
         self.assertEqual(rawFlipY, amplifier.getRawFlipY())
         self.assertEqual(rawXYOffset, amplifier.getRawXYOffset())
+
+        # Test get/set methods for overscan/prescan alias names.
+        # Change slightly, don't care about contiguity, make smaller.
+        newHorizontalOverscanBBox = lsst.geom.Box2I(
+            lsst.geom.Point2I(150, 29), lsst.geom.Extent2I(25, 306))
+        newVerticalOverscanBBox = lsst.geom.Box2I(
+            lsst.geom.Point2I(-2, 201), lsst.geom.Extent2I(123, 5))
+        newPrescanBBox = lsst.geom.Box2I(
+            lsst.geom.Point2I(-20, 2), lsst.geom.Extent2I(4, 306))
+
+        builder.setRawSerialOverscanBBox(newHorizontalOverscanBBox)
+        builder.setRawParallelOverscanBBox(newVerticalOverscanBBox)
+        builder.setRawSerialPrescanBBox(newPrescanBBox)
+        amplifier = builder.finish()
+
+        self.assertEqual(newHorizontalOverscanBBox,
+                         amplifier.getRawHorizontalOverscanBBox())
+        self.assertEqual(newVerticalOverscanBBox,
+                         amplifier.getRawVerticalOverscanBBox())
+        self.assertEqual(newPrescanBBox,
+                         amplifier.getRawPrescanBBox())
+
+        newPrescanBBox2 = lsst.geom.Box2I(
+            lsst.geom.Point2I(-20, 2), lsst.geom.Extent2I(5, 306))
+        builder.setRawHorizontalPrescanBBox(newPrescanBBox2)
+        amplifier = builder.finish()
+        self.assertEqual(newPrescanBBox2,
+                         amplifier.getRawPrescanBBox())
 
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
