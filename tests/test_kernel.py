@@ -73,6 +73,7 @@ class KernelTestCase(lsst.utils.tests.TestCase):
 
         gaussFunc = afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
         kernel = afwMath.AnalyticKernel(kWidth, kHeight, gaussFunc)
+        center = kernel.getCtr()
         self.basicTests(kernel, 3, dimMustMatch=False)
 
         kernelResized = self.verifyResized(kernel)
@@ -85,9 +86,9 @@ class KernelTestCase(lsst.utils.tests.TestCase):
                 gaussFunc.setParameters((xsigma, ysigma, 0.0))
                 # compute array of function values and normalize
                 for row in range(kernel.getHeight()):
-                    y = row - kernel.getCtrY()
+                    y = row - center.getY()
                     for col in range(kernel.getWidth()):
-                        x = col - kernel.getCtrX()
+                        x = col - center.getX()
                         fArr[col, row] = gaussFunc(x, y)
                 fArr /= fArr.sum()
 
@@ -206,10 +207,7 @@ class KernelTestCase(lsst.utils.tests.TestCase):
                                          fullWidth + 1 - kWidth)
                         self.assertEqual(shrunkBBox.getHeight(),
                                          fullHeight + 1 - kHeight)
-                        self.assertEqual(shrunkBBox.getMinX(),
-                                         boxStart[0] + kernel.getCtrX())
-                        self.assertEqual(shrunkBBox.getMinY(),
-                                         boxStart[1] + kernel.getCtrY())
+                        self.assertEqual(shrunkBBox.getMin(), boxStart + lsst.geom.Extent2I(kernel.getCtr()))
                         newFullBBox = kernel.growBBox(shrunkBBox)
                         self.assertEqual(newFullBBox, fullBBox,
                                          "growBBox(shrinkBBox(x)) != x")
@@ -436,6 +434,7 @@ class KernelTestCase(lsst.utils.tests.TestCase):
         gaussFunc1 = afwMath.GaussianFunction1D(1.0)
         kernel = afwMath.SeparableKernel(
             kWidth, kHeight, gaussFunc1, gaussFunc1)
+        center = kernel.getCtr()
         self.basicTests(kernel, 2)
 
         kernelResized = self.verifyResized(kernel)
@@ -450,9 +449,9 @@ class KernelTestCase(lsst.utils.tests.TestCase):
                 gaussFunc.setParameters((xsigma, ysigma, 0.0))
                 # compute array of function values and normalize
                 for row in range(kernel.getHeight()):
-                    y = row - kernel.getCtrY()
+                    y = row - center.getY()
                     for col in range(kernel.getWidth()):
-                        x = col - kernel.getCtrX()
+                        x = col - center.getX()
                         fArr[col, row] = gaussFunc(x, y)
                 fArr /= fArr.sum()
 
@@ -713,11 +712,10 @@ class KernelTestCase(lsst.utils.tests.TestCase):
         gaussFunc = afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
         kernel = afwMath.AnalyticKernel(kWidth, kHeight, gaussFunc)
         for xCtr in range(kWidth):
-            kernel.setCtrX(xCtr)
             for yCtr in range(kHeight):
-                kernel.setCtrY(yCtr)
-                self.assertEqual(kernel.getCtrX(), xCtr)
-                self.assertEqual(kernel.getCtrY(), yCtr)
+                center = lsst.geom.Point2I(xCtr, yCtr)
+                kernel.setCtr(center)
+                self.assertEqual(kernel.getCtr(), center)
 
     def testZeroSizeKernel(self):
         """Creating a kernel with width or height < 1 should raise an exception.
@@ -929,8 +927,8 @@ class KernelTestCase(lsst.utils.tests.TestCase):
         if kernel1.getDimensions() != kernel2.getDimensions():
             retStrs.append("dimensions differ: %s != %s" %
                            (kernel1.getDimensions(), kernel2.getDimensions()))
-        ctr1 = kernel1.getCtrX(), kernel1.getCtrY()
-        ctr2 = kernel2.getCtrX(), kernel2.getCtrY()
+        ctr1 = kernel1.getCtr()
+        ctr2 = kernel2.getCtr()
         if ctr1 != ctr2:
             retStrs.append("centers differ: %s != %s" % (ctr1, ctr2))
         if kernel1.isSpatiallyVarying() != kernel2.isSpatiallyVarying():
@@ -959,9 +957,8 @@ class KernelTestCase(lsst.utils.tests.TestCase):
                     return "kernel images do not match at %s with doNormalize=%s" % (pos, doNormalize)
 
         if newCtr1 is not None:
-            kernel1.setCtrX(newCtr1[0])
-            kernel1.setCtrY(newCtr1[1])
-            newCtr2 = kernel2.getCtrX(), kernel2.getCtrY()
+            kernel1.setCtr(lsst.geom.Point2I(newCtr1))
+            newCtr2 = kernel2.getCtr()
             if ctr2 != newCtr2:
                 return "changing center of kernel1 to %s changed the center of kernel2 from %s to %s" % \
                     (newCtr1, ctr2, newCtr2)

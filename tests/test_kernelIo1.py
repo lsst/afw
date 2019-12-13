@@ -45,8 +45,10 @@ class KernelIOTestCase(unittest.TestCase):
     def kernelCheck(self, k1, k2):
         self.assertEqual(k1.getWidth(), k2.getWidth())
         self.assertEqual(k1.getHeight(), k2.getHeight())
-        self.assertEqual(k1.getCtrX(), k2.getCtrX())
-        self.assertEqual(k1.getCtrY(), k2.getCtrY())
+        self.assertEqual(k1.getCtr(), k2.getCtr())
+        with self.assertWarns(FutureWarning):
+            self.assertEqual(k1.getCtrX(), k2.getCtrX())
+            self.assertEqual(k1.getCtrY(), k2.getCtrY())
         self.assertEqual(k1.getNKernelParameters(), k2.getNKernelParameters())
         self.assertEqual(k1.getNSpatialParameters(),
                          k2.getNSpatialParameters())
@@ -100,6 +102,7 @@ class KernelIOTestCase(unittest.TestCase):
 
         gaussFunc = afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
         k = afwMath.AnalyticKernel(kWidth, kHeight, gaussFunc)
+        center = k.getCtr()
         fArr = np.zeros(shape=[k.getWidth(), k.getHeight()], dtype=float)
         for xsigma in (0.1, 1.0, 3.0):
             for ysigma in (0.1, 1.0, 3.0):
@@ -107,9 +110,9 @@ class KernelIOTestCase(unittest.TestCase):
                     gaussFunc.setParameters((xsigma, ysigma, angle))
                     # compute array of function values and normalize
                     for row in range(k.getHeight()):
-                        y = row - k.getCtrY()
+                        y = row - center.getY()
                         for col in range(k.getWidth()):
-                            x = col - k.getCtrX()
+                            x = col - center.getX()
                             fArr[col, row] = gaussFunc(x, y)
                     fArr /= fArr.sum()
 
@@ -162,6 +165,7 @@ class KernelIOTestCase(unittest.TestCase):
 
         gaussFunc1 = afwMath.GaussianFunction1D(1.0)
         k = afwMath.SeparableKernel(kWidth, kHeight, gaussFunc1, gaussFunc1)
+        center = k.getCtr()
         fArr = np.zeros(shape=[k.getWidth(), k.getHeight()], dtype=float)
         np.zeros(shape=[k.getWidth(), k.getHeight()], dtype=float)
         gaussFunc = afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
@@ -171,9 +175,9 @@ class KernelIOTestCase(unittest.TestCase):
                 gaussFunc.setParameters((xsigma, ysigma, 0.0))
                 # compute array of function values and normalize
                 for row in range(k.getHeight()):
-                    y = row - k.getCtrY()
+                    y = row - center.getY()
                     for col in range(k.getWidth()):
-                        x = col - k.getCtrX()
+                        x = col - center.getX()
                         fArr[col, row] = gaussFunc(x, y)
                 fArr /= fArr.sum()
 
@@ -298,9 +302,9 @@ class KernelIOTestCase(unittest.TestCase):
         gaussFunc = afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
         k = afwMath.AnalyticKernel(kWidth, kHeight, gaussFunc)
         for xCtr in range(kWidth):
-            k.setCtrX(xCtr)
             for yCtr in range(kHeight):
-                k.setCtrY(yCtr)
+                ctr = lsst.geom.Point2I(xCtr, yCtr)
+                k.setCtr(ctr)
 
                 with lsst.utils.tests.getTempFilePath(".fits") as filename:
                     k.writeFits(filename)
@@ -308,8 +312,7 @@ class KernelIOTestCase(unittest.TestCase):
 
                 self.kernelCheck(k, k2)
 
-                self.assertEqual(k2.getCtrX(), xCtr)
-                self.assertEqual(k2.getCtrY(), yCtr)
+                self.assertEqual(k2.getCtr(), ctr)
 
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
