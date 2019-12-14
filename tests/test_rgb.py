@@ -325,9 +325,10 @@ class RgbTestCase(unittest.TestCase):
 
     def writeFileLegacyAPI(self, fileName):
         """Test that the legacy API still works, although it's deprecated"""
-        asinh = rgb.asinhMappingF(self.min, self.range, self.Q)
-        rgbImage = rgb.RgbImageF(
-            self.images[R], self.images[G], self.images[B], asinh)
+        with self.assertWarns(FutureWarning):
+            asinh = rgb.asinhMappingF(self.min, self.range, self.Q)
+            rgbImage = rgb.RgbImageF(
+                self.images[R], self.images[G], self.images[B], asinh)
         if display > 1:
             afwDisplay.Display(frame=0).mtv(self.images[B], title="B: legacy API")
             afwDisplay.Display(frame=1).mtv(self.images[G], title="G: legacy API")
