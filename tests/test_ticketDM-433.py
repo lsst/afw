@@ -166,13 +166,13 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
             self.assertEqual(record.get(self.instFluxKey), record.getPsfInstFlux())
             self.assertEqual(record.get(self.fluxFlagKey),
                              record.getPsfFluxFlag())
-            self.assertEqual(table.getCentroidDefinition(), "b")
+            self.assertEqual(table.getSchema().getAliasMap().get("slot_Centroid"), "b")
             self.assertEqual(record.get(self.centroidKey),
                              record.getCentroid())
             self.assertFloatsAlmostEqual(
                 record.get(self.centroidErrKey),
                 record.getCentroidErr())
-            self.assertEqual(table.getShapeDefinition(), "c")
+            self.assertEqual(table.getSchema().getAliasMap().get("slot_Shape"), "c")
             self.assertEqual(record.get(self.shapeKey), record.getShape())
             self.assertFloatsAlmostEqual(
                 record.get(self.shapeErrKey),
@@ -186,12 +186,12 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
                          self.record.getPsfInstFlux())
         self.assertEqual(self.record.get(self.fluxFlagKey),
                          self.record.getPsfFluxFlag())
-        self.assertEqual(self.table.getCentroidDefinition(), "b")
+        self.assertEqual(self.table.getSchema().getAliasMap().get("slot_Centroid"), "b")
         self.assertEqual(self.record.get(self.centroidKey),
                          self.record.getCentroid())
         self.assertFloatsAlmostEqual(
             self.record.get(self.centroidErrKey), self.record.getCentroidErr())
-        self.assertEqual(self.table.getShapeDefinition(), "c")
+        self.assertEqual(self.table.getSchema().getAliasMap().get("slot_Shape"), "c")
         self.assertEqual(self.record.get(self.shapeKey),
                          self.record.getShape())
         self.assertFloatsAlmostEqual(self.record.get(self.shapeErrKey),

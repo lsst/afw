@@ -124,7 +124,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
                          self.record.getPsfInstFlux())
         self.assertEqual(self.record.get(self.fluxFlagKey),
                          self.record.getPsfFluxFlag())
-        self.assertEqual(self.table.getCentroidDefinition(), "b")
+        self.assertEqual(self.table.getSchema().getAliasMap().get("slot_Centroid"), "b")
         self.assertEqual(self.centroidKey.get(self.record),
                          self.record.getCentroid())
         self.assertFloatsAlmostEqual(
@@ -133,7 +133,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.assertFloatsAlmostEqual(
             math.fabs(self.record.get(self.yErrKey)),
             math.sqrt(self.record.getCentroidErr()[1, 1]), rtol=1e-6)
-        self.assertEqual(self.table.getShapeDefinition(), "c")
+        self.assertEqual(self.table.getSchema().getAliasMap().get("slot_Shape"), "c")
         self.assertEqual(self.shapeKey.get(self.record),
                          self.record.getShape())
         self.assertFloatsAlmostEqual(
@@ -159,7 +159,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
             # current implementation
             self.assertEqual(record.get(self.instFluxKey), record.getPsfInstFlux())
             self.assertEqual(record.get(self.fluxFlagKey), record.getPsfFluxFlag())
-            self.assertEqual(table.getCentroidDefinition(), "b")
+            self.assertEqual(table.getSchema().getAliasMap().get("slot_Centroid"), "b")
             centroid = self.centroidKey.get(self.record)
             self.assertEqual(centroid, record.getCentroid())
             self.assertFloatsAlmostEqual(
@@ -169,7 +169,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
                 math.fabs(self.record.get(self.yErrKey)),
                 math.sqrt(self.record.getCentroidErr()[1, 1]), rtol=1e-6)
             shape = self.shapeKey.get(self.record)
-            self.assertEqual(table.getShapeDefinition(), "c")
+            self.assertEqual(table.getSchema().getAliasMap().get("slot_Shape"), "c")
             self.assertEqual(shape, record.getShape())
             self.assertFloatsAlmostEqual(
                 math.fabs(self.record.get(self.xxErrKey)),
