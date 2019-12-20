@@ -60,9 +60,9 @@ namespace image {
  *  @param[in]    strip               If true, ignore special header keys usually managed by cfitsio
  *                                    (e.g. NAXIS).
  */
-inline std::shared_ptr<daf::base::PropertyList> readMetadata(std::string const& fileName,
-                                                             int hdu = fits::DEFAULT_HDU,
-                                                             bool strip = false) {
+[[deprecated("Use `afw::fits::readMetadata` instead. To be removed after 20.0.0.")]]  // DM-22276
+        inline std::shared_ptr<daf::base::PropertyList>
+        readMetadata(std::string const& fileName, int hdu = fits::DEFAULT_HDU, bool strip = false) {
     return afw::fits::readMetadata(fileName, hdu, strip);
 }
 

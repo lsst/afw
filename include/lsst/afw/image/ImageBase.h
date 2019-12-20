@@ -257,7 +257,9 @@ public:
      *
      * @deprecated use assign(rhs) instead
      */
-    ImageBase& operator<<=(const ImageBase& rhs);
+    [[deprecated("Use `assign` instead. To be removed after 20.0.0.")]]  // DM-22276
+            ImageBase&
+            operator<<=(const ImageBase& rhs);
 
     /**
      * Copy pixels from another image to a specified subregion of this image.
@@ -273,26 +275,44 @@ public:
     void assign(ImageBase const& rhs, lsst::geom::Box2I const& bbox = lsst::geom::Box2I(),
                 ImageOrigin origin = PARENT);
 
-    //@{
-    /**
-     * @deprecated Deprecated in 16.0.  No timeline for removal.
-     * Replaced by get(Point2I, ImageOrigin).
-     */
-    /// Return a reference to the pixel `(x, y)`
+    // TODO: should deprecate these, but the replacement should take two ints
+    // rather than a Point2I, to keep C++ loops simple
+    /// Return a reference to the pixel `(x, y)` in LOCAL coordinates
     PixelReference operator()(int x, int y);
-    /// Return a reference to the pixel `(x, y)` with bounds checking
+    /// Return a reference to the pixel `(x, y)` in LOCAL coordinates with bounds checking
     PixelReference operator()(int x, int y, CheckIndices const&);
-    /// Return a const reference to the pixel `(x, y)`
+    /// Return a const reference to the pixel `(x, y)` in LOCAL coordinates
     PixelConstReference operator()(int x, int y) const;
-    /// Return a const reference to the pixel `(x, y)` with bounds checking
+    /// Return a const reference to the pixel `(x, y)` in LOCAL coordinates with bounds checking
     PixelConstReference operator()(int x, int y, CheckIndices const&) const;
 
-    PixelConstReference get0(int x, int y) const { return operator()(x - getX0(), y - getY0()); }
-    PixelConstReference get0(int x, int y, CheckIndices const& check) const {
+    //@{
+    /**
+     * @deprecated Deprecated in 16.0.  To be removed after 20.0.0.
+     * Replaced by get(Point2I, ImageOrigin).
+     */
+    [[deprecated("Use `operator[Point2I(x, y)]` instead. To be removed after 20.0.0.")]]  // DM-22276
+            PixelConstReference
+            get0(int x, int y) const {
+        return operator()(x - getX0(), y - getY0());
+    }
+    [
+            [deprecated("No replacement; `operator[Point2I(x, y)]` provides unchecked lookup. To be "
+                        "removed after 20.0.0.")]]  // DM-22276
+            PixelConstReference
+            get0(int x, int y, CheckIndices const& check) const {
         return operator()(x - getX0(), y - getY0(), check);
     }
-    void set0(int x, int y, const PixelT v) { operator()(x - getX0(), y - getY0()) = v; }
-    void set0(int x, int y, const PixelT v, CheckIndices const& check) {
+    [[deprecated("Use `operator[Point2I(x, y)]` instead. To be removed after 20.0.0.")]]  // DM-22276
+            void
+            set0(int x, int y, const PixelT v) {
+        operator()(x - getX0(), y - getY0()) = v;
+    }
+    [
+            [deprecated("No replacement; `operator[Point2I(x, y)]` provides unchecked lookup. To be "
+                        "removed after 20.0.0.")]]  // DM-22276
+            void
+            set0(int x, int y, const PixelT v, CheckIndices const& check) {
         operator()(x - getX0(), y - getY0(), check) = v;
     }
     //@}

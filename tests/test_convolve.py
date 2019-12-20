@@ -131,10 +131,10 @@ def refConvolve(imMaskVar, xy0, kernel, doNormalize, doCopyEdge):
         kernel.computeImage(kImage, doNormalize)
         kImArr = kImage.getArray().transpose()
 
-    retRow = kernel.getCtrY()
+    retRow = kernel.getCtr().getY()
     for inRowBeg in range(numRows):
         inRowEnd = inRowBeg + kHeight
-        retCol = kernel.getCtrX()
+        retCol = kernel.getCtr().getX()
         if isSpatiallyVarying:
             rowPos = afwImage.indexToPosition(retRow) + xy0[1]
         for inColBeg in colRange:

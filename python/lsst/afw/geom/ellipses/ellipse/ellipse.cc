@@ -53,7 +53,7 @@ PYBIND11_MODULE(ellipse, mod) {
     //    clsEllipseGridTransform.def("getMatrix", &Ellipse::GridTransform::getMatrix);
     //    clsEllipseGridTransform.def("d", &Ellipse::GridTransform::d);
     //    clsEllipseGridTransform.def("getDeterminant", &Ellipse::GridTransform::getDeterminant);
-    //    clsEllipseGridTransform.def("invert", &Ellipse::GridTransform::invert);
+    //    clsEllipseGridTransform.def("inverted", &Ellipse::GridTransform::inverted);
 
     py::module::import("lsst.geom");
 

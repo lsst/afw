@@ -22,6 +22,7 @@
 __all__ = []
 
 from lsst.utils import continueClass
+from lsst.utils.deprecated import deprecate_pybind11
 from ._base import Catalog
 from ._table import SourceCatalog, SourceTable
 
@@ -63,3 +64,35 @@ class SourceCatalog:
             return (self[s],) + tuple(arg[s] for arg in args)
         else:
             return self[s]
+
+
+SourceTable.getCentroidDefinition = deprecate_pybind11(
+    SourceTable.getCentroidDefinition,
+    reason='Use `getSchema().getAliasMap().get("slot_Centroid")` instead. To be removed after 20.0.0.')
+SourceTable.hasCentroidSlot = deprecate_pybind11(
+    SourceTable.hasCentroidSlot,
+    reason='Use `getCentroidSlot().isValid()` instead. To be removed after 20.0.0.')
+SourceTable.getCentroidKey = deprecate_pybind11(
+    SourceTable.getCentroidKey,
+    reason='Use `getCentroidSlot().getMeasKey()` instead. To be removed after 20.0.0.')
+SourceTable.getCentroidErrKey = deprecate_pybind11(
+    SourceTable.getCentroidErrKey,
+    reason='Use `getCentroidSlot().getErrKey()` instead. To be removed after 20.0.0.')
+SourceTable.getCentroidFlagKey = deprecate_pybind11(
+    SourceTable.getCentroidFlagKey,
+    reason='Use `getCentroidSlot().getFlagKey()` instead. To be removed after 20.0.0.')
+SourceTable.getShapeDefinition = deprecate_pybind11(
+    SourceTable.getShapeDefinition,
+    reason='Use `getSchema().getAliasMap().get("slot_Shape")` instead. To be removed after 20.0.0.')
+SourceTable.hasShapeSlot = deprecate_pybind11(
+    SourceTable.hasShapeSlot,
+    reason='Use `getShapeSlot().isValid()` instead. To be removed after 20.0.0.')
+SourceTable.getShapeKey = deprecate_pybind11(
+    SourceTable.getShapeKey,
+    reason='Use `getShapeSlot().getMeasKey()` instead. To be removed after 20.0.0.')
+SourceTable.getShapeErrKey = deprecate_pybind11(
+    SourceTable.getShapeErrKey,
+    reason='Use `getShapeSlot().getErrKey()` instead. To be removed after 20.0.0.')
+SourceTable.getShapeFlagKey = deprecate_pybind11(
+    SourceTable.getShapeFlagKey,
+    reason='Use `getShapeSlot().getFlagKey()` instead. To be removed after 20.0.0.')

@@ -60,7 +60,9 @@ namespace python {
  *               `PersistableFacade<suffix>`.
  */
 template <typename T>
-void declarePersistableFacade(pybind11::module &module, std::string const &suffix) {
+[[deprecated("Use `addPersistableMethods` instead. To be removed after 20.0.0.")]]  // DM-22276
+        void
+        declarePersistableFacade(pybind11::module &module, std::string const &suffix) {
     using namespace pybind11::literals;
 
     pybind11::class_<PersistableFacade<T>, std::shared_ptr<PersistableFacade<T>>> cls(
@@ -81,7 +83,7 @@ void declarePersistableFacade(pybind11::module &module, std::string const &suffi
  *
  * Use as follows:
  * - When declaring the pybind11 class that wraps your Class do *not* list
- *   table::io::PersistableFacade<Class> and table::io::Persistable as subclasses.
+ *   table::io::PersistableFacade<Class> and table::io::Persistable as base classes.
  * - Call this function to wrap the methods that make your object persistable.
  */
 template <typename Class, typename... Args>

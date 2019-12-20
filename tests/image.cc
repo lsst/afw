@@ -110,6 +110,9 @@ ImageT make_image(int const width = 5, int const height = 6) {
 
 BOOST_AUTO_TEST_CASE(
         getset0) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
+    using image::ImageOrigin::LOCAL;
+    using image::ImageOrigin::PARENT;
+    using lsst::geom::Point2I;
     ImageT img = make_image();
 
     image::CheckIndices docheck(true);
@@ -124,16 +127,15 @@ BOOST_AUTO_TEST_CASE(
     img(3, 4) = 3004;
     BOOST_CHECK_EQUAL(img(3, 4), 3004);
 
-    // get0 / set0 on a (0,0)-referenced image
-    img.set0(3, 4, 3004);
+    // get on a (0,0)-referenced image
+    img.get(Point2I(3, 4), PARENT) = 3004;
     BOOST_CHECK_EQUAL(img(3, 4), 3004);
-    BOOST_CHECK_EQUAL(img.get0(3, 4, docheck), 3004);
-    BOOST_CHECK_EQUAL(img.get0(3, 4), 3004);
-    img.set0(3, 4, 304, docheck);
+    BOOST_CHECK_EQUAL(img.get(Point2I(3, 4), PARENT), 3004);
+    img.get(Point2I(3, 4), PARENT) = 304;
     BOOST_CHECK_EQUAL(img(3, 4), 304);
-    img.set0(3, 4, 3004, docheck);
+    img.get(Point2I(3, 4), PARENT) = 3004;
     BOOST_CHECK_EQUAL(img(3, 4), 3004);
-    img.set0(3, 4, 304);
+    img.get(Point2I(3, 4), PARENT) = 304;
     BOOST_CHECK_EQUAL(img(3, 4), 304);
 
     // create a subimage:   x in [1,3], y in [2,4]
@@ -145,16 +147,13 @@ BOOST_AUTO_TEST_CASE(
 
     BOOST_CHECK_EQUAL(subimg(0, 0), 102);
     BOOST_CHECK_EQUAL(subimg(2, 2), 304);
-    BOOST_CHECK_EQUAL(subimg.get0(1, 2, docheck), 102);
+    BOOST_CHECK_EQUAL(subimg.get(Point2I(1, 2), PARENT), 102);
     // (0,0) in the subimage is (1,2) in the parent image
-    BOOST_CHECK_EQUAL(subimg.get0(1, 2), 102);
-    // subimage can't reference parent coord 0,0
-    BOOST_CHECK_THROW(subimg.get0(0, 0, docheck), lsst::pex::exceptions::LengthError);
+    BOOST_CHECK_EQUAL(subimg.get(Point2I(0, 0), LOCAL), 102);
 
-    subimg.set0(3, 4, 1000000, docheck);
-    BOOST_CHECK_EQUAL(subimg.get0(3, 4, docheck), 1000000);
+    subimg.get(Point2I(3, 4), PARENT) = 1000000;
+    BOOST_CHECK_EQUAL(subimg.get(Point2I(3, 4), PARENT), 1000000);
     BOOST_CHECK_EQUAL(subimg(2, 2), 1000000);
-    BOOST_CHECK_THROW(subimg.set0(0, 0, 1000000, docheck), lsst::pex::exceptions::LengthError);
 }
 
 BOOST_AUTO_TEST_CASE(

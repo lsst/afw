@@ -116,12 +116,16 @@ public:
      * @param prop statistical property to use for grid points
      * @param actrl configuration for approx to be computed
      */
-    BackgroundControl(Interpolate::Style const style, int const nxSample = 10, int const nySample = 10,
-                      UndersampleStyle const undersampleStyle = THROW_EXCEPTION,
-                      StatisticsControl const sctrl = StatisticsControl(), Property const prop = MEANCLIP,
-                      ApproximateControl const actrl = ApproximateControl(ApproximateControl::UNKNOWN, 1)
+    [[deprecated(
+            "Omit `style` parameter, and pass it to `Background::getImage` instead. To be removed after "
+            "20.0.0.")]]  // DM-22276
+            BackgroundControl(
+                    Interpolate::Style const style, int const nxSample = 10, int const nySample = 10,
+                    UndersampleStyle const undersampleStyle = THROW_EXCEPTION,
+                    StatisticsControl const sctrl = StatisticsControl(), Property const prop = MEANCLIP,
+                    ApproximateControl const actrl = ApproximateControl(ApproximateControl::UNKNOWN, 1)
 
-                              )
+                            )
             : _style(style),
               _nxSample(nxSample),
               _nySample(nySample),
@@ -149,11 +153,15 @@ public:
      * @param prop statistical property to use for grid points
      * @param actrl configuration for approx to be computed
      */
-    BackgroundControl(std::string const& style, int const nxSample = 10, int const nySample = 10,
-                      std::string const& undersampleStyle = "THROW_EXCEPTION",
-                      StatisticsControl const sctrl = StatisticsControl(),
-                      std::string const& prop = "MEANCLIP",
-                      ApproximateControl const actrl = ApproximateControl(ApproximateControl::UNKNOWN, 1))
+    [[deprecated(
+            "Omit `style` parameter, and pass it to `Background::getImage` instead. To be removed after "
+            "20.0.0.")]]  // DM-22276
+            BackgroundControl(std::string const& style, int const nxSample = 10, int const nySample = 10,
+                              std::string const& undersampleStyle = "THROW_EXCEPTION",
+                              StatisticsControl const sctrl = StatisticsControl(),
+                              std::string const& prop = "MEANCLIP",
+                              ApproximateControl const actrl = ApproximateControl(ApproximateControl::UNKNOWN,
+                                                                                  1))
             : _style(math::stringToInterpStyle(style)),
               _nxSample(nxSample),
               _nySample(nySample),
@@ -189,9 +197,19 @@ public:
         _nySample = nySample;
     }
 
-    void setInterpStyle(Interpolate::Style const style) { _style = style; }
+    [[deprecated(
+            "Replaced by passing style to `Background::getImage`. To be removed after 20.0.0.")]]  // DM-22276
+            void
+            setInterpStyle(Interpolate::Style const style) {
+        _style = style;
+    }
     // overload to take a string
-    void setInterpStyle(std::string const& style) { _style = math::stringToInterpStyle(style); }
+    [[deprecated(
+            "Replaced by passing style to `Background::getImage`. To be removed after 20.0.0.")]]  // DM-22276
+            void
+            setInterpStyle(std::string const& style) {
+        _style = math::stringToInterpStyle(style);
+    }
 
     void setUndersampleStyle(UndersampleStyle const undersampleStyle) {
         _undersampleStyle = undersampleStyle;
@@ -203,7 +221,10 @@ public:
 
     int getNxSample() const { return _nxSample; }
     int getNySample() const { return _nySample; }
-    Interpolate::Style getInterpStyle() const {
+    [[deprecated(
+            "Replaced by passing style to `Background::getImage`. To be removed after 20.0.0.")]]  // DM-22276
+            Interpolate::Style
+            getInterpStyle() const {
         if (_style < 0 || _style >= Interpolate::NUM_STYLES) {
             throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                               str(boost::format("Style %d is invalid") % _style));
@@ -223,6 +244,7 @@ public:
     std::shared_ptr<ApproximateControl const> getApproximateControl() const { return _actrl; }
 
 private:
+    // TODO: remove _style member in DM-22276
     Interpolate::Style _style;           // style of interpolation to use
     int _nxSample;                       // number of grid squares to divide image into to sample in x
     int _nySample;                       // number of grid squares to divide image into to sample in y
@@ -334,7 +356,10 @@ public:
      * @deprecated New code should specify the interpolation style in getImage, not the ctor
      */
     template <typename PixelT>
-    std::shared_ptr<lsst::afw::image::Image<PixelT>> getImage() const {
+    [[deprecated(
+            "Call an overload with an `interpStyle` parameter. To be removed after 20.0.0.")]]  // DM-22276
+            std::shared_ptr<lsst::afw::image::Image<PixelT>>
+            getImage() const {
         return getImage<PixelT>(_bctrl->getInterpStyle(), _bctrl->getUndersampleStyle());
     }
     /**
@@ -510,7 +535,9 @@ public:
      * This can be a very costly function to get a single pixel. If you want an image, use the getImage()
      * method.
      */
-    double getPixel(Interpolate::Style const style, int const x, int const y) const;
+    [[deprecated("Use `getImage` instead. To be removed after 20.0.0.")]]  // DM-22276
+            double
+            getPixel(Interpolate::Style const style, int const x, int const y) const;
     /**
      * Return the background value at a point
      *
@@ -518,7 +545,13 @@ public:
      *
      * @deprecated New code should specify the interpolation style in getPixel, not the ctor
      */
-    double getPixel(int const x, int const y) const { return getPixel(_bctrl->getInterpStyle(), x, y); }
+    [[deprecated("Use `getImage` instead. To be removed after 20.0.0.")]]  // DM-22276
+            double
+            getPixel(int const x, int const y) const {
+        // I think this should be LOCAL because the original getPixel used 0-based indices
+        return getImage<float>(_bctrl->getInterpStyle(), _bctrl->getUndersampleStyle())
+                ->get(lsst::geom::Point2I(x, y), image::LOCAL);
+    }
     /**
      * Return the image of statistical quantities extracted from the image
      */

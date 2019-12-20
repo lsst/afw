@@ -801,7 +801,9 @@ public:
      *
      * @note operator=() is not equivalent to this command
      */
-    MaskedImage& operator<<=(MaskedImage const& rhs);
+    [[deprecated("Use `assign` instead. To be removed after 20.0.0.")]]  // DM-22276
+            MaskedImage&
+            operator<<=(MaskedImage const& rhs);
 
     /**
      * Copy pixels from another masked image to a specified subregion of this masked image.

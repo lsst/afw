@@ -139,7 +139,7 @@ std::shared_ptr<SpanSet> maskIntersect(SpanSet const& spanSet, image::Mask<T> co
         int endX = std::min(spn.getMaxX(), maskBBox.getMaxX());
         for (int x = startX; x <= endX; ++x) {
             // Find if the pixel matches the given bit pattern
-            bool pixelCompare = mask.get0(x, y) & bitmask;
+            bool pixelCompare = mask.get(lsst::geom::Point2I(x, y), image::ImageOrigin::PARENT) & bitmask;
             // if the templated boolean indicates the compliment of the mask is desired, invert the
             // pixel comparison
             if (invert) {
