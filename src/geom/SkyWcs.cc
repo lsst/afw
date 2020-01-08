@@ -249,6 +249,18 @@ std::shared_ptr<daf::base::PropertyList> SkyWcs::getFitsMetadata(bool precise) c
     header->remove("DATE-OBS");
     header->remove("MJD-OBS");
 
+    // If CD matrix is present, explicitly set any missing entries to zero, as a convenience to the user
+    bool const hasCd11 = header->exists("CD1_1");
+    bool const hasCd12 = header->exists("CD1_2");
+    bool const hasCd21 = header->exists("CD2_1");
+    bool const hasCd22 = header->exists("CD2_2");
+    if (hasCd11 || hasCd12 || hasCd21 || hasCd22) {
+        if (!hasCd11) header->set("CD1_1", 0.0, "Transformation matrix element");
+        if (!hasCd12) header->set("CD1_2", 0.0, "Transformation matrix element");
+        if (!hasCd21) header->set("CD2_1", 0.0, "Transformation matrix element");
+        if (!hasCd22) header->set("CD2_2", 0.0, "Transformation matrix element");
+    }
+
     return header;
 }
 

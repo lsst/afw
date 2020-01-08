@@ -764,6 +764,19 @@ class MetadataWcsTestCase(SkyWcsBaseTestCase):
         self.assertFalse(header.exists("DATE-OBS"))
         self.assertFalse(header.exists("MJD-OBS"))
 
+    def testCdMatrix(self):
+        """Ensure we're writing CD matrix elements even if they're zero"""
+        self.metadata.remove("CD1_2")
+        self.metadata.remove("CD2_1")
+        skyWcs = makeSkyWcs(self.metadata, strip=False)
+        header = skyWcs.getFitsMetadata()
+        for keyword in ("CD1_1", "CD2_2"):
+            # There's some mild rounding going on
+            self.assertFloatsAlmostEqual(header.get(keyword), self.metadata.get(keyword), atol=1.0e-16)
+        for keyword in ("CD1_2", "CD2_1"):
+            self.assertTrue(header.exists(keyword))
+            self.assertEqual(header.get(keyword), 0.0)
+
 
 class TestTanSipTestCase(SkyWcsBaseTestCase):
 
