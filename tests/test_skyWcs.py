@@ -756,6 +756,14 @@ class MetadataWcsTestCase(SkyWcsBaseTestCase):
             skyPos2 = wcs2.pixelToSky(pixPos)
             self.assertSpherePointsAlmostEqual(skyPos2, pred_skyPos)
 
+    def testNoEpoch(self):
+        """Ensure we're not writing epoch headers (DATE-OBS, MJD-OBS)"""
+        self.metadata.set("EQUINOX", 2000.0)  # Triggers AST writing DATE-OBS, MJD-OBS
+        skyWcs = makeSkyWcs(self.metadata)
+        header = skyWcs.getFitsMetadata()
+        self.assertFalse(header.exists("DATE-OBS"))
+        self.assertFalse(header.exists("MJD-OBS"))
+
 
 class TestTanSipTestCase(SkyWcsBaseTestCase):
 

@@ -230,6 +230,7 @@ std::shared_ptr<daf::base::PropertyList> SkyWcs::getFitsMetadata(bool precise) c
     ast::StringStream strStream;
     ast::FitsChan fitsChan(strStream, os.str());
     int const nObjectsWritten = fitsChan.write(frameSet);
+    std::shared_ptr<daf::base::PropertyList> header;
     if (nObjectsWritten == 0) {
         if (precise) {
             throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
@@ -238,10 +239,17 @@ std::shared_ptr<daf::base::PropertyList> SkyWcs::getFitsMetadata(bool precise) c
             // An exact representation could not be written, so try to write a local TAN approximation;
             // set precise true to avoid an infinite loop, should something go wrong
             auto tanWcs = getTanWcs(getPixelOrigin());
-            return tanWcs->getFitsMetadata(true);
+            header = tanWcs->getFitsMetadata(true);
         }
+    } else {
+        header = detail::getPropertyListFromFitsChan(fitsChan);
     }
-    return detail::getPropertyListFromFitsChan(fitsChan);
+
+    // Remove DATE-OBS, MJD-OBS: AST writes these if the EQUINOX is set, but we set them via other mechanisms.
+    header->remove("DATE-OBS");
+    header->remove("MJD-OBS");
+
+    return header;
 }
 
 std::shared_ptr<const ast::FrameDict> SkyWcs::getFrameDict() const { return _frameDict; }
