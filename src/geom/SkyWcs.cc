@@ -230,6 +230,7 @@ std::shared_ptr<daf::base::PropertyList> SkyWcs::getFitsMetadata(bool precise) c
     ast::StringStream strStream;
     ast::FitsChan fitsChan(strStream, os.str());
     int const nObjectsWritten = fitsChan.write(frameSet);
+    std::shared_ptr<daf::base::PropertyList> header;
     if (nObjectsWritten == 0) {
         if (precise) {
             throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
@@ -238,10 +239,29 @@ std::shared_ptr<daf::base::PropertyList> SkyWcs::getFitsMetadata(bool precise) c
             // An exact representation could not be written, so try to write a local TAN approximation;
             // set precise true to avoid an infinite loop, should something go wrong
             auto tanWcs = getTanWcs(getPixelOrigin());
-            return tanWcs->getFitsMetadata(true);
+            header = tanWcs->getFitsMetadata(true);
         }
+    } else {
+        header = detail::getPropertyListFromFitsChan(fitsChan);
     }
-    return detail::getPropertyListFromFitsChan(fitsChan);
+
+    // Remove DATE-OBS, MJD-OBS: AST writes these if the EQUINOX is set, but we set them via other mechanisms.
+    header->remove("DATE-OBS");
+    header->remove("MJD-OBS");
+
+    // If CD matrix is present, explicitly set any missing entries to zero, as a convenience to the user
+    bool const hasCd11 = header->exists("CD1_1");
+    bool const hasCd12 = header->exists("CD1_2");
+    bool const hasCd21 = header->exists("CD2_1");
+    bool const hasCd22 = header->exists("CD2_2");
+    if (hasCd11 || hasCd12 || hasCd21 || hasCd22) {
+        if (!hasCd11) header->set("CD1_1", 0.0, "Transformation matrix element");
+        if (!hasCd12) header->set("CD1_2", 0.0, "Transformation matrix element");
+        if (!hasCd21) header->set("CD2_1", 0.0, "Transformation matrix element");
+        if (!hasCd22) header->set("CD2_2", 0.0, "Transformation matrix element");
+    }
+
+    return header;
 }
 
 std::shared_ptr<const ast::FrameDict> SkyWcs::getFrameDict() const { return _frameDict; }

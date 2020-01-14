@@ -37,7 +37,7 @@ class FrameSetUtilsTestCase(lsst.utils.tests.TestCase):
             crval=self.crval,
             cdMatrix=makeCdMatrix(scale=self.scale, orientation=orientation, flipX=flipX),
         )
-        self.assertEqual(metadata.nameCount(), 12)  # 2 CD terms are zero and so are omitted
+        self.assertEqual(metadata.nameCount(), 11)  # 2 CD terms are zero and so are omitted
         metadata.add("SIMPLE", True)
         metadata.add("BITPIX", 16)
         metadata.add("NAXIS", 2)
@@ -88,7 +88,7 @@ class FrameSetUtilsTestCase(lsst.utils.tests.TestCase):
     def testReadFitsWcsStripMetadata(self):
         metadata = self.makeMetadata()
         nKeys = len(metadata.toList())
-        nToStrip = 12
+        nToStrip = 11
         frameSet1 = readFitsWcs(metadata, strip=False)
         self.assertEqual(type(frameSet1), ast.FrameSet)
         self.assertEqual(len(metadata.toList()), nKeys)
@@ -123,7 +123,7 @@ class FrameSetUtilsTestCase(lsst.utils.tests.TestCase):
     def testReadLsstSkyWcsStripMetadata(self):
         metadata = self.makeMetadata()
         nKeys = len(metadata.toList())
-        nToStrip = 12 + 6  # WCS "A" is also stripped
+        nToStrip = 11 + 6  # WCS "A" is also stripped
         frameSet1 = readLsstSkyWcs(metadata, strip=False)
         self.assertEqual(len(metadata.toList()), nKeys)
 
@@ -294,10 +294,10 @@ class FrameSetUtilsTestCase(lsst.utils.tests.TestCase):
             for projection in ("TAN", "STG"):
                 metadata = makeSimpleWcsMetadata(crpix=crpix, crval=crval,
                                                  cdMatrix=cdMatrix, projection=projection)
-                desiredLength = 12 if orientation == 0 * degrees else 14
+                desiredLength = 11 if orientation == 0 * degrees else 13
                 self.assertEqual(len(metadata.names()), desiredLength)
                 self.assertEqual(metadata.getScalar("RADESYS"), "ICRS")
-                self.assertAlmostEqual(metadata.getScalar("EQUINOX"), 2000.0)
+                self.assertFalse(metadata.exists("EQUINOX"))
                 self.assertEqual(metadata.getScalar("CTYPE1"), "RA---" + projection)
                 self.assertEqual(metadata.getScalar("CTYPE2"), "DEC--" + projection)
                 for i in range(2):

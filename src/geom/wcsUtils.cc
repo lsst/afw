@@ -175,7 +175,6 @@ std::shared_ptr<daf::base::PropertyList> makeSimpleWcsMetadata(lsst::geom::Point
                                                                std::string const& projection) {
     auto pl = std::make_shared<daf::base::PropertyList>();
     pl->add("RADESYS", "ICRS");
-    pl->add("EQUINOX", 2000);  // not needed, but may help some older code
     pl->add("CTYPE1", "RA---" + projection);
     pl->add("CTYPE2", "DEC--" + projection);
     pl->add("CRPIX1", crpix[0] + 1);
