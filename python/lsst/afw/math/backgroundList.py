@@ -27,6 +27,7 @@ import lsst.daf.base as dafBase
 import lsst.geom
 import lsst.afw.image as afwImage
 from lsst.afw.fits import MemFileManager, reduceToFits, Fits
+from lsst.utils import suppress_deprecations
 from . import mathLib as afwMath
 
 
@@ -207,7 +208,12 @@ class BackgroundList:
 
             bkgd = afwMath.BackgroundMI(imageBBox, statsImage)
             bctrl = bkgd.getBackgroundControl()
-            bctrl.setInterpStyle(interpStyle)  # can't remove because other code might call old getImageF
+
+            # TODO: DM-22814: remove this after v20.
+            # Still needed until then because other code might call the old-style getImageF.
+            with suppress_deprecations():
+                bctrl.setInterpStyle(interpStyle)
+
             bctrl.setUndersampleStyle(undersampleStyle)
             actrl = afwMath.ApproximateControl(approxStyle, approxOrderX, approxOrderY, approxWeighting)
             bctrl.setApproximateControl(actrl)
