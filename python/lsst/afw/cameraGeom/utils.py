@@ -630,7 +630,7 @@ def overlayCcdBoxes(ccd, untrimmedCcdBbox=None, nQuarter=0,
             untrimmedCcdBbox = ccd.getBBox()
         else:
             untrimmedCcdBbox = lsst.geom.Box2I()
-            for a in ccd.getAmpInfoCatalog():
+            for a in ccd.getAmplifiers():
                 bbox = a.getRawBBox()
                 untrimmedCcdBbox.include(bbox)
 
