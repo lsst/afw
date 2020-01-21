@@ -55,10 +55,10 @@ public:
 
     virtual ~DetectorCollectionBase() noexcept = 0;
 
-    /// Get an unordered map keyed by name.
+    /// Get a map keyed and ordered by name.
     NameMap const & getNameMap() const noexcept { return _nameDict; }
 
-    /// Get an unordered map keyed by ID.
+    /// Get a map keyed and ordered by ID.
     IdMap const & getIdMap() const noexcept { return _idDict; }
 
     /**
