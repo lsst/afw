@@ -131,8 +131,7 @@ class MatchXyTest(unittest.TestCase):
                     self.nUniqueMatch)
                 for m in matches:
                     if closest:
-                        self.assertEqual(m.first.getId() +
-                                         self.nobj, m.second.getId())
+                        self.assertEqual(m.first.getId() + self.nobj, m.second.getId())
                     else:
                         self.assertLessEqual(m.distance, self.matchRadius)
 

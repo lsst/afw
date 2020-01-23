@@ -341,8 +341,8 @@ class SourceMatchTestCase(lsst.utils.tests.TestCase):
     def assertEqualFloat(self, value1, value2):
         """Compare floating point values, allowing for NAN
         """
-        self.assertTrue(value1 == value2 or
-                        (np.isnan(value1) and np.isnan(value2)))
+        self.assertTrue(value1 == value2
+                        or (np.isnan(value1) and np.isnan(value2)))
 
     def testDistancePrecision(self):
         """Test for precision of the calculated distance

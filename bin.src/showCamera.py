@@ -30,7 +30,7 @@ if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser(description='Show the layout of CCDs in a camera.',
-                                     epilog='The corresponding obs-package must be setup (e.g. obs_decam ' +
+                                     epilog='The corresponding obs-package must be setup (e.g. obs_decam '
                                      'if you want to see DECam)'
                                      )
     parser.add_argument(

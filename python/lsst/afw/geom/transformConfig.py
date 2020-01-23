@@ -142,8 +142,8 @@ class RadialTransformConfig(Config):
             return
         if len(self.coeffs) == 1 or self.coeffs[0] != 0 or self.coeffs[1] == 0:
             raise RuntimeError(
-                "invalid radial transform coeffs %s: " % (self.coeffs,) +
-                "need len(coeffs)=0 or len(coeffs)>1, coeffs[0]==0, "
+                "invalid radial transform coeffs %s: " % (self.coeffs,)
+                + "need len(coeffs)=0 or len(coeffs)>1, coeffs[0]==0, "
                 "and coeffs[1]!=0")
 
 

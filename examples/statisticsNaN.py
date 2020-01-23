@@ -64,8 +64,8 @@ def main():
     # This will print nan
     sctrl = afwMath.StatisticsControl()
     sctrl.setNanSafe(False)
-    print("Should be a nan (nanSafe set to False): " +
-          str(afwMath.makeStatistics(outImage, afwMath.MEAN, sctrl).getValue()))
+    print("Should be a nan (nanSafe set to False): "
+          + str(afwMath.makeStatistics(outImage, afwMath.MEAN, sctrl).getValue()))
 
 
 if __name__ == '__main__':

@@ -72,17 +72,14 @@ class PupilFactoryTestCase(lsst.utils.tests.TestCase):
         # symmetry.
         pupilFactory._cutRay(pupil, (0.0, 0.0), 0*degrees, 0.1)
         np.testing.assert_array_equal(pupil.illuminated, pupil.illuminated[::-1, :])
-        self.assertTrue(np.any(pupil.illuminated !=
-                        pupil.illuminated[:, ::-1]))
+        self.assertTrue(np.any(pupil.illuminated != pupil.illuminated[:, ::-1]))
         self.assertTrue(np.any(pupil.illuminated != pupil.illuminated.T))
 
         # Cut a vertical ray, which then gives transpositional symmetry but
         # removes vertical and horizontal reflection symmetry
         pupilFactory._cutRay(pupil, (0.0, 0.0), 90*degrees, 0.1)
-        self.assertTrue(np.any(pupil.illuminated !=
-                        pupil.illuminated[::-1, :]))
-        self.assertTrue(np.any(pupil.illuminated !=
-                        pupil.illuminated[:, ::-1]))
+        self.assertTrue(np.any(pupil.illuminated != pupil.illuminated[::-1, :]))
+        self.assertTrue(np.any(pupil.illuminated != pupil.illuminated[:, ::-1]))
         self.assertTrue(np.any(pupil.illuminated == pupil.illuminated.T))
 
 

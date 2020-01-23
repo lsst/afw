@@ -146,8 +146,8 @@ class OffsetImageTestCase(unittest.TestCase):
                     im -= refIm
 
                     if display:
-                        afwDisplay.Display(frame=1).mtv(im, title=algorithm +
-                                                        ": diff image (dx, dy) = (%f, %f)" % (dx, dy))
+                        afwDisplay.Display(frame=1).mtv(im, title=algorithm
+                                                        + ": diff image (dx, dy) = (%f, %f)" % (dx, dy))
 
                     imArr = im.getArray()
                     imGoodVals = np.ma.array(

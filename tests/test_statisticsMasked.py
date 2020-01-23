@@ -78,10 +78,9 @@ class StatisticsTestCase(unittest.TestCase):
         stats = afwMath.makeStatistics(
             self.mimg, afwMath.NPOINT | afwMath.MEAN | afwMath.STDEV)
         mean = 0.5*(self.valL + self.valR)
-        nL, nR = self.mimgL.getWidth()*self.mimgL.getHeight(), self.mimgR.getWidth() * \
-            self.mimgR.getHeight()
-        stdev = ((nL*(self.valL - mean)**2 + nR *
-                  (self.valR - mean)**2)/(nL + nR - 1))**0.5
+        nL, nR = (self.mimgL.getWidth()*self.mimgL.getHeight(),
+                  self.mimgR.getWidth()*self.mimgR.getHeight())
+        stdev = ((nL*(self.valL - mean)**2 + nR*(self.valR - mean)**2)/(nL + nR - 1))**0.5
 
         self.assertEqual(stats.getValue(afwMath.NPOINT), self.n)
         self.assertEqual(stats.getValue(afwMath.MEAN), mean)
@@ -109,10 +108,9 @@ class StatisticsTestCase(unittest.TestCase):
         stats = afwMath.makeStatistics(
             self.mimg, afwMath.NPOINT | afwMath.MEAN | afwMath.STDEV)
         mean = 0.5*(self.valL + self.valR)
-        nL, nR = self.mimgL.getWidth()*self.mimgL.getHeight(), self.mimgR.getWidth() * \
-            self.mimgR.getHeight()
-        stdev = ((nL*(self.valL - mean)**2 + nR *
-                  (self.valR - mean)**2)/(nL + nR - 1))**0.5
+        nL, nR = (self.mimgL.getWidth()*self.mimgL.getHeight(),
+                  self.mimgR.getWidth()*self.mimgR.getHeight())
+        stdev = ((nL*(self.valL - mean)**2 + nR*(self.valR - mean)**2)/(nL + nR - 1))**0.5
 
         self.assertEqual(stats.getValue(afwMath.NPOINT), self.n)
         self.assertEqual(stats.getValue(afwMath.MEAN), mean)
@@ -172,8 +170,7 @@ class StatisticsTestCase(unittest.TestCase):
 
         n = 2
         # original estimate; just a rewrite of the usual n/(n - 1) correction
-        stddev = (1.0*(vsum2)/(wsum*(1.0-1.0/n)) -
-                  (vsum**2)/(wsum**2*(1.0-1.0/n)))**0.5
+        stddev = (1.0*(vsum2)/(wsum*(1.0-1.0/n)) - (vsum**2)/(wsum**2*(1.0-1.0/n)))**0.5
         self.assertAlmostEqual(stddev, np.sqrt(variance*n/(n - 1)))
         #
         # The correct formula:

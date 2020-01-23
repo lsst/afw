@@ -548,8 +548,8 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
                          self.imgVal2/self.imgVal1)
         self.assertEqual(mimage2_copy.mask[0, 0, afwImage.LOCAL], self.EDGE)
         self.assertAlmostEqual(mimage2_copy.variance[0, 0, afwImage.LOCAL],
-                               (self.varVal2*pow(self.imgVal1, 2) +
-                                self.varVal1*pow(self.imgVal2, 2))/pow(self.imgVal1, 4), 10)
+                               (self.varVal2*pow(self.imgVal1, 2)
+                                + self.varVal1*pow(self.imgVal2, 2))/pow(self.imgVal1, 4), 10)
         # Divide by an Image (of the same type as MaskedImage.image)
         mimage = self.mimage2.Factory(self.mimage2, True)
         mimage /= mimage.image
