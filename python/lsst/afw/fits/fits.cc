@@ -177,6 +177,14 @@ void declareFits(py::module & mod) {
             "strip"_a=false);
     cls.def("createEmpty", &Fits::createEmpty);
 
+    cls.def("readImageI", [](Fits &self) {
+        ndarray::Vector<int, 2> const offset;  // initialized to zero by default
+        ndarray::Vector<ndarray::Size, 2> shape = self.getImageShape<2>();
+        ndarray::Array<int, 2, 2> result = ndarray::allocate(shape[0], shape[1]);
+        self.readImage(result, offset);
+        return result;
+    });
+
     cls.def("gotoFirstHdu", [](Fits & self) { self.setHdu(DEFAULT_HDU); });
 
     cls.def("setImageCompression", &Fits::setImageCompression);
