@@ -141,8 +141,8 @@ class WcsTestCase(unittest.TestCase):
         pl = headerToPropertyList(self.header)
         makeSkyWcs(pl, strip=False)
         for key, value in self.header.items():
-            self.assertEqual(value, pl.getScalar(
-                key), "%s not invariant: %s vs %s" % (key, value, pl.getScalar(key)))
+            self.assertEqual(value, pl.getScalar(key),
+                             f"{key} not invariant: {value} vs {pl.getScalar(key)}")
 
     def testRepeat(self):
         pl = headerToPropertyList(self.header)

@@ -152,8 +152,8 @@ class SavingSubImagesTest(unittest.TestCase):
                 self.assertEqual(self.parent.maskedImage[lsst.geom.Point2I(p), afwImage.LOCAL],
                                  subImg.maskedImage[lsst.geom.Point2I(subP), afwImage.LOCAL])
 
-                self.assertEqual(adParent[0], adSub[0], "RAs are equal; deep = %s" % deep)
-                self.assertEqual(adParent[1], adSub[1], "DECs are equal; deep = %s" % deep)
+                self.assertEqual(adParent[0], adSub[0], f"RAs are equal; deep = {deep}")
+                self.assertEqual(adParent[1], adSub[1], f"DECs are equal; deep = {deep}")
 
     def testSubSubImage(self):
         """Check that a sub-image of a sub-image is equivalent to a sub image.
@@ -202,7 +202,7 @@ class SavingSubImagesTest(unittest.TestCase):
         for deep in (False, True):
             subImg = afwImage.ExposureF(self.parent, bbox, afwImage.LOCAL, deep)
 
-            with lsst.utils.tests.getTempFilePath("_%s.fits" % (deep,)) as outFile:
+            with lsst.utils.tests.getTempFilePath(f"_{deep}.fits") as outFile:
                 subImg.writeFits(outFile)
                 newImg = afwImage.ExposureF(outFile)
 
@@ -215,9 +215,9 @@ class SavingSubImagesTest(unittest.TestCase):
 
                 for i in range(2):
                     self.assertEqual(
-                        subXY0[i], newXY0[i], "Origin has changed; deep = %s" % deep)
+                        subXY0[i], newXY0[i], f"Origin has changed; deep = {deep}")
                     self.assertAlmostEqual(
-                        subCrpix[i], newCrpix[i], 6, "crpix has changed; deep = %s" % deep)
+                        subCrpix[i], newCrpix[i], 6, f"crpix has changed; deep = {deep}")
 
     def testFitsHeader(self):
         """Test that XY0 and crpix are written to the header as expected.

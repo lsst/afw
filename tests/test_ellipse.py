@@ -133,11 +133,9 @@ class EllipseTestCase(lsst.utils.tests.TestCase):
                         transformed = gt(lsst.geom.Point2D(point))
                         r = (transformed.getX()**2 + transformed.getY()**2)**0.5
                         if array[adjusted.getY(), adjusted.getX()]:
-                            self.assertLessEqual(
-                                r, 1.0, "Point %s is in region but r=%f" % (point, r))
+                            self.assertLessEqual(r, 1.0, f"Point {point} is in region but r={r}")
                         else:
-                            self.assertGreater(
-                                r, 1.0, "Point %s is outside region but r=%f" % (point, r))
+                            self.assertGreater(r, 1.0, f"Point {point} is outside region but r={r}")
                 # Another ellipse at a different position, specifically to
                 # reproduce the problem on DM-20246.
                 e = lsst.afw.geom.Ellipse(core, lsst.geom.Point2D(100, 100))

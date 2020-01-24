@@ -602,8 +602,8 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
             self.assertEqual(
                 np.mean(bkgdImage[0:100, 0:100].array), initialValue)
             if debugMode:
-                afwDisplay.Display(frame=frame).mtv(bkgdImage, title=self._testMethodName + " bkgdImage: "
-                                                    + interpStyle.__str__())
+                afwDisplay.Display(frame=frame).mtv(bkgdImage,
+                                                    title=f"{self._testMethodName} bkgdImage: {interpStyle}")
 
     def testBadImage(self):
         """Test that an entirely bad image doesn't cause an absolute failure"""

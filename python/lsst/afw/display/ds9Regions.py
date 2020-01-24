@@ -106,7 +106,7 @@ def dot(symb, c, r, size, ctype=None, fontFamily="helvetica", textAngle=None):
             if not fontFamily:
                 # appears to be needed at least for 7.4b1
                 fontFamily = ["normal"]
-            font += " %s" % " ".join(fontFamily)
+            font += " " + " ".join(fontFamily)
             font += '"'
         extra = ""
         if color or angle or font:
@@ -134,7 +134,7 @@ def drawLines(points, ctype=None):
     if ctype is None:  # default
         color = ""
     else:
-        color = "# color=%s" % ctype
+        color = f"# color={ctype}"
 
     regions = []
     if len(points) > 0:

@@ -47,11 +47,11 @@ class LeastSquaresTestCase(lsst.utils.tests.TestCase):
 
     def _assertClose(self, a, b, rtol=1E-5, atol=1E-8):
         self.assertFloatsAlmostEqual(
-            a, b, rtol=rtol, atol=atol, msg="\n%s\n!=\n%s" % (a, b))
+            a, b, rtol=rtol, atol=atol, msg=f"\n{a}\n!=\n{b}")
 
     def _assertNotClose(self, a, b, rtol=1E-5, atol=1E-8):
         self.assertFloatsNotEqual(
-            a, b, rtol=rtol, atol=atol, msg="\n%s\n==\n%s" % (a, b))
+            a, b, rtol=rtol, atol=atol, msg=f"\n{a}\n!=\n{b}")
 
     def setUp(self):
         np.random.seed(500)

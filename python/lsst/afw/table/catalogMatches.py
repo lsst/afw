@@ -121,8 +121,7 @@ def copyIntoCatalog(catalog, target, sourceSchema=None, sourcePrefix=None, targe
         target.addNew()
 
     if len(catalog) != len(target):
-        raise RuntimeError("Length mismatch: %d vs %d" %
-                           (len(catalog), len(target)))
+        raise RuntimeError(f"Length mismatch: {len(catalog)} vs {len(target)}")
 
     m = makeMapper(sourceSchema, targetSchema, sourcePrefix, targetPrefix)
     for rFrom, rTo in zip(catalog, target):

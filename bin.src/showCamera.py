@@ -45,25 +45,23 @@ if __name__ == '__main__':
     #
     # Import the obs package and lookup the mapper
     #
-    obsPackageName = "lsst.obs.%s" % args.mapper  # guess the package
+    obsPackageName = f"lsst.obs.{args.mapper}"  # guess the package
 
     try:
         __import__(obsPackageName)
     except Exception:
-        print("Unable to import %s -- is it setup?" %
-              (obsPackageName,), file=sys.stderr)
+        print(f"Unable to import {obsPackageName} -- is it setup?", file=sys.stderr)
         sys.exit(1)
 
     # __import__ returns the top-level module, so look ours up
     obsPackage = sys.modules[obsPackageName]
 
-    mapperName = "%s%sMapper" % (
-        args.mapper[0].title(), args.mapper[1:])  # guess the name too
+    # Guess the name too.
+    mapperName = f"{args.mapper[0].title()}{args.mapper[1:]}Mapper"
     try:
         mapper = getattr(obsPackage, mapperName)
     except AttributeError:
-        print("Unable to find mapper %s in %s" %
-              (mapperName, obsPackageName), file=sys.stderr)
+        print("Unable to find mapper {mapperName} in {obsPackageName}", file=sys.stderr)
         sys.exit(1)
     #
     # Control verbosity from butler

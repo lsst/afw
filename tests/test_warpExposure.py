@@ -363,7 +363,7 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
             originalMetadata = afwImage.DecoratedImageF(originalExposurePath).getMetadata()
             originalSkyWcs = afwGeom.makeSkyWcs(originalMetadata)
 
-            swarpedImageName = "medswarp1%s.fits" % (kernelName,)
+            swarpedImageName = f"medswarp1{kernelName}.fits"
             swarpedImagePath = os.path.join(dataDir, swarpedImageName)
             swarpedDecoratedImage = afwImage.DecoratedImageF(swarpedImagePath)
             swarpedImage = swarpedDecoratedImage.getImage()
@@ -424,7 +424,7 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         try:
             self.assertTrue(np.all(orArr == desOrArr))
         except Exception as e:
-            print("Failed: %r != %r: %s" % (orArr, desOrArr, e))
+            print(f"Failed: {orArr!r} != {desOrArr!r}: {e}")
             raise
 
     def testSmallSrc(self):
@@ -527,8 +527,7 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         predArraySet = (broadArrays[0], predMask, broadArrays[2])
         predExposure = afwImage.makeMaskedImageFromArrays(*predArraySet)
 
-        msg = "Separate mask warping failed; warpingKernel=%s; maskWarpingKernel=%s" % \
-            (kernelName, maskKernelName)
+        msg = f"Separate mask warping failed; warpingKernel={kernelName}; maskWarpingKernel={maskKernelName}"
         self.assertMaskedImagesAlmostEqual(destExposure.getMaskedImage(), predExposure,
                                            doImage=True, doMask=True, doVariance=True,
                                            rtol=rtol, atol=atol, msg=msg)
@@ -571,10 +570,10 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
                                    lsst.geom.Extent2I(145, 200))
             originalExposure = afwImage.ExposureF(
                 originalFullExposure, bbox, afwImage.LOCAL, useDeepCopy)
-            swarpedImageName = "medsubswarp1%s.fits" % (kernelName,)
+            swarpedImageName = f"medsubswarp1{kernelName}.fits"
         else:
             originalExposure = afwImage.ExposureF(originalExposurePath)
-            swarpedImageName = "medswarp1%s.fits" % (kernelName,)
+            swarpedImageName = f"medswarp1{kernelName}.fits"
 
         swarpedImagePath = os.path.join(dataDir, swarpedImageName)
         swarpedDecoratedImage = afwImage.DecoratedImageF(swarpedImagePath)
@@ -584,7 +583,7 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
 
         if useWarpExposure:
             # path for saved afw-warped image
-            afwWarpedImagePath = "afwWarpedExposure1%s.fits" % (kernelName,)
+            afwWarpedImagePath = f"afwWarpedExposure1{kernelName}.fits"
 
             afwWarpedMaskedImage = afwImage.MaskedImageF(
                 swarpedImage.getDimensions())
@@ -603,8 +602,7 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
             if display:
                 afwDisplay.Display(frame=2).mtv(swarpedMaskedImage, title="SWarped")
 
-            msg = "afw and swarp %s-warped differ (ignoring bad pixels)" % (
-                kernelName,)
+            msg = f"afw and swarp {kernelName}-warped differ (ignoring bad pixels)"
             try:
                 self.assertMaskedImagesAlmostEqual(afwWarpedMaskedImage, swarpedMaskedImage,
                                                    doImage=True, doMask=False, doVariance=False,
@@ -612,14 +610,12 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
             except Exception:
                 if SAVE_FAILED_FITS_FILES:
                     afwWarpedExposure.writeFits(afwWarpedImagePath)
-                    print("Saved failed afw-warped exposure as: %s" %
-                          (afwWarpedImagePath,))
+                    print(f"Saved failed afw-warped exposure as: {afwWarpedImagePath}")
                 raise
         else:
             # path for saved afw-warped image
-            afwWarpedImagePath = "afwWarpedImage1%s.fits" % (kernelName,)
-            afwWarpedImage2Path = "afwWarpedImage1%s_xyTransform.fits" % (
-                kernelName,)
+            afwWarpedImagePath = f"afwWarpedImage1{kernelName}.fits"
+            afwWarpedImage2Path = f"afwWarpedImage1{kernelName}_xyTransform.fits"
 
             afwWarpedImage = afwImage.ImageF(swarpedImage.getDimensions())
             originalImage = originalExposure.getMaskedImage().getImage()
@@ -637,8 +633,7 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
 
             afwWarpedImageArr = afwWarpedImage.getArray()
             noDataMaskArr = np.isnan(afwWarpedImageArr)
-            msg = "afw and swarp %s-warped images do not match (ignoring NaN pixels)" % \
-                (kernelName,)
+            msg = f"afw and swarp {kernelName}-warped images do not match (ignoring NaN pixels)"
             try:
                 self.assertImagesAlmostEqual(afwWarpedImage, swarpedImage,
                                              skipMask=noDataMaskArr, rtol=rtol, atol=atol, msg=msg)
@@ -646,25 +641,22 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
                 if SAVE_FAILED_FITS_FILES:
                     # save the image anyway
                     afwWarpedImage.writeFits(afwWarpedImagePath)
-                    print("Saved failed afw-warped image as: %s" %
-                          (afwWarpedImagePath,))
+                    print(f"Saved failed afw-warped image as: {afwWarpedImagePath}")
                 raise
 
             afwWarpedImage2 = afwImage.ImageF(swarpedImage.getDimensions())
             srcToDest = afwGeom.makeWcsPairTransform(originalWcs, warpedWcs)
             afwMath.warpImage(afwWarpedImage2, originalImage,
                               srcToDest, warpingControl)
-            msg = "afw transform-based and WCS-based %s-warped images do not match" % (
-                kernelName,)
+            msg = f"afw transform-based and WCS-based {kernelName}-warped images do not match"
             try:
                 self.assertImagesAlmostEqual(afwWarpedImage2, afwWarpedImage,
                                              rtol=rtol, atol=atol, msg=msg)
             except Exception:
                 if SAVE_FAILED_FITS_FILES:
                     # save the image anyway
-                    afwWarpedImage.writeFits(afwWarpedImagePath)
-                    print("Saved failed afw-warped image as: %s" %
-                          (afwWarpedImage2Path,))
+                    afwWarpedImage.writeFits(afwWarpedImage2)
+                    print(f"Saved failed afw-warped image as: {afwWarpedImage2Path}")
                 raise
 
 

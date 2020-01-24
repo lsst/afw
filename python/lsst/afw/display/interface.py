@@ -82,7 +82,7 @@ def _makeDisplayImpl(display, backend, *args, **kwargs):
     """
     _disp = None
     exc = None
-    for dt in ("lsst.display.%s" % backend, backend, ".%s" % backend, "lsst.afw.display.%s" % backend):
+    for dt in (f"lsst.display.{backend}", backend, f".{backend}", f"lsst.afw.display.{backend}"):
         exc = None
         # only specify the root package if we are not doing an absolute import
         impargs = {}
@@ -175,7 +175,7 @@ class Display:
         self._callbacks = {}
 
         for ik in range(ord('a'), ord('z') + 1):
-            k = "%c" % ik
+            k = f"{ik:c}"
             self.setCallback(k, noRaise=True)
             self.setCallback(k.upper(), noRaise=True)
 
@@ -233,7 +233,7 @@ class Display:
             return getattr(self._impl, name)
         except AttributeError:
             raise AttributeError(
-                "Device %s has no attribute \"%s\"" % (self.name, name))
+                f"Device {self.name} has no attribute \"{name}\"")
 
     def close(self):
         if getattr(self, "_impl", None) is not None:
@@ -256,7 +256,7 @@ class Display:
             self._impl.verbose = value
 
     def __str__(self):
-        return "Display[%s]" % (self.frame)
+        return f"Display[{self.frame}]"
 
     #
     # Handle Displays, including the default one (the frame to use when a user specifies None)
@@ -267,7 +267,7 @@ class Display:
             _makeDisplayImpl(None, backend)
         except Exception as e:
             raise RuntimeError(
-                "Unable to set backend to %s: \"%s\"" % (backend, e))
+                f"Unable to set backend to {backend}: \"{e}\"")
 
         Display._defaultBackend = backend
 
@@ -387,7 +387,7 @@ class Display:
 
         if frame not in Display._displays:
             if backend == "":
-                raise RuntimeError("Frame %s does not exist" % frame)
+                raise RuntimeError(f"Frame {frame} does not exist")
 
             Display._displays[frame] = Display(
                 frame, backend, verbose=verbose, *args, **kwargs)
@@ -550,7 +550,7 @@ class Display:
         elif isinstance(data, afwImage.MaskedImage):
             self._impl._mtv(data.getImage(), data.getMask(), wcs, title)
         else:
-            raise RuntimeError("Unsupported type %s" % repr(data))
+            raise RuntimeError(f"Unsupported type {data!r}")
     #
     # Graphics commands
     #
@@ -629,7 +629,7 @@ class Display:
             Extra keyword arguments to backend
         """
         if isinstance(symb, int):
-            symb = "%d" % (symb)
+            symb = f"{symb:d}"
 
         if origin == afwImage.PARENT and self._xy0 is not None:
             x0, y0 = self._xy0
@@ -710,8 +710,8 @@ class Display:
             Optional keyword arguments to the backend
         """
         if min in ("minmax", "zscale"):
-            assert max is None, "You may not specify \"%s\" and max" % min
-            assert unit is None, "You may not specify \"%s\" and unit" % min
+            assert max is None, f"You may not specify \"{min}\" and max"
+            assert unit is None, f"You may not specify \"{min}\" and unit"
         elif max is None:
             raise RuntimeError("Please specify max")
 
@@ -802,7 +802,7 @@ class Display:
             if noRaise:
                 return
             raise RuntimeError(
-                "Key '%s' is already in use by display, so I can't add a callback for it" % k)
+                f"Key '{k}' is already in use by display, so I can't add a callback for it")
 
         ofunc = self._callbacks.get(k)
         self._callbacks[k] = func if func else noop_callback
@@ -838,7 +838,7 @@ class Event:
         self.y = y
 
     def __str__(self):
-        return "%s (%.2f, %.2f)" % (self.k, self.x, self.y)
+        return f"{self.k} ({self.x:.2f}, {self.y:.2f}"
 #
 # Default fallback function
 #

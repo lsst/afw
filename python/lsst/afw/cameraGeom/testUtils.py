@@ -143,7 +143,7 @@ class DetectorWrapper:
         self.ampList = []
         for i in range(numAmps):
             ampBuilder = Amplifier.Builder()
-            ampName = "amp %d" % (i + 1,)
+            ampName = f"amp {i + 1}"
             ampBuilder.setName(ampName)
             ampBuilder.setBBox(lsst.geom.Box2I(lsst.geom.Point2I(-1, 1), self.ampExtent))
             ampBuilder.setGain(1.71234e3)

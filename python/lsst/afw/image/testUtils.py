@@ -111,7 +111,7 @@ def assertImagesAlmostEqual(testCase, image0, image1, skipMask=None,
     errStr = imagesDiffer(
         image0, image1, skipMask=skipMask, rtol=rtol, atol=atol)
     if errStr:
-        testCase.fail("%s: %s" % (msg, errStr))
+        testCase.fail(f"{msg}: {errStr}")
 
 
 @lsst.utils.tests.inTestCase
@@ -150,7 +150,7 @@ def assertMasksEqual(testCase, mask0, mask1, skipMask=None, msg="Masks differ"):
     """
     errStr = imagesDiffer(mask0, mask1, skipMask=skipMask, rtol=0, atol=0)
     if errStr:
-        testCase.fail("%s: %s" % (msg, errStr))
+        testCase.fail(f"{msg}: {errStr}")
 
 
 @lsst.utils.tests.inTestCase
@@ -218,7 +218,7 @@ def assertMaskedImagesAlmostEqual(
                 assert arrList[i].dtype.kind in ("b", "i", "u", "f", "c")
             assert arrList[1].dtype.kind in ("b", "i", "u")
         except Exception:
-            raise TypeError("%s=%r is not a supported type" % (name, arg))
+            raise TypeError(f"{name}={arg!r} is not a supported type")
 
     errStrList = []
     for ind, (doPlane, planeName) in enumerate(((doImage, "image"),
@@ -236,10 +236,11 @@ def assertMaskedImagesAlmostEqual(
             errStr = imagesDiffer(maskedImageArrList0[ind], maskedImageArrList1[ind],
                                   skipMask=skipMask, rtol=rtol, atol=atol)
             if errStr:
-                errStrList.append("%s planes differ: %s" % (planeName, errStr))
+                errStrList.append(f"{planeName} planes differ: {errStr}")
 
     if errStrList:
-        testCase.fail("%s: %s" % (msg, "; ".join(errStrList)))
+        errStr = "; ".join(errStrList)
+        testCase.fail(f"{msg}: {errStr}")
 
 
 @lsst.utils.tests.inTestCase
@@ -297,11 +298,10 @@ def imagesDiffer(image0, image1, skipMask=None, rtol=1.0e-05, atol=1e-08):
         try:
             assert arr.dtype.kind in ("b", "i", "u", "f", "c")
         except Exception:
-            raise TypeError("%r=%r is not a supported type" % (name, arg))
+            raise TypeError(f"{name!r}={arg!r} is not a supported type")
         if i != 0:
             if arr.shape != imageArr0.shape:
-                raise TypeError("%s shape = %s != %s = image0 shape" %
-                                (name, arr.shape, imageArr0.shape))
+                raise TypeError(f"{name} shape = {arr.shape} != {imageArr0.shape} = image0 shape")
 
     # np.allclose mis-handled unsigned ints in numpy 1.8
     # and subtraction doesn't give the desired answer in any case
@@ -365,9 +365,8 @@ def imagesDiffer(image0, image1, skipMask=None, rtol=1.0e-05, atol=1e-08):
         maxErr = errArr.max()
         maxPosInd = np.where(errArr == maxErr)
         maxPosTuple = (maxPosInd[1][0], maxPosInd[0][0])
-        errStr = "maxDiff=%s at position %s; value=%s vs. %s" % \
-            (maxErr, maxPosTuple,
-             valFilledArr1[maxPosInd][0], valFilledArr2[maxPosInd][0])
+        errStr = f"maxDiff={maxErr} at position {maxPosTuple}; " \
+                 f"value={valFilledArr1[maxPosInd][0]} vs. {valFilledArr2[maxPosInd][0]}"
         errStrList.insert(0, errStr)
 
     return "; ".join(errStrList)

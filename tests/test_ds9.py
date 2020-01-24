@@ -40,7 +40,7 @@ if ds9:
     try:
         ds9.mtv(afwImage.ImageF(1, 1))
     except Exception as e:
-        print("Unable to use ds9: %s" % e)
+        print(f"Unable to use ds9: {e}")
         ds9 = None
 
 

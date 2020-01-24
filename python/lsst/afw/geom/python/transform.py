@@ -106,8 +106,8 @@ def addTransformMethods(cls):
     global transformRegistry
     className = cls.__name__
     if className in transformRegistry:
-        raise RuntimeError("Class %r=%s already registered; cannot register class %s" %
-                           (className, transformRegistry[className], cls))
+        raise RuntimeError(f"Class {className!r}={transformRegistry[className]} already registered; "
+                           f"cannot register class {cls}")
     transformRegistry[cls.__name__] = cls
     cls.getJacobian = getJacobian
     cls.then = then

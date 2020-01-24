@@ -105,17 +105,17 @@ class SimpleGenericMapTestSuite(MutableGenericMapTestBaseClass):
                 keys = self.getTestData(keyType).keys()
                 for value in self.getTestData(keyType).values():
                     self.checkFromKeys(target, keys, value,
-                                       msg=" class=%s, value=%r" % (target, value))
-                self.checkFromKeysDefault(target, keys, msg=" class=%s, no value" % (target))
+                                       msg=f" class={target}, value={value}")
+                self.checkFromKeysDefault(target, keys, msg=f" class={target}, no value")
 
     def testCopy(self):
         for label, (mappingType, contents) in self.examples.items():
             for keyType in self.getValidKeys(mappingType):
                 mapping1 = self.makeMap(mappingType, contents)
                 mapping2 = mapping1.copy()
-                self.assertEqual(mapping1, mapping2, msg="%s" % label)
+                self.assertEqual(mapping1, mapping2, msg=f"{label}")
                 mapping1[keyType(42)] = "A random value!"
-                self.assertNotEqual(mapping1, mapping2, msg="%s" % label)
+                self.assertNotEqual(mapping1, mapping2, msg=f"{label}")
 
     def testEquality(self):
         for label1, (mappingType1, contents1) in self.examples.items():
@@ -123,14 +123,14 @@ class SimpleGenericMapTestSuite(MutableGenericMapTestBaseClass):
             for label2, (mappingType2, contents2) in self.examples.items():
                 mapping2 = self.makeMap(mappingType2, contents2)
                 if contents1 == contents2:
-                    self.assertIsNot(mapping1, mapping2, msg="%s vs %s" % (label1, label2))
-                    self.assertEqual(mapping1, mapping2, msg="%s vs %s" % (label1, label2))
-                    self.assertEqual(mapping1, contents2, msg="%s vs dict(%s)" % (label1, label2))
-                    self.assertEqual(contents1, mapping2, msg="dict(%s) vs %s" % (label1, label2))
+                    self.assertIsNot(mapping1, mapping2, msg=f"{label1} vs {label2}")
+                    self.assertEqual(mapping1, mapping2, msg=f"{label1} vs {label2}")
+                    self.assertEqual(mapping1, contents2, msg=f"{label1} vs dict({label2})")
+                    self.assertEqual(contents1, mapping2, msg=f"dict({label1}) vs {label2}")
                 else:
-                    self.assertNotEqual(mapping1, mapping2, msg="%s vs %s" % (label1, label2))
-                    self.assertNotEqual(mapping1, contents2, msg="%s vs dict(%s)" % (label1, label2))
-                    self.assertNotEqual(contents1, mapping2, msg="dict(%s) vs %s" % (label1, label2))
+                    self.assertNotEqual(mapping1, mapping2, msg=f"{label1} vs {label2}")
+                    self.assertNotEqual(mapping1, contents2, msg=f"{label1} vs dict({label2})")
+                    self.assertNotEqual(contents1, mapping2, msg=f"dict({label1}) vs {label2}")
 
     def testBool(self):
         for label, (mappingType, contents) in self.examples.items():

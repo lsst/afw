@@ -98,8 +98,8 @@ class KernelTestCase(lsst.utils.tests.TestCase):
 
                 kArr = kImage.getArray().transpose()
                 if not np.allclose(fArr, kArr):
-                    self.fail("%s = %s != %s for xsigma=%s, ysigma=%s" %
-                              (kernel.__class__.__name__, kArr, fArr, xsigma, ysigma))
+                    self.fail(f"{kernel.__class__.__name__} = {kArr} "
+                              f"for xsigma={xsigma}, ysigma={ysigma}")
 
         kernel.setKernelParameters((0.5, 1.1, 0.3))
         kernelClone = kernel.clone()
@@ -270,16 +270,14 @@ class KernelTestCase(lsst.utils.tests.TestCase):
 
         outArr = outImage.getArray().transpose()
         if not np.allclose(inArr, outArr):
-            self.fail("%s = %s != %s (not normalized)" %
-                      (kernel.__class__.__name__, inArr, outArr))
+            self.fail(f"{kernel.__class__.__name__} = {inArr} != {outArr} (not normalized)")
 
         normInArr = inArr / inArr.sum()
         normOutImage = afwImage.ImageD(kernel.getDimensions())
         kernel.computeImage(normOutImage, True)
         normOutArr = normOutImage.getArray().transpose()
         if not np.allclose(normOutArr, normInArr):
-            self.fail("%s = %s != %s (normalized)" %
-                      (kernel.__class__.__name__, normInArr, normOutArr))
+            self.fail(f"{kernel.__class__.__name__} = {normInArr} != {normOutArr} (normalized)")
 
         errStr = self.compareKernels(kernel, kernel.clone())
         if errStr:
@@ -315,8 +313,8 @@ class KernelTestCase(lsst.utils.tests.TestCase):
             kernel.computeImage(kIm, True)
             kImArr = kIm.getArray()
             if not np.allclose(kImArr, basisImArrList[ii]):
-                self.fail("%s = %s != %s for the %s'th basis kernel" %
-                          (kernel.__class__.__name__, kImArr, basisImArrList[ii], ii))
+                self.fail(f"{kernel.__class__.__name__} = {kImArr} != "
+                          f"{basisImArrList[ii]} for the {ii}'th basis kernel")
 
         kernelClone = kernel.clone()
         errStr = self.compareKernels(kernel, kernelClone)
@@ -412,11 +410,11 @@ class KernelTestCase(lsst.utils.tests.TestCase):
             kernel.computeImage(kIm, True)
             kImArr = kIm.getArray()
             if not np.allclose(kImArr, basisImArrList[ii]):
-                self.fail("%s = %s != %s for the %s'th basis kernel" %
-                          (kernel.__class__.__name__, kImArr, basisImArrList[ii], ii))
+                self.fail(f"{kernel.__class__.__name__} = {kImArr} != "
+                          f"{basisImArrList[ii]} for the {ii}'th basis kernel")
             if np.allclose(kImArr, modBasisImArrList[ii]):
-                self.fail("%s = %s == %s for *modified* %s'th basis kernel" %
-                          (kernel.__class__.__name__, kImArr, modBasisImArrList[ii], ii))
+                self.fail(f"{kernel.__class__.__name__} = {kImArr} != "
+                          f"{modBasisImArrList[ii]} for *modified* {ii}'th basis kernel")
 
         kernelClone = kernel.clone()
         errStr = self.compareKernels(kernel, kernelClone)
@@ -460,8 +458,8 @@ class KernelTestCase(lsst.utils.tests.TestCase):
                 kernel.computeImage(kImage, True)
                 kArr = kImage.getArray().transpose()
                 if not np.allclose(fArr, kArr):
-                    self.fail("%s = %s != %s for xsigma=%s, ysigma=%s" %
-                              (kernel.__class__.__name__, kArr, fArr, xsigma, ysigma))
+                    self.fail(f"{kernel.__class__.__name__} = {kArr} != "
+                              f"{fArr} for xsigma={xsigma}, ysigma={ysigma}")
         kernelClone = kernel.clone()
         errStr = self.compareKernels(kernel, kernelClone)
         if errStr:
@@ -643,8 +641,8 @@ class KernelTestCase(lsst.utils.tests.TestCase):
             refKImArr = (basisImArrList[0] * coeff0) + \
                 (basisImArrList[1] * coeff1)
             if not np.allclose(kImArr, refKImArr):
-                self.fail("%s = %s != %s at colPos=%s, rowPos=%s" %
-                          (kernel.__class__.__name__, kImArr, refKImArr, colPos, rowPos))
+                self.fail(f"{kernel.__class__.__name__} = {kImArr} != "
+                          f"{refKImArr} at colPos={colPos}, rowPos={rowPos}")
 
         sParams = (
             (0.1, 1.0, 0.0),
@@ -767,8 +765,7 @@ class KernelTestCase(lsst.utils.tests.TestCase):
             errStr = self.compareKernels(
                 kernel, refKernel, compareParams=False)
             if errStr:
-                self.fail("failed with %s for spOrder=%s (numSpCoeff=%s)" %
-                          (errStr, spOrder, numSpParams))
+                self.fail(f"failed with {errStr} for spOrder={spOrder}, numSpParams={numSpParams}")
 
     def testRefactorGaussianLinearCombinationKernel(self):
         """Test LinearCombinationKernel.refactor with Gaussian basis kernels
@@ -801,8 +798,7 @@ class KernelTestCase(lsst.utils.tests.TestCase):
             errStr = self.compareKernels(
                 kernel, refKernel, compareParams=False)
             if errStr:
-                self.fail("failed with %s for spOrder=%s; numSpCoeff=%s" %
-                          (errStr, spOrder, numSpParams))
+                self.fail(f"failed with {errStr} for spOrder={spOrder}, numSpParams={numSpParams}")
 
     def basicTests(self, kernel, nKernelParams, nSpatialParams=0, dimMustMatch=True):
         """Basic tests of a kernel"""
@@ -869,10 +865,10 @@ class KernelTestCase(lsst.utils.tests.TestCase):
         try:
             kernel.computeImage(kImage, True)
             if doRaise:
-                self.fail(kernelDescr + ".computeImage should have raised an exception")
+                self.fail(f"{kernelDescr}.computeImage should have raised an exception")
         except pexExcept.Exception:
             if not doRaise:
-                self.fail(kernelDescr + ".computeImage should not have raised an exception")
+                self.fail(f"{kernelDescr}.computeImage should not have raised an exception")
 
     def compareResizedKernels(self, kernel1, kernel2):
         """Compare kernels' parameters and images where overlapping,
@@ -883,8 +879,8 @@ class KernelTestCase(lsst.utils.tests.TestCase):
         """
         retStrs = []
         if kernel1.isSpatiallyVarying() != kernel2.isSpatiallyVarying():
-            retStrs.append("isSpatiallyVarying differs: %s != %s" %
-                           (kernel1.isSpatiallyVarying(), kernel2.isSpatiallyVarying()))
+            retStrs.append("isSpatiallyVarying differs: "
+                           f"{kernel1.isSpatiallyVarying()} != {kernel2.isSpatiallyVarying()}")
         retStrs = self._compareParams(kernel1, kernel2, retStrs)
         if retStrs:
             return "; ".join(retStrs)
@@ -910,7 +906,7 @@ class KernelTestCase(lsst.utils.tests.TestCase):
             if not np.allclose(im1Arr, im2Arr):
                 print("im1Arr =", im1Arr)
                 print("im2Arr =", im2Arr)
-                return "kernel images do not match at %s with doNormalize=%s" % (pos, doNormalize)
+                return f"kernel images do not match at {pos} with doNormalize={doNormalize}"
 
     def compareKernels(self, kernel1, kernel2, compareParams=True, newCtr1=(0, 0)):
         """Compare two kernels; return None if they match, else return a string kernelDescribing a difference.
@@ -922,15 +918,14 @@ class KernelTestCase(lsst.utils.tests.TestCase):
         """
         retStrs = []
         if kernel1.getDimensions() != kernel2.getDimensions():
-            retStrs.append("dimensions differ: %s != %s" %
-                           (kernel1.getDimensions(), kernel2.getDimensions()))
+            retStrs.append(f"dimensions differ: {kernel1.getDimensions()} != {kernel2.getDimensions()}")
         ctr1 = kernel1.getCtr()
         ctr2 = kernel2.getCtr()
         if ctr1 != ctr2:
-            retStrs.append("centers differ: %s != %s" % (ctr1, ctr2))
+            retStrs.append(f"centers differ: {ctr1} != {ctr2}")
         if kernel1.isSpatiallyVarying() != kernel2.isSpatiallyVarying():
-            retStrs.append("isSpatiallyVarying differs: %s != %s" %
-                           (kernel1.isSpatiallyVarying(), kernel2.isSpatiallyVarying()))
+            retStrs.append("isSpatiallyVarying differs: "
+                           f"{kernel1.isSpatiallyVarying()} != {kernel2.isSpatiallyVarying()}")
 
         if compareParams:
             retStrs = self._compareParams(kernel1, kernel2, retStrs)
@@ -951,27 +946,27 @@ class KernelTestCase(lsst.utils.tests.TestCase):
                 if not np.allclose(im1Arr, im2Arr):
                     print("im1Arr =", im1Arr)
                     print("im2Arr =", im2Arr)
-                    return "kernel images do not match at %s with doNormalize=%s" % (pos, doNormalize)
+                    return "kernel images do not match at {pos} with doNormalize={doNormalize}"
 
         if newCtr1 is not None:
             kernel1.setCtr(lsst.geom.Point2I(newCtr1))
             newCtr2 = kernel2.getCtr()
             if ctr2 != newCtr2:
-                return "changing center of kernel1 to %s changed the center of kernel2 from %s to %s" % \
-                    (newCtr1, ctr2, newCtr2)
+                return f"changing center of kernel1 to {newCtr1} " \
+                    f"changed the center of kernel2 from {ctr2} to {newCtr2}"
 
     def _compareParams(self, kernel1, kernel2, retStrs=None):
         """!Compare two kernels' Parameters"""
         if kernel1.getSpatialParameters() != kernel2.getSpatialParameters():
-            retStrs.append("spatial parameters differ: %s != %s" %
-                           (kernel1.getSpatialParameters(), kernel2.getSpatialParameters()))
+            retStrs.append("spatial parameters differ: "
+                           f"{kernel1.getSpatialParameters()} != {kernel2.getSpatialParameters()}")
         if kernel1.getNSpatialParameters() != kernel2.getNSpatialParameters():
-            retStrs.append("# spatial parameters differs: %s != %s" %
-                           (kernel1.getNSpatialParameters(), kernel2.getNSpatialParameters()))
+            retStrs.append("# spatial parameters differs: "
+                           f"{kernel1.getNSpatialParameters()} != {kernel2.getNSpatialParameters()}")
         if not kernel1.isSpatiallyVarying() and hasattr(kernel1, "getKernelParameters"):
             if kernel1.getKernelParameters() != kernel2.getKernelParameters():
-                retStrs.append("kernel parameters differs: %s != %s" %
-                               (kernel1.getKernelParameters(), kernel2.getKernelParameters()))
+                retStrs.append("kernel parameters differs: "
+                               f"{kernel1.getKernelParameters()} != {kernel2.getKernelParameters()}")
         return retStrs
 
     def _makePositionList(self, kernel1):

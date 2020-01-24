@@ -146,7 +146,7 @@ class FrameSetUtilsTestCase(lsst.utils.tests.TestCase):
         # try a full WCS with just CRPIX1 or 2 missing
         for i in (1, 2):
             metadata = self.makeMetadata()
-            metadata.remove("CRPIX%d" % (i,))
+            metadata.remove(f"CRPIX{i}")
             with self.assertRaises(lsst.pex.exceptions.TypeError):
                 readLsstSkyWcs(metadata, strip=False)
 
@@ -174,7 +174,7 @@ class FrameSetUtilsTestCase(lsst.utils.tests.TestCase):
 
         # get predicted crval by converting with astropy
         crvalFk5 = SkyCoord(crvalFk5Deg[0], crvalFk5Deg[1], frame="fk5",
-                            equinox="J%f" % (equinox,), unit="deg")
+                            equinox=f"J{equinox}", unit="deg")
         predictedCrvalIcrs = crvalFk5.icrs
         predictedCrvalPoint = SpherePoint(predictedCrvalIcrs.ra.radian*radians,
                                           predictedCrvalIcrs.dec.radian*radians)
@@ -236,7 +236,7 @@ class FrameSetUtilsTestCase(lsst.utils.tests.TestCase):
         self.assertIsNone(metadata.getScalar("ANUNDEF"))
 
         for name in expectedNames:
-            self.assertEqual(metadata.getComment(name), "Comment for %s" % (name,))
+            self.assertEqual(metadata.getComment(name), f"Comment for {name}")
 
         # complex values are not supported by PropertyList
         fc.setFitsCF("UNSUPP", complex(1, 0))
@@ -301,12 +301,12 @@ class FrameSetUtilsTestCase(lsst.utils.tests.TestCase):
                 self.assertEqual(metadata.getScalar("CTYPE1"), "RA---" + projection)
                 self.assertEqual(metadata.getScalar("CTYPE2"), "DEC--" + projection)
                 for i in range(2):
-                    self.assertAlmostEqual(metadata.getScalar("CRPIX%d" % (i + 1,)), crpix[i] + 1)
-                    self.assertAlmostEqual(metadata.getScalar("CRVAL%d" % (i + 1,)), crval[i].asDegrees())
-                    self.assertEqual(metadata.getScalar("CUNIT%d" % (i + 1,)), "deg")
+                    self.assertAlmostEqual(metadata.getScalar(f"CRPIX{i + 1}"), crpix[i] + 1)
+                    self.assertAlmostEqual(metadata.getScalar(f"CRVAL{i + 1}"), crval[i].asDegrees())
+                    self.assertEqual(metadata.getScalar(f"CUNIT{i + 1}"), "deg")
                 for i in range(2):
                     for j in range(2):
-                        name = "CD%d_%d" % (i + 1, j + 1)
+                        name = f"CD{i + 1}_{j + 1}"
                         if cdMatrix[i, j] != 0:
                             self.assertAlmostEqual(metadata.getScalar(name), cdMatrix[i, j])
                         else:

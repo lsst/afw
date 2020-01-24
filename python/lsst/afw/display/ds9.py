@@ -46,7 +46,7 @@ except NameError:
                 # don't want to capture in a closure for all time: see DM-9504 for a
                 # full discussion. We therefore define a new exception of the same
                 # type, which just encodes the error text.
-                self.exception = type(exception)("%s (is display_ds9 setup?)" % exception)
+                self.exception = type(exception)(f"{exception} (is display_ds9 setup?)")
 
             def __call__(self, *args, **kwargs):
                 raise self.exception

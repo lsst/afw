@@ -69,12 +69,11 @@ def _compareWcsOverBBox(wcs0, wcs1, bbox, maxDiffSky=0.01*lsst.geom.arcseconds,
         whole pixel grid.
     """
     if nx < 1 or ny < 1:
-        raise RuntimeError(
-            "nx = %s and ny = %s must both be positive" % (nx, ny))
+        raise RuntimeError(f"nx = {nx} and ny = {ny} must both be positive")
     if maxDiffSky < 0*lsst.geom.arcseconds:
-        raise RuntimeError("maxDiffSky = %s must not be negative" % (maxDiffSky,))
+        raise RuntimeError(f"maxDiffSky = {maxDiffSky} must not be negative")
     if maxDiffPix < 0:
-        raise RuntimeError("maxDiffPix = %s must not be negative" % (maxDiffPix,))
+        raise RuntimeError(f"maxDiffPix = {maxDiffPix} must not be negative")
 
     bboxd = lsst.geom.Box2D(bbox)
     xList = np.linspace(bboxd.getMinX(), bboxd.getMaxX(), nx)
@@ -103,11 +102,13 @@ def _compareWcsOverBBox(wcs0, wcs1, bbox, maxDiffSky=0.01*lsst.geom.arcseconds,
 
     msgList = []
     if measDiffSky[0] > maxDiffSky:
-        msgList.append("%s arcsec max measured sky error > %s arcsec max allowed sky error at pix pos=%s" %
-                       (measDiffSky[0].asArcseconds(), maxDiffSky.asArcseconds(), measDiffSky[1]))
+        msgList.append(f"{measDiffSky[0].asArcseconds()} arcsec max measured sky error "
+                       f"> {maxDiffSky.asArcseconds()} arcsec max allowed sky error "
+                       f"at pix pos=measDiffSky[1]")
     if measDiffPix[0] > maxDiffPix:
-        msgList.append("%s max measured pix error > %s max allowed pix error at sky pos=%s" %
-                       (measDiffPix[0], maxDiffPix, measDiffPix[1]))
+        msgList.append(f"{measDiffPix[0]} max measured pix error "
+                       f"> {maxDiffPix} max allowed pix error "
+                       f"at sky pos={measDiffPix[1]}")
 
     return "; ".join(msgList)
 
@@ -192,7 +193,7 @@ def assertWcsAlmostEqualOverBBox(testCase, wcs0, wcs1, bbox, maxDiffSky=0.01*lss
         doShortCircuit=False,
     )
     if errMsg:
-        testCase.fail("%s: %s" % (msg, errMsg))
+        testCase.fail(f"{msg}: {errMsg}")
 
 
 @lsst.utils.tests.inTestCase

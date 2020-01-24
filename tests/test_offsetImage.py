@@ -91,7 +91,7 @@ class OffsetImageTestCase(unittest.TestCase):
                     if False and display:
                         frame += 1
                         disp = afwDisplay.Display(frame=frame)
-                        disp.mtv(outImage, title=algorithm + ": offset image (dx, dy) = (%d, %d)" % (dx, dy))
+                        disp.mtv(outImage, title=f"{algorithm}: offset image (dx, dy) = ({dx}, {dy})")
 
                         disp.pan(50, 50)
                         disp.dot("+", 50 + dx + delta - outImage.getX0(), 50 + dy + delta - outImage.getY0())
@@ -141,13 +141,12 @@ class OffsetImageTestCase(unittest.TestCase):
                     im = afwMath.offsetImage(unshiftedIm, dx, dy, algorithm)
 
                     if display:
-                        afwDisplay.Display(frame=0).mtv(im, title=algorithm + ": image")
+                        afwDisplay.Display(frame=0).mtv(im, title=f"{algorithm}: image")
 
                     im -= refIm
 
                     if display:
-                        afwDisplay.Display(frame=1).mtv(im, title=algorithm
-                                                        + ": diff image (dx, dy) = (%f, %f)" % (dx, dy))
+                        afwDisplay.Display(frame=1).mtv(im, title=f"{algorithm}: diff image ({dx}, {dy})")
 
                     imArr = im.getArray()
                     imGoodVals = np.ma.array(
@@ -160,8 +159,7 @@ class OffsetImageTestCase(unittest.TestCase):
                         self.assertLess(abs(imGoodVals.max()), maxLim*amp)
                         self.assertLess(abs(imGoodVals.min()), maxLim*amp)
                     except Exception:
-                        print("failed on algorithm=%s; dx = %s; dy = %s" %
-                              (algorithm, dx, dy))
+                        print(f"failed on algorithm={algorithm}; dx = {dx}; dy = {dy}")
                         raise
 
 # the following would be preferable if there was an easy way to NaN pixels
@@ -214,7 +212,7 @@ class TransformImageTestCase(unittest.TestCase):
                                (3, 0, 19)]:
             outImage = afwMath.rotateImageBy90(self.inImage, nQuarter)
             if display:
-                afwDisplay.Display(frame=nQuarter).mtv(outImage, title="out %d" % nQuarter)
+                afwDisplay.Display(frame=nQuarter).mtv(outImage, title=f"out {nQuarter}")
             self.assertEqual(self.inImage[0, 0, afwImage.LOCAL], outImage[x, y, afwImage.LOCAL])
 
     def testFlip(self):
@@ -227,7 +225,7 @@ class TransformImageTestCase(unittest.TestCase):
                                      (False, False, 0, 0)]:
             outImage = afwMath.flipImage(self.inImage, flipLR, flipTB)
             if display:
-                afwDisplay.Display(frame=frame).mtv(outImage, title="%s %s" % (flipLR, flipTB))
+                afwDisplay.Display(frame=frame).mtv(outImage, title=f"{flipLR} {flipTB}")
                 frame += 1
             self.assertEqual(self.inImage[0, 0, afwImage.LOCAL], outImage[x, y, afwImage.LOCAL])
 
@@ -291,7 +289,7 @@ class BinImageTestCase(unittest.TestCase):
 
         if display:
             afwDisplay.Display(frame=2).mtv(inImage, title="unbinned")
-            afwDisplay.Display(frame=3).mtv(outImage, title="binned %dx%d" % (binX, binY))
+            afwDisplay.Display(frame=3).mtv(outImage, title=f"binned {binX}x{binY}")
 
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):

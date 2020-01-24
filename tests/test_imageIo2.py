@@ -52,7 +52,7 @@ class ImageIoTestCase(lsst.utils.tests.TestCase):
                                     scaling=ImageScalingOptions(**scaling))
         isCompressed = (compression.get("algorithm", ImageCompressionOptions.NONE)
                         != ImageCompressionOptions.NONE)
-        with lsst.utils.tests.getTempFilePath("_%s.fits" % (type(image).__name__,)) as filename:
+        with lsst.utils.tests.getTempFilePath(f"_{type(image).__name__}.fits") as filename:
             image.writeFits(filename, options=options)
             readImage = type(image)(filename)
             with astropy.io.fits.open(filename) as hduList:

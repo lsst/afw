@@ -262,7 +262,7 @@ class PolygonTest(lsst.utils.tests.TestCase):
             image = poly.createImage(box)
             if display:
                 disp = afwDisplay.Display(frame=i + 1)
-                disp.mtv(image, title="Polygon nside=%d" % num)
+                disp.mtv(image, title=f"Polygon nside={num}")
                 for p1, p2 in poly.getEdges():
                     disp.line((p1, p2))
             self.assertAlmostEqual(
@@ -311,17 +311,17 @@ class PolygonTest(lsst.utils.tests.TestCase):
             if display:
                 axes = poly.plot(c='b')
                 axes.set_aspect("equal")
-                axes.set_title("Polygon nside=%d" % num)
+                axes.set_title(f"Polygon nside={num}")
                 sub.plot(axes, c='r')
                 if not doPause:
                     try:
                         plt.pause(2)
                         plt.close()
                     except Exception:
-                        print("%s: plt.pause() failed. Please close plots when done." % self.__str__())
+                        print(f"{str(self)}: plt.pause() failed. Please close plots when done.")
                         plt.show()
                 else:
-                    print("%s: Please close plots when done." % self.__str__())
+                    print(f"{str(self)}: Please close plots when done.")
                     plt.show()
 
             self.assertEqual(len(sub), 2*num)
@@ -363,17 +363,17 @@ class PolygonTest(lsst.utils.tests.TestCase):
             if display:
                 axes = small.plot(c='k')
                 axes.set_aspect("equal")
-                axes.set_title("AffineTransform: Polygon nside=%d" % num)
+                axes.set_title(f"AffineTransform: Polygon nside={num}")
                 large1.plot(axes, c='b')
                 if not doPause:
                     try:
                         plt.pause(2)
                         plt.close()
                     except Exception:
-                        print("%s: plt.pause() failed. Please close plots when done." % self.__str__())
+                        print(f"{str(self)}: plt.pause() failed. Please close plots when done.")
                         plt.show()
                 else:
-                    print("%s: Please close plots when done." % self.__str__())
+                    print(f"{str(self)}: Please close plots when done.")
                     plt.show()
 
     def testReadWrite(self):

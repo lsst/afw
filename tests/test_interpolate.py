@@ -172,7 +172,7 @@ class InterpolateTestCase(lsst.utils.tests.TestCase):
                     afwMath.Interpolate.Style.AKIMA_SPLINE_PERIODIC: 5,
                 }.get(style, None)
                 if desiredMin is None:
-                    self.fail("Unrecognized style: %s" % (style,))
+                    self.fail(f"Unrecognized style: {style}")
                 self.assertEqual(minPoints, desiredMin)
 
     def testStringToInterpStyle(self):

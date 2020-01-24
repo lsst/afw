@@ -88,7 +88,7 @@ class DetectorConfig(pexConfig.Config):
         try:
             return np.array(self.crosstalk, dtype=np.float32).reshape((numAmps, numAmps))
         except Exception as e:
-            raise RuntimeError("Cannot reshape 'crosstalk' coefficients to square matrix: %s" % (e,))
+            raise RuntimeError(f"Cannot reshape 'crosstalk' coefficients to square matrix: {e}")
 
     @property
     def bbox(self):

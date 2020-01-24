@@ -63,7 +63,7 @@ class GenericMapTestBaseClass(lsst.utils.tests.TestCase):
             self._storage = storage
 
         def __repr__(self):
-            return "ComplexStorable(%r)" % self._storage
+            return f"ComplexStorable({self._storage!r})"
 
         def __hash__(self):
             return hash(self._storage)
@@ -443,7 +443,7 @@ class MutableGenericMapTestBaseClass(GenericMapTestBaseClass):
         genericMap = mapFactory()
 
         for length, (key, value) in enumerate(contents.items()):
-            loopMsg = msg + " Inserting %r=%r" % (key, value)
+            loopMsg = f"{msg} Inserting {key!r}={value!r}"
             genericMap[key] = value
             self.assertEqual(len(genericMap), length+1, msg=loopMsg)
             self.assertEqual(genericMap[key], value, msg=loopMsg)
@@ -482,7 +482,7 @@ class MutableGenericMapTestBaseClass(GenericMapTestBaseClass):
 
         default = "This is a default"
         for length, (key, _) in enumerate(contents.items()):
-            loopMsg = msg + " Defaulting %r" % (key)
+            loopMsg = f"{msg} Defaulting {key!r}"
             result = genericMap.setdefault(key, default)
             self.assertEqual(len(genericMap), length+1, msg=loopMsg)
             self.assertEqual(result, default, msg=loopMsg)
@@ -499,7 +499,7 @@ class MutableGenericMapTestBaseClass(GenericMapTestBaseClass):
 
         genericMap = self._fillMap(mapFactory, contents)
         for length, (key, value) in enumerate(contents.items()):
-            loopMsg = msg + " Defaulting existing %r=%r" % (key, value)
+            loopMsg = f"{msg} Defaulting existing {key!r}={value!r}"
             result = genericMap.setdefault(key, default)
             self.assertEqual(len(genericMap), len(contents), msg=loopMsg)
             self.assertEqual(result, contents[key], msg=loopMsg)
@@ -597,7 +597,7 @@ class MutableGenericMapTestBaseClass(GenericMapTestBaseClass):
         key = keyType(42)
 
         for value in self.getTestData(keyType).values():
-            loopMsg = msg + " Inserting %r=%r" % (key, value)
+            loopMsg = f"{msg} Inserting {key!r}={value!r}"
             genericMap[key] = value  # value may be of a different type
             self.assertEqual(len(genericMap), 1, msg=loopMsg)
             self.assertEqual(genericMap[key], value, msg=loopMsg)
@@ -630,7 +630,7 @@ class MutableGenericMapTestBaseClass(GenericMapTestBaseClass):
         np.random.shuffle(keysToRemove)
         for numPrevious, rawKey in enumerate(keysToRemove):
             key = keyType(rawKey)
-            loopMsg = msg + " Deleting %r" % (key)
+            loopMsg = f"{msg} Deleting {key!r}"
             del genericMap[key]
             self.assertEqual(len(genericMap), len(contents)-numPrevious-1, msg=loopMsg)
             self.assertNotIn(key, genericMap, msg=loopMsg)
@@ -671,7 +671,7 @@ class MutableGenericMapTestBaseClass(GenericMapTestBaseClass):
         np.random.shuffle(itemsToRemove)
         for numPrevious, (rawKey, value) in enumerate(itemsToRemove):
             key = keyType(rawKey)
-            loopMsg = msg + " Popping %r=%r" % (key, value)
+            loopMsg = f"{msg} Popping {key}={value}"
             result = genericMap.pop(key)
             self.assertEqual(len(genericMap), len(contents)-numPrevious-1, msg=loopMsg)
             self.assertNotIn(key, genericMap, msg=loopMsg)
@@ -694,7 +694,7 @@ class MutableGenericMapTestBaseClass(GenericMapTestBaseClass):
 
         for numPrevious in range(len(genericMap)):
             key, value = genericMap.popitem()
-            loopMsg = msg + " Popping %r=%r" % (key, value)
+            loopMsg = f"{msg} Popping {key}={value}"
             self.assertIn((key, value), contents.items(), msg=loopMsg)
             self.assertEqual(len(genericMap), len(contents)-numPrevious-1, msg=loopMsg)
             self.assertNotIn(key, genericMap, msg=loopMsg)
@@ -722,7 +722,7 @@ class MutableGenericMapTestBaseClass(GenericMapTestBaseClass):
         self.assertFalse(genericMap, msg=msg)
         self.assertEqual(len(genericMap), 0, msg=msg)
         for key in genericMap:
-            self.fail("Unexpected key: %s" % key, msg=msg)
+            self.fail(f"Unexpected key: {key}", msg=msg)
 
     def checkMutableViews(self, mapFactory, contents, msg=""):
         """Check that the views of a GenericMap update automatically.

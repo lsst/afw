@@ -72,8 +72,8 @@ def assembleAmplifierImage(destImage, rawImage, amplifier):
     if not amplifier.getHasRawInfo():
         raise RuntimeError("amplifier must contain raw amplifier info")
     if type(destImage.Factory) != type(rawImage.Factory):  # noqa: E721
-        raise RuntimeError("destImage type = %s != %s = rawImage type" %
-                           type(destImage.Factory).__name__, type(rawImage.Factory).__name__)
+        raise RuntimeError(f"destImage type = {type(destImage.Factory).__name__} != "
+                           f"{type(rawImage.Factory).__name__} = rawImage type")
     inView = rawImage.Factory(rawImage, amplifier.getRawDataBBox())
     outView = destImage.Factory(destImage, amplifier.getBBox())
 
@@ -107,8 +107,8 @@ def assembleAmplifierRawImage(destImage, rawImage, amplifier):
     if not amplifier.getHasRawInfo():
         raise RuntimeError("amplifier must contain raw amplifier info")
     if type(destImage.Factory) != type(rawImage.Factory):  # noqa: E721
-        raise RuntimeError("destImage type = %s != %s = rawImage type" %
-                           type(destImage.Factory).__name__, type(rawImage.Factory).__name__)
+        raise RuntimeError(f"destImage type = {type(destImage.Factory).__name__} != "
+                           f"{type(rawImage.Factory).__name__} = rawImage type")
     inBBox = amplifier.getRawBBox()
     inView = rawImage.Factory(rawImage, inBBox)
     outBBox = amplifier.getRawBBox()
@@ -149,14 +149,14 @@ def makeUpdatedDetector(ccd):
                          "Data",
                          "VerticalOverscan",
                          "Prescan"):
-            bbox = getattr(amp, "getRaw%sBBox" % bboxName)()
+            bbox = getattr(amp, f"getRaw{bboxName}BBox")()
             if amp.getRawFlipX():
                 bbox.flipLR(awidth)
             if amp.getRawFlipY():
                 bbox.flipTB(aheight)
             bbox.shift(amp.getRawXYOffset() + shift)
 
-            getattr(amp, "setRaw%sBBox" % bboxName)(bbox)
+            getattr(amp, f"setRaw{bboxName}BBox")(bbox)
         #
         # All of these have now been transferred to the per-amp geometry
         #

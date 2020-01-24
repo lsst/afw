@@ -55,7 +55,7 @@ def _getDisplayFromDisplayOrFrame(display, frame=None):
         display = None
 
     if display and not hasattr(display, "frame"):
-        raise RuntimeError("display == %s doesn't support .frame" % display)
+        raise RuntimeError(f"display == {display} doesn't support .frame")
 
     if frame and display and display.frame != frame:
         raise RuntimeError("Please specify display *or* frame")
@@ -165,7 +165,7 @@ class Mosaic:
         if images:
             if self.images:
                 raise RuntimeError(
-                    "You have already appended %d images to this Mosaic" % len(self.images))
+                    f"You have already appended {len(self.images)} images to this Mosaic")
 
             try:
                 len(images)             # check that it quacks like a list
@@ -217,7 +217,7 @@ class Mosaic:
             if nx*ny < self.nImage:
                 ny += 1
         else:
-            raise RuntimeError("Unknown mosaicing mode: %s" % mode)
+            raise RuntimeError(f"Unknown mosaicing mode: {mode}")
 
         self.nx, self.ny = nx, ny
 
@@ -228,8 +228,7 @@ class Mosaic:
         try:
             mosaic.set(self.background)
         except AttributeError:
-            raise RuntimeError("Attempt to mosaic images of type %s which don't support set" %
-                               type(mosaic))
+            raise RuntimeError(f"Attempt to mosaic images of type {type(mosaic)} which don't support set")
 
         for i in range(len(images)):
             smosaic = mosaic.Factory(
@@ -280,7 +279,7 @@ class Mosaic:
         """
 
         if mode not in ("square", "x", "y"):
-            raise RuntimeError("Unknown mosaicing mode: %s" % mode)
+            raise RuntimeError(f"Unknown mosaicing mode: {mode}")
 
         self.mode = mode
 
@@ -317,8 +316,7 @@ class Mosaic:
             return
 
         if len(labels) != self.nImage:
-            raise RuntimeError("You provided %d labels for %d panels" % (
-                len(labels), self.nImage))
+            raise RuntimeError(f"You provided {len(labels)} labels for {self.nImage} panels")
 
         display = _getDisplayFromDisplayOrFrame(display, frame)
         if not display:

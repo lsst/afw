@@ -77,9 +77,9 @@ class KernelImagesForRegion(lsst.utils.tests.TestCase):
             desImArr = desImage.getArray().transpose().copy()
             actImArr -= desImArr
             if not np.allclose(actImArr, 0):
-                actImage.writeFits("actImage%s.fits" % (location,))
-                desImage.writeFits("desImage%s.fits" % (location,))
-                self.fail("failed on location %s" % (location,))
+                actImage.writeFits(f"actImage{location}.fits")
+                desImage.writeFits(f"desImage{location}.fits")
+                self.fail(f"failed on location {location}")
 
     def makeKernel(self):
         kCols = 7
@@ -136,8 +136,9 @@ class KernelImagesForRegion(lsst.utils.tests.TestCase):
             (region.TOP_RIGHT, (rightInd, topInd)),
         ):
             desPixIndex = lsst.geom.Point2I(desIndex[0], desIndex[1])
-            self.assertEqual(region.getPixelIndex(location), desPixIndex, "getPixelIndex(%s) = %s != %s" %
-                             (LocNameDict[location], region.getPixelIndex(location), desPixIndex))
+            self.assertEqual(region.getPixelIndex(location), desPixIndex,
+                             f"getPixelIndex({LocNameDict[location]}) = {region.getPixelIndex(location)} "
+                             f"!= desPixIndex")
 
     def testComputeNextRow(self):
         """Test computeNextRow method and the resulting RowOfKernelImagesForRegion
@@ -185,7 +186,7 @@ class KernelImagesForRegion(lsst.utils.tests.TestCase):
                 try:
                     self.assertRegionCorrect(subregion)
                 except Exception:
-                    print("failed on xInd=%s, yInd=%s" % (xInd, yInd))
+                    print(f"failed on xInd={xInd}, yInd={yInd}")
                     raise
                 bbox = subregion.getBBox()
                 rowWidth += bbox.getWidth()
@@ -223,7 +224,7 @@ class KernelImagesForRegion(lsst.utils.tests.TestCase):
                 self.kernel.computeImage(desImage, doNormalize, xPos, yPos)
 
                 actImage = region.getImage(location)
-                msg = "exact image(%s) incorrect" % (LocNameDict[location],)
+                msg = f"exact image({LocNameDict[location]}) incorrect"
                 self.assertImagesAlmostEqual(actImage, desImage, msg=msg)
 
 

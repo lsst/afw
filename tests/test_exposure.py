@@ -120,7 +120,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         blankWidth = maskedImageBlank.getWidth()
         blankHeight = maskedImageBlank.getHeight()
         if blankWidth != blankHeight != 0:
-            self.fail("%s = %s != 0" % (blankWidth, blankHeight))
+            self.fail(f"{blankWidth} = {blankHeight} != 0")
 
         maskedImageMiOnly = self.exposureMiOnly.getMaskedImage()
         miOnlyWidth = maskedImageMiOnly.getWidth()
@@ -142,13 +142,13 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         crWcsWidth = maskedImageCrWcs.getWidth()
         crWcsHeight = maskedImageCrWcs.getHeight()
         if crWcsWidth != crWcsHeight != 0:
-            self.fail("%s != %s != 0" % (crWcsWidth, crWcsHeight))
+            self.fail(f"{crWcsWidth} != {crWcsHeight} != 0")
 
         maskedImageCrOnly = self.exposureCrOnly.getMaskedImage()
         crOnlyWidth = maskedImageCrOnly.getWidth()
         crOnlyHeight = maskedImageCrOnly.getHeight()
         if crOnlyWidth != crOnlyHeight != 0:
-            self.fail("%s != %s != 0" % (crOnlyWidth, crOnlyHeight))
+            self.fail(f"{crOnlyWidth} != {crOnlyHeight} != 0")
 
         # Check Exposure.getWidth() returns the MaskedImage's width
         self.assertEqual(crOnlyWidth, self.exposureCrOnly.getWidth())
