@@ -574,7 +574,7 @@ class ImageTestCase(lsst.utils.tests.TestCase):
         # NumPy's string representation varies depending on the size of the
         # array; we test both large and small.
         self.assertIn(str(np.zeros((100, 100), dtype=imageF.dtype)), str(imageF))
-        self.assertIn("bbox=%s" % str(imageF.getBBox()), str(imageF))
+        self.assertIn(f"bbox={imageF.getBBox()}", str(imageF))
 
         self.assertIn(str(np.zeros((2, 2), dtype=imageDSmall.dtype)), str(imageDSmall))
         self.assertIn(str(np.zeros((2, 2), dtype=imageISmall.dtype)), str(imageISmall))

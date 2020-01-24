@@ -168,8 +168,9 @@ class TransformBoundedFieldTestCase(lsst.utils.tests.TestCase):
                 k += 1
         chebyMap = astshim.PolyMap(coeffs, 1)
         transform = lsst.afw.geom.TransformPoint2ToGeneric(chebyMap)
-        print("nchar=%s; minChar=%s" % (len(transform.writeString()), minChars))
-        self.assertGreater(len(transform.writeString()), minChars)
+        lenTransformStr = len(transform.writeString())
+        print(f"len transform str={lenTransformStr}; minChars={minChars}")
+        self.assertGreater(lenTransformStr, minChars)
         complexBoundedField = TransformBoundedField(self.bbox, transform)
         with lsst.utils.tests.getTempFilePath(".fits") as filename:
             complexBoundedField.writeFits(filename)

@@ -59,7 +59,7 @@ def toString(*args):
         args = args[0]
 
     y, x0, x1 = args
-    return "%d: %d..%d" % (y, x0, x1)
+    return f"{y}: {x0}..{x1}"
 
 
 class Object:
@@ -313,10 +313,10 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         axes.scale(2)                   # <r^2> = 1/2 for a disk
 
         self.assertEqual(foot.getCentroid(), cen)
-        self.assertLess(abs(a - axes.getA()), 0.15, "a: %g v. %g" % (a, axes.getA()))
-        self.assertLess(abs(b - axes.getB()), 0.02, "b: %g v. %g" % (b, axes.getB()))
+        self.assertLess(abs(a - axes.getA()), 0.15, f"a: {a:g} vs. {axes.getA():g}")
+        self.assertLess(abs(b - axes.getB()), 0.02, f"b: {b:g} va. {axes.getB():g}")
         self.assertLess(abs(theta - math.degrees(axes.getTheta())), 0.2,
-                        "theta: %g v. %g" % (theta, math.degrees(axes.getTheta())))
+                        f"theta: {theta:g} vs. {math.degrees(axes.getTheta()):g}")
 
     def testCopy(self):
         bbox = lsst.geom.BoxI(lsst.geom.PointI(0, 2), lsst.geom.PointI(5, 6))

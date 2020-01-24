@@ -13,7 +13,7 @@ def concatenate(catalogList):
     schema = catalogList[0].schema
     for i, c in enumerate(catalogList[1:]):
         if c.schema != schema:
-            raise RuntimeError("Schema for catalog %d not consistent" % (i+1))
+            raise RuntimeError(f"Schema for catalog {i+1} not consistent")
 
     out = afwTable.BaseCatalog(schema)
     num = reduce(lambda n, c: n + len(c), catalogList, 0)

@@ -155,8 +155,8 @@ class SpatialCellSetTestCase(unittest.TestCase):
             print()
             for i in range(len(self.cellSet.getCellList())):
                 cell = self.cellSet.getCellList()[i]
-                print(i, "%3d,%3d -- %3d,%3d" % (cell.getBBox().getMinX(), cell.getBBox().getMinY(),
-                                                 cell.getBBox().getMaxX(), cell.getBBox().getMaxY()),
+                print(i, f"{cell.getBBox().getMinX():3d},{cell.getBBox().getMinY():3d} -- "
+                      f"{cell.getBBox().getMaxX():3d},{cell.getBBox().getMaxY():3d}",
                       cell.getLabel())
         self.assertEqual(len(self.cellSet.getCellList()), 6)
 

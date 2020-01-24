@@ -93,7 +93,7 @@ def referenceChebyshev1Polynomial2(x, y, params):
             order += 1
             y_order = 0
     if y_order != 0:
-        raise RuntimeError("invalid # of parameters=%d" % (len(params),))
+        raise RuntimeError(f"invalid # of parameters={len(params)}")
     return retVal
 
 
@@ -281,8 +281,7 @@ class FunctionTestCase(lsst.utils.tests.TestCase):
             params = nrange(numParams, deltaParam + addValue, deltaParam)
             f.setParameters(params)
             predVal = referenceChebyshev1Polynomial2(x, y, params)
-            msg = "%s != %s for x=%s, y=%s, params=%s" % (
-                f(x, y), predVal, x, y, params)
+            msg = f"{f(x, y)} != {predVal} for x={x}, y={y}, params={params}"
             self.assertFloatsAlmostEqual(
                 f(x, y), predVal, msg=msg, atol=self.atol, rtol=None)
 
@@ -386,16 +385,14 @@ class FunctionTestCase(lsst.utils.tests.TestCase):
             for x in np.arange(-xsigma * 20, xsigma * 20.01, xdelta):
                 predVal = basicGaussian(x, xsigma)
                 fSum += predVal
-                msg = "%s = %s != %s for x=%s, xsigma=%s" % (
-                    type(f).__name__, f(x), predVal, x, xsigma)
+                msg = f"{type(f).__name__} = {f(x)} != {predVal} for x={x}, xsigma={xsigma}"
                 self.assertFloatsAlmostEqual(
                     f(x), predVal, msg=msg, atol=self.atol, rtol=None)
                 msg += "; clone"
                 self.assertFloatsAlmostEqual(
                     g(x), predVal, msg=msg, atol=self.atol, rtol=None)
             approxArea = fSum * xdelta
-            msg = "%s area = %s != 1.0 for xsigma=%s" % (
-                type(f).__name__, approxArea, xsigma)
+            msg = f"{type(f).__name__} area = {approxArea} != 1.0 for xsigma={xsigma}"
             self.assertFloatsAlmostEqual(
                 approxArea, 1.0, msg=msg, atol=self.atol, rtol=None)
 
@@ -612,8 +609,7 @@ class FunctionTestCase(lsst.utils.tests.TestCase):
                     ii += 1
                     if ii >= numParams:
                         if xOrder != 0:
-                            raise RuntimeError(
-                                "invalid # params=%d" % (numParams,))
+                            raise RuntimeError(f"invalid # params={numParams}")
                         return retVal
                 order += 1
 

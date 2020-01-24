@@ -43,8 +43,7 @@ class WeightedStatsBugTestCase(unittest.TestCase):
         nBadImg = np.logical_not(np.isfinite(arrayList[0])).sum()
         nBadMsk = np.sum(np.bitwise_and(arrayList[1], badPixelMask) > 0)
         nBadVar = np.logical_not(np.isfinite(arrayList[2])).sum()
-        print("%d bad image pixels, %d bad mask pixels, %d bad variance pixels" % (
-            nBadImg, nBadMsk, nBadVar))
+        print(f"{nBadImg} bad image pixels, {nBadMsk} bad mask pixels, {nBadVar} bad variance pixels")
         self.assertEqual(nBadImg, 0)
         self.assertEqual(nBadMsk, 0)
         self.assertEqual(nBadVar, 0)
@@ -64,7 +63,7 @@ class WeightedStatsBugTestCase(unittest.TestCase):
         statsCtrl.setAndMask(badPixelMask)
 
         for weight in (300.0, 10.0, 1.0):
-            print("Testing with weight=%0.1f" % (weight,))
+            print(f"Testing with weight={weight:0.1f}")
             maskedImageList = []
             weightList = []
 

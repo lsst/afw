@@ -57,8 +57,7 @@ class BoxGrid:
 
     def __init__(self, box, numColRow):
         if len(numColRow) != 2:
-            raise RuntimeError(
-                "numColRow=%r; must be a sequence of two integers" % (numColRow,))
+            raise RuntimeError(f"numColRow={numColRow!r}; must be a sequence of two integers")
         self._numColRow = tuple(int(val) for val in numColRow)
 
         if isinstance(box, lsst.geom.Box2I):
@@ -66,7 +65,7 @@ class BoxGrid:
         elif isinstance(box, lsst.geom.Box2D):
             stopDelta = 0
         else:
-            raise RuntimeError("Unknown class %s of box %s" % (type(box), box))
+            raise RuntimeError(f"Unknown class {type(box)} of box {box}")
         self.boxClass = type(box)
         self.stopDelta = stopDelta
 
@@ -172,8 +171,8 @@ def makeSipPolyMapCoeffs(metadata, name):
     outAxisDict = dict(A=1, B=2, AP=1, BP=2)
     outAxis = outAxisDict.get(name)
     if outAxis is None:
-        raise RuntimeError("%s not a supported SIP name" % (name,))
-    width = metadata.getAsInt("%s_ORDER" % (name,)) + 1
+        raise RuntimeError(f"{name} not a supported SIP name")
+    width = metadata.getAsInt(f"{name}_ORDER") + 1
     found = False
     # start with a term for out = in
     coeffs = []
@@ -184,14 +183,14 @@ def makeSipPolyMapCoeffs(metadata, name):
     # add SIP distortion terms
     for xPower in range(width):
         for yPower in range(width):
-            coeffName = "%s_%s_%s" % (name, xPower, yPower)
+            coeffName = f"{name}_{xPower}_{yPower}"
             if not metadata.exists(coeffName):
                 continue
             found = True
             coeff = metadata.getAsDouble(coeffName)
             coeffs.append([coeff, outAxis, xPower, yPower])
     if not found:
-        raise RuntimeError("No %s coefficients found" % (name,))
+        raise RuntimeError(f"No {name} coefficients found")
     return coeffs
 
 

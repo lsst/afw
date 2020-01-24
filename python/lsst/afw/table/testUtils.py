@@ -43,9 +43,10 @@ def joinWords(items):
     if len(items) == 1:
         result = items[0]
     elif len(items) == 2:
-        result = "%s and %s" % tuple(items)
+        result = f"{items[0]} and {items[1]}"
     else:
-        result = "%s, and %s" % (", ".join(items[:-1]), items[-1])
+        allButLast = ", ".join(items[:-1])
+        result = f"{allButLast}, and items{[-1]}"
     return result
 
 
@@ -89,7 +90,7 @@ def diffSchemas(schema1, schema2, flags=Schema.IDENTICAL):
         components.append("aliases")
     diff = "\n".join(difflib.unified_diff(
         str(schema1).split("\n"), str(schema2).split("\n")))
-    return "%s differ:\n%s" % (joinWords(components).capitalize(), diff)
+    return f"{joinWords(components).capitalize()} differ:\n{diff}"
 
 
 @lsst.utils.tests.inTestCase

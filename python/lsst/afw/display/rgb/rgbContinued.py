@@ -150,7 +150,7 @@ class Mapping:
                 import scipy.misc
             except ImportError as e:
                 raise RuntimeError(
-                    "Unable to rescale as scipy.misc is unavailable: %s" % e)
+                    f"Unable to rescale as scipy.misc is unavailable: {e}")
 
             for i, im in enumerate(imageRGB):
                 imageRGB[i] = scipy.misc.imresize(

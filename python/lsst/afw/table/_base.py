@@ -31,7 +31,7 @@ __all__ = ["Catalog"]
 @continueClass  # noqa: F811
 class BaseRecord:
 
-    def extract(self, *patterns, **kwds):
+    def extract(self, *patterns, **kwargs):
         """Extract a dictionary of {<name>: <field-value>} in which the field names
         match the given shell-style glob pattern(s).
 
@@ -63,26 +63,26 @@ class BaseRecord:
             a standard dict, with the order corresponding to the definition
             order of the `Schema`. Default is `False`.
         """
-        d = kwds.pop("items", None)
-        split = kwds.pop("split", False)
+        d = kwargs.pop("items", None)
+        split = kwargs.pop("split", False)
         if d is None:
-            d = self.schema.extract(*patterns, **kwds).copy()
-        elif kwds:
-            raise ValueError(
-                "Unrecognized keyword arguments for extract: %s" % ", ".join(kwds.keys()))
+            d = self.schema.extract(*patterns, **kwargs).copy()
+        elif kwargs:
+            kwargsStr = ", ".join(kwargs.keys())
+            raise ValueError(f"Unrecognized keyword arguments for extract: {kwargsStr}")
         # must use list because we might be adding/deleting elements
         for name, schemaItem in list(d.items()):
             key = schemaItem.key
             if split and key.HAS_NAMED_SUBFIELDS:
                 for subname, subkey in zip(key.subfields, key.subkeys):
-                    d["%s.%s" % (name, subname)] = self.get(subkey)
+                    d[f"{name}.{subname}"] = self.get(subkey)
                 del d[name]
             else:
                 d[name] = self.get(schemaItem.key)
         return d
 
     def __repr__(self):
-        return "%s\n%s" % (type(self), str(self))
+        return f"{type(self)}\n{self}"
 
 
 class Catalog(metaclass=TemplateMeta):
@@ -115,8 +115,7 @@ class Catalog(metaclass=TemplateMeta):
         elif isinstance(key, np.ndarray):
             if key.dtype == bool:
                 return self.subset(key)
-            raise RuntimeError("Unsupported array type for indexing non-contiguous Catalog: %s" %
-                               (key.dtype,))
+            raise RuntimeError(f"Unsupported array type for indexing non-contiguous Catalog: {key.dtype}")
         elif isinstance(key, Key) or isinstance(key, str):
             if not self.isContiguous():
                 if isinstance(key, str):
@@ -272,7 +271,7 @@ class Catalog(metaclass=TemplateMeta):
             cls = astropy.table.Table
         if unviewable not in ("copy", "raise", "skip"):
             raise ValueError(
-                "'unviewable'=%r must be one of 'copy', 'raise', or 'skip'" % (unviewable,))
+                f"'unviewable'={unviewable!r} must be one of 'copy', 'raise', or 'skip'")
         ps = self.getMetadata()
         meta = ps.toOrderedDict() if ps is not None else None
         columns = []
@@ -361,8 +360,7 @@ class Catalog(metaclass=TemplateMeta):
             return str(self.asAstropy())
         else:
             fields = ' '.join(x.field.getName() for x in self.schema)
-            string = "Non-contiguous afw.Catalog of %d rows.\ncolumns: %s" % (len(self), fields)
-            return string
+            return f"Non-contiguous afw.Catalog of {len(self)} rows.\ncolumns: {fields}"
 
     def __repr__(self):
         return "%s\n%s" % (type(self), self)

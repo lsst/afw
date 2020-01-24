@@ -588,12 +588,12 @@ class MetadataWcsTestCase(SkyWcsBaseTestCase):
         skyOrigin = skyWcs.getSkyOrigin()
         for i in range(2):
             # subtract 1 from FITS CRPIX to get LSST convention
-            self.assertAlmostEqual(pixelOrigin[i], self.metadata.getScalar("CRPIX%s" % (i+1,)) - 1)
+            self.assertAlmostEqual(pixelOrigin[i], self.metadata.getScalar(f"CRPIX{i+1}") - 1)
             self.assertAnglesAlmostEqual(skyOrigin[i],
-                                         self.metadata.getScalar("CRVAL%s" % (i+1,))*lsst.geom.degrees)
+                                         self.metadata.getScalar(f"CRVAL{i+1}")*lsst.geom.degrees)
         cdMatrix = skyWcs.getCdMatrix()
         for i, j in itertools.product(range(2), range(2)):
-            self.assertAlmostEqual(cdMatrix[i, j], self.metadata.getScalar("CD%s_%s" % (i+1, j+1)))
+            self.assertAlmostEqual(cdMatrix[i, j], self.metadata.getScalar(f"CD{i+1}_{j+1}"))
 
         self.assertTrue(skyWcs.isFits)
 
@@ -665,7 +665,7 @@ class MetadataWcsTestCase(SkyWcsBaseTestCase):
 
         # get predicted crval by converting with astropy
         crvalFk5 = astropy.coordinates.SkyCoord(crvalFk5Deg[0], crvalFk5Deg[1], frame="fk5",
-                                                equinox="J%f" % (equinox,), unit="deg")
+                                                equinox=f"J{equinox}", unit="deg")
         predictedCrvalIcrs = crvalFk5.icrs
         predictedCrval = lsst.geom.SpherePoint(predictedCrvalIcrs.ra.radian, predictedCrvalIcrs.dec.radian,
                                                lsst.geom.radians)
@@ -749,8 +749,8 @@ class MetadataWcsTestCase(SkyWcsBaseTestCase):
             if not badPC:
                 for i in (1, 2,):
                     for j in (1, 2,):
-                        self.assertEqual(md.getScalar("CD%d_%d" % (i, j)),
-                                         md.getScalar("CDELT%d" % i)*md.getScalar("PC00%d00%d" % (i, j)))
+                        self.assertEqual(md.getScalar(f"CD{i}_{j}"),
+                                         md.getScalar(f"CDELT{i}")*md.getScalar(f"PC00{i}00{j}"))
 
             wcs2 = makeSkyWcs(md, strip=False)
             skyPos2 = wcs2.pixelToSky(pixPos)

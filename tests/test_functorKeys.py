@@ -316,10 +316,10 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
         schema = lsst.afw.table.Schema()
         if dynamicSize:
             FunctorKeyType = getattr(
-                lsst.afw.table, "CovarianceMatrix2%sKey" % fieldType.lower())
+                lsst.afw.table, f"CovarianceMatrix2{fieldType.lower()}Key")
         else:
             FunctorKeyType = getattr(
-                lsst.afw.table, "CovarianceMatrixX%sKey" % fieldType.lower())
+                lsst.afw.table, f"CovarianceMatrixX{fieldType.lower()}Key")
         fKey1 = FunctorKeyType.addFields(
             schema, "a", names, ["m", "s"], varianceOnly)
         fKey2 = FunctorKeyType.addFields(
@@ -352,8 +352,8 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
         # we generate a schema with a complete set of fields for the diagonal and some (but not all)
         # of the covariance elements
         for i, pi in enumerate(parameterNames):
-            sigmaKeys.append(schema.addField("a_%sErr" %
-                                             pi, type=fieldType, doc="uncertainty on %s" % pi))
+            sigmaKeys.append(schema.addField(f"a_{pi}Err", type=fieldType,
+                                             doc=f"uncertainty on {pi}"))
             if varianceOnly:
                 continue  # in this case we have fields for only the diagonal
             for pj in parameterNames[:i]:
@@ -363,11 +363,11 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
                 # possibilities.
                 r = numpy.random.rand()
                 if r < 0.3:
-                    k = schema.addField("a_%s_%s_Cov" % (pi, pj), type=fieldType,
-                                        doc="%s,%s covariance" % (pi, pj))
+                    k = schema.addField(f"a_{pi}_{pj}_Cov", type=fieldType,
+                                        doc=f"{pi},{pj} covariance")
                 elif r < 0.6:
-                    k = schema.addField("a_%s_%s_Cov" % (pj, pi), type=fieldType,
-                                        doc="%s,%s covariance" % (pj, pi))
+                    k = schema.addField(f"a_{pj}_{pi}_Cov", type=fieldType,
+                                        doc=f"{pj},{pi} covariance")
                 else:
                     k = lsst.afw.table.Key[fieldType]()
                 covKeys.append(k)
@@ -453,7 +453,7 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
                         fieldType, varianceOnly, dynamicSize)
 
     def doTestArrayKey(self, fieldType, numpyType):
-        FunctorKeyType = getattr(lsst.afw.table, "Array%sKey" % fieldType)
+        FunctorKeyType = getattr(lsst.afw.table, f"Array{fieldType}Key")
         self.assertFalse(FunctorKeyType().isValid())
         schema = lsst.afw.table.Schema()
         a0 = schema.addField("a_0", type=fieldType, doc="valid array element")
@@ -465,8 +465,8 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
                              doc="invalid out-of-order array element")
         b1 = schema.addField("b_1", type=fieldType,
                              doc="invalid out-of-order array element")
-        c = schema.addField("c", type="Array%s" %
-                            fieldType, doc="old-style array", size=4)
+        c = schema.addField("c", type=f"Array{fieldType}",
+                            doc="old-style array", size=4)
         k1 = FunctorKeyType([a0, a1, a2])  # construct from a list of keys
         k2 = FunctorKeyType(schema["a"])   # construct from SubSchema
         # construct from old-style Key<Array<T>>

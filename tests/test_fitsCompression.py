@@ -66,7 +66,7 @@ def checkAstropy(image, filename, hduNum=0):
         # astropy 2.0.1 and earlier have problems:
         # * Doesn't support GZIP_2: https://github.com/astropy/astropy/pull/6486
         # * Uses the wrong array type: https://github.com/astropy/astropy/pull/6492
-        print("Refusing to check with astropy version %s due to astropy bugs" % (astropy.__version__,))
+        print(f"Refusing to check with astropy version {astropy.__version__} due to astropy bugs")
         return
     hdu = astropy.io.fits.open(filename)[hduNum]
     if hdu.header["BITPIX"] in (8, 16) and isinstance(image, lsst.afw.image.ImageD):

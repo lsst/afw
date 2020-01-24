@@ -157,10 +157,10 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
                                    lsst.geom.Extent2I(145, 200))
             originalExposure = afwImage.ExposureF(
                 originalFullExposure, bbox, afwImage.LOCAL, useDeepCopy)
-            swarpedImageName = "medsubswarp1%s.fits" % (kernelName,)
+            swarpedImageName = f"medsubswarp1{kernelName}.fits"
         else:
             originalExposure = afwImage.ExposureF(originalExposurePath)
-            swarpedImageName = "medswarp1%s.fits" % (kernelName,)
+            swarpedImageName = f"medswarp1{kernelName}.fits"
 
         swarpedImagePath = os.path.join(dataDir, swarpedImageName)
         swarpedDecoratedImage = afwImage.DecoratedImageF(swarpedImagePath)

@@ -83,15 +83,15 @@ class CameraGeomTestCase(lsst.utils.tests.TestCase):
         """
         for sysName in ("FocalPlane", "FieldAngle", "Pixels", "foo"):
             cameraSys = CameraSys(sysName)
-            predRepr = "CameraSys(%s)" % (sysName)
+            predRepr = f"CameraSys({sysName})"
             self.assertEqual(repr(cameraSys), predRepr)
 
             cameraSysPrefix = CameraSysPrefix(sysName)
-            predCSPRepr = "CameraSysPrefix(%s)" % (sysName)
+            predCSPRepr = f"CameraSysPrefix({sysName})"
             self.assertEqual(repr(cameraSysPrefix), predCSPRepr)
             for detectorName in ("Detector 1", "bar"):
                 cameraSys2 = CameraSys(sysName, detectorName)
-                predRepr2 = "CameraSys(%s, %s)" % (sysName, detectorName)
+                predRepr2 = f"CameraSys({sysName}, {detectorName})"
                 self.assertEqual(repr(cameraSys2), predRepr2)
 
     def testAccessor(self):

@@ -46,6 +46,6 @@ def transformFromString(data):
     try:
         transformClass = transformRegistry[transformClassName]
     except LookupError:
-        raise RuntimeError("Unknown transform class %r" % (transformClassName,))
+        raise RuntimeError(f"Unknown transform class {transformClassName!r}")
 
     return transformClass.readString(data)

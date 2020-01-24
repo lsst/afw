@@ -7,10 +7,10 @@ from .quadrupole import Quadrupole
 @continueClass  # noqa: F811
 class Quadrupole:
     def __repr__(self):
-        return "Quadrupole(ixx=%r, iyy=%r, ixy=%r)" % (self.getIxx(), self.getIyy(), self.getIxy())
+        return f"Quadrupole(ixx={self.getIxx()!r}, iyy={self.getIyy()!r}, ixy={self.getIxy()!r})"
 
     def __reduce__(self):
         return (Quadrupole, (self.getIxx(), self.getIyy(), self.getIxy()))
 
     def __str__(self):
-        return "(ixx=%s, iyy=%s, ixy=%s)" % (self.getIxx(), self.getIyy(), self.getIxy())
+        return f"(ixx={self.getIxx()}, iyy={self.getIyy()}, ixy={self.getIxy()})"

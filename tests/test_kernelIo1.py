@@ -84,15 +84,13 @@ class KernelIOTestCase(unittest.TestCase):
 
         outArr = outImage.getArray().transpose()
         if not np.allclose(inArr, outArr):
-            self.fail("%s = %s != %s (not normalized)" %
-                      (k2.__class__.__name__, inArr, outArr))
+            self.fail(f"{k2.__class__.__name__} = {inArr} != {outArr} (not normalized)")
         normInArr = inArr / inArr.sum()
         normOutImage = afwImage.ImageD(k2.getDimensions())
         k2.computeImage(normOutImage, True)
         normOutArr = normOutImage.getArray().transpose()
         if not np.allclose(normOutArr, normInArr):
-            self.fail("%s = %s != %s (normalized)" %
-                      (k2.__class__.__name__, normInArr, normOutArr))
+            self.fail(f"{k2.__class__.__name__} = {normInArr} != {normOutArr} (normalized)")
 
     def testAnalyticKernel(self):
         """Test AnalyticKernel using a Gaussian function
@@ -128,8 +126,8 @@ class KernelIOTestCase(unittest.TestCase):
                     k2.computeImage(kImage, True)
                     kArr = kImage.getArray().transpose()
                     if not np.allclose(fArr, kArr):
-                        self.fail("%s = %s != %s for xsigma=%s, ysigma=%s" %
-                                  (k2.__class__.__name__, kArr, fArr, xsigma, ysigma))
+                        self.fail(f"{k2.__class__.__name__} = {kArr} != {fArr} "
+                                  f"for xsigma={xsigma}, ysigma={ysigma}")
 
     def testDeltaFunctionKernel(self):
         """Test DeltaFunctionKernel
@@ -193,8 +191,8 @@ class KernelIOTestCase(unittest.TestCase):
                 k2.computeImage(kImage, True)
                 kArr = kImage.getArray().transpose()
                 if not np.allclose(fArr, kArr):
-                    self.fail("%s = %s != %s for xsigma=%s, ysigma=%s" %
-                              (k2.__class__.__name__, kArr, fArr, xsigma, ysigma))
+                    self.fail(f"{k2.__class__.__name__} = {kArr} != {fArr} "
+                              f"for xsigma={xsigma}, ysigma={ysigma}")
 
     def testLinearCombinationKernel(self):
         """Test LinearCombinationKernel using a set of delta basis functions
@@ -231,8 +229,8 @@ class KernelIOTestCase(unittest.TestCase):
             k2.computeImage(kIm, True)
             kImArr = kIm.getArray().transpose()
             if not np.allclose(kImArr, basisImArrList[ii]):
-                self.fail("%s = %s != %s for the %s'th basis kernel" %
-                          (k2.__class__.__name__, kImArr, basisImArrList[ii], ii))
+                self.fail(f"{k2.__class__.__name__} = {kImArr} != {basisImArrList[ii]} "
+                          f"for the {ii}'th basis kernel")
 
     def testSVLinearCombinationKernel(self):
         """Test a spatially varying LinearCombinationKernel
@@ -291,8 +289,8 @@ class KernelIOTestCase(unittest.TestCase):
             refKImArr = (basisImArrList[0] * coeff0) + \
                 (basisImArrList[1] * coeff1)
             if not np.allclose(kImArr, refKImArr):
-                self.fail("%s = %s != %s at colPos=%s, rowPos=%s" %
-                          (k2.__class__.__name__, kImArr, refKImArr, colPos, rowPos))
+                self.fail(f"{k2.__class__.__name__} = {kImArr} != {refKImArr} "
+                          f"at colPos={colPos}, rowPos={rowPos}")
 
     def testSetCtr(self):
         """Test setCtrCol/Row"""

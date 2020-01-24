@@ -427,17 +427,17 @@ class SipApproximationTestCases(lsst.utils.tests.TestCase):
 
     def compareSolution(self, md, approx):
         for p, q in packedRange(md["A_ORDER"]):
-            self.assertFloatsAlmostEqual(md.get("A_%d_%d" % (p, q), 0.0), approx.getA(p, q),
-                                         rtol=1E-10, atol=1E-10, msg="for A_%d_%d" % (p, q))
+            self.assertFloatsAlmostEqual(md.get(f"A_{p}_{q}", 0.0), approx.getA(p, q),
+                                         rtol=1E-10, atol=1E-10, msg=f"for A_{p}_{q}")
         for p, q in packedRange(md["B_ORDER"]):
-            self.assertFloatsAlmostEqual(md.get("B_%d_%d" % (p, q), 0.0), approx.getB(p, q),
-                                         rtol=1E-10, atol=1E-10, msg="for B_%d_%d" % (p, q))
+            self.assertFloatsAlmostEqual(md.get(f"B_{p}_{q}", 0.0), approx.getB(p, q),
+                                         rtol=1E-10, atol=1E-10, msg=f"for B_{p}_{q}")
         for p, q in packedRange(md["AP_ORDER"]):
-            self.assertFloatsAlmostEqual(md.get("AP_%d_%d" % (p, q), 0.0), approx.getAP(p, q),
-                                         rtol=1E-10, atol=1E-10, msg="for AP_%d_%d" % (p, q))
+            self.assertFloatsAlmostEqual(md.get(f"AP_{p}_{q}", 0.0), approx.getAP(p, q),
+                                         rtol=1E-10, atol=1E-10, msg=f"for AP_{p}_{q}")
         for p, q in packedRange(md["BP_ORDER"]):
-            self.assertFloatsAlmostEqual(md.get("BP_%d_%d" % (p, q), 0.0), approx.getBP(p, q),
-                                         rtol=1E-10, atol=1E-10, msg="for BP_%d_%d" % (p, q))
+            self.assertFloatsAlmostEqual(md.get(f"BP_{p}_{q}", 0.0), approx.getBP(p, q),
+                                         rtol=1E-10, atol=1E-10, msg=f"for BP_{p}_{q}")
 
     def testSipDefinitions(self):
         """Check that when we initialize a SipApproximation with coefficients from FITS
@@ -453,10 +453,10 @@ class SipApproximationTestCases(lsst.utils.tests.TestCase):
             ap = np.zeros((order + 1, order + 1), dtype=float)
             bp = np.zeros((order + 1, order + 1), dtype=float)
             for p, q in packedRange(order):
-                a[p, q] = md.get("A_%d_%d" % (p, q), 0.0)
-                b[p, q] = md.get("B_%d_%d" % (p, q), 0.0)
-                ap[p, q] = md.get("AP_%d_%d" % (p, q), 0.0)
-                bp[p, q] = md.get("BP_%d_%d" % (p, q), 0.0)
+                a[p, q] = md.get(f"A_{p}_{q}", 0.0)
+                b[p, q] = md.get(f"B_{p}_{q}", 0.0)
+                ap[p, q] = md.get(f"AP_{p}_{q}", 0.0)
+                bp[p, q] = md.get(f"BP_{p}_{q}", 0.0)
             approx = SipApproximation(a=a, b=b, ap=ap, bp=bp, gridShape=gridShape, **kwds)
             self.compareSolution(md, approx)
             diffs = approx.computeMaxDeviation()

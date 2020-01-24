@@ -344,7 +344,7 @@ class MaskedMultiExtensionTestCase(MultiExtensionTestCase, lsst.utils.tests.Test
         # default arguments into the constructor for parameters which we are
         # not exercising in this test.
         if hdu:
-            filename = "%s[%d]" % (filename, hdu)
+            filename = f"{filename}[{hdu}]"
         return afwImage.MaskedImageF(filename, None, lsst.geom.Box2I(), afwImage.PARENT, False, needAllHdus)
 
     def _checkImage(self, *args, **kwargs):
@@ -403,7 +403,7 @@ class ExposureMultiExtensionTestCase(MultiExtensionTestCase, lsst.utils.tests.Te
         # to stub default arguments into the constructor for parameters which
         # we are not exercising in this test.
         if hdu:
-            filename = "%s[%d]" % (filename, hdu)
+            filename = f"{filename}[{hdu}]"
         if needAllHdus:
             raise Exception("Cannot needAllHdus with Exposure")
         return afwImage.ExposureF(filename)

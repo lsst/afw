@@ -82,12 +82,10 @@ class ScaledPlus(lsst.utils.tests.TestCase):
         afwMath.scaledPlus(actImage, coeff0, self.maskedImage0.getImage(),
                            coeff1, self.maskedImage1.getImage())
 
-        msg = "scaledPlus failed for images; coeff0=%s, coeff1=%s" % (
-            coeff0, coeff1)
+        msg = f"scaledPlus failed for images; coeff0={coeff0}, coeff1={coeff1}"
         self.assertImagesAlmostEqual(
             actImage, desMaskedImage.getImage(), msg=msg)
-        msg = "scaledPlus failed for masked images; coeff0=%s, coeff1=%s" % (
-            coeff0, coeff1)
+        msg = f"scaledPlus failed for masked images; coeff0={coeff0}, coeff1={coeff1}"
         self.assertMaskedImagesAlmostEqual(
             actMaskedImage, desMaskedImage, msg=msg)
 

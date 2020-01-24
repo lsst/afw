@@ -161,7 +161,7 @@ class Schema:
                                 size=size, parse_strict=parse_strict)
         return field._addTo(self, doReplace)
 
-    def extract(self, *patterns, **kwds):
+    def extract(self, *patterns, **kwargs):
         """Extract a dictionary of {<name>: <schema-item>} in which the field names
         match the given shell-style glob pattern(s).
 
@@ -172,7 +172,7 @@ class Schema:
         ----------
         patterns : Array of `str`
             List of glob patterns to use to select field names.
-        kwds : `dict`
+        kwargs : `dict`
             Dictionary of additional keyword arguments.  May contain:
             - ``regex`` : `str` or `re` pattern
                 A regular expression to be used in addition to any
@@ -202,18 +202,18 @@ class Schema:
 
             Also raised if an unknown keyword argument is supplied.
         """
-        if kwds.pop("ordered", False):
+        if kwargs.pop("ordered", False):
             d = collections.OrderedDict()
         else:
             d = dict()
-        regex = kwds.pop("regex", None)
-        sub = kwds.pop("sub", None)
+        regex = kwargs.pop("regex", None)
+        sub = kwargs.pop("sub", None)
         if sub is not None and regex is None:
             raise ValueError(
                 "'sub' keyword argument to extract is invalid without 'regex' argument")
-        if kwds:
-            raise ValueError(
-                "Unrecognized keyword arguments for extract: %s" % ", ".join(kwds.keys()))
+        if kwargs:
+            kwargsStr = ", ".join(kwargs.keys())
+            raise ValueError(f"Unrecognized keyword arguments for extract: {kwargsStr}")
         for item in self:
             trueName = item.field.getName()
             names = [trueName]

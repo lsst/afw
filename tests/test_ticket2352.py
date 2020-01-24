@@ -41,7 +41,7 @@ class ReadMefTest(unittest.TestCase):
     """Test the reading of a multi-extension FITS (MEF) file"""
 
     def checkExtName(self, name, value, extNum):
-        filename = DATA + "[%s]" % name
+        filename = f"{DATA}[{name}]"
 
         header = readMetadata(filename)
         self.assertEqual(header.getScalar("EXT_NUM"), extNum)

@@ -38,10 +38,10 @@ class DemoStorable(Storable):
         self._state = state
 
     def __str__(self):
-        return "value = %s" % self._state
+        return f"value = {self._state}"
 
     def __repr__(self):
-        return "DemoStorable(%r)" % self._state
+        return f"DemoStorable({self._state!r})"
 
     def __hash__(self):
         return hash(self._state)

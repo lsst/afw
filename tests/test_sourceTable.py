@@ -615,21 +615,21 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         """Demonstrate that we can create & use the named Flux slot."""
         schema = lsst.afw.table.SourceTable.makeMinimalSchema()
         baseName = "afw_Test"
-        instFluxKey = schema.addField("%s_instFlux" % (baseName,), type=np.float64, doc="flux")
-        errKey = schema.addField("%s_instFluxErr" % (baseName,), type=np.float64, doc="flux uncertainty")
-        flagKey = schema.addField("%s_flag" % (baseName,), type="Flag", doc="flux flag")
+        instFluxKey = schema.addField(f"{baseName}_instFlux", type=np.float64, doc="flux")
+        errKey = schema.addField(f"{baseName}_instFluxErr", type=np.float64, doc="flux uncertainty")
+        flagKey = schema.addField(f"{baseName}_flag", type="Flag", doc="flux flag")
         catalog = lsst.afw.table.SourceCatalog(schema)
         table = catalog.table
 
         # Initially, the slot is undefined.
-        self.assertFalse(getattr(table, "get%sSlot" % (slotName,))().isValid())
+        self.assertFalse(getattr(table, f"get{slotName}Slot")().isValid())
 
         # After definition, it maps to the keys defined above.
-        getattr(table, "define%s" % (slotName,))(baseName)
-        self.assertTrue(getattr(table, "get%sSlot" % (slotName,))().isValid())
-        self.assertEqual(getattr(table, "get%sSlot" % (slotName,))().getMeasKey(), instFluxKey)
-        self.assertEqual(getattr(table, "get%sSlot" % (slotName,))().getErrKey(), errKey)
-        self.assertEqual(getattr(table, "get%sSlot" % (slotName,))().getFlagKey(), flagKey)
+        getattr(table, f"define{slotName}")(baseName)
+        self.assertTrue(getattr(table, f"get{slotName}Slot")().isValid())
+        self.assertEqual(getattr(table, f"get{slotName}Slot")().getMeasKey(), instFluxKey)
+        self.assertEqual(getattr(table, f"get{slotName}Slot")().getErrKey(), errKey)
+        self.assertEqual(getattr(table, f"get{slotName}Slot")().getFlagKey(), flagKey)
 
         # We should be able to retrieve arbitrary values set in records.
         record = catalog.addNew()
@@ -638,20 +638,20 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         record.set(errKey, err)
         record.set(flagKey, flag)
         instFluxName = slotName.replace("Flux", "InstFlux")
-        self.assertEqual(getattr(record, "get%s" % (instFluxName,))(), instFlux)
-        self.assertEqual(getattr(record, "get%sErr" % (instFluxName,))(), err)
-        self.assertEqual(getattr(record, "get%sFlag" % (slotName,))(), flag)
+        self.assertEqual(getattr(record, f"get{instFluxName}")(), instFlux)
+        self.assertEqual(getattr(record, f"get{instFluxName}Err")(), err)
+        self.assertEqual(getattr(record, f"get{slotName}Flag")(), flag)
 
         # Should also be able to retrieve them as columns from the catalog
         self.assertEqual(getattr(catalog, f"get{instFluxName}")()[0], instFlux)
         self.assertEqual(getattr(catalog, f"get{instFluxName}Err")()[0], err)
 
         # And we should be able to delete the slot, breaking the mapping.
-        table.schema.getAliasMap().erase("slot_%s" % (slotName,))
-        self.assertFalse(getattr(table, "get%sSlot" % (slotName,))().isValid())
-        self.assertNotEqual(getattr(table, "get%sSlot" % (slotName,))().getMeasKey(), instFluxKey)
-        self.assertNotEqual(getattr(table, "get%sSlot" % (slotName,))().getErrKey(), errKey)
-        self.assertNotEqual(getattr(table, "get%sSlot" % (slotName,))().getFlagKey(), flagKey)
+        table.schema.getAliasMap().erase(f"slot_{slotName}")
+        self.assertFalse(getattr(table, f"get{slotName}Slot")().isValid())
+        self.assertNotEqual(getattr(table, f"get{slotName}Slot")().getMeasKey(), instFluxKey)
+        self.assertNotEqual(getattr(table, f"get{slotName}Slot")().getErrKey(), errKey)
+        self.assertNotEqual(getattr(table, f"get{slotName}Slot")().getFlagKey(), flagKey)
 
         # When the slot has been deleted, attempting to access it should
         # throw a LogicError.

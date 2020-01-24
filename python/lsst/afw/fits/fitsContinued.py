@@ -17,22 +17,20 @@ class Fits:
 @continueClass  # noqa: F811
 class ImageWriteOptions:
     def __repr__(self):
-        return "%s(compression=%r, scaling=%r)" % (self.__class__.__name__, self.compression, self.scaling)
+        return f"{self.__class__.__name__}(compression={self.compression!r}, scaling={self.scaling!r})"
 
 
 @continueClass  # noqa: F811
 class ImageCompressionOptions:
     def __repr__(self):
-        return ("%s(algorithm=%r, tiles=%r, quantizeLevel=%f" %
-                (self.__class__.__name__, compressionAlgorithmToString(self.algorithm),
-                 self.tiles.tolist(), self.quantizeLevel))
+        return (f"{self.__class__.__name__}(algorithm={compressionAlgorithmToString(self.algorithm)!r}, "
+                f"tiles={self.tiles.tolist()!r}, quantizeLevel={self.quantizeLevel:f})")
 
 
 @continueClass  # noqa: F811
 class ImageScalingOptions:
     def __repr__(self):
-        return ("%s(algorithm=%r, bitpix=%d, maskPlanes=%s, seed=%d, quantizeLevel=%f, quantizePad=%f, "
-                "fuzz=%s, bscale=%f, bzero=%f" %
-                (self.__class__.__name__, scalingAlgorithmToString(self.algorithm), self.bitpix,
-                 self.maskPlanes, self.seed, self.quantizeLevel, self.quantizePad, self.fuzz,
-                 self.bscale, self.bzero))
+        return (f"{self.__class__.__name__}(algorithm={scalingAlgorithmToString(self.algorithm)!r}, "
+                f"bitpix={self.bitpix}, maskPlanes={self.maskPlanes}, seed={self.seed} "
+                f"quantizeLevel={self.quantizeLevel}, quantizePad={self.quantizePad}, "
+                f"fuzz={self.fuzz}, bscale={self.bscale}, bzero={self.bzero})")

@@ -344,8 +344,8 @@ class DetailTestCase(lsst.utils.tests.TestCase):
         # add the other keywords that will be deleted
         for i in range(2):
             for j in range(2):
-                metadata.set("CD%d_%d%s" % (i+1, j+1, wcsName), 0.2)  # arbitrary nonzero value
-        metadata.set("WCSAXES%s" % (wcsName,), 2)
+                metadata.set(f"CD{i+1}_{j+1}{wcsName}", 0.2)  # arbitrary nonzero value
+        metadata.set(f"WCSAXES{wcsName}", 2)
         # add a keyword that will not be deleted
         metadata.set("NAXIS1", 100)
         self.assertEqual(len(metadata.names(True)), 14)
@@ -360,10 +360,10 @@ class DetailTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(metadata.getScalar("NAXIS1"), 100)
 
         # try with a smattering of keywords (should silently ignore the missing ones)
-        metadata.set("WCSAXES%s" % (wcsName,), 2)
-        metadata.set("CD1_2%s" % (wcsName,), 0.5)
-        metadata.set("CRPIX2%s" % (wcsName,), 5)
-        metadata.set("CRVAL1%s" % (wcsName,), 55)
+        metadata.set(f"WCSAXES{wcsName}", 2)
+        metadata.set(f"CD1_2{wcsName}", 0.5)
+        metadata.set(f"CRPIX2{wcsName}", 5)
+        metadata.set(f"CRVAL1{wcsName}", 55)
         deleteBasicWcsMetadata(metadata=metadata, wcsName=wcsName)
         self.assertEqual(len(metadata.names(True)), 1)
         self.assertEqual(metadata.getScalar("NAXIS1"), 100)
@@ -392,7 +392,7 @@ class DetailTestCase(lsst.utils.tests.TestCase):
 
         # setting CRPIX1, 2 to something other than 1 should be treated as no data available
         for i in (1, 2):
-            nameToChange = "CRPIX%d%s" % (i, wcsName)
+            nameToChange = f"CRPIX{i}{wcsName}"
             metadata.set(nameToChange, 1.1)
             xy0WrongWcsName = getImageXY0FromMetadata(metadata=metadata, wcsName=wcsName, strip=True)
             self.assertEqual(xy0WrongWcsName, lsst.geom.Point2I(0, 0))
@@ -422,12 +422,12 @@ class DetailTestCase(lsst.utils.tests.TestCase):
         for name in ("A", "B", "AP", "BP"):
             self.assertTrue(hasSipMatrix(self.metadata, name))
             sipMatrix = getSipMatrixFromMetadata(self.metadata, name)
-            width = self.metadata.getScalar("%s_ORDER" % (name,)) + 1
+            width = self.metadata.getScalar(f"{name}_ORDER") + 1
             self.assertEqual(sipMatrix.shape, (width, width))
             for i in range(width):
                 for j in range(width):
                     # SIP matrix terms use 0-based indexing
-                    cardName = "%s_%d_%d" % (name, i, j)
+                    cardName = f"{name}_{i}_{j}"
                     if self.metadata.exists(cardName):
                         self.assertEqual(sipMatrix[i, j], self.metadata.getScalar(cardName))
                     else:
@@ -464,7 +464,7 @@ class DetailTestCase(lsst.utils.tests.TestCase):
         cdMatrix = getCdMatrixFromMetadata(self.metadata)
         for i in range(2):
             for j in range(2):
-                cardName = "CD%d_%d" % (i + 1, j + 1)
+                cardName = f"CD{i + 1}_{j + 1}"
                 self.assertEqual(cdMatrix[i, j], self.metadata.getScalar(cardName))
 
         metadata = PropertyList()
@@ -475,7 +475,7 @@ class DetailTestCase(lsst.utils.tests.TestCase):
         for i in range(2):
             for j in range(2):
                 # CD matrix terms use 1-based indexing
-                cardName = "CD%d_%d" % (i + 1, j + 1)
+                cardName = f"CD{i + 1}_{j + 1}"
                 if i == 1 and j == 0:
                     self.assertEqual(cdMatrix2[i, j], 0.56)
                 else:
@@ -523,11 +523,11 @@ class DetailTestCase(lsst.utils.tests.TestCase):
             self.checkSipMetadata(name, matrix, fullMetadata)
 
     def checkSipMetadata(self, name, sipMatrix, metadata):
-        width = metadata.getScalar("%s_ORDER" % (name,)) + 1
+        width = metadata.getScalar(f"{name}_ORDER") + 1
         self.assertEqual(width, sipMatrix.shape[0])
         for i in range(width):
             for j in range(width):
-                cardName = "%s_%s_%s" % (name, i, j)
+                cardName = f"{name}_{i}_{j}"
                 value = sipMatrix[i, j]
                 if value != 0 or metadata.exists(cardName):
                     self.assertEqual(value, metadata.getScalar(cardName))

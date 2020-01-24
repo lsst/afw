@@ -394,11 +394,11 @@ class OldMaskTestCase(unittest.TestCase):
         nplane = self.testMask.getNumPlanesUsed()
         for p in ("XCR", "XBP"):
             self.assertEqual(self.Mask.addMaskPlane(p),
-                             nplane, "Assigning plane %s" % (p))
+                             nplane, f"Assigning plane {p}")
             nplane += 1
 
         def pname(p):
-            return "P%d" % p
+            return f"P{p}"
 
         nextra = 8
         for p in range(0, nextra):
@@ -425,7 +425,7 @@ class OldMaskTestCase(unittest.TestCase):
 
         self.Mask.addMaskPlanesToMetadata(metadata)
         for (k, v) in self.Mask().getMaskPlaneDict().items():
-            self.assertEqual(metadata.getInt("MP_%s" % k), v)
+            self.assertEqual(metadata.getInt(f"MP_{k}"), v)
         #
         # Now add another plane to metadata and make it appear in the mask Dict, albeit
         # in general at another location (hence the getNumPlanesUsed call)
@@ -435,7 +435,7 @@ class OldMaskTestCase(unittest.TestCase):
         self.testMask.conformMaskPlanes(
             self.Mask.parseMaskPlaneMetadata(metadata))
         for (k, v) in self.Mask().getMaskPlaneDict().items():
-            self.assertEqual(metadata.getInt("MP_%s" % k), v)
+            self.assertEqual(metadata.getInt(f"MP_{k}"), v)
 
     def testPlaneOperations(self):
         """Test mask plane operations"""

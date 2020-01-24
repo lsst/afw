@@ -50,7 +50,7 @@ def toString(*args):
         args = args[0]
 
     y, x0, x1 = args
-    return "%d: %d..%d" % (y, x0, x1)
+    return f"{y}: {x0}..{x1}"
 
 
 def peakFromImage(im, pos):
