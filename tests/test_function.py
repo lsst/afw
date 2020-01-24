@@ -119,8 +119,7 @@ class FunctionTestCase(lsst.utils.tests.TestCase):
 
             f = afwMath.Chebyshev1Function1D(order, xMin, xMax)
             numParams = f.getNParameters()
-            params = np.arange(deltaParam, deltaParam *
-                               numParams + (deltaParam / 2.0), deltaParam)
+            params = np.arange(deltaParam, deltaParam*numParams + (deltaParam / 2.0), deltaParam)
             f.setParameters(params)
             g = afwMath.Chebyshev1Function1D(params, xMin, xMax)
             h = f.clone()

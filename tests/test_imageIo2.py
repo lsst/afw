@@ -50,8 +50,8 @@ class ImageIoTestCase(lsst.utils.tests.TestCase):
             scaling = dict(algorithm=ImageScalingOptions.NONE, bitpix=0)
         options = ImageWriteOptions(compression=ImageCompressionOptions(**compression),
                                     scaling=ImageScalingOptions(**scaling))
-        isCompressed = (compression.get("algorithm", ImageCompressionOptions.NONE) !=
-                        ImageCompressionOptions.NONE)
+        isCompressed = (compression.get("algorithm", ImageCompressionOptions.NONE)
+                        != ImageCompressionOptions.NONE)
         with lsst.utils.tests.getTempFilePath("_%s.fits" % (type(image).__name__,)) as filename:
             image.writeFits(filename, options=options)
             readImage = type(image)(filename)

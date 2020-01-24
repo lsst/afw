@@ -214,10 +214,10 @@ class PolygonTest(lsst.utils.tests.TestCase):
         polyList4 = poly4.union(poly1)
         self.assertEqual(len(polyList3), 2)
         self.assertEqual(len(polyList3), len(polyList4))
-        self.assertTrue((polyList3[0] == polyList4[0] and polyList3[1] == polyList4[1]) or
-                        (polyList3[0] == polyList4[1] and polyList3[1] == polyList4[0]))
-        self.assertTrue((polyList3[0] == poly1 and polyList3[1] == poly4) or
-                        (polyList3[0] == poly4 and polyList3[1] == poly1))
+        self.assertTrue((polyList3[0] == polyList4[0] and polyList3[1] == polyList4[1])
+                        or (polyList3[0] == polyList4[1] and polyList3[1] == polyList4[0]))
+        self.assertTrue((polyList3[0] == poly1 and polyList3[1] == poly4)
+                        or (polyList3[0] == poly4 and polyList3[1] == poly1))
 
     def testSymDifference(self):
         """Test Polygon.symDifference"""
@@ -236,10 +236,10 @@ class PolygonTest(lsst.utils.tests.TestCase):
 
         self.assertEqual(len(diff1), 2)
         self.assertEqual(len(diff2), 2)
-        self.assertTrue((diff1[0] == diff2[0] and diff1[1] == diff2[1]) or
-                        (diff1[1] == diff2[0] and diff1[0] == diff2[1]))
-        self.assertTrue((diff1[0] == poly3 and diff1[1] == poly4) or
-                        (diff1[1] == poly3 and diff1[0] == poly4))
+        self.assertTrue((diff1[0] == diff2[0] and diff1[1] == diff2[1])
+                        or (diff1[1] == diff2[0] and diff1[0] == diff2[1]))
+        self.assertTrue((diff1[0] == poly3 and diff1[1] == poly4)
+                        or (diff1[1] == poly3 and diff1[0] == poly4))
 
     def testConvexHull(self):
         """Test Polygon.convexHull"""

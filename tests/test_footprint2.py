@@ -477,8 +477,10 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
             # is treated as a Peak
             #
             if (dwidth != 0 or dheight != 0):
-                if (foot.getBBox().getMinX() == 0 or foot.getBBox().getMaxX() == self.im.getWidth() - 1 or
-                        foot.getBBox().getMinY() == 0 or foot.getBBox().getMaxY() == self.im.getHeight() - 1):
+                if (foot.getBBox().getMinX() == 0
+                        or foot.getBBox().getMaxX() == self.im.getWidth() - 1
+                        or foot.getBBox().getMinY() == 0
+                        or foot.getBBox().getMaxY() == self.im.getHeight() - 1):
                     npeak = 1
 
             if npeak is None:

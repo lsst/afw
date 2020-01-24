@@ -659,8 +659,8 @@ def overlayCcdBoxes(ccd, untrimmedCcdBbox=None, nQuarter=0,
                     displayUtils.drawBBox(bbox, origin=ccdOrigin, borderWidth=0.49, ctype=ctype,
                                           display=display, bin=binSize)
             # Label each Amp
-            xc, yc = (ampbbox.getMin()[0] + ampbbox.getMax()[0])//2, (ampbbox.getMin()[1] +
-                                                                      ampbbox.getMax()[1])//2
+            xc, yc = ((ampbbox.getMin()[0] + ampbbox.getMax()[0])//2,
+                      (ampbbox.getMin()[1] + ampbbox.getMax()[1])//2)
             #
             # Rotate the amp labels too
             #

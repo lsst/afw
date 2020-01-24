@@ -81,8 +81,8 @@ def refraction(wavelength, elevation, observatory, weather=None):
 
     # Account for oblate Earth
     # This replicates equation 10 of Stone 1996
-    relativeGravity = (1. + 0.005302*np.sin(latitude.asRadians())**2. -
-                       0.00000583*np.sin(2.*latitude.asRadians())**2. - 0.000000315*altitude)
+    relativeGravity = (1. + 0.005302*np.sin(latitude.asRadians())**2.
+                       - 0.00000583*np.sin(2.*latitude.asRadians())**2. - 0.000000315*altitude)
 
     # Calculate the tangent of the zenith angle.
     tanZ = np.tan(np.pi/2. - elevation.asRadians())
@@ -155,8 +155,7 @@ def deltaN(wavelength, weather):
     waveNum = 1E3/wavelength  # want wave number in units 1/micron
     dryAirTerm = 2371.34 + (683939.7/(130. - waveNum**2.)) + (4547.3/(38.9 - waveNum**2.))
     wetAirTerm = 6487.31 + 58.058*waveNum**2. - 0.71150*waveNum**4. + 0.08851*waveNum**6.
-    return (dryAirTerm*densityFactorDry(weather) +
-            wetAirTerm*densityFactorWater(weather))
+    return (dryAirTerm*densityFactorDry(weather) + wetAirTerm*densityFactorWater(weather))
 
 
 def densityFactorDry(weather):
@@ -188,8 +187,8 @@ def densityFactorDry(weather):
     waterVaporPressure = humidityToPressure(weather)
     airPressure = weather.getAirPressure()*units.pascal
     dryPressure = airPressure - waterVaporPressure
-    eqn = dryPressure.to_value(cds.mbar)*(57.90E-8 - 9.3250E-4/temperature.to_value(units.Kelvin) +
-                                          0.25844/temperature.to_value(units.Kelvin)**2.)
+    eqn = dryPressure.to_value(cds.mbar)*(57.90E-8 - 9.3250E-4/temperature.to_value(units.Kelvin)
+                                          + 0.25844/temperature.to_value(units.Kelvin)**2.)
     densityFactor = (1. + eqn)*dryPressure.to_value(cds.mbar)/temperature.to_value(units.Kelvin)
     return densityFactor
 
@@ -221,9 +220,9 @@ def densityFactorWater(weather):
     """
     temperature = extractTemperature(weather, useKelvin=True)
     waterVaporPressure = humidityToPressure(weather)
-    densityEqn1 = (-2.37321E-3 + 2.23366/temperature.to_value(units.Kelvin) -
-                   710.792/temperature.to_value(units.Kelvin)**2. +
-                   7.75141E-4/temperature.to_value(units.Kelvin)**3.)
+    densityEqn1 = (-2.37321E-3 + 2.23366/temperature.to_value(units.Kelvin)
+                   - 710.792/temperature.to_value(units.Kelvin)**2.
+                   + 7.75141E-4/temperature.to_value(units.Kelvin)**3.)
     densityEqn2 = waterVaporPressure.to_value(cds.mbar)*(1. + 3.7E-4*waterVaporPressure.to_value(cds.mbar))
     relativeDensity = waterVaporPressure.to_value(cds.mbar)/temperature.to_value(units.Kelvin)
     densityFactor = (1 + densityEqn2*densityEqn1)*relativeDensity
@@ -262,8 +261,8 @@ def humidityToPressure(weather):
     temperatureEqn1 = (temperature + 238.3*units.Celsius)*x + 17.2694*temperature
     temperatureEqn2 = (temperature + 238.3*units.Celsius)*(17.2694 - x) - 17.2694*temperature
     dewPoint = 238.3*temperatureEqn1/temperatureEqn2
-    waterVaporPressure = (4.50874 + 0.341724*dewPoint + 0.0106778*dewPoint**2 + 0.184889E-3*dewPoint**3 +
-                          0.238294E-5*dewPoint**4 + 0.203447E-7*dewPoint**5)*133.32239*units.pascal
+    waterVaporPressure = (4.50874 + 0.341724*dewPoint + 0.0106778*dewPoint**2 + 0.184889E-3*dewPoint**3
+                          + 0.238294E-5*dewPoint**4 + 0.203447E-7*dewPoint**5)*133.32239*units.pascal
 
     return waterVaporPressure
 

@@ -171,9 +171,9 @@ class PupilFactory:
         # the line
         p1 = (p0[0] + 1, p0[1] + np.tan(angleRad))
         d = PupilFactory._pointLineDistance((self.u, self.v), p0, p1)
-        pupil.illuminated[(d < 0.5*thickness) &
-                          ((self.u - p0[0])*np.cos(angleRad) +
-                           (self.v - p0[1])*np.sin(angleRad) >= 0)] = False
+        pupil.illuminated[(d < 0.5*thickness)
+                          & ((self.u - p0[0])*np.cos(angleRad)
+                             + (self.v - p0[1])*np.sin(angleRad) >= 0)] = False
 
     def _centerPupil(self, pupil):
         """Center the illuminated portion of the pupil in array.

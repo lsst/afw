@@ -301,8 +301,8 @@ class MultiExtensionTestCase:
             afwMath.makeStatistics(mim.getImage(), afwMath.MEAN).getValue(),
             val1)
         s = afwMath.makeStatistics(mim.getMask(), afwMath.SUM | afwMath.NPOINT)
-        self.assertEqual(float(s.getValue(afwMath.SUM)) /
-                         s.getValue(afwMath.NPOINT), val2)
+        self.assertEqual(float(s.getValue(afwMath.SUM)) / s.getValue(afwMath.NPOINT),
+                         val2)
         self.assertEqual(
             afwMath.makeStatistics(mim.getVariance(), afwMath.MEAN).getValue(),
             val3)

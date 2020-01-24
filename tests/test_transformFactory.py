@@ -230,10 +230,10 @@ class TransformFactoryTestSuite(TransformTestBaseClass):
         for fromPoint in self.point2DList():
             toPoint = transform.applyForward(fromPoint)
             predToPoint = lsst.geom.Point2D(
-                matrix[0] * fromPoint[0] +
-                matrix[1] * fromPoint[1],
-                matrix[2] * fromPoint[0] +
-                matrix[3] * fromPoint[1],
+                matrix[0] * fromPoint[0]
+                + matrix[1] * fromPoint[1],
+                matrix[2] * fromPoint[0]
+                + matrix[3] * fromPoint[1],
             )
             self.assertPairsAlmostEqual(toPoint, predToPoint)
 
@@ -262,10 +262,10 @@ class TransformFactoryTestSuite(TransformTestBaseClass):
         for fromPoint in self.point2DList():
             toPoint = transform.applyForward(fromPoint)
             predToPoint = lsst.geom.Point2D(
-                matrix[0] * fromPoint[0] +
-                matrix[1] * fromPoint[1],
-                matrix[2] * fromPoint[0] +
-                matrix[3] * fromPoint[1],
+                matrix[0] * fromPoint[0]
+                + matrix[1] * fromPoint[1],
+                matrix[2] * fromPoint[0]
+                + matrix[3] * fromPoint[1],
             )
             predToPoint = predToPoint + offset
             self.assertPairsAlmostEqual(toPoint, predToPoint)

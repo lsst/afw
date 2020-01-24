@@ -105,8 +105,8 @@ class SchemaMapper:
         """
         iSchema = self.getInputSchema()
         oSchema = self.getOutputSchema()
-        if (not (iSchema.compare(other.getInputSchema(), Schema.IDENTICAL) == Schema.IDENTICAL and
-                 oSchema.compare(other.getOutputSchema(), Schema.IDENTICAL) == Schema.IDENTICAL)):
+        if (not (iSchema.compare(other.getInputSchema(), Schema.IDENTICAL) == Schema.IDENTICAL
+                 and oSchema.compare(other.getOutputSchema(), Schema.IDENTICAL) == Schema.IDENTICAL)):
             return False
 
         for item in iSchema:

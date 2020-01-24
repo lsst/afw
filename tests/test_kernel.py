@@ -855,8 +855,7 @@ class KernelTestCase(lsst.utils.tests.TestCase):
                 if (dx == dy == 0) or not dimMustMatch:
                     ksum = kernel.computeImage(image, True)
                     self.assertAlmostEqual(ksum, 1.0)
-                    llBorder = ((image.getDimensions() -
-                                 kernelDim) / 2).truncate()
+                    llBorder = ((image.getDimensions() - kernelDim) / 2).truncate()
                     predCtr = lsst.geom.Point2I(llBorder + kernelCtr)
                     self.assertEqual(kernel.getCtr(), predCtr)
                 else:
@@ -870,12 +869,10 @@ class KernelTestCase(lsst.utils.tests.TestCase):
         try:
             kernel.computeImage(kImage, True)
             if doRaise:
-                self.fail(kernelDescr +
-                          ".computeImage should have raised an exception")
+                self.fail(kernelDescr + ".computeImage should have raised an exception")
         except pexExcept.Exception:
             if not doRaise:
-                self.fail(kernelDescr +
-                          ".computeImage should not have raised an exception")
+                self.fail(kernelDescr + ".computeImage should not have raised an exception")
 
     def compareResizedKernels(self, kernel1, kernel2):
         """Compare kernels' parameters and images where overlapping,

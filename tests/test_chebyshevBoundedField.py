@@ -87,8 +87,7 @@ class ChebyshevBoundedFieldTestCase(lsst.utils.tests.TestCase):
                     ctrl.triangular = triangular
                     coefficients = np.random.randn(orderY + 1, orderX + 1)
                     if triangular:
-                        coefficients[indexX + indexY >
-                                     max(orderX, orderY)] = 0.0
+                        coefficients[indexX + indexY > max(orderX, orderY)] = 0.0
                     self.cases.append((ctrl, coefficients))
 
         array = np.arange(self.bbox.getArea(), dtype=np.float32).reshape(self.bbox.getDimensions())
@@ -251,8 +250,8 @@ class ChebyshevBoundedFieldTestCase(lsst.utils.tests.TestCase):
         coeffs[0, 0] = 5.0
         coeffs[1, 0] = 7.0
         coeffs[0, 2] = 3.0
-        self._testIntegrateBox(bbox, coeffs, 4.0*coeffs[0, 0] -
-                               (4.0/3.0)*coeffs[2, 0] - (4.0/3.0)*coeffs[0, 2])
+        self._testIntegrateBox(bbox, coeffs,
+                               4.0*coeffs[0, 0] - (4.0/3.0)*coeffs[2, 0] - (4.0/3.0)*coeffs[0, 2])
 
     def testIntegrateBox(self):
         r"""Test integrating over an "interesting" box.

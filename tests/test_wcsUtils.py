@@ -78,8 +78,8 @@ class BaseTestCase(lsst.utils.tests.TestCase):
         """Make an affine TransformPoint2ToPoint2 that first adds the specified offset,
         then scales and rotates the result
         """
-        rotScale = lsst.geom.AffineTransform(lsst.geom.LinearTransform.makeScaling(scale) *
-                                             lsst.geom.LinearTransform.makeRotation(rotation))
+        rotScale = lsst.geom.AffineTransform(lsst.geom.LinearTransform.makeScaling(scale)
+                                             * lsst.geom.LinearTransform.makeRotation(rotation))
         offset = lsst.geom.AffineTransform(lsst.geom.Extent2D(*offset))
         # AffineTransform a*b = b.then(a)
         return afwGeom.makeTransform(rotScale*offset)
