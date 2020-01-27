@@ -1,0 +1,571 @@
+SIMPLE  =                    T / file does conform to FITS standard             BITPIX  =                   16 / number of bits per data pixel                  NAXIS   =                    0 / number of data axes                            EXTEND  =                    T / FITS dataset may contain extensions            COMMENT   FITS (Flexible Image Transport System) format is defined in 'AstronomyCOMMENT   and Astrophysics', volume 376, page 359; bibcode: 2001A&A...376..359H END                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             XTENSION= 'BINTABLE'           / binary table extension                         BITPIX  =                    8 / 8-bit bytes                                    NAXIS   =                    2 / 2-dimensional binary table                     NAXIS1  =                  148 / width of table in bytes                        NAXIS2  =                    1 / number of rows in table                        PCOUNT  =                    0 / size of special data area                      GCOUNT  =                    1 / one data group (required keyword)              TFIELDS =                    7 / number of fields in each row                   TTYPE1  = 'id      '           / Archive ID of the persistable object that owns TFORM1  = '1J      '           / format of field                                TDOC1   = 'Archive ID of the persistable object that owns the records pointed &'CONTINUE  'at by this entry'                                                    TCCLS1  = 'Scalar  '           / Field template used by lsst.afw.table          TTYPE2  = 'cat.archive'        / index of the catalog this entry points to, fromTFORM2  = '1J      '           / format of field                                TDOC2   = 'index of the catalog this entry points to, from the perspective of &'CONTINUE  'the archive'                                                         TCCLS2  = 'Scalar  '           / Field template used by lsst.afw.table          TTYPE3  = 'cat.persistable'    / index of the catalog this entry points to, fromTFORM3  = '1J      '           / format of field                                TDOC3   = 'index of the catalog this entry points to, from the perspective of &'CONTINUE  'the Persistable'                                                     TCCLS3  = 'Scalar  '           / Field template used by lsst.afw.table          TTYPE4  = 'row0    '           / first row used by the persistable object in thiTFORM4  = '1J      '           / format of field                                TDOC4   = 'first row used by the persistable object in this catalog'            TCCLS4  = 'Scalar  '           / Field template used by lsst.afw.table          TTYPE5  = 'nrows   '           / number of rows used by the persistable object iTFORM5  = '1J      '           / format of field                                TDOC5   = 'number of rows used by the persistable object in this catalog'       TCCLS5  = 'Scalar  '           / Field template used by lsst.afw.table          TTYPE6  = 'name    '           / unique name for the persistable object's class TFORM6  = '64A     '           / format of field                                TDOC6   = 'unique name for the persistable object''s class'                     TCCLS6  = 'String  '           / Field template used by lsst.afw.table          TTYPE7  = 'module  '           / Python module that should be imported to registTFORM7  = '64A     '           / format of field                                TDOC7   = 'Python module that should be imported to register the object''s fac&'CONTINUE  'tory    '                                                            TCCLS7  = 'String  '           / Field template used by lsst.afw.table          EXTTYPE = 'ARCHIVE_INDEX'                                                       AR_CATN =                    0 / # of this catalog relative to the start of thisAR_NCAT =                    2 / # of catalogs in this archive, including the inHIERARCH AFW_TABLE_VERSION = 3                                                  END                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              SkyWcs                                                          lsst.afw.geom                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               XTENSION= 'BINTABLE'           / binary table extension                         BITPIX  =                    8 / 8-bit bytes                                    NAXIS   =                    2 / 2-dimensional binary table                     NAXIS1  =                   16 / width of table in bytes                        NAXIS2  =                    1 / number of rows in table                        PCOUNT  =                16374 / size of special data area                      GCOUNT  =                    1 / one data group (required keyword)              TFIELDS =                    1 / number of fields in each row                   TTYPE1  = 'wcs     '           / wcs string representation                      TFORM1  = '1QB(16374)'         / format of field                                TDOC1   = 'wcs string representation'                                           TCCLS1  = 'Array   '           / Field template used by lsst.afw.table          EXTTYPE = 'ARCHIVE_DATA'                                                        AR_CATN =                    1 / # of this catalog relative to the start of thisAR_NAME = 'SkyWcs  '           / Class name for objects stored here             HIERARCH AFW_TABLE_VERSION = 3                                                  END                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   ?ö        1 SkyWcs 0  Begin FrameSet
+#   Title = "ICRS coordinates; gnomonic projection"
+#   Naxes = 2
+#   Domain = "SKY"
+#   Epoch = 2000
+#   Lbl1 = "Right ascension"
+#   Lbl2 = "Declination"
+#   System = "ICRS"
+#   Uni1 = "hh:mm:ss.s"
+#   Uni2 = "ddd:mm:ss"
+#   Dir1 = 0
+#   Bot2 = -1.5707963267948966
+#   Top2 = 1.5707963267948966
+ IsA Frame
+    Nframe = 4
+#   Base = 1
+    Currnt = 4
+    Lnk2 = 1
+    Lnk3 = 2
+    Lnk4 = 3
+    Frm1 =
+       Begin Frame
+#         Title = "2-d coordinate system"
+          Naxes = 2
+          Domain = "PIXELS"
+#         Lbl1 = "Axis 1"
+#         Lbl2 = "Axis 2"
+          Ax1 =
+             Begin Axis
+             End Axis
+          Ax2 =
+             Begin Axis
+             End Axis
+       End Frame
+    Frm2 =
+       Begin Frame
+#         Title = "2-d coordinate system"
+          Naxes = 2
+          Domain = "FOCAL"
+#         Lbl1 = "Axis 1"
+#         Lbl2 = "Axis 2"
+          Ax1 =
+             Begin Axis
+             End Axis
+          Ax2 =
+             Begin Axis
+             End Axis
+       End Frame
+    Frm3 =
+       Begin Frame
+#         Title = "2-d coordinate system"
+          Naxes = 2
+          Domain = "IWC"
+#         Lbl1 = "Axis 1"
+#         Lbl2 = "Axis 2"
+          Ax1 =
+             Begin Axis
+             End Axis
+          Ax2 =
+             Begin Axis
+             End Axis
+       End Frame
+    Frm4 =
+       Begin SkyFrame
+          Ident = " "
+       IsA Object
+#         Title = "ICRS coordinates; gnomonic projection"
+          Naxes = 2
+#         Domain = "SKY"
+#         Epoch = 2000
+#         Lbl1 = "Right ascension"
+#         Lbl2 = "Declination"
+          System = "ICRS"
+          AlSys = "ICRS"
+#         Uni1 = "hh:mm:ss.s"
+#         Uni2 = "ddd:mm:ss"
+#         Dir1 = 0
+#         Bot2 = -1.5707963267948966
+#         Top2 = 1.5707963267948966
+          Ax1 =
+             Begin SkyAxis
+             End SkyAxis
+          Ax2 =
+             Begin SkyAxis
+             End SkyAxis
+       IsA Frame
+          Proj = "gnomonic"
+#         SkyTol = 0.001
+          SRefIs = "Ignored"
+          SRef1 = -2.5588798864783686
+          SRef2 = 0.91623312582797334
+       End SkyFrame
+    Map2 =
+       Begin PolyMap
+          Nin = 2
+       IsA Mapping
+          MPF1 = 1
+          MPF2 = 1
+          NCF1 = 3
+          NCF2 = 3
+          CF1 = -174.59677715385365
+          CF2 = 0.015000379812670552
+          CF3 = 6.6140774679922724e-06
+          CF4 = 74.111182009433435
+          CF5 = -7.0391209610062682e-06
+          CF6 = 0.015000247927114159
+          PF3 = 1
+          PF6 = 1
+          PF9 = 1
+          PF12 = 1
+          MPI1 = 1
+          MPI2 = 1
+          NCI1 = 3
+          NCI2 = 3
+          CI1 = 11641.666486769083
+          CI2 = 66.66496485927145
+          CI3 = -0.029394663616409834
+          CI4 = -4935.2007560509419
+          CI5 = 0.031283666362436943
+          CI6 = 66.665550992649045
+          PI3 = 1
+          PI6 = 1
+          PI9 = 1
+          PI12 = 1
+          IterInv = 0
+       End PolyMap
+    Map3 =
+       Begin PolyMap
+          Nin = 2
+       IsA Mapping
+          MPF1 = 7
+          MPF2 = 7
+          NCF1 = 36
+          NCF2 = 36
+          CF1 = 0.52793441635773108
+          CF2 = 3.5295092671719264e-05
+          CF3 = -0.0031251569581900607
+          CF4 = -1.1346891704653666e-09
+          CF5 = 6.124895934047072e-10
+          CF6 = -3.1095863320848783e-09
+          CF7 = -1.7205144862506484e-11
+          CF8 = 1.4518756632900845e-09
+          CF9 = -1.7936521186826069e-11
+          CF10 = 1.4539804721480586e-09
+          CF11 = -4.428247105634031e-15
+          CF12 = 1.9628310267138727e-15
+          CF13 = 6.5371950612370261e-15
+          CF14 = -8.1043107804403232e-15
+          CF15 = 6.3856368415260788e-16
+          CF16 = 2.792582613381885e-17
+          CF17 = 1.3105246521284244e-15
+          CF18 = 7.4920788489725438e-17
+          CF19 = 2.6368160435021437e-15
+          CF20 = -4.5072408947538698e-18
+          CF21 = 1.2688893930980926e-15
+          CF22 = 2.0821058102973019e-20
+          CF23 = 1.6456547654983537e-20
+          CF24 = -2.1059300243065497e-19
+          CF25 = 1.5143365422240265e-19
+          CF26 = -3.5401928046594393e-19
+          CF27 = 1.7826870553286285e-19
+          CF28 = -1.2617611780921228e-19
+          CF29 = -6.6660439604783302e-22
+          CF30 = 1.155659392084995e-20
+          CF31 = -1.6493386103675814e-21
+          CF32 = 3.3667442081589582e-20
+          CF33 = -1.5093007710432102e-21
+          CF34 = 3.4536272161514146e-20
+          CF35 = 6.8665444332483098e-23
+          CF36 = 1.1858155846653214e-20
+          CF37 = 0.0080994127513658171
+          CF38 = -0.0031250164516500624
+          CF39 = -3.5019056381016173e-05
+          CF40 = 6.157642685744649e-10
+          CF41 = -1.3318637112463087e-09
+          CF42 = -1.3407756116486821e-10
+          CF43 = 1.4508281605259656e-09
+          CF44 = 1.4100880250355584e-11
+          CF45 = 1.4577834702670876e-09
+          CF46 = 1.5424153870600635e-11
+          CF47 = -2.6126629499784191e-15
+          CF48 = -5.3515222881659783e-15
+          CF49 = 8.1175797665358149e-15
+          CF50 = -9.0871583620603905e-15
+          CF51 = 5.8511794132825992e-15
+          CF52 = 1.3558960350654641e-15
+          CF53 = 1.388515967797952e-16
+          CF54 = 2.4181768026192675e-15
+          CF55 = 1.0774584621666697e-16
+          CF56 = 1.1651382974846418e-15
+          CF57 = 5.2668208678915426e-17
+          CF58 = 5.1017724907594184e-20
+          CF59 = -1.1722312944311669e-19
+          CF60 = 2.6292484233345853e-20
+          CF61 = -5.2458323093433106e-20
+          CF62 = -9.0007054942849062e-20
+          CF63 = -3.5798980589773711e-20
+          CF64 = -4.6265492373159613e-20
+          CF65 = 1.1085746896061419e-20
+          CF66 = -1.2006828604462788e-21
+          CF67 = 3.6589530242974379e-20
+          CF68 = -4.4506239036646322e-22
+          CF69 = 3.7946071175802859e-20
+          CF70 = -9.2414667938656724e-22
+          CF71 = 1.2902257225205551e-20
+          CF72 = -2.4146173753037997e-22
+          PF3 = 1
+          PF6 = 1
+          PF7 = 2
+          PF9 = 1
+          PF10 = 1
+          PF12 = 2
+          PF13 = 3
+          PF15 = 2
+          PF16 = 1
+          PF17 = 1
+          PF18 = 2
+          PF20 = 3
+          PF21 = 4
+          PF23 = 3
+          PF24 = 1
+          PF25 = 2
+          PF26 = 2
+          PF27 = 1
+          PF28 = 3
+          PF30 = 4
+          PF31 = 5
+          PF33 = 4
+          PF34 = 1
+          PF35 = 3
+          PF36 = 2
+          PF37 = 2
+          PF38 = 3
+          PF39 = 1
+          PF40 = 4
+          PF42 = 5
+          PF43 = 6
+          PF45 = 5
+          PF46 = 1
+          PF47 = 4
+          PF48 = 2
+          PF49 = 3
+          PF50 = 3
+          PF51 = 2
+          PF52 = 4
+          PF53 = 1
+          PF54 = 5
+          PF56 = 6
+          PF57 = 7
+          PF59 = 6
+          PF60 = 1
+          PF61 = 5
+          PF62 = 2
+          PF63 = 4
+          PF64 = 3
+          PF65 = 3
+          PF66 = 4
+          PF67 = 2
+          PF68 = 5
+          PF69 = 1
+          PF70 = 6
+          PF72 = 7
+          PF75 = 1
+          PF78 = 1
+          PF79 = 2
+          PF81 = 1
+          PF82 = 1
+          PF84 = 2
+          PF85 = 3
+          PF87 = 2
+          PF88 = 1
+          PF89 = 1
+          PF90 = 2
+          PF92 = 3
+          PF93 = 4
+          PF95 = 3
+          PF96 = 1
+          PF97 = 2
+          PF98 = 2
+          PF99 = 1
+          PF100 = 3
+          PF102 = 4
+          PF103 = 5
+          PF105 = 4
+          PF106 = 1
+          PF107 = 3
+          PF108 = 2
+          PF109 = 2
+          PF110 = 3
+          PF111 = 1
+          PF112 = 4
+          PF114 = 5
+          PF115 = 6
+          PF117 = 5
+          PF118 = 1
+          PF119 = 4
+          PF120 = 2
+          PF121 = 3
+          PF122 = 3
+          PF123 = 2
+          PF124 = 4
+          PF125 = 1
+          PF126 = 5
+          PF128 = 6
+          PF129 = 7
+          PF131 = 6
+          PF132 = 1
+          PF133 = 5
+          PF134 = 2
+          PF135 = 4
+          PF136 = 3
+          PF137 = 3
+          PF138 = 4
+          PF139 = 2
+          PF140 = 5
+          PF141 = 1
+          PF142 = 6
+          PF144 = 7
+          MPI1 = 6
+          MPI2 = 6
+          NCI1 = 28
+          NCI2 = 28
+          CI1 = 0.59864106992469879
+          CI2 = 3.6391401314921539
+          CI3 = -323.00891716607885
+          CI4 = -1.214498657021573
+          CI5 = 18.978054609804111
+          CI6 = -8.4639779041283028
+          CI7 = 0.46794066100808723
+          CI8 = -13.8495897464084
+          CI9 = -5.2209815339643093
+          CI10 = 10.880872523226186
+          CI11 = -4.2459655171114816
+          CI12 = 20.127320217597578
+          CI13 = -42.129129129994134
+          CI14 = 35.626320304564594
+          CI15 = -54.637512888199332
+          CI16 = 0.99641784257021115
+          CI17 = 3.4371445506275462
+          CI18 = -22.749403684307598
+          CI19 = 62.821525279108286
+          CI20 = -45.331014512114422
+          CI21 = 54.246830966092574
+          CI22 = -5.9736407525543749
+          CI23 = 24.316687592063971
+          CI24 = -54.115307299690606
+          CI25 = 71.070497372107837
+          CI26 = -84.491566817967808
+          CI27 = 46.791944306224714
+          CI28 = -31.908962069950345
+          CI29 = 171.31360692992308
+          CI30 = -334.13244739598633
+          CI31 = -3.7529837740123724
+          CI32 = 31.177188799829384
+          CI33 = -1.4468366345188126
+          CI34 = 9.3879236378227979
+          CI35 = -30.600800139824155
+          CI36 = -0.0017804991309172968
+          CI37 = -14.326030376180697
+          CI38 = -1.7684664940433328
+          CI39 = 23.378490347038269
+          CI40 = -14.227569984566404
+          CI41 = 29.400751635408138
+          CI42 = -26.560669206068777
+          CI43 = 8.4072565114562696
+          CI44 = -17.405563405021006
+          CI45 = 2.1983611926383579
+          CI46 = 6.5991969262990287
+          CI47 = -22.536133846955973
+          CI48 = 30.378206109589449
+          CI49 = -8.7479519818502656
+          CI50 = 14.264316595219212
+          CI51 = -31.453259574759475
+          CI52 = 55.546832243866412
+          CI53 = -66.78982178750141
+          CI54 = 50.064994810823769
+          CI55 = -32.481770049220387
+          CI56 = 7.570852595711667
+          PI3 = 1
+          PI6 = 1
+          PI7 = 2
+          PI9 = 1
+          PI10 = 1
+          PI12 = 2
+          PI13 = 3
+          PI15 = 2
+          PI16 = 1
+          PI17 = 1
+          PI18 = 2
+          PI20 = 3
+          PI21 = 4
+          PI23 = 3
+          PI24 = 1
+          PI25 = 2
+          PI26 = 2
+          PI27 = 1
+          PI28 = 3
+          PI30 = 4
+          PI31 = 5
+          PI33 = 4
+          PI34 = 1
+          PI35 = 3
+          PI36 = 2
+          PI37 = 2
+          PI38 = 3
+          PI39 = 1
+          PI40 = 4
+          PI42 = 5
+          PI43 = 6
+          PI45 = 5
+          PI46 = 1
+          PI47 = 4
+          PI48 = 2
+          PI49 = 3
+          PI50 = 3
+          PI51 = 2
+          PI52 = 4
+          PI53 = 1
+          PI54 = 5
+          PI56 = 6
+          PI59 = 1
+          PI62 = 1
+          PI63 = 2
+          PI65 = 1
+          PI66 = 1
+          PI68 = 2
+          PI69 = 3
+          PI71 = 2
+          PI72 = 1
+          PI73 = 1
+          PI74 = 2
+          PI76 = 3
+          PI77 = 4
+          PI79 = 3
+          PI80 = 1
+          PI81 = 2
+          PI82 = 2
+          PI83 = 1
+          PI84 = 3
+          PI86 = 4
+          PI87 = 5
+          PI89 = 4
+          PI90 = 1
+          PI91 = 3
+          PI92 = 2
+          PI93 = 2
+          PI94 = 3
+          PI95 = 1
+          PI96 = 4
+          PI98 = 5
+          PI99 = 6
+          PI101 = 5
+          PI102 = 1
+          PI103 = 4
+          PI104 = 2
+          PI105 = 3
+          PI106 = 3
+          PI107 = 2
+          PI108 = 4
+          PI109 = 1
+          PI110 = 5
+          PI112 = 6
+          IterInv = 0
+       End PolyMap
+    Map4 =
+       Begin CmpMap
+          Nin = 2
+       IsA Mapping
+          MapA =
+             Begin UnitMap
+                Nin = 2
+                IsSimp = 1
+             IsA Mapping
+             End UnitMap
+          MapB =
+             Begin CmpMap
+                Nin = 2
+             IsA Mapping
+                InvA = 1
+                MapA =
+                   Begin CmpMap
+                      Nin = 2
+                      Invert = 1
+                   IsA Mapping
+                      InvA = 1
+                      MapA =
+                         Begin SphMap
+                            Nin = 3
+                            Nout = 2
+                            Invert = 0
+                         IsA Mapping
+                            UntRd = 1
+                            PlrLg = 3.7243054207012181
+                         End SphMap
+                      MapB =
+                         Begin CmpMap
+                            Nin = 3
+                            Nout = 2
+                         IsA Mapping
+                            InvA = 1
+                            MapA =
+                               Begin MatrixMap
+                                  Nin = 3
+                                  Invert = 0
+                               IsA Mapping
+                                  M0 = -0.6623956449313968
+                                  M1 = 0.55029104589365396
+                                  M2 = -0.5083421823783536
+                                  M3 = -0.43655355369660115
+                                  M4 = -0.83497291262008522
+                                  M5 = -0.33502422292365724
+                                  M6 = -0.60881278266047245
+                                  M7 = 0
+                                  M8 = 0.79331393260752225
+                                  IM0 = -0.6623956449313968
+                                  IM1 = -0.43655355369660115
+                                  IM2 = -0.60881278266047245
+                                  IM3 = 0.55029104589365396
+                                  IM4 = -0.83497291262008522
+                                  IM5 = 0
+                                  IM6 = -0.5083421823783536
+                                  IM7 = -0.33502422292365724
+                                  IM8 = 0.79331393260752225
+                                  Form = "Full"
+                               End MatrixMap
+                            MapB =
+                               Begin CmpMap
+                                  Nin = 3
+                                  Nout = 2
+                               IsA Mapping
+                                  MapA =
+                                     Begin SphMap
+                                        Nin = 3
+                                        Nout = 2
+                                        Invert = 1
+                                     IsA Mapping
+                                        UntRd = 1
+                                        PlrLg = 0
+                                     End SphMap
+                                  MapB =
+                                     Begin CmpMap
+                                        Nin = 2
+                                     IsA Mapping
+                                        MapA =
+                                           Begin WcsMap
+                                              Nin = 2
+                                              Invert = 1
+                                           IsA Mapping
+                                              Type = "TAN"
+                                           End WcsMap
+                                        MapB =
+                                           Begin ZoomMap
+                                              Nin = 2
+                                              Invert = 0
+                                           IsA Mapping
+                                              Zoom = 57.295779513082323
+                                           End ZoomMap
+                                     End CmpMap
+                               End CmpMap
+                         End CmpMap
+                   End CmpMap
+                MapB =
+                   Begin UnitMap
+                      Nin = 2
+                      IsSimp = 1
+                   IsA Mapping
+                   End UnitMap
+             End CmpMap
+       End CmpMap
+ End FrameSet
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          

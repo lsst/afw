@@ -19,14 +19,16 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 
-from __future__ import absolute_import, division, print_function
+import os
 import unittest
+import itertools
 import numpy as np
 from numpy.testing import assert_allclose
 import lsst.utils.tests
 from lsst.daf.base import PropertyList
 from lsst.geom import Point2D, Point2I, Extent2I, Box2D, Box2I
-from lsst.afw.geom import SipApproximation, makeSkyWcs, getPixelToIntermediateWorldCoords
+from lsst.afw.geom import (SipApproximation, makeSkyWcs, getPixelToIntermediateWorldCoords, SkyWcs,
+                           calculateSipWcsHeader)
 
 
 def makePropertyListFromDict(md):
@@ -425,6 +427,12 @@ class SipApproximationTestCases(lsst.utils.tests.TestCase):
             'RADESYS': 'FK5'
         }
 
+        # 'jointcal' data are from the jointcal solution of HSC
+        # visit=30600 ccd=88 tract=16973.
+        # This doesn't have a direct TAN-SIP representation.
+        self.jointcal = SkyWcs.readFits(os.path.join(os.path.abspath(os.path.dirname(__file__)), "data",
+                                        "jointcal_wcs-0030600-088.fits"))
+
     def compareSolution(self, md, approx):
         for p, q in packedRange(md["A_ORDER"]):
             self.assertFloatsAlmostEqual(md.get(f"A_{p}_{q}", 0.0), approx.getA(p, q),
@@ -515,6 +523,78 @@ class SipApproximationTestCases(lsst.utils.tests.TestCase):
 
         run(self.calexp03, order=3)
         run(self.wcs22, order=8)
+
+    def testCalculateSipWcsHeader(self):
+        """Test the calculateSipWcsHeader function
+
+        This function not only generates the coefficients approximating the WCS,
+        but allows creating a new ``SkyWcs`` using those coefficients.
+        """
+        def run(original, width, height, order, spacing=20, skyTol=1.0e-4, pixTol=1.0e-8):
+            """Run calculateSipWcsHeader and evaluate performance
+
+            Parameters
+            ----------
+            original : `lsst.afw.geom.SkyWcs`
+                Original WCS to approximate with SIP.
+            width, height : `int`
+                Dimensions of the image.
+            order : `int`
+                SIP order (equal to the maximum sum of the polynomial exponents).
+            spacing : `float`
+                Spacing between sample points.
+            skyTol : `float`
+                Tolerance in arcseconds for comparing sky positions.
+            pixTol : `float`
+                Tolerance in pixels for comparing pixel positions.
+
+            Returns
+            -------
+            wcs : `lsst.afw.geom.SkyWcs`
+                SIP WCS.
+            """
+            # Get new SIP WCS
+            bbox = Box2I(Point2I(0, 0), Extent2I(width, height))
+            header = calculateSipWcsHeader(original, order, bbox, spacing)
+            wcs = makeSkyWcs(header)
+
+            # Evaluate performance
+            points = [Point2D(xx, yy) for xx, yy in itertools.product(range(0, width, spacing),
+                                                                      range(0, height, spacing))]
+            coord1 = [original.pixelToSky(pp) for pp in points]
+            coord2 = [wcs.pixelToSky(pp) for pp in points]
+            offsets = (c1.getTangentPlaneOffset(c2) for c1, c2 in zip(coord1, coord2))
+            offsets = np.array([(off[0].asArcseconds(), off[1].asArcseconds()) for off in offsets])
+
+            self.assertFloatsAlmostEqual(offsets[0].mean(), 0.0, atol=skyTol)
+            self.assertFloatsAlmostEqual(offsets[1].mean(), 0.0, atol=skyTol)
+            self.assertFloatsAlmostEqual(offsets.mean(), 0.0, atol=skyTol)
+            self.assertFloatsAlmostEqual(offsets[0].std(), 0.0, atol=skyTol)
+            self.assertFloatsAlmostEqual(offsets[1].std(), 0.0, atol=skyTol)
+            self.assertFloatsAlmostEqual(offsets.std(), 0.0, atol=skyTol)
+            self.assertFloatsAlmostEqual(np.abs(offsets).max(), 0.0, atol=skyTol)
+
+            # Not comparing to absolute round-trip, but relative to the
+            # original WCS round-trip. This is an important distinction: we're
+            # recreating the original WCS, along with all its flaws.
+            roundTrip = np.array([wcs.skyToPixel(wcs.pixelToSky(pp)) for pp in points])
+            roundTrip -= np.array([original.skyToPixel(original.pixelToSky(pp)) for pp in points])
+
+            self.assertFloatsAlmostEqual(roundTrip[0].mean(), 0.0, atol=pixTol)
+            self.assertFloatsAlmostEqual(roundTrip[1].mean(), 0.0, atol=pixTol)
+            self.assertFloatsAlmostEqual(roundTrip.mean(), 0.0, atol=pixTol)
+            self.assertFloatsAlmostEqual(roundTrip[0].std(), 0.0, atol=pixTol)
+            self.assertFloatsAlmostEqual(roundTrip[1].std(), 0.0, atol=pixTol)
+            self.assertFloatsAlmostEqual(roundTrip.std(), 0.0, atol=pixTol)
+            self.assertFloatsAlmostEqual(np.abs(roundTrip).max(), 0.0, atol=pixTol)
+
+            return wcs
+
+        run(makeSkyWcs(makePropertyListFromDict(self.calexp03)),
+            self.calexp03["NAXES1"], self.calexp03["NAXES2"], order=4, skyTol=1.0e-4)
+        run(makeSkyWcs(makePropertyListFromDict(self.wcs22)),
+            self.wcs22["NAXES1"], self.wcs22["NAXES2"], order=8, skyTol=2.0e-4)
+        run(self.jointcal, 2048, 4176, order=9)
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
