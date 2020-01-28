@@ -264,24 +264,24 @@ double SipApproximation::getA(int p, int q) const {
 }
 
 double SipApproximation::getB(int p, int q) const {
-    return _solution->b[_solution->a.getBasis().index(p, q)];
+    return _solution->b[_solution->b.getBasis().index(p, q)];
 }
 
 double SipApproximation::getAP(int p, int q) const {
-    return _solution->ap[_solution->a.getBasis().index(p, q)];
+    return _solution->ap[_solution->ap.getBasis().index(p, q)];
 }
 
 double SipApproximation::getBP(int p, int q) const {
-    return _solution->bp[_solution->a.getBasis().index(p, q)];
+    return _solution->bp[_solution->bp.getBasis().index(p, q)];
 }
 
 namespace {
 
 template <typename F>
-Eigen::MatrixXd makeCoefficientMatrix(std::size_t size, F getter) {
-    Eigen::MatrixXd result = Eigen::MatrixXd::Zero(size, size);
-    for (std::size_t p = 0; p < size; ++p) {
-        for (std::size_t q = 0; q < size; ++q) {
+Eigen::MatrixXd makeCoefficientMatrix(std::size_t order, F getter) {
+    Eigen::MatrixXd result = Eigen::MatrixXd::Zero(order + 1, order + 1);
+    for (std::size_t p = 0; p <= order; ++p) {
+        for (std::size_t q = 0; q <= order - p; ++q) {
             result(p, q) = getter(p, q);
         }
     }
@@ -292,28 +292,28 @@ Eigen::MatrixXd makeCoefficientMatrix(std::size_t size, F getter) {
 
 Eigen::MatrixXd SipApproximation::getA() const noexcept {
     return makeCoefficientMatrix(
-        _solution->a.getBasis().size(),
+        getOrder(),
         [this](int p, int q) { return getA(p, q); }
     );
 }
 
 Eigen::MatrixXd SipApproximation::getB() const noexcept {
     return makeCoefficientMatrix(
-        _solution->b.getBasis().size(),
+        getOrder(),
         [this](int p, int q) { return getB(p, q); }
     );
 }
 
 Eigen::MatrixXd SipApproximation::getAP() const noexcept {
     return makeCoefficientMatrix(
-        _solution->ap.getBasis().size(),
+        getOrder(),
         [this](int p, int q) { return getAP(p, q); }
     );
 }
 
 Eigen::MatrixXd SipApproximation::getBP() const noexcept {
     return makeCoefficientMatrix(
-        _solution->bp.getBasis().size(),
+        getOrder(),
         [this](int p, int q) { return getBP(p, q); }
     );
 }
