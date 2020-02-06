@@ -271,7 +271,7 @@ ExposureInfo::FitsWriteData ExposureInfo::_startWriteFits(lsst::geom::Point2I co
     // image coordinates. When saving an image we convert from pixel to index coordinates.
     // In the case where this image is a parent image, the reference pixels are unchanged
     // by this transformation
-    if (hasWcs()) {
+    if (hasWcs() && getWcs()->isFits()) {
         // Try to save the WCS as FITS-WCS metadata; if an exact representation
         // is not possible then skip it
         auto shift = lsst::geom::Extent2D(lsst::geom::Point2I(0, 0) - xy0);

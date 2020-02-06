@@ -144,3 +144,4 @@ from .skyWcs import *
 from .transformFromString import *
 from . import wcsUtils
 from .sipApproximation import *
+from .calculateSipWcsHeader import *
