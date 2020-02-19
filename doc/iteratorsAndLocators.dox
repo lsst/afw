@@ -147,7 +147,8 @@ Set the %image (but not the mask or variance) to a ramp
 That didn't gain us much, did it?  The code's a little messier than using
 \c x_iterator.   But now we can add code to calculate the smoothed
 %image.  First make an output image, and copy the input pixels:
-\until out2.assign
+\skip ImageT
+\until out.assign
 (we didn't need to copy all of them, just the ones around the edge
 that we won't smooth, but this is an easy way to do it).
 
@@ -160,11 +161,13 @@ but \c lsst::afw::math can do convolutions for you).
 
 Here's a faster way to do the same thing (the use of an \c Image::Ptr is
 just for variety)
+\skip std::shared_ptr
 \until }
 \until }
 The \c xy_loc::cached_location_t variables remember relative positions.
 
 We can rewrite this to move setting \c nw, \c se etc. out of the loop:
+\skip xy_loc
 \until }
 \until }
 
@@ -173,6 +176,7 @@ change the coefficients, but that'd slow things down for integer
 images (such as the one here); but we can normalise after the fact
 by making an Image that shares pixels with the central part of \c out2
 and manipulating it via overloaded \c operator/=
+\skip {
 \until }
 
 N.b. you can use the iterator embedded in the locator directly if you really want to, e.g.
@@ -183,6 +187,7 @@ Note that this isn't quite the same \c x_iterator as before, due to the need to 
 move the underlying \c xy_locator.
 
 Finally write some output files and close out \c main():
+\skip out.writeFits
 \until }
 
 \example maskedImage2.cc
