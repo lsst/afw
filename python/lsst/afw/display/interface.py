@@ -74,7 +74,7 @@ def _makeDisplayImpl(display, backend, *args, **kwargs):
     .. code-block:: py
 
          import lsst.afw.display as afwDisplay
-         display = afwDisplay.Display(display=1, backend="ds9")
+         display = afwDisplay.Display(backend="ds9")
 
      would call
 
