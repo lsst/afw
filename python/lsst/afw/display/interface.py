@@ -429,7 +429,7 @@ class Display:
 
            colorGenerator = interface.maskColorGenerator(omitBW=True)
            for p in planeList:
-               print p, next(colorGenerator)
+               print(p, next(colorGenerator))
         """
         _maskColors = [WHITE, BLACK, RED, GREEN,
                        BLUE, CYAN, MAGENTA, YELLOW, ORANGE]
