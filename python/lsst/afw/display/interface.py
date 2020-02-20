@@ -70,14 +70,18 @@ def _makeDisplayImpl(display, backend, *args, **kwargs):
     Examples
     --------
     E.g.
+
     .. code-block:: py
 
          import lsst.afw.display as afwDisplay
          display = afwDisplay.Display(display=1, backend="ds9")
+
      would call
+
     .. code-block:: py
 
          _makeDisplayImpl(..., "ds9", 1)
+
     and import the ds9 implementation of ``DisplayImpl`` from `lsst.display.ds9`
     """
     _disp = None
