@@ -1046,7 +1046,7 @@ void writeKeyFromProperty(Fits &fits, daf::base::PropertySet const &metadata, st
     } else if (valueType == typeid(nullptr_t)) {
         if (metadata.isArray(key)) {
             // Write multiple undefined values for the same key
-            std::vector<std::string> tmp = metadata.getArray<std::string>(key);
+            auto tmp = metadata.getArray<nullptr_t>(key);
             for (std::size_t i = 0; i != tmp.size(); ++i) {
                 writeKeyImpl(fits, key.c_str(), comment);
             }
