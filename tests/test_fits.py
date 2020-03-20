@@ -122,6 +122,12 @@ class FitsTestCase(lsst.utils.tests.TestCase):
         for key in others:
             self.assertEqual(metadata.valueCount(key), 1, key)
 
+    def testUndefinedVector(self):
+        header = PropertyList()
+        header.set("FOO", [None, None])
+        metadata = self.writeAndRead(header)
+        self.assertEqual(metadata.getArray("FOO"), [None, None])
+
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
