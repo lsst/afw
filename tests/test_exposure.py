@@ -78,7 +78,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         self.md = maskedImageMD
         self.psf = DummyPsf(2.0)
         self.detector = DetectorWrapper().detector
-        self.extras = {"misc": DummyPsf(3.5)}
+        self.extras = {"MISC": DummyPsf(3.5)}
 
         self.exposureBlank = afwImage.ExposureF()
         self.exposureMiOnly = afwImage.makeExposure(maskedImage)
