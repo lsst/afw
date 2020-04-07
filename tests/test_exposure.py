@@ -476,7 +476,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
 
             readInfo = readExposure.getInfo()
             for key, value in self.extras.items():
-                self.assertEqual(value, readInfo.getComponent(key))
+                self.assertEqual(value, readInfo.getComponent(key.upper()))
 
             psf = readExposure.getPsf()
             self.assertIsNotNone(psf)
