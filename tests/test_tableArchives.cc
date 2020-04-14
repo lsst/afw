@@ -541,8 +541,7 @@ BOOST_AUTO_TEST_CASE(FixedKernel) {
     std::shared_ptr<afwMath::FixedKernel> p2 = roundtrip(p1.get());
     BOOST_CHECK_EQUAL(p1->getWidth(), p2->getWidth());
     BOOST_CHECK_EQUAL(p1->getHeight(), p2->getHeight());
-    BOOST_CHECK_EQUAL(p1->getCtrX(), p2->getCtrX());
-    BOOST_CHECK_EQUAL(p1->getCtrY(), p2->getCtrY());
+    BOOST_CHECK_EQUAL(p1->getCtr(), p2->getCtr());
     BOOST_CHECK_EQUAL(p1->getNSpatialParameters(), p2->getNSpatialParameters());
     BOOST_CHECK_EQUAL(p1->getNKernelParameters(), p2->getNKernelParameters());
     afwImage::Image<double> image2(p2->getDimensions());
@@ -560,8 +559,7 @@ BOOST_AUTO_TEST_CASE(AnalyticKernel1) {
     std::shared_ptr<afwMath::AnalyticKernel> p2 = roundtrip(p1.get());
     BOOST_CHECK_EQUAL(p1->getWidth(), p2->getWidth());
     BOOST_CHECK_EQUAL(p1->getHeight(), p2->getHeight());
-    BOOST_CHECK_EQUAL(p1->getCtrX(), p2->getCtrX());
-    BOOST_CHECK_EQUAL(p1->getCtrY(), p2->getCtrY());
+    BOOST_CHECK_EQUAL(p1->getCtr(), p2->getCtr());
     BOOST_CHECK_EQUAL(p1->getNSpatialParameters(), p2->getNSpatialParameters());
     BOOST_CHECK_EQUAL(p1->getNKernelParameters(), p2->getNKernelParameters());
     compareFunctions(*p1->getKernelFunction(), *p2->getKernelFunction());
@@ -585,8 +583,7 @@ BOOST_AUTO_TEST_CASE(AnalyticKernel2) {
     std::shared_ptr<afwMath::AnalyticKernel> p2 = roundtrip(p1.get());
     BOOST_CHECK_EQUAL(p1->getWidth(), p2->getWidth());
     BOOST_CHECK_EQUAL(p1->getHeight(), p2->getHeight());
-    BOOST_CHECK_EQUAL(p1->getCtrX(), p2->getCtrX());
-    BOOST_CHECK_EQUAL(p1->getCtrY(), p2->getCtrY());
+    BOOST_CHECK_EQUAL(p1->getCtr(), p2->getCtr());
     BOOST_CHECK_EQUAL(p1->getNSpatialParameters(), p2->getNSpatialParameters());
     BOOST_CHECK_EQUAL(p1->getNKernelParameters(), p2->getNKernelParameters());
     compareFunctions(*p1->getKernelFunction(), *p2->getKernelFunction());
@@ -620,8 +617,7 @@ BOOST_AUTO_TEST_CASE(LinearCombinationKernel1) {
     std::shared_ptr<afwMath::LinearCombinationKernel> p2 = roundtrip(p1.get());
     BOOST_CHECK_EQUAL(p1->getWidth(), p2->getWidth());
     BOOST_CHECK_EQUAL(p1->getHeight(), p2->getHeight());
-    BOOST_CHECK_EQUAL(p1->getCtrX(), p2->getCtrX());
-    BOOST_CHECK_EQUAL(p1->getCtrY(), p2->getCtrY());
+    BOOST_CHECK_EQUAL(p1->getCtr(), p2->getCtr());
     BOOST_CHECK_EQUAL(p1->getNSpatialParameters(), p2->getNSpatialParameters());
     BOOST_CHECK_EQUAL(p1->getNKernelParameters(), p2->getNKernelParameters());
     BOOST_CHECK(p1->getSpatialParameters() == p2->getSpatialParameters());
@@ -654,8 +650,7 @@ BOOST_AUTO_TEST_CASE(LinearCombinationKernel2) {
     std::shared_ptr<afwMath::LinearCombinationKernel> p2 = roundtrip(p1.get());
     BOOST_CHECK_EQUAL(p1->getWidth(), p2->getWidth());
     BOOST_CHECK_EQUAL(p1->getHeight(), p2->getHeight());
-    BOOST_CHECK_EQUAL(p1->getCtrX(), p2->getCtrX());
-    BOOST_CHECK_EQUAL(p1->getCtrY(), p2->getCtrY());
+    BOOST_CHECK_EQUAL(p1->getCtr(), p2->getCtr());
     BOOST_CHECK_EQUAL(p1->getNSpatialParameters(), p2->getNSpatialParameters());
     BOOST_CHECK_EQUAL(p1->getNKernelParameters(), p2->getNKernelParameters());
     BOOST_CHECK(p1->getSpatialParameters() == p2->getSpatialParameters());

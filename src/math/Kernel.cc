@@ -188,7 +188,7 @@ lsst::geom::Box2I Kernel::shrinkBBox(lsst::geom::Box2I const &bbox) const {
         throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
     }
     return lsst::geom::Box2I(
-            lsst::geom::Point2I(bbox.getMinX() + getCtrX(), bbox.getMinY() + getCtrY()),
+            lsst::geom::Point2I(bbox.getMin() + lsst::geom::Extent2I(getCtr())),
             lsst::geom::Extent2I(bbox.getWidth() + 1 - getWidth(), bbox.getHeight() + 1 - getHeight()));
 }
 

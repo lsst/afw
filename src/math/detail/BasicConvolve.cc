@@ -189,8 +189,8 @@ void basicConvolve(OutImageT& convolvedImage, InImageT const& inImage,
     int const mImageHeight = inImage.getHeight();
     int const cnvWidth = mImageWidth + 1 - kernel.getWidth();
     int const cnvHeight = mImageHeight + 1 - kernel.getHeight();
-    int const cnvStartX = kernel.getCtrX();
-    int const cnvStartY = kernel.getCtrY();
+    int const cnvStartX = kernel.getCtr().getX();
+    int const cnvStartY = kernel.getCtr().getY();
     int const inStartX = kernel.getPixel().getX();
     int const inStartY = kernel.getPixel().getY();
 
@@ -375,8 +375,8 @@ void convolveWithBruteForce(OutImageT& convolvedImage, InImageT const& inImage, 
     int const kHeight = kernel.getHeight();
     int const cnvWidth = inImageWidth + 1 - kernel.getWidth();
     int const cnvHeight = inImageHeight + 1 - kernel.getHeight();
-    int const cnvStartX = kernel.getCtrX();
-    int const cnvStartY = kernel.getCtrY();
+    int const cnvStartX = kernel.getCtr().getX();
+    int const cnvStartY = kernel.getCtr().getY();
     int const cnvEndX = cnvStartX + cnvWidth;   // end index + 1
     int const cnvEndY = cnvStartY + cnvHeight;  // end index + 1
 

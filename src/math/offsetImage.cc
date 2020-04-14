@@ -94,10 +94,10 @@ std::shared_ptr<ImageT> offsetImage(ImageT const& inImage, float dx, float dy,
     // one to the right to center up the largest coefficients
     //
     if (dKerX < 0) {
-        offsetKernel->setCtrX(offsetKernel->getCtrX() + 1);
+        offsetKernel->setCtr(offsetKernel->getCtr() + lsst::geom::Extent2I(1, 0));
     }
     if (dKerY < 0) {
-        offsetKernel->setCtrY(offsetKernel->getCtrY() + 1);
+        offsetKernel->setCtr(offsetKernel->getCtr() + lsst::geom::Extent2I(0, 1));
     }
 
     offsetKernel->setKernelParameters(std::make_pair(dKerX, dKerY));
