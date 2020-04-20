@@ -60,7 +60,7 @@ namespace python {
  *               `PersistableFacade<suffix>`.
  */
 template <typename T>
-[[deprecated("Use `addPersistableMethods` instead. To be removed after 20.0.0.")]]  // DM-22276
+[[deprecated("Use `addPersistableMethods` instead. To be removed after 20.0.0.")]]  // DM-22814
         void
         declarePersistableFacade(pybind11::module &module, std::string const &suffix) {
     using namespace pybind11::literals;

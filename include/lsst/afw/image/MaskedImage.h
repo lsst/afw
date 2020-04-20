@@ -801,7 +801,7 @@ public:
      *
      * @note operator=() is not equivalent to this command
      */
-    [[deprecated("Use `assign` instead. To be removed after 20.0.0.")]]  // DM-22276
+    [[deprecated("Use `assign` instead. To be removed after 20.0.0.")]]  // DM-22814
             MaskedImage&
             operator<<=(MaskedImage const& rhs);
 

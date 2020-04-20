@@ -125,7 +125,7 @@ SourceMatchVector matchXy(
  * @param[in] radius   match radius (pixels)
  * @param[in] closest  if true then just return the closest match
  */
-[[deprecated("Use overloads that take `MatchControl` instead. To be removed after 20.0.0.")]]  // DM-22276
+[[deprecated("Use overloads that take `MatchControl` instead. To be removed after 20.0.0.")]]  // DM-22814
         SourceMatchVector
         matchXy(SourceCatalog const &cat1, SourceCatalog const &cat2, double radius, bool closest);
 
@@ -141,7 +141,7 @@ SourceMatchVector matchXy(
  * @param[in] symmetric    if cat to `true` symmetric matches are produced: i.e.
  *                         if (s1, s2, d) is reported, then so is (s2, s1, d).
  */
-[[deprecated("Use overloads that take `MatchControl` instead. To be removed after 20.0.0.")]]  // DM-22276
+[[deprecated("Use overloads that take `MatchControl` instead. To be removed after 20.0.0.")]]  // DM-22814
         SourceMatchVector
         matchXy(SourceCatalog const &cat, double radius, bool symmetric);
 
@@ -193,7 +193,7 @@ std::vector<Match<typename Cat::Record, typename Cat::Record> > matchRaDec(
  * This is instantiated for Simple-Simple, Simple-Source, and Source-Source catalog combinations.
  */
 template <typename Cat1, typename Cat2>
-[[deprecated("Use overloads that take `MatchControl` instead. To be removed after 20.0.0.")]]  // DM-22276
+[[deprecated("Use overloads that take `MatchControl` instead. To be removed after 20.0.0.")]]  // DM-22814
         std::vector<Match<typename Cat1::Record, typename Cat2::Record> >
         matchRaDec(Cat1 const &cat1, Cat2 const &cat2, lsst::geom::Angle radius, bool closest);
 
@@ -212,7 +212,7 @@ template <typename Cat1, typename Cat2>
  * This is instantiated for Simple and Source catalogs.
  */
 template <typename Cat>
-[[deprecated("Use overloads that take `MatchControl` instead. To be removed after 20.0.0.")]]  // DM-22276
+[[deprecated("Use overloads that take `MatchControl` instead. To be removed after 20.0.0.")]]  // DM-22814
         std::vector<Match<typename Cat::Record, typename Cat::Record> >
         matchRaDec(Cat const &cat, lsst::geom::Angle radius, bool symmetric);
 

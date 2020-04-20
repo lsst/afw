@@ -239,7 +239,7 @@ public:
      *
      * @deprecated Use getCtr instead
      */
-    [[deprecated("Use `getCtr` instead. To be removed after 20.0.0.")]]  // DM-22276
+    [[deprecated("Use `getCtr` instead. To be removed after 20.0.0.")]]  // DM-22814
             inline int
             getCtrX() const {
         return _ctrX;
@@ -250,7 +250,7 @@ public:
      *
      * @deprecated Use getCtr instead
      */
-    [[deprecated("Use `getCtr` instead. To be removed after 20.0.0.")]]  // DM-22276
+    [[deprecated("Use `getCtr` instead. To be removed after 20.0.0.")]]  // DM-22814
             inline int
             getCtrY() const {
         return _ctrY;
@@ -343,7 +343,7 @@ public:
      *
      * @deprecated Use setCtr instead
      */
-    [[deprecated("Use `setCtr` instead. To be removed after 20.0.0.")]]  // DM-22276
+    [[deprecated("Use `setCtr` instead. To be removed after 20.0.0.")]]  // DM-22814
             inline void
             setCtrX(int ctrX) {
         _ctrX = ctrX;
@@ -355,7 +355,7 @@ public:
      *
      * @deprecated Use setCtr instead
      */
-    [[deprecated("Use `setCtr` instead. To be removed after 20.0.0.")]]  // DM-22276
+    [[deprecated("Use `setCtr` instead. To be removed after 20.0.0.")]]  // DM-22814
             inline void
             setCtrY(int ctrY) {
         _ctrY = ctrY;
