@@ -145,10 +145,10 @@ inline typename OutImageT::SinglePixel convolveAtAPoint(
  * are set to the corresponding pixels of the input %image and (if there is a mask) the mask EDGE bit is set.
  *
  * The border of edge pixels has size:
- * - kernel.getCtrX() along the left edge
- * - kernel.getCtrY() along the bottom edge
- * - kernel.getWidth()  - 1 - kernel.getCtrX() along the right edge
- * - kernel.getHeight() - 1 - kernel.getCtrY() along the top edge
+ * - kernel.getCtr().getX() along the left edge
+ * - kernel.getCtr().getY() along the bottom edge
+ * - kernel.getWidth()  - 1 - kernel.getCtr().getX() along the right edge
+ * - kernel.getHeight() - 1 - kernel.getCtr().getY() along the top edge
  * You can obtain a bounding box for the good pixels in the convolved image
  * from a bounding box for the entire image using the Kernel method shrinkBBox.
  *

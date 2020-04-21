@@ -63,7 +63,7 @@ namespace math {
 // the warping kernels are designed to work in two cases
 //    0 < x < 1  and ctrX=(size-1)/2
 //    -1 < x < 0  and ctrX=(size+1)/2
-// (and analogously for y).  Note that to get the second case, Kernel::setCtrX(1) must be
+// (and analogously for y).  Note that to get the second case, Kernel::setCtr(1, y) must be
 // called before calling Kernel::setKernelParameter().  [see afw::math::offsetImage() for
 // an example]
 //

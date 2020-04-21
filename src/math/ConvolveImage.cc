@@ -69,8 +69,8 @@ inline void setEdgePixels(OutImageT& outImage, Kernel const& kernel, InImageT co
     const unsigned int imHeight = outImage.getHeight();
     const unsigned int kWidth = kernel.getWidth();
     const unsigned int kHeight = kernel.getHeight();
-    const unsigned int kCtrX = kernel.getCtrX();
-    const unsigned int kCtrY = kernel.getCtrY();
+    const unsigned int kCtrX = kernel.getCtr().getX();
+    const unsigned int kCtrY = kernel.getCtr().getY();
 
     const typename OutImageT::SinglePixel edgePixel =
             math::edgePixel<OutImageT>(typename image::detail::image_traits<OutImageT>::image_category());
@@ -121,8 +121,8 @@ inline void setEdgePixels(OutImageT& outImage, Kernel const& kernel, InImageT co
     const unsigned int imHeight = outImage.getHeight();
     const unsigned int kWidth = kernel.getWidth();
     const unsigned int kHeight = kernel.getHeight();
-    const unsigned int kCtrX = kernel.getCtrX();
-    const unsigned int kCtrY = kernel.getCtrY();
+    const unsigned int kCtrX = kernel.getCtr().getX();
+    const unsigned int kCtrY = kernel.getCtr().getY();
 
     const typename OutImageT::SinglePixel edgePixel =
             math::edgePixel<OutImageT>(typename image::detail::image_traits<OutImageT>::image_category());

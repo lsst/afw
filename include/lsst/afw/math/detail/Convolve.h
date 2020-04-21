@@ -49,10 +49,10 @@ namespace detail {
  *
  * convolvedImage must be the same size as inImage.
  * convolvedImage has a border in which the output pixels are not set. This border has size:
- * - kernel.getCtrX() along the left edge
- * - kernel.getCtrY() along the bottom edge
- * - kernel.getWidth()  - 1 - kernel.getCtrX() along the right edge
- * - kernel.getHeight() - 1 - kernel.getCtrY() along the top edge
+ * - kernel.getCtr().getX() along the left edge
+ * - kernel.getCtr().getY() along the bottom edge
+ * - kernel.getWidth()  - 1 - kernel.getCtr().getX() along the right edge
+ * - kernel.getHeight() - 1 - kernel.getCtr().getY() along the top edge
  *
  * @param[out] convolvedImage convolved %image
  * @param[in] inImage %image to convolve
@@ -126,10 +126,10 @@ void basicConvolve(OutImageT& convolvedImage, InImageT const& inImage,
  *
  * convolvedImage must be the same size as inImage.
  * convolvedImage has a border in which the output pixels are not set. This border has size:
- * - kernel.getCtrX() along the left edge
- * - kernel.getCtrY() along the bottom edge
- * - kernel.getWidth()  - 1 - kernel.getCtrX() along the right edge
- * - kernel.getHeight() - 1 - kernel.getCtrY() along the top edge
+ * - kernel.getCtr().getX() along the left edge
+ * - kernel.getCtr().getY() along the bottom edge
+ * - kernel.getWidth()  - 1 - kernel.getCtr().getX() along the right edge
+ * - kernel.getHeight() - 1 - kernel.getCtr().getY() along the top edge
  *
  * @param[out] convolvedImage convolved %image
  * @param[in] inImage %image to convolve
