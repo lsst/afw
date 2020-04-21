@@ -118,7 +118,7 @@ public:
      */
     [[deprecated(
             "Omit `style` parameter, and pass it to `Background::getImage` instead. To be removed after "
-            "20.0.0.")]]  // DM-22276
+            "20.0.0.")]]  // DM-22814
             BackgroundControl(
                     Interpolate::Style const style, int const nxSample = 10, int const nySample = 10,
                     UndersampleStyle const undersampleStyle = THROW_EXCEPTION,
@@ -155,7 +155,7 @@ public:
      */
     [[deprecated(
             "Omit `style` parameter, and pass it to `Background::getImage` instead. To be removed after "
-            "20.0.0.")]]  // DM-22276
+            "20.0.0.")]]  // DM-22814
             BackgroundControl(std::string const& style, int const nxSample = 10, int const nySample = 10,
                               std::string const& undersampleStyle = "THROW_EXCEPTION",
                               StatisticsControl const sctrl = StatisticsControl(),
@@ -198,14 +198,14 @@ public:
     }
 
     [[deprecated(
-            "Replaced by passing style to `Background::getImage`. To be removed after 20.0.0.")]]  // DM-22276
+            "Replaced by passing style to `Background::getImage`. To be removed after 20.0.0.")]]  // DM-22814
             void
             setInterpStyle(Interpolate::Style const style) {
         _style = style;
     }
     // overload to take a string
     [[deprecated(
-            "Replaced by passing style to `Background::getImage`. To be removed after 20.0.0.")]]  // DM-22276
+            "Replaced by passing style to `Background::getImage`. To be removed after 20.0.0.")]]  // DM-22814
             void
             setInterpStyle(std::string const& style) {
         _style = math::stringToInterpStyle(style);
@@ -222,7 +222,7 @@ public:
     int getNxSample() const { return _nxSample; }
     int getNySample() const { return _nySample; }
     [[deprecated(
-            "Replaced by passing style to `Background::getImage`. To be removed after 20.0.0.")]]  // DM-22276
+            "Replaced by passing style to `Background::getImage`. To be removed after 20.0.0.")]]  // DM-22814
             Interpolate::Style
             getInterpStyle() const {
         if (_style < 0 || _style >= Interpolate::NUM_STYLES) {
@@ -244,7 +244,7 @@ public:
     std::shared_ptr<ApproximateControl const> getApproximateControl() const { return _actrl; }
 
 private:
-    // TODO: remove _style member in DM-22276
+    // TODO: remove _style member in DM-22814
     Interpolate::Style _style;           // style of interpolation to use
     int _nxSample;                       // number of grid squares to divide image into to sample in x
     int _nySample;                       // number of grid squares to divide image into to sample in y
@@ -357,7 +357,7 @@ public:
      */
     template <typename PixelT>
     [[deprecated(
-            "Call an overload with an `interpStyle` parameter. To be removed after 20.0.0.")]]  // DM-22276
+            "Call an overload with an `interpStyle` parameter. To be removed after 20.0.0.")]]  // DM-22814
             std::shared_ptr<lsst::afw::image::Image<PixelT>>
             getImage() const {
         return getImage<PixelT>(_bctrl->getInterpStyle(), _bctrl->getUndersampleStyle());
@@ -535,7 +535,7 @@ public:
      * This can be a very costly function to get a single pixel. If you want an image, use the getImage()
      * method.
      */
-    [[deprecated("Use `getImage` instead. To be removed after 20.0.0.")]]  // DM-22276
+    [[deprecated("Use `getImage` instead. To be removed after 20.0.0.")]]  // DM-22814
             double
             getPixel(Interpolate::Style const style, int const x, int const y) const;
     /**
@@ -545,7 +545,7 @@ public:
      *
      * @deprecated New code should specify the interpolation style in getPixel, not the ctor
      */
-    [[deprecated("Use `getImage` instead. To be removed after 20.0.0.")]]  // DM-22276
+    [[deprecated("Use `getImage` instead. To be removed after 20.0.0.")]]  // DM-22814
             double
             getPixel(int const x, int const y) const {
         // I think this should be LOCAL because the original getPixel used 0-based indices

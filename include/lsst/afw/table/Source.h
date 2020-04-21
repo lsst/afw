@@ -381,7 +381,7 @@ public:
      */
     [
             [deprecated("Use `getSchema().getAliasMap()->get(\"slot_Centroid\")` instead. To be removed "
-                        "after 20.0.0.")]]  // DM-22276
+                        "after 20.0.0.")]]  // DM-22814
             std::string
             getCentroidDefinition() const {
         return getSchema().getAliasMap()->get(getCentroidSlot().getAlias());
@@ -392,7 +392,7 @@ public:
      *
      *  @deprecated in favor of `getCentroidSlot().isValid()`.
      */
-    [[deprecated("Use `getCentroidSlot().isValid()` instead. To be removed after 20.0.0.")]]  // DM-22276
+    [[deprecated("Use `getCentroidSlot().isValid()` instead. To be removed after 20.0.0.")]]  // DM-22814
             bool
             hasCentroidSlot() const {
         return getCentroidSlot().isValid();
@@ -405,7 +405,7 @@ public:
      */
     [
             [deprecated("Use `getCentroidSlot().getMeasKey()` instead. To be removed after "
-                        "20.0.0.")]]  // DM-22276
+                        "20.0.0.")]]  // DM-22814
             CentroidSlotDefinition::MeasKey
             getCentroidKey() const {
         return getCentroidSlot().getMeasKey();
@@ -418,7 +418,7 @@ public:
      */
     [
             [deprecated("Use `getCentroidSlot().getErrKey()` instead. To be removed after "
-                        "20.0.0.")]]  // DM-22276
+                        "20.0.0.")]]  // DM-22814
             CentroidSlotDefinition::ErrKey
             getCentroidErrKey() const {
         return getCentroidSlot().getErrKey();
@@ -429,7 +429,7 @@ public:
      *
      *  @deprecated in favor of `getCentroidSlot().getFlagKey()`.
      */
-    [[deprecated("Use `getCentroidSlot().getFlagKey()` instead. To be removed after 20.0.0.")]]  // DM-22276
+    [[deprecated("Use `getCentroidSlot().getFlagKey()` instead. To be removed after 20.0.0.")]]  // DM-22814
             Key<Flag>
             getCentroidFlagKey() const {
         return getCentroidSlot().getFlagKey();
@@ -459,7 +459,7 @@ public:
      */
     [
             [deprecated("Use `getSchema().getAliasMap()->get(\"slot_Shape\")` instead. To be removed after "
-                        "20.0.0.")]]  // DM-22276
+                        "20.0.0.")]]  // DM-22814
             std::string
             getShapeDefinition() const {
         return getSchema().getAliasMap()->get(getShapeSlot().getAlias());
@@ -470,7 +470,7 @@ public:
      *
      *  @deprecated in favor of `getShapeSlot().isValid()`.
      */
-    [[deprecated("Use `getShapeSlot().isValid()` instead. To be removed after 20.0.0.")]]  // DM-22276
+    [[deprecated("Use `getShapeSlot().isValid()` instead. To be removed after 20.0.0.")]]  // DM-22814
             bool
             hasShapeSlot() const {
         return getShapeSlot().isValid();
@@ -481,7 +481,7 @@ public:
      *
      *  @deprecated in favor of `getShapeSlot().getMeasKey()`.
      */
-    [[deprecated("Use `getShapeSlot().getMeasKey()` instead. To be removed after 20.0.0.")]]  // DM-22276
+    [[deprecated("Use `getShapeSlot().getMeasKey()` instead. To be removed after 20.0.0.")]]  // DM-22814
             ShapeSlotDefinition::MeasKey
             getShapeKey() const {
         return getShapeSlot().getMeasKey();
@@ -492,7 +492,7 @@ public:
      *
      *  @deprecated in favor of `getShapeSlot().getErrKey()`.
      */
-    [[deprecated("Use `getShapeSlot().getErrKey()` instead. To be removed after 20.0.0.")]]  // DM-22276
+    [[deprecated("Use `getShapeSlot().getErrKey()` instead. To be removed after 20.0.0.")]]  // DM-22814
             ShapeSlotDefinition::ErrKey
             getShapeErrKey() const {
         return getShapeSlot().getErrKey();
@@ -503,7 +503,7 @@ public:
      *
      *  @deprecated in favor of `getShapeSlot().getFlagKey()`.
      */
-    [[deprecated("Use `getShapeSlot().getFlagKey()` instead. To be removed after 20.0.0.")]]  // DM-22276
+    [[deprecated("Use `getShapeSlot().getFlagKey()` instead. To be removed after 20.0.0.")]]  // DM-22814
             Key<Flag>
             getShapeFlagKey() const {
         return getShapeSlot().getFlagKey();

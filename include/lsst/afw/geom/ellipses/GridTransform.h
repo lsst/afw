@@ -72,7 +72,7 @@ public:
      * @deprecated invert is deprecated in favor of inverted
      */
     lsst::geom::LinearTransform inverted() const;
-    [[deprecated("Use `inverted` instead. To be removed after 20.0.0.")]]  // DM-22276
+    [[deprecated("Use `inverted` instead. To be removed after 20.0.0.")]]  // DM-22814
             lsst::geom::LinearTransform
             invert() const {
         return inverted();

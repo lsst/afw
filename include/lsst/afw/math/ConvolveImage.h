@@ -204,7 +204,7 @@ void convolve(OutImageT& convolvedImage, InImageT const& inImage, KernelT const&
  *                       copy edge pixels from input and set EDGE bit of mask
  */
 template <typename OutImageT, typename InImageT, typename KernelT>
-[[deprecated("Use `convolve` with a `ConvolutionControl` instead. To be removed after 20.0.0.")]]  // DM-22276
+[[deprecated("Use `convolve` with a `ConvolutionControl` instead. To be removed after 20.0.0.")]]  // DM-22814
         void
         convolve(OutImageT& convolvedImage, InImageT const& inImage, KernelT const& kernel, bool doNormalize,
                  bool doCopyEdge = false);
