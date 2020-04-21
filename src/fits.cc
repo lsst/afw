@@ -13,6 +13,7 @@ extern "C" {
 #include "fitsio2.h"
 }
 
+#include "boost/algorithm/string.hpp"
 #include "boost/regex.hpp"
 #include "boost/filesystem.hpp"
 #include "boost/preprocessor/seq/for_each.hpp"
@@ -789,7 +790,16 @@ void Fits::forEachKey(HeaderIterationFunctor &functor) {
     int i = 1;
     while (i <= nKeys) {
         fits_read_keyn(reinterpret_cast<fitsfile *>(fptr), i, key, value, comment, &status);
-        keyStr = key;
+        // fits_read_keyn does not convert the key case on read, like other fits methods in cfitsio>=3.38
+        // We uppercase to try to be more consistent.
+        std::string upperKey(key);
+        boost::to_upper(upperKey);
+        if (upperKey.compare(key) != 0){
+            LOGLS_WARN("afw.fits",
+                       boost::format("In %s, raising key case on read for key '%s' (for cfitsio>=3.38).") %
+                       BOOST_CURRENT_FUNCTION % key);
+        }
+        keyStr = upperKey;
         valueStr = value;
         commentStr = comment;
         ++i;
@@ -969,6 +979,13 @@ void MetadataIterationFunctor::operator()(std::string const &key, std::string co
 
 void writeKeyFromProperty(Fits &fits, daf::base::PropertySet const &metadata, std::string const &key,
                           char const *comment = 0) {
+    std::string upperKey(key);
+    boost::to_upper(upperKey);
+    if (upperKey.compare(key) != 0){
+        LOGLS_WARN("afw.fits",
+                   boost::format("In %s, cfitsio>=3.38 will raise key case on write ('%s' -> '%s').") %
+                   BOOST_CURRENT_FUNCTION % key % upperKey);
+    }
     std::type_info const &valueType = metadata.typeOf(key);
     if (valueType == typeid(bool)) {
         if (metadata.isArray(key)) {
