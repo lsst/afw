@@ -28,15 +28,8 @@
 #ifndef LSST_AFW_GEOM_H
 #define LSST_AFW_GEOM_H
 
-#include "lsst/afw/geom/Angle.h"
-#include "lsst/afw/geom/Point.h"
-#include "lsst/afw/geom/Extent.h"
-#include "lsst/afw/geom/AffineTransform.h"
-#include "lsst/afw/geom/LinearTransform.h"
-#include "lsst/afw/geom/Box.h"
 #include "lsst/afw/geom/Span.h"
 #include "lsst/afw/geom/SpanSet.h"
-#include "lsst/afw/geom/SpherePoint.h"
 #include "lsst/afw/geom/polygon/Polygon.h"
 #include "lsst/afw/geom/Endpoint.h"
 #include "lsst/afw/geom/Transform.h"
