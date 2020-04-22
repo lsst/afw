@@ -36,10 +36,10 @@ namespace {
 
 std::pair<poly::PolynomialFunction2dYX, poly::PolynomialFunction2dYX> fitSipOneDirection(
     int order,
-    Box2D const & box,
+    lsst::geom::Box2D const & box,
     double svdThreshold,
-    std::vector<Point2D> const & input,
-    std::vector<Point2D> const & output
+    std::vector<lsst::geom::Point2D> const & input,
+    std::vector<lsst::geom::Point2D> const & output
 ) {
     // The scaled polynomial basis evaluates polynomials after mapping the
     // input coordinates from the given box to [-1, 1]x[-1, 1] (for numerical
@@ -69,14 +69,15 @@ std::pair<poly::PolynomialFunction2dYX, poly::PolynomialFunction2dYX> fitSipOneD
 }
 
 // Return a vector of points on a grid, covering the given bounding box.
-std::vector<Point2D> makeGrid(Box2D const & bbox, Extent2I const & shape) {
+std::vector<lsst::geom::Point2D> makeGrid(lsst::geom::Box2D const & bbox,
+                                          lsst::geom::Extent2I const & shape) {
     if (shape.getX() <= 0 || shape.getY() <= 0) {
         throw LSST_EXCEPT(
             pex::exceptions::InvalidParameterError,
             "Grid shape must be positive."
         );
     }
-    std::vector<Point2D> points;
+    std::vector<lsst::geom::Point2D> points;
     points.reserve(shape.getX()*shape.getY());
     double const dx = bbox.getWidth()/shape.getX();
     double const dy = bbox.getHeight()/shape.getY();
@@ -108,12 +109,12 @@ poly::PolynomialFunction2dYX makePolynomialFromCoeffMatrix(ndarray::Array<double
 struct SipApproximation::Grid {
 
     // Set up the grid.
-    Grid(Extent2I const & shape_, SipApproximation const & parent);
+    Grid(lsst::geom::Extent2I const & shape_, SipApproximation const & parent);
 
-    Extent2I const shape;  //  number of grid points in each dimension
-    std::vector<Point2D> dpix1; //  [pixel coords] - CRPIX
-    std::vector<Point2D> siwc;  //  CD^{-1}([intermediate world coords])
-    std::vector<Point2D> dpix2; //  round-tripped version of dpix1 if useInverse, or exactly dpix1
+    lsst::geom::Extent2I const shape;  //  number of grid points in each dimension
+    std::vector<lsst::geom::Point2D> dpix1; //  [pixel coords] - CRPIX
+    std::vector<lsst::geom::Point2D> siwc;  //  CD^{-1}([intermediate world coords])
+    std::vector<lsst::geom::Point2D> dpix2; //  round-tripped version of dpix1 if useInverse, or exactly dpix1
 };
 
 // Private implementation object for SipApproximation that manages the solution
@@ -142,12 +143,12 @@ struct SipApproximation::Solution {
 
     Workspace makeWorkspace() const { return a.makeWorkspace(); }
 
-    Point2D applyForward(Point2D const & dpix, Workspace & ws) const {
-        return dpix + Extent2D(a(dpix, ws), b(dpix, ws));
+    lsst::geom::Point2D applyForward(lsst::geom::Point2D const & dpix, Workspace & ws) const {
+        return dpix + lsst::geom::Extent2D(a(dpix, ws), b(dpix, ws));
     }
 
-    Point2D applyInverse(Point2D const & siwc, Workspace & ws) const {
-        return siwc + Extent2D(ap(siwc, ws), bp(siwc, ws));
+    lsst::geom::Point2D applyInverse(lsst::geom::Point2D const & siwc, Workspace & ws) const {
+        return siwc + lsst::geom::Extent2D(ap(siwc, ws), bp(siwc, ws));
     }
 
     poly::PolynomialFunction2dYX a;
@@ -156,27 +157,27 @@ struct SipApproximation::Solution {
     poly::PolynomialFunction2dYX bp;
 };
 
-SipApproximation::Grid::Grid(Extent2I const & shape_, SipApproximation const & parent) :
+SipApproximation::Grid::Grid(lsst::geom::Extent2I const & shape_, SipApproximation const & parent) :
     shape(shape_),
     dpix1(makeGrid(parent._bbox, shape)),
     siwc(parent._pixelToIwc->applyForward(dpix1))
 {
     // Apply the CRPIX offset to make pix1 into dpix1 (in-place)
-    std::for_each(dpix1.begin(), dpix1.end(), [&parent](Point2D & p){ p -= parent._crpix; });
+    std::for_each(dpix1.begin(), dpix1.end(), [&parent](lsst::geom::Point2D & p){ p -= parent._crpix; });
 
     if (parent._useInverse) {
         // Set from the given inverse of the given pixels-to-iwc transform
         // Note that at this point, siwc is still just iwc, because the scaling by cdInv is later.
         dpix2 = parent._pixelToIwc->applyInverse(siwc);
         // Apply the CRPIX offset to make pix1 into dpix2 (in-place)
-        std::for_each(dpix2.begin(), dpix2.end(), [&parent](Point2D & p){ p -= parent._crpix; });
+        std::for_each(dpix2.begin(), dpix2.end(), [&parent](lsst::geom::Point2D & p){ p -= parent._crpix; });
     } else {
         // Just make dpix2 = dpix1, and hence fit to the true inverse of pixels-to-iwc.
         dpix2 = dpix1;
     }
 
     // Apply the CD^{-1} transform to siwc
-    std::for_each(siwc.begin(), siwc.end(), [&parent](Point2D & p){ p = parent._cdInv(p); });
+    std::for_each(siwc.begin(), siwc.end(), [&parent](lsst::geom::Point2D & p){ p = parent._cdInv(p); });
 }
 
 std::unique_ptr<SipApproximation::Solution> SipApproximation::Solution::fit(
@@ -193,11 +194,11 @@ std::unique_ptr<SipApproximation::Solution> SipApproximation::Solution::fit(
         );
     }
 
-    Box2D boxFwd(parent._bbox);
+    lsst::geom::Box2D boxFwd(parent._bbox);
     boxFwd.shift(-parent._crpix);
     auto fwd = fitSipOneDirection(order, boxFwd, svdThreshold, parent._grid->dpix1, parent._grid->siwc);
 
-    Box2D boxInv;
+    lsst::geom::Box2D boxInv;
     for (auto const & point : parent._grid->siwc) {
         boxInv.include(point);
     }
@@ -208,10 +209,10 @@ std::unique_ptr<SipApproximation::Solution> SipApproximation::Solution::fit(
 
 SipApproximation::SipApproximation(
     std::shared_ptr<TransformPoint2ToPoint2> pixelToIwc,
-    Point2D const & crpix,
+    lsst::geom::Point2D const & crpix,
     Eigen::Matrix2d const & cd,
-    Box2D const & bbox,
-    Extent2I const & gridShape,
+    lsst::geom::Box2D const & bbox,
+    lsst::geom::Extent2I const & gridShape,
     int order,
     bool useInverse,
     double svdThreshold
@@ -220,17 +221,17 @@ SipApproximation::SipApproximation(
     _pixelToIwc(std::move(pixelToIwc)),
     _bbox(bbox),
     _crpix(crpix),
-    _cdInv(LinearTransform(cd).inverted()),
+    _cdInv(lsst::geom::LinearTransform(cd).inverted()),
     _grid(new Grid(gridShape, *this)),
     _solution(Solution::fit(order, svdThreshold, *this))
 {}
 
 SipApproximation::SipApproximation(
     std::shared_ptr<TransformPoint2ToPoint2> pixelToIwc,
-    Point2D const & crpix,
+    lsst::geom::Point2D const & crpix,
     Eigen::Matrix2d const & cd,
-    Box2D const & bbox,
-    Extent2I const & gridShape,
+    lsst::geom::Box2D const & bbox,
+    lsst::geom::Extent2I const & gridShape,
     ndarray::Array<double const, 2> const & a,
     ndarray::Array<double const, 2> const & b,
     ndarray::Array<double const, 2> const & ap,
@@ -241,7 +242,7 @@ SipApproximation::SipApproximation(
     _pixelToIwc(std::move(pixelToIwc)),
     _bbox(bbox),
     _crpix(crpix),
-    _cdInv(LinearTransform(cd).inverted()),
+    _cdInv(lsst::geom::LinearTransform(cd).inverted()),
     _grid(new Grid(gridShape, *this)),
     _solution(
         new Solution(
@@ -318,15 +319,16 @@ Eigen::MatrixXd SipApproximation::getBP() const noexcept {
     );
 }
 
-Point2D SipApproximation::applyForward(Point2D const & pix) const {
+lsst::geom::Point2D SipApproximation::applyForward(lsst::geom::Point2D const & pix) const {
     auto cd = _cdInv.inverted();
     auto ws = _solution->makeWorkspace();
     return cd(_solution->applyForward(pix - _crpix, ws));
 }
 
-std::vector<Point2D> SipApproximation::applyForward(std::vector<Point2D> const & pix) const {
+std::vector<lsst::geom::Point2D> SipApproximation::applyForward(
+        std::vector<lsst::geom::Point2D> const & pix) const {
     auto ws = _solution->makeWorkspace();
-    std::vector<Point2D> iwc;
+    std::vector<lsst::geom::Point2D> iwc;
     iwc.reserve(pix.size());
     auto cd = _cdInv.inverted();
     for (auto const & point : pix) {
@@ -335,14 +337,15 @@ std::vector<Point2D> SipApproximation::applyForward(std::vector<Point2D> const &
     return iwc;
 }
 
-Point2D SipApproximation::applyInverse(Point2D const & iwc) const {
+lsst::geom::Point2D SipApproximation::applyInverse(lsst::geom::Point2D const & iwc) const {
     auto ws = _solution->makeWorkspace();
     return _solution->applyInverse(_cdInv(iwc), ws) + _crpix;
 }
 
-std::vector<Point2D> SipApproximation::applyInverse(std::vector<Point2D> const & iwc) const {
+std::vector<lsst::geom::Point2D> SipApproximation::applyInverse(
+        std::vector<lsst::geom::Point2D> const & iwc) const {
     auto ws = _solution->makeWorkspace();
-    std::vector<Point2D> pix;
+    std::vector<lsst::geom::Point2D> pix;
     pix.reserve(iwc.size());
     for (auto const & point : iwc) {
         pix.push_back(_solution->applyInverse(_cdInv(point), ws) + _crpix);
@@ -350,16 +353,16 @@ std::vector<Point2D> SipApproximation::applyInverse(std::vector<Point2D> const &
     return pix;
 }
 
-Extent2D SipApproximation::getGridStep() const noexcept {
-    return Extent2D(_bbox.getWidth()/_grid->shape.getX(),
+lsst::geom::Extent2D SipApproximation::getGridStep() const noexcept {
+    return lsst::geom::Extent2D(_bbox.getWidth()/_grid->shape.getX(),
                     _bbox.getHeight()/_grid->shape.getY());
 }
 
-Extent2I SipApproximation::getGridShape() const noexcept {
+lsst::geom::Extent2I SipApproximation::getGridShape() const noexcept {
     return _grid->shape;
 }
 
-void SipApproximation::updateGrid(Extent2I const & shape) {
+void SipApproximation::updateGrid(lsst::geom::Extent2I const & shape) {
     _grid = std::make_unique<Grid>(shape, *this);
 }
 
@@ -367,7 +370,7 @@ void SipApproximation::refineGrid(int f) {
     // We shrink the grid spacing by the given factor, which is not the same
     // as increasing the number of grid points by that factor, because there
     // is one more grid point that step in each dimension.
-    Extent2I unit(1);
+    lsst::geom::Extent2I unit(1);
     updateGrid((_grid->shape - unit)*f + unit);
 }
 

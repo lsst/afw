@@ -29,8 +29,8 @@
 #include "Eigen/Core"
 
 #include "lsst/afw/geom/Transform.h"
-#include "lsst/afw/geom/Box.h"
-#include "lsst/afw/geom/LinearTransform.h"
+#include "lsst/geom/Box.h"
+#include "lsst/geom/LinearTransform.h"
 
 namespace lsst { namespace afw { namespace geom {
 
@@ -126,10 +126,10 @@ public:
      */
     SipApproximation(
         std::shared_ptr<TransformPoint2ToPoint2> pixelToIwc,
-        Point2D const & crpix,
+        lsst::geom::Point2D const & crpix,
         Eigen::Matrix2d const & cd,
-        Box2D const & bbox,
-        Extent2I const & gridShape,
+        lsst::geom::Box2D const & bbox,
+        lsst::geom::Extent2I const & gridShape,
         int order,
         bool useInverse=true,
         double svdThreshold=-1
@@ -175,10 +175,10 @@ public:
      */
     SipApproximation(
         std::shared_ptr<TransformPoint2ToPoint2> pixelToIwc,
-        Point2D const & crpix,
+        lsst::geom::Point2D const & crpix,
         Eigen::Matrix2d const & cd,
-        Box2D const & bbox,
-        Extent2I const & gridShape,
+        lsst::geom::Box2D const & bbox,
+        lsst::geom::Extent2I const & gridShape,
         ndarray::Array<double const, 2> const & a,
         ndarray::Array<double const, 2> const & b,
         ndarray::Array<double const, 2> const & ap,
@@ -256,14 +256,14 @@ public:
      *
      *  @exceptsafe strong
      */
-    Point2D applyForward(Point2D const & pix) const;
+    lsst::geom::Point2D applyForward(lsst::geom::Point2D const & pix) const;
 
     /**
      *  Convert an array of points from pixels to intermediate world coordinates.
      *
      *  @exceptsafe strong
      */
-    std::vector<Point2D> applyForward(std::vector<Point2D> const & pix) const;
+    std::vector<lsst::geom::Point2D> applyForward(std::vector<lsst::geom::Point2D> const & pix) const;
 
     /**
      *  Convert a point from intermediate world coordinates to pixels.
@@ -272,26 +272,26 @@ public:
      *
      *  @exceptsafe strong
      */
-    Point2D applyInverse(Point2D const & iwcs) const;
+    lsst::geom::Point2D applyInverse(lsst::geom::Point2D const & iwcs) const;
 
     /**
      *  Convert an array of points from intermediate world coordinates to pixels.
      *
      *  @exceptsafe strong
      */
-    std::vector<Point2D> applyInverse(std::vector<Point2D> const & iwcs) const;
+    std::vector<lsst::geom::Point2D> applyInverse(std::vector<lsst::geom::Point2D> const & iwcs) const;
 
     /// Return the distance between grid points in pixels.
-    Extent2D getGridStep() const noexcept;
+    lsst::geom::Extent2D getGridStep() const noexcept;
 
     /// Return the number of grid points in x and y.
-    Extent2I getGridShape() const noexcept;
+    lsst::geom::Extent2I getGridShape() const noexcept;
 
     /// Return the pixel-coordinate bounding box over which the approximation should be valid.
-    Box2D getBBox() const noexcept { return _bbox; }
+    lsst::geom::Box2D getBBox() const noexcept { return _bbox; }
 
     /// Return the pixel origin of the WCS being approximated.
-    Point2D getPixelOrigin() const noexcept { return Point2D(_crpix); }
+    lsst::geom::Point2D getPixelOrigin() const noexcept { return lsst::geom::Point2D(_crpix); }
 
     /// Return the CD matrix of the WCS being approximated.
     Eigen::Matrix2d getCdMatrix() const noexcept { return _cdInv.inverted().getMatrix(); }
@@ -308,7 +308,7 @@ public:
      *
      *  @exceptsafe strong
      */
-    void updateGrid(Extent2I const & shape);
+    void updateGrid(lsst::geom::Extent2I const & shape);
 
     /**
      *  Update the grid by making it finer by a given integer factor.
@@ -358,9 +358,9 @@ private:
 
     bool _useInverse;
     std::shared_ptr<TransformPoint2ToPoint2> _pixelToIwc;
-    Box2D _bbox;
-    Extent2D _crpix;
-    LinearTransform _cdInv;
+    lsst::geom::Box2D _bbox;
+    lsst::geom::Extent2D _crpix;
+    lsst::geom::LinearTransform _cdInv;
     std::unique_ptr<Grid const> _grid;
     std::unique_ptr<Solution const> _solution;
 };
