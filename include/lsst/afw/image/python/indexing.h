@@ -23,7 +23,7 @@
 #define LSST_AFW_IMAGE_PYTHON_INDEXING_H
 
 #include "pybind11/pybind11.h"
-#include "lsst/afw/geom/Box.h"
+#include "lsst/geom/Box.h"
 
 namespace lsst { namespace afw { namespace image { namespace python {
 

@@ -43,10 +43,10 @@ PYBIND11_MODULE(sipApproximation, mod) {
     cls.def(
         py::init<
             std::shared_ptr<TransformPoint2ToPoint2>,
-            Point2D const &,
+            lsst::geom::Point2D const &,
             Eigen::MatrixXd const &,
-            Box2D const &,
-            Extent2I const &,
+            lsst::geom::Box2D const &,
+            lsst::geom::Extent2I const &,
             int,
             bool,
             double
@@ -58,10 +58,10 @@ PYBIND11_MODULE(sipApproximation, mod) {
     cls.def(
         py::init<
             std::shared_ptr<TransformPoint2ToPoint2>,
-            Point2D const &,
+            lsst::geom::Point2D const &,
             Eigen::MatrixXd const &,
-            Box2D const &,
-            Extent2I const &,
+            lsst::geom::Box2D const &,
+            lsst::geom::Extent2I const &,
             ndarray::Array<double const, 2> const &,
             ndarray::Array<double const, 2> const &,
             ndarray::Array<double const, 2> const &,
@@ -72,8 +72,9 @@ PYBIND11_MODULE(sipApproximation, mod) {
         "a"_a, "b"_a, "ap"_a, "bp"_a, "useInverse"_a=true
     );
 
-    using ScalarTransform = Point2D (SipApproximation::*)(Point2D const &) const;
-    using VectorTransform = std::vector<Point2D> (SipApproximation::*)(std::vector<Point2D> const &) const;
+    using ScalarTransform = lsst::geom::Point2D (SipApproximation::*)(lsst::geom::Point2D const &) const;
+    using VectorTransform = std::vector<lsst::geom::Point2D> (SipApproximation::*)(
+        std::vector<lsst::geom::Point2D> const &) const;
 
     cls.def("getOrder", &SipApproximation::getOrder);
     cls.def("getA", py::overload_cast<int, int>(&SipApproximation::getA, py::const_), "p"_a, "q"_a);
