@@ -983,7 +983,7 @@ void writeKeyFromProperty(Fits &fits, daf::base::PropertySet const &metadata, st
     boost::to_upper(upperKey);
     if (upperKey.compare(key) != 0){
         LOGLS_WARN("afw.fits",
-                   boost::format("In %s, cfitsio>=3.38 will raise key case on write ('%s' -> '%s').") %
+                   boost::format("In %s, key '%s' may be standardized to uppercase '%s' on write.") %
                    BOOST_CURRENT_FUNCTION % key % upperKey);
     }
     std::type_info const &valueType = metadata.typeOf(key);
