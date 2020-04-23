@@ -796,8 +796,8 @@ void Fits::forEachKey(HeaderIterationFunctor &functor) {
         boost::to_upper(upperKey);
         if (upperKey.compare(key) != 0){
             LOGLS_WARN("afw.fits",
-                       boost::format("In %s, raising key case on read for key '%s' (for cfitsio>=3.38).") %
-                       BOOST_CURRENT_FUNCTION % key);
+                       boost::format("In %s, standardizing key '%s' to uppercase '%s' on read.") %
+                       BOOST_CURRENT_FUNCTION % key % upperKey);
         }
         keyStr = upperKey;
         valueStr = value;
