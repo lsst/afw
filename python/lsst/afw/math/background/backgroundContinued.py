@@ -20,8 +20,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from lsst.utils import continueClass
-from lsst.utils.deprecated import deprecate_pybind11
-from .background import Background, BackgroundControl, BackgroundMI
+from .background import Background
 
 __all__ = []  # import this module only for its side effects
 
@@ -31,22 +30,3 @@ class Background:
     def __reduce__(self):
         """Pickling"""
         return self.__class__, (self.getImageBBox(), self.getStatsImage())
-
-
-BackgroundControl.__init__ = deprecate_pybind11(
-    BackgroundControl.__init__,
-    reason='Overloads that take a ``style`` parameter are deprecated; the style must be '
-           'passed to `Background.getImageF` instead. To be removed after 20.0.0.')
-Background.getImageF = deprecate_pybind11(
-    Background.getImageF,
-    reason='Zero-argument overload is deprecated; use one that takes an ``interpStyle`` instead. '
-           'To be removed after 20.0.0.')
-BackgroundControl.getInterpStyle = deprecate_pybind11(
-    BackgroundControl.getInterpStyle,
-    reason='Replaced by passing style to `Background.getImageF`. To be removed after 20.0.0.')
-BackgroundControl.setInterpStyle = deprecate_pybind11(
-    BackgroundControl.setInterpStyle,
-    reason='Replaced by passing style to `Background.getImageF`. To be removed after 20.0.0.')
-BackgroundMI.getPixel = deprecate_pybind11(
-    BackgroundMI.getPixel,
-    reason='Use `getImageF` instead. To be removed after 20.0.0.')
