@@ -673,9 +673,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
                 backgroundList.append((bkgd, interpStyle, undersampleStyle,
                                        approxStyle, approxOrderX, approxOrderY, approxWeighting))
             else:
-                # Relies on having called getImage; deprecated
-                with self.assertWarns(FutureWarning):
-                    backgroundList.append(bkgd)
+                backgroundList.append(bkgd)
 
         def assertBackgroundList(bgl):
             self.assertEqual(len(bgl), 2)  # check that len() works
@@ -785,9 +783,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
                     backgroundList.append((bkgd, interpStyle, undersampleStyle,
                                            astyle, approxOrderX, approxOrderY, approxWeighting))
                 else:
-                    # Relies on having called getImage; deprecated
-                    with self.assertWarns(FutureWarning):
-                        backgroundList.append(bkgd)
+                    backgroundList.append(bkgd)
 
                 backImage += bkgd.getImageF(interpStyle, undersampleStyle)
 

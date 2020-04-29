@@ -22,7 +22,6 @@
 __all__ = ["BackgroundList"]
 
 import os
-import warnings
 import lsst.daf.base as dafBase
 import lsst.geom
 import lsst.afw.image as afwImage
@@ -88,10 +87,6 @@ class BackgroundList:
             bkgd, interpStyle, undersampleStyle, approxStyle, \
                 approxOrderX, approxOrderY, approxWeighting = val
         except TypeError:
-            warnings.warn("Passing Background objects to BackgroundList is deprecated; "
-                          "use a (Background, Interpolation.Style, UndersampleStyle, "
-                          "ApproximateControl.Style, int, int, bool) tuple instead.",
-                          category=FutureWarning, stacklevel=2)
             bkgd = val
             interpStyle = None
             undersampleStyle = None
