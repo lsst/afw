@@ -182,27 +182,17 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         self.assertImagesEqual(self.exposureMiOnly.variance, var3)
 
     def testGetWcs(self):
+        """Test that a WCS can be obtained from each Exposure created with
+        a WCS, and that an Exposure lacking a WCS returns None.
         """
-        Test if a WCS can be obtained from each Exposure created with
-        a WCS.
+        # These exposures don't contain a WCS
+        self.assertIsNone(self.exposureBlank.getWcs())
+        self.assertIsNone(self.exposureMiOnly.getWcs())
+        self.assertIsNone(self.exposureCrOnly.getWcs())
 
-        Test that appropriate exceptions are thrown if a WCS is
-        requested from an Exposure that was not created with a WCS.
-        Python turns the pex::exceptions in the Exposure and
-        MaskedImage classes into IndexErrors.
-
-        The exposureBlank, exposureMiOnly, and exposureCrOnly
-        Exposures should throw a lsst::pex::exceptions::NotFound.
-        """
-
-        self.assertFalse(self.exposureBlank.getWcs())
-        self.assertFalse(self.exposureMiOnly.getWcs())
-
-        # These two should pass
-        self.exposureMiWcs.getWcs()
-        self.exposureCrWcs.getWcs()
-
-        self.assertFalse(self.exposureCrOnly.getWcs())
+        # These exposures should contain a WCS
+        self.assertEqual(self.wcs, self.exposureMiWcs.getWcs())
+        self.assertEqual(self.wcs, self.exposureCrWcs.getWcs())
 
     def testExposureInfoConstructor(self):
         """Test the Exposure(maskedImage, exposureInfo) constructor"""
