@@ -38,10 +38,8 @@ class BackgroundList:
     ----------
     *args : `tuple` or `~lsst.afw.math.Background`
         A sequence of arguments, each of which becomes an element of the list.
-        In deference to the deprecated-but-not-yet-removed
-        `~lsst.afw.math.Background.getImageF()` API, we also accept a single
-        `lsst.afw.math.Background` and extract the ``interpStyle`` and
-        ``undersampleStyle`` from the as-used values.
+        We also accept a single `lsst.afw.math.Background` and extract the
+        ``interpStyle`` and ``undersampleStyle`` from the as-used values.
     """
 
     def __init__(self, *args):

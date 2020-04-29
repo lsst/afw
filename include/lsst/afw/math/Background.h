@@ -104,9 +104,8 @@ public:
                                   nySample));
         }
     }
-    // And now the two old APIs (preserved for backward compatibility)
     /**
-     * @deprecated New code should specify the interpolation style in getImage, not the BackgroundControl ctor
+     * Overload constructor to provide interp style.
      *
      * @param style Style of the interpolation
      * @param nxSample Num. grid samples in x
@@ -138,8 +137,6 @@ public:
 
     /**
      * Overload constructor to handle strings for both interp and undersample styles.
-     *
-     * @deprecated New code should specify the interpolation style in getImage, not the BackgroundControl ctor
      *
      * @param style Style of the interpolation
      * @param nxSample num. grid samples in x
@@ -243,10 +240,6 @@ protected:
      * Estimate the statistical properties of the Image in a grid of cells;  we'll later call
      * getImage() to interpolate those values, creating an image the same size as the original
      *
-     * @note The old and deprecated API specified the interpolation style as part of the BackgroundControl
-     * object passed to this ctor.  This is still supported, but the work isn't done until the getImage()
-     * method is called
-     *
      * @param img ImageT (or MaskedImage) whose properties we want
      * @param bgCtrl Control how the Background is estimated
      */
@@ -331,7 +324,6 @@ public:
 
     /**
      * Method to interpolate and return the background for entire image
-     * @deprecated New code should specify the interpolation style in getImage, not the ctor
      */
     template <typename PixelT>
     std::shared_ptr<lsst::afw::image::Image<PixelT>> getImage() const {
@@ -434,7 +426,6 @@ private:
  *     // get a whole background image
  *     Image<PixelT> back = backobj->getImage<PixelT>(math::Interpolate::NATURAL_SPLINE);
  *
- * @deprecated
  * there is also
  *
  *     // get the background at a pixel at i_x,i_y
@@ -463,11 +454,6 @@ public:
      *     bkgdImage = bkgd.getImageF(afwMath.Interpolate.NATURAL_SPLINE, afwMath.REDUCE_INTERP_ORDER)
      *
      * There is a ticket (#2825) to allow getImage to specify a default value to use when interpolation fails
-     *
-     * @deprecated The old and deprecated API specified the interpolation style as part of the
-     * BackgroundControl
-     * object passed to this ctor.  This is still supported, but the work isn't done until the getImage()
-     * method is called
      */
     explicit BackgroundMI(ImageT const& img, BackgroundControl const& bgCtrl);
     /**
@@ -517,8 +503,6 @@ public:
      * Return the background value at a point
      *
      * @warning This is very inefficient -- only use it for debugging, if then.
-     *
-     * @deprecated New code should specify the interpolation style in getPixel, not the ctor
      */
     [[deprecated("Use `getImage` instead. To be removed after 20.0.0.")]]  // DM-22814
             double
