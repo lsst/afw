@@ -510,7 +510,9 @@ public:
      * This can be a very costly function to get a single pixel. If you want an image, use the getImage()
      * method.
      */
-    double getPixel(Interpolate::Style const style, int const x, int const y) const;
+    [[deprecated("Use `getImage` instead. To be removed after 20.0.0.")]]  // DM-22814
+            double
+            getPixel(Interpolate::Style const style, int const x, int const y) const;
     /**
      * Return the background value at a point
      *
@@ -518,7 +520,11 @@ public:
      *
      * @deprecated New code should specify the interpolation style in getPixel, not the ctor
      */
-    double getPixel(int const x, int const y) const { return getPixel(_bctrl->getInterpStyle(), x, y); }
+    [[deprecated("Use `getImage` instead. To be removed after 20.0.0.")]]  // DM-22814
+            double
+            getPixel(int const x, int const y) const {
+        return getPixel(_bctrl->getInterpStyle(), x, y);
+    }
     /**
      * Return the image of statistical quantities extracted from the image
      */

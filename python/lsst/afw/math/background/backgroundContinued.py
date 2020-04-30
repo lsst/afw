@@ -20,7 +20,8 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from lsst.utils import continueClass
-from .background import Background
+from lsst.utils.deprecated import deprecate_pybind11
+from .background import Background, BackgroundMI
 
 __all__ = []  # import this module only for its side effects
 
@@ -30,3 +31,8 @@ class Background:
     def __reduce__(self):
         """Pickling"""
         return self.__class__, (self.getImageBBox(), self.getStatsImage())
+
+
+BackgroundMI.getPixel = deprecate_pybind11(
+    BackgroundMI.getPixel,
+    reason='Use `getImageF` instead. To be removed after 20.0.0.')
