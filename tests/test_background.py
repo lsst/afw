@@ -99,7 +99,8 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         bgCtrl.getStatisticsControl().setNumSigmaClip(3)
         back = afwMath.makeBackground(self.image, bgCtrl)
 
-        self.assertEqual(back.getPixel(xcen, ycen), self.val)
+        with self.assertWarns(FutureWarning):
+            self.assertEqual(back.getPixel(xcen, ycen), self.val)
 
     @unittest.skipIf(AfwdataDir is None, "afwdata not setup")
     def testBackgroundTestImages(self):
@@ -128,18 +129,12 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
             bctrl.setNxSample(5)
             bctrl.setNySample(5)
 
-            # run the background constructor and call the getPixel() and
-            # getImage() functions.
+            # run the background constructor and call the getImage() function.
             backobj = afwMath.makeBackground(img, bctrl)
 
             pixPerSubimage = img.getWidth()*img.getHeight() / \
                 (bctrl.getNxSample()*bctrl.getNySample())
             stdevInterp = reqStdev/math.sqrt(pixPerSubimage)
-
-            # test getPixel()
-            testval = backobj.getPixel(naxis1//2, naxis2//2)
-            self.assertAlmostEqual(testval/centerValue, 1, places=7)
-            self.assertLess(abs(testval - reqMean), 2*stdevInterp)
 
             # test getImage() by checking the center pixel
             bimg = backobj.getImageF()
@@ -196,7 +191,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         ypixels = [0, ny//2, ny - 1]
         for xpix in xpixels:
             for ypix in ypixels:
-                testval = backobj.getPixel(xpix, ypix)
+                testval = backobj.getImageF()[xpix, ypix, afwImage.LOCAL]
                 self.assertAlmostEqual(testval/rampimg[xpix, ypix, afwImage.LOCAL], 1, 6)
 
         # Test pickle
@@ -278,7 +273,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         ypixels = [segmentCenter, ny//2, ny - segmentCenter]
         for xpix in xpixels:
             for ypix in ypixels:
-                testval = backobj.getPixel(bctrl.getInterpStyle(), xpix, ypix)
+                testval = backobj.getImageF(bctrl.getInterpStyle())[xpix, ypix, afwImage.LOCAL]
                 realval = parabimg[xpix, ypix, afwImage.LOCAL]
                 # quadratic terms skew the averages of the subimages and the clipped mean for
                 # a subimage != value of center pixel.  1/20 counts on a 10000 count sky
@@ -461,7 +456,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         ypixels = [0, ny//2, ny - 1]
         for xpix in xpixels:
             for ypix in ypixels:
-                testval = backobj.getPixel(bctrl.getInterpStyle(), xpix, ypix)
+                testval = backobj.getImageF(bctrl.getInterpStyle())[xpix, ypix]
                 self.assertAlmostEqual(testval/mean, 1)
 
     def testAdjustLevel(self):

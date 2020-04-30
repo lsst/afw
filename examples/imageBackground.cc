@@ -91,8 +91,8 @@ int main() {
     std::shared_ptr<math::Background> back = math::makeBackground(img, bgCtrl);
 
     // can get an individual pixel or a whole frame.
-    float const MID = std::dynamic_pointer_cast<math::BackgroundMI>(back)->getPixel(xcen, ycen);
     std::shared_ptr<ImageF> bg = back->getImage<ImageF::Pixel>();
+    float const MID = (*bg)(xcen, ycen);
 
     // create a background-subtracted image
     ImageF sub(img.getDimensions());

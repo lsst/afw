@@ -69,13 +69,11 @@ BOOST_AUTO_TEST_CASE(BackgroundBasic) { /* parasoft-suppress  LsstDm-3-2a LsstDm
         bgCtrl.getStatisticsControl()->setNumSigmaClip(3);
         bgCtrl.getStatisticsControl()->setNumIter(3);
         std::shared_ptr<math::Background> back = math::makeBackground(img, bgCtrl);
-        double const TESTVAL = std::dynamic_pointer_cast<math::BackgroundMI>(back)->getPixel(xcen, ycen);
 
         std::shared_ptr<image::Image<float>> bImage = back->getImage<float>();
         Image::Pixel const testFromImage = *(bImage->xy_at(xcen, ycen));
 
-        BOOST_CHECK_EQUAL(TESTVAL, pixVal);
-        BOOST_CHECK_EQUAL(TESTVAL, testFromImage);
+        BOOST_CHECK_EQUAL(pixVal, testFromImage);
     }
 }
 
@@ -123,13 +121,8 @@ BOOST_AUTO_TEST_CASE(BackgroundTestImages,
             bctrl.setNySample(5);
             float stdevSubimg = reqStdev / sqrt(width * height / (bctrl.getNxSample() * bctrl.getNySample()));
 
-            // run the background constructor and call the getPixel() and getImage() functions.
+            // run the background constructor and call the getImage() function.
             std::shared_ptr<math::Background> backobj = math::makeBackground(*img, bctrl);
-
-            // test getPixel()
-            float testval =
-                    std::dynamic_pointer_cast<math::BackgroundMI>(backobj)->getPixel(width / 2, height / 2);
-            BOOST_REQUIRE(fabs(testval - reqMean) < 2.0 * stdevSubimg);
 
             // test getImage() by checking the center pixel
             std::shared_ptr<image::Image<float>> bimg = backobj->getImage<float>();
@@ -175,7 +168,7 @@ BOOST_AUTO_TEST_CASE(BackgroundRamp) { /* parasoft-suppress  LsstDm-3-2a LsstDm-
             int xpix = i * (nX - 1) / (ntest - 1);
             for (int j = 0; j < ntest; ++j) {
                 int ypix = j * (nY - 1) / (ntest - 1);
-                double testval = backobj->getPixel(xpix, ypix);
+                double testval = (*(backobj->getImage<float>()))(xpix, ypix);
                 double realval = *rampimg.xy_at(xpix, ypix);
                 BOOST_CHECK_CLOSE(testval / realval, 1.0, 2.5e-5);
             }
@@ -218,7 +211,7 @@ BOOST_AUTO_TEST_CASE(BackgroundParabola) { /* parasoft-suppress  LsstDm-3-2a Lss
             int xpix = i * (nX - 1) / (ntest - 1);
             for (int j = 0; j < ntest; ++j) {
                 int ypix = j * (nY - 1) / (ntest - 1);
-                double testval = backobj->getPixel(xpix, ypix);
+                double testval = (*(backobj->getImage<float>()))(xpix, ypix);
                 double realval = *parabimg.xy_at(xpix, ypix);
                 // print xpix, ypix, testval, realval
                 // quadratic terms skew the averages of the subimages and the clipped mean for
