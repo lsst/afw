@@ -104,9 +104,8 @@ public:
                                   nySample));
         }
     }
-    // And now the two old APIs (preserved for backward compatibility)
     /**
-     * @deprecated New code should specify the interpolation style in getImage, not the BackgroundControl ctor
+     * Overload constructor to provide interp style.
      *
      * @param style Style of the interpolation
      * @param nxSample Num. grid samples in x
@@ -116,16 +115,12 @@ public:
      * @param prop statistical property to use for grid points
      * @param actrl configuration for approx to be computed
      */
-    [[deprecated(
-            "Omit `style` parameter, and pass it to `Background::getImage` instead. To be removed after "
-            "20.0.0.")]]  // DM-22814
-            BackgroundControl(
-                    Interpolate::Style const style, int const nxSample = 10, int const nySample = 10,
-                    UndersampleStyle const undersampleStyle = THROW_EXCEPTION,
-                    StatisticsControl const sctrl = StatisticsControl(), Property const prop = MEANCLIP,
-                    ApproximateControl const actrl = ApproximateControl(ApproximateControl::UNKNOWN, 1)
+    BackgroundControl(Interpolate::Style const style, int const nxSample = 10, int const nySample = 10,
+                      UndersampleStyle const undersampleStyle = THROW_EXCEPTION,
+                      StatisticsControl const sctrl = StatisticsControl(), Property const prop = MEANCLIP,
+                      ApproximateControl const actrl = ApproximateControl(ApproximateControl::UNKNOWN, 1)
 
-                            )
+                              )
             : _style(style),
               _nxSample(nxSample),
               _nySample(nySample),
@@ -143,8 +138,6 @@ public:
     /**
      * Overload constructor to handle strings for both interp and undersample styles.
      *
-     * @deprecated New code should specify the interpolation style in getImage, not the BackgroundControl ctor
-     *
      * @param style Style of the interpolation
      * @param nxSample num. grid samples in x
      * @param nySample num. grid samples in y
@@ -153,15 +146,11 @@ public:
      * @param prop statistical property to use for grid points
      * @param actrl configuration for approx to be computed
      */
-    [[deprecated(
-            "Omit `style` parameter, and pass it to `Background::getImage` instead. To be removed after "
-            "20.0.0.")]]  // DM-22814
-            BackgroundControl(std::string const& style, int const nxSample = 10, int const nySample = 10,
-                              std::string const& undersampleStyle = "THROW_EXCEPTION",
-                              StatisticsControl const sctrl = StatisticsControl(),
-                              std::string const& prop = "MEANCLIP",
-                              ApproximateControl const actrl = ApproximateControl(ApproximateControl::UNKNOWN,
-                                                                                  1))
+    BackgroundControl(std::string const& style, int const nxSample = 10, int const nySample = 10,
+                      std::string const& undersampleStyle = "THROW_EXCEPTION",
+                      StatisticsControl const sctrl = StatisticsControl(),
+                      std::string const& prop = "MEANCLIP",
+                      ApproximateControl const actrl = ApproximateControl(ApproximateControl::UNKNOWN, 1))
             : _style(math::stringToInterpStyle(style)),
               _nxSample(nxSample),
               _nySample(nySample),
@@ -197,19 +186,9 @@ public:
         _nySample = nySample;
     }
 
-    [[deprecated(
-            "Replaced by passing style to `Background::getImage`. To be removed after 20.0.0.")]]  // DM-22814
-            void
-            setInterpStyle(Interpolate::Style const style) {
-        _style = style;
-    }
+    void setInterpStyle(Interpolate::Style const style) { _style = style; }
     // overload to take a string
-    [[deprecated(
-            "Replaced by passing style to `Background::getImage`. To be removed after 20.0.0.")]]  // DM-22814
-            void
-            setInterpStyle(std::string const& style) {
-        _style = math::stringToInterpStyle(style);
-    }
+    void setInterpStyle(std::string const& style) { _style = math::stringToInterpStyle(style); }
 
     void setUndersampleStyle(UndersampleStyle const undersampleStyle) {
         _undersampleStyle = undersampleStyle;
@@ -221,10 +200,7 @@ public:
 
     int getNxSample() const { return _nxSample; }
     int getNySample() const { return _nySample; }
-    [[deprecated(
-            "Replaced by passing style to `Background::getImage`. To be removed after 20.0.0.")]]  // DM-22814
-            Interpolate::Style
-            getInterpStyle() const {
+    Interpolate::Style getInterpStyle() const {
         if (_style < 0 || _style >= Interpolate::NUM_STYLES) {
             throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                               str(boost::format("Style %d is invalid") % _style));
@@ -244,7 +220,6 @@ public:
     std::shared_ptr<ApproximateControl const> getApproximateControl() const { return _actrl; }
 
 private:
-    // TODO: remove _style member in DM-22814
     Interpolate::Style _style;           // style of interpolation to use
     int _nxSample;                       // number of grid squares to divide image into to sample in x
     int _nySample;                       // number of grid squares to divide image into to sample in y
@@ -264,10 +239,6 @@ protected:
      *
      * Estimate the statistical properties of the Image in a grid of cells;  we'll later call
      * getImage() to interpolate those values, creating an image the same size as the original
-     *
-     * @note The old and deprecated API specified the interpolation style as part of the BackgroundControl
-     * object passed to this ctor.  This is still supported, but the work isn't done until the getImage()
-     * method is called
      *
      * @param img ImageT (or MaskedImage) whose properties we want
      * @param bgCtrl Control how the Background is estimated
@@ -353,13 +324,9 @@ public:
 
     /**
      * Method to interpolate and return the background for entire image
-     * @deprecated New code should specify the interpolation style in getImage, not the ctor
      */
     template <typename PixelT>
-    [[deprecated(
-            "Call an overload with an `interpStyle` parameter. To be removed after 20.0.0.")]]  // DM-22814
-            std::shared_ptr<lsst::afw::image::Image<PixelT>>
-            getImage() const {
+    std::shared_ptr<lsst::afw::image::Image<PixelT>> getImage() const {
         return getImage<PixelT>(_bctrl->getInterpStyle(), _bctrl->getUndersampleStyle());
     }
     /**
@@ -459,7 +426,6 @@ private:
  *     // get a whole background image
  *     Image<PixelT> back = backobj->getImage<PixelT>(math::Interpolate::NATURAL_SPLINE);
  *
- * @deprecated
  * there is also
  *
  *     // get the background at a pixel at i_x,i_y
@@ -488,11 +454,6 @@ public:
      *     bkgdImage = bkgd.getImageF(afwMath.Interpolate.NATURAL_SPLINE, afwMath.REDUCE_INTERP_ORDER)
      *
      * There is a ticket (#2825) to allow getImage to specify a default value to use when interpolation fails
-     *
-     * @deprecated The old and deprecated API specified the interpolation style as part of the
-     * BackgroundControl
-     * object passed to this ctor.  This is still supported, but the work isn't done until the getImage()
-     * method is called
      */
     explicit BackgroundMI(ImageT const& img, BackgroundControl const& bgCtrl);
     /**
@@ -542,15 +503,12 @@ public:
      * Return the background value at a point
      *
      * @warning This is very inefficient -- only use it for debugging, if then.
-     *
-     * @deprecated New code should specify the interpolation style in getPixel, not the ctor
      */
     [[deprecated("Use `getImage` instead. To be removed after 20.0.0.")]]  // DM-22814
             double
             getPixel(int const x, int const y) const {
         // I think this should be LOCAL because the original getPixel used 0-based indices
-        return getImage<float>(_bctrl->getInterpStyle(), _bctrl->getUndersampleStyle())
-                ->get(lsst::geom::Point2I(x, y), image::LOCAL);
+        return getImage<float>()->get(lsst::geom::Point2I(x, y), image::LOCAL);
     }
     /**
      * Return the image of statistical quantities extracted from the image
