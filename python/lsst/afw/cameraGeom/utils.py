@@ -68,8 +68,6 @@ def prepareWcsData(wcs, amp, isTrimmed=True):
     ampWcs : `lsst.afw.geom.SkyWcs`
         The modified WCS.
     """
-    if not amp.getHasRawInfo():
-        raise RuntimeError("Cannot modify wcs without raw amp information")
     if isTrimmed:
         ampBox = amp.getRawDataBBox()
     else:
@@ -210,9 +208,6 @@ def makeImageFromAmp(amp, imValue=None, imageFactory=afwImage.ImageU, markSize=1
     ampImage : `lsst.afw.image`
         An untrimmed amp image, of the type produced by ``imageFactory``.
     """
-    if not amp.getHasRawInfo():
-        raise RuntimeError(
-            "Can't create a raw amp image without raw amp information")
     bbox = amp.getRawBBox()
     dbbox = amp.getRawDataBBox()
     img = imageFactory(bbox)
@@ -260,8 +255,6 @@ def calcRawCcdBBox(ccd):
     """
     bbox = lsst.geom.Box2I()
     for amp in ccd:
-        if not amp.getHasRawInfo():
-            return None
         tbbox = amp.getRawBBox()
         tbbox.shift(amp.getRawXYOffset())
         bbox.include(tbbox)
@@ -299,14 +292,13 @@ def makeImageFromCcd(ccd, isTrimmed=True, showAmpGain=True, imageFactory=afwImag
     else:
         bbox = calcRawCcdBBox(ccd)
     for amp in ccd:
-        if amp.getHasRawInfo():
-            if showAmpGain:
-                ampImages.append(makeImageFromAmp(
-                    amp, imageFactory=imageFactory, markSize=rcMarkSize))
-            else:
-                ampImages.append(makeImageFromAmp(amp, imValue=(index + 1)*1000,
-                                                  imageFactory=imageFactory, markSize=rcMarkSize))
-            index += 1
+        if showAmpGain:
+            ampImages.append(makeImageFromAmp(
+                amp, imageFactory=imageFactory, markSize=rcMarkSize))
+        else:
+            ampImages.append(makeImageFromAmp(amp, imValue=(index + 1)*1000,
+                                              imageFactory=imageFactory, markSize=rcMarkSize))
+        index += 1
 
     if len(ampImages) > 0:
         ccdImage = imageFactory(bbox)
@@ -649,7 +641,7 @@ def overlayCcdBoxes(ccd, untrimmedCcdBbox=None, nQuarter=0,
             displayUtils.drawBBox(ampbbox, origin=ccdOrigin, borderWidth=0.49,
                                   display=display, bin=binSize)
 
-            if not isTrimmed and amp.getHasRawInfo():
+            if not isTrimmed:
                 for bbox, ctype in ((amp.getRawHorizontalOverscanBBox(), afwDisplay.RED),
                                     (amp.getRawDataBBox(), afwDisplay.BLUE),
                                     (amp.getRawVerticalOverscanBBox(),
@@ -717,7 +709,7 @@ def showAmp(amp, imageSource=FakeImageDataSource(isTrimmed=False), display=None,
     display.mtv(ampImage, title=title)
     if overlay:
         with display.Buffering():
-            if amp.getHasRawInfo() and ampImSize == amp.getRawBBox().getDimensions():
+            if ampImSize == amp.getRawBBox().getDimensions():
                 bboxes = [(amp.getRawBBox(), 0.49, afwDisplay.GREEN), ]
                 xy0 = bboxes[0][0].getMin()
                 bboxes.append(

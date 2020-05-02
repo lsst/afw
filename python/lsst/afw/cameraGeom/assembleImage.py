@@ -69,8 +69,6 @@ def assembleAmplifierImage(destImage, rawImage, amplifier):
     RuntimeError
         Raised if image types do not match or amplifier has no raw amplifier info.
     """
-    if not amplifier.getHasRawInfo():
-        raise RuntimeError("amplifier must contain raw amplifier info")
     if type(destImage.Factory) != type(rawImage.Factory):  # noqa: E721
         raise RuntimeError(f"destImage type = {type(destImage.Factory).__name__} != "
                            f"{type(rawImage.Factory).__name__} = rawImage type")
@@ -104,8 +102,6 @@ def assembleAmplifierRawImage(destImage, rawImage, amplifier):
     RuntimeError
         Raised if image types do not match or amplifier has no raw amplifier info.
     """
-    if not amplifier.getHasRawInfo():
-        raise RuntimeError("amplifier must contain raw amplifier info")
     if type(destImage.Factory) != type(rawImage.Factory):  # noqa: E721
         raise RuntimeError(f"destImage type = {type(destImage.Factory).__name__} != "
                            f"{type(rawImage.Factory).__name__} = rawImage type")
@@ -130,8 +126,6 @@ def makeUpdatedDetector(ccd):
     """
     builder = ccd.rebuild()
     for amp in builder.getAmplifiers():
-        assert amp.getHasRawInfo()
-
         bbox = amp.getRawBBox()
         awidth, aheight = bbox.getDimensions()
         #

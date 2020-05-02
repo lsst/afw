@@ -158,10 +158,6 @@ public:
     /// Units for the input to the linearity relation (DN).
     std::string getLinearityUnits() const { return getFields().linearityUnits; }
 
-    /// Does this table have raw amplifier information?
-    [[deprecated("Amplifier objects always have raw information; will be removed after 19.0.")]] // DM-21711
-    bool getHasRawInfo() const { return true; }
-
     /**
      *  Bounding box of all amplifier pixels on untrimmed, assembled raw
      *  image.
