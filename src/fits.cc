@@ -73,8 +73,8 @@ std::string makeLimitedFitsHeaderImpl(std::vector<std::string> const &paramNames
                 out += (boost::format("%#20.17G") % value).str();
             } else {
                 LOGLS_WARN("afw.fits",
-                           boost::format("In %s, found NaN in metadata item '%s'") %
-                                         BOOST_CURRENT_FUNCTION % name);
+                            boost::format("In %s, found NaN in metadata item '%s'") %
+                                          BOOST_CURRENT_FUNCTION % name);
                 // Convert it to FITS undefined
                 out += " ";
             }
@@ -796,8 +796,8 @@ void Fits::forEachKey(HeaderIterationFunctor &functor) {
         boost::to_upper(upperKey);
         if (upperKey.compare(key) != 0){
             LOGLS_DEBUG("afw.fits",
-                       boost::format("In %s, standardizing key '%s' to uppercase '%s' on read.") %
-                       BOOST_CURRENT_FUNCTION % key % upperKey);
+                        boost::format("In %s, standardizing key '%s' to uppercase '%s' on read.") %
+                        BOOST_CURRENT_FUNCTION % key % upperKey);
         }
         keyStr = upperKey;
         valueStr = value;
