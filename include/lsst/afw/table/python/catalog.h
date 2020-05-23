@@ -68,6 +68,37 @@ ndarray::Array<double const, 1, 1> _getArrayFromCatalog(
     return out;
 }
 
+template <typename Record>
+void _setFlagColumnToArray(
+    CatalogT<Record> & catalog,
+    Key<Flag> const & key,
+    ndarray::Array<bool const, 1> const & array
+) {
+    if (array.size() != catalog.size()) {
+        throw LSST_EXCEPT(
+            pex::exceptions::LengthError,
+            (boost::format("Catalog has %d rows, while array has %d elements.")
+             % catalog.size() % array.size()).str()
+        );
+    }
+    auto catIter = catalog.begin();
+    auto arrayIter = array.begin();
+    for (; catIter != catalog.end(); ++catIter, ++arrayIter) {
+        catIter->set(key, *arrayIter);
+    }
+}
+
+template <typename Record>
+void _setFlagColumnToScalar(
+    CatalogT<Record> & catalog,
+    Key<Flag> const & key,
+    bool value
+) {
+    for (auto catIter = catalog.begin(); catIter != catalog.end(); ++catIter) {
+        catIter->set(key, value);
+    }
+}
+
 /**
  * Declare field-type-specific overloaded catalog member functions for one field type
  *
@@ -111,6 +142,18 @@ void declareCatalogOverloads(PyCatalog<Record> &cls) {
 
     cls.def("_getitem_",
             [](Catalog const &self, Key<T> const &key) { return _getArrayFromCatalog(self, key); });
+    cls.def(
+        "_set_flag",
+        [](Catalog &self, Key<Flag> const & key, ndarray::Array<bool const, 1> const & array) {
+            _setFlagColumnToArray(self, key, array);
+        }
+    );
+    cls.def(
+        "_set_flag",
+        [](Catalog &self, Key<Flag> const & key, bool value) {
+            _setFlagColumnToScalar(self, key, value);
+        }
+    );
 }
 
 /**
