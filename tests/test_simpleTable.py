@@ -799,6 +799,26 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         with self.assertRaises(IndexError):
             del catalog[50]
 
+    def testSetFlagColumn(self):
+        schema = lsst.afw.table.Schema()
+        key = schema.addField("a", type="Flag", doc="doc for 'a'")
+        catalog = lsst.afw.table.BaseCatalog(schema)
+        catalog.resize(5)
+        # Set scalar with key.
+        catalog[key] = True
+        self.assertEqual(list(catalog[key]), [True] * 5)
+        # Set scalar with name.
+        catalog["a"] = False
+        self.assertEqual(list(catalog[key]), [False] * 5)
+        # Set array with key.
+        v1 = np.array([True, False, True, False, True], dtype=bool)
+        catalog[key] = v1
+        self.assertEqual(list(catalog[key]), list(v1))
+        # Set array with name.
+        v2 = np.array([False, True, False, True, False], dtype=bool)
+        catalog["a"] = v2
+        self.assertEqual(list(catalog[key]), list(v2))
+
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
     pass

@@ -138,8 +138,13 @@ class Catalog(metaclass=TemplateMeta):
         ``value``.
         """
         self._columns = None
-        if isinstance(key, Key) or isinstance(key, str):
-            self.columns[key] = value
+        if isinstance(key, str):
+            key = self.schema[key].asKey()
+        if isinstance(key, Key):
+            if isinstance(key, Key["Flag"]):
+                self._set_flag(key, value)
+            else:
+                self.columns[key] = value
         else:
             return self.set(key, value)
 
