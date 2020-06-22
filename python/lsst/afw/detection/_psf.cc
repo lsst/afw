@@ -55,7 +55,7 @@ void wrapPsf(utils::python::WrapperCollection& wrappers) {
             [](auto& mod, auto& cls) {
                 table::io::python::addPersistableMethods<Psf>(cls);
 
-                cls.def("clone", &Psf::clone);
+                // cls.def("clone", &Psf::clone);
                 cls.def("resized", &Psf::resized, "width"_a, "height"_a);
                 cls.def("computeImage", &Psf::computeImage, "position"_a = NullPoint,
                         "color"_a = image::Color(), "owner"_a = Psf::ImageOwnerEnum::COPY);
