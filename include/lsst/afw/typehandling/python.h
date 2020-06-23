@@ -51,6 +51,21 @@ class StorableHelper : public Base {
 public:
     using Base::Base;
 
+    /**
+     * Delegating constructor for wrapped class.
+     *
+     * While we would like to simply inherit base class constructors, when doing so, we cannot
+     * change their access specifiers.  One consequence is that it's not possible to use inheritance
+     * to expose a protected constructor to python.  The alternative, used here, is to create a new
+     * public constructor that delegates to the base class public or protected constructor with the
+     * same signature.
+     *
+     * @tparam Args  Variadic type specification
+     * @param ...args  Arguments to forward to the Base class constructor.
+     */
+    template<typename... Args>
+    StorableHelper<Base>(Args... args) : Base(args...) {}
+
     std::shared_ptr<Storable> cloneStorable() const override {
         /* __deepcopy__ takes an optional dict, but PYBIND11_OVERLOAD_* won't
          * compile unless you give it arguments that work for the C++ method

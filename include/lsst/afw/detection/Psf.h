@@ -113,7 +113,7 @@ public:
      * This method is an alias of @ref clone that can be called from a
      * reference to @ref typehandling::Storable "Storable".
      */
-    std::shared_ptr<typehandling::Storable> cloneStorable() const override final { return clone(); }
+    std::shared_ptr<typehandling::Storable> cloneStorable() const override { return clone(); }
 
     /**
      *  Return clone with specified kernel dimensions
@@ -290,6 +290,14 @@ protected:
      */
     explicit Psf(bool isFixed = false, std::size_t capacity = 100);
 
+    /**
+     * This virtual member is protected (rather than private) so that python-implemented derived
+     * classes may opt to use the default implementation.  C++ derived classes may override this
+     * method, but should not call it.
+     */
+    virtual std::shared_ptr<Image> doComputeImage(lsst::geom::Point2D const& position,
+                                                  image::Color const& color) const;
+
 private:
     //@{
     /**
@@ -299,8 +307,6 @@ private:
      *
      *  Derived classes are responsible for ensuring that returned images sum to one.
      */
-    virtual std::shared_ptr<Image> doComputeImage(lsst::geom::Point2D const& position,
-                                                  image::Color const& color) const;
     virtual std::shared_ptr<Image> doComputeKernelImage(lsst::geom::Point2D const& position,
                                                         image::Color const& color) const = 0;
     virtual double doComputeApertureFlux(double radius, lsst::geom::Point2D const& position,

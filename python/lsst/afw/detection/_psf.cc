@@ -26,15 +26,19 @@
 #include <pybind11/pybind11.h>
 
 #include "lsst/utils/python.h"
+#include "lsst/utils/python/PySharedPtr.h"
 
 #include "lsst/geom/Point.h"
 #include "lsst/afw/image/Color.h"
 #include "lsst/afw/table/io/python.h"  // for addPersistableMethods
 #include "lsst/afw/typehandling/Storable.h"
 #include "lsst/afw/detection/Psf.h"
+#include "lsst/afw/detection/python.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
+
+using lsst::utils::python::PySharedPtr;
 
 namespace lsst {
 namespace afw {
@@ -51,10 +55,12 @@ void wrapPsf(utils::python::WrapperCollection& wrappers) {
     wrappers.addSignatureDependency("lsst.afw.fits");
 
     auto clsPsf = wrappers.wrapType(
-            py::class_<Psf, std::shared_ptr<Psf>, typehandling::Storable>(wrappers.module, "Psf"),
+            py::class_<Psf, PySharedPtr<Psf>, typehandling::Storable, PsfTrampoline<>>(
+                wrappers.module, "Psf"
+            ),
             [](auto& mod, auto& cls) {
                 table::io::python::addPersistableMethods<Psf>(cls);
-
+                cls.def(py::init<bool, size_t>(), "isFixed"_a=false, "capacity"_a=100);  // Constructor for pure-Python subclasses
                 cls.def("clone", &Psf::clone);
                 cls.def("resized", &Psf::resized, "width"_a, "height"_a);
                 cls.def("computeImage", &Psf::computeImage, "position"_a = NullPoint,
