@@ -33,7 +33,7 @@ Python API reference
 
 .. automodapi:: lsst.afw.geom
    :no-main-docstr:
-   :skip: SinglePolygonException, all, any
+   :skip: SinglePolygonException
 
 .. automodapi:: lsst.afw.geom.testUtils
    :no-main-docstr:

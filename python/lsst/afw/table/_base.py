@@ -255,9 +255,10 @@ class Catalog(metaclass=TemplateMeta):
             One of the following options (which is ignored if
             copy=`True` ), indicating how to handle field types (`str`
             and `Flag`) for which views cannot be constructed:
-                - 'copy' (default): copy only the unviewable fields.
-                - 'raise': raise ValueError if unviewable fields are present.
-                - 'skip': do not include unviewable fields in the Astropy Table.
+
+            - 'copy' (default): copy only the unviewable fields.
+            - 'raise': raise ValueError if unviewable fields are present.
+            - 'skip': do not include unviewable fields in the Astropy Table.
 
         Returns
         -------

@@ -125,37 +125,38 @@ class _BaseColumnViewBase:
             List of glob patterns to use to select field names.
         kwds : `dict`
             Dictionary of additional keyword arguments.  May contain:
-            - ``items`` : `list`
+
+            ``items`` : `list`
                 The result of a call to self.schema.extract(); this
                 will be used instead of doing any new matching, and
                 allows the pattern matching to be reused to extract
                 values from multiple records.  This keyword is
                 incompatible with any position arguments and the
                 regex, sub, and ordered keyword arguments.
-            - ``where`` : array index expression
+            ``where`` : array index expression
                 Any expression that can be passed as indices to a
                 NumPy array, including slices, boolean arrays, and
                 index arrays, that will be used to index each column
                 array.  This is applied before arrays are copied when
                 copy is True, so if the indexing results in an
                 implicit copy no unnecessary second copy is performed.
-            - ``copy`` : `bool`
+            ``copy`` : `bool`
                 If True, the returned arrays will be contiguous copies
                 rather than strided views into the catalog.  This
                 ensures that the lifetime of the catalog is not tied
                 to the lifetime of a particular catalog, and it also
                 may improve the performance if the array is used
                 repeatedly. Default is False.
-            - ``regex`` : `str` or `re` pattern
+            ``regex`` : `str` or `re` pattern
                 A regular expression to be used in addition to any
                 glob patterns passed as positional arguments.  Note
                 that this will be compared with re.match, not
                 re.search.
-            - ``sub`` : `str`
+            ``sub`` : `str`
                 A replacement string (see re.MatchObject.expand) used
                 to set the dictionary keys of any fields matched by
                 regex.
-            - ``ordered`` : `bool`
+            ``ordered`` : `bool`
                 If True, a collections.OrderedDict will be returned
                 instead of a standard dict, with the order
                 corresponding to the definition order of the

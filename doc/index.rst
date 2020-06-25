@@ -9,7 +9,6 @@ afw documentation preview
 .. toctree::
    :maxdepth: 1
 
-   afw/index
    lsst.afw.cameraGeom/index
    lsst.afw.coord/index
    lsst.afw.detection/index
@@ -22,4 +21,3 @@ afw documentation preview
    lsst.afw.table/index
    lsst.afw.typehandling/index
    lsst.afw.multiband/index
-

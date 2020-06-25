@@ -145,7 +145,7 @@ def matchesToCatalog(matches, matchMeta):
     Returns
     -------
     mergedCatalog : :py:class:`lsst.afw.table.BaseCatalog`
-        Catalog of matches (with ref_ and src_ prefix identifiers for
+        Catalog of matches (with ``ref_`` and ``src_`` prefix identifiers for
         referece and source entries, respectively, including alias
         maps from reference and source catalogs)
     """
@@ -191,8 +191,8 @@ def matchesFromCatalog(catalog, sourceSlotConfig=None):
     ----------
     catalog : :py:class:`lsst.afw.table.BaseCatalog`
         Catalog of matches.  Must have schema where reference entries
-        are prefixed with "ref_" and source entries are prefixed with
-        "src_".
+        are prefixed with ``ref_`` and source entries are prefixed with
+        ``src_``.
     sourceSlotConfig : `lsst.meas.base.baseMeasurement.SourceSlotConfig`, optional
         Configuration for source slots.
 
@@ -228,8 +228,8 @@ def copyAliasMapWithPrefix(inSchema, outSchema, prefix=""):
     This copies the alias map of one schema into another, optionally
     prepending a prefix to both the "from" and "to" names of the alias
     (the example use case here is for the "match" catalog created by
-    `lsst.meas.astrom.denormalizeMatches` where prefixes "src_" and
-    "ref_" are added to the source and reference field entries,
+    `lsst.meas.astrom.denormalizeMatches` where prefixes ``src_`` and
+    ``ref_`` are added to the source and reference field entries,
     respectively).
 
     Parameters
