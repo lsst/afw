@@ -500,9 +500,9 @@ that are required to have the same `SpanSet`s and `PeakCatalog`.
 
 .. warning::
 
-    To speed up processing there is no check that the `PeakCatalog`s are the
-    same, so initializing a `MultibandFootprint` with `HeavyFootprint`s that
-    have different `PeakCatalog`s may lead to unexpected results.
+    To speed up processing there is no check that the `PeakCatalog`\s are the
+    same, so initializing a `MultibandFootprint` with `HeavyFootprint`\s that
+    have different `PeakCatalog`\s may lead to unexpected results.
 
 Construction
 ------------

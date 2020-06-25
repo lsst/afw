@@ -162,11 +162,11 @@ class Schema:
         return field._addTo(self, doReplace)
 
     def extract(self, *patterns, **kwargs):
-        """Extract a dictionary of {<name>: <schema-item>} in which the field names
-        match the given shell-style glob pattern(s).
+        """Extract a dictionary of {<name>: <schema-item>} in which the field
+        names match the given shell-style glob pattern(s).
 
-        Any number of glob patterns may be passed; the result will be the union of all
-        the result of each glob considered separately.
+        Any number of glob patterns may be passed; the result will be the
+        union of all the result of each glob considered separately.
 
         Parameters
         ----------
@@ -174,16 +174,17 @@ class Schema:
             List of glob patterns to use to select field names.
         kwargs : `dict`
             Dictionary of additional keyword arguments.  May contain:
-            - ``regex`` : `str` or `re` pattern
+
+            ``regex`` : `str` or `re` pattern
                 A regular expression to be used in addition to any
                 glob patterns passed as positional arguments.  Note
                 that this will be compared with re.match, not
                 re.search.
-             - ``sub`` : `str`
+            ``sub`` : `str`
                 A replacement string (see re.MatchObject.expand) used
                 to set the dictionary keys of any fields matched by
                 regex.
-            - ``ordered`` : `bool`, optional
+            ``ordered`` : `bool`, optional
                 If True, a collections.OrderedDict will be returned
                 instead of a standard dict, with the order
                 corresponding to the definition order of the

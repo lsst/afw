@@ -33,16 +33,19 @@ Catalog.register("Source", SourceCatalog)
 class SourceCatalog:
 
     def getChildren(self, parent, *args):
-        """Return the subset of self for which the parent field equals the given value.
+        """Return the subset of self for which the parent field equals the
+        given value.
 
-        In order for this method to return the correct result, it must be sorted by parent
-        (i.e. self.isSorted(SourceTable.getParentKey()) must be True).  This is naturally the
-        case with SourceCatalogs produced by the detection and deblending tasks, but it may
-        not be true when concatenating multiple such catalogs.
+        In order for this method to return the correct result, it must be
+        sorted by parent (i.e. self.isSorted(SourceTable.getParentKey()) must
+        be True).  This is naturally the case with SourceCatalogs produced by
+        the detection and deblending tasks, but it may not be true when
+        concatenating multiple such catalogs.
 
-        Additional Catalogs or sequences whose elements correspond in order to the records
-        of self (i.e. zip(self, *args) is valid) will be subset using the same slice object
-        used on self, and these subsets will be returned along with the subset of self.
+        Additional Catalogs or sequences whose elements correspond in order to
+        the records of self (i.e. ``zip(self, *args)`` is valid) will be
+        subset using the same slice object used on self, and these subsets
+        will be returned along with the subset of self.
 
         Parameters
         ----------
