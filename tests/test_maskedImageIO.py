@@ -405,7 +405,7 @@ class ExposureMultiExtensionTestCase(MultiExtensionTestCase, lsst.utils.tests.Te
         if hdu:
             filename = f"{filename}[{hdu}]"
         if needAllHdus:
-            raise Exception("Cannot needAllHdus with Exposure")
+            raise ValueError("Cannot needAllHdus with Exposure")
         return afwImage.ExposureF(filename)
 
     def _checkImage(self, im, width, height, val1, val2, val3):
