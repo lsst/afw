@@ -202,31 +202,40 @@ MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> MaskedImageFitsReader::read
 
     // only read other planes if they're in their normal HDUs
     if (_imageReader.getHdu() == static_cast<int>(Hdu::Image)) {
-        try {
-            mask = std::make_shared<Mask<MaskPixelT>>(
-                _maskReader.read<MaskPixelT>(bbox, origin, conformMasks, allowUnsafe)
-            );
-        } catch (fits::FitsError& e) {
-            if (needAllHdus) {
-                LSST_EXCEPT_ADD(e, "Reading Mask");
-                throw e;
+        // Do not even try if we are missing the HDU
+        if (_maskReader._fitsFile) {
+            try {
+                mask = std::make_shared<Mask<MaskPixelT>>(
+                    _maskReader.read<MaskPixelT>(bbox, origin, conformMasks, allowUnsafe)
+                );
+            } catch (fits::FitsError& e) {
+                if (needAllHdus) {
+                    LSST_EXCEPT_ADD(e, "Reading Mask");
+                    throw e;
+                }
+                LOGL_WARN(_log, "Mask unreadable (%s); using default", e.what());
+                // By resetting the status we are able to read the next HDU (the variance).
+                _maskReader._fitsFile->status = 0;
             }
-            LOGL_WARN(_log, "Mask unreadable (%s); using default", e.what());
-            // By resetting the status we are able to read the next HDU (the variance).
-            _maskReader._fitsFile->status = 0;
+        } else if (needAllHdus) {
+            throw LSST_EXCEPT(pex::exceptions::NotFoundError, "No mask extensions found");
         }
-        try {
-            variance = std::make_shared<Image<VariancePixelT>>(
-                _varianceReader.read<VariancePixelT>(bbox, origin, allowUnsafe)
-            );
-        } catch (fits::FitsError& e) {
-            if (needAllHdus) {
-                LSST_EXCEPT_ADD(e, "Reading Variance");
-                throw e;
+        if (_varianceReader._fitsFile) {
+            try {
+                variance = std::make_shared<Image<VariancePixelT>>(
+                    _varianceReader.read<VariancePixelT>(bbox, origin, allowUnsafe)
+                );
+            } catch (fits::FitsError& e) {
+                if (needAllHdus) {
+                    LSST_EXCEPT_ADD(e, "Reading Variance");
+                    throw e;
+                }
+                LOGL_WARN(_log, "Variance unreadable (%s); using default", e.what());
+                // By resetting the status we are able to read the next HDU (the variance).
+                _varianceReader._fitsFile->status = 0;
             }
-            LOGL_WARN(_log, "Variance unreadable (%s); using default", e.what());
-            // By resetting the status we are able to read the next HDU (the variance).
-            _varianceReader._fitsFile->status = 0;
+        } else if (needAllHdus) {
+            throw LSST_EXCEPT(pex::exceptions::NotFoundError, "No variance extensions found");
         }
     }
     return MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>(image, mask, variance);
