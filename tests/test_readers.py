@@ -21,6 +21,7 @@
 
 import unittest
 
+import os
 import numpy as np
 
 import lsst.utils.tests
@@ -34,6 +35,8 @@ from lsst.afw.image import (Image, Mask, Exposure, LOCAL, PARENT, MaskPixel, Var
 from lsst.afw.image.utils import defineFilter
 from lsst.afw.detection import GaussianPsf
 from lsst.afw.cameraGeom.testUtils import DetectorWrapper
+
+TESTDIR = os.path.abspath(os.path.dirname(__file__))
 
 
 class FitsReaderTestCase(lsst.utils.tests.TestCase):
@@ -203,6 +206,16 @@ class FitsReaderTestCase(lsst.utils.tests.TestCase):
             reader, exposureIn, fileName, dtypesOut,
             compare=lambda a, b: self.assertMaskedImagesEqual(a.maskedImage, b.maskedImage)
         )
+
+    def testCompressedSinglePlaneExposureFitsReader(self):
+        """Test that a compressed single plane image can be read as exposure.
+        """
+        uncompressed_file = os.path.join(TESTDIR, "data", "ticketdm26260.fits")
+        compressed_file = os.path.join(TESTDIR, "data", "ticketdm26260.fits.fz")
+        uncompressed = ExposureFitsReader(uncompressed_file).read()
+        compressed = ExposureFitsReader(compressed_file).read()
+
+        self.assertMaskedImagesEqual(uncompressed.maskedImage, compressed.maskedImage)
 
     def testMultiPlaneFitsReaders(self):
         """Run tests for MaskedImageFitsReader and ExposureFitsReader.
