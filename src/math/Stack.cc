@@ -34,8 +34,13 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/Stack.h"
 #include "lsst/afw/math/MaskedVector.h"
+#include "lsst/log/Log.h"
 
 namespace pexExcept = lsst::pex::exceptions;
+
+namespace {
+    LOG_LOGGER _log = LOG_GET("afw.math.Stack");
+}
 
 namespace lsst {
 namespace afw {
@@ -260,6 +265,11 @@ void statisticsStack(image::MaskedImage<PixelT> &out,
                                                                 wvector);  // use wvector
         }
     } else {
+        if (!wvector.empty()) {
+            LOGL_WARN(_log,
+               "Weights passed on to statisticsStack are ignored as sctrl.getWeighted() is False."
+               "Set sctrl.setWeighted(True) for them to be used.");
+        }
         return computeMaskedImageStack<PixelT, false, false>(out, images, flags, sctrl, clipped, excuse);
     }
 }
