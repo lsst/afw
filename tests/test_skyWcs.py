@@ -7,6 +7,7 @@ import astropy.io.fits
 import astropy.coordinates
 import astropy.wcs
 import astshim as ast
+import numpy as np
 from numpy.testing import assert_allclose
 
 import lsst.utils.tests
@@ -544,6 +545,56 @@ class SimpleSkyWcsTestCase(SkyWcsBaseTestCase):
             skyWcs = makeSkyWcs(crpix=self.crpix, crval=crval, cdMatrix=cdMatrix, projection=projection)
             # Most projections only seem to agree to within 1e-4 in the round trip test
             self.assertSkyWcsAstropyWcsAlmostEqual(skyWcs=skyWcs, astropyWcs=astropyWcs, bbox=bbox)
+
+    def testPixelToSkyArray(self):
+        """Test the numpy-array version of pixelToSky
+        """
+        cdMatrix = makeCdMatrix(scale=self.scale)
+        wcs = makeSkyWcs(crpix=self.crpix, crval=self.crvalList[0], cdMatrix=cdMatrix)
+
+        xPoints = np.array([0.0, 1000.0, 0.0, -1111.0])
+        yPoints = np.array([0.0, 0.0, 2000.0, -2222.0])
+
+        pixPointList = [lsst.geom.Point2D(x, y) for x, y in zip(xPoints, yPoints)]
+
+        spherePoints = wcs.pixelToSky(pixPointList)
+
+        ra, dec = wcs.pixelToSkyArray(xPoints, yPoints, degrees=False)
+        for r, d, spherePoint in zip(ra, dec, spherePoints):
+            self.assertAlmostEqual(r, spherePoint.getRa().asRadians())
+            self.assertAlmostEqual(d, spherePoint.getDec().asRadians())
+
+        ra, dec = wcs.pixelToSkyArray(xPoints, yPoints, degrees=True)
+        for r, d, spherePoint in zip(ra, dec, spherePoints):
+            self.assertAlmostEqual(r, spherePoint.getRa().asDegrees())
+            self.assertAlmostEqual(d, spherePoint.getDec().asDegrees())
+
+    def testSkyToPixelArray(self):
+        """Test the numpy-array version of skyToPixel
+        """
+        cdMatrix = makeCdMatrix(scale=self.scale)
+        wcs = makeSkyWcs(crpix=self.crpix, crval=self.crvalList[0], cdMatrix=cdMatrix)
+
+        raPoints = np.array([3.92646679e-02, 3.59646622e+02,
+                             3.96489283e-02, 4.70419353e-01])
+        decPoints = np.array([44.9722155, 44.97167735,
+                              45.52775599, 44.3540619])
+
+        spherePointList = [lsst.geom.SpherePoint(ra*lsst.geom.degrees,
+                                                 dec*lsst.geom.degrees)
+                           for ra, dec in zip(raPoints, decPoints)]
+
+        pixPoints = wcs.skyToPixel(spherePointList)
+
+        x, y = wcs.skyToPixelArray(np.deg2rad(raPoints), np.deg2rad(decPoints))
+        for x0, y0, pixPoint in zip(x, y, pixPoints):
+            self.assertAlmostEqual(x0, pixPoint.getX())
+            self.assertAlmostEqual(y0, pixPoint.getY())
+
+        x, y = wcs.skyToPixelArray(raPoints, decPoints, degrees=True)
+        for x0, y0, pixPoint in zip(x, y, pixPoints):
+            self.assertAlmostEqual(x0, pixPoint.getX())
+            self.assertAlmostEqual(y0, pixPoint.getY())
 
     def testStr(self):
         """Test that we can get something coherent when printing a SkyWcs.
