@@ -155,7 +155,7 @@ class BackgroundList:
 
         See Also
         --------
-        getImage()
+        getImage
         """
         if not isinstance(fileName, MemFileManager) and not os.path.exists(fileName):
             raise RuntimeError(f"File not found: {fileName}")
