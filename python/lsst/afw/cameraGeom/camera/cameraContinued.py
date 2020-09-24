@@ -27,8 +27,8 @@ from lsst.utils import continueClass, doImport
 from .camera import Camera
 
 
-@continueClass  # noqa: F811
-class Camera:
+@continueClass  # noqa: F811 (FIXME: remove for py 3.8+)
+class Camera:  # noqa: F811
 
     def getPupilFactory(self, visitInfo, pupilSize, npix, **kwargs):
         """Construct a PupilFactory.

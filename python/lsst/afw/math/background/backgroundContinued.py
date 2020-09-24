@@ -26,8 +26,8 @@ from .background import Background, BackgroundMI
 __all__ = []  # import this module only for its side effects
 
 
-@continueClass  # noqa: F811
-class Background:
+@continueClass  # noqa: F811 (FIXME: remove for py 3.8+)
+class Background:  # noqa: F811
     def __reduce__(self):
         """Pickling"""
         return self.__class__, (self.getImageBBox(), self.getStatsImage())

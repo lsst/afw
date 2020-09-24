@@ -28,8 +28,8 @@ from ._schema import Field, Schema
 from ._table import SchemaMapper
 
 
-@continueClass  # noqa: F811
-class SchemaMapper:
+@continueClass  # noqa: F811 (FIXME: remove for py 3.8+)
+class SchemaMapper:  # noqa: F811
 
     def addOutputField(self, field, type=None, doc=None, units="", size=None,
                        doReplace=False, parse_strict="raise"):

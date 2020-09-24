@@ -29,8 +29,8 @@ from .skyWcs import SkyWcs
 __all__ = []
 
 
-@continueClass  # noqa: F811
-class SkyWcs:
+@continueClass  # noqa: F811 (FIXME: remove for py 3.8+)
+class SkyWcs:  # noqa: F811
     def pixelToSkyArray(self, x, y, degrees=False):
         """
         Convert numpy array pixels (x, y) to numpy array sky (ra, dec)
