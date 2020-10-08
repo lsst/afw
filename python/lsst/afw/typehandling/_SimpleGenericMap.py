@@ -67,8 +67,8 @@ SimpleGenericMap.register(str, SimpleGenericMapS)
 _oldInit = SimpleGenericMapS.__init__
 
 
-@continueClass  # noqa F811
-class SimpleGenericMapS:
+@continueClass  # noqa: F811 (FIXME: remove for py 3.8+)
+class SimpleGenericMapS:  # noqa: F811
     def __init__(self, source=None, **kwargs):
         _oldInit(self)
         if source:
