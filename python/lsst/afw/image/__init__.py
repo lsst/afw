@@ -28,6 +28,7 @@ from .coaddInputs import *
 from .color import *
 from .defect import *
 from .filter import *
+from .filterLabel import *
 from .image import *
 from .imageSlice import *
 from .maskedImage import *
