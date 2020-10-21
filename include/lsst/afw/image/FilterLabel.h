@@ -56,6 +56,12 @@ public:
     static FilterLabel fromPhysical(std::string const &physical);
     /** @} */
 
+    FilterLabel(FilterLabel const &);
+    FilterLabel(FilterLabel &&) noexcept;
+    FilterLabel &operator=(FilterLabel const &);  // Only way to modify a FilterLabel
+    FilterLabel &operator=(FilterLabel &&) noexcept;
+    ~FilterLabel() noexcept;
+
     /// Return whether the filter label names a band.
     bool hasBandLabel() const noexcept;
 

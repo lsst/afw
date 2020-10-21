@@ -43,6 +43,13 @@ FilterLabel FilterLabel::fromPhysical(std::string const &physical) {
     return FilterLabel(false, ""s, true, physical);
 }
 
+// defaults give the right behavior with bool-and-string implementation
+FilterLabel::FilterLabel(FilterLabel const &) = default;
+FilterLabel::FilterLabel(FilterLabel &&) noexcept = default;
+FilterLabel &FilterLabel::operator=(FilterLabel const &) = default;
+FilterLabel &FilterLabel::operator=(FilterLabel &&) noexcept = default;
+FilterLabel::~FilterLabel() noexcept = default;
+
 bool FilterLabel::hasBandLabel() const noexcept { return _hasBand; }
 
 std::string FilterLabel::getBandLabel() const {
