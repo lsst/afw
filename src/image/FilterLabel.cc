@@ -65,6 +65,23 @@ std::string FilterLabel::getPhysicalLabel() const {
     }
 }
 
+bool FilterLabel::operator==(FilterLabel const &rhs) const noexcept {
+    // Do not compare name unless _hasName for both
+    if (_hasBand != rhs._hasBand) {
+        return false;
+    }
+    if (_hasBand && _band != rhs._band) {
+        return false;
+    }
+    if (_hasPhysical != rhs._hasPhysical) {
+        return false;
+    }
+    if (_hasPhysical && _physical != rhs._physical) {
+        return false;
+    }
+    return true;
+}
+
 }  // namespace image
 }  // namespace afw
 }  // namespace lsst

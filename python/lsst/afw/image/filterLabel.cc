@@ -56,6 +56,32 @@ void define(PyFilterLabel& cls) {
     cls.def_static("fromBand", &FilterLabel::fromBand, "band"_a);
     cls.def_static("fromPhysical", &FilterLabel::fromPhysical, "physical"_a);
 
+    // Keyword constructor
+    /* This is messy in C++, but it's hard to write a Python __init__ that delegates to a factory,
+     * and the pybind11 docs imply that this way is less prone to multiple-definition errors.
+     * In C++17, we should be able to replace py::object with std::optional<string>.
+     */
+    cls.def(py::init([](py::object band, py::object physical) {
+                try {
+                    // Expand as we get more combinations of keywords
+                    if (!band.is_none() && !physical.is_none()) {
+                        return FilterLabel::fromBandPhysical(py::cast<std::string>(band),
+                                                             py::cast<std::string>(physical));
+                    } else if (!band.is_none()) {
+                        return FilterLabel::fromBand(py::cast<std::string>(band));
+                    } else if (!physical.is_none()) {
+                        return FilterLabel::fromPhysical(py::cast<std::string>(physical));
+                    } else {
+                        throw py::value_error("Need at least one of band, physical");
+                    }
+                } catch (py::cast_error const& e) {
+                    // By default cast_error is wrapped as RuntimeError
+                    std::throw_with_nested(py::type_error(e.what()));
+                }
+            }),
+            // TODO: use py::kw_only() in pybind11 2.6 or later (DM-27247)
+            "band"_a = py::none(), "physical"_a = py::none());
+
     cls.def("hasBandLabel", &FilterLabel::hasBandLabel);
     cls.def_property_readonly("bandLabel", [](FilterLabel const& label) {
         _DELEGATE_EXCEPTION(label.getBandLabel(), pex::exceptions::LogicError, std::runtime_error);
@@ -64,6 +90,8 @@ void define(PyFilterLabel& cls) {
     cls.def_property_readonly("physicalLabel", [](FilterLabel const& label) {
         _DELEGATE_EXCEPTION(label.getPhysicalLabel(), pex::exceptions::LogicError, std::runtime_error);
     });
+    cls.def("__eq__", &FilterLabel::operator==, py::is_operator());
+    cls.def("__ne__", &FilterLabel::operator!=, py::is_operator());
 }
 
 PYBIND11_MODULE(filterLabel, mod) {

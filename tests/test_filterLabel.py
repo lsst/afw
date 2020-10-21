@@ -33,10 +33,60 @@ class FilterLabelTestCase(lsst.utils.tests.TestCase):
         self.band = "k"
 
     def _labelVariants(self):
+        # Contains some redundant entries to check that equality behaves
+        # consistently across both construction methods.
         return iter({FilterLabel(physical=self.physicalName, band=self.band),
                      FilterLabel.fromBand(self.band),
+                     FilterLabel(band=self.band),
                      FilterLabel(physical=self.physicalName),
                      })
+
+    def testInit(self):
+        with self.assertRaises(ValueError):
+            FilterLabel()
+        self.assertEqual(FilterLabel(physical=self.physicalName),
+                         FilterLabel.fromPhysical(self.physicalName))
+        self.assertEqual(FilterLabel(band=self.band),
+                         FilterLabel.fromBand(self.band))
+        self.assertEqual(FilterLabel(physical=self.physicalName, band=self.band),
+                         FilterLabel.fromBandPhysical(self.band, self.physicalName))
+
+        with self.assertRaises(TypeError):
+            FilterLabel(physical=42)
+        with self.assertRaises(TypeError):
+            FilterLabel(band=("g", "r"))
+
+    def testEqualsBasic(self):
+        # Reflexivity
+        for label in self._labelVariants():
+            self.assertEqual(label, label)
+            self.assertFalse(label != label)
+
+        # Symmetry
+        for labelA in self._labelVariants():
+            for labelB in self._labelVariants():
+                self.assertEqual(labelA == labelB, labelB == labelA)
+                self.assertEqual(labelA != labelB, labelB != labelA)
+
+        # Transitivity
+        for labelA in self._labelVariants():
+            for labelB in self._labelVariants():
+                for labelC in self._labelVariants():
+                    if labelA == labelB and labelB == labelC:
+                        self.assertEqual(labelA, labelC)
+                    # The logical implications if A != B or B != C are handled
+                    # on a different iteration/permutation of (A, B, C).
+
+    def testEqualsIdentical(self):
+        self.assertEqual(FilterLabel(physical=self.physicalName), FilterLabel(physical=self.physicalName))
+
+    def testEqualsSameText(self):
+        # Ensure different kinds of labels are distinguishable, even if they have the same string
+        self.assertNotEqual(FilterLabel(band=self.band), FilterLabel(physical=self.band))
+
+    def testEqualsMissingField(self):
+        self.assertNotEqual(FilterLabel(band=self.band),
+                            FilterLabel(band=self.band, physical=self.physicalName))
 
     def _checkProperty(self, label, has, property, value):
         # For consistency with C++ API, getting a missing label raises instead of returning None

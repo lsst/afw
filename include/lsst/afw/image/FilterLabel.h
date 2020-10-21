@@ -78,6 +78,19 @@ public:
      */
     std::string getPhysicalLabel() const;
 
+    /**
+     * Filter labels compare equal if their components are equal.
+     *
+     * @note This operation does not test whether two *filters* are the same.
+     *       Two FilterLabels corresponding to identically-named filters on
+     *       different instruments will compare equal.
+     *
+     * @{
+     */
+    bool operator==(FilterLabel const &rhs) const noexcept;
+    bool operator!=(FilterLabel const &rhs) const noexcept { return !(*this == rhs); }
+    /** @} */
+
 private:
     FilterLabel(bool hasBand, std::string const &band, bool hasPhysical, std::string const &physical);
 
