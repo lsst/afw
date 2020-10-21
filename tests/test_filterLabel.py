@@ -88,6 +88,14 @@ class FilterLabelTestCase(lsst.utils.tests.TestCase):
         self.assertNotEqual(FilterLabel(band=self.band),
                             FilterLabel(band=self.band, physical=self.physicalName))
 
+    def testRepr(self):
+        for label in self._labelVariants():
+            try:
+                self.assertEqual(eval(repr(label)), label)
+            except (SyntaxError, ValueError):
+                print(f"repr(label) = '{label!r}'")
+                raise
+
     def _checkProperty(self, label, has, property, value):
         # For consistency with C++ API, getting a missing label raises instead of returning None
         if value:

@@ -31,6 +31,8 @@
 #include "lsst/afw/typehandling/Storable.h"
 #include "lsst/afw/table/io/python.h"
 
+using namespace std::string_literals;
+
 namespace py = pybind11;
 using namespace pybind11::literals;
 
@@ -60,6 +62,27 @@ PyFilterLabel declare(py::module& mod) {
             The physical filter associated with this label.
     )delim";
     return PyFilterLabel(mod, "FilterLabel", initDoc);
+}
+
+// Implemented in C++ because afw::image uses old-style wrappers, and adding a
+// Python extension is not worth it for a single method.
+std::string getRepr(FilterLabel const& label) {
+    std::string buffer("FilterLabel(");
+    bool comma = false;
+
+    if (label.hasBandLabel()) {
+        if (comma) buffer += ", "s;
+        buffer += "band"s + "=\""s + label.getBandLabel() + "\""s;
+        comma = true;
+    }
+    if (label.hasPhysicalLabel()) {
+        if (comma) buffer += ", "s;
+        buffer += "physical"s + "=\""s + label.getPhysicalLabel() + "\""s;
+        comma = true;
+    }
+    buffer += ")"s;
+
+    return buffer;
 }
 
 void define(PyFilterLabel& cls) {
@@ -103,6 +126,8 @@ void define(PyFilterLabel& cls) {
     });
     cls.def("__eq__", &FilterLabel::operator==, py::is_operator());
     cls.def("__ne__", &FilterLabel::operator!=, py::is_operator());
+
+    cls.def("__repr__", &getRepr);
 }
 
 PYBIND11_MODULE(filterLabel, mod) {
