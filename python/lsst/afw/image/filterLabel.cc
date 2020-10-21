@@ -49,7 +49,18 @@ using PyFilterLabel = py::class_<FilterLabel, std::shared_ptr<FilterLabel>, type
         std::throw_with_nested(py_ex(e.what())); \
     }
 
-PyFilterLabel declare(py::module& mod) { return PyFilterLabel(mod, "FilterLabel"); }
+PyFilterLabel declare(py::module& mod) {
+    // Include Python-only constructor in class doc, since it's what people should use
+    auto initDoc = R"delim(
+        Attributes
+        ----------
+        band : str, optional
+            The band associated with this label.
+        physical : str, optional
+            The physical filter associated with this label.
+    )delim";
+    return PyFilterLabel(mod, "FilterLabel", initDoc);
+}
 
 void define(PyFilterLabel& cls) {
     cls.def_static("fromBandPhysical", &FilterLabel::fromBandPhysical, "band"_a, "physical"_a);
