@@ -24,7 +24,7 @@ import unittest
 
 import lsst.utils.tests
 
-from lsst.afw.image import FilterLabel
+from lsst.afw.image import FilterLabel, getDatabaseFilterLabel
 
 
 class FilterLabelTestCase(lsst.utils.tests.TestCase):
@@ -139,6 +139,13 @@ class FilterLabelTestCase(lsst.utils.tests.TestCase):
 
             copy2 = copy.deepcopy(label)
             self._checkCopy(copy2, label)
+
+    def testDatabaseLabel(self):
+        self.assertEqual(getDatabaseFilterLabel("k"), "k")
+        self.assertEqual(getDatabaseFilterLabel("k-0234"), "k_0234")
+        self.assertEqual(getDatabaseFilterLabel("g decam 0101"), "g_decam_0101")
+        self.assertEqual(getDatabaseFilterLabel("speci@l band"), "speci_l_band")
+        self.assertEqual(getDatabaseFilterLabel("\"hacky, (42);"), "_hacky___42__")
 
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):

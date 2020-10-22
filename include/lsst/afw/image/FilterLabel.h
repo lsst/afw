@@ -146,6 +146,13 @@ private:
     static Factory factory;
 };
 
+/**
+ * Remap special characters, etc. to "_" for database fields.
+ *
+ * @return The filter label in database-sanitized format.
+ */
+std::string getDatabaseFilterLabel(std::string const &filterLabel);
+
 }  // namespace image
 }  // namespace afw
 }  // namespace lsst

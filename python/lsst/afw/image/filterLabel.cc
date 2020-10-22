@@ -64,7 +64,7 @@ PyFilterLabel declare(py::module& mod) {
     return PyFilterLabel(mod, "FilterLabel", initDoc);
 }
 
-void define(PyFilterLabel& cls) {
+void define(py::module& mod, PyFilterLabel& cls) {
     table::io::python::addPersistableMethods(cls);
 
     cls.def_static("fromBandPhysical", &FilterLabel::fromBandPhysical, "band"_a, "physical"_a);
@@ -112,6 +112,10 @@ void define(PyFilterLabel& cls) {
     // Neither __copy__ nor __deepcopy__ default to each other
     cls.def("__copy__", [](const FilterLabel& obj) { return obj.cloneStorable(); });
     cls.def("__deepcopy__", [](const FilterLabel& obj, py::dict& memo) { return obj.cloneStorable(); });
+
+    // Free functions
+
+    mod.def("getDatabaseFilterLabel", &getDatabaseFilterLabel, "filterLabel"_a);
 }
 
 PYBIND11_MODULE(filterLabel, mod) {
@@ -122,7 +126,7 @@ PYBIND11_MODULE(filterLabel, mod) {
     // then import dependencies used in method signatures
     // none
     // and now we can safely define methods and other attributes
-    define(cls);
+    define(mod, cls);
 }
 
 }  // namespace

@@ -22,6 +22,7 @@
  */
 
 #include <memory>
+#include <regex>
 
 #include "lsst/utils/hashCombine.h"
 #include "lsst/pex/exceptions.h"
@@ -40,6 +41,11 @@ using namespace std::string_literals;
 namespace lsst {
 namespace afw {
 namespace image {
+
+std::string getDatabaseFilterLabel(std::string const &filterLabel) {
+    static std::regex const unsafeCharacters("\\W"s);
+    return std::regex_replace(filterLabel, unsafeCharacters, "_"s);
+}
 
 namespace impl {
 // Hack to allow unit tests to test states that, while legal, are
