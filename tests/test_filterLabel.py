@@ -19,6 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import copy
 import unittest
 
 import lsst.utils.tests
@@ -121,6 +122,14 @@ class FilterLabelTestCase(lsst.utils.tests.TestCase):
     def _checkCopy(self, label1, label2):
         self.assertEqual(label1, label2)
         self.assertIsNot(label1, label2)
+
+    def testCopy(self):
+        for label in self._labelVariants():
+            copy1 = copy.copy(label)
+            self._checkCopy(copy1, label)
+
+            copy2 = copy.deepcopy(label)
+            self._checkCopy(copy2, label)
 
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):

@@ -21,6 +21,9 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <memory>
+
+#include "lsst/utils/hashCombine.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image/FilterLabel.h"
 
@@ -29,6 +32,16 @@ using namespace std::string_literals;
 namespace lsst {
 namespace afw {
 namespace image {
+
+namespace impl {
+// Hack to allow unit tests to test states that, while legal, are
+// not produced by (and should not be required of) standard factories.
+FilterLabel makeTestFilterLabel(bool hasBand, std::string const &band, bool hasPhysical,
+                                std::string const &physical) {
+    // private constructor accessible via friend
+    return FilterLabel(hasBand, band, hasPhysical, physical);
+}
+}  // namespace impl
 
 FilterLabel::FilterLabel(bool hasBand, std::string const &band, bool hasPhysical, std::string const &physical)
         : _hasBand(hasBand), _hasPhysical(hasPhysical), _band(band), _physical(physical) {}
@@ -87,6 +100,42 @@ bool FilterLabel::operator==(FilterLabel const &rhs) const noexcept {
         return false;
     }
     return true;
+}
+
+// Storable support
+
+std::size_t FilterLabel::hash_value() const noexcept {
+    // Do not count _name unless _hasName
+    // (_has=false, _name="A") and (_has=false, _name="B") compare equal, so must have same hash
+    return utils::hashCombine(42, _hasBand, _hasBand ? _band : ""s, _hasPhysical,
+                              _hasPhysical ? _physical : ""s);
+}
+
+/* The implementation is biased toward Python in its format, but I expect
+ * the C++ calls to mostly be used for debugging rather than presentation.
+ * This class is also too simple to need "long" and "short" string forms.
+ */
+std::string FilterLabel::toString() const {
+    std::string buffer("FilterLabel(");
+    bool comma = false;
+
+    if (hasBandLabel()) {
+        if (comma) buffer += ", "s;
+        buffer += "band"s + "=\""s + getBandLabel() + "\""s;
+        comma = true;
+    }
+    if (hasPhysicalLabel()) {
+        if (comma) buffer += ", "s;
+        buffer += "physical"s + "=\""s + getPhysicalLabel() + "\""s;
+        comma = true;
+    }
+    buffer += ")"s;
+
+    return buffer;
+}
+
+std::shared_ptr<typehandling::Storable> FilterLabel::cloneStorable() const {
+    return std::make_shared<FilterLabel>(*this);
 }
 
 }  // namespace image

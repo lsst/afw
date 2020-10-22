@@ -64,27 +64,6 @@ PyFilterLabel declare(py::module& mod) {
     return PyFilterLabel(mod, "FilterLabel", initDoc);
 }
 
-// Implemented in C++ because afw::image uses old-style wrappers, and adding a
-// Python extension is not worth it for a single method.
-std::string getRepr(FilterLabel const& label) {
-    std::string buffer("FilterLabel(");
-    bool comma = false;
-
-    if (label.hasBandLabel()) {
-        if (comma) buffer += ", "s;
-        buffer += "band"s + "=\""s + label.getBandLabel() + "\""s;
-        comma = true;
-    }
-    if (label.hasPhysicalLabel()) {
-        if (comma) buffer += ", "s;
-        buffer += "physical"s + "=\""s + label.getPhysicalLabel() + "\""s;
-        comma = true;
-    }
-    buffer += ")"s;
-
-    return buffer;
-}
-
 void define(PyFilterLabel& cls) {
     cls.def_static("fromBandPhysical", &FilterLabel::fromBandPhysical, "band"_a, "physical"_a);
     cls.def_static("fromBand", &FilterLabel::fromBand, "band"_a);
@@ -127,7 +106,10 @@ void define(PyFilterLabel& cls) {
     cls.def("__eq__", &FilterLabel::operator==, py::is_operator());
     cls.def("__ne__", &FilterLabel::operator!=, py::is_operator());
 
-    cls.def("__repr__", &getRepr);
+    cls.def("__repr__", &FilterLabel::toString);
+    // Neither __copy__ nor __deepcopy__ default to each other
+    cls.def("__copy__", [](const FilterLabel& obj) { return obj.cloneStorable(); });
+    cls.def("__deepcopy__", [](const FilterLabel& obj, py::dict& memo) { return obj.cloneStorable(); });
 }
 
 PYBIND11_MODULE(filterLabel, mod) {

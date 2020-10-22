@@ -34,6 +34,14 @@ namespace lsst {
 namespace afw {
 namespace image {
 
+#ifndef DOXYGEN
+class FilterLabel;
+namespace impl {
+// Needed for some esoteric tests; do not use elsewhere!
+FilterLabel makeTestFilterLabel(bool, std::string const &, bool, std::string const &);
+}  // namespace impl
+#endif
+
 /**
  * A group of labels for a filter in an exposure or coadd.
  *
@@ -97,8 +105,22 @@ public:
     bool operator!=(FilterLabel const &rhs) const noexcept { return !(*this == rhs); }
     /** @} */
 
+    // Storable support
+
+    /// Return a hash of this object.
+    std::size_t hash_value() const noexcept override;
+    /// Return a string representation of this object.
+    std::string toString() const override;
+    /// Create a new object that is a copy of this one.
+    std::shared_ptr<Storable> cloneStorable() const override;
+    bool equals(Storable const &other) const noexcept override { return singleClassEquals(*this, other); }
+
 private:
     FilterLabel(bool hasBand, std::string const &band, bool hasPhysical, std::string const &physical);
+#ifndef DOXYGEN
+    // Needed for some esoteric tests; do not use elsewhere!
+    friend FilterLabel impl::makeTestFilterLabel(bool, std::string const &, bool, std::string const &);
+#endif
 
     // A separate boolean leads to easier implementations (at the cost of more
     // memory) than a unique_ptr<string>.
@@ -110,5 +132,14 @@ private:
 }  // namespace image
 }  // namespace afw
 }  // namespace lsst
+
+namespace std {
+template <>
+struct hash<lsst::afw::image::FilterLabel> {
+    using argument_type = lsst::afw::image::FilterLabel;
+    using result_type = size_t;
+    size_t operator()(argument_type const &obj) const noexcept { return obj.hash_value(); }
+};
+}  // namespace std
 
 #endif
