@@ -115,6 +115,18 @@ public:
     std::shared_ptr<Storable> cloneStorable() const override;
     bool equals(Storable const &other) const noexcept override { return singleClassEquals(*this, other); }
 
+    // Persistable support
+
+    /// All filter labels are always persistable.
+    bool isPersistable() const noexcept override { return true; }
+
+protected:
+    // Persistable support
+
+    std::string getPersistenceName() const noexcept override;
+    std::string getPythonModule() const noexcept override;
+    void write(table::io::OutputArchiveHandle &handle) const override;
+
 private:
     FilterLabel(bool hasBand, std::string const &band, bool hasPhysical, std::string const &physical);
 #ifndef DOXYGEN
@@ -127,6 +139,11 @@ private:
     // _band and _physical are part of the object state iff _hasBand and _hasPhysical, respectively
     bool _hasBand, _hasPhysical;
     std::string _band, _physical;
+
+    // Persistable support
+
+    class Factory;
+    static Factory factory;
 };
 
 }  // namespace image

@@ -97,6 +97,15 @@ class FilterLabelTestCase(lsst.utils.tests.TestCase):
                 print(f"repr(label) = '{label!r}'")
                 raise
 
+    def testPersistence(self):
+        """Check persistence of a FilterLabel.
+        """
+        for label in self._labelVariants():
+            with lsst.utils.tests.getTempFilePath(".fits") as outFile:
+                label.writeFits(outFile)
+                roundTrip = FilterLabel.readFits(outFile)
+            self.assertEqual(roundTrip, label)
+
     def _checkProperty(self, label, has, property, value):
         # For consistency with C++ API, getting a missing label raises instead of returning None
         if value:

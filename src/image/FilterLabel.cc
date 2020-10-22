@@ -26,6 +26,14 @@
 #include "lsst/utils/hashCombine.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image/FilterLabel.h"
+#include "lsst/afw/table/BaseRecord.h"
+#include "lsst/afw/table/Flag.h"
+#include "lsst/afw/table/FunctorKey.h"
+#include "lsst/afw/table/Schema.h"
+#include "lsst/afw/table/io/InputArchive.h"
+#include "lsst/afw/table/io/OutputArchive.h"
+#include "lsst/afw/table/io/CatalogVector.h"
+#include "lsst/afw/table/io/Persistable.cc"  // Needed for PersistableFacade::dynamicCast
 
 using namespace std::string_literals;
 
@@ -138,6 +146,116 @@ std::shared_ptr<typehandling::Storable> FilterLabel::cloneStorable() const {
     return std::make_shared<FilterLabel>(*this);
 }
 
+// Persistable support
+
+namespace {
+
+/* Abstract the representation of an optional string so that it's easy to
+ * add/remove filter names later. The choice of pair as the key type was
+ * dictated by the implementation of FilterLabel, and may be changed if
+ * FilterLabel's internal representation changes. The persisted form
+ * cannot be changed without breaking old files.
+ */
+class OptionalString : public table::FunctorKey<std::pair<bool, std::string>> {
+public:
+    static OptionalString addFields(table::Schema &schema, std::string const &name, std::string const &doc,
+                                    int length) {
+        table::Key<table::Flag> existsKey =
+                schema.addField<table::Flag>(schema.join(name, "exists"), "Existence flag for "s + name);
+        table::Key<std::string> valueKey = schema.addField<std::string>(name, doc, "", length);
+        return OptionalString(existsKey, valueKey);
+    }
+
+    OptionalString() noexcept : _exists(), _value() {}
+    OptionalString(table::Key<table::Flag> const &exists, table::Key<std::string> const &value) noexcept
+            : _exists(exists), _value(value) {}
+
+    std::pair<bool, std::string> get(table::BaseRecord const &record) const override {
+        // Suppress any weird values if they don't matter
+        bool exists = record.get(_exists);
+        return std::make_pair(exists, exists ? record.get(_value) : ""s);
+    }
+
+    void set(table::BaseRecord &record, std::pair<bool, std::string> const &value) const override {
+        // Suppress any weird values if they don't matter
+        record.set(_exists, value.first);
+        record.set(_value, value.first ? value.second : ""s);
+    }
+
+    bool operator==(OptionalString const &other) const noexcept {
+        return _exists == other._exists && _value == other._value;
+    }
+    bool operator!=(OptionalString const &other) const noexcept { return !(*this == other); }
+
+    bool isValid() const noexcept { return _exists.isValid() && _value.isValid(); }
+
+    table::Key<table::Flag> getExists() const noexcept { return _exists; }
+    table::Key<std::string> getValue() const noexcept { return _value; }
+
+private:
+    table::Key<table::Flag> _exists;
+    table::Key<std::string> _value;
+};
+
+struct PersistenceHelper {
+    table::Schema schema;
+    OptionalString band;
+    OptionalString physical;
+
+    static PersistenceHelper const &get() {
+        static PersistenceHelper const instance;
+        return instance;
+    }
+
+private:
+    PersistenceHelper()
+            : schema(),
+              band(OptionalString::addFields(schema, "band", "Name of the band.", 32)),
+              physical(OptionalString::addFields(schema, "physical", "Name of the physical filter.", 32)) {}
+};
+
+std::string _getPersistenceName() noexcept { return "FilterLabel"s; }
+
+}  // namespace
+
+std::string FilterLabel::getPersistenceName() const noexcept { return _getPersistenceName(); }
+std::string FilterLabel::getPythonModule() const noexcept { return "lsst.afw.image"s; }
+
+void FilterLabel::write(table::io::OutputArchiveHandle &handle) const {
+    PersistenceHelper const &keys = PersistenceHelper::get();
+    table::BaseCatalog catalog = handle.makeCatalog(keys.schema);
+    std::shared_ptr<table::BaseRecord> record = catalog.addNew();
+
+    record->set(keys.band, std::make_pair(_hasBand, _band));
+    record->set(keys.physical, std::make_pair(_hasPhysical, _physical));
+    handle.saveCatalog(catalog);
+}
+
+class FilterLabel::Factory : public table::io::PersistableFactory {
+public:
+    std::shared_ptr<table::io::Persistable> read(table::io::InputArchive const &archive,
+                                                 table::io::CatalogVector const &catalogs) const override {
+        auto const &keys = PersistenceHelper::get();
+        LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
+        table::BaseRecord const &record = catalogs.front().front();
+        LSST_ARCHIVE_ASSERT(record.getSchema() == keys.schema);
+
+        // Use explicit new operator to access private constructor
+        return std::shared_ptr<FilterLabel>(
+                new FilterLabel(record.get(keys.band.getExists()), record.get(keys.band.getValue()),
+                                record.get(keys.physical.getExists()), record.get(keys.physical.getValue())));
+    }
+
+    Factory(std::string const &name) : table::io::PersistableFactory(name) {}
+};
+
+// Adds FilterLabel::factory to a global registry.
+FilterLabel::Factory FilterLabel::factory(_getPersistenceName());
+
 }  // namespace image
+
+template std::shared_ptr<image::FilterLabel> table::io::PersistableFacade<image::FilterLabel>::dynamicCast(
+        std::shared_ptr<table::io::Persistable> const &);
+
 }  // namespace afw
 }  // namespace lsst

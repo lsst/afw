@@ -65,6 +65,8 @@ PyFilterLabel declare(py::module& mod) {
 }
 
 void define(PyFilterLabel& cls) {
+    table::io::python::addPersistableMethods(cls);
+
     cls.def_static("fromBandPhysical", &FilterLabel::fromBandPhysical, "band"_a, "physical"_a);
     cls.def_static("fromBand", &FilterLabel::fromBand, "band"_a);
     cls.def_static("fromPhysical", &FilterLabel::fromPhysical, "physical"_a);
