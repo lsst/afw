@@ -70,6 +70,10 @@ void declareGetImage(PyClass &cls, std::string const &suffix) {
 }
 }
 
+// BackgroundMI Deleter to work around different holder types for Background/BackgroundMI
+template<typename T> struct Deleter { void operator() (T *o) const { delete o; } };
+
+
 PYBIND11_MODULE(background, mod) {
     py::module::import("lsst.afw.image.image");
 
@@ -151,7 +155,8 @@ PYBIND11_MODULE(background, mod) {
     clsBackground.def("getBackgroundControl", (std::shared_ptr<BackgroundControl> (Background::*)()) &
                                                       Background::getBackgroundControl);
 
-    py::class_<BackgroundMI, std::shared_ptr<BackgroundMI>, Background> clsBackgroundMI(mod, "BackgroundMI");
+    // Workaround for:  https://github.com/pybind/pybind11/issues/1317
+    py::class_<BackgroundMI, std::unique_ptr<BackgroundMI, Deleter<BackgroundMI>>, Background> clsBackgroundMI(mod, "BackgroundMI");
 
     /* Constructors */
     clsBackgroundMI.def(
