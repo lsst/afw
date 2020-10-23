@@ -227,7 +227,7 @@ class ImageTestCase(lsst.utils.tests.TestCase):
                 for origin in (None, afwImage.PARENT, afwImage.LOCAL):
                     destIm[:] = -1.0
                     bbox = lsst.geom.Box2I(validMin, srcIm.getDimensions())
-                    if origin != afwImage.LOCAL:
+                    if origin is None or origin != afwImage.LOCAL:
                         bbox.shift(lsst.geom.Extent2I(xy0))
                     if origin is None:
                         destIm.assign(srcIm, bbox)
@@ -251,7 +251,7 @@ class ImageTestCase(lsst.utils.tests.TestCase):
                 # None to omit the argument
                 for origin in (None, afwImage.PARENT, afwImage.LOCAL):
                     bbox = lsst.geom.Box2I(badMin, srcIm.getDimensions())
-                    if origin != afwImage.LOCAL:
+                    if origin is None or origin != afwImage.LOCAL:
                         bbox.shift(lsst.geom.Extent2I(xy0))
                     if origin is None:
                         self.assertRaises(Exception, destIm.set, srcIm, bbox)

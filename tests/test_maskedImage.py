@@ -351,7 +351,7 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
                     destVariance[:] = -1.0
                     destMask[:] = 0xFFFF
                     bbox = lsst.geom.Box2I(validMin, srcMI.getDimensions())
-                    if origin != afwImage.LOCAL:
+                    if origin is None or origin != afwImage.LOCAL:
                         bbox.shift(lsst.geom.Extent2I(xy0))
                     if origin is None:
                         destMI.assign(srcMI, bbox)
@@ -381,7 +381,7 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
                 # None to omit the argument
                 for origin in (None, afwImage.PARENT, afwImage.LOCAL):
                     bbox = lsst.geom.Box2I(validMin, srcMI.getDimensions())
-                    if origin != afwImage.LOCAL:
+                    if origin is None or origin != afwImage.LOCAL:
                         bbox.shift(lsst.geom.Extent2I(xy0))
                     if origin is None:
                         self.assertRaises(Exception, destMI.set, srcMI, bbox)
