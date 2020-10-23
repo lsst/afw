@@ -293,7 +293,7 @@ class SimpleSkyWcsTestCase(SkyWcsBaseTestCase):
         crpix = wcs.getPixelOrigin()
         self.assertPairsAlmostEqual(crpix, self.crpix, maxDiff=self.tinyPixels)
 
-        self.assertFloatsAlmostEqual(wcs.getCdMatrix(), cdMatrix)
+        self.assertFloatsAlmostEqual(wcs.getCdMatrix(), cdMatrix, atol=7.08e-16)
 
         pixelScale = wcs.getPixelScale()
         self.assertAnglesAlmostEqual(self.scale, pixelScale, maxDiff=self.tinyAngle)
