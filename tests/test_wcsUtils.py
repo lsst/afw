@@ -33,7 +33,7 @@ import lsst.utils.tests
 from lsst.afw.geom.wcsUtils import createTrivialWcsMetadata, deleteBasicWcsMetadata, \
     getCdMatrixFromMetadata, getSipMatrixFromMetadata, getImageXY0FromMetadata, \
     hasSipMatrix, makeSipMatrixMetadata, makeTanSipMetadata, \
-    computePixelToDistortedPixel, makeDistortedTanWcs
+    computePixelToDistortedPixel
 
 
 def makeRotationMatrix(angle, scale):
@@ -47,8 +47,7 @@ def makeRotationMatrix(angle, scale):
 
 
 class BaseTestCase(lsst.utils.tests.TestCase):
-    """Base class for testing makeDistortedTanWcs and
-    computePixelToDistortedPixel
+    """Base class for testing computePixelToDistortedPixel
     """
     def setUp(self):
         # define the position and size of one CCD in the focal plane
@@ -83,76 +82,6 @@ class BaseTestCase(lsst.utils.tests.TestCase):
         offset = lsst.geom.AffineTransform(lsst.geom.Extent2D(*offset))
         # AffineTransform a*b = b.then(a)
         return afwGeom.makeTransform(rotScale*offset)
-
-
-class MakeDistortedTanWcsTestCase(BaseTestCase):
-    """Test lsst.afw.geom.makeDistortedTanWcs
-    """
-
-    def testNoDistortion(self):
-        """Test makeDistortedTanWcs using an affine transform for pixelToFocalPlane
-
-        Construct pixelToFocalPlane to match the plate scale used to
-        generate self.tanWcs, the input to makeDistortedTanWcs. Thus the WCS
-        returned by makeDistortedTanWcs should match self.tanWcs.
-        """
-        focalPlaneToFieldAngle = self.makeAffineTransform(scale=self.radPerMm)
-        wcs = makeDistortedTanWcs(
-            tanWcs=self.tanWcs,
-            pixelToFocalPlane=self.pixelToFocalPlane,
-            focalPlaneToFieldAngle=focalPlaneToFieldAngle,
-        )
-        self.assertWcsAlmostEqualOverBBox(wcs, self.tanWcs, bbox=self.bbox)
-
-    def testDistortion(self):
-        """Test makeDistortedTanWcs using a non-affine transform for pixelToFocalPlane
-        """
-        # Compute a distorted wcs that matches self.tanWcs at the center of the field;
-        # the amount of distortion is 10s of pixels over the detector
-        fieldAngleToFocalPlane = afwGeom.makeRadialTransform([0.0, 1/self.radPerMm, 0.0, 1000/self.radPerMm])
-        focalPlaneToFieldAngle = fieldAngleToFocalPlane.inverted()
-        focalPlaneToTanFieldAngle = self.makeAffineTransform(scale=self.radPerMm)
-        wcs = makeDistortedTanWcs(
-            tanWcs=self.tanWcs,
-            pixelToFocalPlane=self.pixelToFocalPlane,
-            focalPlaneToFieldAngle=focalPlaneToFieldAngle,
-        )
-
-        # At the center of the focal plane both WCS should give the same sky position
-        pixelAtCtr = self.pixelToFocalPlane.applyInverse(lsst.geom.Point2D(0, 0))
-        tanSkyAtCtr = self.tanWcs.pixelToSky(pixelAtCtr)
-        skyAtCtr = wcs.pixelToSky(pixelAtCtr)
-        self.assertPairsAlmostEqual(tanSkyAtCtr, skyAtCtr)
-
-        # At all reasonable sky points the following field angles should be almost equal:
-        #   sky -> tanWcs.skyToPixel -> pixelToFocalPlane -> focalPlaneToTanFieldAngle
-        #   sky -> wcs.skyToPixel -> pixelToFocalPlane -> focalPlaneToFieldAngle
-        # where focalPlaneToTanFieldAngle is the linear approximation to
-        # focalPlaneToFieldAngle at the center of the field (where tanWcs and wcs match),
-        # since for a given pointing, field angle gives position on the sky
-        skyPoints = self.tanWcs.pixelToSky(self.pixelPoints)
-
-        tanFieldAnglePoints = focalPlaneToTanFieldAngle.applyForward(
-            self.pixelToFocalPlane.applyForward(self.tanWcs.skyToPixel(skyPoints)))
-        fieldAnglePoints = focalPlaneToFieldAngle.applyForward(
-            self.pixelToFocalPlane.applyForward(wcs.skyToPixel(skyPoints)))
-        assert_allclose(tanFieldAnglePoints, fieldAnglePoints)
-
-        # The inverse should also be true: for a set of field angle points
-        # the following sky positions should be almost equal:
-        # fieldAngle -> fieldAngleToTanFocalPlane -> focalPlaneToPixel -> tanWcs.pixelToSky
-        # fieldAngle -> fieldAngleToFocalPlane -> focalPlaneToPixel -> wcs.pixelToSky
-        focalPlaneToPixel = self.pixelToFocalPlane.inverted()
-        fieldAngleToTanFocalPlane = focalPlaneToTanFieldAngle.inverted()
-        tanSkyPoints2 = self.tanWcs.pixelToSky(
-            focalPlaneToPixel.applyForward(
-                fieldAngleToTanFocalPlane.applyForward(fieldAnglePoints)))
-
-        skyPoints2 = wcs.pixelToSky(
-            focalPlaneToPixel.applyForward(
-                fieldAngleToFocalPlane.applyForward(fieldAnglePoints)))
-
-        self.assertSpherePointListsAlmostEqual(tanSkyPoints2, skyPoints2)
 
 
 class ComputePixelToDistortedPixelTestCase(BaseTestCase):
