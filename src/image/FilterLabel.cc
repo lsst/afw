@@ -70,7 +70,7 @@ std::string FilterLabel::getBandLabel() const {
     if (hasBandLabel()) {
         return _band;
     } else {
-        throw LSST_EXCEPT(pex::exceptions::LogicError, "FilterLabel has no band."s);
+        throw LSST_EXCEPT(pex::exceptions::LogicError, toString() + " has no band."s);
     }
 }
 
@@ -81,7 +81,7 @@ std::string FilterLabel::getPhysicalLabel() const {
     if (hasPhysicalLabel()) {
         return _physical;
     } else {
-        throw LSST_EXCEPT(pex::exceptions::LogicError, "FilterLabel has no physical filter."s);
+        throw LSST_EXCEPT(pex::exceptions::LogicError, toString() + " has no physical filter."s);
     }
 }
 
