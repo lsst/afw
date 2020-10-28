@@ -27,6 +27,7 @@
 #include <pybind11/pybind11.h>
 
 #include "lsst/afw/detection/Psf.h"
+#include "lsst/afw/typehandling/Storable.h"
 
 namespace lsst {
 namespace afw {
@@ -42,7 +43,7 @@ std::shared_ptr<Psf> clonedPsf(const Psf& psf) {
     return psf.clone();
 }
 
-std::shared_ptr<typehandling::Storable> clonedStorablePsf(const Psf& psf) {
+std::shared_ptr<typehandling::Storable> clonedStorablePsf(const typehandling::Storable& psf) {
     return psf.cloneStorable();
 }
 
