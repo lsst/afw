@@ -37,6 +37,7 @@ import lsst.pex.exceptions
 import lsst.geom
 import lsst.afw.table
 import lsst.afw.fits
+import lsst.afw.image
 import lsst.afw.detection
 
 

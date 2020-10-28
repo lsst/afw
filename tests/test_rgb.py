@@ -116,8 +116,11 @@ class RgbTestCase(unittest.TestCase):
         convolvedImage = type(self.images[0])(self.images[0].getDimensions())
         randomImage = type(self.images[0])(self.images[0].getDimensions())
         rand = afwMath.Random("MT19937", 666)
+        convolutionControl = afwMath.ConvolutionControl()
+        convolutionControl.setDoNormalize(True)
+        convolutionControl.setDoCopyEdge(True)
         for i in range(len(self.images)):
-            afwMath.convolve(convolvedImage, self.images[i], psf, True, True)
+            afwMath.convolve(convolvedImage, self.images[i], psf, convolutionControl)
             afwMath.randomGaussianImage(randomImage, rand)
             randomImage *= 2
             convolvedImage += randomImage
@@ -321,25 +324,6 @@ class RgbTestCase(unittest.TestCase):
         with lsst.utils.tests.getTempFilePath(".png") as fileName:
             rgb.makeRGB(self.images[R], self.images[G],
                         self.images[B], fileName=fileName, rescaleFactor=0.5)
-            self.assertTrue(os.path.exists(fileName))
-
-    def writeFileLegacyAPI(self, fileName):
-        """Test that the legacy API still works, although it's deprecated"""
-        with self.assertWarns(FutureWarning):
-            asinh = rgb.asinhMappingF(self.min, self.range, self.Q)
-            rgbImage = rgb.RgbImageF(
-                self.images[R], self.images[G], self.images[B], asinh)
-        if display > 1:
-            afwDisplay.Display(frame=0).mtv(self.images[B], title="B: legacy API")
-            afwDisplay.Display(frame=1).mtv(self.images[G], title="G: legacy API")
-            afwDisplay.Display(frame=2).mtv(self.images[R], title="R: legacy API")
-
-        rgbImage.write(fileName)
-
-    @unittest.skipUnless(HAVE_MATPLOTLIB, NO_MATPLOTLIB_STRING)
-    def testWriteStarsLegacyAPI(self):
-        with lsst.utils.tests.getTempFilePath(".png") as fileName:
-            self.writeFileLegacyAPI(fileName)
             self.assertTrue(os.path.exists(fileName))
 
 

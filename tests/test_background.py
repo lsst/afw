@@ -89,19 +89,6 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
                           [back[0, y, afwImage.LOCAL] for y in range(H)]):
             self.assertLess(abs(iy - by), 5)
 
-    def testgetPixel(self):
-        """Tests basic functionality of getPixel() method (floats)"""
-        xcen, ycen = 50, 100
-        bgCtrl = afwMath.BackgroundControl(10, 10)
-        bgCtrl.setNxSample(5)
-        bgCtrl.setNySample(5)
-        bgCtrl.getStatisticsControl().setNumIter(3)
-        bgCtrl.getStatisticsControl().setNumSigmaClip(3)
-        back = afwMath.makeBackground(self.image, bgCtrl)
-
-        with self.assertWarns(FutureWarning):
-            self.assertEqual(back.getPixel(xcen, ycen), self.val)
-
     @unittest.skipIf(AfwdataDir is None, "afwdata not setup")
     def testBackgroundTestImages(self):
         """Tests Laher's afwdata/Statistics/*.fits images (doubles)"""

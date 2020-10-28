@@ -50,23 +50,6 @@ namespace afw {
 namespace image {
 
 /**
- *  Return the metadata (header entries) from a FITS file.
- *
- *  @deprecated Use lsst::afw::fits::readMetadata instead.
- *
- *  @param[in]    fileName            File to read.
- *  @param[in]    hdu                 HDU to read, 0-indexed.  The special value of afw::fits::DEFAULT_HDU
- *                                    will read the first non-empty HDU.
- *  @param[in]    strip               If true, ignore special header keys usually managed by cfitsio
- *                                    (e.g. NAXIS).
- */
-[[deprecated("Use `afw::fits::readMetadata` instead. To be removed after 20.0.0.")]]  // DM-22814
-        inline std::shared_ptr<daf::base::PropertyList>
-        readMetadata(std::string const& fileName, int hdu = fits::DEFAULT_HDU, bool strip = false) {
-    return afw::fits::readMetadata(fileName, hdu, strip);
-}
-
-/**
  * Return a value indicating a bad pixel for the given Image type
  *
  * A quiet NaN is returned for types that support it otherwise `bad`

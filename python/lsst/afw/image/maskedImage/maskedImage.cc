@@ -100,7 +100,6 @@ PyMaskedImage<ImagePixelT> declareMaskedImage(py::module &mod, const std::string
 
     cls.def("subset", &MI::subset, "bbox"_a, "origin"_a = PARENT);
 
-    cls.def("__ilshift__", &MI::operator<<=);
     cls.def("__iadd__", (MI & (MI::*)(ImagePixelT const)) & MI::operator+=);
     cls.def("__iadd__", (MI & (MI::*)(MI const &)) & MI::operator+=);
     cls.def("__iadd__", (MI & (MI::*)(Image<ImagePixelT> const &)) & MI::operator+=);

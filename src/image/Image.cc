@@ -157,12 +157,6 @@ ImageBase<PixelT>& ImageBase<PixelT>::operator=(ImageBase&& rhs) {
 }
 
 template <typename PixelT>
-ImageBase<PixelT>& ImageBase<PixelT>::operator<<=(ImageBase const& rhs) {
-    assign(rhs);
-    return *this;
-}
-
-template <typename PixelT>
 void ImageBase<PixelT>::assign(ImageBase const& rhs, lsst::geom::Box2I const& bbox, ImageOrigin origin) {
     auto lhsDim = bbox.isEmpty() ? getDimensions() : bbox.getDimensions();
     if (lhsDim != rhs.getDimensions()) {

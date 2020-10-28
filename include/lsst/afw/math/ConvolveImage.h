@@ -192,24 +192,6 @@ void convolve(OutImageT& convolvedImage, InImageT const& inImage, KernelT const&
               ConvolutionControl const& convolutionControl = ConvolutionControl());
 
 /**
- * Old, deprecated version of convolve.
- *
- * @deprecated This version has no ability to control interpolation parameters.
- *
- * @param[out] convolvedImage convolved %image; must be the same size as inImage
- * @param[in] inImage %image to convolve
- * @param[in] kernel convolution kernel
- * @param[in] doNormalize if true, normalize the kernel, else use "as is"
- * @param[in] doCopyEdge if false (default), set edge pixels to the standard edge pixel; if true,
- *                       copy edge pixels from input and set EDGE bit of mask
- */
-template <typename OutImageT, typename InImageT, typename KernelT>
-[[deprecated("Use `convolve` with a `ConvolutionControl` instead. To be removed after 20.0.0.")]]  // DM-22814
-        void
-        convolve(OutImageT& convolvedImage, InImageT const& inImage, KernelT const& kernel, bool doNormalize,
-                 bool doCopyEdge = false);
-
-/**
  * Return an off-the-edge pixel appropriate for a given Image type
  *
  * The value is quiet_NaN if that exists for the pixel type, else 0

@@ -46,9 +46,6 @@ class KernelIOTestCase(unittest.TestCase):
         self.assertEqual(k1.getWidth(), k2.getWidth())
         self.assertEqual(k1.getHeight(), k2.getHeight())
         self.assertEqual(k1.getCtr(), k2.getCtr())
-        with self.assertWarns(FutureWarning):
-            self.assertEqual(k1.getCtrX(), k2.getCtrX())
-            self.assertEqual(k1.getCtrY(), k2.getCtrY())
         self.assertEqual(k1.getNKernelParameters(), k2.getNKernelParameters())
         self.assertEqual(k1.getNSpatialParameters(),
                          k2.getNSpatialParameters())

@@ -370,71 +370,6 @@ public:
         getSchema().getAliasMap()->set(getCentroidSlot().getAlias(), name);
     }
 
-    /**
-     *  Return the name of the field used for the Centroid slot.
-     *
-     *  @throws pex::exceptions::NotFoundError if the slot is not defined.
-     *
-     *  @deprecated in favor of
-     *
-     *      getSchema().getAliasMap()->get("slot_Centroid")
-     */
-    [
-            [deprecated("Use `getSchema().getAliasMap()->get(\"slot_Centroid\")` instead. To be removed "
-                        "after 20.0.0.")]]  // DM-22814
-            std::string
-            getCentroidDefinition() const {
-        return getSchema().getAliasMap()->get(getCentroidSlot().getAlias());
-    }
-
-    /**
-     *  Return true if the Centroid slot corresponds to a valid field.
-     *
-     *  @deprecated in favor of `getCentroidSlot().isValid()`.
-     */
-    [[deprecated("Use `getCentroidSlot().isValid()` instead. To be removed after 20.0.0.")]]  // DM-22814
-            bool
-            hasCentroidSlot() const {
-        return getCentroidSlot().isValid();
-    }
-
-    /**
-     *  Return the key used for the Centroid slot measurement value.
-     *
-     *  @deprecated in favor of `getCentroidSlot().getMeasKey()`.
-     */
-    [
-            [deprecated("Use `getCentroidSlot().getMeasKey()` instead. To be removed after "
-                        "20.0.0.")]]  // DM-22814
-            CentroidSlotDefinition::MeasKey
-            getCentroidKey() const {
-        return getCentroidSlot().getMeasKey();
-    }
-
-    /**
-     *  Return the key used for the Centroid slot uncertainty.
-     *
-     *  @deprecated in favor of `getCentroidSlot().getErrKey()`.
-     */
-    [
-            [deprecated("Use `getCentroidSlot().getErrKey()` instead. To be removed after "
-                        "20.0.0.")]]  // DM-22814
-            CentroidSlotDefinition::ErrKey
-            getCentroidErrKey() const {
-        return getCentroidSlot().getErrKey();
-    }
-
-    /**
-     *  Return the key used for the Centroid slot failure flag.
-     *
-     *  @deprecated in favor of `getCentroidSlot().getFlagKey()`.
-     */
-    [[deprecated("Use `getCentroidSlot().getFlagKey()` instead. To be removed after 20.0.0.")]]  // DM-22814
-            Key<Flag>
-            getCentroidFlagKey() const {
-        return getCentroidSlot().getFlagKey();
-    }
-
     ShapeSlotDefinition const &getShapeSlot() const { return _slots.defShape; }
 
     /**
@@ -446,67 +381,6 @@ public:
      */
     void defineShape(std::string const &name) {
         getSchema().getAliasMap()->set(getShapeSlot().getAlias(), name);
-    }
-
-    /**
-     *  Return the name of the field used for the Shape slot.
-     *
-     *  @throws pex::exceptions::NotFoundError if the slot is not defined.
-     *
-     *  @deprecated in favor of
-     *
-     *      getSchema().getAliasMap()->get("slot_Shape")
-     */
-    [
-            [deprecated("Use `getSchema().getAliasMap()->get(\"slot_Shape\")` instead. To be removed after "
-                        "20.0.0.")]]  // DM-22814
-            std::string
-            getShapeDefinition() const {
-        return getSchema().getAliasMap()->get(getShapeSlot().getAlias());
-    }
-
-    /**
-     *  Return true if the Shape slot corresponds to a valid field.
-     *
-     *  @deprecated in favor of `getShapeSlot().isValid()`.
-     */
-    [[deprecated("Use `getShapeSlot().isValid()` instead. To be removed after 20.0.0.")]]  // DM-22814
-            bool
-            hasShapeSlot() const {
-        return getShapeSlot().isValid();
-    }
-
-    /**
-     *  Return the key used for the Shape slot measurement value.
-     *
-     *  @deprecated in favor of `getShapeSlot().getMeasKey()`.
-     */
-    [[deprecated("Use `getShapeSlot().getMeasKey()` instead. To be removed after 20.0.0.")]]  // DM-22814
-            ShapeSlotDefinition::MeasKey
-            getShapeKey() const {
-        return getShapeSlot().getMeasKey();
-    }
-
-    /**
-     *  Return the key used for the Shape slot uncertainty.
-     *
-     *  @deprecated in favor of `getShapeSlot().getErrKey()`.
-     */
-    [[deprecated("Use `getShapeSlot().getErrKey()` instead. To be removed after 20.0.0.")]]  // DM-22814
-            ShapeSlotDefinition::ErrKey
-            getShapeErrKey() const {
-        return getShapeSlot().getErrKey();
-    }
-
-    /**
-     *  Return the key used for the Shape slot failure flag.
-     *
-     *  @deprecated in favor of `getShapeSlot().getFlagKey()`.
-     */
-    [[deprecated("Use `getShapeSlot().getFlagKey()` instead. To be removed after 20.0.0.")]]  // DM-22814
-            Key<Flag>
-            getShapeFlagKey() const {
-        return getShapeSlot().getFlagKey();
     }
 
     SourceTable &operator=(SourceTable const &) = delete;
@@ -600,20 +474,20 @@ public:
     }
 
     ndarray::Array<double, 1> const getX() const {
-        return this->operator[](this->getTable()->getCentroidKey().getX());
+        return this->operator[](this->getTable()->getCentroidSlot().getMeasKey().getX());
     }
     ndarray::Array<double, 1> const getY() const {
-        return this->operator[](this->getTable()->getCentroidKey().getY());
+        return this->operator[](this->getTable()->getCentroidSlot().getMeasKey().getY());
     }
 
     ndarray::Array<double, 1> const getIxx() const {
-        return this->operator[](this->getTable()->getShapeKey().getIxx());
+        return this->operator[](this->getTable()->getShapeSlot().getMeasKey().getIxx());
     }
     ndarray::Array<double, 1> const getIyy() const {
-        return this->operator[](this->getTable()->getShapeKey().getIyy());
+        return this->operator[](this->getTable()->getShapeSlot().getMeasKey().getIyy());
     }
     ndarray::Array<double, 1> const getIxy() const {
-        return this->operator[](this->getTable()->getShapeKey().getIxy());
+        return this->operator[](this->getTable()->getShapeSlot().getMeasKey().getIxy());
     }
 
     /// @copydoc BaseColumnView::make
@@ -719,11 +593,11 @@ inline bool SourceRecord::getShapeFlag() const { return this->get(getTable()->ge
 
 inline RecordId SourceRecord::getParent() const { return get(SourceTable::getParentKey()); }
 inline void SourceRecord::setParent(RecordId id) { set(SourceTable::getParentKey(), id); }
-inline double SourceRecord::getX() const { return get(getTable()->getCentroidKey().getX()); }
-inline double SourceRecord::getY() const { return get(getTable()->getCentroidKey().getY()); }
-inline double SourceRecord::getIxx() const { return get(getTable()->getShapeKey().getIxx()); }
-inline double SourceRecord::getIyy() const { return get(getTable()->getShapeKey().getIyy()); }
-inline double SourceRecord::getIxy() const { return get(getTable()->getShapeKey().getIxy()); }
+inline double SourceRecord::getX() const { return get(getTable()->getCentroidSlot().getMeasKey().getX()); }
+inline double SourceRecord::getY() const { return get(getTable()->getCentroidSlot().getMeasKey().getY()); }
+inline double SourceRecord::getIxx() const { return get(getTable()->getShapeSlot().getMeasKey().getIxx()); }
+inline double SourceRecord::getIyy() const { return get(getTable()->getShapeSlot().getMeasKey().getIyy()); }
+inline double SourceRecord::getIxy() const { return get(getTable()->getShapeSlot().getMeasKey().getIxy()); }
 
 }  // namespace table
 }  // namespace afw

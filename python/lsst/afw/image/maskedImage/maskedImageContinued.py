@@ -25,7 +25,6 @@ __all__ = ["MaskedImage", "VariancePixel"]
 import numpy as np
 
 from lsst.utils import TemplateMeta
-from lsst.utils.deprecated import deprecate_pybind11
 
 from ..image.fitsIoWithOptions import imageReadFitsWithOptions, exposureWriteFitsWithOptions
 from ..slicing import supportSlicing
@@ -130,5 +129,3 @@ MaskedImage.alias("L", MaskedImageL)
 for cls in set(MaskedImage.values()):
     supportSlicing(cls)
     disableImageArithmetic(cls)
-    cls.__ilshift__ = deprecate_pybind11(cls.__ilshift__,
-                                         reason="Use `assign` instead. To be removed after 20.0.0.")

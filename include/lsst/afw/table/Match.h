@@ -114,39 +114,6 @@ SourceMatchVector matchXy(
 
 /**
  * Compute all tuples (s1,s2,d) where s1 belings to `cat1`, s2 belongs to `cat2` and
- * d, the distance between s1 and s2, in pixels, is at most `radius`. If cat1 and
- * cat2 are identical, then this call is equivalent to `matchXy(cat1,radius)`.
- * The match is performed in pixel space (2d cartesian).
- *
- * @deprecated  Please use the matchXy(..., MatchControl const&) API
- *
- * @param[in] cat1     first catalog
- * @param[in] cat2     second catalog
- * @param[in] radius   match radius (pixels)
- * @param[in] closest  if true then just return the closest match
- */
-[[deprecated("Use overloads that take `MatchControl` instead. To be removed after 20.0.0.")]]  // DM-22814
-        SourceMatchVector
-        matchXy(SourceCatalog const &cat1, SourceCatalog const &cat2, double radius, bool closest);
-
-/**
- * Compute all tuples (s1,s2,d) where s1 != s2, s1 and s2 both belong to `cat`,
- * and d, the distance between s1 and s2, in pixels, is at most `radius`. The
- * match is performed in pixel space (2d cartesian).
- *
- * @deprecated  Please use the matchXy(..., MatchControl const&) API
- *
- * @param[in] cat          the catalog to self-match
- * @param[in] radius       match radius (pixels)
- * @param[in] symmetric    if cat to `true` symmetric matches are produced: i.e.
- *                         if (s1, s2, d) is reported, then so is (s2, s1, d).
- */
-[[deprecated("Use overloads that take `MatchControl` instead. To be removed after 20.0.0.")]]  // DM-22814
-        SourceMatchVector
-        matchXy(SourceCatalog const &cat, double radius, bool symmetric);
-
-/**
- * Compute all tuples (s1,s2,d) where s1 belings to `cat1`, s2 belongs to `cat2` and
  * d, the distance between s1 and s2, is at most `radius`. If cat1 and
  * cat2 are identical, then this call is equivalent to `matchRaDec(cat1,radius)`.
  * The match is performed in ra, dec space.
@@ -176,45 +143,6 @@ std::vector<Match<typename Cat::Record, typename Cat::Record> > matchRaDec(
         MatchControl const &mc =
                 MatchControl()  ///< how to do the matching (obeys MatchControl::symmetricMatch)
 );
-
-/**
- * Compute all tuples (s1,s2,d) where s1 belings to `cat1`, s2 belongs to `cat2` and
- * d, the distance between s1 and s2, is at most `radius`. If cat1 and
- * cat2 are identical, then this call is equivalent to `matchRaDec(cat1,radius)`.
- * The match is performed in ra, dec space.
- *
- * @deprecated.  Use the matchRaDec(..., MatchControl) version
- *
- * @param[in] cat1     first catalog
- * @param[in] cat2     second catalog
- * @param[in] radius   match radius
- * @param[in] closest  if true then just return the closest match
- *
- * This is instantiated for Simple-Simple, Simple-Source, and Source-Source catalog combinations.
- */
-template <typename Cat1, typename Cat2>
-[[deprecated("Use overloads that take `MatchControl` instead. To be removed after 20.0.0.")]]  // DM-22814
-        std::vector<Match<typename Cat1::Record, typename Cat2::Record> >
-        matchRaDec(Cat1 const &cat1, Cat2 const &cat2, lsst::geom::Angle radius, bool closest);
-
-/**
- * Compute all tuples (s1,s2,d) where s1 != s2, s1 and s2 both belong to `cat`,
- * and d, the distance between s1 and s2, is at most `radius`. The
- * match is performed in ra, dec space.
- *
- * @deprecated.  Use the matchRaDec(..., MatchControl) version
- *
- * @param[in] cat          the catalog to self-match
- * @param[in] radius       match radius
- * @param[in] symmetric    if cat to `true` symmetric matches are produced: i.e.
- *                         if (s1, s2, d) is reported, then so is (s2, s1, d).
- *
- * This is instantiated for Simple and Source catalogs.
- */
-template <typename Cat>
-[[deprecated("Use overloads that take `MatchControl` instead. To be removed after 20.0.0.")]]  // DM-22814
-        std::vector<Match<typename Cat::Record, typename Cat::Record> >
-        matchRaDec(Cat const &cat, lsst::geom::Angle radius, bool symmetric);
 
 /**
  *  Return a table representation of a MatchVector that can be used to persist it.

@@ -390,14 +390,15 @@ class ConvolveTestCase(lsst.utils.tests.TestCase):
         # create a delta function kernel that has 1,1 in the center
         kFunc = afwMath.IntegerDeltaFunction2D(0.0, 0.0)
         kernel = afwMath.AnalyticKernel(3, 3, kFunc)
-        doNormalize = False
-        doCopyEdge = False
+        convControl = afwMath.ConvolutionControl()
+        convControl.setDoNormalize(False)
+        convControl.setDoCopyEdge(False)
 
         afwMath.convolve(self.cnvImage, self.maskedImage.getImage(),
-                         kernel, doNormalize, doCopyEdge)
+                         kernel, convControl)
 
         afwMath.convolve(self.cnvMaskedImage, self.maskedImage,
-                         kernel, doNormalize, doCopyEdge)
+                         kernel, convControl)
         cnvImMaskVarArr = self.cnvMaskedImage.getArrays()
 
         skipMaskArr = numpy.array(numpy.isnan(

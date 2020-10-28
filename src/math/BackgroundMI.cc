@@ -177,26 +177,6 @@ BackgroundMI& BackgroundMI::operator-=(float const delta) {
     return *this;
 }
 
-double BackgroundMI::getPixel(Interpolate::Style const interpStyle, int const x, int const y) const {
-    (void)getImage<InternalPixelT>(interpStyle);  // setup the interpolation
-
-    // build an interpobj along the row y and get the x'th value
-    int const nxSample = _statsImage.getWidth();
-    std::vector<double> bg_x(nxSample);
-    for (int iX = 0; iX < nxSample; iX++) {
-        bg_x[iX] = _gridColumns[iX][y];
-    }
-    std::vector<double> xcenTmp, bgTmp;
-    cullNan(_xcen, bg_x, xcenTmp, bgTmp);
-
-    try {
-        std::shared_ptr<Interpolate> intobj = makeInterpolate(xcenTmp, bgTmp, interpStyle);
-        return static_cast<double>(intobj->interpolate(x));
-    } catch (ex::Exception& e) {
-        LSST_EXCEPT_ADD(e, "in getPixel()");
-        throw;
-    }
-}
 template <typename PixelT>
 std::shared_ptr<image::Image<PixelT>> BackgroundMI::doGetImage(
         lsst::geom::Box2I const& bbox,

@@ -163,11 +163,6 @@ PYBIND11_MODULE(background, mod) {
     clsBackgroundMI.def("__isub__", &BackgroundMI::operator-=);
 
     /* Members */
-    clsBackgroundMI.def("getPixel",
-                        (double (BackgroundMI::*)(Interpolate::Style const, int const, int const) const) &
-                                BackgroundMI::getPixel);
-    clsBackgroundMI.def("getPixel",
-                        (double (BackgroundMI::*)(int const, int const) const) & BackgroundMI::getPixel);
     clsBackgroundMI.def("getStatsImage", &BackgroundMI::getStatsImage);
     clsBackgroundMI.def("getImageBBox", &BackgroundMI::getImageBBox);
 
