@@ -257,14 +257,14 @@ protected:
      * is mostly used to implement persistence.
      */
     explicit Background(lsst::geom::Box2I const imageBBox, int const nx, int const ny);
-    /// dtor
-    virtual ~Background() = default;
 
 public:
     typedef float InternalPixelT;  ///< type used for any internal images, and returned by getApproximate
 
     Background(Background const&) = delete;
     Background(Background&&) = delete;
+    /// dtor
+    virtual ~Background() = default;
     Background& operator=(Background const&) = delete;
     Background& operator=(Background&&) = delete;
 
