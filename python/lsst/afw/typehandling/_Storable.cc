@@ -50,6 +50,15 @@ void wrapStorable(utils::python::WrapperCollection& wrappers) {
         cls.def("__eq__", [](Storable const& self, Storable const& other) { return self.equals(other); },
                 "other"_a);
     });
+
+    wrappers.wrapType(
+        py::class_<StorableHelperFactory>(
+            wrappers.module, "StorableHelperFactory"
+        ),
+        [](auto& mod, auto& cls) {
+            cls.def(py::init<std::string&, std::string&>());
+        }
+    );
 }
 
 }  // namespace typehandling

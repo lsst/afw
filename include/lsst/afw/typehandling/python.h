@@ -29,6 +29,10 @@
 #include <string>
 
 #include "lsst/afw/typehandling/Storable.h"
+#include "lsst/afw/formatters/Utils.h"
+#include "lsst/afw/table/io/CatalogVector.h"
+#include "lsst/afw/table/io/OutputArchive.h"
+#include "lsst/afw/table/io/Persistable.cc"
 
 namespace lsst {
 namespace afw {
@@ -84,9 +88,120 @@ public:
     bool equals(Storable const& other) const noexcept override {
         PYBIND11_OVERLOAD_NAME(bool, Base, "__eq__", equals, other);
     }
+
+    bool isPersistable() const noexcept override {
+        PYBIND11_OVERLOAD(
+            bool, Base, isPersistable
+        );
+    }
+
+    std::string getPersistenceName() const override {
+        PYBIND11_OVERLOAD_NAME(
+            std::string, Base, "_getPersistenceName", getPersistenceName
+        );
+    }
+
+    std::string getPythonModule() const override {
+        PYBIND11_OVERLOAD_NAME(
+            std::string, Base, "_getPythonModule", getPythonModule
+        );
+    }
+
+    void write(table::io::OutputArchiveHandle& handle) const override;
 };
 
 std::string declareGenericMapRestrictions(std::string const& className, std::string const& keyName);
+
+/**
+ * StorableHelper persistence.
+ *
+ * We cannot directly override `StorableHelper::write` or `StorableHelperFactory::read` in python using
+ * PYBIND11_OVERLOAD* macros as the required argument c++ types (OutputArchiveHandle, InputArchive,
+ * CatalogVector) are not bound to python types.  Instead, we allow python subclasses of Storable to define
+ * `_write` and `_read` methods that return/accept a string serialization of the object.  The `_write` method
+ * should take no arguments (besides self) and return a byte string.  The `_read` method should be a static
+ * method that takes a string and returns an instance of the python class.  The python pickle module may be
+ * useful for handling the string serialization / deserialization.
+ *
+ * The `StorableHelper::write` and `StorableHelperFactory::read` c++ methods will directly call the python
+ * methods described above when required.
+ */
+
+namespace {
+
+class StorableHelperPersistenceHelper {
+public:
+    table::Schema schema;
+    table::Key<table::Array<std::uint8_t>> bytes;
+
+    static StorableHelperPersistenceHelper const &get() {
+        static StorableHelperPersistenceHelper instance;
+        return instance;
+    }
+
+    // No copying
+    StorableHelperPersistenceHelper(StorableHelperPersistenceHelper const &) = delete;
+    StorableHelperPersistenceHelper &operator=(StorableHelperPersistenceHelper const &) = delete;
+
+    // No moving
+    StorableHelperPersistenceHelper(StorableHelperPersistenceHelper &&) = delete;
+    StorableHelperPersistenceHelper &operator=(StorableHelperPersistenceHelper &&) = delete;
+
+private:
+    StorableHelperPersistenceHelper() :
+        schema(),
+        bytes(schema.addField<table::Array<std::uint8_t>>(
+            "bytes", "an opaque bytestring representation of a Storable", ""
+        ))
+    {}
+};
+
+
+class StorableHelperFactory : public table::io::PersistableFactory {
+public:
+    StorableHelperFactory(std::string const &module, std::string const &name) :
+        table::io::PersistableFactory(name),
+        _module(module),
+        _name(name)
+    {}
+
+    std::shared_ptr<table::io::Persistable> read(
+        InputArchive const &archive,
+        CatalogVector const &catalogs
+    ) const override {
+        pybind11::gil_scoped_acquire gil;
+        auto const &keys = StorableHelperPersistenceHelper::get();
+        LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
+        LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
+        LSST_ARCHIVE_ASSERT(catalogs.front().getSchema() == keys.schema);
+        auto const &record = catalogs.front().front();
+        std::string stringRep = formatters::bytesToString(record.get(keys.bytes));
+        auto cls = pybind11::module::import(_module.c_str()).attr(_name.c_str());
+        auto pyobj = cls.attr("_read")(pybind11::bytes(stringRep));
+        return pyobj.cast<std::shared_ptr<Storable>>();
+    }
+
+private:
+    std::string _module;
+    std::string _name;
+};
+
+}  // namespace
+
+
+template <typename Base>
+void StorableHelper<Base>::write(table::io::OutputArchiveHandle& handle) const {
+    pybind11::gil_scoped_acquire gil;
+    pybind11::function overload = pybind11::get_overload(static_cast<const Base *>(this), "_write");
+    if (!overload)
+        throw std::runtime_error("Cannot find StorableHelper _write overload");
+    auto o = overload().cast<std::string>();
+    auto const &keys = StorableHelperPersistenceHelper::get();
+    table::BaseCatalog cat = handle.makeCatalog(keys.schema);
+    std::shared_ptr<table::BaseRecord> record = cat.addNew();
+    record->set(keys.bytes, formatters::stringToBytes(o));
+    handle.saveCatalog(cat);
+}
 
 }  // namespace typehandling
 }  // namespace afw

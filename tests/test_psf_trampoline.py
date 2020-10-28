@@ -21,12 +21,14 @@
 
 import unittest
 from copy import deepcopy
+import pickle
 
 import numpy as np
 
 import lsst.utils.tests
+from lsst.afw.typehandling import StorableHelperFactory
 from lsst.afw.detection import Psf, GaussianPsf
-from lsst.afw.image import Image
+from lsst.afw.image import Image, ExposureF
 from lsst.geom import Box2I, Extent2I, Point2I, Point2D
 from lsst.afw.geom.ellipses import Quadrupole
 import testPsfTrampolineLib as cppLib
@@ -35,8 +37,17 @@ import testPsfTrampolineLib as cppLib
 # Subclass Psf in python.  Main tests here are that python virtual methods get
 # resolved by trampoline class.  The test suite below calls python compute*
 # methods which are implemented in c++ to call the _doCompute* methods defined
-# in the PyGaussianPsf class.
+# in the PyGaussianPsf class.  We also test persistence and associated
+# overloads.
 class PyGaussianPsf(Psf):
+    # We need to ensure a c++ StorableHelperFactory is constructed and available
+    # before any unpersists of this class.  Placing this "private" class
+    # attribute here accomplishes that.  Note the unusual use of `__name__` for
+    # the module name, which is appropriate here where the class is defined in
+    # the test suite.  In production code, this might be something like
+    # `lsst.meas.extensions.piff`
+    _factory = StorableHelperFactory(__name__, "PyGaussianPsf")
+
     def __init__(self, width, height, sigma):
         Psf.__init__(self, isFixed=True)
         self.dimensions = Extent2I(width, height)
@@ -49,7 +60,10 @@ class PyGaussianPsf(Psf):
     def resized(self, width, height):
         return PyGaussianPsf(width, height, self.sigma)
 
-    # "private" virtual overrides are underscored
+    def isPersistable(self):
+        return True
+
+    # "private" virtual overrides are underscored by convention
     def _doComputeKernelImage(self, position=None, color=None):
         bbox = self.computeBBox()
         img = Image(bbox, dtype=np.float64)
@@ -67,6 +81,32 @@ class PyGaussianPsf(Psf):
 
     def _doComputeApertureFlux(self, radius, position=None, color=None):
         return 1 - np.exp(-0.5*(radius/self.sigma)**2)
+
+    def _getPersistenceName(self):
+        return "PyGaussianPsf"
+
+    def _getPythonModule(self):
+        return __name__
+
+    # _write and _read are not ordinary python overrides of the c++ Psf methods,
+    # since the argument types required by the c++ methods are not available in
+    # python.  Instead, we create methods that opaquely persist/unpersist
+    # to/from a string via pickle.
+    def _write(self):
+        return pickle.dumps((self.dimensions, self.sigma))
+
+    @staticmethod
+    def _read(pkl):
+        dimensions, sigma = pickle.loads(pkl)
+        return PyGaussianPsf(dimensions.x, dimensions.y, sigma)
+
+    def __eq__(self, rhs):
+        if isinstance(rhs, PyGaussianPsf):
+            return (
+                self.dimensions == rhs.dimensions
+                and self.sigma == rhs.sigma
+            )
+        return False
 
 
 class PsfTrampolineTestSuite(lsst.utils.tests.TestCase):
@@ -157,6 +197,17 @@ class PsfTrampolineTestSuite(lsst.utils.tests.TestCase):
                     pgp.computeImage(),
                     p.computeImage()
                 )
+
+    def testPersistence(self):
+        for pgp in self.pgps:
+            assert cppLib.isPersistable(pgp)
+            im = ExposureF(10, 10)
+            im.setPsf(pgp)
+            self.assertEqual(im.getPsf(), pgp)
+            with lsst.utils.tests.getTempFilePath(".fits") as tmpFile:
+                im.writeFits(tmpFile)
+                newIm = ExposureF(tmpFile)
+                self.assertEqual(newIm.getPsf(), im.getPsf())
 
 
 # Psf with position-dependent image, but nonetheless may use isFixed=True.

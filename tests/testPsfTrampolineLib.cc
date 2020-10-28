@@ -47,12 +47,17 @@ std::shared_ptr<typehandling::Storable> clonedStorablePsf(const typehandling::St
     return psf.cloneStorable();
 }
 
+bool isPersistable(const typehandling::Storable& psf) {
+    return psf.isPersistable();
+}
+
 }
 
 PYBIND11_MODULE(testPsfTrampolineLib, mod) {
     mod.def("resizedPsf", &resizedPsf);
     mod.def("clonedPsf", &clonedPsf);
     mod.def("clonedStorablePsf", &clonedStorablePsf);
+    mod.def("isPersistable", &isPersistable);
 }
 
 }  // namespace detection
