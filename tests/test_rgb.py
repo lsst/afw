@@ -19,14 +19,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-"""
-Tests for RGB Images
-
-Run with:
-   python test_rgb.py
-or
-   pytest test_rgb.py
-"""
 import os
 import math
 import unittest

@@ -19,15 +19,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-"""
-Tests for detection.GaussianPsf
-
-Run with:
-   python test_gaussianPsf.py
-or
-   pytest test_gaussianPsf.py
-"""
-
 import unittest
 
 import numpy as np
