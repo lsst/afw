@@ -148,19 +148,9 @@ PySourceTable declareSourceTable(WrapperCollection &wrappers) {
 
         cls.def("getCentroidSlot", &SourceTable::getCentroidSlot);
         cls.def("defineCentroid", &SourceTable::defineCentroid, "name"_a);
-        cls.def("getCentroidDefinition", &SourceTable::getCentroidDefinition);
-        cls.def("hasCentroidSlot", &SourceTable::hasCentroidSlot);
-        cls.def("getCentroidKey", &SourceTable::getCentroidKey);
-        cls.def("getCentroidErrKey", &SourceTable::getCentroidErrKey);
-        cls.def("getCentroidFlagKey", &SourceTable::getCentroidFlagKey);
 
         cls.def("getShapeSlot", &SourceTable::getShapeSlot);
         cls.def("defineShape", &SourceTable::defineShape, "name"_a);
-        cls.def("getShapeDefinition", &SourceTable::getShapeDefinition);
-        cls.def("hasShapeSlot", &SourceTable::hasShapeSlot);
-        cls.def("getShapeKey", &SourceTable::getShapeKey);
-        cls.def("getShapeErrKey", &SourceTable::getShapeErrKey);
-        cls.def("getShapeFlagKey", &SourceTable::getShapeFlagKey);
     });
 }
 

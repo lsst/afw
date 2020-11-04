@@ -21,7 +21,6 @@
 #
 
 import numpy as np
-from deprecated.sphinx import deprecated
 
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
@@ -464,40 +463,3 @@ def writeRGB(fileName, rgbImage):
     """
     import matplotlib.image
     matplotlib.image.imsave(fileName, rgbImage)
-
-#
-# Support the legacy API
-#
-
-
-@deprecated(reason="Use `AsinhMapping` instead. To be removed after 20.0.0.",
-            category=FutureWarning)  # noqa: N801 (FIXME: When python 3.7 is dropped)
-class asinhMappingF:  # noqa: N801
-    """Deprecated object used to support legacy API
-    """
-
-    def __init__(self, minimum, dataRange, Q):
-        self.minimum = minimum
-        self.dataRange = dataRange
-        self.Q = Q
-
-
-class _RgbImageF:
-    """Deprecated object used to support legacy API
-    """
-
-    def __init__(self, imageR, imageG, imageB, mapping):
-        asinh = AsinhMapping(mapping.minimum, mapping.dataRange, mapping.Q)
-        self.rgb = asinh.makeRgbImage(imageR, imageG, imageB)
-
-    def write(self, fileName):
-        writeRGB(fileName, self.rgb)
-
-
-@deprecated(
-    reason="Use `Mapping.makeRgbImage` instead. To be removed after 20.0.0.",
-    category=FutureWarning)
-def RgbImageF(imageR, imageG, imageB, mapping):
-    """Deprecated legacy API
-    """
-    return _RgbImageF(imageR, imageG, imageB, mapping)

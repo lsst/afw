@@ -252,14 +252,6 @@ public:
     ImageBase& operator=(ImageBase&& rhs);
     /// Set the %image's pixels to rhs
     ImageBase& operator=(const PixelT rhs);
-    /**
-     * Set the lhs's %pixel values to equal the rhs's
-     *
-     * @deprecated use assign(rhs) instead
-     */
-    [[deprecated("Use `assign` instead. To be removed after 20.0.0.")]]  // DM-22814
-            ImageBase&
-            operator<<=(const ImageBase& rhs);
 
     /**
      * Copy pixels from another image to a specified subregion of this image.
@@ -285,37 +277,6 @@ public:
     PixelConstReference operator()(int x, int y) const;
     /// Return a const reference to the pixel `(x, y)` in LOCAL coordinates with bounds checking
     PixelConstReference operator()(int x, int y, CheckIndices const&) const;
-
-    //@{
-    /**
-     * @deprecated Deprecated in 16.0.  To be removed after 20.0.0.
-     * Replaced by get(Point2I, ImageOrigin).
-     */
-    [[deprecated("Use `operator[Point2I(x, y)]` instead. To be removed after 20.0.0.")]]  // DM-22814
-            PixelConstReference
-            get0(int x, int y) const {
-        return operator()(x - getX0(), y - getY0());
-    }
-    [
-            [deprecated("No replacement; `operator[Point2I(x, y)]` provides unchecked lookup. To be "
-                        "removed after 20.0.0.")]]  // DM-22814
-            PixelConstReference
-            get0(int x, int y, CheckIndices const& check) const {
-        return operator()(x - getX0(), y - getY0(), check);
-    }
-    [[deprecated("Use `operator[Point2I(x, y)]` instead. To be removed after 20.0.0.")]]  // DM-22814
-            void
-            set0(int x, int y, const PixelT v) {
-        operator()(x - getX0(), y - getY0()) = v;
-    }
-    [
-            [deprecated("No replacement; `operator[Point2I(x, y)]` provides unchecked lookup. To be "
-                        "removed after 20.0.0.")]]  // DM-22814
-            void
-            set0(int x, int y, const PixelT v, CheckIndices const& check) {
-        operator()(x - getX0(), y - getY0(), check) = v;
-    }
-    //@}
 
     /// Return a reference to a single pixel (with no bounds check).
     PixelReference get(lsst::geom::Point2I const& index, ImageOrigin origin);

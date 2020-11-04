@@ -225,13 +225,6 @@ operator=(MaskedImage::SinglePixel const& rhs) {
 }
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>& MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::
-operator<<=(MaskedImage const& rhs) {
-    assign(rhs);
-    return *this;
-}
-
-template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::assign(MaskedImage const& rhs,
                                                                   lsst::geom::Box2I const& bbox,
                                                                   ImageOrigin origin) {
