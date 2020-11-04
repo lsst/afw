@@ -36,10 +36,10 @@ You can use \ref afwSecDisplay "displaying images" to display Image%s and their 
 %Image Pixels may be accessed via iterators or locators;
 the former are simpler if you want single-pixel access, while the latter provide
 you with access to a pixel's friends and neighbours. The following tutorials are available:
-- \link imageIterators Image iterators\endlink
-- \link imageLocators Image locators\endlink
-- \link maskedImageIterators MaskedImage iterators\endlink
-- \link maskedImageLocators MaskedImage locators\endlink
+- \link imageIterators Image iterators \endlink
+- \link imageLocators Image locators \endlink
+- \link maskedImageIterators MaskedImage iterators \endlink
+- \link maskedImageLocators MaskedImage locators \endlink
 
 See also \ref afwSecPixelAccessReference. LSST %image access is modelled after the boost::gil %image interface; see
    http://www.boost.org/doc/libs/1_48_0/libs/gil/doc/html/giltutorial.html
@@ -63,10 +63,10 @@ There are also some algorithms analogous to the STL's @c \<algorithm\>; see \ref
 %Image Pixels may be accessed via iterators or locators;
 the former are simpler if you want single-pixel access, while the latter provide
 you with access to a pixel's friends and neighbours. There are a set of tutorials:
-- \link imageIterators Image iterators\endlink
-- \link imageLocators Image locators\endlink
-- \link maskedImageIterators MaskedImage iterators\endlink
-- \link maskedImageLocators MaskedImage locators\endlink
+- \link imageIterators Image iterators \endlink
+- \link imageLocators Image locators \endlink
+- \link maskedImageIterators MaskedImage iterators \endlink
+- \link maskedImageLocators MaskedImage locators \endlink
 
 In the case of MaskedImage, the user-visible \c iterator%s and
 locator%s (and \c const variants) are derived from MaskedImageIteratorBase
@@ -225,7 +225,7 @@ Image::Image(fileName, hdu=0, metadata=lsst::daf::base::PropertySet::Ptr(), bbox
 of data in the file.  As a special favour, "0" is intepreted as the first HDU, and if
 it's empty, the next is read instead.
 - The \c metadata is basically the contents of the
-FITS header (n.b. it's read automatically if you call \link Exposure::Exposure\endlink(fileName)).
+FITS header (n.b. it's read automatically if you call \link Exposure::Exposure \endlink(fileName)).
 - If the bounding box \c bbox is supplied, only that part of the file is read (n.b. in this
 case the image's origin is set correctly, cf. Image::getXY0).
 

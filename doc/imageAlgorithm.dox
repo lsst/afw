@@ -39,7 +39,7 @@ is a @c std::function with a virtual @c operator() added.
 
 \subsection afwSecForEachPixelExample Example of using for_each_pixel
 
-This code is in \link forEachPixel.cc\endlink.
+This code is in \link forEachPixel.cc \endlink.
 
 \dontinclude forEachPixel.cc
 
