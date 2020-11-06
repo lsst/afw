@@ -33,7 +33,6 @@ import lsst.utils
 import lsst.utils.tests
 import lsst.geom
 import lsst.afw.image as afwImage
-from lsst.afw.image.utils import defineFilter
 from lsst.afw.coord import Weather
 import lsst.afw.geom as afwGeom
 import lsst.afw.table as afwTable
@@ -87,11 +86,6 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         self.exposureCrWcs = afwImage.ExposureF(100, 100, self.wcs)
         # test with ExtentI(100, 100) too
         self.exposureCrOnly = afwImage.ExposureF(lsst.geom.ExtentI(100, 100))
-
-        afwImage.Filter.reset()
-        afwImage.FilterProperty.reset()
-
-        defineFilter("g", 470.0)
 
     def tearDown(self):
         del self.smallExposure
@@ -805,10 +799,6 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
 class ExposureInfoTestCase(lsst.utils.tests.TestCase):
     def setUp(self):
         super().setUp()
-
-        afwImage.Filter.reset()
-        afwImage.FilterProperty.reset()
-        defineFilter("g", 470.0)
 
         self.wcs = afwGeom.makeSkyWcs(lsst.geom.Point2D(0.0, 0.0),
                                       lsst.geom.SpherePoint(2.0, 34.0, lsst.geom.degrees),

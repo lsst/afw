@@ -21,8 +21,6 @@
 
 import unittest
 
-import numpy as np
-
 import lsst.utils.tests
 import lsst.daf.base as dafBase
 import lsst.pex.exceptions as pexExcept
@@ -76,9 +74,6 @@ class FilterTestCase(lsst.utils.tests.TestCase):
         self.g_lambdaEff = [lambdaEff for name,
                             lambdaEff in wavelengths.items() if name == "g"][0]  # for tests
 
-    def defineFilterProperty(self, name, lambdaEff, force=False):
-        return afwImage.FilterProperty(name, lambdaEff, force=force)
-
     def testListFilters(self):
         self.assertEqual(afwImage.Filter.getNames(), list(self.filters))
 
@@ -114,34 +109,6 @@ class FilterTestCase(lsst.utils.tests.TestCase):
         f = afwImage.Filter()           # the unknown filter
         self.assertNotEqual(f, f)       # ... doesn't equal itself
 
-    def testFilterProperty(self):
-        """Test properties of a "g" filter"""
-        f = afwImage.Filter("g")
-        # The properties of a g filter
-        g = afwImage.FilterProperty.lookup("g")
-
-        self.assertEqual(f.getName(), "g")
-        self.assertEqual(f.getId(), 1)
-        self.assertEqual(f.getFilterProperty().getLambdaEff(),
-                         self.g_lambdaEff)
-        self.assertEqual(f.getFilterProperty(),
-                         self.defineFilterProperty("gX", self.g_lambdaEff, force=True))
-        self.assertEqual(g.getLambdaEff(), self.g_lambdaEff)
-
-    def testLambdaMinMax(self):
-        """Test additional properties for minimum and maximum wavelength for a filter."""
-        filt = afwImage.Filter("g")
-        # LambdaMin and LambdaMax are undefined for the test SDSS filter, and should return nan
-        self.assertTrue(np.isnan(filt.getFilterProperty().getLambdaMin()))
-        self.assertTrue(np.isnan(filt.getFilterProperty().getLambdaMax()))
-        lambdaEff = 476.31
-        lambdaMin = 405
-        lambdaMax = 552
-        imageUtils.defineFilter("gNew", lambdaEff, lambdaMin=lambdaMin, lambdaMax=lambdaMax)
-        filtNew = afwImage.Filter("gNew")
-        self.assertEqual(lambdaMin, filtNew.getFilterProperty().getLambdaMin())
-        self.assertEqual(lambdaMax, filtNew.getFilterProperty().getLambdaMax())
-
     def testFilterAliases(self):
         """Test that we can provide an alias for a Filter"""
         for name0 in self.aliases:
@@ -159,27 +126,10 @@ class FilterTestCase(lsst.utils.tests.TestCase):
                 self.assertEqual(afwImage.Filter(f.getId()).getName(), name0)
                 self.assertEqual(f.getCanonicalName(), name0)
                 self.assertNotEqual(f.getCanonicalName(), name)
-                self.assertEqual(f.getFilterProperty().getLambdaEff(),
-                                 f0.getFilterProperty().getLambdaEff())
 
     def testReset(self):
         """Test that we can reset filter IDs and properties if needs be"""
         g = afwImage.FilterProperty.lookup("g")
-
-        # Can we add a filter property?
-        with self.assertRaises(pexExcept.RuntimeError):
-            self.defineFilterProperty("g", self.g_lambdaEff + 10)
-        # should not raise
-        self.defineFilterProperty("g", self.g_lambdaEff + 10, True)
-        self.defineFilterProperty("g", self.g_lambdaEff, True)
-
-        # Can we redefine properties?
-        with self.assertRaises(pexExcept.RuntimeError):
-            # changing definition is not allowed
-            self.defineFilterProperty("g", self.g_lambdaEff + 10)
-
-        # identical redefinition is allowed
-        self.defineFilterProperty("g", self.g_lambdaEff)
 
         # OK if Id's the same
         afwImage.Filter.define(g, afwImage.Filter("g").getId())
@@ -198,21 +148,6 @@ class FilterTestCase(lsst.utils.tests.TestCase):
         # Force definition
         f = afwImage.Filter(badFilter, True)
         self.assertEqual(f.getName(), badFilter)  # name is correctly defined
-
-        # can't use Filter f
-        with self.assertRaises(pexExcept.NotFoundError):
-            f.getFilterProperty().getLambdaEff()
-
-        # Now define badFilter
-        lambdaEff = 666.0
-        self.defineFilterProperty(badFilter, lambdaEff)
-
-        # but now we can
-        self.assertEqual(f.getFilterProperty().getLambdaEff(), lambdaEff)
-
-        # Check that we didn't accidently define the unknown filter
-        with self.assertRaises(pexExcept.NotFoundError):
-            afwImage.Filter().getFilterProperty().getLambdaEff()
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
