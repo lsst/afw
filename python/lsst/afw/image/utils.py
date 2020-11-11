@@ -56,12 +56,8 @@ def resetFilters():
     FilterProperty.reset()
 
 
-def defineFilter(name, lambdaEff, lambdaMin=np.nan, lambdaMax=np.nan, alias=[], force=False,
-                 transmissionCurve=None):
+def defineFilter(name, lambdaEff, lambdaMin=np.nan, lambdaMax=np.nan, alias=[], force=False):
     """Define a filter and its properties in the filter registry"""
-    if transmissionCurve:
-        (lambdaMin, lambdaMax) = transmissionCurve.getWavelengthBounds()
-        lambdaEff = 0.5 * (lambdaMax + lambdaMin)
     prop = FilterProperty(name, lambdaEff, lambdaMin, lambdaMax, force)
     Filter.define(prop)
     if isinstance(alias, str):
