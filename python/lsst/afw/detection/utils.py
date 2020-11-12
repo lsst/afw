@@ -19,11 +19,26 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+__all__ = ["writeFootprintAsDefects"]
+
 from . import footprintToBBoxList
 
 
 def writeFootprintAsDefects(fd, foot):
-    """Write foot as a set of Defects to fd"""
+    """
+    Write foot as a set of Defects to fd
+
+    Given a detection footprint, convert it to a BBoxList and write the output to the file object fd.
+
+    Parameters
+    ----------
+    fd : `typing.TextIO`
+    foot : `lsst.afw.detection.Footprint`
+
+    See Also
+    --------
+    lsst.afw.detection.footprintToBBoxList
+    """
 
     bboxes = footprintToBBoxList(foot)
     for bbox in bboxes:

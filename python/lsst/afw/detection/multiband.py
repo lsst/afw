@@ -35,19 +35,19 @@ def getSpanSetFromImages(images, thresh=0, xy0=None):
 
     Parameters
     ----------
-    images: `MultibandImage` or list of `Image`, array
+    images : `lsst.afw.image.MultibandImage` or list of `lsst.afw.image.Image`, array
         Images to extract the footprint from
-    thresh: `float`
+    thresh : `float`
         All pixels above `thresh` will be included in the footprint
-    xy0: `Point2I`
+    xy0 : `lsst.geom.Point2I`
         Location of the minimum value of the images bounding box
         (if images is an array, otherwise the image bounding box is used).
 
     Returns
     -------
-    spans: `SpanSet`
+    spans : `lsst.afw.geom.SpanSet`
         Union of all spans in the images above the threshold
-    imageBBox: `Box2I`
+    imageBBox : `lsst.afw.detection.Box2I`
         Bounding box for the input images.
     """
     # Set the threshold for each band
@@ -80,20 +80,20 @@ def heavyFootprintToImage(heavy, fill=np.nan, bbox=None, imageType=MaskedImage):
 
     Parameters
     ----------
-    heavy: `HeavyFootprint`
+    heavy : `HeavyFootprint`
         The HeavyFootprint to insert into the image
     fill: number
         Number to fill the pixels in the image that are not
         contained in `heavy`.
-    bbox: `Box2I`
+    bbox : `Box2I`
         Bounding box of the output image.
-    imageType: `type`
+    imageType : `type`
         This should be either a `MaskedImage` or `Image` and describes
         the type of the output image.
 
     Returns
     -------
-    image: `MaskedImage` or `Image`
+    image : `lsst.afw.image.MaskedImage` or `lsst.afw.image.Image`
         An image defined by `bbox` and padded with `fill` that
         contains the projected flux in `heavy`.
     """
@@ -113,9 +113,9 @@ class MultibandFootprint(MultibandBase):
 
     Parameters
     ----------
-    filters: `list`
+    filters : `list`
         List of filter names.
-    singles: `list`
+    singles : `list`
         A list of single band `HeavyFootprint` objects.
         Each `HeavyFootprint` should have the same `PeakCatalog`
         and the same `SpanSet`, however to save CPU cycles there
@@ -139,36 +139,36 @@ class MultibandFootprint(MultibandBase):
 
         Parameters
         ----------
-        filters: `list`
+        filters : `list`
             List of filter names.
         image: array
-            An array to convert into `HeavyFootprint` objects.
+            An array to convert into `lsst.afw.detection.HeavyFootprint` objects.
             Only pixels above the `thresh` value for at least one band
             will be included in the `SpanSet` and resulting footprints.
-        mask: array
+        mask : array
             Mask for the `image` array.
-        variance: array
+        variance : array
             Variance of the `image` array.
-        footprint: `Footprint`
+        footprint : `Footprint`
             `Footprint` that contains the `SpanSet` and `PeakCatalog`
             to use for the `HeavyFootprint` in each band.
             If `footprint` is `None` then the `thresh` is used to create a
             `Footprint` based on the pixels above the `thresh` value.
-        xy0: `Point2I`
+        xy0 : `Point2I`
             If `image` is an array and `footprint` is `None` then specifying
             `xy0` gives the location of the minimum `x` and `y` value of the
             `images`.
-        thresh: float or list of floats
+        thresh : `float` or list of floats
             Threshold in each band (or the same threshold to be used in all bands)
             to include a pixel in the `SpanSet` of the `MultibandFootprint`.
             If `Footprint` is not `None` then `thresh` is ignored.
-        peaks: `PeakCatalog`
+        peaks : `PeakCatalog`
             Catalog containing information about the peaks located in the
             footprints.
 
         Returns
         -------
-        result: `MultibandFootprint`
+        result : `MultibandFootprint`
             MultibandFootprint created from the arrays
         """
         # Generate a new Footprint if one has not been specified
@@ -190,28 +190,28 @@ class MultibandFootprint(MultibandBase):
 
         Parameters
         ----------
-        filters: list
+        filters : `list`
             List of filter names.
-        image: `MultibandImage`, or list of `Image`
-            A `MultibandImage` (or collection of images in each band)
+        image : `lsst.afw.image.MultibandImage`, or list of `lsst.afw.image.Image`
+            A `lsst.afw.image.MultibandImage` (or collection of images in each band)
             to convert into `HeavyFootprint` objects.
             Only pixels above the `thresh` value for at least one band
             will be included in the `SpanSet` and resulting footprints.
-        mask: `MultibandMask` or list of `Mask`
+        mask : `MultibandMask` or list of `Mask`
             Mask for the `image`.
-        variance: `MultibandImage`, or list of `Image`
+        variance : `lsst.afw.image.MultibandImage`, or list of `lsst.afw.image.Image`
             Variance of the `image`.
-        thresh: `float` or `list` of floats
+        thresh : `float` or `list` of floats
             Threshold in each band (or the same threshold to be used in all bands)
             to include a pixel in the `SpanSet` of the `MultibandFootprint`.
             If `Footprint` is not `None` then `thresh` is ignored.
-        peaks: `PeakCatalog`
+        peaks : `PeakCatalog`
             Catalog containing information about the peaks located in the
             footprints.
 
         Returns
         -------
-        result: `MultibandFootprint`
+        result : `MultibandFootprint`
             MultibandFootprint created from the image, mask, and variance
         """
         # Generate a new Footprint if one has not been specified
@@ -233,15 +233,15 @@ class MultibandFootprint(MultibandBase):
 
         Parameters
         ----------
-        maskedImages: `list` of `MaskedImage`
+        maskedImages : `list` of `lsst.afw.image.MaskedImage`
             MaskedImages to extract the single band heavy footprints from.
-            Like `fromImage`, if a `footprint` is not specified then all
+            Like `fromImages`, if a `footprint` is not specified then all
             pixels above `thresh` will be used, and `peaks` will be added
             to the `PeakCatalog`.
 
         Returns
         -------
-        result: `MultibandFootprint`
+        result : `MultibandFootprint`
             MultibandFootprint created from the image, mask, and variance
         """
         image = [maskedImage.image for maskedImage in maskedImages]
@@ -307,20 +307,20 @@ class MultibandFootprint(MultibandBase):
 
         Parameters
         ----------
-        bbox: `Box2I`
+        bbox : `Box2I`
             Bounding box of the resulting image.
             If no bounding box is specified, then the bounding box
             of the footprint is used.
-        fill: `float`
+        fill : `float`
             Value to use for any pixel in the resulting image
             outside of the `SpanSet`.
-        imageType: `type`
+        imageType : `type`
             This should be either a `MultibandMaskedImage`
             or `MultibandImage` and describes the type of the output image.
 
         Returns
         -------
-        result: `MultibandBase`
+        result : `MultibandBase`
             The resulting `MultibandImage` or `MultibandMaskedImage` created
             from the `MultibandHeavyFootprint`.
         """
@@ -339,12 +339,12 @@ class MultibandFootprint(MultibandBase):
 
         Parameters
         ----------
-        deep: `bool`
+        deep : `bool`
             Whether or not to make a deep copy
 
         Returns
         -------
-        result: `MultibandFootprint`
+        result : `MultibandFootprint`
             The cloned footprint.
         """
         if deep:
