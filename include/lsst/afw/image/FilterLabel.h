@@ -51,6 +51,9 @@ FilterLabel makeTestFilterLabel(bool, std::string const &, bool, std::string con
  * FilterLabel does not expose a public constructor in C++, except for copy
  * and move constructors. You can create a FilterLabel by calling one of the
  * `from*` factory methods, or (in Python) through a keyword-only constructor.
+ *
+ * Not all of a FilterLabel object's labels need be defined, but at least one
+ * is guaranteed to be present.
  */
 class FilterLabel final : public table::io::PersistableFacade<FilterLabel>, public typehandling::Storable {
 public:
@@ -137,6 +140,7 @@ private:
     // A separate boolean leads to easier implementations (at the cost of more
     // memory) than a unique_ptr<string>.
     // _band and _physical are part of the object state iff _hasBand and _hasPhysical, respectively
+    // Class invariant: at least one of _hasBand, _hasPhysical is true
     bool _hasBand, _hasPhysical;
     std::string _band, _physical;
 
