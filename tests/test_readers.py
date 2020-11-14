@@ -31,7 +31,8 @@ from lsst.afw.geom import makeSkyWcs, Polygon
 from lsst.afw.table import ExposureTable
 from lsst.afw.image import (Image, Mask, Exposure, LOCAL, PARENT, MaskPixel, VariancePixel,
                             ImageFitsReader, MaskFitsReader, MaskedImageFitsReader, ExposureFitsReader,
-                            Filter, PhotoCalib, ApCorrMap, VisitInfo, TransmissionCurve, CoaddInputs)
+                            Filter, FilterLabel, PhotoCalib, ApCorrMap, VisitInfo, TransmissionCurve,
+                            CoaddInputs)
 from lsst.afw.image.utils import defineFilter
 from lsst.afw.detection import GaussianPsf
 from lsst.afw.cameraGeom.testUtils import DetectorWrapper
@@ -253,6 +254,7 @@ class FitsReaderTestCase(lsst.utils.tests.TestCase):
                 exposureIn.setMetadata(metadata)
                 exposureIn.setWcs(wcs)
                 exposureIn.setFilter(Filter("test_readers_filter"))
+                exposureIn.setFilterLabel(FilterLabel(physical="test_readers_filter"))
                 exposureIn.setPhotoCalib(calib)
                 exposureIn.setPsf(psf)
                 exposureIn.getInfo().setValidPolygon(polygon)

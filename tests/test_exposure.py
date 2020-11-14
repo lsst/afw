@@ -200,7 +200,9 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         exposureInfo.setWcs(self.wcs)
         exposureInfo.setDetector(self.detector)
         gFilter = afwImage.Filter("g")
+        gFilterLabel = afwImage.FilterLabel(band="g")
         exposureInfo.setFilter(gFilter)
+        exposureInfo.setFilterLabel(gFilterLabel)
         maskedImage = afwImage.MaskedImageF(inFilePathSmall)
         exposure = afwImage.ExposureF(maskedImage, exposureInfo)
 
@@ -212,6 +214,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(exposure.getDetector().getSerial(),
                          self.detector.getSerial())
         self.assertEqual(exposure.getFilter(), gFilter)
+        self.assertEqual(exposure.getFilterLabel(), gFilterLabel)
 
         self.assertTrue(exposure.getInfo().hasWcs())
         self.assertEqual(exposure.getInfo().getWcs().getPixelOrigin(),
@@ -221,6 +224,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(exposure.getInfo().getDetector().getSerial(),
                          self.detector.getSerial())
         self.assertEqual(exposure.getInfo().getFilter(), gFilter)
+        self.assertEqual(exposure.getInfo().getFilterLabel(), gFilterLabel)
 
     def testNullWcs(self):
         """Test that an Exposure constructed with second argument None is usable
@@ -251,7 +255,9 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         exposureInfo.setWcs(self.wcs)
         exposureInfo.setDetector(self.detector)
         gFilter = afwImage.Filter("g")
+        gFilterLabel = afwImage.FilterLabel(band="g")
         exposureInfo.setFilter(gFilter)
+        exposureInfo.setFilterLabel(gFilterLabel)
         maskedImage = afwImage.MaskedImageF(inFilePathSmall)
         exposure = afwImage.ExposureF(maskedImage)
         self.assertFalse(exposure.hasWcs())
@@ -266,6 +272,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(exposure.getDetector().getSerial(),
                          self.detector.getSerial())
         self.assertEqual(exposure.getFilter(), gFilter)
+        self.assertEqual(exposure.getFilterLabel(), gFilterLabel)
 
     def testVisitInfoFitsPersistence(self):
         """Test saving an exposure to FITS and reading it back in preserves (some) VisitInfo fields"""
@@ -285,7 +292,9 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         exposureInfo.setPhotoCalib(photoCalib)
         exposureInfo.setDetector(self.detector)
         gFilter = afwImage.Filter("g")
+        gFilterLabel = afwImage.FilterLabel(band="g")
         exposureInfo.setFilter(gFilter)
+        exposureInfo.setFilterLabel(gFilterLabel)
         maskedImage = afwImage.MaskedImageF(inFilePathSmall)
         exposure = afwImage.ExposureF(maskedImage, exposureInfo)
         with lsst.utils.tests.getTempFilePath(".fits") as tmpFile:
@@ -295,6 +304,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(rtVisitInfo.getWeather(), weather)
         self.assertEqual(rtExposure.getPhotoCalib(), photoCalib)
         self.assertEqual(rtExposure.getFilter(), gFilter)
+        self.assertEqual(rtExposure.getFilterLabel(), gFilterLabel)
 
     def testSetMembers(self):
         """
@@ -307,12 +317,14 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         exposure.setWcs(self.wcs)
         exposure.setDetector(self.detector)
         exposure.setFilter(afwImage.Filter("g"))
+        exposure.setFilterLabel(afwImage.FilterLabel(band="g"))
 
         self.assertEqual(exposure.getDetector().getName(),
                          self.detector.getName())
         self.assertEqual(exposure.getDetector().getSerial(),
                          self.detector.getSerial())
         self.assertEqual(exposure.getFilter().getName(), "g")
+        self.assertEqual(exposure.getFilterLabel().bandLabel, "g")
         self.assertEqual(exposure.getWcs(), self.wcs)
 
         # The PhotoCalib tests are in test_photoCalib.py;
@@ -461,6 +473,8 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
             #
             self.assertEqual(mainExposure.getFilter().getName(),
                              readExposure.getFilter().getName())
+            self.assertEqual(mainExposure.getFilterLabel(),
+                             readExposure.getFilterLabel())
 
             self.assertEqual(photoCalib, readExposure.getPhotoCalib())
 
@@ -504,6 +518,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(e1.getDetector().getSerial(),
                          e2.getDetector().getSerial())
         self.assertEqual(e1.getFilter().getName(), e2.getFilter().getName())
+        self.assertEqual(e1.getFilterLabel(), e2.getFilterLabel())
         xy = lsst.geom.Point2D(0, 0)
         self.assertEqual(e1.getWcs().pixelToSky(xy)[0],
                          e2.getWcs().pixelToSky(xy)[0])
@@ -528,6 +543,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         exposureU.setWcs(self.wcs)
         exposureU.setDetector(self.detector)
         exposureU.setFilter(afwImage.Filter("g"))
+        exposureU.setFilterLabel(afwImage.FilterLabel(band="g"))
         exposureU.setPsf(DummyPsf(4.0))
         infoU = exposureU.getInfo()
         for key, value in self.extras.items():
@@ -825,7 +841,9 @@ class ExposureInfoTestCase(lsst.utils.tests.TestCase):
 
         self.exposureInfo = afwImage.ExposureInfo()
         gFilter = afwImage.Filter("g")
+        gFilterLabel = afwImage.FilterLabel(band="g")
         self.exposureInfo.setFilter(gFilter)
+        self.exposureInfo.setFilterLabel(gFilterLabel)
 
     def _checkAlias(self, exposureInfo, key, value, has, get):
         self.assertFalse(has())

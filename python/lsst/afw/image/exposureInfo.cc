@@ -31,6 +31,7 @@
 #include "lsst/afw/image/PhotoCalib.h"
 #include "lsst/afw/image/CoaddInputs.h"
 #include "lsst/afw/image/Filter.h"
+#include "lsst/afw/image/FilterLabel.h"
 #include "lsst/afw/image/VisitInfo.h"
 #include "lsst/afw/image/TransmissionCurve.h"
 #include "lsst/afw/image/ExposureInfo.h"
@@ -92,6 +93,7 @@ PYBIND11_MODULE(exposureInfo, mod) {
     py::module::import("lsst.afw.image.apCorrMap");
     py::module::import("lsst.afw.image.coaddInputs");
     py::module::import("lsst.afw.image.filter");
+    py::module::import("lsst.afw.image.filterLabel");
     py::module::import("lsst.afw.image.visitInfo");
 
     /* Module level */
@@ -140,6 +142,11 @@ PYBIND11_MODULE(exposureInfo, mod) {
 
     cls.def("getFilter", &ExposureInfo::getFilter);
     cls.def("setFilter", &ExposureInfo::setFilter, "filter"_a);
+
+    cls.attr("KEY_FILTER") = ExposureInfo::KEY_FILTER.getId();
+    cls.def("hasFilterLabel", &ExposureInfo::hasFilterLabel);
+    cls.def("getFilterLabel", &ExposureInfo::getFilterLabel);
+    cls.def("setFilterLabel", &ExposureInfo::setFilterLabel, "filterLabel"_a);
 
     declareGenericMethods<std::shared_ptr<typehandling::Storable const>>(cls);
     declareGenericMethodsMerged(cls);

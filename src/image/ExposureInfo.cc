@@ -128,6 +128,14 @@ void ExposureInfo::setTransmissionCurve(std::shared_ptr<TransmissionCurve const>
     setComponent(KEY_TRANSMISSION_CURVE, tc);
 }
 
+typehandling::Key<std::string, std::shared_ptr<FilterLabel const>> const ExposureInfo::KEY_FILTER =
+        typehandling::makeKey<std::shared_ptr<FilterLabel const>>("FILTER"s);
+bool ExposureInfo::hasFilterLabel() const { return hasComponent(KEY_FILTER); }
+std::shared_ptr<FilterLabel const> ExposureInfo::getFilterLabel() const { return getComponent(KEY_FILTER); }
+void ExposureInfo::setFilterLabel(std::shared_ptr<FilterLabel const> label) {
+    setComponent(KEY_FILTER, label);
+}
+
 int ExposureInfo::getFitsSerializationVersion() {
     // Version history:
     // unversioned and 0: photometric calibration via Calib, WCS via SkyWcs using AST.

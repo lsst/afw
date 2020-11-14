@@ -29,6 +29,7 @@
 #include "lsst/daf/base.h"
 #include "lsst/geom/Point.h"
 #include "lsst/afw/image/Filter.h"
+#include "lsst/afw/image/FilterLabel.h"
 #include "lsst/afw/table/io/OutputArchive.h"
 #include "lsst/afw/image/CoaddInputs.h"
 #include "lsst/afw/image/VisitInfo.h"
@@ -103,6 +104,8 @@ public:
     /// Standard key for looking up the transmission curve.
     static typehandling::Key<std::string, std::shared_ptr<TransmissionCurve const>> const
             KEY_TRANSMISSION_CURVE;
+    /// Standard key for looking up filter information.
+    static typehandling::Key<std::string, std::shared_ptr<FilterLabel const>> const KEY_FILTER;
 
     /// Does this exposure have a Wcs?
     bool hasWcs() const;
@@ -127,6 +130,18 @@ public:
 
     /// Set the exposure's filter
     void setFilter(Filter const& filter) { _filter = filter; }
+
+    /// Does this exposure have filter information?
+    // TODO: deprecate in DM-27177, remove in DM-27811.
+    bool hasFilterLabel() const;
+
+    /// Return the exposure's filter information
+    // TODO: deprecate in DM-27177, remove in DM-27811.
+    std::shared_ptr<FilterLabel const> getFilterLabel() const;
+
+    /// Set the exposure's filter information
+    // TODO: deprecate in DM-27177, remove in DM-27811.
+    void setFilterLabel(std::shared_ptr<FilterLabel const> filterLabel);
 
     /// Does this exposure have a photometric calibration?
     bool hasPhotoCalib() const;
@@ -317,14 +332,14 @@ public:
             std::shared_ptr<TransmissionCurve const> const& transmissionCurve =
                     std::shared_ptr<TransmissionCurve>());
 
-    /// Copy constructor; shares all components except the filter.
+    /// Copy constructor; shares all components except the (old-style) filter.
     ExposureInfo(ExposureInfo const& other);
     ExposureInfo(ExposureInfo&& other);
 
-    /// Copy constructor; shares everything but the filter and possibly the metadata.
+    /// Copy constructor; shares everything but the (old-style) filter and possibly the metadata.
     ExposureInfo(ExposureInfo const& other, bool copyMetadata);
 
-    /// Assignment; shares all components except the filter.
+    /// Assignment; shares all components except the (old-style) filter.
     ExposureInfo& operator=(ExposureInfo const& other);
     ExposureInfo& operator=(ExposureInfo&& other);
 
