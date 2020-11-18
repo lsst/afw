@@ -528,7 +528,25 @@ operator-(ExprT1 e1) {
 
 //------------------------------------------
 /// Template for (e1 + e2)
-template <typename ExprT1, typename ExprT2>
+template <class T, template <class...> class Template>
+struct is_specialization : std::false_type {};
+
+template <template <class...> class Template, class... Args>
+struct is_specialization<Template<Args...>, Template> : std::true_type {};
+// avoid invocation with pybind11::detail::descr::operator+ for pybind11 >= 2.3.0
+template <typename ExprT1, typename ExprT2,
+   typename = std::enable_if_t <
+          ( std::is_integral<ExprT1>::value  ||
+            is_specialization<ExprT1,BinaryExpr>{} ||
+            is_specialization<ExprT1,SinglePixel>{} ||
+            is_specialization<ExprT1,Pixel>{})
+            &&
+          ( std::is_integral<ExprT2>::value  ||
+            is_specialization<ExprT2,BinaryExpr>{} ||
+            is_specialization<ExprT2,SinglePixel>{} ||
+            is_specialization<ExprT2,Pixel>{} )
+         >
+>
 BinaryExpr<ExprT1, ExprT2, std::plus<typename exprTraits<ExprT1>::ImagePixelT>,
            bitwise_or<typename exprTraits<ExprT1>::MaskPixelT>,
            variance_plus<typename exprTraits<ExprT1>::VariancePixelT> >

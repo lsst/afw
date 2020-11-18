@@ -133,13 +133,7 @@ PYBIND11_MODULE(background, mod) {
                              (std::shared_ptr<ApproximateControl> (BackgroundControl::*)()) &
                                      BackgroundControl::getApproximateControl);
 
-    /* Note that, in this case, the holder type must be unique_ptr to enable usage
-     * of py::nodelete, which in turn is needed because Background has a protected
-     * destructor. Adding py::nodelete prevents pybind11 from calling the destructor
-     * when the pointer is destroyed. Thus care needs to be taken to prevent leaks.
-     * Basically Background should only ever be used as a base class (without data
-     * members). */
-    py::class_<Background, std::unique_ptr<Background, py::nodelete>> clsBackground(mod, "Background");
+    py::class_<Background, std::shared_ptr<Background>> clsBackground(mod, "Background");
 
     /* Members */
     declareGetImage<float>(clsBackground, "F");
