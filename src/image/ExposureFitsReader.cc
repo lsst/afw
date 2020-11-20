@@ -19,6 +19,10 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <map>
+#include <regex>
+#include <set>
+
 #include "lsst/log/Log.h"
 
 #include "lsst/afw/image/PhotoCalib.h"
@@ -92,6 +96,18 @@ public:
             metadata = primaryMetadata;
         }
 
+        // Earlier versions persisted Filter as header keyword, version 2 persists FilterLabel as a Storable
+        if (version < 2) {
+            std::string key = "FILTER";
+            if (metadata->exists(key)) {
+                // Original Filter code depended on Boost for string trimming.
+                // DIY to avoid making this module depend on Boost.
+                std::string name = metadata->getAsString(key);
+                size_t end = name.find_last_not_of(' ');
+                filterLabel = makeFilterLabel(name.substr(0, end + 1));
+            }
+        }
+        // Also read the filter keyword the conventional way
         filter = Filter(metadata, true);
         detail::stripFilterKeywords(metadata);
 
@@ -114,9 +130,92 @@ public:
         metadata->remove("DETSER");
     }
 
+    /**
+     * Determine heuristically whether a filter name represents a band or a physical filter.
+     *
+     * @param name The name to test.
+     */
+    static bool isBand(std::string const& name) {
+        static std::set<std::string> const BANDS = {"u", "g", "r", "i", "z", "y", "SH", "PH", "VR", "white"};
+        // Standard band
+        if (BANDS.count(name) > 0) {
+            return true;
+        }
+        // Looks like a narrow-band band
+        if (std::regex_match(name, std::regex("N\\d+"))) {
+            return true;
+        }
+        // Looks like an intermediate-band band; exclude "I2"
+        if (std::regex_match(name, std::regex("I\\d{2,}"))) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Convert an old-style single Filter name to a FilterLabel, using available information.
+     *
+     * If a filter has been declared using `lsst.obs.base.FilterDefinition`,
+     * that information (as encoded in the `~lsst.afw.image.Filter` registry)
+     * is used to infer the filter's band and physical filter.
+     *
+     * @param name The name persisted in a FITS file. May be any of a Filter's many names.
+     * @returns The closest equivalent FilterLabel, given available information.
+     */
+    static std::shared_ptr<FilterLabel> makeFilterLabel(std::string const& name) {
+        // Map from compatibility "afw name" to correct filter label
+        static std::map<std::string, FilterLabel> const AFW_NAMES = {
+                std::make_pair("r2", FilterLabel::fromBandPhysical("r", "HSC-R2")),
+                std::make_pair("i2", FilterLabel::fromBandPhysical("i", "HSC-I2")),
+                std::make_pair("SOLID", FilterLabel::fromPhysical("solid plate 0.0 0.0"))};
+        if (AFW_NAMES.count(name) > 0) {
+            return std::make_shared<FilterLabel>(AFW_NAMES.at(name));
+        }
+        // else name is either a band, a physical filter, or a deprecated alias
+
+        std::string band, physical;
+        try {
+            // To ease the transition to FilterLabel, use Filter to get all the names
+            Filter filter(name, false);
+            // obs.base.FilterDefinition ensures the canonical name is the band, if one exists
+            if (isBand(filter.getCanonicalName())) {
+                band = filter.getCanonicalName();
+                // physical filter is one of the aliases, but can't tell which one
+                // (FilterDefinition helpfully sorts them). Safer to leave it blank.
+                if (name != band) {
+                    physical = name;
+                } else if (filter.getAliases().size() == 1) {
+                    physical = filter.getAliases().front();
+                }
+            } else {
+                physical = filter.getCanonicalName();
+            }
+        } catch (pex::exceptions::NotFoundError const&) {
+            // Unknown filter, no extra info to be gained
+            if (isBand(name)) {
+                band = name;
+            } else {
+                physical = name;
+            }
+        }
+
+        // FilterLabel::from* returns a statically allocated object, so only way
+        // to get it into shared_ptr is to copy it.
+        if (!band.empty() && !physical.empty()) {
+            return std::make_shared<FilterLabel>(FilterLabel::fromBandPhysical(band, physical));
+        } else if (!band.empty()) {
+            return std::make_shared<FilterLabel>(FilterLabel::fromBand(band));
+        } else if (!physical.empty()) {
+            return std::make_shared<FilterLabel>(FilterLabel::fromPhysical(physical));
+        } else {
+            return std::make_shared<FilterLabel>(FilterLabel::fromPhysical(name));
+        }
+    }
+
     int version;
     std::shared_ptr<daf::base::PropertyList> metadata;
     Filter filter;
+    std::shared_ptr<FilterLabel> filterLabel;
     std::shared_ptr<afw::geom::SkyWcs> wcs;
     std::shared_ptr<PhotoCalib> photoCalib;
     std::shared_ptr<VisitInfo> visitInfo;
@@ -329,6 +428,15 @@ Filter ExposureFitsReader::readFilter() {
     return _metadataReader->filter;
 }
 
+std::shared_ptr<FilterLabel> ExposureFitsReader::readFilterLabel() {
+    _ensureReaders();
+    if (_metadataReader->version < 2) {
+        return _metadataReader->filterLabel;
+    } else {
+        return _archiveReader->readComponent<FilterLabel>(_getFitsFile(), ExposureInfo::KEY_FILTER.getId());
+    }
+}
+
 std::shared_ptr<PhotoCalib> ExposureFitsReader::readPhotoCalib() {
     _ensureReaders();
     if (_metadataReader->version == 0) {
@@ -448,6 +556,11 @@ std::shared_ptr<ExposureInfo> ExposureFitsReader::readExposureInfo() {
         } else {
             LOGLS_WARN(_log, "Data corruption: generic component " << key << " is not a Storable; skipping.");
         }
+    }
+    // Convert old-style Filter to new-style FilterLabel
+    // In newer versions this is handled by readExtraComponents()
+    if (_metadataReader->version < 2 && !result->hasFilterLabel()) {
+        result->setFilterLabel(readFilterLabel());
     }
     return result;
 }  // namespace image

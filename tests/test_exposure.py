@@ -473,6 +473,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
             #
             self.assertEqual(mainExposure.getFilter().getName(),
                              readExposure.getFilter().getName())
+            self.assertIsNotNone(mainExposure.getFilterLabel())
             self.assertEqual(mainExposure.getFilterLabel(),
                              readExposure.getFilterLabel())
 
@@ -917,6 +918,7 @@ class ExposureNoAfwdataTestCase(lsst.utils.tests.TestCase):
 
         self.v0PhotoCalib = afwImage.makePhotoCalibFromCalibZeroPoint(1e6, 2e4)
         self.v1PhotoCalib = afwImage.PhotoCalib(1e6, 2e4)
+        self.v1FilterLabel = afwImage.FilterLabel(physical="ha")
 
     def testReadUnversioned(self):
         """Test that we can read an unversioned (implicit verison 0) file.
@@ -927,6 +929,7 @@ class ExposureNoAfwdataTestCase(lsst.utils.tests.TestCase):
         self.assertMaskedImagesEqual(exposure.maskedImage, self.maskedImage)
 
         self.assertEqual(exposure.getPhotoCalib(), self.v0PhotoCalib)
+        self.assertEqual(exposure.getFilterLabel(), self.v1FilterLabel)
 
     def testReadVersion0(self):
         """Test that we can read an version 0 file.
@@ -939,6 +942,7 @@ class ExposureNoAfwdataTestCase(lsst.utils.tests.TestCase):
         self.assertMaskedImagesEqual(exposure.maskedImage, self.maskedImage)
 
         self.assertEqual(exposure.getPhotoCalib(), self.v0PhotoCalib)
+        self.assertEqual(exposure.getFilterLabel(), self.v1FilterLabel)
 
         # Check that the metadata reader parses the file correctly
         reader = afwImage.ExposureFitsReader(filename)
@@ -955,6 +959,7 @@ class ExposureNoAfwdataTestCase(lsst.utils.tests.TestCase):
         self.assertMaskedImagesEqual(exposure.maskedImage, self.maskedImage)
 
         self.assertEqual(exposure.getPhotoCalib(), self.v1PhotoCalib)
+        self.assertEqual(exposure.getFilterLabel(), self.v1FilterLabel)
 
         # Check that the metadata reader parses the file correctly
         reader = afwImage.ExposureFitsReader(filename)

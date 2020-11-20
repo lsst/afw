@@ -139,8 +139,9 @@ void ExposureInfo::setFilterLabel(std::shared_ptr<FilterLabel const> label) {
 int ExposureInfo::getFitsSerializationVersion() {
     // Version history:
     // unversioned and 0: photometric calibration via Calib, WCS via SkyWcs using AST.
-    // 1: photometric calibration via PhotoCalib
-    static int const version = 1;
+    // 1: photometric calibration via PhotoCalib, generic components
+    // 2: remove Filter, replaced with (generic) FilterLabel
+    static int const version = 2;
     return version;
 }
 

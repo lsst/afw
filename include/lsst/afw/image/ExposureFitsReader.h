@@ -116,6 +116,12 @@ public:
     /// Read the Exposure's filter.
     Filter readFilter();
 
+    /**
+     * Read the Exposure's filter information.
+     */
+    // TODO: deprecate in DM-27177, remove in DM-27811
+    std::shared_ptr<FilterLabel> readFilterLabel();
+
     /// Read the Exposure's photometric calibration.
     std::shared_ptr<PhotoCalib> readPhotoCalib();
 

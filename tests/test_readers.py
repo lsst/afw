@@ -183,6 +183,7 @@ class FitsReaderTestCase(lsst.utils.tests.TestCase):
         self.assertWcsAlmostEqualOverBBox(exposureIn.getWcs(), reader.readWcs(), self.bbox,
                                           maxDiffPix=0, maxDiffSky=0*degrees)
         self.assertEqual(exposureIn.getFilter(), reader.readFilter())
+        self.assertEqual(exposureIn.getFilterLabel(), reader.readFilterLabel())
         self.assertEqual(exposureIn.getPhotoCalib(), reader.readPhotoCalib())
         self.assertImagesEqual(exposureIn.getPsf().computeImage(), reader.readPsf().computeImage())
         self.assertEqual(exposureIn.getInfo().getValidPolygon(), reader.readValidPolygon())
