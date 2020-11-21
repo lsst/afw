@@ -52,7 +52,110 @@ bool _contains(std::array<T, N> const& array, T const& value) {
     return false;
 }
 
+// Map from compatibility "afw name" to correct filter label
+std::map<std::string, FilterLabel> const _AFW_NAMES = {
+        std::make_pair("r2", FilterLabel::fromBandPhysical("r", "HSC-R2")),
+        std::make_pair("i2", FilterLabel::fromBandPhysical("i", "HSC-I2")),
+        std::make_pair("SOLID", FilterLabel::fromPhysical("solid plate 0.0 0.0")),
+};
+
+/**
+ * Determine heuristically whether a filter name represents a band or a physical filter.
+ *
+ * @param name The name to test.
+ */
+bool _isBand(std::string const& name) {
+    static std::set<std::string> const BANDS = {"u", "g", "r", "i", "z", "y", "SH", "PH", "VR", "white"};
+    // Standard band
+    if (BANDS.count(name) > 0) {
+        return true;
+    }
+    // Looks like a narrow-band band
+    if (std::regex_match(name, std::regex("N\\d+"))) {
+        return true;
+    }
+    // Looks like an intermediate-band band; exclude "I2"
+    if (std::regex_match(name, std::regex("I\\d{2,}"))) {
+        return true;
+    }
+    return false;
+}
+
 }  // namespace
+
+/**
+ * Convert an old-style Filter to a FilterLabel.
+ *
+ * If a filter has been declared using `lsst.obs.base.FilterDefinition`, that
+ * information (as encoded in the `~lsst.afw.image.Filter` registry) is used to
+ * infer the filter's band and physical filter.
+ *
+ * @param filter Any Filter object.
+ * @returns The closest equivalent FilterLabel, given available information.
+ */
+// TODO: compatibility code to be removed in DM-27177
+std::shared_ptr<FilterLabel> makeFilterLabel(Filter const& filter) {
+    // obs.base.FilterDefinition ensures the canonical name is the first defined
+    // of afwname, band name, physical filter name.
+    std::string canonical = filter.getCanonicalName();
+
+    if (_AFW_NAMES.count(canonical) > 0) {
+        return std::make_shared<FilterLabel>(_AFW_NAMES.at(canonical));
+    } else if (_isBand(canonical)) {
+        // physical filter is one of the aliases, but can't tell which one
+        // (FilterDefinition helpfully sorts them). Safer to leave it blank.
+        std::vector<std::string> aliases = filter.getAliases();
+        if (aliases.size() == 1) {
+            return std::make_shared<FilterLabel>(FilterLabel::fromBandPhysical(canonical, aliases.front()));
+        } else {
+            return std::make_shared<FilterLabel>(FilterLabel::fromBand(canonical));
+        }
+    } else {
+        return std::make_shared<FilterLabel>(FilterLabel::fromPhysical(canonical));
+    }
+}
+
+/**
+ * Convert an old-style single Filter name to a FilterLabel, using available information.
+ *
+ * If a filter has been declared using `lsst.obs.base.FilterDefinition`, that
+ * information (as encoded in the `~lsst.afw.image.Filter` registry) is used to
+ * infer the filter's band and physical filter.
+ *
+ * @param name The name persisted in a FITS file. May be any of a Filter's many names.
+ * @returns The closest equivalent FilterLabel, given available information.
+ */
+std::shared_ptr<FilterLabel> makeFilterLabel(std::string const& name) {
+    if (_AFW_NAMES.count(name) > 0) {
+        return std::make_shared<FilterLabel>(_AFW_NAMES.at(name));
+    }
+    // else name is either a band, a physical filter, or a deprecated alias
+
+    try {
+        // To ease the transition to FilterLabel, use Filter to get all the names
+        // TODO: after DM-27177, leave only the catch block
+        Filter filter(name, false);
+        std::shared_ptr<FilterLabel> converted = makeFilterLabel(filter);
+        // Make use of the extra information that `name` is a preferred name
+        // If name is not a band, it is likely the physical filter
+        if (converted && !converted->hasPhysicalLabel() && converted->hasBandLabel() &&
+            name != converted->getBandLabel()) {
+            return std::make_shared<FilterLabel>(
+                    FilterLabel::fromBandPhysical(converted->getBandLabel(), name));
+        } else {
+            return converted;
+        }
+    } catch (pex::exceptions::NotFoundError const&) {
+        // Unknown filter, no extra info to be gained
+        // FilterLabel::from* returns a statically allocated object, so only way
+        // to get it into shared_ptr is to copy it.
+        if (_isBand(name)) {
+            return std::make_shared<FilterLabel>(FilterLabel::fromBand(name));
+        } else {
+            return std::make_shared<FilterLabel>(FilterLabel::fromPhysical(name));
+        }
+    }
+}
 
 class ExposureFitsReader::MetadataReader {
 public:
@@ -128,88 +231,6 @@ public:
         // with a Detector
         metadata->remove("DETNAME");
         metadata->remove("DETSER");
-    }
-
-    /**
-     * Determine heuristically whether a filter name represents a band or a physical filter.
-     *
-     * @param name The name to test.
-     */
-    static bool isBand(std::string const& name) {
-        static std::set<std::string> const BANDS = {"u", "g", "r", "i", "z", "y", "SH", "PH", "VR", "white"};
-        // Standard band
-        if (BANDS.count(name) > 0) {
-            return true;
-        }
-        // Looks like a narrow-band band
-        if (std::regex_match(name, std::regex("N\\d+"))) {
-            return true;
-        }
-        // Looks like an intermediate-band band; exclude "I2"
-        if (std::regex_match(name, std::regex("I\\d{2,}"))) {
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * Convert an old-style single Filter name to a FilterLabel, using available information.
-     *
-     * If a filter has been declared using `lsst.obs.base.FilterDefinition`,
-     * that information (as encoded in the `~lsst.afw.image.Filter` registry)
-     * is used to infer the filter's band and physical filter.
-     *
-     * @param name The name persisted in a FITS file. May be any of a Filter's many names.
-     * @returns The closest equivalent FilterLabel, given available information.
-     */
-    static std::shared_ptr<FilterLabel> makeFilterLabel(std::string const& name) {
-        // Map from compatibility "afw name" to correct filter label
-        static std::map<std::string, FilterLabel> const AFW_NAMES = {
-                std::make_pair("r2", FilterLabel::fromBandPhysical("r", "HSC-R2")),
-                std::make_pair("i2", FilterLabel::fromBandPhysical("i", "HSC-I2")),
-                std::make_pair("SOLID", FilterLabel::fromPhysical("solid plate 0.0 0.0"))};
-        if (AFW_NAMES.count(name) > 0) {
-            return std::make_shared<FilterLabel>(AFW_NAMES.at(name));
-        }
-        // else name is either a band, a physical filter, or a deprecated alias
-
-        std::string band, physical;
-        try {
-            // To ease the transition to FilterLabel, use Filter to get all the names
-            Filter filter(name, false);
-            // obs.base.FilterDefinition ensures the canonical name is the band, if one exists
-            if (isBand(filter.getCanonicalName())) {
-                band = filter.getCanonicalName();
-                // physical filter is one of the aliases, but can't tell which one
-                // (FilterDefinition helpfully sorts them). Safer to leave it blank.
-                if (name != band) {
-                    physical = name;
-                } else if (filter.getAliases().size() == 1) {
-                    physical = filter.getAliases().front();
-                }
-            } else {
-                physical = filter.getCanonicalName();
-            }
-        } catch (pex::exceptions::NotFoundError const&) {
-            // Unknown filter, no extra info to be gained
-            if (isBand(name)) {
-                band = name;
-            } else {
-                physical = name;
-            }
-        }
-
-        // FilterLabel::from* returns a statically allocated object, so only way
-        // to get it into shared_ptr is to copy it.
-        if (!band.empty() && !physical.empty()) {
-            return std::make_shared<FilterLabel>(FilterLabel::fromBandPhysical(band, physical));
-        } else if (!band.empty()) {
-            return std::make_shared<FilterLabel>(FilterLabel::fromBand(band));
-        } else if (!physical.empty()) {
-            return std::make_shared<FilterLabel>(FilterLabel::fromPhysical(physical));
-        } else {
-            return std::make_shared<FilterLabel>(FilterLabel::fromPhysical(name));
-        }
     }
 
     int version;
