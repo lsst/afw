@@ -64,7 +64,7 @@ public:
      * @param ...args  Arguments to forward to the Base class constructor.
      */
     template<typename... Args>
-    PsfTrampoline<Base>(Args... args) : StorableHelper<Base>(args...) {}
+    explicit PsfTrampoline<Base>(Args... args) : StorableHelper<Base>(args...) {}
 
     std::shared_ptr<Psf> clone() const override {
         /* __deepcopy__ takes an optional dict, but PYBIND11_OVERLOAD_* won't

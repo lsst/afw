@@ -64,7 +64,7 @@ public:
      * @param ...args  Arguments to forward to the Base class constructor.
      */
     template<typename... Args>
-    StorableHelper<Base>(Args... args) : Base(args...) {}
+    explicit StorableHelper<Base>(Args... args) : Base(args...) {}
 
     std::shared_ptr<Storable> cloneStorable() const override {
         /* __deepcopy__ takes an optional dict, but PYBIND11_OVERLOAD_* won't
