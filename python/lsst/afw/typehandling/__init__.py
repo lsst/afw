@@ -20,6 +20,6 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 # Don't use wrapped GenericMapX templates directly, let _GenericMap rewrap them
-from ._typehandling import Storable
+from ._typehandling import Storable, StorableHelperFactory
 from ._GenericMap import *
 from ._SimpleGenericMap import *
