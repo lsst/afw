@@ -196,7 +196,15 @@ std::shared_ptr<FilterLabel> makeFilterLabel(std::string const& name) {
  */
 Filter makeFilter(FilterLabel const& label) {
     // Filters still have standard aliases, so can use almost any name to define them.
-    // Prefer band because that's what most code assumes is Filter.getName().
+    // Prefer afw_name or band because that's what most code assumes is Filter.getName().
+    for (auto const& keyValue : _AFW_NAMES) {
+        std::string const& afwName = keyValue.first;
+        FilterLabel const& afwFilter = keyValue.second;
+        if (label == afwFilter) {
+            return Filter(afwName);
+        }
+    }
+
     if (label.hasBandLabel()) {
         return Filter(label.getBandLabel(), true);
     } else {
