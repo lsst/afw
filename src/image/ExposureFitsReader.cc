@@ -175,8 +175,9 @@ public:
             if (headerKey.substr(0, PREFIX.size()) == PREFIX) {
                 std::string componentName = headerKey.substr(PREFIX.size());
                 int archiveId = metadata.get<int>(headerKey);
+                _genericIds.emplace(componentName, archiveId);
                 if (!_contains(_ids, archiveId)) {
-                    _extraIds.emplace(componentName, archiveId);
+                    _extraIds.emplace(componentName);
                 }
                 toStrip.push_back(headerKey);
                 toStrip.push_back(componentName + "_ID");  // strip corresponding old-style ID, if it exists
@@ -223,9 +224,8 @@ public:
 
         // Not safe to call getAll if a component cannot be unpersisted
         // Instead, look for the archives registered in the metadata
-        for (auto const& keyValue : _extraIds) {
-            std::string componentName = keyValue.first;
-            int archiveId = keyValue.second;
+        for (std::string const& componentName : _extraIds) {
+            int archiveId = _genericIds.at(componentName);
 
             try {
                 result.emplace(componentName, _archive.get(archiveId));
@@ -257,7 +257,8 @@ private:
     ArchiveState _state = ArchiveState::UNKNOWN;
     table::io::InputArchive _archive;
     std::array<int, N_ARCHIVE_COMPONENTS> _ids = {0};
-    std::map<std::string, int> _extraIds;
+    std::map<std::string, int> _genericIds;
+    std::set<std::string> _extraIds;  // _genericIds not included in _ids
 };
 
 ExposureFitsReader::ExposureFitsReader(std::string const& fileName) : _maskedImageReader(fileName) {}
