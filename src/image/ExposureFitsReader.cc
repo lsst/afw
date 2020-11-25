@@ -206,6 +206,35 @@ public:
     }
 
     /**
+     * Read an arbitrary component, if available.
+     *
+     * @param fitsFile The file from which to read the component. Must match
+     *                 the metadata used to construct this object.
+     * @param c The archive ID of the component to read.
+     *
+     * @return The desired component, or ``nullptr`` if the file could not be read.
+     *
+     * @throws pex::exceptions::NotFoundError Thrown if the component is
+     *     registered in the file metadata but could not be found.
+     */
+    // This method takes a string instead of a strongly typed Key because
+    // readExtraComponents() gets its keys from the FITS metadata.
+    // Using a Key would make the calling code more complicated.
+    template <typename T>
+    std::shared_ptr<T> readComponent(afw::fits::Fits* fitsFile, std::string c) {
+        if (!_ensureLoaded(fitsFile)) {
+            return nullptr;
+        }
+
+        if (_extraIds.count(c) > 0) {
+            int archiveId = _genericIds.at(c);
+            return _archive.get<T>(archiveId);
+        } else {
+            return nullptr;
+        }
+    }
+
+    /**
      * Read the components that are stored using arbitrary-component support.
      *
      * @param fitsFile The file from which to read the components. Must match
@@ -225,10 +254,8 @@ public:
         // Not safe to call getAll if a component cannot be unpersisted
         // Instead, look for the archives registered in the metadata
         for (std::string const& componentName : _extraIds) {
-            int archiveId = _genericIds.at(componentName);
-
             try {
-                result.emplace(componentName, _archive.get(archiveId));
+                result.emplace(componentName, readComponent<table::io::Persistable>(fitsFile, componentName));
             } catch (pex::exceptions::NotFoundError const& err) {
                 LOGLS_WARN(_log,
                            "Could not read component " << componentName << "; skipping: " << err.what());
