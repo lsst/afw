@@ -919,6 +919,7 @@ class ExposureNoAfwdataTestCase(lsst.utils.tests.TestCase):
         self.v0PhotoCalib = afwImage.makePhotoCalibFromCalibZeroPoint(1e6, 2e4)
         self.v1PhotoCalib = afwImage.PhotoCalib(1e6, 2e4)
         self.v1FilterLabel = afwImage.FilterLabel(physical="ha")
+        self.v2FilterLabel = afwImage.FilterLabel(band="N656", physical="ha")
 
     def testReadUnversioned(self):
         """Test that we can read an unversioned (implicit verison 0) file.
@@ -932,7 +933,7 @@ class ExposureNoAfwdataTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(exposure.getFilterLabel(), self.v1FilterLabel)
 
     def testReadVersion0(self):
-        """Test that we can read an version 0 file.
+        """Test that we can read a version 0 file.
         This file should be identical to the unversioned one, except that it
         is marked as ExposureInfo version 0 in the header.
         """
@@ -950,7 +951,7 @@ class ExposureNoAfwdataTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(reader.readPhotoCalib(), self.v0PhotoCalib)
 
     def testReadVersion1(self):
-        """Test that we can read an version 1 file.
+        """Test that we can read a version 1 file.
         Version 1 replaced Calib with PhotoCalib.
         """
         filename = os.path.join(self.dataDir, "exposure-version-1.fits")
@@ -960,6 +961,23 @@ class ExposureNoAfwdataTestCase(lsst.utils.tests.TestCase):
 
         self.assertEqual(exposure.getPhotoCalib(), self.v1PhotoCalib)
         self.assertEqual(exposure.getFilterLabel(), self.v1FilterLabel)
+
+        # Check that the metadata reader parses the file correctly
+        reader = afwImage.ExposureFitsReader(filename)
+        self.assertEqual(reader.readExposureInfo().getPhotoCalib(), self.v1PhotoCalib)
+        self.assertEqual(reader.readPhotoCalib(), self.v1PhotoCalib)
+
+    def testReadVersion2(self):
+        """Test that we can read a version 2 file.
+        Version 2 replaced Filter with FilterLabel.
+        """
+        filename = os.path.join(self.dataDir, "exposure-version-2.fits")
+        exposure = afwImage.ExposureF.readFits(filename)
+
+        self.assertMaskedImagesEqual(exposure.maskedImage, self.maskedImage)
+
+        self.assertEqual(exposure.getPhotoCalib(), self.v1PhotoCalib)
+        self.assertEqual(exposure.getFilterLabel(), self.v2FilterLabel)
 
         # Check that the metadata reader parses the file correctly
         reader = afwImage.ExposureFitsReader(filename)

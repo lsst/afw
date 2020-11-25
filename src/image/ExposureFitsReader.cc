@@ -258,9 +258,6 @@ public:
                 filterLabel = makeFilterLabel(name.substr(0, end + 1));
             }
         }
-        // Also read the filter keyword the conventional way
-        filter = Filter(metadata, true);
-        detail::stripFilterKeywords(metadata);
 
         visitInfo = std::make_shared<VisitInfo>(*metadata);
         detail::stripVisitInfoKeywords(*metadata);
@@ -283,7 +280,6 @@ public:
 
     int version;
     std::shared_ptr<daf::base::PropertyList> metadata;
-    Filter filter;
     std::shared_ptr<FilterLabel> filterLabel;
     std::shared_ptr<afw::geom::SkyWcs> wcs;
     std::shared_ptr<PhotoCalib> photoCalib;
@@ -493,8 +489,13 @@ std::shared_ptr<afw::geom::SkyWcs> ExposureFitsReader::readWcs() {
 }
 
 Filter ExposureFitsReader::readFilter() {
-    _ensureReaders();
-    return _metadataReader->filter;
+    std::shared_ptr<FilterLabel const> label = readFilterLabel();
+    if (label) {
+        return makeFilter(*label);
+    } else {
+        // Old exposures always had a Filter, even if only the default
+        return Filter();
+    }
 }
 
 std::shared_ptr<FilterLabel> ExposureFitsReader::readFilterLabel() {

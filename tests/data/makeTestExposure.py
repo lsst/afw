@@ -4,7 +4,6 @@ import numpy as np
 
 from lsst.afw.cameraGeom.testUtils import DetectorWrapper
 import lsst.afw.image
-from lsst.afw.image.utils import resetFilters, defineFilter
 import lsst.afw.geom
 import lsst.daf.base
 import lsst.geom
@@ -24,10 +23,8 @@ detectorWrapper = DetectorWrapper(bbox=exp.getBBox())
 exp.setDetector(detectorWrapper.detector)
 
 # Fill the filter
-resetFilters()
-defineFilter('ha', 656.28)
-filt = lsst.afw.image.Filter('ha')
-exp.setFilter(filt)
+filt = lsst.afw.image.FilterLabel(band='N656', physical='ha')
+exp.setFilterLabel(filt)
 
 # Fill the PhotoCalib
 photoCalib = lsst.afw.image.PhotoCalib(1e6, 2e4)

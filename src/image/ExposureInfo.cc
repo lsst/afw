@@ -325,7 +325,6 @@ ExposureInfo::FitsWriteData ExposureInfo::_startWriteFits(lsst::geom::Point2I co
     data.imageMetadata->set("LTV1", static_cast<double>(-xy0.getX()));
     data.imageMetadata->set("LTV2", static_cast<double>(-xy0.getY()));
 
-    data.metadata->set("FILTER", getFilter().getName());
     if (hasDetector()) {
         data.metadata->set("DETNAME", getDetector()->getName());
         data.metadata->set("DETSER", getDetector()->getSerial());
