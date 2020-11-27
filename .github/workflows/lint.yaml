@@ -1,0 +1,22 @@
+name: lint
+
+on:
+  - push
+  - pull_request
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+
+      - name: Install
+        run: pip install -r <(curl https://raw.githubusercontent.com/lsst/linting/master/requirements.txt)
+
+      - name: Run linter
+        run: flake8
