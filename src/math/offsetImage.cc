@@ -102,7 +102,10 @@ std::shared_ptr<ImageT> offsetImage(ImageT const& inImage, float dx, float dy,
 
     offsetKernel->setKernelParameters(std::make_pair(dKerX, dKerY));
 
-    convolve(*convImage, *buffImage, *offsetKernel, true, true);
+    ConvolutionControl convolutionControl;
+    convolutionControl.setDoNormalize(true);
+    convolutionControl.setDoCopyEdge(true);
+    convolve(*convImage, *buffImage, *offsetKernel, convolutionControl);
 
     std::shared_ptr<ImageT> outImage;
     if (buffer > 0) {

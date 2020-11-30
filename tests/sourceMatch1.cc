@@ -68,7 +68,8 @@ void makeSources(afwTable::SourceCatalog &set, int n) {
     for (int i = 0; i < n; ++i) {
         std::shared_ptr<afwTable::SourceRecord> src = set.addNew();
         src->setId(i);
-        src->set(set.getTable()->getCentroidKey(), lsst::geom::Point2D(rng().uniform(), rng().uniform()));
+        src->set(set.getTable()->getCentroidSlot().getMeasKey(),
+                 lsst::geom::Point2D(rng().uniform(), rng().uniform()));
         double z = rng().flat(-1.0, 1.0);
         src->set(afwTable::SourceTable::getCoordKey().getRa(), rng().flat(0.0, 360.) * lsst::geom::degrees);
         src->set(afwTable::SourceTable::getCoordKey().getDec(), std::asin(z) * lsst::geom::radians);
@@ -194,7 +195,9 @@ BOOST_AUTO_TEST_CASE(
     afwTable::SourceCatalog set1(getGlobalTable()), set2(getGlobalTable());
     makeSources(set1, N);
     makeSources(set2, N);
-    std::vector<afwTable::SourceMatch> matches = afwTable::matchRaDec(set1, set2, radius, false);
+    afwTable::MatchControl matchControl;
+    matchControl.findOnlyClosest = false;
+    std::vector<afwTable::SourceMatch> matches = afwTable::matchRaDec(set1, set2, radius, matchControl);
     std::vector<afwTable::SourceMatch> refMatches = bruteMatch(set1, set2, radius, DistRaDec());
     compareMatches(matches, refMatches, radius);
 }
@@ -207,7 +210,9 @@ BOOST_AUTO_TEST_CASE(matchSelfRaDec) { /* parasoft-suppress  LsstDm-3-2a LsstDm-
 
     afwTable::SourceCatalog set(getGlobalTable());
     makeSources(set, N);
-    std::vector<afwTable::SourceMatch> matches = afwTable::matchRaDec(set, radius, true);
+    afwTable::MatchControl matchControl;
+    matchControl.symmetricMatch = true;
+    std::vector<afwTable::SourceMatch> matches = afwTable::matchRaDec(set, radius, matchControl);
     std::vector<afwTable::SourceMatch> refMatches = bruteMatch(set, radius, DistRaDec());
     compareMatches(matches, refMatches, radius);
 }
@@ -221,7 +226,9 @@ BOOST_AUTO_TEST_CASE(
     afwTable::SourceCatalog set1(getGlobalTable()), set2(getGlobalTable());
     makeSources(set1, N);
     makeSources(set2, N);
-    std::vector<afwTable::SourceMatch> matches = afwTable::matchXy(set1, set2, radius, false);
+    afwTable::MatchControl matchControl;
+    matchControl.findOnlyClosest = false;
+    std::vector<afwTable::SourceMatch> matches = afwTable::matchXy(set1, set2, radius, matchControl);
     std::vector<afwTable::SourceMatch> refMatches = bruteMatch(set1, set2, radius, DistXy());
     compareMatches(matches, refMatches, radius);
 }
@@ -234,7 +241,9 @@ BOOST_AUTO_TEST_CASE(
 
     afwTable::SourceCatalog set(getGlobalTable());
     makeSources(set, N);
-    std::vector<afwTable::SourceMatch> matches = afwTable::matchXy(set, radius, true);
+    afwTable::MatchControl matchControl;
+    matchControl.symmetricMatch = true;
+    std::vector<afwTable::SourceMatch> matches = afwTable::matchXy(set, radius, matchControl);
     std::vector<afwTable::SourceMatch> refMatches = bruteMatch(set, radius, DistXy());
     compareMatches(matches, refMatches, radius);
 }
@@ -347,7 +356,9 @@ BOOST_AUTO_TEST_CASE(matchNearPole) {
     normalizeRaDec(set1);
     normalizeRaDec(set2);
 
-    std::vector<afwTable::SourceMatch> matches = afwTable::matchRaDec(set1, set2, rad, false);
+    afwTable::MatchControl matchControl;
+    matchControl.findOnlyClosest = false;
+    std::vector<afwTable::SourceMatch> matches = afwTable::matchRaDec(set1, set2, rad, matchControl);
     std::vector<afwTable::SourceMatch> refMatches = bruteMatch(set1, set2, rad, DistRaDec());
     compareMatches(matches, refMatches, rad);
 }

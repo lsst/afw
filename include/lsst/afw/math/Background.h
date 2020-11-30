@@ -485,32 +485,6 @@ public:
     BackgroundMI& operator-=(float const delta) override;
 
     /**
-     * Method to retrieve the background level at a pixel coord.
-     *
-     * @param style How to interpolate
-     * @param x x-pixel coordinate (column)
-     * @param y y-pixel coordinate (row)
-     * @returns an estimated background at x,y (double)
-     *
-     * @deprecated Don't call this image (not even in test code).
-     * This can be a very costly function to get a single pixel. If you want an image, use the getImage()
-     * method.
-     */
-    [[deprecated("Use `getImage` instead. To be removed after 20.0.0.")]]  // DM-22814
-            double
-            getPixel(Interpolate::Style const style, int const x, int const y) const;
-    /**
-     * Return the background value at a point
-     *
-     * @warning This is very inefficient -- only use it for debugging, if then.
-     */
-    [[deprecated("Use `getImage` instead. To be removed after 20.0.0.")]]  // DM-22814
-            double
-            getPixel(int const x, int const y) const {
-        // I think this should be LOCAL because the original getPixel used 0-based indices
-        return getImage<float>()->get(lsst::geom::Point2I(x, y), image::LOCAL);
-    }
-    /**
      * Return the image of statistical quantities extracted from the image
      */
     lsst::afw::image::MaskedImage<InternalPixelT> getStatsImage() const { return _statsImage; }

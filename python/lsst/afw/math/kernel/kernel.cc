@@ -49,8 +49,6 @@ PYBIND11_MODULE(kernel, mod) {
     clsKernel.def("getWidth", &Kernel::getWidth);
     clsKernel.def("getHeight", &Kernel::getHeight);
     clsKernel.def("getCtr", &Kernel::getCtr);
-    clsKernel.def("getCtrX", &Kernel::getCtrX);
-    clsKernel.def("getCtrY", &Kernel::getCtrY);
     clsKernel.def("getBBox", &Kernel::getBBox);
     clsKernel.def("getNKernelParameters", &Kernel::getNKernelParameters);
     clsKernel.def("getNSpatialParameters", &Kernel::getNSpatialParameters);
@@ -61,8 +59,6 @@ PYBIND11_MODULE(kernel, mod) {
     clsKernel.def("growBBox", &Kernel::growBBox);
     clsKernel.def("shrinkBBox", &Kernel::shrinkBBox);
     clsKernel.def("setCtr", &Kernel::setCtr);
-    clsKernel.def("setCtrX", &Kernel::setCtrX);
-    clsKernel.def("setCtrY", &Kernel::setCtrY);
     clsKernel.def("getSpatialParameters", &Kernel::getSpatialParameters);
     clsKernel.def("isSpatiallyVarying", &Kernel::isSpatiallyVarying);
     clsKernel.def("setKernelParameters",

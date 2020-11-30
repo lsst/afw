@@ -795,17 +795,6 @@ public:
     MaskedImage operator[](lsst::geom::Box2I const& bbox) const { return subset(bbox); }
 
     /**
-     * Copy the pixels from the rhs to the lhs
-     *
-     * @deprecated use assign(rhs) instead
-     *
-     * @note operator=() is not equivalent to this command
-     */
-    [[deprecated("Use `assign` instead. To be removed after 20.0.0.")]]  // DM-22814
-            MaskedImage&
-            operator<<=(MaskedImage const& rhs);
-
-    /**
      * Copy pixels from another masked image to a specified subregion of this masked image.
      *
      * @param[in] rhs  source image whose pixels are to be copied into this image (the destination)

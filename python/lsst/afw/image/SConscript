@@ -14,7 +14,6 @@ scripts.BasicSConscript.pybind11(
      'maskedImage/maskedImage',
      'imageUtils',
      'imageSlice',
-     'readMetadata/readMetadata',
      'imagePca',
      'transmissionCurve',
      'visitInfo',

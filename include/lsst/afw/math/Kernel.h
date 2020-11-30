@@ -235,28 +235,6 @@ public:
     inline lsst::geom::Point2I getCtr() const { return lsst::geom::Point2I(_ctrX, _ctrY); }
 
     /**
-     * Return x index of kernel's center
-     *
-     * @deprecated Use getCtr instead
-     */
-    [[deprecated("Use `getCtr` instead. To be removed after 20.0.0.")]]  // DM-22814
-            inline int
-            getCtrX() const {
-        return _ctrX;
-    }
-
-    /**
-     * Return y index of kernel's center
-     *
-     * @deprecated Use getCtr instead
-     */
-    [[deprecated("Use `getCtr` instead. To be removed after 20.0.0.")]]  // DM-22814
-            inline int
-            getCtrY() const {
-        return _ctrY;
-    }
-
-    /**
      * return parent bounding box, with XY0 = -center
      */
     inline lsst::geom::Box2I getBBox() const {
@@ -335,30 +313,6 @@ public:
     inline void setCtr(lsst::geom::Point2I ctr) {
         _ctrX = ctr.getX();
         _ctrY = ctr.getY();
-        _setKernelXY();
-    }
-
-    /**
-     * Set x index of kernel's center
-     *
-     * @deprecated Use setCtr instead
-     */
-    [[deprecated("Use `setCtr` instead. To be removed after 20.0.0.")]]  // DM-22814
-            inline void
-            setCtrX(int ctrX) {
-        _ctrX = ctrX;
-        _setKernelXY();
-    }
-
-    /**
-     * Set y index of kernel's center
-     *
-     * @deprecated Use setCtr instead
-     */
-    [[deprecated("Use `setCtr` instead. To be removed after 20.0.0.")]]  // DM-22814
-            inline void
-            setCtrY(int ctrY) {
-        _ctrY = ctrY;
         _setKernelXY();
     }
 
