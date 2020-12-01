@@ -236,6 +236,7 @@ public:
         return _info->getDetector();
     }
     /// Return the Exposure's filter
+    // TODO: deprecate in DM-27170, remove in DM-27177
     Filter getFilter() const { return _info->getFilter(); }
     /// Return the Exposure's filter information
     // TODO: deprecate in DM-27177, remove in DM-27811
@@ -296,6 +297,7 @@ public:
         _info->setDetector(detector);
     }
     /// Set the Exposure's filter
+    // TODO: deprecate in DM-27170, remove in DM-27177
     void setFilter(Filter const& filter) { _info->setFilter(filter); }
     /// Set the Exposure's filter information
     // TODO: deprecate in DM-27177, remove in DM-27811

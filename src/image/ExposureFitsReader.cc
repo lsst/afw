@@ -84,6 +84,24 @@ bool _isBand(std::string const& name) {
 }  // namespace
 
 /**
+ * Convert an old-style filter name to a FilterLabel without external information.
+ *
+ * Guaranteed to not call any code related to Filter or FilterDefinition.
+ *
+ * @param name A name for the filter.
+ * @returns A FilterLabel containing that name.
+ */
+std::shared_ptr<FilterLabel> makeFilterLabelDirect(std::string const& name) {
+    // FilterLabel::from* returns a statically allocated object, so only way
+    // to get it into shared_ptr is to copy it.
+    if (_isBand(name)) {
+        return std::make_shared<FilterLabel>(FilterLabel::fromBand(name));
+    } else {
+        return std::make_shared<FilterLabel>(FilterLabel::fromPhysical(name));
+    }
+}
+
+/**
  * Convert an old-style Filter to a FilterLabel.
  *
  * If a filter has been declared using `lsst.obs.base.FilterDefinition`, that
@@ -95,16 +113,34 @@ bool _isBand(std::string const& name) {
  */
 // TODO: compatibility code to be removed in DM-27177
 std::shared_ptr<FilterLabel> makeFilterLabel(Filter const& filter) {
+    // Filter has no self-consistency guarantees whatsoever, and most methods
+    // are unsafe. Program extremely defensively.
+    if (filter.getId() == Filter::UNKNOWN) {
+        // Not a registered filter; guarantees on canonical name do not apply
+        return makeFilterLabelDirect(filter.getName());
+    }
+
     // obs.base.FilterDefinition ensures the canonical name is the first defined
     // of afwname, band name, physical filter name.
-    std::string canonical = filter.getCanonicalName();
+    std::string canonical;
+    try {
+        canonical = filter.getCanonicalName();
+    } catch (pex::exceptions::NotFoundError const&) {
+        // Not a registered filter; guarantees on canonical name do not apply
+        return makeFilterLabelDirect(filter.getName());
+    }
 
     if (_AFW_NAMES.count(canonical) > 0) {
         return std::make_shared<FilterLabel>(_AFW_NAMES.at(canonical));
     } else if (_isBand(canonical)) {
         // physical filter is one of the aliases, but can't tell which one
         // (FilterDefinition helpfully sorts them). Safer to leave it blank.
-        std::vector<std::string> aliases = filter.getAliases();
+        std::vector<std::string> aliases;
+        try {
+            aliases = filter.getAliases();
+        } catch (pex::exceptions::NotFoundError const&) {
+            // No aliases; leave the vector empty
+        }
         if (aliases.size() == 1) {
             return std::make_shared<FilterLabel>(FilterLabel::fromBandPhysical(canonical, aliases.front()));
         } else {
@@ -147,13 +183,25 @@ std::shared_ptr<FilterLabel> makeFilterLabel(std::string const& name) {
         }
     } catch (pex::exceptions::NotFoundError const&) {
         // Unknown filter, no extra info to be gained
-        // FilterLabel::from* returns a statically allocated object, so only way
-        // to get it into shared_ptr is to copy it.
-        if (_isBand(name)) {
-            return std::make_shared<FilterLabel>(FilterLabel::fromBand(name));
-        } else {
-            return std::make_shared<FilterLabel>(FilterLabel::fromPhysical(name));
-        }
+        return makeFilterLabelDirect(name);
+    }
+}
+
+/**
+ * Convert a FilterLabel back to an old-style Filter.
+ *
+ * @param label The FilterLabel to convert.
+ * @returns The closest equivalent Filter, following the conventions
+ *          established by obs.base.FilterDefinition.
+ */
+Filter makeFilter(FilterLabel const& label) {
+    // Filters still have standard aliases, so can use almost any name to define them.
+    // Prefer band because that's what most code assumes is Filter.getName().
+    if (label.hasBandLabel()) {
+        return Filter(label.getBandLabel(), true);
+    } else {
+        // FilterLabel guarantees at least one of band or physical is defined.
+        return Filter(label.getPhysicalLabel(), true);
     }
 }
 
@@ -512,7 +560,6 @@ std::map<std::string, std::shared_ptr<table::io::Persistable>> ExposureFitsReade
 std::shared_ptr<ExposureInfo> ExposureFitsReader::readExposureInfo() {
     auto result = std::make_shared<ExposureInfo>();
     result->setMetadata(readMetadata());
-    result->setFilter(readFilter());
     result->setPhotoCalib(readPhotoCalib());
     result->setVisitInfo(readVisitInfo());
     // When reading an ExposureInfo (as opposed to reading individual

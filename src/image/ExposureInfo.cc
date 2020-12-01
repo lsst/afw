@@ -128,6 +128,22 @@ void ExposureInfo::setTransmissionCurve(std::shared_ptr<TransmissionCurve const>
     setComponent(KEY_TRANSMISSION_CURVE, tc);
 }
 
+// Compatibility code defined inside ExposureFitsReader.cc, to be removed in DM-27177
+std::shared_ptr<FilterLabel> makeFilterLabel(Filter const& filter);
+Filter makeFilter(FilterLabel const& label);
+
+Filter ExposureInfo::getFilter() const {
+    std::shared_ptr<FilterLabel const> label = getFilterLabel();
+    if (label) {
+        return makeFilter(*label);
+    } else {
+        // Old exposures always had a Filter, even if only the default
+        return Filter();
+    }
+}
+
+void ExposureInfo::setFilter(Filter const& filter) { setFilterLabel(makeFilterLabel(filter)); }
+
 typehandling::Key<std::string, std::shared_ptr<FilterLabel const>> const ExposureInfo::KEY_FILTER =
         typehandling::makeKey<std::shared_ptr<FilterLabel const>>("FILTER"s);
 bool ExposureInfo::hasFilterLabel() const { return hasComponent(KEY_FILTER); }
@@ -169,11 +185,17 @@ ExposureInfo::ExposureInfo(std::shared_ptr<geom::SkyWcs const> const& wcs,
                            std::shared_ptr<ApCorrMap> const& apCorrMap,
                            std::shared_ptr<image::VisitInfo const> const& visitInfo,
                            std::shared_ptr<TransmissionCurve const> const& transmissionCurve)
-        : _filter(filter),
-          _metadata(metadata ? metadata
+        : _metadata(metadata ? metadata
                              : std::shared_ptr<daf::base::PropertySet>(new daf::base::PropertyList())),
           _visitInfo(visitInfo),
           _components(std::make_unique<MapClass>()) {
+    static Filter const DEFAULT;
+    // Avoid putting dummy filters into the FilterLabel store. getFilter()
+    // will preserve old default behavior.
+    // Default filter has id=UNKNOWN, but others do too.
+    if (filter.getId() != DEFAULT.getId() || filter.getName() != DEFAULT.getName()) {
+        setFilter(filter);
+    }
     setWcs(wcs);
     setPsf(psf);
     setPhotoCalib(photoCalib);
@@ -190,8 +212,7 @@ ExposureInfo::ExposureInfo(ExposureInfo const& other) : ExposureInfo(other, fals
 ExposureInfo::ExposureInfo(ExposureInfo&& other) : ExposureInfo(other) {}
 
 ExposureInfo::ExposureInfo(ExposureInfo const& other, bool copyMetadata)
-        : _filter(other._filter),
-          _metadata(other._metadata),
+        : _metadata(other._metadata),
           _visitInfo(other._visitInfo),
           // ExposureInfos can (historically) share objects, but should each have their own pointers to them
           _components(std::make_unique<MapClass>(*(other._components))) {
@@ -200,7 +221,6 @@ ExposureInfo::ExposureInfo(ExposureInfo const& other, bool copyMetadata)
 
 ExposureInfo& ExposureInfo::operator=(ExposureInfo const& other) {
     if (&other != this) {
-        _filter = other._filter;
         _metadata = other._metadata;
         _visitInfo = other._visitInfo;
         // ExposureInfos can (historically) share objects, but should each have their own pointers to them
