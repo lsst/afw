@@ -819,6 +819,26 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         catalog["a"] = v2
         self.assertEqual(list(catalog[key]), list(v2))
 
+    def testArrayIndex(self):
+        """Test that indexing a Catalog with a numpy integer array works"""
+        num = 10
+        column = "number"
+        schema = lsst.afw.table.Schema()
+        key = schema.addField(column, type="I")
+        catalog = lsst.afw.table.BaseCatalog(schema)
+        catalog.reserve(num)
+        expect = np.arange(num, dtype=int)
+        for ii in range(num):
+            catalog.addNew().set(key, expect[ii])
+
+        self.assertFloatsEqual(catalog[np.arange(num, dtype=int)][column], expect)
+
+        for ii in range(num):
+            self.assertEqual(catalog[np.array([ii])][column], expect[ii])
+
+        indices = np.array(list(reversed(range(num))))
+        self.assertFloatsEqual(catalog[indices][column], expect[indices])
+
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
     pass

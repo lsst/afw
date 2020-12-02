@@ -100,6 +100,13 @@ class Catalog(metaclass=TemplateMeta):
         elif isinstance(key, np.ndarray):
             if key.dtype == bool:
                 return self.subset(key)
+            if np.issubdtype(key.dtype, np.integer) and key.ndim == 1:
+                # Return a shallow copy containing the desired records
+                new = type(self)(self.schema)
+                new.reserve(len(key))
+                for ii in key:
+                    new.append(self[int(ii)])
+                return new
             raise RuntimeError(f"Unsupported array type for indexing non-contiguous Catalog: {key.dtype}")
         elif isinstance(key, Key) or isinstance(key, str):
             if not self.isContiguous():
