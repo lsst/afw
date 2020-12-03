@@ -8,7 +8,6 @@ by an image processing system.  In particular:
    - \ref afwSecImage : Representation of Images (and Masks)
    - \ref afwSecPyImage : How to manipulate images from python
    - \ref afwSecDisplay : How to display images
-   - \ref afwSecDetection : Detection of sources in images
    - \ref afwTable : Table and record classes for catalog data
    - \ref afwTablePersistence : Table-based persistence
 */
@@ -280,21 +279,3 @@ You can read the HDU of your desires by passing an \c hdu to the constructor.
 but \b not possible to read it back from a non-default HDU.
 */
 }}}
-
-//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
-namespace lsst { namespace afw { namespace detection {
-/**
-\page afwSecDetection Detection
-
-Detected pixels are manipulated using the following classes:
- - Footprint : A set of pixels above (or below) a Threshold
- - FootprintFunctor : A functor to process the pixels in a Footprint
- - FootprintSet : A set of Footprints associated with a MaskedImage
- - Peak : A peak pixel in the %image
- - Source : The properties of a source of electrons (e.g. a star or cosmic ray)
- - Threshold : An object describing the threshold used to define a set of Footprint%s
-
-*/
-}}}
-

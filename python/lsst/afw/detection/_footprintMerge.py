@@ -29,7 +29,32 @@ from ._detection import FootprintMergeList
 class FootprintMergeList:  # noqa: F811
     def getMergedSourceCatalog(self, catalogs, filters,
                                peakDist, schema, idFactory, samePeakDist):
-        """Add multiple catalogs and get the SourceCatalog with merged Footprints"""
+        """Add multiple catalogs and get the SourceCatalog with merged Footprints
+
+        Parameters
+        ----------
+        catalogs : `list` [`lsst.afw.table.SourceCatalog`]
+            list of catalogs
+        filters : `list` [`str`]
+            list of filters
+        peakDist : `float` or `list` [`float`]
+            distance between source peaks
+        schema : `lsst.afw.table.Schema`
+        idFactory : `lsst.afw.table.IdFactory`
+        samePeakDist : `float` or `list [`float`]
+            distance between source peaks (check)
+
+        Returns
+        -------
+        mergedList : `lsst.afw.table.SourceCatalog`
+            merged list of sources
+
+        See also
+        --------
+        lsst.afw.table.SourceTable
+
+        """
+
         import lsst.afw.table as afwTable
 
         table = afwTable.SourceTable.make(schema, idFactory)
