@@ -58,8 +58,11 @@ public:
 
     /** Return the effective wavelength for this object in the given filter
      */
-    double getLambdaEff(Filter const &  ///< The filter in question
-                        ) const {
+    [
+            [deprecated("Removed with no replacement (but see lsst::afw::image::TransmissionCurve). Will be "
+                        "removed after v22.")]] double
+    getLambdaEff(Filter const &  ///< The filter in question
+                 ) const {
         return 1000 * _g_r;
     }
 

@@ -236,8 +236,10 @@ public:
         return _info->getDetector();
     }
     /// Return the Exposure's filter
-    // TODO: deprecate in DM-27170, remove in DM-27177
-    Filter getFilter() const { return _info->getFilter(); }
+    // TODO: remove in DM-27177
+    [[deprecated("Replaced with getFilterLabel. Will be removed after v22.")]] Filter getFilter() const {
+        return _info->getFilter();
+    }
     /// Return the Exposure's filter information
     // TODO: deprecate in DM-27177, remove in DM-27811
     std::shared_ptr<FilterLabel const> getFilterLabel() const { return _info->getFilterLabel(); }
@@ -302,8 +304,11 @@ public:
      * @param filter The filter to set. If this is the default filter
      *               ("_unknown_"), it is interpreted as "no filter".
      */
-    // TODO: deprecate in DM-27170, remove in DM-27177
-    void setFilter(Filter const& filter) { _info->setFilter(filter); }
+    // TODO: remove in DM-27177
+    [[deprecated("Replaced with setFilterLabel. Will be removed after v22.")]] void setFilter(
+            Filter const& filter) {
+        _info->setFilter(filter);
+    }
     /// Set the Exposure's filter information
     // TODO: deprecate in DM-27177, remove in DM-27811
     void setFilterLabel(std::shared_ptr<FilterLabel const> filterLabel) {

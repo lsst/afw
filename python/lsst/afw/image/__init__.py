@@ -28,6 +28,7 @@ from .coaddInputs import *
 from .color import *
 from .defect import *
 from .filter import *
+from .filterContinued import *  # just here to support deprecation
 from .filterLabel import *
 from .image import *
 from .imageSlice import *
@@ -35,6 +36,7 @@ from .maskedImage import *
 from .visitInfo import *
 from .transmissionCurve import *
 from .exposureInfo import *
+from .exposureInfoContinued import *  # just here to support deprecation
 from .exposure import *
 from .photoCalib import *
 from .imagePca import *
@@ -44,3 +46,4 @@ from .basicUtils import *
 from .testUtils import *
 
 from .readers import *
+from .exposureFitsReaderContinued import *  # just here to support deprecation

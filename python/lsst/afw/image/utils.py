@@ -23,6 +23,8 @@
 __all__ = ["clipImage", "resetFilters", "defineFilter",
            "projectImage", "getProjectionIndices"]
 
+from deprecated.sphinx import deprecated
+
 import numpy as np
 
 import lsst.afw.detection as afwDetect
@@ -50,12 +52,17 @@ def clipImage(im, minClip, maxClip):
             mi.getImage(), ds.getFootprints(), maxClip)
 
 
+@deprecated(reason=("Removed with no replacement (FilterLabels do not need to be reset)."
+                    " Will be removed after v22."), category=FutureWarning, version="v22")
 def resetFilters():
     """Reset registry of filters and filter properties"""
     Filter.reset()
     FilterProperty.reset()
 
 
+@deprecated(reason=("Removed with no replacement (but see lsst::afw::image::TransmissionCurve for how to set"
+                    "and retrieve filter wavelength information). Will be removed after v22."),
+            category=FutureWarning, version="v22")
 def defineFilter(name, lambdaEff, lambdaMin=np.nan, lambdaMax=np.nan, alias=[], force=False):
     """Define a filter and its properties in the filter registry"""
     prop = FilterProperty(name, lambdaEff, lambdaMin, lambdaMax, force)

@@ -34,7 +34,6 @@ import lsst.geom
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
-import lsst.afw.image.utils as imageUtils
 import lsst.pex.exceptions as pexExcept
 import lsst.afw.display as afwDisplay
 from lsst.log import Log
@@ -103,13 +102,11 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         - bad mask pixels get smeared out so we have to excluded all bad mask pixels
           from the output image when comparing masks.
         """
-        imageUtils.defineFilter("i", 748.1)
-
         originalExposure = afwImage.ExposureF(originalExposurePath)
         originalExposure.getInfo().setVisitInfo(makeVisitInfo())
-        originalFilter = afwImage.Filter("i")
+        originalFilterLabel = afwImage.FilterLabel(band="i")
         originalPhotoCalib = afwImage.PhotoCalib(1.0e5, 1.0e3)
-        originalExposure.setFilter(originalFilter)
+        originalExposure.setFilterLabel(originalFilterLabel)
         originalExposure.setPhotoCalib(originalPhotoCalib)
         afwWarpedExposure = afwImage.ExposureF(
             originalExposure.getBBox(),
@@ -121,8 +118,8 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         if SAVE_FITS_FILES:
             afwWarpedExposure.writeFits("afwWarpedExposureNull.fits")
 
-        self.assertEqual(afwWarpedExposure.getFilter().getName(),
-                         originalFilter.getName())
+        self.assertEqual(afwWarpedExposure.getFilterLabel().bandLabel,
+                         originalFilterLabel.bandLabel)
         self.assertEqual(afwWarpedExposure.getPhotoCalib(), originalPhotoCalib)
         self.assertEqual(afwWarpedExposure.getInfo().getVisitInfo(),
                          originalExposure.getInfo().getVisitInfo())

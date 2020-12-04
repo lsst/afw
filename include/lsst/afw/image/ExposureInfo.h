@@ -125,8 +125,8 @@ public:
     void setDetector(std::shared_ptr<cameraGeom::Detector const> detector);
 
     /// Return the exposure's filter
-    // TODO: deprecate in DM-27170, remove in DM-27177
-    Filter getFilter() const;
+    // TODO: remove in DM-27177
+    [[deprecated("Replaced with getFilterLabel. Will be removed after v22.")]] Filter getFilter() const;
 
     /**
      * Set the exposure's filter
@@ -134,8 +134,9 @@ public:
      * @param filter The filter to set. If this is the default filter
      *               ("_unknown_"), it is interpreted as "no filter".
      */
-    // TODO: deprecate in DM-27170, remove in DM-27177
-    void setFilter(Filter const& filter);
+    // TODO: remove in DM-27177
+    [[deprecated("Replaced with setFilterLabel. Will be removed after v22.")]] void setFilter(
+            Filter const& filter);
 
     /// Does this exposure have filter information?
     // TODO: deprecate in DM-27177, remove in DM-27811.
