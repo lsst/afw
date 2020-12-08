@@ -79,6 +79,8 @@ public:
     /**
      * Return the band label.
      *
+     * In Python, this is replaced by the `band` read-only property.
+     *
      * @returns The band label.
      * @throws lsst::pex::exceptions::LogicError Thrown if hasBandLabel() is `false`.
      */
@@ -89,6 +91,8 @@ public:
 
     /**
      * Return the physical filter label.
+     *
+     * In Python, this is replaced by the `physicalLabel` read-only property.
      *
      * @returns The physical filter label.
      * @throws lsst::pex::exceptions::LogicError Thrown if hasPhysicalLabel() is `false`.
