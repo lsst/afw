@@ -289,6 +289,7 @@ void declareExposureFitsReader(py::module & mod) {
     cls.def("readMetadata", &ExposureFitsReader::readMetadata);
     cls.def("readWcs", &ExposureFitsReader::readWcs);
     cls.def("readFilter", &ExposureFitsReader::readFilter);
+    cls.def("readFilterLabel", &ExposureFitsReader::readFilterLabel);
     cls.def("readPhotoCalib", &ExposureFitsReader::readPhotoCalib);
     cls.def("readPsf", &ExposureFitsReader::readPsf);
     cls.def("readValidPolygon", &ExposureFitsReader::readValidPolygon);

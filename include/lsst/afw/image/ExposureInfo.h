@@ -29,6 +29,7 @@
 #include "lsst/daf/base.h"
 #include "lsst/geom/Point.h"
 #include "lsst/afw/image/Filter.h"
+#include "lsst/afw/image/FilterLabel.h"
 #include "lsst/afw/table/io/OutputArchive.h"
 #include "lsst/afw/image/CoaddInputs.h"
 #include "lsst/afw/image/VisitInfo.h"
@@ -69,7 +70,6 @@ class TransmissionCurve;
  *  The constness semantics of the things held by ExposureInfo are admittedly a bit of a mess,
  *  but they're that way to preserve backwards compatibility for now.  Eventually I'd like to make
  *  a lot of these things immutable, but in the meantime, here's the summary:
- *   - Filter is held and returned by value.
  *   - VisitInfo is immutable and is held by a const ptr and has a setter and getter.
  *   - Metadata is held by non-const pointer, and you can get a non-const pointer via a const
  *     member function accessor (i.e. constness is not propagated).
@@ -103,6 +103,8 @@ public:
     /// Standard key for looking up the transmission curve.
     static typehandling::Key<std::string, std::shared_ptr<TransmissionCurve const>> const
             KEY_TRANSMISSION_CURVE;
+    /// Standard key for looking up filter information.
+    static typehandling::Key<std::string, std::shared_ptr<FilterLabel const>> const KEY_FILTER;
 
     /// Does this exposure have a Wcs?
     bool hasWcs() const;
@@ -123,10 +125,24 @@ public:
     void setDetector(std::shared_ptr<cameraGeom::Detector const> detector);
 
     /// Return the exposure's filter
-    Filter getFilter() const { return _filter; }
+    // TODO: deprecate in DM-27170, remove in DM-27177
+    Filter getFilter() const;
 
     /// Set the exposure's filter
-    void setFilter(Filter const& filter) { _filter = filter; }
+    // TODO: deprecate in DM-27170, remove in DM-27177
+    void setFilter(Filter const& filter);
+
+    /// Does this exposure have filter information?
+    // TODO: deprecate in DM-27177, remove in DM-27811.
+    bool hasFilterLabel() const;
+
+    /// Return the exposure's filter information
+    // TODO: deprecate in DM-27177, remove in DM-27811.
+    std::shared_ptr<FilterLabel const> getFilterLabel() const;
+
+    /// Set the exposure's filter information
+    // TODO: deprecate in DM-27177, remove in DM-27811.
+    void setFilterLabel(std::shared_ptr<FilterLabel const> filterLabel);
 
     /// Does this exposure have a photometric calibration?
     bool hasPhotoCalib() const;
@@ -317,14 +333,14 @@ public:
             std::shared_ptr<TransmissionCurve const> const& transmissionCurve =
                     std::shared_ptr<TransmissionCurve>());
 
-    /// Copy constructor; shares all components except the filter.
+    /// Copy constructor; shares all components.
     ExposureInfo(ExposureInfo const& other);
     ExposureInfo(ExposureInfo&& other);
 
-    /// Copy constructor; shares everything but the filter and possibly the metadata.
+    /// Copy constructor; shares everything except possibly the metadata.
     ExposureInfo(ExposureInfo const& other, bool copyMetadata);
 
-    /// Assignment; shares all components except the filter.
+    /// Assignment; shares all components.
     ExposureInfo& operator=(ExposureInfo const& other);
     ExposureInfo& operator=(ExposureInfo&& other);
 
@@ -431,7 +447,6 @@ private:
         }
     }
 
-    Filter _filter;
     std::shared_ptr<daf::base::PropertySet> _metadata;
     std::shared_ptr<image::VisitInfo const> _visitInfo;
 

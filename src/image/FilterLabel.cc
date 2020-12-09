@@ -58,7 +58,12 @@ FilterLabel makeTestFilterLabel(bool hasBand, std::string const &band, bool hasP
 }  // namespace impl
 
 FilterLabel::FilterLabel(bool hasBand, std::string const &band, bool hasPhysical, std::string const &physical)
-        : _hasBand(hasBand), _hasPhysical(hasPhysical), _band(band), _physical(physical) {}
+        : _hasBand(hasBand), _hasPhysical(hasPhysical), _band(band), _physical(physical) {
+    // Guard against changes to factory methods or pybind11 keyword constructor
+    if (!hasBand && !hasPhysical) {
+        throw LSST_EXCEPT(pex::exceptions::LogicError, "FilterLabel must have at least one label.");
+    }
+}
 
 FilterLabel FilterLabel::fromBandPhysical(std::string const &band, std::string const &physical) {
     return FilterLabel(true, band, true, physical);

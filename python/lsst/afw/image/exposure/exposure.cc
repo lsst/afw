@@ -26,6 +26,7 @@
 #include "lsst/afw/geom/SkyWcs.h"
 #include "lsst/afw/image/PhotoCalib.h"
 #include "lsst/afw/image/Filter.h"
+#include "lsst/afw/image/FilterLabel.h"
 #include "lsst/afw/image/Exposure.h"
 #include "lsst/afw/detection/Psf.h"
 
@@ -104,6 +105,8 @@ PyExposure<PixelT> declareExposure(py::module &mod, const std::string &suffix) {
     cls.def("setDetector", &ExposureT::setDetector, "detector"_a);
     cls.def("getFilter", &ExposureT::getFilter);
     cls.def("setFilter", &ExposureT::setFilter, "filter"_a);
+    cls.def("getFilterLabel", &ExposureT::getFilterLabel);
+    cls.def("setFilterLabel", &ExposureT::setFilterLabel, "filterLabel"_a);
 
     cls.def("getPhotoCalib", &ExposureT::getPhotoCalib);
     cls.def("setPhotoCalib", &ExposureT::setPhotoCalib, "photoCalib"_a);

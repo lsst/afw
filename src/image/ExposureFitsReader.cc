@@ -19,6 +19,10 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <map>
+#include <regex>
+#include <set>
+
 #include "lsst/log/Log.h"
 
 #include "lsst/afw/image/PhotoCalib.h"
@@ -48,7 +52,166 @@ bool _contains(std::array<T, N> const& array, T const& value) {
     return false;
 }
 
+// Map from compatibility "afw name" to correct filter label
+std::map<std::string, FilterLabel> const _AFW_NAMES = {
+        std::make_pair("r2", FilterLabel::fromBandPhysical("r", "HSC-R2")),
+        std::make_pair("i2", FilterLabel::fromBandPhysical("i", "HSC-I2")),
+        std::make_pair("SOLID", FilterLabel::fromPhysical("solid plate 0.0 0.0")),
+};
+
+/**
+ * Determine heuristically whether a filter name represents a band or a physical filter.
+ *
+ * @param name The name to test.
+ */
+bool _isBand(std::string const& name) {
+    static std::set<std::string> const BANDS = {"u", "g", "r", "i", "z", "y", "SH", "PH", "VR", "white"};
+    // Standard band
+    if (BANDS.count(name) > 0) {
+        return true;
+    }
+    // Looks like a narrow-band band
+    if (std::regex_match(name, std::regex("N\\d+"))) {
+        return true;
+    }
+    // Looks like an intermediate-band band; exclude "I2"
+    if (std::regex_match(name, std::regex("I\\d{2,}"))) {
+        return true;
+    }
+    return false;
+}
+
 }  // namespace
+
+/**
+ * Convert an old-style filter name to a FilterLabel without external information.
+ *
+ * Guaranteed to not call any code related to Filter or FilterDefinition.
+ *
+ * @param name A name for the filter.
+ * @returns A FilterLabel containing that name.
+ */
+std::shared_ptr<FilterLabel> makeFilterLabelDirect(std::string const& name) {
+    // FilterLabel::from* returns a statically allocated object, so only way
+    // to get it into shared_ptr is to copy it.
+    if (_isBand(name)) {
+        return std::make_shared<FilterLabel>(FilterLabel::fromBand(name));
+    } else {
+        return std::make_shared<FilterLabel>(FilterLabel::fromPhysical(name));
+    }
+}
+
+/**
+ * Convert an old-style Filter to a FilterLabel.
+ *
+ * If a filter has been declared using `lsst.obs.base.FilterDefinition`, that
+ * information (as encoded in the `~lsst.afw.image.Filter` registry) is used to
+ * infer the filter's band and physical filter.
+ *
+ * @param filter Any Filter object.
+ * @returns The closest equivalent FilterLabel, given available information.
+ */
+// TODO: compatibility code to be removed in DM-27177
+std::shared_ptr<FilterLabel> makeFilterLabel(Filter const& filter) {
+    // Filter has no self-consistency guarantees whatsoever, and most methods
+    // are unsafe. Program extremely defensively.
+    if (filter.getId() == Filter::UNKNOWN) {
+        // Not a registered filter; guarantees on canonical name do not apply
+        return makeFilterLabelDirect(filter.getName());
+    }
+
+    // obs.base.FilterDefinition ensures the canonical name is the first defined
+    // of afwname, band name, physical filter name.
+    std::string canonical;
+    try {
+        canonical = filter.getCanonicalName();
+    } catch (pex::exceptions::NotFoundError const&) {
+        // Not a registered filter; guarantees on canonical name do not apply
+        return makeFilterLabelDirect(filter.getName());
+    }
+
+    if (_AFW_NAMES.count(canonical) > 0) {
+        return std::make_shared<FilterLabel>(_AFW_NAMES.at(canonical));
+    } else if (_isBand(canonical)) {
+        // physical filter is one of the aliases, but can't tell which one
+        // (FilterDefinition helpfully sorts them). Safer to leave it blank.
+        std::vector<std::string> aliases;
+        try {
+            aliases = filter.getAliases();
+        } catch (pex::exceptions::NotFoundError const&) {
+            // No aliases; leave the vector empty
+        }
+        if (aliases.size() == 1) {
+            return std::make_shared<FilterLabel>(FilterLabel::fromBandPhysical(canonical, aliases.front()));
+        } else {
+            return std::make_shared<FilterLabel>(FilterLabel::fromBand(canonical));
+        }
+    } else {
+        return std::make_shared<FilterLabel>(FilterLabel::fromPhysical(canonical));
+    }
+}
+
+/**
+ * Convert an old-style single Filter name to a FilterLabel, using available information.
+ *
+ * If a filter has been declared using `lsst.obs.base.FilterDefinition`, that
+ * information (as encoded in the `~lsst.afw.image.Filter` registry) is used to
+ * infer the filter's band and physical filter.
+ *
+ * @param name The name persisted in a FITS file. May be any of a Filter's many names.
+ * @returns The closest equivalent FilterLabel, given available information.
+ */
+std::shared_ptr<FilterLabel> makeFilterLabel(std::string const& name) {
+    if (_AFW_NAMES.count(name) > 0) {
+        return std::make_shared<FilterLabel>(_AFW_NAMES.at(name));
+    }
+    // else name is either a band, a physical filter, or a deprecated alias
+
+    try {
+        // To ease the transition to FilterLabel, use Filter to get all the names
+        // TODO: after DM-27177, leave only the catch block
+        Filter filter(name, false);
+        std::shared_ptr<FilterLabel> converted = makeFilterLabel(filter);
+        // Make use of the extra information that `name` is a preferred name
+        // If name is not a band, it is likely the physical filter
+        if (converted && !converted->hasPhysicalLabel() && converted->hasBandLabel() &&
+            name != converted->getBandLabel()) {
+            return std::make_shared<FilterLabel>(
+                    FilterLabel::fromBandPhysical(converted->getBandLabel(), name));
+        } else {
+            return converted;
+        }
+    } catch (pex::exceptions::NotFoundError const&) {
+        // Unknown filter, no extra info to be gained
+        return makeFilterLabelDirect(name);
+    }
+}
+
+/**
+ * Convert a FilterLabel back to an old-style Filter.
+ *
+ * @param label The FilterLabel to convert.
+ * @returns The closest equivalent Filter, following the conventions
+ *          established by obs.base.FilterDefinition.
+ */
+Filter makeFilter(FilterLabel const& label) {
+    // Filters still have standard aliases, so can use almost any name to define them.
+    // Prefer afw_name or band because that's what most code assumes is Filter.getName().
+    for (auto const& keyValue : _AFW_NAMES) {
+        std::string const& afwName = keyValue.first;
+        FilterLabel const& afwFilter = keyValue.second;
+        if (label == afwFilter) {
+            return Filter(afwName);
+        }
+    }
+
+    if (label.hasBandLabel()) {
+        return Filter(label.getBandLabel(), true);
+    } else {
+        // FilterLabel guarantees at least one of band or physical is defined.
+        return Filter(label.getPhysicalLabel(), true);
+    }
+}
 
 class ExposureFitsReader::MetadataReader {
 public:
@@ -92,8 +255,17 @@ public:
             metadata = primaryMetadata;
         }
 
-        filter = Filter(metadata, true);
-        detail::stripFilterKeywords(metadata);
+        // Earlier versions persisted Filter as header keyword, version 2 persists FilterLabel as a Storable
+        if (version < 2) {
+            std::string key = "FILTER";
+            if (metadata->exists(key)) {
+                // Original Filter code depended on Boost for string trimming.
+                // DIY to avoid making this module depend on Boost.
+                std::string name = metadata->getAsString(key);
+                size_t end = name.find_last_not_of(' ');
+                filterLabel = makeFilterLabel(name.substr(0, end + 1));
+            }
+        }
 
         visitInfo = std::make_shared<VisitInfo>(*metadata);
         detail::stripVisitInfoKeywords(*metadata);
@@ -116,7 +288,7 @@ public:
 
     int version;
     std::shared_ptr<daf::base::PropertyList> metadata;
-    Filter filter;
+    std::shared_ptr<FilterLabel> filterLabel;
     std::shared_ptr<afw::geom::SkyWcs> wcs;
     std::shared_ptr<PhotoCalib> photoCalib;
     std::shared_ptr<VisitInfo> visitInfo;
@@ -175,8 +347,9 @@ public:
             if (headerKey.substr(0, PREFIX.size()) == PREFIX) {
                 std::string componentName = headerKey.substr(PREFIX.size());
                 int archiveId = metadata.get<int>(headerKey);
+                _genericIds.emplace(componentName, archiveId);
                 if (!_contains(_ids, archiveId)) {
-                    _extraIds.emplace(componentName, archiveId);
+                    _extraIds.emplace(componentName);
                 }
                 toStrip.push_back(headerKey);
                 toStrip.push_back(componentName + "_ID");  // strip corresponding old-style ID, if it exists
@@ -205,6 +378,35 @@ public:
     }
 
     /**
+     * Read an arbitrary component, if available.
+     *
+     * @param fitsFile The file from which to read the component. Must match
+     *                 the metadata used to construct this object.
+     * @param c The archive ID of the component to read.
+     *
+     * @return The desired component, or ``nullptr`` if the file could not be read.
+     *
+     * @throws pex::exceptions::NotFoundError Thrown if the component is
+     *     registered in the file metadata but could not be found.
+     */
+    // This method takes a string instead of a strongly typed Key because
+    // readExtraComponents() gets its keys from the FITS metadata.
+    // Using a Key would make the calling code more complicated.
+    template <typename T>
+    std::shared_ptr<T> readComponent(afw::fits::Fits* fitsFile, std::string c) {
+        if (!_ensureLoaded(fitsFile)) {
+            return nullptr;
+        }
+
+        if (_extraIds.count(c) > 0) {
+            int archiveId = _genericIds.at(c);
+            return _archive.get<T>(archiveId);
+        } else {
+            return nullptr;
+        }
+    }
+
+    /**
      * Read the components that are stored using arbitrary-component support.
      *
      * @param fitsFile The file from which to read the components. Must match
@@ -223,12 +425,9 @@ public:
 
         // Not safe to call getAll if a component cannot be unpersisted
         // Instead, look for the archives registered in the metadata
-        for (auto const& keyValue : _extraIds) {
-            std::string componentName = keyValue.first;
-            int archiveId = keyValue.second;
-
+        for (std::string const& componentName : _extraIds) {
             try {
-                result.emplace(componentName, _archive.get(archiveId));
+                result.emplace(componentName, readComponent<table::io::Persistable>(fitsFile, componentName));
             } catch (pex::exceptions::NotFoundError const& err) {
                 LOGLS_WARN(_log,
                            "Could not read component " << componentName << "; skipping: " << err.what());
@@ -257,7 +456,8 @@ private:
     ArchiveState _state = ArchiveState::UNKNOWN;
     table::io::InputArchive _archive;
     std::array<int, N_ARCHIVE_COMPONENTS> _ids = {0};
-    std::map<std::string, int> _extraIds;
+    std::map<std::string, int> _genericIds;
+    std::set<std::string> _extraIds;  // _genericIds not included in _ids
 };
 
 ExposureFitsReader::ExposureFitsReader(std::string const& fileName) : _maskedImageReader(fileName) {}
@@ -297,8 +497,22 @@ std::shared_ptr<afw::geom::SkyWcs> ExposureFitsReader::readWcs() {
 }
 
 Filter ExposureFitsReader::readFilter() {
+    std::shared_ptr<FilterLabel const> label = readFilterLabel();
+    if (label) {
+        return makeFilter(*label);
+    } else {
+        // Old exposures always had a Filter, even if only the default
+        return Filter();
+    }
+}
+
+std::shared_ptr<FilterLabel> ExposureFitsReader::readFilterLabel() {
     _ensureReaders();
-    return _metadataReader->filter;
+    if (_metadataReader->version < 2) {
+        return _metadataReader->filterLabel;
+    } else {
+        return _archiveReader->readComponent<FilterLabel>(_getFitsFile(), ExposureInfo::KEY_FILTER.getId());
+    }
 }
 
 std::shared_ptr<PhotoCalib> ExposureFitsReader::readPhotoCalib() {
@@ -355,7 +569,6 @@ std::map<std::string, std::shared_ptr<table::io::Persistable>> ExposureFitsReade
 std::shared_ptr<ExposureInfo> ExposureFitsReader::readExposureInfo() {
     auto result = std::make_shared<ExposureInfo>();
     result->setMetadata(readMetadata());
-    result->setFilter(readFilter());
     result->setPhotoCalib(readPhotoCalib());
     result->setVisitInfo(readVisitInfo());
     // When reading an ExposureInfo (as opposed to reading individual
@@ -420,6 +633,11 @@ std::shared_ptr<ExposureInfo> ExposureFitsReader::readExposureInfo() {
         } else {
             LOGLS_WARN(_log, "Data corruption: generic component " << key << " is not a Storable; skipping.");
         }
+    }
+    // Convert old-style Filter to new-style FilterLabel
+    // In newer versions this is handled by readExtraComponents()
+    if (_metadataReader->version < 2 && !result->hasFilterLabel()) {
+        result->setFilterLabel(readFilterLabel());
     }
     return result;
 }  // namespace image
