@@ -20,7 +20,8 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 __all__ = ["makeMergedSchema", "copyIntoCatalog",
-           "matchesToCatalog", "matchesFromCatalog", "copyAliasMapWithPrefix"]
+           "matchesToCatalog", "matchesFromCatalog", "copyAliasMapWithPrefix",
+           "reindexCatalog"]
 
 import os.path
 
@@ -254,3 +255,26 @@ def copyAliasMapWithPrefix(inSchema, outSchema, prefix=""):
         outSchema.getAliasMap().set(prefix + k, prefix + v)
 
     return outSchema
+
+
+def reindexCatalog(catalog, indices, deep=True):
+    """Apply a numpy index array to an afw Catalog
+
+    Parameters
+    ----------
+    catalog : `lsst.afw.table.SourceCatalog`
+        Catalog to reindex.
+    indices : `numpy.ndarray` of `int`
+        Index array.
+    deep : `bool`
+        Whether or not to make a deep copy of the original catalog.
+
+    Returns
+    -------
+    new : subclass of `lsst.afw.table.BaseCatalog`
+        Reindexed catalog. Records are shallow copies of those in ``catalog``.
+    """
+    new = SourceCatalog(catalog.table.clone() if deep else catalog.table)
+    records = [catalog[int(ii)] for ii in indices]
+    new.extend(records, deep=deep)
+    return new
