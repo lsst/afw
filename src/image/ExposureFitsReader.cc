@@ -92,6 +92,12 @@ bool _isBand(std::string const& name) {
  * @returns A FilterLabel containing that name.
  */
 std::shared_ptr<FilterLabel> makeFilterLabelDirect(std::string const& name) {
+    static Filter const DEFAULT;
+    // Avoid turning dummy filters into real FilterLabels.
+    if (name == DEFAULT.getName()) {
+        return nullptr;
+    }
+
     // FilterLabel::from* returns a statically allocated object, so only way
     // to get it into shared_ptr is to copy it.
     if (_isBand(name)) {
@@ -113,6 +119,13 @@ std::shared_ptr<FilterLabel> makeFilterLabelDirect(std::string const& name) {
  */
 // TODO: compatibility code to be removed in DM-27177
 std::shared_ptr<FilterLabel> makeFilterLabel(Filter const& filter) {
+    static Filter const DEFAULT;
+    // Avoid turning dummy filters into real FilterLabels.
+    // Default filter has id=UNKNOWN, but others do too.
+    if (filter.getId() == DEFAULT.getId() && filter.getName() == DEFAULT.getName()) {
+        return nullptr;
+    }
+
     // Filter has no self-consistency guarantees whatsoever, and most methods
     // are unsafe. Program extremely defensively.
     if (filter.getId() == Filter::UNKNOWN) {

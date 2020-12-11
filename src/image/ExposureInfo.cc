@@ -189,13 +189,8 @@ ExposureInfo::ExposureInfo(std::shared_ptr<geom::SkyWcs const> const& wcs,
                              : std::shared_ptr<daf::base::PropertySet>(new daf::base::PropertyList())),
           _visitInfo(visitInfo),
           _components(std::make_unique<MapClass>()) {
-    static Filter const DEFAULT;
-    // Avoid putting dummy filters into the FilterLabel store. getFilter()
-    // will preserve old default behavior.
-    // Default filter has id=UNKNOWN, but others do too.
-    if (filter.getId() != DEFAULT.getId() || filter.getName() != DEFAULT.getName()) {
-        setFilter(filter);
-    }
+    // setFilter guards against default filters
+    setFilter(filter);
     setWcs(wcs);
     setPsf(psf);
     setPhotoCalib(photoCalib);

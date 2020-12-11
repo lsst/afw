@@ -128,7 +128,12 @@ public:
     // TODO: deprecate in DM-27170, remove in DM-27177
     Filter getFilter() const;
 
-    /// Set the exposure's filter
+    /**
+     * Set the exposure's filter
+     *
+     * @param filter The filter to set. If this is the default filter
+     *               ("_unknown_"), it is interpreted as "no filter".
+     */
     // TODO: deprecate in DM-27170, remove in DM-27177
     void setFilter(Filter const& filter);
 
