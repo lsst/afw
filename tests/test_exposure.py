@@ -274,6 +274,15 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(exposure.getFilter(), gFilter)
         self.assertEqual(exposure.getFilterLabel(), gFilterLabel)
 
+    def testDefaultFilter(self):
+        """Test that old convention of having a "default" filter replaced with `None`.
+        """
+        exposureInfo = afwImage.ExposureInfo()
+        noFilter = afwImage.Filter()
+        exposureInfo.setFilter(noFilter)
+        self.assertFalse(exposureInfo.hasFilterLabel())
+        self.assertIsNone(exposureInfo.getFilterLabel())
+
     def testVisitInfoFitsPersistence(self):
         """Test saving an exposure to FITS and reading it back in preserves (some) VisitInfo fields"""
         exposureId = 5
