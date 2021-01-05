@@ -26,7 +26,10 @@ import lsst.daf.base as dafBase
 import lsst.geom
 import lsst.afw.image as afwImage
 from lsst.afw.fits import MemFileManager, reduceToFits, Fits
-from . import mathLib as afwMath
+from .interpolate import Interpolate
+from .approximate import ApproximateControl
+from .background import BackgroundMI
+from .background import UndersampleStyle
 
 
 class BackgroundList:
@@ -185,24 +188,24 @@ class BackgroundList:
             height = md["BKGD_HEIGHT"]
             imageBBox = lsst.geom.BoxI(lsst.geom.PointI(x0, y0), lsst.geom.ExtentI(width, height))
 
-            interpStyle = afwMath.Interpolate.Style(md["INTERPSTYLE"])
-            undersampleStyle = afwMath.UndersampleStyle(md["UNDERSAMPLESTYLE"])
+            interpStyle = Interpolate.Style(md["INTERPSTYLE"])
+            undersampleStyle = UndersampleStyle(md["UNDERSAMPLESTYLE"])
 
             # Older outputs won't have APPROX* settings.  Provide alternative defaults.
             # Note: Currently X- and Y-orders must be equal due to a limitation in
             #       math::Chebyshev1Function2.  Setting approxOrderY = -1 is equivalent
             #       to saying approxOrderY = approxOrderX.
-            approxStyle = md.get("APPROXSTYLE", afwMath.ApproximateControl.UNKNOWN)
-            approxStyle = afwMath.ApproximateControl.Style(approxStyle)
+            approxStyle = md.get("APPROXSTYLE", ApproximateControl.UNKNOWN)
+            approxStyle = ApproximateControl.Style(approxStyle)
             approxOrderX = md.get("APPROXORDERX", 1)
             approxOrderY = md.get("APPROXORDERY", -1)
             approxWeighting = md.get("APPROXWEIGHTING", True)
 
-            bkgd = afwMath.BackgroundMI(imageBBox, statsImage)
+            bkgd = BackgroundMI(imageBBox, statsImage)
             bctrl = bkgd.getBackgroundControl()
             bctrl.setInterpStyle(interpStyle)
             bctrl.setUndersampleStyle(undersampleStyle)
-            actrl = afwMath.ApproximateControl(approxStyle, approxOrderX, approxOrderY, approxWeighting)
+            actrl = ApproximateControl(approxStyle, approxOrderX, approxOrderY, approxWeighting)
             bctrl.setApproximateControl(actrl)
             bgInfo = (bkgd, interpStyle, undersampleStyle, approxStyle,
                       approxOrderX, approxOrderY, approxWeighting)
@@ -219,12 +222,12 @@ class BackgroundList:
         for (bkgd, interpStyle, undersampleStyle, approxStyle,
              approxOrderX, approxOrderY, approxWeighting) in self:
             if not bkgdImage:
-                if approxStyle != afwMath.ApproximateControl.UNKNOWN:
+                if approxStyle != ApproximateControl.UNKNOWN:
                     bkgdImage = bkgd.getImageF()
                 else:
                     bkgdImage = bkgd.getImageF(interpStyle, undersampleStyle)
             else:
-                if approxStyle != afwMath.ApproximateControl.UNKNOWN:
+                if approxStyle != ApproximateControl.UNKNOWN:
                     bkgdImage += bkgd.getImageF()
                 else:
                     bkgdImage += bkgd.getImageF(interpStyle, undersampleStyle)
