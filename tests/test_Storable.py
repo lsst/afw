@@ -19,14 +19,19 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+from __future__ import annotations
+
+from dataclasses import dataclass, asdict
 import copy
 import gc
 import unittest
+import yaml
 
 import lsst.utils.tests
 
-from lsst.afw.typehandling import Storable
+from lsst.afw.typehandling import Storable, StorableHelperFactory
 import testGenericMapLib as cppLib
+from lsst.afw.image import ExposureF
 
 
 class DemoStorable(Storable):
@@ -146,6 +151,64 @@ class CppStorableTestSuite(lsst.utils.tests.TestCase):
 
         self.assertEqual(self.testbed.value, newstr)
         cppLib.assertCppValue(self.testbed, newstr)
+
+
+@dataclass
+class Blob(Storable):
+    _factory = StorableHelperFactory(__name__, "Blob")
+
+    an_int: int
+    a_float: float
+
+    def __post_init__(self):
+        Storable.__init__(self)  # required for trampoline
+
+    def isPersistable(self):
+        return True
+
+    def _getPersistenceName(self):
+        return "Blob"
+
+    def _getPythonModule(self):
+        return __name__
+
+    def _write(self):
+        return yaml.dump(asdict(self), encoding='utf-8')
+
+    @staticmethod
+    def _read(bytes):
+        return Blob(**yaml.load(bytes, Loader=yaml.SafeLoader))
+
+
+class ExposureStorableBlobTestSuite(lsst.utils.tests.TestCase):
+    def setUp(self):
+        self.blob = Blob(1, 2.0)
+
+    def testClone(self):
+        """Test copying an exposure with an attached Blob.
+        """
+        im = ExposureF(10, 10)
+        # Extra components must be ALL CAPS for fits storage.
+        im.getInfo().setComponent("BLOB", self.blob)
+
+        im2 = im.clone()
+        im3 = copy.deepcopy(im)
+        im4 = ExposureF(im, deep=False)
+        im5 = ExposureF(im, deep=True)
+
+        for i in [im2, im3, im4, im5]:
+            self.assertEqual(i.getInfo().getComponent("BLOB"), self.blob)
+
+    def testPersistence(self):
+        """Test persisting an exposure with an attached Blob.
+        """
+        im = ExposureF(10, 10)
+        # Extra components must be ALL CAPS for fits storage.
+        im.getInfo().setComponent("BLOB", self.blob)
+        with lsst.utils.tests.getTempFilePath(".fits") as tmpFile:
+            im.writeFits(tmpFile)
+            newIm = ExposureF(tmpFile)
+            self.assertEqual(newIm.getInfo().getComponent("BLOB"), self.blob)
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
