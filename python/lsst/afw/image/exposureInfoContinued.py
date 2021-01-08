@@ -20,28 +20,16 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-from . import pixel
+from lsst.utils import continueClass
+from .exposureInfo import ExposureInfo
 
-from .apCorrMap import *
-from .calib import *
-from .coaddInputs import *
-from .color import *
-from .defect import *
-from .filter import *
-from .filterLabel import *
-from .image import *
-from .imageSlice import *
-from .maskedImage import *
-from .visitInfo import *
-from .transmissionCurve import *
-from .exposureInfo import *
-from .exposure import *
-from .photoCalib import *
-from .imagePca import *
-from .imageUtils import *
-from .exposureInfoContinued import *
+__all__ = []  # import this module only for its side effects
 
-from .basicUtils import *
-from .testUtils import *
 
-from .readers import *
+@continueClass  # noqa: F811 (FIXME: remove for py 3.8+)
+class ExposureInfo:  # noqa: F811
+    def getSummary(self):
+        return self.getComponent('SUMMARY')
+
+    def setSummary(self, summary):
+        self.setComponent('SUMMARY', summary)
