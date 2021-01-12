@@ -147,6 +147,9 @@ public:
     /// Read the Exposure's detector.
     std::shared_ptr<cameraGeom::Detector> readDetector();
 
+    /// Read an arbitrary non-standard component
+    std::shared_ptr<table::io::Persistable> readComponent(std::string const &componentName);
+
     /// Read the Exposure's non-standard components
     std::map<std::string, std::shared_ptr<table::io::Persistable>> readExtraComponents();
 

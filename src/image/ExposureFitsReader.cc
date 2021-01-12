@@ -574,6 +574,11 @@ std::shared_ptr<cameraGeom::Detector> ExposureFitsReader::readDetector() {
     return _archiveReader->readComponent<cameraGeom::Detector>(_getFitsFile(), ArchiveReader::DETECTOR);
 }
 
+std::shared_ptr<table::io::Persistable> ExposureFitsReader::readComponent(std::string const &componentName) {
+    _ensureReaders();
+    return _archiveReader->readComponent<table::io::Persistable>(_getFitsFile(), componentName);
+}
+
 std::map<std::string, std::shared_ptr<table::io::Persistable>> ExposureFitsReader::readExtraComponents() {
     _ensureReaders();
     return _archiveReader->readExtraComponents(_getFitsFile());
