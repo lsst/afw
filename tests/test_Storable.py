@@ -31,7 +31,7 @@ import lsst.utils.tests
 
 from lsst.afw.typehandling import Storable, StorableHelperFactory
 import testGenericMapLib as cppLib
-from lsst.afw.image import ExposureF
+from lsst.afw.image import ExposureF, ExposureFitsReader
 
 
 class DemoStorable(Storable):
@@ -207,8 +207,13 @@ class ExposureStorableBlobTestSuite(lsst.utils.tests.TestCase):
         im.getInfo().setComponent("BLOB", self.blob)
         with lsst.utils.tests.getTempFilePath(".fits") as tmpFile:
             im.writeFits(tmpFile)
+
             newIm = ExposureF(tmpFile)
             self.assertEqual(newIm.getInfo().getComponent("BLOB"), self.blob)
+
+            reader = ExposureFitsReader(tmpFile)
+            newBlob = reader.readComponent("BLOB")
+            self.assertEqual(newBlob, self.blob)
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):

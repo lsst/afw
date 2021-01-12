@@ -297,6 +297,7 @@ void declareExposureFitsReader(py::module & mod) {
     cls.def("readCoaddInputs", &ExposureFitsReader::readCoaddInputs);
     cls.def("readVisitInfo", &ExposureFitsReader::readVisitInfo);
     cls.def("readTransmissionCurve", &ExposureFitsReader::readTransmissionCurve);
+    cls.def("readComponent", &ExposureFitsReader::readComponent);
     cls.def("readDetector", &ExposureFitsReader::readDetector);
     cls.def("readExposureInfo", &ExposureFitsReader::readExposureInfo);
     cls.def(
