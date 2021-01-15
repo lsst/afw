@@ -411,7 +411,7 @@ public:
             return nullptr;
         }
 
-        if (_extraIds.count(c) > 0) {
+        if (_genericIds.count(c) > 0) {
             int archiveId = _genericIds.at(c);
             return _archive.get<T>(archiveId);
         } else {
