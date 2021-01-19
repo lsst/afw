@@ -32,7 +32,7 @@ from lsst.afw.table import ExposureTable
 from lsst.afw.image import (Image, Mask, Exposure, LOCAL, PARENT, MaskPixel, VariancePixel,
                             ImageFitsReader, MaskFitsReader, MaskedImageFitsReader, ExposureFitsReader,
                             Filter, FilterLabel, PhotoCalib, ApCorrMap, VisitInfo, TransmissionCurve,
-                            CoaddInputs)
+                            CoaddInputs, ExposureInfo)
 from lsst.afw.image.utils import defineFilter
 from lsst.afw.detection import GaussianPsf
 from lsst.afw.cameraGeom.testUtils import DetectorWrapper
@@ -182,18 +182,35 @@ class FitsReaderTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(exposureIn.getMetadata().toDict(), reader.readMetadata().toDict())
         self.assertWcsAlmostEqualOverBBox(exposureIn.getWcs(), reader.readWcs(), self.bbox,
                                           maxDiffPix=0, maxDiffSky=0*degrees)
+        self.assertWcsAlmostEqualOverBBox(exposureIn.getWcs(),
+                                          reader.readComponent(ExposureInfo.KEY_WCS),
+                                          self.bbox,
+                                          maxDiffPix=0, maxDiffSky=0*degrees)
         self.assertEqual(exposureIn.getFilter(), reader.readFilter())
         self.assertEqual(exposureIn.getFilterLabel(), reader.readFilterLabel())
+        self.assertEqual(exposureIn.getFilterLabel(),
+                         reader.readComponent(ExposureInfo.KEY_FILTER))
         self.assertEqual(exposureIn.getPhotoCalib(), reader.readPhotoCalib())
+        self.assertEqual(exposureIn.getPhotoCalib(),
+                         reader.readComponent(ExposureInfo.KEY_PHOTO_CALIB))
         self.assertImagesEqual(exposureIn.getPsf().computeImage(), reader.readPsf().computeImage())
+        self.assertImagesEqual(exposureIn.getPsf().computeImage(),
+                               reader.readComponent('PSF').computeImage())
         self.assertEqual(exposureIn.getInfo().getValidPolygon(), reader.readValidPolygon())
+        self.assertEqual(exposureIn.getInfo().getValidPolygon(),
+                         reader.readComponent(ExposureInfo.KEY_VALID_POLYGON))
         self.assertCountEqual(exposureIn.getInfo().getApCorrMap(), reader.readApCorrMap())
+        self.assertCountEqual(exposureIn.getInfo().getApCorrMap(),
+                              reader.readComponent(ExposureInfo.KEY_AP_CORR_MAP))
         self.assertEqual(exposureIn.getInfo().getVisitInfo().getExposureTime(),
                          reader.readVisitInfo().getExposureTime())
         point = Point2D(2.3, 3.1)
         wavelengths = np.linspace(4000, 5000, 5)
         self.assertFloatsEqual(exposureIn.getInfo().getTransmissionCurve().sampleAt(point, wavelengths),
                                reader.readTransmissionCurve().sampleAt(point, wavelengths))
+        # Note: readComponent(ExposureInfo.KEY_TRANSMISSION_CURVE) returns a generic Storable
+        # rather than a TransmissionCurve object.
+
         # Because we persisted the same instances, we should get back the same
         # instances for *archive* components, and hence equality comparisons
         # should work even if it just amounts to C++ pointer equality.

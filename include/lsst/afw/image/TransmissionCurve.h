@@ -55,6 +55,12 @@ namespace image {
  *  at each position it is evaluated at).  Other classes and functions using
  *  TransmissionCurves should of course document the flux units and/or
  *  normalization expected/provided.
+ *
+ * @note TransmissionCurve is an interface to various C++-only implementation
+ * classes. Because these classes are not mapped to Python, some references to
+ * a TransmissionCurve object may appear in Python as a table::io::Persistable
+ * or typehandling::Storable instead. The best way to avoid this at present is
+ * to call functions that, in C++, explicitly return a TransmissionCurve.
  */
 class TransmissionCurve : public table::io::PersistableFacade<TransmissionCurve>,
                           public typehandling::Storable,
