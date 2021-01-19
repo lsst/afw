@@ -401,6 +401,10 @@ public:
      *
      * @throws pex::exceptions::NotFoundError Thrown if the component is
      *     registered in the file metadata but could not be found.
+     *
+     * @note When accessing from python, components with derived subclasses, such
+     *       as ``TransmissionCurve``, are not properly type converted and thus
+     *       the specialized reader must be used instead of ``readComponent``.
      */
     // This method takes a string instead of a strongly typed Key because
     // readExtraComponents() gets its keys from the FITS metadata.
