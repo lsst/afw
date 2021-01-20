@@ -87,6 +87,7 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
             lsst.afw.image.RotType.SKY,
             Observatory(11.1*degrees, 22.2*degrees, 0.333),
             Weather(1.1, 2.2, 34.5),
+            "testCam"
         )
 
     @staticmethod

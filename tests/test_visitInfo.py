@@ -72,7 +72,8 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
                   'boresightRotAngle',
                   'rotType',
                   'observatory',
-                  'weather'
+                  'weather',
+                  'instrumentLabel'
                   ]
         VisitInfoData = collections.namedtuple("VisitInfoData", fields)
         data1 = VisitInfoData(exposureId=10313423,
@@ -92,6 +93,7 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
                               observatory=Observatory(
                                   11.1*degrees, 22.2*degrees, 0.333),
                               weather=Weather(1.1, 2.2, 34.5),
+                              instrumentLabel="TestCameraOne",
                               )
         self.data1 = data1
         self.localEra1, self.hourAngle1 = computeLstHA(data1)
@@ -111,6 +113,7 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
                               observatory=Observatory(
                                   22.2*degrees, 33.3*degrees, 0.444),
                               weather=Weather(2.2, 3.3, 44.4),
+                              instrumentLabel="TestCameraTwo"
                               )
         self.data2 = data2
         self.localEra2, self.hourAngle2 = computeLstHA(data2)
@@ -129,6 +132,7 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
                                        data.rotType,
                                        data.observatory,
                                        data.weather,
+                                       data.instrumentLabel
                                        )
         self.assertEqual(visitInfo.getExposureId(), data.exposureId)
         self.assertEqual(visitInfo.getExposureTime(), data.exposureTime)
@@ -144,6 +148,7 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
                          data.boresightRotAngle)
         self.assertEqual(visitInfo.getRotType(), data.rotType)
         self.assertEqual(visitInfo.getObservatory(), data.observatory)
+        self.assertEqual(visitInfo.getInstrumentLabel(), data.instrumentLabel)
         self.assertEqual(visitInfo.getWeather(), data.weather)
         self.assertEqual(visitInfo.getLocalEra(), localEra)
         self.assertEqual(visitInfo.getBoresightHourAngle(), hourAngle)
@@ -179,10 +184,11 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
                                            item.rotType,
                                            item.observatory,
                                            item.weather,
+                                           item.instrumentLabel
                                            )
             metadata = PropertyList()
             afwImage.setVisitInfoMetadata(metadata, visitInfo)
-            self.assertEqual(metadata.nameCount(), 20)
+            self.assertEqual(metadata.nameCount(), 21)
             self.assertEqual(metadata.getScalar("EXPID"), item.exposureId)
             self.assertEqual(metadata.getScalar("EXPTIME"), item.exposureTime)
             self.assertEqual(metadata.getScalar("DARKTIME"), item.darkTime)
@@ -217,6 +223,8 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
                              item.weather.getAirPressure())
             self.assertEqual(metadata.getScalar("HUMIDITY"),
                              item.weather.getHumidity())
+            self.assertEqual(metadata.getScalar("INSTRUMENT"),
+                             item.instrumentLabel)
 
     def testSetVisitInfoMetadataMissingValues(self):
         """If a value is unknown then it should not be written to the metadata"""
@@ -234,12 +242,13 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
             afwImage.setVisitInfoMetadata(metadata, visitInfo)
             # add an extra keyword that will not be stripped
             metadata.set("EXTRA", 5)
-            self.assertEqual(metadata.nameCount(), 21)
+            self.assertEqual(metadata.nameCount(), 22)
             afwImage.stripVisitInfoKeywords(metadata)
             self.assertEqual(metadata.nameCount(), 1)
 
     def _testIsEmpty(self, visitInfo):
-        """Test that visitInfo is all NaN or 0, as appropriate."""
+        """Test that visitInfo is all NaN, 0, or empty string, as appropriate.
+        """
         self.assertEqual(visitInfo.getExposureId(), 0)
         self.assertTrue(math.isnan(visitInfo.getExposureTime()))
         self.assertTrue(math.isnan(visitInfo.getDarkTime()))
@@ -264,6 +273,7 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
         self.assertTrue(math.isnan(visitInfo.getWeather().getAirPressure()))
         self.assertTrue(math.isnan(visitInfo.getWeather().getHumidity()))
         self.assertTrue(math.isnan(visitInfo.getBoresightHourAngle()))
+        self.assertEqual(visitInfo.getInstrumentLabel(), "")
 
     def testMetadataConstructor(self):
         """Test the metadata constructor
@@ -393,6 +403,10 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(visitInfo.getWeather().getHumidity(),
                          data.weather.getHumidity())
 
+        metadata = propertySetFromDict({"INSTRUMENT": data.instrumentLabel})
+        visitInfo = afwImage.VisitInfo(metadata)
+        self.assertEqual(visitInfo.getInstrumentLabel(), data.instrumentLabel)
+
     def testConstructorKeywordArguments(self):
         """Test VisitInfo with named arguments"""
         data = self.data1
@@ -443,6 +457,9 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
         visitInfo = afwImage.VisitInfo(weather=data.weather)
         self.assertEqual(visitInfo.getWeather(), data.weather)
 
+        visitInfo = afwImage.VisitInfo(instrumentLabel=data.instrumentLabel)
+        self.assertEqual(visitInfo.getInstrumentLabel(), data.instrumentLabel)
+
     def testGoodRotTypes(self):
         """Test round trip of all valid rot types"""
         for rotType in RotTypeEnumNameDict:
@@ -479,6 +496,7 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
                                        self.data1.rotType,
                                        self.data1.observatory,
                                        self.data1.weather,
+                                       self.data1.instrumentLabel
                                        )
         string = str(visitInfo)
         self.assertIn("exposureId=10313423", string)

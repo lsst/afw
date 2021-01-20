@@ -72,15 +72,16 @@ PYBIND11_MODULE(visitInfo, mod) {
 
     /* Constructors */
     cls.def(py::init<table::RecordId, double, double, daf::base::DateTime const &, double,
-                     lsst::geom::Angle const &, lsst::geom::SpherePoint const &, lsst::geom::SpherePoint const &, double,
-                     lsst::geom::Angle const &, RotType const &, coord::Observatory const &,
-                     coord::Weather const &>(),
+                     lsst::geom::Angle const &, lsst::geom::SpherePoint const &,
+                     lsst::geom::SpherePoint const &, double, lsst::geom::Angle const &, RotType const &,
+                     coord::Observatory const &, coord::Weather const &, std::string const &>(),
             "exposureId"_a = 0, "exposureTime"_a = nan, "darkTime"_a = nan, "date"_a = daf::base::DateTime(),
-            "ut1"_a = nan, "era"_a = nanAngle, "boresightRaDec"_a = lsst::geom::SpherePoint(nanAngle, nanAngle),
+            "ut1"_a = nan, "era"_a = nanAngle,
+            "boresightRaDec"_a = lsst::geom::SpherePoint(nanAngle, nanAngle),
             "boresightAzAlt"_a = lsst::geom::SpherePoint(nanAngle, nanAngle), "boresightAirmass"_a = nan,
             "boresightRotAngle"_a = nanAngle, "rotType"_a = RotType::UNKNOWN,
             "observatory"_a = coord::Observatory(nanAngle, nanAngle, nan),
-            "weather"_a = coord::Weather(nan, nan, nan));
+            "weather"_a = coord::Weather(nan, nan, nan), "instrumentLabel"_a = "");
     cls.def(py::init<daf::base::PropertySet const &>(), "metadata"_a);
     cls.def(py::init<VisitInfo const &>(), "visitInfo"_a);
 
@@ -110,6 +111,7 @@ PYBIND11_MODULE(visitInfo, mod) {
     cls.def("isPersistable", &VisitInfo::isPersistable);
     cls.def("getLocalEra", &VisitInfo::getLocalEra);
     cls.def("getBoresightHourAngle", &VisitInfo::getBoresightHourAngle);
+    cls.def("getInstrumentLabel", &VisitInfo::getInstrumentLabel);
 
     utils::python::addOutputOp(cls, "__str__");
 

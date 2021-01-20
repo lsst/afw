@@ -99,12 +99,12 @@ BOOST_AUTO_TEST_CASE(VisitInfoHash) {
                     45.1 * degrees, lsst::geom::SpherePoint(23.1 * degrees, 73.2 * degrees),
                     lsst::geom::SpherePoint(134.5 * degrees, 33.3 * degrees), 1.73, 73.2 * degrees,
                     RotType::SKY, coord::Observatory(11.1 * degrees, 22.2 * degrees, 0.333),
-                    coord::Weather(1.1, 2.2, 34.5));
+                    coord::Weather(1.1, 2.2, 34.5), "testCam1");
     VisitInfo info2(10313423, 10.01, 11.02, DateTime(65321.1, DateTime::MJD, DateTime::TAI), 12345.1,
                     45.1 * degrees, lsst::geom::SpherePoint(23.1 * degrees, 73.2 * degrees),
                     lsst::geom::SpherePoint(134.5 * degrees, 33.3 * degrees), 1.73, 73.2 * degrees,
                     RotType::SKY, coord::Observatory(11.1 * degrees, 22.2 * degrees, 0.333),
-                    coord::Weather(1.1, 2.2, 34.5));
+                    coord::Weather(1.1, 2.2, 34.5), "testCam1");
 
     utils::assertHashesEqual(info1, info2);
 }
