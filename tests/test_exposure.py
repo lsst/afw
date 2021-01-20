@@ -843,6 +843,7 @@ class ExposureInfoTestCase(lsst.utils.tests.TestCase):
         self.photoCalib = afwImage.PhotoCalib(1.5)
         self.psf = DummyPsf(2.0)
         self.detector = DetectorWrapper().detector
+        self.summaryStats = afwImage.ExposureSummaryStats(ra=100.0)
         self.polygon = afwGeom.Polygon(lsst.geom.Box2D(lsst.geom.Point2D(0.0, 0.0),
                                                        lsst.geom.Point2D(25.0, 20.0)))
         self.coaddInputs = afwImage.CoaddInputs()
@@ -893,6 +894,8 @@ class ExposureInfoTestCase(lsst.utils.tests.TestCase):
                          self.exposureInfo.hasApCorrMap, self.exposureInfo.getApCorrMap)
         self._checkAlias(self.exposureInfo, cls.KEY_TRANSMISSION_CURVE, self.transmissionCurve,
                          self.exposureInfo.hasTransmissionCurve, self.exposureInfo.getTransmissionCurve)
+        self._checkAlias(self.exposureInfo, cls.KEY_SUMMARY_STATS, self.summaryStats,
+                         self.exposureInfo.hasSummaryStats, self.exposureInfo.getSummaryStats)
 
     def testCopy(self):
         # Test that ExposureInfos have independently settable state

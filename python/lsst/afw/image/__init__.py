@@ -36,12 +36,12 @@ from .maskedImage import *
 from .visitInfo import *
 from .transmissionCurve import *
 from .exposureInfo import *
-from .exposureInfoContinued import *  # just here to support deprecation
+from .exposureInfoContinued import *
 from .exposure import *
 from .photoCalib import *
 from .imagePca import *
 from .imageUtils import *
-from .exposureSummary import *
+from .exposureSummaryStats import *
 
 from .basicUtils import *
 from .testUtils import *

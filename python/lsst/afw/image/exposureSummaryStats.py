@@ -18,7 +18,6 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
 from __future__ import annotations
 
 from dataclasses import dataclass, asdict, field
@@ -27,7 +26,7 @@ import yaml
 from ..typehandling import Storable, StorableHelperFactory
 
 
-__all__ = ("ExposureSummary", )
+__all__ = ("ExposureSummaryStats", )
 
 
 def _default_corners():
@@ -35,8 +34,10 @@ def _default_corners():
 
 
 @dataclass
-class ExposureSummary(Storable):
-    _factory = StorableHelperFactory(__name__, "ExposureSummary")
+class ExposureSummaryStats(Storable):
+    _persistence_name = 'ExposureSummaryStats'
+
+    _factory = StorableHelperFactory(__name__, _persistence_name)
 
     version: int = 0
     # PSF determinant radius (pixels)
@@ -69,13 +70,13 @@ class ExposureSummary(Storable):
     decCorners: list[float] = field(default_factory=_default_corners)
 
     def __post_init__(self):
-        Storable.__init__(self)  # required for trampoline
+        Storable.__init__(self)
 
     def isPersistable(self):
         return True
 
     def _getPersistenceName(self):
-        return "ExposureSummary"
+        return self._persistence_name
 
     def _getPythonModule(self):
         return __name__
@@ -85,4 +86,4 @@ class ExposureSummary(Storable):
 
     @staticmethod
     def _read(bytes):
-        return ExposureSummary(**yaml.load(bytes, Loader=yaml.SafeLoader))
+        return ExposureSummaryStats(**yaml.load(bytes, Loader=yaml.SafeLoader))

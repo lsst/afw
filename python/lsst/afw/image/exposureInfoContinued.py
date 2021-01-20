@@ -16,13 +16,13 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
-"""This file only exists to deprecate the get/setFilter methods.
-"""
 from lsst.utils.deprecated import deprecate_pybind11
+from lsst.utils import continueClass
 
 from . import ExposureInfo
+
+__all__ = []  # import this module only for its side effects
+
 
 ExposureInfo.getFilter = deprecate_pybind11(
     ExposureInfo.getFilter,
@@ -33,3 +33,36 @@ ExposureInfo.setFilter = deprecate_pybind11(
     ExposureInfo.setFilter,
     reason="Replaced by setFilterLabel. Will be removed after v22.",
     version="v22.0")
+
+
+@continueClass
+class ExposureInfo:  # noqa: F811
+    KEY_SUMMARY_STATS = 'SUMMARY_STATS'
+
+    def getSummaryStats(self):
+        """Get exposure summary statistics component.
+
+        Returns
+        -------
+        summaryStats : `lsst.afw.image.ExposureSummaryStats`
+        """
+        return self.getComponent(self.KEY_SUMMARY_STATS)
+
+    def setSummaryStats(self, summaryStats):
+        """Set exposure summary statistics component.
+
+        Parameters
+        ----------
+        summaryStats : `lsst.afw.image.ExposureSummaryStats`
+        """
+        self.setComponent(self.KEY_SUMMARY_STATS, summaryStats)
+
+    def hasSummaryStats(self):
+        """Check if exposureInfo has a summary statistics component.
+
+        Returns
+        -------
+        hasSummaryStats : `bool`
+            True if exposureInfo has a summary statistics component.
+        """
+        return self.hasComponent(self.KEY_SUMMARY_STATS)
