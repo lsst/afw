@@ -48,6 +48,25 @@ def propertySetFromDict(keyValDict):
     return metadata
 
 
+def makeVisitInfo(data):
+    """Return a VisitInfo constructed from a VisitInfoData namedtuple."""
+    return afwImage.VisitInfo(data.exposureId,
+                              data.exposureTime,
+                              data.darkTime,
+                              data.date,
+                              data.ut1,
+                              data.era,
+                              data.boresightRaDec,
+                              data.boresightAzAlt,
+                              data.boresightAirmass,
+                              data.boresightRotAngle,
+                              data.rotType,
+                              data.observatory,
+                              data.weather,
+                              data.instrumentLabel
+                              )
+
+
 class VisitInfoTestCase(lsst.utils.tests.TestCase):
     """Test lsst.afw.image.VisitInfo, a simple struct-like class"""
 
@@ -119,21 +138,7 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
         self.localEra2, self.hourAngle2 = computeLstHA(data2)
 
     def _testValueConstructor(self, data, localEra, hourAngle):
-        visitInfo = afwImage.VisitInfo(data.exposureId,
-                                       data.exposureTime,
-                                       data.darkTime,
-                                       data.date,
-                                       data.ut1,
-                                       data.era,
-                                       data.boresightRaDec,
-                                       data.boresightAzAlt,
-                                       data.boresightAirmass,
-                                       data.boresightRotAngle,
-                                       data.rotType,
-                                       data.observatory,
-                                       data.weather,
-                                       data.instrumentLabel
-                                       )
+        visitInfo = makeVisitInfo(data)
         self.assertEqual(visitInfo.getExposureId(), data.exposureId)
         self.assertEqual(visitInfo.getExposureTime(), data.exposureTime)
         self.assertEqual(visitInfo.getDarkTime(), data.darkTime)
@@ -171,21 +176,7 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
 
     def testSetVisitInfoMetadata(self):
         for item in (self.data1, self.data2):
-            visitInfo = afwImage.VisitInfo(item.exposureId,
-                                           item.exposureTime,
-                                           item.darkTime,
-                                           item.date,
-                                           item.ut1,
-                                           item.era,
-                                           item.boresightRaDec,
-                                           item.boresightAzAlt,
-                                           item.boresightAirmass,
-                                           item.boresightRotAngle,
-                                           item.rotType,
-                                           item.observatory,
-                                           item.weather,
-                                           item.instrumentLabel
-                                           )
+            visitInfo = makeVisitInfo(item)
             metadata = PropertyList()
             afwImage.setVisitInfoMetadata(metadata, visitInfo)
             self.assertEqual(metadata.nameCount(), 21)
@@ -483,21 +474,7 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
 
     def test_str(self):
         """Check that we get something reasonable for str()"""
-        visitInfo = afwImage.VisitInfo(self.data1.exposureId,
-                                       self.data1.exposureTime,
-                                       self.data1.darkTime,
-                                       self.data1.date,
-                                       self.data1.ut1,
-                                       self.data1.era,
-                                       self.data1.boresightRaDec,
-                                       self.data1.boresightAzAlt,
-                                       self.data1.boresightAirmass,
-                                       self.data1.boresightRotAngle,
-                                       self.data1.rotType,
-                                       self.data1.observatory,
-                                       self.data1.weather,
-                                       self.data1.instrumentLabel
-                                       )
+        visitInfo = makeVisitInfo(self.data1)
         string = str(visitInfo)
         self.assertIn("exposureId=10313423", string)
         self.assertIn("exposureTime=10.01", string)
