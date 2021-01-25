@@ -82,6 +82,18 @@ lsst::geom::Angle getAngle(daf::base::PropertySet const& metadata, std::string c
 }
 
 /**
+ * @internal Get a specified string from a PropertySet, or "" if not present.
+ *
+ * @param[in] metadata  metadata to get
+ * @param[in] key  key name; the associated value must be of type string if the key exists.
+ * @returns value of metadata for the specified key, as a string,
+ *   with a value of "" if the key is not present.
+ */
+std::string getString(daf::base::PropertySet const& metadata, std::string const& key) {
+    return metadata.exists(key) ? metadata.getAsString(key) : "";
+}
+
+/**
  * @internal Set a specified double in a PropertySet, if value is finite
  *
  * @param[in,out] metadata  metadata to set
@@ -109,6 +121,23 @@ bool setDouble(daf::base::PropertySet& metadata, std::string const& key, double 
 bool setAngle(daf::base::PropertySet& metadata, std::string const& key, lsst::geom::Angle const& angle,
               std::string const& comment) {
     return setDouble(metadata, key, angle.asDegrees(), comment);
+}
+
+/**
+ * @internal Set a specified string in a PropertySet, if value is non-empty.
+ *
+ * @param[in,out] metadata  metadata to set
+ * @param[in] key  name of key to set
+ * @param[in] value  value of key
+ * @returns true if item set, false otherwise
+ */
+bool setString(daf::base::PropertySet& metadata, std::string const& key, std::string value,
+               std::string const& comment) {
+    if (!value.empty()) {
+        metadata.set(key, value);
+        return true;
+    }
+    return false;
 }
 
 /**
@@ -176,6 +205,8 @@ public:
     table::Key<double> airPressure;
     table::Key<double> humidity;
 
+    table::Key<std::string> instrumentLabel;
+
     static VisitInfoSchema const& get() {
         static VisitInfoSchema instance;
         return instance;
@@ -221,10 +252,14 @@ private:
                       "latitude", "latitude of telescope (+ is east of Greenwich)", "")),
               longitude(schema.addField<lsst::geom::Angle>("longitude", "longitude of telescope", "")),
               elevation(schema.addField<double>("elevation", "elevation of telescope", "")),
+
               // weather data
               airTemperature(schema.addField<double>("airtemperature", "air temperature", "C")),
               airPressure(schema.addField<double>("airpressure", "air pressure", "Pascal")),
-              humidity(schema.addField<double>("humidity", "humidity (%)", "")) {}
+              humidity(schema.addField<double>("humidity", "humidity (%)", "")),
+
+              instrumentLabel(schema.addField<std::string>(
+                      "instrumentlabel", "Short name of the instrument that took this data", "", 0)) {}
 };
 
 class VisitInfoFactory : public table::io::PersistableFactory {
@@ -247,7 +282,8 @@ public:
                               coord::Observatory(record.get(keys.longitude), record.get(keys.latitude),
                                                  record.get(keys.elevation)),
                               coord::Weather(record.get(keys.airTemperature), record.get(keys.airPressure),
-                                             record.get(keys.humidity))));
+                                             record.get(keys.humidity)),
+                              record.get(keys.instrumentLabel)));
         return result;
     }
 
@@ -265,10 +301,11 @@ namespace detail {
 int stripVisitInfoKeywords(daf::base::PropertySet& metadata) {
     int nstripped = 0;
 
-    std::vector<std::string> keyList = {
-            "EXPID",   "EXPTIME",  "DARKTIME", "DATE-AVG", "TIMESYS",  "TIME-MID",     "MJD-AVG-UT1",
-            "AVG-ERA", "BORE-RA",  "BORE-DEC", "BORE-AZ",  "BORE-ALT", "BORE-AIRMASS", "BORE-ROTANG",
-            "ROTTYPE", "OBS-LONG", "OBS-LAT",  "OBS-ELEV", "AIRTEMP",  "AIRPRESS",     "HUMIDITY"};
+    std::vector<std::string> keyList = {"EXPID",    "EXPTIME",     "DARKTIME",     "DATE-AVG",    "TIMESYS",
+                                        "TIME-MID", "MJD-AVG-UT1", "AVG-ERA",      "BORE-RA",     "BORE-DEC",
+                                        "BORE-AZ",  "BORE-ALT",    "BORE-AIRMASS", "BORE-ROTANG", "ROTTYPE",
+                                        "OBS-LONG", "OBS-LAT",     "OBS-ELEV",     "AIRTEMP",     "AIRPRESS",
+                                        "HUMIDITY", "INSTRUMENT"};
     for (auto&& key : keyList) {
         if (metadata.exists(key)) {
             metadata.remove(key);
@@ -308,6 +345,8 @@ void setVisitInfoMetadata(daf::base::PropertyList& metadata, VisitInfo const& vi
     setDouble(metadata, "AIRTEMP", weather.getAirTemperature(), "Outside air temperature (C)");
     setDouble(metadata, "AIRPRESS", weather.getAirPressure(), "Outdoor air pressure (P)");
     setDouble(metadata, "HUMIDITY", weather.getHumidity(), "Relative humidity (%)");
+    setString(metadata, "INSTRUMENT", visitInfo.getInstrumentLabel(),
+              "Short name of the instrument that took this data");
 }
 
 }  // namespace detail
@@ -329,7 +368,8 @@ VisitInfo::VisitInfo(daf::base::PropertySet const& metadata)
           _observatory(getAngle(metadata, "OBS-LONG"), getAngle(metadata, "OBS-LAT"),
                        getDouble(metadata, "OBS-ELEV")),
           _weather(getDouble(metadata, "AIRTEMP"), getDouble(metadata, "AIRPRESS"),
-                   getDouble(metadata, "HUMIDITY")) {
+                   getDouble(metadata, "HUMIDITY")),
+          _instrumentLabel(getString(metadata, "INSTRUMENT")) {
     auto key = "EXPID";
     if (metadata.exists(key)) {
         _exposureId = metadata.getAsInt64(key);
@@ -385,14 +425,15 @@ bool VisitInfo::operator==(VisitInfo const& other) const {
            _era == other.getEra() && _boresightRaDec == other.getBoresightRaDec() &&
            _boresightAzAlt == other.getBoresightAzAlt() && _boresightAirmass == other.getBoresightAirmass() &&
            _boresightRotAngle == other.getBoresightRotAngle() && _rotType == other.getRotType() &&
-           _observatory == other.getObservatory() && _weather == other.getWeather();
+           _observatory == other.getObservatory() && _weather == other.getWeather() &&
+           _instrumentLabel == other.getInstrumentLabel();
 }
 
 std::size_t VisitInfo::hash_value() const noexcept {
     // Completely arbitrary seed
     return utils::hashCombine(17, _exposureId, _exposureTime, _darkTime, _date, _ut1, _era, _boresightRaDec,
                               _boresightAzAlt, _boresightAirmass, _boresightRotAngle, _rotType, _observatory,
-                              _weather);
+                              _weather, _instrumentLabel);
 }
 
 std::string VisitInfo::getPersistenceName() const { return getVisitInfoPersistenceName(); }
@@ -422,6 +463,7 @@ void VisitInfo::write(OutputArchiveHandle& handle) const {
     record->set(keys.airTemperature, weather.getAirTemperature());
     record->set(keys.airPressure, weather.getAirPressure());
     record->set(keys.humidity, weather.getHumidity());
+    record->set(keys.instrumentLabel, getInstrumentLabel());
     handle.saveCatalog(cat);
 }
 
@@ -466,7 +508,8 @@ std::string VisitInfo::toString() const {
     buffer << "boresightRotAngle=" << getBoresightRotAngle() << ", ";
     buffer << "rotType=" << static_cast<int>(getRotType()) << ", ";
     buffer << "observatory=" << getObservatory() << ", ";
-    buffer << "weather=" << getWeather();
+    buffer << "weather=" << getWeather() << ", ";
+    buffer << "instrumentLabel=" << getInstrumentLabel();
     buffer << ")";
     return buffer.str();
 }

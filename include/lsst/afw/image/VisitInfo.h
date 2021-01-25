@@ -85,13 +85,15 @@ public:
      * @param[in] rotType  rotation type
      * @param[in] observatory  observatory longitude, latitude and altitude
      * @param[in] weather  basic weather information for computing air mass
+     * @param[in] instrumentLabel  The short name of the instrument that took this data (e.g. "HSC")
      */
     explicit VisitInfo(table::RecordId exposureId, double exposureTime, double darkTime,
                        daf::base::DateTime const &date, double ut1, lsst::geom::Angle const &era,
                        lsst::geom::SpherePoint const &boresightRaDec,
                        lsst::geom::SpherePoint const &boresightAzAlt, double boresightAirmass,
                        lsst::geom::Angle const &boresightRotAngle, RotType const &rotType,
-                       coord::Observatory const &observatory, coord::Weather const &weather)
+                       coord::Observatory const &observatory, coord::Weather const &weather,
+                       std::string const &instrumentLabel)
             : _exposureId(exposureId),
               _exposureTime(exposureTime),
               _darkTime(darkTime),
@@ -104,7 +106,8 @@ public:
               _boresightRotAngle(boresightRotAngle),
               _rotType(rotType),
               _observatory(observatory),
-              _weather(weather){};
+              _weather(weather),
+              _instrumentLabel(instrumentLabel){};
 
     explicit VisitInfo(daf::base::PropertySet const &metadata);
 
@@ -176,6 +179,8 @@ public:
     // get hour angle at the boresight
     lsst::geom::Angle getBoresightHourAngle() const;
 
+    std::string getInstrumentLabel() const { return _instrumentLabel; }
+
     /**
      * Get parallactic angle at the boresight
      *
@@ -219,6 +224,7 @@ private:
     RotType _rotType;
     coord::Observatory _observatory;
     coord::Weather _weather;
+    std::string _instrumentLabel;
 };
 
 std::ostream &operator<<(std::ostream &os, VisitInfo const &visitInfo);

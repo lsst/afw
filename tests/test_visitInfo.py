@@ -48,6 +48,25 @@ def propertySetFromDict(keyValDict):
     return metadata
 
 
+def makeVisitInfo(data):
+    """Return a VisitInfo constructed from a VisitInfoData namedtuple."""
+    return afwImage.VisitInfo(data.exposureId,
+                              data.exposureTime,
+                              data.darkTime,
+                              data.date,
+                              data.ut1,
+                              data.era,
+                              data.boresightRaDec,
+                              data.boresightAzAlt,
+                              data.boresightAirmass,
+                              data.boresightRotAngle,
+                              data.rotType,
+                              data.observatory,
+                              data.weather,
+                              data.instrumentLabel
+                              )
+
+
 class VisitInfoTestCase(lsst.utils.tests.TestCase):
     """Test lsst.afw.image.VisitInfo, a simple struct-like class"""
 
@@ -72,7 +91,8 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
                   'boresightRotAngle',
                   'rotType',
                   'observatory',
-                  'weather'
+                  'weather',
+                  'instrumentLabel'
                   ]
         VisitInfoData = collections.namedtuple("VisitInfoData", fields)
         data1 = VisitInfoData(exposureId=10313423,
@@ -92,6 +112,7 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
                               observatory=Observatory(
                                   11.1*degrees, 22.2*degrees, 0.333),
                               weather=Weather(1.1, 2.2, 34.5),
+                              instrumentLabel="TestCameraOne",
                               )
         self.data1 = data1
         self.localEra1, self.hourAngle1 = computeLstHA(data1)
@@ -111,25 +132,13 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
                               observatory=Observatory(
                                   22.2*degrees, 33.3*degrees, 0.444),
                               weather=Weather(2.2, 3.3, 44.4),
+                              instrumentLabel="TestCameraTwo"
                               )
         self.data2 = data2
         self.localEra2, self.hourAngle2 = computeLstHA(data2)
 
     def _testValueConstructor(self, data, localEra, hourAngle):
-        visitInfo = afwImage.VisitInfo(data.exposureId,
-                                       data.exposureTime,
-                                       data.darkTime,
-                                       data.date,
-                                       data.ut1,
-                                       data.era,
-                                       data.boresightRaDec,
-                                       data.boresightAzAlt,
-                                       data.boresightAirmass,
-                                       data.boresightRotAngle,
-                                       data.rotType,
-                                       data.observatory,
-                                       data.weather,
-                                       )
+        visitInfo = makeVisitInfo(data)
         self.assertEqual(visitInfo.getExposureId(), data.exposureId)
         self.assertEqual(visitInfo.getExposureTime(), data.exposureTime)
         self.assertEqual(visitInfo.getDarkTime(), data.darkTime)
@@ -144,6 +153,7 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
                          data.boresightRotAngle)
         self.assertEqual(visitInfo.getRotType(), data.rotType)
         self.assertEqual(visitInfo.getObservatory(), data.observatory)
+        self.assertEqual(visitInfo.getInstrumentLabel(), data.instrumentLabel)
         self.assertEqual(visitInfo.getWeather(), data.weather)
         self.assertEqual(visitInfo.getLocalEra(), localEra)
         self.assertEqual(visitInfo.getBoresightHourAngle(), hourAngle)
@@ -166,23 +176,10 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
 
     def testSetVisitInfoMetadata(self):
         for item in (self.data1, self.data2):
-            visitInfo = afwImage.VisitInfo(item.exposureId,
-                                           item.exposureTime,
-                                           item.darkTime,
-                                           item.date,
-                                           item.ut1,
-                                           item.era,
-                                           item.boresightRaDec,
-                                           item.boresightAzAlt,
-                                           item.boresightAirmass,
-                                           item.boresightRotAngle,
-                                           item.rotType,
-                                           item.observatory,
-                                           item.weather,
-                                           )
+            visitInfo = makeVisitInfo(item)
             metadata = PropertyList()
             afwImage.setVisitInfoMetadata(metadata, visitInfo)
-            self.assertEqual(metadata.nameCount(), 20)
+            self.assertEqual(metadata.nameCount(), 21)
             self.assertEqual(metadata.getScalar("EXPID"), item.exposureId)
             self.assertEqual(metadata.getScalar("EXPTIME"), item.exposureTime)
             self.assertEqual(metadata.getScalar("DARKTIME"), item.darkTime)
@@ -217,6 +214,8 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
                              item.weather.getAirPressure())
             self.assertEqual(metadata.getScalar("HUMIDITY"),
                              item.weather.getHumidity())
+            self.assertEqual(metadata.getScalar("INSTRUMENT"),
+                             item.instrumentLabel)
 
     def testSetVisitInfoMetadataMissingValues(self):
         """If a value is unknown then it should not be written to the metadata"""
@@ -234,12 +233,13 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
             afwImage.setVisitInfoMetadata(metadata, visitInfo)
             # add an extra keyword that will not be stripped
             metadata.set("EXTRA", 5)
-            self.assertEqual(metadata.nameCount(), 21)
+            self.assertEqual(metadata.nameCount(), 22)
             afwImage.stripVisitInfoKeywords(metadata)
             self.assertEqual(metadata.nameCount(), 1)
 
     def _testIsEmpty(self, visitInfo):
-        """Test that visitInfo is all NaN or 0, as appropriate."""
+        """Test that visitInfo is all NaN, 0, or empty string, as appropriate.
+        """
         self.assertEqual(visitInfo.getExposureId(), 0)
         self.assertTrue(math.isnan(visitInfo.getExposureTime()))
         self.assertTrue(math.isnan(visitInfo.getDarkTime()))
@@ -264,6 +264,7 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
         self.assertTrue(math.isnan(visitInfo.getWeather().getAirPressure()))
         self.assertTrue(math.isnan(visitInfo.getWeather().getHumidity()))
         self.assertTrue(math.isnan(visitInfo.getBoresightHourAngle()))
+        self.assertEqual(visitInfo.getInstrumentLabel(), "")
 
     def testMetadataConstructor(self):
         """Test the metadata constructor
@@ -393,6 +394,10 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(visitInfo.getWeather().getHumidity(),
                          data.weather.getHumidity())
 
+        metadata = propertySetFromDict({"INSTRUMENT": data.instrumentLabel})
+        visitInfo = afwImage.VisitInfo(metadata)
+        self.assertEqual(visitInfo.getInstrumentLabel(), data.instrumentLabel)
+
     def testConstructorKeywordArguments(self):
         """Test VisitInfo with named arguments"""
         data = self.data1
@@ -443,6 +448,9 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
         visitInfo = afwImage.VisitInfo(weather=data.weather)
         self.assertEqual(visitInfo.getWeather(), data.weather)
 
+        visitInfo = afwImage.VisitInfo(instrumentLabel=data.instrumentLabel)
+        self.assertEqual(visitInfo.getInstrumentLabel(), data.instrumentLabel)
+
     def testGoodRotTypes(self):
         """Test round trip of all valid rot types"""
         for rotType in RotTypeEnumNameDict:
@@ -466,20 +474,7 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
 
     def test_str(self):
         """Check that we get something reasonable for str()"""
-        visitInfo = afwImage.VisitInfo(self.data1.exposureId,
-                                       self.data1.exposureTime,
-                                       self.data1.darkTime,
-                                       self.data1.date,
-                                       self.data1.ut1,
-                                       self.data1.era,
-                                       self.data1.boresightRaDec,
-                                       self.data1.boresightAzAlt,
-                                       self.data1.boresightAirmass,
-                                       self.data1.boresightRotAngle,
-                                       self.data1.rotType,
-                                       self.data1.observatory,
-                                       self.data1.weather,
-                                       )
+        visitInfo = makeVisitInfo(self.data1)
         string = str(visitInfo)
         self.assertIn("exposureId=10313423", string)
         self.assertIn("exposureTime=10.01", string)
