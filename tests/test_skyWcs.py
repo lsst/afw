@@ -603,7 +603,7 @@ class SimpleSkyWcsTestCase(SkyWcsBaseTestCase):
         skyWcs = makeSkyWcs(crpix=self.crpix, crval=self.crvalList[0], cdMatrix=cdMatrix)
         self.assertIn(f"Sky Origin: {self.crvalList[0]}", str(skyWcs))
         self.assertIn(f"Pixel Origin: {self.crpix}", str(skyWcs))
-        self.assertIn(f"Pixel Scale: ", str(skyWcs))
+        self.assertIn("Pixel Scale: ", str(skyWcs))
 
 
 class MetadataWcsTestCase(SkyWcsBaseTestCase):

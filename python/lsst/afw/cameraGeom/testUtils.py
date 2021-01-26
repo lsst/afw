@@ -218,8 +218,8 @@ class CameraWrapper:
         self.detectorIdList = []
         with open(detFile) as fh:
             names = fh.readline().rstrip().lstrip("#").split("|")
-            for l in fh:
-                els = l.rstrip().split("|")
+            for line in fh:
+                els = line.rstrip().split("|")
                 detectorProps = dict([(name, el)
                                       for name, el in zip(names, els)])
                 detectors.append(detectorProps)
@@ -272,8 +272,8 @@ class CameraWrapper:
         ampDataList = []
         with open(ampFile) as fh:
             names = fh.readline().rstrip().lstrip("#").split("|")
-            for l in fh:
-                els = l.rstrip().split("|")
+            for line in fh:
+                els = line.rstrip().split("|")
                 ampProps = dict([(name, el) for name, el in zip(names, els)])
                 ampDataList.append(ampProps)
         ampListDict = {}
