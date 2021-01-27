@@ -55,6 +55,11 @@ namespace image {
 
 namespace {
 
+// Version history:
+// unversioned: original VisitInfo schema
+// 1: file versioning, instrument label
+int constexpr SERIALIZATION_VERSION = 1;
+
 auto const nan = std::numeric_limits<double>::quiet_NaN();
 
 /**
@@ -206,6 +211,9 @@ public:
     table::Key<double> humidity;
 
     table::Key<std::string> instrumentLabel;
+    table::Key<int> version;
+
+    static std::string const VERSION_KEY;
 
     static VisitInfoSchema const& get() {
         static VisitInfoSchema instance;
@@ -259,8 +267,12 @@ private:
               humidity(schema.addField<double>("humidity", "humidity (%)", "")),
 
               instrumentLabel(schema.addField<std::string>(
-                      "instrumentlabel", "Short name of the instrument that took this data", "", 0)) {}
+                      "instrumentlabel", "Short name of the instrument that took this data", "", 0)),
+
+              // for internal support
+              version(schema.addField<int>(VERSION_KEY, "version of this VisitInfo")) {}
 };
+std::string const VisitInfoSchema::VERSION_KEY = "version";
 
 class VisitInfoFactory : public table::io::PersistableFactory {
 public:
@@ -269,8 +281,16 @@ public:
         VisitInfoSchema const& keys = VisitInfoSchema::get();
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
-        LSST_ARCHIVE_ASSERT(catalogs.front().getSchema() == keys.schema);
         table::BaseRecord const& record = catalogs.front().front();
+        int version = getVersion(record);
+        if (version > SERIALIZATION_VERSION) {
+            throw LSST_EXCEPT(pex::exceptions::TypeError, "Cannot read VisitInfo FITS version > " +
+                                                                  std::to_string(SERIALIZATION_VERSION));
+        }
+
+        // Version-dependent fields
+        std::string instrumentLabel = version >= 1 ? record.get(keys.instrumentLabel) : "";
+
         std::shared_ptr<VisitInfo> result(
                 new VisitInfo(record.get(keys.exposureId), record.get(keys.exposureTime),
                               record.get(keys.darkTime), ::DateTime(record.get(keys.tai), ::DateTime::TAI),
@@ -283,11 +303,23 @@ public:
                                                  record.get(keys.elevation)),
                               coord::Weather(record.get(keys.airTemperature), record.get(keys.airPressure),
                                              record.get(keys.humidity)),
-                              record.get(keys.instrumentLabel)));
+                              instrumentLabel));
         return result;
     }
 
     explicit VisitInfoFactory(std::string const& name) : table::io::PersistableFactory(name) {}
+
+private:
+    int getVersion(table::BaseRecord const& record) const {
+        try {
+            // Don't assume version is at same index as in VisitInfoSchema
+            auto versionKey = record.getSchema().find<int>(VisitInfoSchema::VERSION_KEY);
+            return record.get(versionKey.key);
+        } catch (pex::exceptions::NotFoundError const&) {
+            // un-versioned files are implicitly version 0
+            return 0;
+        }
+    }
 };
 
 std::string getVisitInfoPersistenceName() { return "VisitInfo"; }
@@ -464,6 +496,7 @@ void VisitInfo::write(OutputArchiveHandle& handle) const {
     record->set(keys.airPressure, weather.getAirPressure());
     record->set(keys.humidity, weather.getHumidity());
     record->set(keys.instrumentLabel, getInstrumentLabel());
+    record->set(keys.version, SERIALIZATION_VERSION);
     handle.saveCatalog(cat);
 }
 

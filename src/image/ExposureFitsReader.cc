@@ -239,7 +239,7 @@ public:
         }
         if (version > ExposureInfo::getFitsSerializationVersion()) {
             throw LSST_EXCEPT(pex::exceptions::TypeError,
-                              str(boost::format("Cannot read Exposure FITS version >= %i") %
+                              str(boost::format("Cannot read Exposure FITS version > %i") %
                                   ExposureInfo::getFitsSerializationVersion()));
         }
 
@@ -578,7 +578,7 @@ std::shared_ptr<cameraGeom::Detector> ExposureFitsReader::readDetector() {
     return _archiveReader->readComponent<cameraGeom::Detector>(_getFitsFile(), ArchiveReader::DETECTOR);
 }
 
-std::shared_ptr<typehandling::Storable> ExposureFitsReader::readComponent(std::string const &componentName) {
+std::shared_ptr<typehandling::Storable> ExposureFitsReader::readComponent(std::string const& componentName) {
     _ensureReaders();
     return _archiveReader->readComponent<typehandling::Storable>(_getFitsFile(), componentName);
 }

@@ -165,6 +165,8 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
         self._testValueConstructor(self.data2, self.localEra2, self.hourAngle2)
 
     def testTablePersistence(self):
+        """Test that VisitInfo can be round-tripped with current code.
+        """
         for item in (self.data1, self.data2):
             tablePath = os.path.join(
                 self.testDir, "testVisitInfo_testTablePersistence.fits")
@@ -173,6 +175,51 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
             v2 = afwImage.VisitInfo.readFits(tablePath)
             self.assertEqual(v1, v2)
             os.unlink(tablePath)
+
+    def _testFitsRead(self, data, filePath, version):
+        """Test that old VersionInfo files are read correctly.
+
+        Parameters
+        ----------
+        data : `VisitInfoData`
+            The values expected to be stored in the file, or a
+            superset thereof.
+        filePath : `str`
+            The file to test.
+        version : `int`
+            The VersionInfo persistence format used in ``filePath``.
+        """
+        visitInfo = afwImage.VisitInfo.readFits(filePath)
+
+        if version >= 0:
+            self.assertEqual(visitInfo.getExposureId(), data.exposureId)
+            self.assertEqual(visitInfo.getExposureTime(), data.exposureTime)
+            self.assertEqual(visitInfo.getDarkTime(), data.darkTime)
+            self.assertEqual(visitInfo.getDate(), data.date)
+            self.assertEqual(visitInfo.getUt1(), data.ut1)
+            self.assertEqual(visitInfo.getEra(), data.era)
+            self.assertEqual(visitInfo.getBoresightRaDec(), data.boresightRaDec)
+            self.assertEqual(visitInfo.getBoresightAzAlt(), data.boresightAzAlt)
+            self.assertEqual(visitInfo.getBoresightAirmass(),
+                             data.boresightAirmass)
+            self.assertEqual(visitInfo.getBoresightRotAngle(),
+                             data.boresightRotAngle)
+            self.assertEqual(visitInfo.getRotType(), data.rotType)
+            self.assertEqual(visitInfo.getObservatory(), data.observatory)
+            self.assertEqual(visitInfo.getWeather(), data.weather)
+        if version >= 1:
+            self.assertEqual(visitInfo.getInstrumentLabel(), data.instrumentLabel)
+        else:
+            self.assertEqual(visitInfo.getInstrumentLabel(), "")
+
+    def testPersistenceVersions(self):
+        """Test that older versions are handled appropriately.
+        """
+        dataDir = os.path.join(os.path.dirname(__file__), "data")
+
+        # All files created by makeVisitInfo(self.data1).writeFits()
+        self._testFitsRead(self.data1, os.path.join(dataDir, "visitInfo-noversion.fits"), 0)
+        self._testFitsRead(self.data1, os.path.join(dataDir, "visitInfo-version-1.fits"), 1)
 
     def testSetVisitInfoMetadata(self):
         for item in (self.data1, self.data2):
