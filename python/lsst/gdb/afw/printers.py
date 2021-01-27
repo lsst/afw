@@ -668,7 +668,7 @@ try:
             self.val = val
 
         def to_string(self):
-            return "Background(%dx%d) %s %s" % (
+            return "Background(%dx%d) %s" % (
                 self.val["_imgWidth"], self.val["_imgHeight"],
                 self.val["_bctrl"])
 
