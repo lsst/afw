@@ -29,7 +29,6 @@ import lsst.utils.tests
 import lsst.geom
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
-import lsst.afw.image.utils as imageUtils
 import lsst.afw.math as afwMath
 import lsst.pex.exceptions as pexExcept
 from lsst.log import Log
@@ -80,11 +79,9 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         originalExposure, swarpedImage, swarpedWcs = self.getSwarpedImage(
             kernelName=kernelName, useSubregion=True, useDeepCopy=False)
 
-        imageUtils.defineFilter("i", 748.1)
-
-        originalFilter = afwImage.Filter("i")
+        originalFilterLabel = afwImage.FilterLabel(band="i")
         originalPhotoCalib = afwImage.PhotoCalib(1.0e5, 1.0e3)
-        originalExposure.setFilter(originalFilter)
+        originalExposure.setFilterLabel(originalFilterLabel)
         originalExposure.setPhotoCalib(originalPhotoCalib)
 
         warpedExposure1 = warper.warpExposure(
@@ -109,8 +106,8 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(nGood1, nGood2)
         self.assertLess(nGood3, nGood1)
 
-        self.assertEqual(warpedExposure1.getFilter().getName(),
-                         originalFilter.getName())
+        self.assertEqual(warpedExposure1.getFilterLabel().bandLabel,
+                         originalFilterLabel.bandLabel)
         self.assertEqual(warpedExposure1.getPhotoCalib(), originalPhotoCalib)
 
     @unittest.skipIf(dataDir is None, "afwdata not setup")

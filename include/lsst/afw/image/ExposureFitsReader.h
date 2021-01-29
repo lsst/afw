@@ -114,8 +114,8 @@ public:
     std::shared_ptr<afw::geom::SkyWcs> readWcs();
 
     /// Read the Exposure's filter.
-    // TODO: deprecate in DM-27170, remove in DM-27177
-    Filter readFilter();
+    // TODO: remove in DM-27177
+    [[deprecated("Replaced with readFilterLabel. Will be removed after v22.")]] Filter readFilter();
 
     /**
      * Read the Exposure's filter information.

@@ -48,7 +48,9 @@ namespace image {
 /**
  * Describe the properties of a Filter (e.g. effective wavelength)
  */
-class FilterProperty final {
+class[
+        [deprecated("Removed with no replacement (but see lsst::afw::image::TransmissionCurve). Will be "
+                    "removed after v22.")]] FilterProperty final {
 public:
     explicit FilterProperty(std::string const& name, double lambdaEff, double lambdaMin = NAN,
                             double lambdaMax = NAN, bool force = false)
@@ -65,7 +67,7 @@ public:
                             bool force = false);
 
     FilterProperty(FilterProperty const&) = default;
-    FilterProperty(FilterProperty&&) noexcept = default;
+    FilterProperty(FilterProperty &&) noexcept = default;
     FilterProperty& operator=(FilterProperty const&) = default;
     FilterProperty& operator=(FilterProperty&&) noexcept = default;
     ~FilterProperty() noexcept = default;
@@ -138,7 +140,8 @@ private:
 /**
  * Holds an integer identifier for an LSST filter.
  */
-class Filter final : public typehandling::Storable {
+class[[deprecated("Replaced with FilterLabel. Will be removed after v22.")]] Filter final
+        : public typehandling::Storable {
 public:
     static int const AUTO;
     static int const UNKNOWN;
@@ -165,7 +168,7 @@ public:
     explicit Filter(std::shared_ptr<lsst::daf::base::PropertySet const> metadata, bool const force = false);
 
     Filter(Filter const&) = default;
-    Filter(Filter&&) noexcept = default;
+    Filter(Filter &&) noexcept = default;
     Filter& operator=(Filter const&) = default;
     Filter& operator=(Filter&&) noexcept = default;
     ~Filter() noexcept = default;
@@ -245,7 +248,7 @@ public:
 protected:
     std::string getPersistenceName() const override;
     std::string getPythonModule() const override;
-    void write(OutputArchiveHandle& handle) const override;
+    void write(OutputArchiveHandle & handle) const override;
 
 private:
     typedef std::unordered_map<std::string, std::string const> AliasMap;
