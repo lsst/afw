@@ -24,7 +24,9 @@ __all__ = ["Warper", "WarperConfig"]
 import lsst.pex.config as pexConfig
 import lsst.geom
 import lsst.afw.image as afwImage
-from . import mathLib
+from .warpExposure import warpImage
+from .warpExposure import WarpingControl
+from .warpExposure import warpExposure
 
 
 def computeWarpedBBox(destWcs, srcBBox, srcWcs):
@@ -126,7 +128,7 @@ class Warper:
                  cacheSize=_DefaultCacheSize,
                  maskWarpingKernelName="",
                  growFullMask=afwImage.Mask.getPlaneBitMask("EDGE"),):
-        self._warpingControl = mathLib.WarpingControl(
+        self._warpingControl = WarpingControl(
             warpingKernelName, maskWarpingKernelName, cacheSize, interpLength, growFullMask)
 
     @classmethod
@@ -200,7 +202,7 @@ class Warper:
             destBBox=destBBox,
         )
         destExposure = srcExposure.Factory(destBBox, destWcs)
-        mathLib.warpExposure(destExposure, srcExposure, self._warpingControl)
+        warpExposure(destExposure, srcExposure, self._warpingControl)
         return destExposure
 
     def warpImage(self, destWcs, srcImage, srcWcs, border=0, maxBBox=None, destBBox=None):
@@ -242,8 +244,8 @@ class Warper:
             destBBox=destBBox,
         )
         destImage = srcImage.Factory(destBBox)
-        mathLib.warpImage(destImage, destWcs, srcImage,
-                          srcWcs, self._warpingControl)
+        warpImage(destImage, destWcs, srcImage,
+                  srcWcs, self._warpingControl)
         return destImage
 
     def _computeDestBBox(self, destWcs, srcImage, srcWcs, border, maxBBox, destBBox):
