@@ -18,7 +18,6 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
 from __future__ import annotations
 
 from dataclasses import dataclass, asdict
@@ -155,19 +154,20 @@ class CppStorableTestSuite(lsst.utils.tests.TestCase):
 
 @dataclass
 class Blob(Storable):
-    _factory = StorableHelperFactory(__name__, "Blob")
+    _persistence_name = 'Blob'
+    _factory = StorableHelperFactory(__name__, _persistence_name)
 
     an_int: int
     a_float: float
 
     def __post_init__(self):
-        Storable.__init__(self)  # required for trampoline
+        Storable.__init__(self)
 
     def isPersistable(self):
         return True
 
     def _getPersistenceName(self):
-        return "Blob"
+        return self._persistence_name
 
     def _getPythonModule(self):
         return __name__
