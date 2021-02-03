@@ -19,16 +19,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+from lsst.utils import continueClass
+from ._math import Background
 
-import lsst.afw.geom
-from lsst.afw.table.io import Persistable
-import lsst.afw.image.pixel  # for SinglePixel, needed by the warping functions
+__all__ = []  # import this module only for its side effects
 
-from ._math import *
-from .detail import *
-from ._background import *
-from ._backgroundList import *
-from ._chebyshevBoundedField import *
-from ._chebyshevBoundedFieldConfig import ChebyshevBoundedFieldConfig
-from ._spatialCell import *
-from ._warper import *
+
+@continueClass  # noqa: F811 (FIXME: remove for py 3.8+)
+class Background:  # noqa: F811
+    def __reduce__(self):
+        """Pickling"""
+        return self.__class__, (self.getImageBBox(), self.getStatsImage())

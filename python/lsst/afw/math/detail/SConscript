@@ -1,5 +1,3 @@
-## -*- python -*-
+# -*- python -*-
 from lsst.sconsUtils import scripts
-scripts.BasicSConscript.pybind11(['spline',
-                                  'convolve'],
-                                 addUnderscore=False)
+scripts.BasicSConscript.python(['_detail'])

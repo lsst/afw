@@ -22,5 +22,4 @@
 
 """Support code for lsst.afw.math
 """
-from .spline import *
-from .convolve import *
+from ._detail import *
