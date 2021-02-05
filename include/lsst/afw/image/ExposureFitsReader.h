@@ -102,6 +102,12 @@ public:
     lsst::geom::Point2I readXY0(lsst::geom::Box2I const &bbox = lsst::geom::Box2I(),
                                 ImageOrigin origin = PARENT);
 
+
+    /**
+     * Read the serialization version number from the header.
+     */
+    int readSerializationVersion();
+
     /**
      * Read the flexible metadata associated with the Exposure.
      *

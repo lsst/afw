@@ -282,6 +282,7 @@ void declareExposureFitsReader(lsst::utils::python::WrapperCollection &wrappers)
         cls.def(py::init<fits::MemFileManager &>(), "manager"_a);
         declareCommonMethods(cls);
         declareMultiPlaneMethods(cls);
+        cls.def("readSerializationVersion", &ExposureFitsReader::readSerializationVersion);
         cls.def("readMetadata", &ExposureFitsReader::readMetadata);
         cls.def("readWcs", &ExposureFitsReader::readWcs);
         cls.def("readFilter", &ExposureFitsReader::readFilter);
