@@ -20,22 +20,6 @@ namespace lsst {
 namespace afw {
 namespace table {
 
-namespace detail {
-
-class TableImpl;
-
-/**
- *  Defines the ordering of packed covariance matrices.
- *
- *  This storage is equivalent to LAPACK 'UPLO=U'.
- */
-inline int indexCovariance(int i, int j) { return (i < j) ? (i + j * (j + 1) / 2) : (j + i * (i + 1) / 2); }
-
-/// Defines the packed size of a covariance matrices.
-inline int computeCovariancePackedSize(int size) { return size * (size + 1) / 2; }
-
-}  // namespace detail
-
 /**
  *  Field base class default implementation (used for numeric scalars and lsst::geom::Angle).
  */

@@ -595,6 +595,20 @@ public:
         return oldUnits;
     }
 
+    /**
+     *  Defines the ordering of packed covariance matrices.
+     *
+     *  This storage is equivalent to LAPACK 'UPLO=U'.
+     */
+    static int indexCovariance(int i, int j) {
+        return (i < j) ? (i + j * (j + 1) / 2) : (j + i * (i + 1) / 2);
+    }
+
+    /// Defines the packed size of a covariance matrices.
+    static int computeCovariancePackedSize(int size) {
+        return size * (size + 1) / 2;
+    }
+
     static std::unique_ptr<FitsColumnReader> make(Schema &schema, FitsSchemaItem const &item,
                                                   std::vector<std::string> const &names) {
         return std::unique_ptr<FitsColumnReader>(new CovarianceConversionReader(schema, item, names));
@@ -605,14 +619,14 @@ public:
             : _column(item.column),
               _size(names.size()),
               _key(CovarianceMatrixKey<T, N>::addFields(schema, item.ttype, names, guessUnits(item.tunit))),
-              _buffer(new T[detail::computeCovariancePackedSize(names.size())]) {}
+              _buffer(new T[computeCovariancePackedSize(names.size())]) {}
 
     void readCell(BaseRecord &record, std::size_t row, afw::fits::Fits &fits,
                   std::shared_ptr<InputArchive> const &archive) const override {
-        fits.readTableArray(row, _column, detail::computeCovariancePackedSize(_size), _buffer.get());
+        fits.readTableArray(row, _column, computeCovariancePackedSize(_size), _buffer.get());
         for (int i = 0; i < _size; ++i) {
             for (int j = i; j < _size; ++j) {
-                _key.setElement(record, i, j, _buffer[detail::indexCovariance(i, j)]);
+                _key.setElement(record, i, j, _buffer[indexCovariance(i, j)]);
             }
         }
     }
