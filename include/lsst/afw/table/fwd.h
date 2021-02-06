@@ -41,10 +41,9 @@ namespace lsst {
 namespace afw {
 namespace table {
 
-template <typename T>
-class Key;
-template <typename T>
-struct Field;
+// Some schema primitives (Key, Field, KeyBase, FieldBase) are forward-declared
+// in misc.h, along with their explicit specializations.
+
 template <typename T>
 struct SchemaItem;
 class Schema;

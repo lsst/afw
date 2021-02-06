@@ -8,16 +8,8 @@
 
 #include "boost/mpl/vector.hpp"
 #include "boost/preprocessor/punctuation/paren.hpp"
-#include "Eigen/Core"
 
-#include "lsst/base.h"
-#include "lsst/pex/exceptions.h"
-#include "ndarray.h"
-#include "lsst/geom.h"
-#include "lsst/afw/geom/ellipses.h"
-#include "lsst/afw/coord.h"
 #include "lsst/afw/table/misc.h"
-#include "lsst/afw/table/KeyBase.h"
 
 /*
  *  This file contains macros and MPL vectors that list the types that can be used for fields.

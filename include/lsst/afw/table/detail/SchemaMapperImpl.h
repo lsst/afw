@@ -8,6 +8,8 @@
 #include "boost/variant.hpp"
 #include "boost/mpl/transform.hpp"
 
+#include "lsst/afw/table/Key.h"
+#include "lsst/afw/table/types.h"
 #include "lsst/afw/table/Schema.h"
 
 namespace lsst {

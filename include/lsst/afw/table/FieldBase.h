@@ -2,19 +2,13 @@
 #ifndef AFW_TABLE_FieldBase_h_INCLUDED
 #define AFW_TABLE_FieldBase_h_INCLUDED
 
-#include <cstring>
+#include <string>
 #include <iostream>
 
-#include "boost/mpl/vector.hpp"
-#include "boost/preprocessor/punctuation/paren.hpp"
-#include "Eigen/Core"
-
-#include "lsst/base.h"
-#include "lsst/pex/exceptions.h"
 #include "ndarray.h"
+
+#include "lsst/pex/exceptions.h"
 #include "lsst/afw/table/misc.h"
-#include "lsst/afw/table/KeyBase.h"
-#include "lsst/afw/table/types.h"
 
 namespace lsst {
 namespace afw {
@@ -291,6 +285,47 @@ protected:
 private:
     int _size;
 };
+
+/**
+ *  Specialization for Flag fields.
+ *
+ *  Flag fields are handled specially in many places, because their keys have both an offset into an
+ *  integer element and the bit in that element; while other fields have one or more elements per field,
+ *  Flags have multiple fields per element.  This means we can't put all the custom code for Flag in
+ *  FieldBase, and because Flags have an explicit Key specialization, we put the record access
+ *  implementation in Key.
+ */
+template <>
+struct FieldBase<Flag> {
+    typedef bool Value;            ///< the type returned by BaseRecord::get
+    typedef std::int64_t Element;  ///< the actual storage type (shared by multiple flag fields)
+
+    /// Return the number of subfield elements (always one for scalars).
+    int getElementCount() const { return 1; }
+
+    /// Return a string description of the field type.
+    static std::string getTypeString() { return "Flag"; }
+
+    // Only the first of these constructors is valid for this specializations, but
+    // it's convenient to be able to instantiate both, since the other is used
+    // by other specializations.
+    FieldBase() = default;
+    FieldBase(int) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::LogicError,
+                          "Constructor disabled (this Field type is not sized).");
+    }
+
+    FieldBase(FieldBase const &) = default;
+    FieldBase(FieldBase &&) = default;
+    FieldBase &operator=(FieldBase const &) = default;
+    FieldBase &operator=(FieldBase &&) = default;
+    ~FieldBase() = default;
+
+protected:
+    /// Defines how fields are printed.
+    void stream(std::ostream &os) const {}
+};
+
 }  // namespace table
 }  // namespace afw
 }  // namespace lsst

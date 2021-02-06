@@ -2,12 +2,13 @@
 #ifndef AFW_TABLE_DETAIL_Access_h_INCLUDED
 #define AFW_TABLE_DETAIL_Access_h_INCLUDED
 
-#include <cstring>
+#include <string>
 
 #include "ndarray/Manager.h"
-#include "lsst/afw/table/FieldBase.h"
+#include "lsst/afw/table/misc.h"
+#include "lsst/afw/table/KeyBase.h"
+#include "lsst/afw/table/Key.h"
 #include "lsst/afw/table/Schema.h"
-#include "lsst/afw/table/detail/SchemaImpl.h"
 
 namespace lsst {
 namespace afw {

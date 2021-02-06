@@ -3,8 +3,7 @@
 #define AFW_TABLE_misc_h_INCLUDED
 
 #include <cstdint>
-
-#include "boost/mpl/if.hpp"
+#include <string>
 
 #include "lsst/geom/Angle.h"
 #include "lsst/geom/SpherePoint.h"
@@ -34,6 +33,25 @@ class Flag;
 typedef lsst::geom::Angle Angle;
 typedef lsst::geom::SpherePoint SpherePoint;
 //@}
+
+
+// Forward-declare schema primitives, and then forward-declare all
+// explicit specializations, to guard against code implicitly instantiating
+// the default template for any of those.
+
+template <typename T> class KeyBase;
+template <typename T> class FieldBase;
+template <typename T> class Key;
+template <typename T> class Field;
+
+template <> class KeyBase<Flag>;
+template <> class FieldBase<Flag>;
+template <> class Key<Flag>;
+
+template <typename U> class KeyBase<Array<U>>;
+template <typename U> class FieldBase<Array<U>>;
+template <> class FieldBase<std::string>;
+
 }  // namespace table
 }  // namespace afw
 }  // namespace lsst

@@ -17,6 +17,7 @@
 
 #include "lsst/log/Log.h"
 #include "lsst/geom.h"
+#include "lsst/afw/geom/ellipses/Quadrupole.h"
 #include "lsst/afw/table/io/FitsSchemaInputMapper.h"
 #include "lsst/afw/table/aggregates.h"
 

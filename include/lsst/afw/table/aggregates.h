@@ -23,11 +23,15 @@
 #ifndef AFW_TABLE_aggregates_h_INCLUDED
 #define AFW_TABLE_aggregates_h_INCLUDED
 
+#include <vector>
+#include <string>
+#include "Eigen/Core"
+
 #include "lsst/utils/hashCombine.h"
+#include "lsst/geom.h"
 
 #include "lsst/afw/table/FunctorKey.h"
 #include "lsst/afw/table/Schema.h"
-#include "lsst/geom.h"
 
 namespace lsst {
 namespace afw {
@@ -36,6 +40,7 @@ namespace geom {
 namespace ellipses {
 
 class Quadrupole;
+class Ellipse;
 
 }  // namespace ellipses
 }  // namespace geom

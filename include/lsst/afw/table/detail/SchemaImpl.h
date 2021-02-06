@@ -5,10 +5,13 @@
 #include <vector>
 #include <algorithm>
 #include <map>
-#include <set>
 
 #include "boost/variant.hpp"
 #include "boost/mpl/transform.hpp"
+
+#include "lsst/afw/table/Key.h"
+#include "lsst/afw/table/Field.h"
+#include "lsst/afw/table/types.h"
 
 namespace lsst {
 namespace afw {

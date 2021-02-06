@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "lsst/afw/table/misc.h"
+#include "lsst/afw/table/FieldBase.h"
 
 namespace lsst {
 namespace afw {
@@ -12,14 +13,18 @@ namespace table {
 
 class BaseRecord;
 
-template <typename T>
-class Key;
-
 /// A base class for Key that allows subfield keys to be extracted for some field types.
 template <typename T>
 class KeyBase {
 public:
     static bool const HAS_NAMED_SUBFIELDS = false;
+
+    KeyBase() = default;
+    KeyBase(KeyBase const &) = default;
+    KeyBase(KeyBase &&) = default;
+    KeyBase &operator=(KeyBase const &) = default;
+    KeyBase &operator=(KeyBase &&) = default;
+    ~KeyBase() = default;
 };
 
 /// KeyBase specialization for Arrays.
@@ -27,6 +32,13 @@ template <typename U>
 class KeyBase<Array<U> > {
 public:
     static bool const HAS_NAMED_SUBFIELDS = false;
+
+    KeyBase() = default;
+    KeyBase(KeyBase const &) = default;
+    KeyBase(KeyBase &&) = default;
+    KeyBase &operator=(KeyBase const &) = default;
+    KeyBase &operator=(KeyBase &&) = default;
+    ~KeyBase() = default;
 
     std::vector<U> extractVector(BaseRecord const& record) const;
 
@@ -36,6 +48,25 @@ public:
 
     Key<Array<U> > slice(int begin, int end) const;  ///< Return a key for a range of elements
 };
+
+/// KeyBase specialization for Flags.
+template <>
+class KeyBase<Flag> {
+public:
+    static bool const HAS_NAMED_SUBFIELDS = false;
+
+    KeyBase() = default;
+    KeyBase(KeyBase const &) = default;
+    KeyBase(KeyBase &&) = default;
+    KeyBase &operator=(KeyBase const &) = default;
+    KeyBase &operator=(KeyBase &&) = default;
+    ~KeyBase() = default;
+
+    /// Return a key corresponding to the integer element where this field's bit is packed.
+    Key<FieldBase<Flag>::Element> getStorage() const;
+
+};
+
 }  // namespace table
 }  // namespace afw
 }  // namespace lsst

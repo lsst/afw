@@ -23,6 +23,10 @@
 #ifndef AFW_TABLE_arrays_h_INCLUDED
 #define AFW_TABLE_arrays_h_INCLUDED
 
+#include <vector>
+#include <string>
+#include "ndarray.h"
+
 #include "lsst/utils/hashCombine.h"
 
 #include "lsst/afw/table/FunctorKey.h"
