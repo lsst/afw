@@ -314,7 +314,6 @@ void declareSchemaType(WrapperCollection &wrappers) {
 
     // KeyBase
     wrappers.wrapType(PyKeyBase<T>(wrappers.module, ("KeyBase" + suffix).c_str()), [](auto &mod, auto &cls) {
-        cls.def_readonly_static("HAS_NAMED_SUBFIELDS", &KeyBase<T>::HAS_NAMED_SUBFIELDS);
         declareKeyBaseSpecializations(cls);
     });
 

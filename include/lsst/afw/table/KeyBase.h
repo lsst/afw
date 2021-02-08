@@ -17,8 +17,6 @@ class BaseRecord;
 template <typename T>
 class KeyBase {
 public:
-    static bool const HAS_NAMED_SUBFIELDS = false;
-
     KeyBase() = default;
     KeyBase(KeyBase const &) = default;
     KeyBase(KeyBase &&) = default;
@@ -31,8 +29,6 @@ public:
 template <typename U>
 class KeyBase<Array<U> > {
 public:
-    static bool const HAS_NAMED_SUBFIELDS = false;
-
     KeyBase() = default;
     KeyBase(KeyBase const &) = default;
     KeyBase(KeyBase &&) = default;
@@ -53,8 +49,6 @@ public:
 template <>
 class KeyBase<Flag> {
 public:
-    static bool const HAS_NAMED_SUBFIELDS = false;
-
     KeyBase() = default;
     KeyBase(KeyBase const &) = default;
     KeyBase(KeyBase &&) = default;
