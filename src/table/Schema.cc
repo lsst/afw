@@ -4,10 +4,6 @@
 #include <type_traits>
 #include <variant>
 
-#include "boost/mpl/and.hpp"
-#include "boost/mpl/bool.hpp"
-#include "boost/iterator/transform_iterator.hpp"
-#include "boost/iterator/filter_iterator.hpp"
 #include "boost/preprocessor/seq/for_each.hpp"
 #include "boost/preprocessor/tuple/to_seq.hpp"
 
@@ -93,98 +89,6 @@ public:
 
 namespace detail {
 
-//----- Finding a SchemaItem by field name ------------------------------------------------------------------
-
-// This is easier to understand if you start reading from the bottom of this section, with
-// SchemaImpl::find(std::string const &), then work your way up.
-
-namespace {
-
-// Given a SchemaItem for a regular field, look for a subfield with the given name.
-// Return the index of the subfield (>= 0) on success, -1 on failure.
-template <typename T>
-inline int findNamedSubfield(
-        SchemaItem<T> const &item, std::string const &name, char delimiter,
-        boost::mpl::true_ *  // whether a match is possible based on the type of T; computed by caller
-) {
-    if (name.size() <= item.field.getName().size()) return -1;
-
-    if (  // compare invocation is equivalent to "name.startswith(item.field.getName())" in Python
-            name.compare(0, item.field.getName().size(), item.field.getName()) == 0 &&
-            name[item.field.getName().size()] == delimiter) {
-        int const position = item.field.getName().size() + 1;
-        int const size = name.size() - position;
-        int const nElements = item.field.getElementCount();
-        for (int i = 0; i < nElements; ++i) {
-            if (name.compare(position, size, Key<T>::subfields[i]) == 0) {
-                return i;
-            }
-        }
-    }
-    return -1;
-}
-
-// This is an overload of findNamedSubfield that always fails; it's called when we
-// know from the type of the field and subfield that they're incompatible.
-template <typename T>
-inline int findNamedSubfield(
-        SchemaItem<T> const &item, std::string const &name, char delimiter,
-        boost::mpl::false_ *  // whether a match is possible based on the type of T; computed by caller
-) {
-    return -1;
-}
-
-// Given a SchemaItem and a subfield index, make a new SchemaItem that corresponds to that
-// subfield and put it in the result smart pointer.
-template <typename T, typename U>
-inline void makeSubfieldItem(
-        SchemaItem<T> const &item, int index, char delimiter, std::unique_ptr<SchemaItem<U> > &result,
-        boost::mpl::true_ *  // whether a match is possible based on the types of T and U; computed by caller
-) {
-    result.reset(new SchemaItem<U>(detail::Access::extractElement(item.key, index),
-                                   Field<U>(join(item.field.getName(), Key<T>::subfields[index], delimiter),
-                                            item.field.getDoc(), item.field.getUnits())));
-}
-
-// An overload of makeSubfieldItem that always fails because we know T and U aren't compatible.
-template <typename T, typename U>
-inline void makeSubfieldItem(
-        SchemaItem<T> const &item, int index, char delimiter, std::unique_ptr<SchemaItem<U> > &result,
-        boost::mpl::false_ *  // whether a match is possible based on the types of T and U; computed by caller
-) {}
-
-// This is a Variant visitation functor used to extract subfield items by name.
-// For example, if we have a Point field "a", if we search the Schema for "a.x",
-// we want to return a SchemaItem that makes it look like "a.x" is a full-fledged
-// field in its own right.
-template <typename U>
-struct ExtractItemByName : public boost::static_visitor<> {
-    explicit ExtractItemByName(std::string const &name_, char delimiter_)
-            : delimiter(delimiter_), name(name_) {}
-
-    template <typename T>
-    void operator()(SchemaItem<T> const &item) const {
-        // We want to find out if 'item' has a subfield whose fully-qualified name matches our
-        // name data member.  But we also know that the subfield needs to have type U, and that
-        // the field needs to have named subfields.
-        // This typedef is boost::mpl::true_ if all the above is true, and boost::mpl::false_ otherwise.
-        typedef typename boost::mpl::and_<std::is_same<U, typename Field<T>::Element>,
-                                          boost::mpl::bool_<KeyBase<T>::HAS_NAMED_SUBFIELDS> >::type
-                IsMatchPossible;
-        // We use that type to dispatch one of the two overloads of findNamedSubfield.
-        int n = findNamedSubfield(item, name, delimiter, (IsMatchPossible *)0);
-        // If we have a match, we call another overloaded template to make the subfield.
-        if (n >= 0) makeSubfieldItem(item, n, delimiter, result, (IsMatchPossible *)0);
-    }
-
-    char delimiter;
-    std::string name;                                // name we're looking for
-    mutable std::unique_ptr<SchemaItem<U> > result;  // where we put the result to signal that we're done
-};
-
-}  // namespace
-
-// Here's the driver for the find-by-name algorithm.
 template <typename T>
 SchemaItem<T> SchemaImpl::find(std::string const &name) const {
     NameMap::const_iterator i = _names.lower_bound(name);
@@ -197,79 +101,12 @@ SchemaItem<T> SchemaImpl::find(std::string const &name) const {
                                 (boost::format("Field '%s' does not have the given type.") % name).str());
         }
     }
-    // We didn't get an exact match, but we might be searching for "a.x/a_x" and "a" might be a point field.
-    // Because the names are sorted, we know we overshot it, so we work backwards.
-    ExtractItemByName<T> extractor(name, getDelimiter());
-    while (i != _names.begin()) {
-        --i;
-        boost::apply_visitor(extractor, _items[i->second]);  // see if the current item is a match
-        if (extractor.result) return *extractor.result;
-    }
     throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundError,
-                      (boost::format("Field or subfield with name '%s' not found with type '%s'.") % name %
+                      (boost::format("Field with name '%s' not found with type '%s'.") % name %
                        Field<T>::getTypeString())
                               .str());
 }
 
-//----- Finding a SchemaItem by key -------------------------------------------------------------------------
-
-// This is easier to understand if you start reading from the bottom of this section, with
-// SchemaImpl::find(Key<T> const &), then work your way up.
-
-namespace {
-
-// Given a SchemaItem for a regular field, look for a subfield with the given Key
-// Return the index of the subfield (>= 0) on success, -1 on failure.
-template <typename T, typename U>
-inline int findKeySubfield(
-        SchemaItem<T> const &item, Key<U> const &key,
-        boost::mpl::true_ *  // whether a match is possible based on the types of T and U; computed by caller
-) {
-    int n = (key.getOffset() - item.key.getOffset()) / sizeof(U);
-    if (n >= 0 && n < item.key.getElementCount()) {
-        return n;
-    }
-    return -1;
-}
-
-// This is an overload of findKeySubfield that always fails; it's called when we
-// know from the type of the field and subfield that they're incompatible.
-template <typename T, typename U>
-inline int findKeySubfield(
-        SchemaItem<T> const &item, Key<U> const &key,
-        boost::mpl::false_ *  // whether a match is possible based on the types of T and U; computed by caller
-) {
-    return -1;
-}
-
-// This is a Variant visitation functor used to extract subfield items by key.
-template <typename U>
-struct ExtractItemByKey : public boost::static_visitor<> {
-    explicit ExtractItemByKey(Key<U> const &key_, char delimiter_) : delimiter(delimiter_), key(key_) {}
-
-    template <typename T>
-    void operator()(SchemaItem<T> const &item) const {
-        // We want to find out if 'item' has a subfield whose  matches our key data member.
-        // But we also know that the subfield needs to have type U.
-        // This typedef is boost::mpl::true_ if the above is true, and boost::mpl::false_ otherwise.
-        typedef typename boost::mpl::and_<std::is_same<U, typename Field<T>::Element>,
-                                          boost::mpl::bool_<KeyBase<T>::HAS_NAMED_SUBFIELDS> >::type
-                IsMatchPossible;
-        // We use that type to dispatch one of the two overloads of findKeySubfield.
-        int n = findKeySubfield(item, key, (IsMatchPossible *)0);
-        // If we have a match, we call another overloaded template to make the subfield.
-        // (this is the same  makeSubfieldItem used in ExtractItemByName, so it's defined up there)
-        if (n >= 0) makeSubfieldItem(item, n, delimiter, result, (IsMatchPossible *)0);
-    }
-
-    char delimiter;
-    Key<U> key;
-    mutable std::unique_ptr<SchemaItem<U> > result;
-};
-
-}  // namespace
-
-// Here's the driver for the find-by-key algorithm.  It's pretty similar to the find-by-name algorithm.
 template <typename T>
 SchemaItem<T> SchemaImpl::find(Key<T> const &key) const {
     OffsetMap::const_iterator i = _offsets.lower_bound(key.getOffset());
