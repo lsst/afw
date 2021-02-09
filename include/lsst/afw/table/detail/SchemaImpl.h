@@ -5,9 +5,7 @@
 #include <vector>
 #include <algorithm>
 #include <map>
-
-#include "boost/variant.hpp"
-#include "boost/mpl/transform.hpp"
+#include <variant>
 
 #include "lsst/afw/table/Key.h"
 #include "lsst/afw/table/Field.h"
@@ -50,21 +48,15 @@ class Access;
  */
 class SchemaImpl {
 private:
-    /// Boost.MPL metafunction that returns a SchemaItem<T> given a T.
-    struct MakeItem {
-        template <typename T>
-        struct apply {
-            typedef SchemaItem<T> type;
-        };
-    };
-
+    /// Type metafunction that returns a std::variant of SchemaItem given a
+    /// list of the types to parameterize SchemaItem with.
+    template <typename ...E>
+    static std::variant<SchemaItem<E>...> makeItemVariantType(TypeList<E...>);
 public:
     static int const VERSION = 3;
 
-    /// An MPL sequence of all the allowed SchemaItem templates.
-    typedef boost::mpl::transform<FieldTypes, MakeItem>::type ItemTypes;
     /// A Boost.Variant type that can hold any one of the allowed SchemaItem types.
-    typedef boost::make_variant_over<ItemTypes>::type ItemVariant;
+    using ItemVariant = decltype(makeItemVariantType(FieldTypes{}));
     /// A std::vector whose elements can be any of the allowed SchemaItem types.
     typedef std::vector<ItemVariant> ItemContainer;
     /// A map from field names to position in the vector, so we can do name lookups.
@@ -99,14 +91,13 @@ public:
 
     /// Find an item by name and run the given functor on it.
     template <typename F>
-    void findAndApply(std::string const& name, F&& func) const {
+    decltype(auto) findAndApply(std::string const& name, F&& func) const {
         auto iter = _names.find(name);
         if (iter == _names.end()) {
             throw LSST_EXCEPT(pex::exceptions::NotFoundError,
                               (boost::format("Field with name '%s' not found") % name).str());
         }
-        VisitorWrapper<F> visitor(std::forward<F>(func));
-        visitor(_items[iter->second]);
+        return std::visit(std::forward<F>(func), _items[iter->second]);
     }
 
     /// Return a set of field names (used to implement Schema::getNames).
@@ -147,42 +138,6 @@ public:
 
     /// Default constructor.
     explicit SchemaImpl() : _recordSize(0), _lastFlagField(-1), _lastFlagBit(-1), _items() {}
-
-    /**
-     *  A functor-wrapper used in the implementation of Schema::forEach.
-     *
-     *  Visitor functors used with Boost.Variant (see the Boost.Variant docs)
-     *  must inherit from boost::static_visitor<> to declare their return type
-     *  (void, in this case).  By wrapping user-supplied functors with this class,
-     *  we can hide the fact that we've implemented SchemaImpl using Boost.Variant
-     *  (because they won't need to inherit from static_visitor themselves.
-     */
-    template <typename F>
-    struct VisitorWrapper : public boost::static_visitor<> {
-        /// Call the wrapped function.
-        template <typename T>
-        void operator()(SchemaItem<T> const& x) const {
-            _func(x);
-        };
-
-        /**
-         *  Invoke the visitation.
-         *
-         *  The call to boost::apply_visitor will call the appropriate template of operator().
-         *
-         *  This overload allows a VisitorWrapper to be applied directly on a variant object
-         *  with function-call syntax, allowing us to use it on our vector of variants with
-         *  std::for_each and other STL algorithms.
-         */
-        void operator()(ItemVariant const& v) const { boost::apply_visitor(*this, v); }
-
-        /// Construct the wrapper.
-        template <typename T>
-        explicit VisitorWrapper(T&& func) : _func(std::forward<T>(func)) {}
-
-    private:
-        F _func;
-    };
 
 private:
     friend class detail::Access;

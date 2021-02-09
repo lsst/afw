@@ -3,6 +3,7 @@
 #define AFW_TABLE_Schema_h_INCLUDED
 
 #include <memory>
+#include <algorithm>
 #include <vector>
 
 #include "ndarray.h"
@@ -198,6 +199,7 @@ public:
     template <typename T>
     void replaceField(Key<T> const& key, Field<T> const& field);
 
+    //@{
     /**
      *  Apply a functor to each SchemaItem in the Schema.
      *
@@ -208,10 +210,18 @@ public:
      *  Fields will be processed in the order they were added to the schema.
      */
     template <typename F>
-    void forEach(F&& func) const {
-        Impl::VisitorWrapper<F> visitor(std::forward<F>(func));
-        std::for_each(_impl->getItems().begin(), _impl->getItems().end(), visitor);
+    void forEach(F & func) const {
+        for (auto const & item : _impl->getItems()) {
+            std::visit(func, item);
+        }
     }
+    template <typename F>
+    void forEach(F const & func) const {
+        for (auto const & item : _impl->getItems()) {
+            std::visit(func, item);
+        }
+    }
+    //@}
 
     //@{
     /**

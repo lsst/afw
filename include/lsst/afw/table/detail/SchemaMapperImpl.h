@@ -5,9 +5,6 @@
 #include <map>
 #include <algorithm>
 
-#include "boost/variant.hpp"
-#include "boost/mpl/transform.hpp"
-
 #include "lsst/afw/table/Key.h"
 #include "lsst/afw/table/types.h"
 #include "lsst/afw/table/Schema.h"
@@ -28,6 +25,10 @@ namespace detail {
  */
 class SchemaMapperImpl final {
 private:
+    /// Type metafunction that returns a std::variant of
+    /// std::pair<Key<T>, Key<T>> given a list of the types for T.
+    template <typename ...E>
+    static std::variant<std::pair<Key<E>, Key<E>>...> makeKeyPairVariantType(TypeList<E...>);
     /// Boost.MPL metafunction that returns a std::pair< Key<T>, Key<T> > given a T.
     struct MakeKeyPair {
         template <typename T>
@@ -37,47 +38,13 @@ private:
     };
 
 public:
-    /// An MPL sequence of all the allowed pair templates.
-    typedef boost::mpl::transform<FieldTypes, MakeKeyPair>::type KeyPairTypes;
-    /// A Boost.Variant type that can hold any one of the allowed pair types.
-    typedef boost::make_variant_over<KeyPairTypes>::type KeyPairVariant;
+    /// A Boost.Variant type that can hold any one of the allowed pairx types.
+    using KeyPairVariant = decltype(makeKeyPairVariantType(FieldTypes{}));
     /// A std::vector whose elements can be any of the allowed pair types.
     typedef std::vector<KeyPairVariant> KeyPairMap;
 
     /// Constructor from the given input and output schemas
     explicit SchemaMapperImpl(Schema const& input, Schema const& output) : _input(input), _output(output) {}
-
-    /**
-     *  A functor-wrapper used in the implementation of SchemaMapper::forEach.
-     *
-     *  See SchemaImpl::VisitorWrapper for discussion of the motivation.
-     */
-    template <typename F>
-    struct VisitorWrapper : public boost::static_visitor<> {
-        /// Call the wrapped function.
-        template <typename T>
-        void operator()(std::pair<Key<T>, Key<T> > const& pair) const {
-            _func(pair.first, pair.second);
-        }
-
-        /**
-         *  Invoke the visitation.
-         *
-         *  The call to boost::apply_visitor will call the appropriate template of operator().
-         *
-         *  This overload allows a VisitorWrapper to be applied directly on a variant object
-         *  with function-call syntax, allowing us to use it on our vector of variants with
-         *  std::for_each and other STL algorithms.
-         */
-        void operator()(KeyPairVariant const& v) const { boost::apply_visitor(*this, v); }
-
-        /// Construct the wrappper.
-        template <typename T>
-        explicit VisitorWrapper(T&& func) : _func(std::forward<T>(func)) {}
-
-    private:
-        F _func;
-    };
 
 private:
     friend class table::SchemaMapper;

@@ -2,6 +2,7 @@
 #include <memory>
 #include <stdexcept>
 #include <type_traits>
+#include <variant>
 
 #include "boost/preprocessor/seq/for_each.hpp"
 #include "boost/preprocessor/tuple/to_seq.hpp"
@@ -39,58 +40,44 @@ std::string join(std::string const &a, std::string const &b, char delimiter) {
 class ItemFunctors {
     typedef detail::SchemaImpl::ItemVariant ItemVariant;
 
-    // Compares keys - must be initialized with one ItemVariant and passed the other.
-    struct KeyHelper : public boost::static_visitor<bool> {
-        explicit KeyHelper(ItemVariant const *other_) : other(other_) {}
+    // Compares keys (including types).
+    struct KeyHelper {
 
         template <typename T>
-        bool operator()(SchemaItem<T> const &a) const {
-            SchemaItem<T> const *b = boost::get<SchemaItem<T> >(other);
-            return (b) && a.key == b->key;
+        bool operator()(SchemaItem<T> const &a, SchemaItem<T> const &b) const {
+            return a.key == b.key;
         }
 
-        ItemVariant const *other;
-    };
-
-    // Extracts field name from an ItemVariant
-    struct NameHelper : public boost::static_visitor<std::string const &> {
-        template <typename T>
-        std::string const &operator()(SchemaItem<T> const &a) const {
-            return a.field.getName();
-        }
-    };
-
-    // Extracts field doc from an ItemVariant
-    struct DocHelper : public boost::static_visitor<std::string const &> {
-        template <typename T>
-        std::string const &operator()(SchemaItem<T> const &a) const {
-            return a.field.getDoc();
-        }
-    };
-
-    // Extracts field units from an ItemVariant
-    struct UnitsHelper : public boost::static_visitor<std::string const &> {
-        template <typename T>
-        std::string const &operator()(SchemaItem<T> const &a) const {
-            return a.field.getUnits();
+        template <typename T, typename U>
+        bool operator()(SchemaItem<T> const &a, SchemaItem<U> const &b) const {
+            return false;
         }
     };
 
 public:
     static bool compareKeys(ItemVariant const &a, ItemVariant const &b) {
-        return boost::apply_visitor(KeyHelper(&b), a);
+        return std::visit(KeyHelper(), a, b);
     }
 
     static bool compareNames(ItemVariant const &a, ItemVariant const &b) {
-        return boost::apply_visitor(NameHelper(), a) == boost::apply_visitor(NameHelper(), b);
+        return std::visit(
+            [](auto const & a, auto const & b) { return a.field.getName() == b.field.getName(); },
+            a, b
+        );
     }
 
     static bool compareDocs(ItemVariant const &a, ItemVariant const &b) {
-        return boost::apply_visitor(DocHelper(), a) == boost::apply_visitor(DocHelper(), b);
+        return std::visit(
+            [](auto const & a, auto const & b) { return a.field.getDoc() == b.field.getDoc(); },
+            a, b
+        );
     }
 
     static bool compareUnits(ItemVariant const &a, ItemVariant const &b) {
-        return boost::apply_visitor(UnitsHelper(), a) == boost::apply_visitor(UnitsHelper(), b);
+        return std::visit(
+            [](auto const & a, auto const & b) { return a.field.getUnits() == b.field.getUnits(); },
+            a, b
+        );
     }
 };
 
@@ -108,8 +95,8 @@ SchemaItem<T> SchemaImpl::find(std::string const &name) const {
     if (i != _names.end() && i->first == name) {
         // got an exact match; we're done if it has the right type, and dead if it doesn't.
         try {
-            return boost::get<SchemaItem<T>>(_items[i->second]);
-        } catch (boost::bad_get &err) {
+            return std::get<SchemaItem<T>>(_items[i->second]);
+        } catch (std::bad_variant_access &err) {
             throw LSST_EXCEPT(lsst::pex::exceptions::TypeError,
                                 (boost::format("Field '%s' does not have the given type.") % name).str());
         }
@@ -125,8 +112,8 @@ SchemaItem<T> SchemaImpl::find(Key<T> const &key) const {
     OffsetMap::const_iterator i = _offsets.lower_bound(key.getOffset());
     if (i != _offsets.end() && i->first == key.getOffset()) {
         try {
-            return boost::get<SchemaItem<T>>(_items[i->second]);
-        } catch (boost::bad_get &err) {
+            return std::get<SchemaItem<T>>(_items[i->second]);
+        } catch (std::bad_variant_access &err) {
             // just swallow the exception; this might be a subfield key that points to the beginning.
         }
     }
@@ -142,8 +129,8 @@ SchemaItem<Flag> SchemaImpl::find(Key<Flag> const &key) const {
     if (i != _flags.end()) {
         if (i->first.first == key.getOffset() && i->first.second == key.getBit()) {
             try {
-                return boost::get<SchemaItem<Flag> const>(_items[i->second]);
-            } catch (boost::bad_get &err) {
+                return std::get<SchemaItem<Flag>>(_items[i->second]);
+            } catch (std::bad_variant_access &err) {
                 throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundError,
                                   (boost::format("Flag field with offset %d and bit %d not found.") %
                                    key.getOffset() % key.getBit())
@@ -151,7 +138,6 @@ SchemaItem<Flag> SchemaImpl::find(Key<Flag> const &key) const {
             }
         }
     }
-    // Flag keys are never subfields, so we require an exact match.
     throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundError,
                       (boost::format("Flag field with offset %d and bit %d not found.") % key.getOffset() %
                        key.getBit())
@@ -211,7 +197,7 @@ void SchemaImpl::replaceField(Key<T> const &key, Field<T> const &field) {
     if (j != _names.end()) {
         // The field name is already present in the Schema; see if it's the one we're replacing.
         // If we can get the old item with this, we don't need to update the name map at all.
-        item = boost::get<SchemaItem<T> >(&_items[j->second]);
+        item = std::get_if<SchemaItem<T>>(&_items[j->second]);
         if (!item || key != item->key) {
             throw LSST_EXCEPT(
                     lsst::pex::exceptions::InvalidParameterError,
@@ -222,7 +208,7 @@ void SchemaImpl::replaceField(Key<T> const &key, Field<T> const &field) {
     }
     if (!item) {  // Need to find the original item by key, since it's a new name.
         int index = findKey(_offsets, _flags, key);
-        item = boost::get<SchemaItem<T> >(&_items[index]);
+        item = std::get_if<SchemaItem<T>>(&_items[index]);
         if (!item) {
             throw LSST_EXCEPT(lsst::pex::exceptions::TypeError,
                               (boost::format("Incorrect key type '%s'.") % key).str());
@@ -245,7 +231,7 @@ int SchemaImpl::contains(SchemaItem<T> const &item, int flags) const {
     SchemaItem<T> const *cmpItem = 0;
     int index = findKey(_offsets, _flags, item.key, false);
     if (index >= 0) {
-        cmpItem = boost::get<SchemaItem<T> >(&_items[index]);
+        cmpItem = std::get_if<SchemaItem<T> >(&_items[index]);
         if (!cmpItem) {
             if ((flags & Schema::EQUAL_NAMES) && cmpItem->field.getName() != item.field.getName()) {
                 flags &= ~Schema::EQUAL_NAMES;
@@ -336,7 +322,7 @@ Key<Flag> SchemaImpl::addField(Field<Flag> const &field, bool doReplace) {
             _names.insert(std::pair<std::string, int>(field.getName(), _items.size()));
     if (!result.second) {
         if (doReplace) {
-            SchemaItem<Flag> *item = boost::get<SchemaItem<Flag> >(&_items[result.first->second]);
+            SchemaItem<Flag> *item = std::get_if<SchemaItem<Flag>>(&_items[result.first->second]);
             if (!item) {
                 throw LSST_EXCEPT(
                         lsst::pex::exceptions::TypeError,
@@ -384,7 +370,7 @@ Key<T> SchemaImpl::addFieldImpl(int elementSize, int elementCount, Field<T> cons
             _names.insert(std::pair<std::string, int>(field.getName(), _items.size()));
     if (!result.second) {
         if (doReplace) {
-            SchemaItem<T> *item = boost::get<SchemaItem<T> >(&_items[result.first->second]);
+            SchemaItem<T> *item = std::get_if<SchemaItem<T>>(&_items[result.first->second]);
             if (!item) {
                 throw LSST_EXCEPT(
                         lsst::pex::exceptions::TypeError,
