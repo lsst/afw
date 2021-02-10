@@ -26,17 +26,18 @@
 #define LSST_AFW_TYPEHANDLING_GENERICMAP_H
 
 #include <algorithm>
+#include <functional>
 #include <memory>
 #include <sstream>
 #include <string>
 #include <type_traits>
 #include <utility>
 #include <vector>
-
-#include "boost/variant.hpp"
+#include <variant>
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/typehandling/detail/type_traits.h"
+#include "lsst/afw/typehandling/detail/refwrap_utils.h"
 #include "lsst/afw/typehandling/Key.h"
 #include "lsst/afw/typehandling/Storable.h"
 #include "lsst/afw/typehandling/PolymorphicValue.h"
@@ -232,7 +233,9 @@ public:
             return false;
         }
         for (K const& key : keys1) {
-            if (this->unsafeLookup(key) != other.unsafeLookup(key)) {
+            // Can't use std::variant::operator== here because
+            // std::reference_wrapper isn't equality-comparable.
+            if (!detail::refwrap_equals()(this->unsafeLookup(key), other.unsafeLookup(key))) {
                 return false;
             }
         }
@@ -337,13 +340,12 @@ private:
     // Methods have no definition but can't be deleted without breaking type definitions below
 
     /// @cond
-    // may need to use std::reference_wrapper when migrating to std::variant, but it confuses Boost
     template <typename... Types>
-    static boost::variant<std::add_lvalue_reference_t<Types>...> _typeToRef(
-            boost::variant<Types...> const&) noexcept;
+    static std::variant<std::reference_wrapper<Types>...> _typeToRef(
+            std::variant<Types...> const&) noexcept;
     template <typename... Types>
-    static boost::variant<std::add_lvalue_reference_t<std::add_const_t<Types>>...> _typeToConstRef(
-            boost::variant<Types...> const&) noexcept;
+    static std::variant<std::reference_wrapper<std::add_const_t<Types>>...> _typeToConstRef(
+            std::variant<Types...> const&) noexcept;
     /// @endcond
 
 protected:
@@ -354,8 +356,8 @@ protected:
      */
     // Use int, long, long long instead of int32_t, int64_t because C++ doesn't
     // consider signed integers of the same length but different names equivalent
-    using StorableType = boost::variant<bool, int, long, long long, float, double, std::string,
-                                        PolymorphicValue, std::shared_ptr<Storable const>>;
+    using StorableType = std::variant<bool, int, long, long long, float, double, std::string,
+                                      PolymorphicValue, std::shared_ptr<Storable const>>;
 
     /**
      * A type-agnostic reference to the value stored inside the map.
@@ -388,13 +390,10 @@ protected:
 
     ValueReference unsafeLookup(K key) {
         ConstValueReference constRef = static_cast<const GenericMap&>(*this).unsafeLookup(key);
-        auto removeConst = [](auto const& value) -> ValueReference {
-            using NonConstRef = std::add_lvalue_reference_t<
-                    std::remove_const_t<std::remove_reference_t<decltype(value)>>>;
-            // This cast is safe; see Effective C++, Item 3
-            return const_cast<NonConstRef>(value);
-        };
-        return boost::apply_visitor(removeConst, constRef);
+        return std::visit(
+            [](auto const & v) { return ValueReference(detail::refwrap_const_cast(v)); },
+            constRef
+        );
     }
 
     /** @} */
@@ -409,8 +408,8 @@ private:
                       "Due to implementation constraints, const keys are not supported.");
         try {
             auto foo = unsafeLookup(key.getId());
-            return boost::get<T const&>(foo);
-        } catch (boost::bad_get const&) {
+            return std::get<std::reference_wrapper<T const>>(foo);
+        } catch (std::bad_variant_access const&) {
             std::stringstream message;
             message << "Key " << key << " not found, but a key labeled " << key.getId() << " is present.";
             throw LSST_EXCEPT(pex::exceptions::OutOfRangeError, message.str());
@@ -425,7 +424,7 @@ private:
         try {
             auto foo = unsafeLookup(key.getId());
             // Don't use pointer-based get, because it won't work after migrating to std::variant
-            Storable const& value = boost::get<PolymorphicValue const&>(foo);
+            Storable const& value = std::get<std::reference_wrapper<PolymorphicValue const>>(foo).get();
             T const* typedPointer = dynamic_cast<T const*>(&value);
             if (typedPointer != nullptr) {
                 return *typedPointer;
@@ -434,7 +433,7 @@ private:
                 message << "Key " << key << " not found, but a key labeled " << key.getId() << " is present.";
                 throw LSST_EXCEPT(pex::exceptions::OutOfRangeError, message.str());
             }
-        } catch (boost::bad_get const&) {
+        } catch (std::bad_variant_access const&) {
             std::stringstream message;
             message << "Key " << key << " not found, but a key labeled " << key.getId() << " is present.";
             throw LSST_EXCEPT(pex::exceptions::OutOfRangeError, message.str());
@@ -448,7 +447,7 @@ private:
                       "Due to implementation constraints, pointers to non-const are not supported.");
         try {
             auto foo = unsafeLookup(key.getId());
-            auto pointer = boost::get<std::shared_ptr<Storable const> const&>(foo);
+            auto pointer = std::get<std::reference_wrapper<std::shared_ptr<Storable const> const>>(foo).get();
             if (pointer == nullptr) {  // dynamic_cast not helpful
                 return nullptr;
             }
@@ -463,7 +462,7 @@ private:
                 message << "Key " << key << " not found, but a key labeled " << key.getId() << " is present.";
                 throw LSST_EXCEPT(pex::exceptions::OutOfRangeError, message.str());
             }
-        } catch (boost::bad_get const&) {
+        } catch (std::bad_variant_access const&) {
             std::stringstream message;
             message << "Key " << key << " not found, but a key labeled " << key.getId() << " is present.";
             throw LSST_EXCEPT(pex::exceptions::OutOfRangeError, message.str());
@@ -481,13 +480,7 @@ private:
         }
 
         auto foo = unsafeLookup(key.getId());
-        // boost::variant has no equivalent to std::holds_alternative
-        try {
-            boost::get<T const&>(foo);
-            return true;
-        } catch (boost::bad_get const&) {
-            return false;
-        }
+        return std::holds_alternative<std::reference_wrapper<T const>>(foo);
     }
 
     // Storable and its subclasses
@@ -499,12 +492,12 @@ private:
         }
 
         auto foo = unsafeLookup(key.getId());
-        try {
-            // Don't use pointer-based get, because it won't work after migrating to std::variant
-            Storable const& value = boost::get<PolymorphicValue const&>(foo);
+        auto refwrap = std::get_if<std::reference_wrapper<PolymorphicValue const>>(&foo);
+        if (refwrap) {
+            Storable const & value = refwrap->get();
             auto asT = dynamic_cast<T const*>(&value);
             return asT != nullptr;
-        } catch (boost::bad_get const&) {
+        } else {
             return false;
         }
     }
@@ -521,7 +514,7 @@ private:
 
         auto foo = unsafeLookup(key.getId());
         try {
-            auto pointer = boost::get<std::shared_ptr<Storable const> const&>(foo);
+            auto pointer = std::get<std::reference_wrapper<std::shared_ptr<Storable const> const>>(foo).get();
             if (pointer == nullptr) {  // Can't confirm type with dynamic_cast
                 return true;
             }
@@ -529,7 +522,7 @@ private:
             // shared_ptr can be empty without being null. dynamic_pointer_cast
             // only promises result of failed cast is empty, so test for that
             return typedPointer.use_count() > 0;
-        } catch (boost::bad_get const&) {
+        } catch (std::bad_variant_access const&) {
             return false;
         }
     }
@@ -544,9 +537,10 @@ private:
     // No return value, const GenericMap
     template <class Visitor, typename std::enable_if_t<std::is_void<_VisitorResult<Visitor>>::value, int> = 0>
     void _apply(Visitor&& visitor) const {
+        auto wrapped = detail::make_refwrap_visitor(std::forward<Visitor>(visitor));
         for (K const& key : keys()) {
-            boost::variant<K> varKey = key;
-            boost::apply_visitor(visitor, varKey, unsafeLookup(key));
+            std::variant<K> varKey = key;
+            std::visit(wrapped, varKey, unsafeLookup(key));
         }
     }
 
@@ -556,10 +550,10 @@ private:
     auto _apply(Visitor&& visitor) const {
         std::vector<_VisitorResult<Visitor>> results;
         results.reserve(size());
-
+        auto wrapped = detail::make_refwrap_visitor(std::forward<Visitor>(visitor));
         for (K const& key : keys()) {
-            boost::variant<K> varKey = key;
-            results.emplace_back(boost::apply_visitor(visitor, varKey, unsafeLookup(key)));
+            std::variant<K> varKey = key;
+            results.emplace_back(std::visit(wrapped, varKey, unsafeLookup(key)));
         }
         return results;
     }
@@ -567,11 +561,10 @@ private:
     // No return value, non-const GenericMap
     template <class Visitor, typename std::enable_if_t<std::is_void<_VisitorResult<Visitor>>::value, int> = 0>
     void _apply(Visitor&& visitor) {
+        auto wrapped = detail::make_refwrap_visitor(std::forward<Visitor>(visitor));
         for (K const& key : keys()) {
-            boost::variant<K> varKey = key;
-            // Boost gets confused if we pass it a temporary variant
-            ValueReference ref = unsafeLookup(key);
-            boost::apply_visitor(visitor, varKey, ref);
+            std::variant<K> varKey = key;
+            std::visit(wrapped, varKey, unsafeLookup(key));
         }
     }
 
@@ -581,12 +574,11 @@ private:
     auto _apply(Visitor&& visitor) {
         std::vector<_VisitorResult<Visitor>> results;
         results.reserve(size());
+        auto wrapped = detail::make_refwrap_visitor(std::forward<Visitor>(visitor));
 
         for (K const& key : keys()) {
-            boost::variant<K> varKey = key;
-            // Boost gets confused if we pass it a temporary variant
-            ValueReference ref = unsafeLookup(key);
-            results.emplace_back(boost::apply_visitor(visitor, varKey, ref));
+            std::variant<K> varKey = key;
+            results.emplace_back(std::visit(wrapped, varKey, unsafeLookup(key)));
         }
         return results;
     }
