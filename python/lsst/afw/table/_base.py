@@ -32,11 +32,11 @@ __all__ = ["Catalog"]
 class BaseRecord:  # noqa: F811
 
     def extract(self, *patterns, **kwargs):
-        """Extract a dictionary of {<name>: <field-value>} in which the field names
-        match the given shell-style glob pattern(s).
+        """Extract a dictionary of {<name>: <field-value>} in which the field
+        names match the given shell-style glob pattern(s).
 
-        Any number of glob patterns may be passed; the result will be the union of all
-        the result of each glob considered separately.
+        Any number of glob patterns may be passed; the result will be the union
+        of all the result of each glob considered separately.
 
         Parameters
         ----------
@@ -46,11 +46,6 @@ class BaseRecord:  # noqa: F811
             to be reused to extract values from multiple records.  This
             keyword is incompatible with any position arguments and the regex,
             sub, and ordered keyword arguments.
-        split : `bool`
-            If `True`, fields with named subfields (e.g. points) will be split
-            into separate items in the dict; instead of {"point":
-            lsst.geom.Point2I(2,3)}, for instance, you'd get {"point.x":
-            2, "point.y": 3}. Default is `False`.
         regex : `str` or `re` pattern object
             A regular expression to be used in addition to any glob patterns
             passed as positional arguments.  Note that this will be compared
@@ -64,22 +59,12 @@ class BaseRecord:  # noqa: F811
             order of the `Schema`. Default is `False`.
         """
         d = kwargs.pop("items", None)
-        split = kwargs.pop("split", False)
         if d is None:
             d = self.schema.extract(*patterns, **kwargs).copy()
         elif kwargs:
             kwargsStr = ", ".join(kwargs.keys())
             raise ValueError(f"Unrecognized keyword arguments for extract: {kwargsStr}")
-        # must use list because we might be adding/deleting elements
-        for name, schemaItem in list(d.items()):
-            key = schemaItem.key
-            if split and key.HAS_NAMED_SUBFIELDS:
-                for subname, subkey in zip(key.subfields, key.subkeys):
-                    d[f"{name}.{subname}"] = self.get(subkey)
-                del d[name]
-            else:
-                d[name] = self.get(schemaItem.key)
-        return d
+        return {name: self.get(schemaItem.key) for name, schemaItem in d.items()}
 
     def __repr__(self):
         return f"{type(self)}\n{self}"

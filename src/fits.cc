@@ -1060,10 +1060,10 @@ void writeKeyFromProperty(Fits &fits, daf::base::PropertySet const &metadata, st
         } else {
             writeKeyImpl(fits, key.c_str(), metadata.get<std::string>(key), comment);
         }
-    } else if (valueType == typeid(nullptr_t)) {
+    } else if (valueType == typeid(std::nullptr_t)) {
         if (metadata.isArray(key)) {
             // Write multiple undefined values for the same key
-            auto tmp = metadata.getArray<nullptr_t>(key);
+            auto tmp = metadata.getArray<std::nullptr_t>(key);
             for (std::size_t i = 0; i != tmp.size(); ++i) {
                 writeKeyImpl(fits, key.c_str(), comment);
             }
