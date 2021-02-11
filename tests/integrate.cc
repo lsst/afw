@@ -56,7 +56,7 @@ namespace math = lsst::afw::math;
  * We have to inherit from IntegrandBase for the integrator to work.
  */
 template <typename IntegrandT>
-class Parab1D : public std::unary_function<IntegrandT, IntegrandT> {
+class Parab1D {
 public:
     Parab1D(double k, double kx) : _k(k), _kx(kx) {}
 
@@ -66,8 +66,9 @@ public:
     }
 
     // operator() must be overloaded to return the evaluation of the function
-    IntegrandT operator()(IntegrandT const x) const { return (_k - _kx * x * x); }
-
+    IntegrandT operator()(IntegrandT const x) const {
+        return (_k - _kx * x * x);
+    }
 private:
     double _k, _kx;
 };
@@ -84,7 +85,7 @@ double parabola1d(double x) {
  * Note that we have to inherit from IntegrandBase
  */
 template <typename IntegrandT>
-class Parab2D : public std::binary_function<IntegrandT, IntegrandT, IntegrandT> {
+class Parab2D {
 public:
     Parab2D(double k, double kx, double ky) : _k(k), _kx(kx), _ky(ky) {}
 
@@ -97,10 +98,9 @@ public:
     }
 
     // operator() must be overloaded to return the evaluation of the function
-    IntegrandT operator()(IntegrandT const x, IntegrandT const y) const {
+    auto operator()(IntegrandT const x, IntegrandT const y) const {
         return (_k - _kx * x * x - _ky * y * y);
     }
-
 private:
     double _k, _kx, _ky;
 };
@@ -114,6 +114,7 @@ double parabola2d(double const x, double const y) {
  * Test the 1D integrator on a Parabola
  * @note default precision is 1e-6 for integrate()
  */
+
 BOOST_AUTO_TEST_CASE(
         Parabola1D) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
 
@@ -128,7 +129,7 @@ BOOST_AUTO_TEST_CASE(
     double parab_area_integrate = math::integrate(parab1d, x1, x2);
     double parab_area_analytic = parab1d.getAnalyticArea(x1, x2);
 
-    double parab_area_integrate_function = math::integrate(std::ptr_fun(parabola1d), x1, x2);
+    double parab_area_integrate_function = math::integrate(parabola1d, x1, x2);
 
     BOOST_CHECK_CLOSE(parab_area_integrate, parab_area_analytic, 1e-6);
     BOOST_CHECK_CLOSE(parab_area_integrate_function, parab_area_analytic, 1e-6);
@@ -152,8 +153,36 @@ BOOST_AUTO_TEST_CASE(
     double parab_volume_integrate = math::integrate2d(parab2d, x1, x2, y1, y2);
     double parab_volume_analytic = parab2d.getAnalyticVolume(x1, x2, y1, y2);
 
-    double parab_volume_integrate_function = math::integrate2d(std::ptr_fun(parabola2d), x1, x2, y1, y2);
+    double parab_volume_integrate_function = math::integrate2d(parabola2d, x1, x2, y1, y2);
 
     BOOST_CHECK_CLOSE(parab_volume_integrate, parab_volume_analytic, 1e-6);
     BOOST_CHECK_CLOSE(parab_volume_integrate_function, parab_volume_analytic, 1e-6);
+}
+
+/*
+ * Test int1d function on Gaussian
+ */
+BOOST_AUTO_TEST_CASE(Integrate) {
+    constexpr double tolerance = 1e-6;
+    constexpr double result1 = 0.68268949;
+    constexpr double result2 = 0.5;
+    class Gauss {
+    public :
+        Gauss(double _mu, double _sig) : mu(_mu), sig(_sig) {}
+
+        double operator()(double x) const {
+            constexpr double inv_sqrt_2pi = 0.3989422804014327;
+            double a = (x - mu) / sig;
+            return inv_sqrt_2pi / sig * std::exp(-0.5 * a * a);
+        }
+
+    private :
+        double mu, sig;
+    };
+    lsst::afw::math::IntRegion<double> reg1(-1., 1.);
+    lsst::afw::math::IntRegion<double> reg2(0, 20);
+    double integ1 = lsst::afw::math::int1d(Gauss(0., 1.), reg1, 1.e-10, 1.e-4);
+    double integ2 = lsst::afw::math::int1d(Gauss(0., 2.), reg2, 1.e-10, 1.e-4);
+    BOOST_CHECK_CLOSE(integ1, result1, tolerance);
+    BOOST_CHECK_CLOSE(integ2, result2, tolerance);
 }

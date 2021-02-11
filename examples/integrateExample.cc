@@ -43,7 +43,7 @@
 namespace math = lsst::afw::math;
 
 // A simple Gaussian, parametrized by its center (mu) and size (sigma).
-class Gauss : public std::unary_function<double, double> {
+class Gauss {
 public:
     explicit Gauss(double mu, double sig) : _mu(mu), _sig(sig), _sigsq(sig * sig) {}
 
@@ -78,7 +78,8 @@ struct Cosmology {
     double omM, omV, w, wa;
 };
 
-struct W_Integrator : public std::unary_function<double, double> {
+class W_Integrator {
+public:
     W_Integrator(Cosmology const &c) : _c(c) {}
     double operator()(double a) const {
         // First calculate H^2 according to:
@@ -140,7 +141,6 @@ int main() {
     std::cout << "int(Gauss(0.0, 2.0) , 0..inf) = " << int1d(g02, reg3) << std::endl;
 
     math::IntRegion<double> reg4(0.0, 1.0);
-    std::cout << "\nint(x*(3*x+y)+y, 0..1, 0..1) = " << int2d(std::ptr_fun(foo), reg4, reg4) << std::endl;
 
     std::cout << "\nIn a universe with:\n\n";
     std::cout << "Omega_m = 0.3\n";

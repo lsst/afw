@@ -44,7 +44,7 @@ namespace math = lsst::afw::math;
  * @note We *have* to inherit from unary_function<>
  */
 template <typename IntegrandT>
-class Parab1D : public std::unary_function<IntegrandT, IntegrandT> {
+class Parab1D {
 public:
     // declare coefficients at instantiation
     Parab1D(double const k, double const kx) : _k(k), _kx(kx) {}
@@ -70,7 +70,7 @@ private:
  * @note we *have* to inherit from binary_function<>
  */
 template <typename IntegrandT>
-class Parab2D : public std::binary_function<IntegrandT, IntegrandT, IntegrandT> {
+class Parab2D {
 public:
     // declare coefficients at instantiation.
     Parab2D(IntegrandT const k, IntegrandT const kx, IntegrandT const ky) : _k(k), _kx(kx), _ky(ky) {}
@@ -132,7 +132,7 @@ int main() {
     double const parab_area_analytic = parab1d.getAnalyticArea(x1, x2);
 
     // now run it on the 1d function (you *need* to wrap the function in ptr_fun())
-    double const parab_area_integrate_func = math::integrate(std::ptr_fun(parabola), x1, x2);
+    double const parab_area_integrate_func = math::integrate(parabola, x1, x2);
 
     // output
     std::cout << "1D integrate: functor = " << parab_area_integrate
@@ -149,7 +149,7 @@ int main() {
     double const parab_volume_analytic = parab2d.getAnalyticVolume(x1, x2, y1, y2);
 
     // now run it on the 2d function (you *need* to wrap the function in ptr_fun())
-    double const parab_volume_integrate_func = math::integrate2d(std::ptr_fun(parabola2d), x1, x2, y1, y2);
+    double const parab_volume_integrate_func = math::integrate2d(parabola2d, x1, x2, y1, y2);
 
     // output
     std::cout << "2D integrate: functor = " << parab_volume_integrate
