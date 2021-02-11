@@ -255,7 +255,7 @@ class PolygonTest(lsst.utils.tests.TestCase):
         """Test Polygon.createImage"""
         if display:
             import lsst.afw.display as afwDisplay
-        for i, num in enumerate(range(3, 30)):
+        for i, num in enumerate(range(4, 30)):
             poly = self.polygon(num, 25, 75, 75)
             box = lsst.geom.Box2I(lsst.geom.Point2I(15, 15),
                                   lsst.geom.Extent2I(115, 115))
