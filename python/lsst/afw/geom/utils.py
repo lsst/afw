@@ -1,9 +1,10 @@
+# This file is part of afw.
 #
-# LSST Data Management System
-# Copyright 2015 LSST Corporation.
-#
-# This product includes software developed by the
-# LSST Project (http://www.lsst.org/).
+# Developed for the LSST Data Management System.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org).
+# See the COPYRIGHT file at the top-level directory of this distribution
+# for details of code ownership.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,10 +16,9 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
-# You should have received a copy of the LSST License Statement and
-# the GNU General Public License along with this program.  If not,
-# see <http://www.lsstcorp.org/LegalNotices/>.
-#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 """Utilities that should be imported into the lsst.afw.geom namespace when lsst.afw.geom is used
 
 In the case of the assert functions, importing them makes them available in lsst.utils.tests.TestCase
@@ -32,7 +32,7 @@ import numpy as np
 
 import lsst.utils.tests
 import lsst.geom
-from .endpoint import GenericEndpoint, Point2Endpoint, SpherePointEndpoint
+from ._geom import GenericEndpoint, Point2Endpoint, SpherePointEndpoint
 
 
 def _compareWcsOverBBox(wcs0, wcs1, bbox, maxDiffSky=0.01*lsst.geom.arcseconds,

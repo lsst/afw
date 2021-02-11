@@ -22,7 +22,10 @@
 
 """lsst.afw.geom.ellipses
 """
-from .ellipsesLib import *
+from ._ellipses import *
+from ._ellipse import *
+from ._axes import *
+from ._quadrupole import *
 
 Separable = {
     (Distortion, DeterminantRadius): SeparableDistortionDeterminantRadius,

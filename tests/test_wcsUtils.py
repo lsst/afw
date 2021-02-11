@@ -30,7 +30,7 @@ from lsst.daf.base import PropertyList
 import lsst.geom
 import lsst.afw.geom as afwGeom
 import lsst.utils.tests
-from lsst.afw.geom.wcsUtils import createTrivialWcsMetadata, deleteBasicWcsMetadata, \
+from lsst.afw.geom import createTrivialWcsMetadata, deleteBasicWcsMetadata, \
     getCdMatrixFromMetadata, getSipMatrixFromMetadata, getImageXY0FromMetadata, \
     hasSipMatrix, makeSipMatrixMetadata, makeTanSipMetadata, \
     computePixelToDistortedPixel

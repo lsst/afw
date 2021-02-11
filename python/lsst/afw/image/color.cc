@@ -1,9 +1,11 @@
 /*
- * LSST Data Management System
- * Copyright 2008-2017 AURA/LSST.
+ * This file is part of afw.
  *
- * This product includes software developed by the
- * LSST Project (http://www.lsst.org/).
+ * Developed for the LSST Data Management System.
+ * This product includes software developed by the LSST Project
+ * (https://www.lsst.org).
+ * See the COPYRIGHT file at the top-level directory of this distribution
+ * for details of code ownership.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,12 +17,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the LSST License Statement and
- * the GNU General Public License along with this program.  If not,
- * see <https://www.lsstcorp.org/LegalNotices/>.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #include "pybind11/pybind11.h"
+#include "lsst/utils/python.h"
 
 #include <limits>
 
@@ -36,22 +38,33 @@ namespace {
 
 using PyColor = py::class_<Color, std::shared_ptr<Color>>;
 
-PYBIND11_MODULE(color, mod) {
+void wrapColor(lsst::utils::python::WrapperCollection &wrappers) {
     /* Module level */
-    PyColor cls(mod, "Color");
+    wrappers.wrapType(PyColor(wrappers.module, "Color"), [](auto &mod, auto &cls) {
+        /* Constructors */
+        cls.def(py::init<double>(), "g_r"_a = std::numeric_limits<double>::quiet_NaN());
 
-    /* Constructors */
-    cls.def(py::init<double>(), "g_r"_a = std::numeric_limits<double>::quiet_NaN());
+        /* Operators */
+        cls.def(
+                "__eq__", [](Color const &self, Color const &other) { return self == other; },
+                py::is_operator());
+        cls.def(
+                "__ne__", [](Color const &self, Color const &other) { return self != other; },
+                py::is_operator());
 
-    /* Operators */
-    cls.def("__eq__", [](Color const& self, Color const& other) { return self == other; }, py::is_operator());
-    cls.def("__ne__", [](Color const& self, Color const& other) { return self != other; }, py::is_operator());
+        /* Members */
+        cls.def("isIndeterminate", &Color::isIndeterminate);
+        cls.def("getLambdaEff", &Color::getLambdaEff, "filter"_a);
+    });
+}
 
-    /* Members */
-    cls.def("isIndeterminate", &Color::isIndeterminate);
-    cls.def("getLambdaEff", &Color::getLambdaEff, "filter"_a);
+PYBIND11_MODULE(color, mod) {
+    lsst::utils::python::WrapperCollection wrappers(mod, "lsst.afw.image.color");
+    wrapColor(wrappers);
+    wrappers.finish();
 }
-}
-}
-}
-}  // namespace lsst::afw::image::<anonymous>
+
+}  // namespace
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst

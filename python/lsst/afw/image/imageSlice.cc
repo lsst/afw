@@ -1,9 +1,11 @@
 /*
- * LSST Data Management System
- * Copyright 2008-2017 AURA/LSST.
+ * This file is part of afw.
  *
- * This product includes software developed by the
- * LSST Project (http://www.lsst.org/).
+ * Developed for the LSST Data Management System.
+ * This product includes software developed by the LSST Project
+ * (https://www.lsst.org).
+ * See the COPYRIGHT file at the top-level directory of this distribution
+ * for details of code ownership.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,12 +17,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the LSST License Statement and
- * the GNU General Public License along with this program.  If not,
- * see <https://www.lsstcorp.org/LegalNotices/>.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #include "pybind11/pybind11.h"
+#include "lsst/utils/python.h"
 
 #include "lsst/afw/image/ImageSlice.h"
 
@@ -34,72 +36,91 @@ namespace image {
 namespace {
 
 template <typename PixelT>
-static void declareImageSlice(py::module &mod, std::string const &suffix) {
+static void declareImageSlice(lsst::utils::python::WrapperCollection &wrappers, std::string const &suffix) {
     using Class = ImageSlice<PixelT>;
 
-    py::module::import("lsst.afw.image.image");
+    wrappers.wrapType(
+            py::class_<Class, std::shared_ptr<Class>, Image<PixelT>>(wrappers.module,
+                                                                     ("ImageSlice" + suffix).c_str()),
+            [](auto &mod, auto &cls) {
+                cls.def(py::init<Image<PixelT> const &>(), "img"_a);
 
-    py::class_<Class, std::shared_ptr<Class>, Image<PixelT>> cls(mod, ("ImageSlice" + suffix).c_str());
+                py::enum_<typename Class::ImageSliceType>(cls, "ImageSliceType")
+                        .value("ROW", Class::ImageSliceType::ROW)
+                        .value("COLUMN", Class::ImageSliceType::COLUMN)
+                        .export_values();
 
-    cls.def(py::init<Image<PixelT> const &>(), "img"_a);
+                cls.def("getImageSliceType", &Class::getImageSliceType);
 
-    py::enum_<typename Class::ImageSliceType>(cls, "ImageSliceType")
-            .value("ROW", Class::ImageSliceType::ROW)
-            .value("COLUMN", Class::ImageSliceType::COLUMN)
-            .export_values();
+                cls.def(
+                        "__add__",
+                        [](ImageSlice<PixelT> &self, Image<PixelT> const &other) { return self + other; },
+                        py::is_operator());
+                cls.def(
+                        "__mul__",
+                        [](ImageSlice<PixelT> &self, Image<PixelT> const &other) { return self * other; },
+                        py::is_operator());
+                cls.def("__iadd__", [](ImageSlice<PixelT> &self, Image<PixelT> const &other) {
+                    self += other;
+                    return self;
+                });
+                cls.def("__imul__", [](ImageSlice<PixelT> &self, Image<PixelT> const &other) {
+                    self *= other;
+                    return self;
+                });
 
-    cls.def("getImageSliceType", &Class::getImageSliceType);
-
-    cls.def("__add__", [](ImageSlice<PixelT> &self, Image<PixelT> const &other) { return self + other; },
-            py::is_operator());
-    cls.def("__mul__", [](ImageSlice<PixelT> &self, Image<PixelT> const &other) { return self * other; },
-            py::is_operator());
-    cls.def("__iadd__", [](ImageSlice<PixelT> &self, Image<PixelT> const &other) {
-        self += other;
-        return self;
-    });
-    cls.def("__imul__", [](ImageSlice<PixelT> &self, Image<PixelT> const &other) {
-        self *= other;
-        return self;
-    });
-
-    cls.def("__add__",
-            [](Image<PixelT> const &self, ImageSlice<PixelT> const &other) { return self + other; },
-            py::is_operator());
-    cls.def("__sub__",
-            [](Image<PixelT> const &self, ImageSlice<PixelT> const &other) { return self - other; },
-            py::is_operator());
-    cls.def("__mul__",
-            [](Image<PixelT> const &self, ImageSlice<PixelT> const &other) { return self * other; },
-            py::is_operator());
-    cls.def("__truediv__",
-            [](Image<PixelT> const &self, ImageSlice<PixelT> const &other) { return self / other; },
-            py::is_operator());
-    cls.def("__iadd__", [](Image<PixelT> &self, ImageSlice<PixelT> const &other) {
-        self += other;
-        return self;
-    });
-    cls.def("__isub__", [](Image<PixelT> &self, ImageSlice<PixelT> const &other) {
-        self -= other;
-        return self;
-    });
-    cls.def("__imul__", [](Image<PixelT> &self, ImageSlice<PixelT> const &other) {
-        self *= other;
-        return self;
-    });
-    cls.def("__itruediv__", [](Image<PixelT> &self, ImageSlice<PixelT> const &other) {
-        self /= other;
-        return self;
-    });
+                cls.def(
+                        "__add__",
+                        [](Image<PixelT> const &self, ImageSlice<PixelT> const &other) {
+                            return self + other;
+                        },
+                        py::is_operator());
+                cls.def(
+                        "__sub__",
+                        [](Image<PixelT> const &self, ImageSlice<PixelT> const &other) {
+                            return self - other;
+                        },
+                        py::is_operator());
+                cls.def(
+                        "__mul__",
+                        [](Image<PixelT> const &self, ImageSlice<PixelT> const &other) {
+                            return self * other;
+                        },
+                        py::is_operator());
+                cls.def(
+                        "__truediv__",
+                        [](Image<PixelT> const &self, ImageSlice<PixelT> const &other) {
+                            return self / other;
+                        },
+                        py::is_operator());
+                cls.def("__iadd__", [](Image<PixelT> &self, ImageSlice<PixelT> const &other) {
+                    self += other;
+                    return self;
+                });
+                cls.def("__isub__", [](Image<PixelT> &self, ImageSlice<PixelT> const &other) {
+                    self -= other;
+                    return self;
+                });
+                cls.def("__imul__", [](Image<PixelT> &self, ImageSlice<PixelT> const &other) {
+                    self *= other;
+                    return self;
+                });
+                cls.def("__itruediv__", [](Image<PixelT> &self, ImageSlice<PixelT> const &other) {
+                    self /= other;
+                    return self;
+                });
+            });
 }
 
 PYBIND11_MODULE(imageSlice, mod) {
-    py::module::import("lsst.afw.image.image");
+    lsst::utils::python::WrapperCollection wrappers(mod, "lsst.afw.image.imageSlice");
+    wrappers.addSignatureDependency("lsst.afw.image.image");
+    declareImageSlice<float>(wrappers, "F");
+    declareImageSlice<double>(wrappers, "D");
+    wrappers.finish();
+}
 
-    declareImageSlice<float>(mod, "F");
-    declareImageSlice<double>(mod, "D");
-}
-}
-}
-}
-}  // namespace lsst::afw::image::<anonymous>
+}  // namespace
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst

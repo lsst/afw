@@ -19,7 +19,7 @@ from lsst.afw.geom import wcsAlmostEqualOverBBox, \
     SkyWcs, makeSkyWcs, makeCdMatrix, makeWcsPairTransform, \
     makeFlippedWcs, makeModifiedWcs, makeTanSipWcs, \
     getIntermediateWorldCoordsToSky, getPixelToIntermediateWorldCoords
-from lsst.afw.geom.wcsUtils import getCdMatrixFromMetadata, getSipMatrixFromMetadata, makeSimpleWcsMetadata
+from lsst.afw.geom import getCdMatrixFromMetadata, getSipMatrixFromMetadata, makeSimpleWcsMetadata
 from lsst.afw.geom.testUtils import makeSipIwcToPixel, makeSipPixelToIwc
 from lsst.afw.fits import makeLimitedFitsHeader
 from lsst.afw.image import ExposureF

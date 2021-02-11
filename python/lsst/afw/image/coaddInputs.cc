@@ -1,9 +1,11 @@
 /*
- * LSST Data Management System
- * Copyright 2008-2017 AURA/LSST.
+ * This file is part of afw.
  *
- * This product includes software developed by the
- * LSST Project (http://www.lsst.org/).
+ * Developed for the LSST Data Management System.
+ * This product includes software developed by the LSST Project
+ * (https://www.lsst.org).
+ * See the COPYRIGHT file at the top-level directory of this distribution
+ * for details of code ownership.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,12 +17,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the LSST License Statement and
- * the GNU General Public License along with this program.  If not,
- * see <https://www.lsstcorp.org/LegalNotices/>.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #include "pybind11/pybind11.h"
+#include "lsst/utils/python.h"
 
 #include "lsst/afw/table/io/python.h"  // for addPersistableMethods
 #include "lsst/afw/table/Schema.h"
@@ -38,25 +40,30 @@ namespace {
 
 using PyCoaddInputs = py::class_<CoaddInputs, std::shared_ptr<CoaddInputs>, typehandling::Storable>;
 
+void wrapCoaddInputs(lsst::utils::python::WrapperCollection &wrappers) {
+    wrappers.wrapType(PyCoaddInputs(wrappers.module, "CoaddInputs"), [](auto &mod, auto &cls) {
+        /* Constructors */
+        cls.def(py::init<>());
+        cls.def(py::init<table::Schema const &, table::Schema const &>(), "visitSchema"_a, "ccdSchema"_a);
+        cls.def(py::init<table::ExposureCatalog const &, table::ExposureCatalog const &>(), "visits"_a,
+                "ccds"_a);
+
+        table::io::python::addPersistableMethods<CoaddInputs>(cls);
+
+        /* Members */
+        cls.def_readwrite("visits", &CoaddInputs::visits);
+        cls.def_readwrite("ccds", &CoaddInputs::ccds);
+        cls.def("isPersistable", &CoaddInputs::isPersistable);
+    });
+}
 PYBIND11_MODULE(coaddInputs, mod) {
-    /* Module level */
-    py::module::import("lsst.afw.typehandling");
-
-    PyCoaddInputs cls(mod, "CoaddInputs");
-
-    /* Constructors */
-    cls.def(py::init<>());
-    cls.def(py::init<table::Schema const &, table::Schema const &>(), "visitSchema"_a, "ccdSchema"_a);
-    cls.def(py::init<table::ExposureCatalog const &, table::ExposureCatalog const &>(), "visits"_a, "ccds"_a);
-
-    table::io::python::addPersistableMethods<CoaddInputs>(cls);
-
-    /* Members */
-    cls.def_readwrite("visits", &CoaddInputs::visits);
-    cls.def_readwrite("ccds", &CoaddInputs::ccds);
-    cls.def("isPersistable", &CoaddInputs::isPersistable);
+    lsst::utils::python::WrapperCollection wrappers(mod, "lsst.afw.image.coaddInputs");
+    wrappers.addInheritanceDependency("lsst.afw.typehandling");
+    wrapCoaddInputs(wrappers);
+    wrappers.finish();
 }
-}
-}
-}
-}  // namespace lsst::afw::image::<anonymous>
+
+}  // namespace
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst
