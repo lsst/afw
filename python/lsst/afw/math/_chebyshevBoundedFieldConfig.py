@@ -18,17 +18,18 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
+__all__ = []  # import this module only for its side effects
+
+import lsst.pex.config
+from ._math import ChebyshevBoundedField, ChebyshevBoundedFieldControl
 
 
-import lsst.afw.geom
-from lsst.afw.table.io import Persistable
-import lsst.afw.image.pixel  # for SinglePixel, needed by the warping functions
+@lsst.pex.config.wrap(ChebyshevBoundedFieldControl)
+class ChebyshevBoundedFieldConfig(lsst.pex.config.Config):
 
-from ._math import *
-from .detail import *
-from ._background import *
-from ._backgroundList import *
-from ._chebyshevBoundedField import *
-from ._chebyshevBoundedFieldConfig import ChebyshevBoundedFieldConfig
-from ._spatialCell import *
-from ._warper import *
+    def computeSize(self):
+        return self.makeControl().computeSize()
+
+
+ChebyshevBoundedField.Control = ChebyshevBoundedFieldControl
+ChebyshevBoundedField.ConfigClass = ChebyshevBoundedFieldConfig
