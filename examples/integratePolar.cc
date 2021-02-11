@@ -43,7 +43,7 @@ namespace math = lsst::afw::math;
  * @note that we *have* to inherit from binary_function<>
  */
 template <typename IntegrandT>
-class Parab2D : public std::binary_function<IntegrandT, IntegrandT, IntegrandT> {
+class Parab2D {
 public:
     // declare coefficients at instantiation.
     Parab2D(IntegrandT const k, IntegrandT const kr) : _k(k), _kr(kr) {}
@@ -96,7 +96,7 @@ int main() {
 
     // now run it on the 2d function (you *need* to wrap the function in ptr_fun())
     double const parab_volume_integrate_func =
-            math::integrate2d(std::ptr_fun(parabola2d), r1, r2, theta1, theta2);
+            math::integrate2d(parabola2d, r1, r2, theta1, theta2);
 
     // output
     std::cout << "2D integrate: functor = " << parab_volume_integrate
