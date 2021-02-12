@@ -1,3 +1,8 @@
 # -*- python -*-
 from lsst.sconsUtils import scripts
+
+for flag in ("-D_LIBCPP_DISABLE_AVAILABILITY=1", ):
+    env["CFLAGS"].append(flag)
+    env["CXXFLAGS"].append(flag)
+
 scripts.BasicSConscript.lib()
