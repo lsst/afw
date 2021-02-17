@@ -1,9 +1,11 @@
 /*
- * LSST Data Management System
- * Copyright 2008-2017 AURA/LSST.
+ * This file is part of afw.
  *
- * This product includes software developed by the
- * LSST Project (http://www.lsst.org/).
+ * Developed for the LSST Data Management System.
+ * This product includes software developed by the LSST Project
+ * (https://www.lsst.org).
+ * See the COPYRIGHT file at the top-level directory of this distribution
+ * for details of code ownership.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,13 +17,13 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the LSST License Statement and
- * the GNU General Public License along with this program.  If not,
- * see <https://www.lsstcorp.org/LegalNotices/>.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
+#include "lsst/utils/python.h"
 
 #include "lsst/afw/image/ImagePca.h"
 
@@ -36,51 +38,62 @@ namespace image {
 namespace {
 
 template <typename ImageT>
-static void declareImagePca(py::module &mod, std::string const &suffix) {
-    py::class_<ImagePca<ImageT>, std::shared_ptr<ImagePca<ImageT>>> cls(mod, ("ImagePca" + suffix).c_str());
+static void declareImagePca(lsst::utils::python::WrapperCollection &wrappers, std::string const &suffix) {
+    std::string name = "ImagePca" + suffix;
+    wrappers.wrapType(
+            py::class_<ImagePca<ImageT>, std::shared_ptr<ImagePca<ImageT>>>(wrappers.module, name.c_str()),
+            [](auto &mod, auto &cls) {
+                //  py::class_<ImagePca<ImageT>, std::shared_ptr<ImagePca<ImageT>>> cls(mod, ("ImagePca" +
+                //  suffix).c_str());
 
-    cls.def(py::init<bool>(), "constantWeight"_a = true);
+                cls.def(py::init<bool>(), "constantWeight"_a = true);
 
-    cls.def("addImage", &ImagePca<ImageT>::addImage, "img"_a, "flux"_a = 0.0);
-    cls.def("getImageList", &ImagePca<ImageT>::getImageList);
-    cls.def("getDimensions", &ImagePca<ImageT>::getDimensions);
-    cls.def("getMean", &ImagePca<ImageT>::getMean);
-    cls.def("analyze", &ImagePca<ImageT>::analyze);
-    cls.def("updateBadPixels", &ImagePca<ImageT>::updateBadPixels);
-    cls.def("getEigenValues", &ImagePca<ImageT>::getEigenValues);
-    cls.def("getEigenImages", &ImagePca<ImageT>::getEigenImages);
+                cls.def("addImage", &ImagePca<ImageT>::addImage, "img"_a, "flux"_a = 0.0);
+                cls.def("getImageList", &ImagePca<ImageT>::getImageList);
+                cls.def("getDimensions", &ImagePca<ImageT>::getDimensions);
+                cls.def("getMean", &ImagePca<ImageT>::getMean);
+                cls.def("analyze", &ImagePca<ImageT>::analyze);
+                cls.def("updateBadPixels", &ImagePca<ImageT>::updateBadPixels);
+                cls.def("getEigenValues", &ImagePca<ImageT>::getEigenValues);
+                cls.def("getEigenImages", &ImagePca<ImageT>::getEigenImages);
+            });
 }
 
 template <typename Image1T, typename Image2T>
-static void declareInnerProduct(py::module &mod) {
-    mod.def("innerProduct",
-            (double (*)(Image1T const &, Image2T const &, int const))innerProduct<Image1T, Image2T>, "lhs"_a,
-            "rhs"_a, "border"_a = 0);
+static void declareInnerProduct(lsst::utils::python::WrapperCollection &wrappers) {
+    wrappers.wrap([](auto &mod) {
+        mod.def("innerProduct",
+                (double (*)(Image1T const &, Image2T const &, int const))innerProduct<Image1T, Image2T>,
+                "lhs"_a, "rhs"_a, "border"_a = 0);
+    });
 }
 
 }  // namespace
 
 PYBIND11_MODULE(imagePca, mod) {
-    declareImagePca<Image<int>>(mod, "I");
-    declareImagePca<Image<float>>(mod, "F");
-    declareImagePca<Image<double>>(mod, "D");
-    declareImagePca<Image<std::uint16_t>>(mod, "U");
-    declareImagePca<Image<std::uint64_t>>(mod, "L");
-    declareImagePca<MaskedImage<int>>(mod, "MI");
-    declareImagePca<MaskedImage<float>>(mod, "MF");
-    declareImagePca<MaskedImage<double>>(mod, "MD");
-    declareImagePca<MaskedImage<std::uint16_t>>(mod, "MU");
-    declareImagePca<MaskedImage<std::uint64_t>>(mod, "ML");
+    lsst::utils::python::WrapperCollection wrappers(mod, "lsst.afw.image.imagePca");
+    wrappers.addSignatureDependency("lsst.afw.image.image");
+    declareImagePca<Image<int>>(wrappers, "I");
+    declareImagePca<Image<float>>(wrappers, "F");
+    declareImagePca<Image<double>>(wrappers, "D");
+    declareImagePca<Image<std::uint16_t>>(wrappers, "U");
+    declareImagePca<Image<std::uint64_t>>(wrappers, "L");
+    declareImagePca<MaskedImage<int>>(wrappers, "MI");
+    declareImagePca<MaskedImage<float>>(wrappers, "MF");
+    declareImagePca<MaskedImage<double>>(wrappers, "MD");
+    declareImagePca<MaskedImage<std::uint16_t>>(wrappers, "MU");
+    declareImagePca<MaskedImage<std::uint64_t>>(wrappers, "ML");
 
-    declareInnerProduct<Image<int>, Image<int>>(mod);
-    declareInnerProduct<Image<float>, Image<float>>(mod);
-    declareInnerProduct<Image<double>, Image<double>>(mod);
-    declareInnerProduct<Image<std::uint16_t>, Image<std::uint16_t>>(mod);
-    declareInnerProduct<Image<std::uint64_t>, Image<std::uint64_t>>(mod);
+    declareInnerProduct<Image<int>, Image<int>>(wrappers);
+    declareInnerProduct<Image<float>, Image<float>>(wrappers);
+    declareInnerProduct<Image<double>, Image<double>>(wrappers);
+    declareInnerProduct<Image<std::uint16_t>, Image<std::uint16_t>>(wrappers);
+    declareInnerProduct<Image<std::uint64_t>, Image<std::uint64_t>>(wrappers);
 
-    declareInnerProduct<Image<float>, Image<double>>(mod);
-    declareInnerProduct<Image<double>, Image<float>>(mod);
+    declareInnerProduct<Image<float>, Image<double>>(wrappers);
+    declareInnerProduct<Image<double>, Image<float>>(wrappers);
+    wrappers.finish();
 }
-}
-}
-}  // lsst::afw::image
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst

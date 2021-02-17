@@ -1,9 +1,11 @@
 /*
- * LSST Data Management System
- * Copyright 2008-2017 AURA/LSST.
+ * This file is part of afw.
  *
- * This product includes software developed by the
- * LSST Project (http://www.lsst.org/).
+ * Developed for the LSST Data Management System.
+ * This product includes software developed by the LSST Project
+ * (https://www.lsst.org).
+ * See the COPYRIGHT file at the top-level directory of this distribution
+ * for details of code ownership.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,12 +17,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the LSST License Statement and
- * the GNU General Public License along with this program.  If not,
- * see <https://www.lsstcorp.org/LegalNotices/>.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #include "pybind11/pybind11.h"
+#include "lsst/utils/python.h"
 
 #include <memory>
 #include <limits>
@@ -52,72 +54,86 @@ static lsst::geom::Angle const nanAngle(nan);
 
 }  // namespace
 
+void wrapVisitInfo(lsst::utils::python::WrapperCollection &wrappers) {
+    wrappers.wrapType(
+            py::class_<VisitInfo, std::shared_ptr<VisitInfo>, typehandling::Storable>(wrappers.module,
+                                                                                      "VisitInfo"),
+            [](auto &mod, auto &cls) {
+                /* Constructors */
+                cls.def(py::init<table::RecordId, double, double, daf::base::DateTime const &, double,
+                                 lsst::geom::Angle const &, lsst::geom::SpherePoint const &,
+                                 lsst::geom::SpherePoint const &, double, lsst::geom::Angle const &,
+                                 RotType const &, coord::Observatory const &, coord::Weather const &,
+                                 std::string const &>(),
+                        "exposureId"_a = 0, "exposureTime"_a = nan, "darkTime"_a = nan,
+                        "date"_a = daf::base::DateTime(), "ut1"_a = nan, "era"_a = nanAngle,
+                        "boresightRaDec"_a = lsst::geom::SpherePoint(nanAngle, nanAngle),
+                        "boresightAzAlt"_a = lsst::geom::SpherePoint(nanAngle, nanAngle),
+                        "boresightAirmass"_a = nan, "boresightRotAngle"_a = nanAngle,
+                        "rotType"_a = RotType::UNKNOWN,
+                        "observatory"_a = coord::Observatory(nanAngle, nanAngle, nan),
+                        "weather"_a = coord::Weather(nan, nan, nan), "instrumentLabel"_a = "");
+                cls.def(py::init<daf::base::PropertySet const &>(), "metadata"_a);
+                cls.def(py::init<VisitInfo const &>(), "visitInfo"_a);
+
+                table::io::python::addPersistableMethods<VisitInfo>(cls);
+
+                /* Operators */
+                cls.def(
+                        "__eq__", [](VisitInfo const &self, VisitInfo const &other) { return self == other; },
+                        py::is_operator());
+                cls.def(
+                        "__ne__", [](VisitInfo const &self, VisitInfo const &other) { return self != other; },
+                        py::is_operator());
+
+                /* Members */
+                cls.def("getExposureId", &VisitInfo::getExposureId);
+                cls.def("getExposureTime", &VisitInfo::getExposureTime);
+                cls.def("getDarkTime", &VisitInfo::getDarkTime);
+                cls.def("getDate", &VisitInfo::getDate);
+                cls.def("getUt1", &VisitInfo::getUt1);
+                cls.def("getEra", &VisitInfo::getEra);
+                cls.def("getBoresightRaDec", &VisitInfo::getBoresightRaDec);
+                cls.def("getBoresightAzAlt", &VisitInfo::getBoresightAzAlt);
+                cls.def("getBoresightAirmass", &VisitInfo::getBoresightAirmass);
+                cls.def("getBoresightParAngle", &VisitInfo::getBoresightParAngle);
+                cls.def("getBoresightRotAngle", &VisitInfo::getBoresightRotAngle);
+                cls.def("getRotType", &VisitInfo::getRotType);
+                cls.def("getObservatory", &VisitInfo::getObservatory);
+                cls.def("getWeather", &VisitInfo::getWeather);
+                cls.def("isPersistable", &VisitInfo::isPersistable);
+                cls.def("getLocalEra", &VisitInfo::getLocalEra);
+                cls.def("getBoresightHourAngle", &VisitInfo::getBoresightHourAngle);
+                cls.def("getInstrumentLabel", &VisitInfo::getInstrumentLabel);
+
+                utils::python::addOutputOp(cls, "__str__");
+            });
+}
+void wrapRotType(lsst::utils::python::WrapperCollection &wrappers) {
+    wrappers.wrapType(py::enum_<RotType>(wrappers.module, "RotType"), [](auto &mod, auto &enm) {
+        enm.value("UNKNOWN", RotType::UNKNOWN);
+        enm.value("SKY", RotType::SKY);
+        enm.value("HORIZON", RotType::HORIZON);
+        enm.value("MOUNT", RotType::MOUNT);
+        enm.export_values();
+    });
+}
+
 PYBIND11_MODULE(visitInfo, mod) {
-    py::module::import("lsst.daf.base");
-    py::module::import("lsst.geom");
-    py::module::import("lsst.afw.coord.observatory");
-    py::module::import("lsst.afw.coord.weather");
-    py::module::import("lsst.afw.typehandling");
-
-    /* Module level */
-    py::class_<VisitInfo, std::shared_ptr<VisitInfo>, typehandling::Storable> cls(mod, "VisitInfo");
-
-    /* Member types and enums */
-    py::enum_<RotType>(mod, "RotType")
-            .value("UNKNOWN", RotType::UNKNOWN)
-            .value("SKY", RotType::SKY)
-            .value("HORIZON", RotType::HORIZON)
-            .value("MOUNT", RotType::MOUNT)
-            .export_values();
-
-    /* Constructors */
-    cls.def(py::init<table::RecordId, double, double, daf::base::DateTime const &, double,
-                     lsst::geom::Angle const &, lsst::geom::SpherePoint const &,
-                     lsst::geom::SpherePoint const &, double, lsst::geom::Angle const &, RotType const &,
-                     coord::Observatory const &, coord::Weather const &, std::string const &>(),
-            "exposureId"_a = 0, "exposureTime"_a = nan, "darkTime"_a = nan, "date"_a = daf::base::DateTime(),
-            "ut1"_a = nan, "era"_a = nanAngle,
-            "boresightRaDec"_a = lsst::geom::SpherePoint(nanAngle, nanAngle),
-            "boresightAzAlt"_a = lsst::geom::SpherePoint(nanAngle, nanAngle), "boresightAirmass"_a = nan,
-            "boresightRotAngle"_a = nanAngle, "rotType"_a = RotType::UNKNOWN,
-            "observatory"_a = coord::Observatory(nanAngle, nanAngle, nan),
-            "weather"_a = coord::Weather(nan, nan, nan), "instrumentLabel"_a = "");
-    cls.def(py::init<daf::base::PropertySet const &>(), "metadata"_a);
-    cls.def(py::init<VisitInfo const &>(), "visitInfo"_a);
-
-    table::io::python::addPersistableMethods<VisitInfo>(cls);
-
-    /* Operators */
-    cls.def("__eq__", [](VisitInfo const &self, VisitInfo const &other) { return self == other; },
-            py::is_operator());
-    cls.def("__ne__", [](VisitInfo const &self, VisitInfo const &other) { return self != other; },
-            py::is_operator());
-
-    /* Members */
-    cls.def("getExposureId", &VisitInfo::getExposureId);
-    cls.def("getExposureTime", &VisitInfo::getExposureTime);
-    cls.def("getDarkTime", &VisitInfo::getDarkTime);
-    cls.def("getDate", &VisitInfo::getDate);
-    cls.def("getUt1", &VisitInfo::getUt1);
-    cls.def("getEra", &VisitInfo::getEra);
-    cls.def("getBoresightRaDec", &VisitInfo::getBoresightRaDec);
-    cls.def("getBoresightAzAlt", &VisitInfo::getBoresightAzAlt);
-    cls.def("getBoresightAirmass", &VisitInfo::getBoresightAirmass);
-    cls.def("getBoresightParAngle", &VisitInfo::getBoresightParAngle);
-    cls.def("getBoresightRotAngle", &VisitInfo::getBoresightRotAngle);
-    cls.def("getRotType", &VisitInfo::getRotType);
-    cls.def("getObservatory", &VisitInfo::getObservatory);
-    cls.def("getWeather", &VisitInfo::getWeather);
-    cls.def("isPersistable", &VisitInfo::isPersistable);
-    cls.def("getLocalEra", &VisitInfo::getLocalEra);
-    cls.def("getBoresightHourAngle", &VisitInfo::getBoresightHourAngle);
-    cls.def("getInstrumentLabel", &VisitInfo::getInstrumentLabel);
-
-    utils::python::addOutputOp(cls, "__str__");
-
-    /* Free Functions */
-    mod.def("setVisitInfoMetadata", &detail::setVisitInfoMetadata, "metadata"_a, "visitInfo"_a);
-    mod.def("stripVisitInfoKeywords", &detail::stripVisitInfoKeywords, "metadata"_a);
+    lsst::utils::python::WrapperCollection wrappers(mod, "lsst.afw.image.visitInfo");
+    wrappers.addInheritanceDependency("lsst.daf.base");
+    wrappers.addInheritanceDependency("lsst.geom");
+    wrappers.addInheritanceDependency("lsst.afw.coord.observatory");
+    wrappers.addInheritanceDependency("lsst.afw.coord.weather");
+    wrappers.addInheritanceDependency("lsst.afw.typehandling");
+    wrapRotType(wrappers);
+    wrapVisitInfo(wrappers);
+    wrappers.wrap([](auto &mod) {
+        /* Free Functions */
+        mod.def("setVisitInfoMetadata", &detail::setVisitInfoMetadata, "metadata"_a, "visitInfo"_a);
+        mod.def("stripVisitInfoKeywords", &detail::stripVisitInfoKeywords, "metadata"_a);
+    });
+    wrappers.finish();
 }
 }  // namespace image
 }  // namespace afw

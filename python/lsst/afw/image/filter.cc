@@ -1,9 +1,11 @@
 /*
- * LSST Data Management System
- * Copyright 2008-2017 AURA/LSST.
+ * This file is part of afw.
  *
- * This product includes software developed by the
- * LSST Project (http://www.lsst.org/).
+ * Developed for the LSST Data Management System.
+ * This product includes software developed by the LSST Project
+ * (https://www.lsst.org).
+ * See the COPYRIGHT file at the top-level directory of this distribution
+ * for details of code ownership.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,13 +17,13 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the LSST License Statement and
- * the GNU General Public License along with this program.  If not,
- * see <https://www.lsstcorp.org/LegalNotices/>.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
+#include "lsst/utils/python.h"
 
 #include <cmath>
 #include "lsst/daf/base/PropertySet.h"
@@ -40,56 +42,70 @@ using PyFilterProperty = py::class_<FilterProperty, std::shared_ptr<FilterProper
 
 using PyFilter = py::class_<Filter, std::shared_ptr<Filter>, typehandling::Storable>;
 
+void wrapFilterProperty(lsst::utils::python::WrapperCollection &wrappers) {
+    wrappers.wrapType(PyFilterProperty(wrappers.module, "FilterProperty"), [](auto &mod,
+                                                                              auto &clsFilterProperty) {
+        clsFilterProperty.def(py::init<std::string const &, double, double, double, bool>(), "name"_a,
+                              "lambdaEff"_a, "lambdaMin"_a = NAN, "lambdaMax"_a = NAN, "force"_a = false);
+        // note: metadata should be defaulted with "metadata"_a=daf::base::PropertySet()
+        // but that causes an error about copying when the Python extension is imported
+        clsFilterProperty.def(py::init<std::string const &, daf::base::PropertySet const &, bool>(), "name"_a,
+                              "metadata"_a, "force"_a = false);
+        clsFilterProperty.def(
+                "__eq__",
+                [](FilterProperty const &self, FilterProperty const &other) { return self == other; },
+                py::is_operator());
+        clsFilterProperty.def(
+                "__ne__",
+                [](FilterProperty const &self, FilterProperty const &other) { return self != other; },
+                py::is_operator());
+        clsFilterProperty.def("getName", &FilterProperty::getName);
+        clsFilterProperty.def("getLambdaEff", &FilterProperty::getLambdaEff);
+        clsFilterProperty.def("getLambdaMin", &FilterProperty::getLambdaMin);
+        clsFilterProperty.def("getLambdaMax", &FilterProperty::getLambdaMax);
+        clsFilterProperty.def_static("reset", &FilterProperty::reset);
+        clsFilterProperty.def_static("lookup", &FilterProperty::lookup, "name"_a);
+    });
+}
+void wrapFilter(lsst::utils::python::WrapperCollection &wrappers) {
+    wrappers.wrapType(PyFilter(wrappers.module, "Filter"), [](auto &mod, auto &clsFilter) {
+        clsFilter.def(py::init<std::string const &, bool const>(), "name"_a, "force"_a = false);
+        clsFilter.def(py::init<int>(), "id"_a = Filter::UNKNOWN);
+        clsFilter.def(py::init<std::shared_ptr<daf::base::PropertySet const>, bool const>(), "metadata"_a,
+                      "force"_a = false);
+        clsFilter.def(
+                "__eq__", [](Filter const &self, Filter const &other) { return self == other; },
+                py::is_operator());
+        clsFilter.def(
+                "__ne__", [](Filter const &self, Filter const &other) { return self != other; },
+                py::is_operator());
+        clsFilter.def_readonly_static("AUTO", &Filter::AUTO);
+        clsFilter.def_readonly_static("UNKNOWN", &Filter::UNKNOWN);
+        clsFilter.def("getId", &Filter::getId);
+        clsFilter.def("getName", &Filter::getName);
+        clsFilter.def("getCanonicalName", &Filter::getCanonicalName);
+        clsFilter.def("getAliases", &Filter::getAliases);
+        clsFilter.def("getFilterProperty", &Filter::getFilterProperty);
+        clsFilter.def_static("reset", &Filter::reset);
+        clsFilter.def_static("define", &Filter::define, "filterProperty"_a, "id"_a = Filter::AUTO,
+                             "force"_a = false);
+        clsFilter.def_static("defineAlias", &Filter::defineAlias, "oldName"_a, "newName"_a,
+                             "force"_a = false);
+        clsFilter.def_static("getNames", &Filter::getNames);
+    });
+}
+
 PYBIND11_MODULE(filter, mod) {
-    py::module::import("lsst.daf.base");
-    py::module::import("lsst.afw.typehandling");
-
-    mod.def("stripFilterKeywords", &detail::stripFilterKeywords, "metadata"_a);
-
-    PyFilterProperty clsFilterProperty(mod, "FilterProperty");
-    clsFilterProperty.def(py::init<std::string const &, double, double, double, bool>(),
-                          "name"_a, "lambdaEff"_a, "lambdaMin"_a = NAN, "lambdaMax"_a = NAN,
-                          "force"_a = false);
-    // note: metadata should be defaulted with "metadata"_a=daf::base::PropertySet()
-    // but that causes an error about copying when the Python extension is imported
-    clsFilterProperty.def(py::init<std::string const &, daf::base::PropertySet const &, bool>(), "name"_a,
-                          "metadata"_a, "force"_a = false);
-    clsFilterProperty.def(
-            "__eq__", [](FilterProperty const &self, FilterProperty const &other) { return self == other; },
-            py::is_operator());
-    clsFilterProperty.def(
-            "__ne__", [](FilterProperty const &self, FilterProperty const &other) { return self != other; },
-            py::is_operator());
-    clsFilterProperty.def("getName", &FilterProperty::getName);
-    clsFilterProperty.def("getLambdaEff", &FilterProperty::getLambdaEff);
-    clsFilterProperty.def("getLambdaMin", &FilterProperty::getLambdaMin);
-    clsFilterProperty.def("getLambdaMax", &FilterProperty::getLambdaMax);
-    clsFilterProperty.def_static("reset", &FilterProperty::reset);
-    clsFilterProperty.def_static("lookup", &FilterProperty::lookup, "name"_a);
-
-    PyFilter clsFilter(mod, "Filter");
-    clsFilter.def(py::init<std::string const &, bool const>(), "name"_a, "force"_a = false);
-    clsFilter.def(py::init<int>(), "id"_a = Filter::UNKNOWN);
-    clsFilter.def(py::init<std::shared_ptr<daf::base::PropertySet const>, bool const>(), "metadata"_a,
-                  "force"_a = false);
-    clsFilter.def("__eq__", [](Filter const &self, Filter const &other) { return self == other; },
-                  py::is_operator());
-    clsFilter.def("__ne__", [](Filter const &self, Filter const &other) { return self != other; },
-                  py::is_operator());
-    clsFilter.def_readonly_static("AUTO", &Filter::AUTO);
-    clsFilter.def_readonly_static("UNKNOWN", &Filter::UNKNOWN);
-    clsFilter.def("getId", &Filter::getId);
-    clsFilter.def("getName", &Filter::getName);
-    clsFilter.def("getCanonicalName", &Filter::getCanonicalName);
-    clsFilter.def("getAliases", &Filter::getAliases);
-    clsFilter.def("getFilterProperty", &Filter::getFilterProperty);
-    clsFilter.def_static("reset", &Filter::reset);
-    clsFilter.def_static("define", &Filter::define, "filterProperty"_a, "id"_a = Filter::AUTO,
-                         "force"_a = false);
-    clsFilter.def_static("defineAlias", &Filter::defineAlias, "oldName"_a, "newName"_a, "force"_a = false);
-    clsFilter.def_static("getNames", &Filter::getNames);
+    lsst::utils::python::WrapperCollection wrappers(mod, "lsst.afw.image.filter");
+    wrappers.addSignatureDependency("lsst.daf.base");
+    wrappers.addInheritanceDependency("lsst.afw.typehandling");
+    wrapFilterProperty(wrappers);
+    wrapFilter(wrappers);
+    wrappers.wrap(
+            [](auto &mod) { mod.def("stripFilterKeywords", &detail::stripFilterKeywords, "metadata"_a); });
+    wrappers.finish();
 }
-}
-}
-}
-}  // namespace lsst::afw::image::<anonymous>
+}  // namespace
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst

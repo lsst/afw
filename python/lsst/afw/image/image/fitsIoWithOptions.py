@@ -1,9 +1,10 @@
+# This file is part of afw.
 #
-# LSST Data Management System
-# Copyright 2018 LSST/AURA.
-#
-# This product includes software developed by the
-# LSST Project (http://www.lsst.org/).
+# Developed for the LSST Data Management System.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org).
+# See the COPYRIGHT file at the top-level directory of this distribution
+# for details of code ownership.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,17 +16,16 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
-# You should have received a copy of the LSST License Statement and
-# the GNU General Public License along with this program.  If not,
-# see <http://www.lsstcorp.org/LegalNotices/>.
-#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 __all__ = ["imageReadFitsWithOptions",
            "imageWriteFitsWithOptions", "exposureWriteFitsWithOptions"]
 
 import lsst.geom
 from lsst.log import Log
 from lsst.afw.fits import ImageWriteOptions
-from . import image
+from .image import ImageOrigin
 
 
 # This must be added to a class as a *classmethod*, for example:
@@ -67,13 +67,13 @@ def imageReadFitsWithOptions(cls, source, options):
         width = options.getInt("width")
         height = options.getInt("height")
         bbox = lsst.geom.Box2I(lsst.geom.Point2I(llcX, llcY), lsst.geom.Extent2I(width, height))
-    origin = image.PARENT
+    origin = ImageOrigin.PARENT
     if options.exists("imageOrigin"):
         originStr = options.getString("imageOrigin")
         if (originStr == "LOCAL"):
-            origin = image.LOCAL
+            origin = ImageOrigin.LOCAL
         elif (originStr == "PARENT"):
-            origin = image.PARENT
+            origin = ImageOrigin.PARENT
         else:
             raise RuntimeError("Unknown ImageOrigin type {}".format(originStr))
 

@@ -21,6 +21,7 @@
  */
 
 #include "pybind11/pybind11.h"
+#include "lsst/utils/python.h"
 
 #include <cstdint>
 #include <string>
@@ -48,24 +49,29 @@ namespace {
 @param[in] name  Name of Python class, e.g. "SinglePixelI" if PixelT is `int`.
 */
 template <typename PixelT>
-void declareSinglePixel(py::module& mod, std::string const& name) {
-    mod.def("makeSinglePixel", &makeSinglePixel<PixelT, MaskPixel, VariancePixel>, "x"_a, "m"_a, "v"_a);
-
-    py::class_<SinglePixel<PixelT, MaskPixel, VariancePixel>> cls(mod, name.c_str());
-
-    cls.def(py::init<PixelT, MaskPixel, VariancePixel>(), "image"_a, "mask"_a = 0, "variance"_a = 0);
+void declareSinglePixel(lsst::utils::python::WrapperCollection &wrappers, std::string const &name) {
+    wrappers.wrapType(
+            py::class_<SinglePixel<PixelT, MaskPixel, VariancePixel>>(wrappers.module, name.c_str()),
+            [](auto &mod, auto &cls) {
+                mod.def("makeSinglePixel", &makeSinglePixel<PixelT, MaskPixel, VariancePixel>, "x"_a, "m"_a,
+                        "v"_a);
+                cls.def(py::init<PixelT, MaskPixel, VariancePixel>(), "image"_a, "mask"_a = 0,
+                        "variance"_a = 0);
+            });
 }
 
-}  // anonymous
+}  // namespace
 
 PYBIND11_MODULE(pixel, mod) {
-    declareSinglePixel<float>(mod, "SinglePixelF");
-    declareSinglePixel<double>(mod, "SinglePixelD");
-    declareSinglePixel<int>(mod, "SinglePixelI");
-    declareSinglePixel<std::uint16_t>(mod, "SinglePixelU");
-    declareSinglePixel<std::uint64_t>(mod, "SinglePixelL");
+    lsst::utils::python::WrapperCollection wrappers(mod, "lsst.afw.image.pixel");
+    declareSinglePixel<float>(wrappers, "SinglePixelF");
+    declareSinglePixel<double>(wrappers, "SinglePixelD");
+    declareSinglePixel<int>(wrappers, "SinglePixelI");
+    declareSinglePixel<std::uint16_t>(wrappers, "SinglePixelU");
+    declareSinglePixel<std::uint64_t>(wrappers, "SinglePixelL");
+    wrappers.finish();
 }
-}
-}
-}
-}  // namespace lsst::afw::image::pixel
+}  // namespace pixel
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst

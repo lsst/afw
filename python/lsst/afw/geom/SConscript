@@ -1,16 +1,3 @@
 # -*- python -*-
 from lsst.sconsUtils import scripts
-scripts.BasicSConscript.pybind11(
-    [
-        'detail/frameSetUtils',
-        'wcsUtils/wcsUtils',
-        'sipApproximation',
-        'span',
-        'spanSet',
-        'endpoint',
-        'transform/transform',
-        'transformFactory',
-        'skyWcs/skyWcs',
-    ],
-    addUnderscore=False
-)
+scripts.BasicSConscript.python(['_geom'])

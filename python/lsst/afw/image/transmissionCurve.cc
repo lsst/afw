@@ -1,9 +1,11 @@
 /*
- * LSST Data Management System
- * Copyright 2008-2017 AURA/LSST.
+ * This file is part of afw.
  *
- * This product includes software developed by the
- * LSST Project (http://www.lsst.org/).
+ * Developed for the LSST Data Management System.
+ * This product includes software developed by the LSST Project
+ * (https://www.lsst.org).
+ * See the COPYRIGHT file at the top-level directory of this distribution
+ * for details of code ownership.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,13 +17,13 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the LSST License Statement and
- * the GNU General Public License along with this program.  If not,
- * see <https://www.lsstcorp.org/LegalNotices/>.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
+#include "lsst/utils/python.h"
 
 #include <memory>
 
@@ -42,54 +44,43 @@ namespace {
 using PyTransmissionCurve =
         py::class_<TransmissionCurve, std::shared_ptr<TransmissionCurve>, typehandling::Storable>;
 
-PyTransmissionCurve declare(py::module & mod) {
-    return PyTransmissionCurve(mod, "TransmissionCurve");
-}
+void wrapTransmissionCurve(lsst::utils::python::WrapperCollection &wrappers) {
+    wrappers.wrapType(PyTransmissionCurve(wrappers.module, "TransmissionCurve"), [](auto &mod, auto &cls) {
+        table::io::python::addPersistableMethods(cls);
 
-void define(PyTransmissionCurve & cls) {
-    table::io::python::addPersistableMethods(cls);
-
-    cls.def_static("makeIdentity", &TransmissionCurve::makeIdentity);
-    cls.def_static("makeSpatiallyConstant", &TransmissionCurve::makeSpatiallyConstant,
-                   "throughput"_a, "wavelengths"_a,
-                   "throughputAtMin"_a=0.0, "throughputAtMax"_a=0.0);
-    cls.def_static("makeRadial", &TransmissionCurve::makeRadial,
-                   "throughput"_a, "wavelengths"_a, "radii"_a,
-                   "throughputAtMin"_a=0.0, "throughputAtMax"_a=0.0);
-    cls.def("__mul__", &TransmissionCurve::multipliedBy, py::is_operator());
-    cls.def("multipliedBy", &TransmissionCurve::multipliedBy);
-    cls.def("transformedBy", &TransmissionCurve::transformedBy, "transform"_a);
-    cls.def("getWavelengthBounds", &TransmissionCurve::getWavelengthBounds);
-    cls.def("getThroughputAtBounds", &TransmissionCurve::getThroughputAtBounds);
-    cls.def(
-        "sampleAt",
-        (void (TransmissionCurve::*)(
-            lsst::geom::Point2D const &,
-            ndarray::Array<double const,1,1> const &,
-            ndarray::Array<double,1,1> const &
-        ) const) &TransmissionCurve::sampleAt,
-        "position"_a, "wavelengths"_a, "out"_a
-    );
-    cls.def(
-        "sampleAt",
-        (ndarray::Array<double,1,1> (TransmissionCurve::*)(
-            lsst::geom::Point2D const &,
-            ndarray::Array<double const,1,1> const &
-        ) const) &TransmissionCurve::sampleAt,
-        "position"_a, "wavelengths"_a
-    );
+        cls.def_static("makeIdentity", &TransmissionCurve::makeIdentity);
+        cls.def_static("makeSpatiallyConstant", &TransmissionCurve::makeSpatiallyConstant, "throughput"_a,
+                       "wavelengths"_a, "throughputAtMin"_a = 0.0, "throughputAtMax"_a = 0.0);
+        cls.def_static("makeRadial", &TransmissionCurve::makeRadial, "throughput"_a, "wavelengths"_a,
+                       "radii"_a, "throughputAtMin"_a = 0.0, "throughputAtMax"_a = 0.0);
+        cls.def("__mul__", &TransmissionCurve::multipliedBy, py::is_operator());
+        cls.def("multipliedBy", &TransmissionCurve::multipliedBy);
+        cls.def("transformedBy", &TransmissionCurve::transformedBy, "transform"_a);
+        cls.def("getWavelengthBounds", &TransmissionCurve::getWavelengthBounds);
+        cls.def("getThroughputAtBounds", &TransmissionCurve::getThroughputAtBounds);
+        cls.def("sampleAt",
+                (void (TransmissionCurve::*)(lsst::geom::Point2D const &,
+                                             ndarray::Array<double const, 1, 1> const &,
+                                             ndarray::Array<double, 1, 1> const &) const) &
+                        TransmissionCurve::sampleAt,
+                "position"_a, "wavelengths"_a, "out"_a);
+        cls.def("sampleAt",
+                (ndarray::Array<double, 1, 1>(TransmissionCurve::*)(
+                        lsst::geom::Point2D const &, ndarray::Array<double const, 1, 1> const &) const) &
+                        TransmissionCurve::sampleAt,
+                "position"_a, "wavelengths"_a);
+    });
 }
 
 PYBIND11_MODULE(transmissionCurve, mod) {
-    // import inheritance dependencies
-    py::module::import("lsst.afw.typehandling");
-    // then declare classes
-    auto cls = declare(mod);
-    // then import dependencies used in method signatures
-    py::module::import("lsst.afw.geom");
-    // and now we can safely define methods and other attributes
-    define(cls);
+    lsst::utils::python::WrapperCollection wrappers(mod, "lsst.afw.image.transmissionCurve");
+    wrappers.addInheritanceDependency("lsst.afw.typehandling");
+    wrappers.addSignatureDependency("lsst.afw.geom");
+    wrapTransmissionCurve(wrappers);
+    wrappers.finish();
 }
 
-}}}}  // namespace lsst::afw::image::<anonymous>
-
+}  // namespace
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst

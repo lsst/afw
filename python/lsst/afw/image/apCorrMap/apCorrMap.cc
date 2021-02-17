@@ -22,6 +22,7 @@
 
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
+#include "lsst/utils/python.h"
 
 #include <string>
 #include <vector>
@@ -29,7 +30,6 @@
 #include "lsst/afw/table/io/python.h"  // for addPersistableMethods
 #include "lsst/afw/typehandling/Storable.h"
 #include "lsst/afw/image/ApCorrMap.h"
-#include "lsst/afw/table/io/Persistable.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -41,36 +41,41 @@ namespace {
 
 using PyApCorrMap = py::class_<ApCorrMap, std::shared_ptr<ApCorrMap>, typehandling::Storable>;
 
+void wrapApCorrMap(lsst::utils::python::WrapperCollection &wrappers) {
+    wrappers.wrapType(PyApCorrMap(wrappers.module, "ApCorrMap"), [](auto &mod, auto &cls) {
+        cls.def(py::init<>());
+
+        table::io::python::addPersistableMethods<ApCorrMap>(cls);
+
+        /* Operators */
+        cls.def("__imul__", &ApCorrMap::operator*=);
+        cls.def("__itruediv__", &ApCorrMap::operator/=);
+
+        /* Members */
+        cls.def("get", &ApCorrMap::get);
+        cls.def("set", &ApCorrMap::set);
+        cls.def(
+                "items", [](ApCorrMap const &self) { return py::make_iterator(self.begin(), self.end()); },
+                py::keep_alive<0, 1>());
+        // values, keys, and __iter__ defined in apCorrMap.py
+
+        cls.def("__len__", &ApCorrMap::size);
+        cls.def("__getitem__", &ApCorrMap::operator[]);
+        cls.def("__setitem__", &ApCorrMap::set);
+        cls.def("__contains__",
+                [](ApCorrMap const &self, std::string name) { return static_cast<bool>(self.get(name)); });
+    });
+}
+
 PYBIND11_MODULE(apCorrMap, mod) {
-    py::module::import("lsst.afw.table.io");
-    py::module::import("lsst.afw.typehandling");
-
+    lsst::utils::python::WrapperCollection wrappers(mod, "lsst.afw.image.apCorrMap");
+    wrappers.addInheritanceDependency("lsst.afw.table.io");
+    wrappers.addInheritanceDependency("lsst.afw.typehandling");
+    wrapApCorrMap(wrappers);
+    wrappers.finish();
     /* Declare CRTP base class. */
-    PyApCorrMap cls(mod, "ApCorrMap");
-
-    /* Constructors */
-    cls.def(py::init<>());
-
-    table::io::python::addPersistableMethods<ApCorrMap>(cls);
-
-    /* Operators */
-    cls.def("__imul__", &ApCorrMap::operator*=);
-    cls.def("__itruediv__", &ApCorrMap::operator/=);
-
-    /* Members */
-    cls.def("get", &ApCorrMap::get);
-    cls.def("set", &ApCorrMap::set);
-    cls.def("items", [](ApCorrMap const& self) { return py::make_iterator(self.begin(), self.end()); },
-            py::keep_alive<0, 1>());
-    // values, keys, and __iter__ defined in apCorrMap.py
-
-    cls.def("__len__", &ApCorrMap::size);
-    cls.def("__getitem__", &ApCorrMap::operator[]);
-    cls.def("__setitem__", &ApCorrMap::set);
-    cls.def("__contains__",
-            [](ApCorrMap const& self, std::string name) { return static_cast<bool>(self.get(name)); });
 }
-}
-}
-}
-}  // namespace lsst::afw::geom::<anonymous>
+}  // namespace
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst

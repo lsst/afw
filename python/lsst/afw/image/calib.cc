@@ -1,9 +1,11 @@
 /*
- * LSST Data Management System
- * Copyright 2008-2017 AURA/LSST.
+ * This file is part of afw.
  *
- * This product includes software developed by the
- * LSST Project (http://www.lsst.org/).
+ * Developed for the LSST Data Management System.
+ * This product includes software developed by the LSST Project
+ * (https://www.lsst.org).
+ * See the COPYRIGHT file at the top-level directory of this distribution
+ * for details of code ownership.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,21 +17,18 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the LSST License Statement and
- * the GNU General Public License along with this program.  If not,
- * see <https://www.lsstcorp.org/LegalNotices/>.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #include "pybind11/pybind11.h"
-#include "pybind11/stl.h"
+#include "lsst/utils/python.h"
 
 #include <memory>
 #include <vector>
 
 #include "ndarray/pybind11.h"
 
-#include "lsst/daf/base/PropertySet.h"
-#include "lsst/afw/table/io/python.h"  // for addPersistableMethods
 #include "lsst/afw/image/Calib.h"
 
 namespace py = pybind11;
@@ -41,25 +40,39 @@ namespace image {
 namespace {
 
 template <typename T>
-void declareVectorOperations(py::module& mod) {
-    typedef ndarray::Array<T, 1> Array;
-    typedef ndarray::Array<T const, 1> ConstArray;
-    mod.def("abMagFromFlux", (Array(*)(ConstArray const&)) & abMagFromFlux<T>, "flux"_a);
-    mod.def("abMagErrFromFluxErr", (Array(*)(ConstArray const&, ConstArray const&)) & abMagErrFromFluxErr<T>,
-            "fluxErr"_a, "flux"_a);
-    mod.def("fluxFromABMag", (Array(*)(ConstArray const&)) & fluxFromABMag<T>, "mag"_a);
-    mod.def("fluxErrFromABMagErr", (Array(*)(ConstArray const&, ConstArray const&)) & fluxErrFromABMagErr<T>,
-            "magErr"_a, "mag"_a);
+void wrapVectorOperations(lsst::utils::python::WrapperCollection &wrappers) {
+    wrappers.wrap([](auto &mod) {
+        typedef ndarray::Array<T, 1> Array;
+        typedef ndarray::Array<T const, 1> ConstArray;
+        mod.def("abMagFromFlux", (Array(*)(ConstArray const &)) & abMagFromFlux<T>, "flux"_a);
+        mod.def("abMagErrFromFluxErr",
+                (Array(*)(ConstArray const &, ConstArray const &)) & abMagErrFromFluxErr<T>, "fluxErr"_a,
+                "flux"_a);
+        mod.def("fluxFromABMag", (Array(*)(ConstArray const &)) & fluxFromABMag<T>, "mag"_a);
+        mod.def("fluxErrFromABMagErr",
+                (Array(*)(ConstArray const &, ConstArray const &)) & fluxErrFromABMagErr<T>, "magErr"_a,
+                "mag"_a);
+    });
+}
+
+void wrapCalibMod(lsst::utils::python::WrapperCollection &wrappers) {
+    wrappers.wrap([](auto &mod) {
+        mod.def("abMagFromFlux", (double (*)(double)) & abMagFromFlux, "flux"_a);
+        mod.def("abMagErrFromFluxErr", (double (*)(double, double)) & abMagErrFromFluxErr, "fluxErr"_a,
+                "flux"_a);
+        mod.def("fluxFromABMag", (double (*)(double)) & fluxFromABMag, "mag"_a);
+        mod.def("fluxErrFromABMagErr", (double (*)(double, double)) & fluxErrFromABMagErr, "magErr"_a,
+                "mag"_a);
+    });
 }
 
 PYBIND11_MODULE(calib, mod) {
     /* Module level */
-    mod.def("abMagFromFlux", (double (*)(double)) & abMagFromFlux, "flux"_a);
-    mod.def("abMagErrFromFluxErr", (double (*)(double, double)) & abMagErrFromFluxErr, "fluxErr"_a, "flux"_a);
-    mod.def("fluxFromABMag", (double (*)(double)) & fluxFromABMag, "mag"_a);
-    mod.def("fluxErrFromABMagErr", (double (*)(double, double)) & fluxErrFromABMagErr, "magErr"_a, "mag"_a);
-    declareVectorOperations<float>(mod);
-    declareVectorOperations<double>(mod);
+    lsst::utils::python::WrapperCollection wrappers(mod, "lsst.afw.image.calib");
+    wrapCalibMod(wrappers);
+    wrapVectorOperations<float>(wrappers);
+    wrapVectorOperations<double>(wrappers);
+    wrappers.finish();
 }
 }  // namespace
 }  // namespace image
