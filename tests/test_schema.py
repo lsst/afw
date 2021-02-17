@@ -65,6 +65,7 @@ class SchemaTestCase(unittest.TestCase):
         def testKey(name, key):
             col = schema.find(name)
             self.assertEqual(col.key, key)
+            self.assertEqual(hash(col.key), hash(key))
             self.assertEqual(col.field.getName(), name)
 
         schema = lsst.afw.table.Schema()
@@ -81,8 +82,10 @@ class SchemaTestCase(unittest.TestCase):
 
         # Extra tests for special types
         self.assertEqual(ab_k.getRa(), schema["a_b_ra"].asKey())
+        self.assertEqual(hash(ab_k.getRa()), hash(schema["a_b_ra"].asKey()))
         abpx_si = schema.find("a_b_p_x")
         self.assertEqual(abp_k.getX(), abpx_si.key)
+        self.assertEqual(hash(abp_k.getX()), hash(abpx_si.key))
         self.assertEqual(abpx_si.field.getName(), "a_b_p_x")
         self.assertEqual(abpx_si.field.getDoc(), "point")
         self.assertEqual(abp_k.getX(), schema["a_b_p_x"].asKey())

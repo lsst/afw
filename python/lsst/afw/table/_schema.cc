@@ -357,6 +357,7 @@ void declareSchemaType(WrapperCollection &wrappers) {
                 py::is_operator());
         cls.def("__ne__", [](Key<T> const &self, Key<T> const &other) -> bool { return self != other; },
                 py::is_operator());
+        utils::python::addHash(cls);
         cls.def("isValid", &Key<T>::isValid);
         cls.def("getOffset", &Key<T>::getOffset);
         utils::python::addOutputOp(cls, "__str__");

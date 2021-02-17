@@ -89,6 +89,12 @@ class FilterLabelTestCase(lsst.utils.tests.TestCase):
         self.assertNotEqual(FilterLabel(band=self.band),
                             FilterLabel(band=self.band, physical=self.physicalName))
 
+    def testEqualsHash(self):
+        self.assertEqual(hash(FilterLabel(band=self.band)),
+                         hash(FilterLabel(band=self.band)))
+        self.assertEqual(hash(FilterLabel(physical=self.physicalName)),
+                         hash(FilterLabel(physical=self.physicalName)))
+
     def testRepr(self):
         for label in self._labelVariants():
             try:
