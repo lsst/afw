@@ -103,6 +103,7 @@ void wrapFilterLabel(lsst::utils::python::WrapperCollection &wrappers) {
             _DELEGATE_EXCEPTION(label.getPhysicalLabel(), pex::exceptions::LogicError, std::runtime_error);
         });
         cls.def("__eq__", &FilterLabel::operator==, py::is_operator());
+        utils::python::addHash(cls);
         cls.def("__ne__", &FilterLabel::operator!=, py::is_operator());
 
         cls.def("__repr__", &FilterLabel::toString);
