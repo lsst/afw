@@ -493,6 +493,11 @@ lsst::geom::Point2I ExposureFitsReader::readXY0(lsst::geom::Box2I const& bbox, I
     return _maskedImageReader.readXY0(bbox, origin);
 }
 
+int ExposureFitsReader::readSerializationVersion() {
+    _ensureReaders();
+    return _metadataReader->version;
+}
+
 std::string ExposureFitsReader::readImageDType() const { return _maskedImageReader.readImageDType(); }
 
 std::string ExposureFitsReader::readMaskDType() const { return _maskedImageReader.readMaskDType(); }
