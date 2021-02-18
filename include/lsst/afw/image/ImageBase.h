@@ -472,7 +472,14 @@ void swap(ImageBase<PixelT>& a, ImageBase<PixelT>& b);
 
 template <typename PixelT>
 typename ImageBase<PixelT>::Array ImageBase<PixelT>::getArray() {
-    int rowStride = reinterpret_cast<PixelT*>(row_begin(1)) - reinterpret_cast<PixelT*>(row_begin(0));
+    int rowStride;
+    if (getHeight() == 1) {
+        rowStride = 1;
+    } else if (getHeight() == 0) {
+        rowStride = 0;
+    } else {
+        rowStride = reinterpret_cast<PixelT*>(row_begin(1)) - reinterpret_cast<PixelT*>(row_begin(0));
+    }
     return ndarray::external(reinterpret_cast<PixelT*>(row_begin(0)),
                              ndarray::makeVector(getHeight(), getWidth()), ndarray::makeVector(rowStride, 1),
                              this->_manager);
@@ -480,7 +487,14 @@ typename ImageBase<PixelT>::Array ImageBase<PixelT>::getArray() {
 
 template <typename PixelT>
 typename ImageBase<PixelT>::ConstArray ImageBase<PixelT>::getArray() const {
-    int rowStride = reinterpret_cast<PixelT*>(row_begin(1)) - reinterpret_cast<PixelT*>(row_begin(0));
+    int rowStride;
+    if (getHeight() == 1) {
+        rowStride = 1;
+    } else if (getHeight() == 0) {
+        rowStride = 0;
+    } else {
+        rowStride = reinterpret_cast<PixelT*>(row_begin(1)) - reinterpret_cast<PixelT*>(row_begin(0));
+    }
     return ndarray::external(reinterpret_cast<PixelT*>(row_begin(0)),
                              ndarray::makeVector(getHeight(), getWidth()), ndarray::makeVector(rowStride, 1),
                              this->_manager);
