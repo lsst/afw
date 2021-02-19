@@ -33,6 +33,7 @@
 #pragma clang diagnostic pop
 #include "boost/regex.hpp"
 #include "boost/filesystem/path.hpp"
+#include "boost/format.hpp"
 #include "lsst/log/Log.h"
 #include "lsst/pex/exceptions.h"
 
@@ -306,6 +307,11 @@ template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>& MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::
 operator*=(MaskedImage const& rhs) {
     // Must do variance before we modify the image values
+    if (_image->getDimensions() != rhs._image->getDimensions()) {
+        throw LSST_EXCEPT(pexExcept::LengthError,
+                          boost::str(boost::format("Images are of different size, %dx%d v %dx%d") %
+                                     _image->getWidth() % _image->getHeight() % rhs._image->getWidth() % rhs._image->getHeight()));
+    }
     transform_pixels(_image->_getRawView(),         // lhs
                      rhs._image->_getRawView(),     // rhs,
                      _variance->_getRawView(),      // Var(lhs),
@@ -322,6 +328,11 @@ template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::scaledMultiplies(double const c,
                                                                             MaskedImage const& rhs) {
     // Must do variance before we modify the image values
+    if (_image->getDimensions() != rhs._image->getDimensions()) {
+        throw LSST_EXCEPT(pexExcept::LengthError,
+                          boost::str(boost::format("Images are of different size, %dx%d v %dx%d") %
+                                     _image->getWidth() % _image->getHeight() % rhs._image->getWidth() % rhs._image->getHeight()));
+    }
     transform_pixels(_image->_getRawView(),         // lhs
                      rhs._image->_getRawView(),     // rhs,
                      _variance->_getRawView(),      // Var(lhs),
@@ -367,6 +378,11 @@ template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>& MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::
 operator/=(MaskedImage const& rhs) {
     // Must do variance before we modify the image values
+    if (_image->getDimensions() != rhs._image->getDimensions()) {
+        throw LSST_EXCEPT(pexExcept::LengthError,
+                          boost::str(boost::format("Images are of different size, %dx%d v %dx%d") %
+                                     _image->getWidth() % _image->getHeight() % rhs._image->getWidth() % rhs._image->getHeight()));
+    }
     transform_pixels(_image->_getRawView(),         // lhs
                      rhs._image->_getRawView(),     // rhs,
                      _variance->_getRawView(),      // Var(lhs),
@@ -383,6 +399,11 @@ template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::scaledDivides(double const c,
                                                                          MaskedImage const& rhs) {
     // Must do variance before we modify the image values
+    if (_image->getDimensions() != rhs._image->getDimensions()) {
+        throw LSST_EXCEPT(pexExcept::LengthError,
+                          str(boost::format("Images are of different size, %dx%d v %dx%d") %
+                              _image->getWidth() % _image->getHeight() % rhs._image->getWidth() % rhs._image->getHeight()));
+    }
     transform_pixels(_image->_getRawView(),         // lhs
                      rhs._image->_getRawView(),     // rhs,
                      _variance->_getRawView(),      // Var(lhs),
