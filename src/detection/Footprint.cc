@@ -375,7 +375,7 @@ std::vector<lsst::geom::Box2I> footprintToBBoxList(Footprint const& footprint) {
     int y0 = 0;  // the first row with non-zero pixels in it
     while (y0 < height) {
         lsst::geom::Box2I bbox;  // our next BBox
-        for (int y = y0; y != height; ++y) {
+        for (int y = y0; y < height; ++y) {
             // Look for a set pixel in this row
             image::Image<PixelT>::x_iterator begin = idImage->row_begin(y), end = idImage->row_end(y);
             image::Image<PixelT>::x_iterator first = std::find(begin, end, 1);
@@ -384,6 +384,7 @@ std::vector<lsst::geom::Box2I> footprintToBBoxList(Footprint const& footprint) {
                 image::Image<PixelT>::x_iterator last = std::find(first, end, 0) - 1;
                 int const x0 = first - begin;
                 int const x1 = last - begin;
+                int const x_size = 1 + x1 - x0;
 
                 std::fill(first, last + 1, 0);  // clear pixels; we don't want to see them again
 
@@ -391,11 +392,12 @@ std::vector<lsst::geom::Box2I> footprintToBBoxList(Footprint const& footprint) {
                 bbox.include(lsst::geom::Point2I(x1, y));  // the LRC; initial guess for URC
 
                 // we found at least one pixel so extend the BBox upwards
-                for (++y; y != height; ++y) {
-                    if (std::find(idImage->at(x0, y), idImage->at(x1 + 1, y), 0) != idImage->at(x1 + 1, y)) {
+                for (++y; y < height; ++y) {
+                    if (std::find(idImage->at(x0, y), idImage->at(x0, y) + x_size, 0) !=
+                        idImage->at(x0, y) + x_size) {
                         break;  // some pixels weren't set, so the BBox stops here, (actually in previous row)
                     }
-                    std::fill(idImage->at(x0, y), idImage->at(x1 + 1, y), 0);
+                    std::fill(idImage->at(x0, y), idImage->at(x0, y) + x_size, 0);
 
                     bbox.include(lsst::geom::Point2I(x1, y));  // the new URC
                 }
