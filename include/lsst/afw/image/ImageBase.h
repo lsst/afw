@@ -364,7 +364,7 @@ public:
     //
     /** Return an STL compliant iterator to the start of the %image
      *
-     * Note that this isn't especially efficient; see @link imageIterators@endlink for
+     * Note that this isn't especially efficient; see @link imageIterators Image Iterators @endlink for
      * a discussion
      */
     iterator begin() const;
