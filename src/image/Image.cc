@@ -88,8 +88,14 @@ typename ImageBase<PixelT>::_view_t ImageBase<PixelT>::_makeSubView(lsst::geom::
                  view.height())
                         .str());
     }
-    return boost::gil::subimage_view(view, offset.getX(), offset.getY(), dimensions.getX(),
-                                     dimensions.getY());
+    if (dimensions.getX() == 0 && dimensions.getY() == 0
+        && view.width() == 0 && view.height() == 0) {
+        // Getting a zero-extent subview of a zero-extent view returns itself
+        return view;
+    } else {
+        return boost::gil::subimage_view(view, offset.getX(), offset.getY(), dimensions.getX(),
+                                         dimensions.getY());
+    }
 }
 
 template <typename PixelT>
