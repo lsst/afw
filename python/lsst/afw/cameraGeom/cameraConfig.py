@@ -24,8 +24,8 @@ __all__ = ["CameraConfig", "DetectorConfig"]
 import numpy as np
 import lsst.pex.config as pexConfig
 import lsst.geom as geom
-from .orientation import Orientation
-from .transformConfig import TransformMapConfig
+from ._cameraGeom import Orientation
+from ._transformConfig import TransformMapConfig
 
 
 class DetectorConfig(pexConfig.Config):

@@ -22,6 +22,7 @@
 #include <cstdint>
 
 #include <pybind11/pybind11.h>
+#include <lsst/utils/python.h>
 
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/Mask.h"
@@ -37,27 +38,31 @@ namespace display {
 namespace {
 
 template <typename ImageT>
-void declareAll(py::module &mod) {
-    mod.def("writeFitsImage",
-            (void (*)(int, ImageT const &, geom::SkyWcs const *, char const *)) & writeBasicFits<ImageT>,
-            "fd"_a, "data"_a, "wcs"_a = NULL, "title"_a = NULL);
+void declareAll(lsst::utils::python::WrapperCollection &wrappers) {
+    wrappers.wrap([](auto &mod) {
+        mod.def("writeFitsImage",
+                (void (*)(int, ImageT const &, geom::SkyWcs const *, char const *)) &writeBasicFits<ImageT>,
+                "fd"_a, "data"_a, "wcs"_a = NULL, "title"_a = NULL);
 
-    mod.def("writeFitsImage",
-            (void (*)(std::string const &, ImageT const &, geom::SkyWcs const *, char const *)) &
-                    writeBasicFits<ImageT>,
-            "filename"_a, "data"_a, "wcs"_a = NULL, "title"_a = NULL);
+        mod.def("writeFitsImage",
+                (void (*)(std::string const &, ImageT const &, geom::SkyWcs const *, char const *)) &
+                        writeBasicFits<ImageT>,
+                "filename"_a, "data"_a, "wcs"_a = NULL, "title"_a = NULL);
+    });
 }
 
 }  // <anonymous>
 
 PYBIND11_MODULE(_simpleFits, mod) {
-    declareAll<image::Image<std::uint16_t>>(mod);
-    declareAll<image::Image<std::uint64_t>>(mod);
-    declareAll<image::Image<int>>(mod);
-    declareAll<image::Image<float>>(mod);
-    declareAll<image::Image<double>>(mod);
-    declareAll<image::Mask<std::uint16_t>>(mod);
-    declareAll<image::Mask<image::MaskPixel>>(mod);
+    lsst::utils::python::WrapperCollection wrappers(mod, "lsst.afw.display");
+    declareAll<image::Image<std::uint16_t>>(wrappers);
+    declareAll<image::Image<std::uint64_t>>(wrappers);
+    declareAll<image::Image<int>>(wrappers);
+    declareAll<image::Image<float>>(wrappers);
+    declareAll<image::Image<double>>(wrappers);
+    declareAll<image::Mask<std::uint16_t>>(wrappers);
+    declareAll<image::Mask<image::MaskPixel>>(wrappers);
+    wrappers.finish();
 }
 
 }  // display

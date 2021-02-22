@@ -27,7 +27,7 @@ import unittest
 
 from lsst.geom import Angle, degrees
 from lsst.afw.coord import Observatory, Weather
-from lsst.afw.coord.refraction import refraction, differentialRefraction
+from lsst.afw.coord import refraction, differentialRefraction
 import lsst.utils.tests
 
 

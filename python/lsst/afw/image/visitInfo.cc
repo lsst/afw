@@ -123,8 +123,7 @@ PYBIND11_MODULE(visitInfo, mod) {
     lsst::utils::python::WrapperCollection wrappers(mod, "lsst.afw.image.visitInfo");
     wrappers.addInheritanceDependency("lsst.daf.base");
     wrappers.addInheritanceDependency("lsst.geom");
-    wrappers.addInheritanceDependency("lsst.afw.coord.observatory");
-    wrappers.addInheritanceDependency("lsst.afw.coord.weather");
+    wrappers.addInheritanceDependency("lsst.afw.coord");
     wrappers.addInheritanceDependency("lsst.afw.typehandling");
     wrapRotType(wrappers);
     wrapVisitInfo(wrappers);

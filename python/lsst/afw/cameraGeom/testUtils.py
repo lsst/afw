@@ -29,15 +29,14 @@ import lsst.utils
 import lsst.geom
 import lsst.afw.geom as afwGeom
 from lsst.utils.tests import inTestCase
-from .cameraSys import CameraSys, PIXELS, TAN_PIXELS, FIELD_ANGLE, FOCAL_PLANE, ACTUAL_PIXELS
-from .orientation import Orientation
-from .amplifier import Amplifier, ReadoutCorner
-from .camera import Camera
-from .detector import DetectorType
+from ._cameraGeom import CameraSys, PIXELS, TAN_PIXELS, FIELD_ANGLE, FOCAL_PLANE, ACTUAL_PIXELS, Orientation
+from ._cameraGeom import Amplifier, ReadoutCorner
+from ._camera import Camera
+from ._cameraGeom import DetectorType
 from .cameraConfig import DetectorConfig, CameraConfig
-from .cameraFactory import makeCameraFromAmpLists
-from .makePixelToTanPixel import makePixelToTanPixel
-from .transformConfig import TransformMapConfig
+from ._cameraFactory import makeCameraFromAmpLists
+from ._makePixelToTanPixel import makePixelToTanPixel
+from ._transformConfig import TransformMapConfig
 
 
 class DetectorWrapper:

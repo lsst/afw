@@ -25,7 +25,7 @@ from astropy.units import cds
 import numpy as np
 
 import lsst.geom
-from lsst.afw.coord.weather import Weather
+from ._coord import Weather
 
 __all__ = ["refraction", "differentialRefraction"]
 

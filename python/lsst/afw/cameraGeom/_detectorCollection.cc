@@ -20,6 +20,8 @@
  */
 
 #include "pybind11/pybind11.h"
+#include <lsst/utils/python.h>
+
 #include "pybind11/stl.h"
 
 #include "lsst/afw/table/io/python.h"
@@ -73,29 +75,25 @@ void declareDetectorCollectionBase(PyDetectorCollectionBase<T> & cls) {
         }
     );
 }
-
-void declareDetectorCollection(py::module & mod) {
-    PyDetectorCollectionBase<Detector const> base(mod, "DetectorCollectionDetectorBase");
-    declareDetectorCollectionBase(base);
-    PyDetectorCollection cls(mod, "DetectorCollection");
-    cls.def(py::init<DetectorCollection::List>());
-    cls.def("getFpBBox", &DetectorCollection::getFpBBox);
-    table::io::python::addPersistableMethods(cls);
 }
+void wrapDetectorCollection(lsst::utils::python::WrapperCollection &wrappers) {
+    wrappers.addInheritanceDependency("lsst.afw.table.io");
+ wrappers.wrapType(PyDetectorCollectionBase<Detector const>(wrappers.module, "DetectorCollectionDetectorBase"),
+  [](auto &mod,auto &cls) {
+ declareDetectorCollectionBase(cls);
+});
+   wrappers.wrapType(PyDetectorCollection (wrappers.module,"DetectorCollection"),
+            [](auto &mod,auto &cls) {;
+                cls.def(py::init<DetectorCollection::List>());
+                cls.def("getFpBBox", &DetectorCollection::getFpBBox);
+                table::io::python::addPersistableMethods(cls);
+            });
 
-PYBIND11_MODULE(detectorCollection, mod){
-    py::module::import("lsst.afw.cameraGeom.detector");
-    declareDetectorCollection(mod);
-
-    PyDetectorCollectionBase<Detector::InCameraBuilder> cameraBuilderBase(
-        mod,
-        "DetectorCollectionBuilderBase"
-    );
-    declareDetectorCollectionBase(cameraBuilderBase);
+     wrappers.wrapType( PyDetectorCollectionBase<Detector::InCameraBuilder> (wrappers.module,"DetectorCollectionBuilderBase"),
+            [](auto &mod,auto &cls) {
+            declareDetectorCollectionBase(cls);
+    });
 }
-
-} // anonymous
-
 } // cameraGeom
 } // afw
 } // lsst

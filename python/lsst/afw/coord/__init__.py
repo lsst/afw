@@ -19,8 +19,6 @@
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
-import lsst.afw.geom
 
-from .observatory import *
-from .refraction import *
-from .weather import *
+from ._coord import *
+from ._refraction import *

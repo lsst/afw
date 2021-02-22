@@ -21,7 +21,7 @@
 
 __all__ = ['DetectorTypeValNameDict', 'DetectorTypeNameValDict']
 
-from .detector import DetectorType
+from ._cameraGeom import DetectorType
 
 DetectorTypeValNameDict = {
     DetectorType.SCIENCE: "SCIENCE",

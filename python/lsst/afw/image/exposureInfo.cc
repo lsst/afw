@@ -207,7 +207,7 @@ PYBIND11_MODULE(exposureInfo, mod) {
     lsst::utils::python::WrapperCollection wrappers(mod, "lsst.afw.image.exposureInfo");
     wrappers.addSignatureDependency("lsst.daf.base");
     wrappers.addSignatureDependency("lsst.afw.geom");
-    wrappers.addSignatureDependency("lsst.afw.cameraGeom.detector");
+    wrappers.addSignatureDependency("lsst.afw.cameraGeom");
     wrappers.addSignatureDependency("lsst.afw.detection");  // For Psf
     wrappers.addSignatureDependency("lsst.afw.image.photoCalib");
     wrappers.addSignatureDependency("lsst.afw.image.apCorrMap");

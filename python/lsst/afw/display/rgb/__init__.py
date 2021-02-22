@@ -1,2 +1,2 @@
-from .rgb import *
-from .rgbContinued import *
+from ._rgb import *
+from ._rgbContinued import *

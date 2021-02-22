@@ -24,6 +24,8 @@
 #include <string>
 
 #include "pybind11/pybind11.h"
+#include <lsst/utils/python.h>
+
 #include "pybind11/stl.h"
 
 #include "ndarray/pybind11.h"
@@ -85,57 +87,61 @@ void declare2SysMethods(PyClass &cls) {
             "points"_a, "fromSys"_a, "toSys"_a);
 }
 
-void declareDetectorBase(py::module & mod) {
-    PyDetectorBase cls(mod, "DetectorBase");
-    cls.def("getName", &DetectorBase::getName);
-    cls.def("getId", &DetectorBase::getId);
-    cls.def("getType", &DetectorBase::getType);
-    cls.def("getPhysicalType", &DetectorBase::getPhysicalType);
-    cls.def("getSerial", &DetectorBase::getSerial);
-    cls.def("getBBox", &DetectorBase::getBBox);
-    cls.def("getOrientation", &DetectorBase::getOrientation);
-    cls.def("getPixelSize", &DetectorBase::getPixelSize);
-    cls.def("hasCrosstalk", &DetectorBase::hasCrosstalk);
-    cls.def("getCrosstalk", &DetectorBase::getCrosstalk);
-    cls.def("getNativeCoordSys", &DetectorBase::getNativeCoordSys);
-    cls.def("makeCameraSys",
-            py::overload_cast<CameraSys const &>(&DetectorBase::makeCameraSys, py::const_),
-            "cameraSys"_a);
-    cls.def("makeCameraSys",
-            py::overload_cast<CameraSysPrefix const &>(&DetectorBase::makeCameraSys, py::const_),
-            "cameraSysPrefix"_a);
+void declareDetectorBase(lsst::utils::python::WrapperCollection &wrappers) {
+    wrappers.wrapType(PyDetectorBase  (wrappers.module,"DetectorBase"),
+            [](auto &mod,auto &cls) {
+
+                cls.def("getName", &DetectorBase::getName);
+                cls.def("getId", &DetectorBase::getId);
+                cls.def("getType", &DetectorBase::getType);
+                cls.def("getPhysicalType", &DetectorBase::getPhysicalType);
+                cls.def("getSerial", &DetectorBase::getSerial);
+                cls.def("getBBox", &DetectorBase::getBBox);
+                cls.def("getOrientation", &DetectorBase::getOrientation);
+                cls.def("getPixelSize", &DetectorBase::getPixelSize);
+                cls.def("hasCrosstalk", &DetectorBase::hasCrosstalk);
+                cls.def("getCrosstalk", &DetectorBase::getCrosstalk);
+                cls.def("getNativeCoordSys", &DetectorBase::getNativeCoordSys);
+                cls.def("makeCameraSys",
+                        py::overload_cast < CameraSys const & > (&DetectorBase::makeCameraSys, py::const_),
+                    "cameraSys"_a);
+                cls.def("makeCameraSys",
+                        py::overload_cast < CameraSysPrefix const & > (&DetectorBase::makeCameraSys, py::const_),
+                    "cameraSysPrefix"_a);
+            });
 }
 
 void declareDetectorBuilder(PyDetector & parent);
 void declareDetectorPartialRebuilder(PyDetector & parent);
 void declareDetectorInCameraBuilder(PyDetector & parent);
 
-void declareDetector(py::module & mod) {
-    py::module::import("lsst.afw.typehandling");
-    PyDetector cls(mod, "Detector");
-    declareDetectorBuilder(cls);
-    declareDetectorPartialRebuilder(cls);
-    declareDetectorInCameraBuilder(cls);
-    cls.def("rebuild", &Detector::rebuild);
-    declare1SysMethods<CameraSys>(cls);
-    declare1SysMethods<CameraSysPrefix>(cls);
-    declare2SysMethods<CameraSys, CameraSys>(cls);
-    declare2SysMethods<CameraSys, CameraSysPrefix>(cls);
-    declare2SysMethods<CameraSysPrefix, CameraSys>(cls);
-    declare2SysMethods<CameraSysPrefix, CameraSysPrefix>(cls);
-    cls.def("getTransformMap", &Detector::getTransformMap);
-    cls.def("getAmplifiers", &Detector::getAmplifiers);
-    // __iter__ defined in pure-Python extension
-    cls.def("__getitem__",
-            [](Detector const & self, std::ptrdiff_t i) {
-                return self[utils::python::cppIndex(self.size(), i)];
-            },
-            "i"_a);
-    cls.def("__getitem__",
-            py::overload_cast<std::string const &>(&Detector::operator[], py::const_),
-            "name"_a);
-    cls.def("__len__", &Detector::size);
-    table::io::python::addPersistableMethods(cls);
+void declareDetector(lsst::utils::python::WrapperCollection &wrappers) {
+   wrappers.wrapType( PyDetector (wrappers.module,"Detector"),
+            [](auto &mod,auto &cls) {
+                declareDetectorBuilder(cls);
+                declareDetectorPartialRebuilder(cls);
+                declareDetectorInCameraBuilder(cls);
+                cls.def("rebuild", &Detector::rebuild);
+                declare1SysMethods<CameraSys>(cls);
+                declare1SysMethods<CameraSysPrefix>(cls);
+                declare2SysMethods<CameraSys, CameraSys>(cls);
+                declare2SysMethods<CameraSys, CameraSysPrefix>(cls);
+                declare2SysMethods<CameraSysPrefix, CameraSys>(cls);
+                declare2SysMethods<CameraSysPrefix, CameraSysPrefix>(cls);
+                cls.def("getTransformMap", &Detector::getTransformMap);
+                cls.def("getAmplifiers", &Detector::getAmplifiers);
+                // __iter__ defined in pure-Python extension
+                cls.def("__getitem__",
+                        [](Detector const &self, std::ptrdiff_t i) {
+                            return self[utils::python::cppIndex(self.size(), i)];
+                        },
+                        "i"_a);
+                cls.def("__getitem__",
+                        py::overload_cast < std::string const & > (&Detector::operator[], py::const_),
+                    "name"_a);
+                cls.def("__len__", &Detector::size);
+                table::io::python::addPersistableMethods(cls);
+            });
 }
 
 void declareDetectorBuilder(PyDetector & parent) {
@@ -194,20 +200,19 @@ void declareDetectorInCameraBuilder(PyDetector & parent) {
             ),
             "toSys"_a);
 }
-
-PYBIND11_MODULE(detector, mod) {
-    py::enum_<DetectorType>(mod, "DetectorType")
-            .value("SCIENCE", DetectorType::SCIENCE)
-            .value("FOCUS", DetectorType::FOCUS)
-            .value("GUIDER", DetectorType::GUIDER)
-            .value("WAVEFRONT", DetectorType::WAVEFRONT)
-            ;
-    declareDetectorBase(mod);
-    declareDetector(mod);
-}
-
-
 }  // anonymous
+void wrapDetector(lsst::utils::python::WrapperCollection &wrappers) {
+    wrappers.addInheritanceDependency("lsst.afw.typehandling");
+     wrappers.wrapType(  py::enum_<DetectorType>(wrappers.module,"DetectorType"),
+            [](auto &mod,auto &enm) {
+        enm.value("SCIENCE", DetectorType::SCIENCE);
+        enm.value("FOCUS", DetectorType::FOCUS);
+        enm.value("GUIDER", DetectorType::GUIDER);
+        enm.value("WAVEFRONT", DetectorType::WAVEFRONT);
+    });
+    declareDetectorBase(wrappers);
+    declareDetector(wrappers);
+}
 }  // namespace cameraGeom
 }  // namespace afw
 }  // namespace lsst

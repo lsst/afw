@@ -41,9 +41,9 @@ import lsst.daf.base as dafBase
 import lsst.log
 import lsst.pex.exceptions as pexExceptions
 
-from .rotateBBoxBy90 import rotateBBoxBy90
-from .assembleImage import assembleAmplifierImage, assembleAmplifierRawImage
-from .cameraGeomLib import FIELD_ANGLE, FOCAL_PLANE
+from ._rotateBBoxBy90 import rotateBBoxBy90
+from ._assembleImage import assembleAmplifierImage, assembleAmplifierRawImage
+from ._cameraGeom import FIELD_ANGLE, FOCAL_PLANE
 from lsst.afw.display.utils import _getDisplayFromDisplayOrFrame
 from lsst.afw.cameraGeom import DetectorType
 

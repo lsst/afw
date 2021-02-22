@@ -22,7 +22,7 @@
 __all__ = ["DetectorBase", "DetectorTypeValNameDict", "DetectorTypeNameValDict"]
 
 from lsst.utils import continueClass
-from .detector import DetectorBase, DetectorType
+from ._cameraGeom import DetectorBase, DetectorType
 
 DetectorTypeValNameDict = {
     DetectorType.SCIENCE: "SCIENCE",

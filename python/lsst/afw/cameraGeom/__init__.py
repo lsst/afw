@@ -23,15 +23,17 @@
 
 """Application Framework classes to handle a mosaic camera's geometry
 """
-from .cameraGeomLib import *
+from ._cameraGeom import *
+from ._detector import *
+from ._amplifier import *
 from .cameraConfig import *
-from .detectorCollection import *
-from .camera import *
-from .cameraFactory import *
-from .cameraGeomEnumDicts import *
-from .makePixelToTanPixel import *
-from .assembleImage import *
-from .rotateBBoxBy90 import *
+from ._detectorCollection import *
+from ._camera import *
+from ._cameraFactory import *
+from ._cameraGeomEnumDicts import *
+from ._makePixelToTanPixel import *
+from ._assembleImage import *
+from ._rotateBBoxBy90 import *
 from .pupil import *
-from .transformConfig import *
+from ._transformConfig import *
 NullLinearityType = "None"  # linearity type indicating no linearity correction wanted

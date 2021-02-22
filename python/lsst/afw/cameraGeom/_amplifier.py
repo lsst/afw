@@ -21,7 +21,7 @@
 
 __all__ = ["ReadoutCornerValNameDict", "ReadoutCornerNameValDict"]
 
-from .amplifier import ReadoutCorner
+from ._cameraGeom import ReadoutCorner
 
 
 ReadoutCornerValNameDict = {

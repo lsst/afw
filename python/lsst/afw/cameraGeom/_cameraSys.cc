@@ -23,7 +23,7 @@
 #include <string>
 
 #include <pybind11/pybind11.h>
-//#include <pybind11/stl.h>
+#include <lsst/utils/python.h>
 
 #include "lsst/utils/python.h"
 
@@ -59,35 +59,37 @@ void declareCommonSysMethods(PyClass &cls) {
 }
 }
 
-PYBIND11_MODULE(cameraSys, mod) {
+void wrapCameraSys(lsst::utils::python::WrapperCollection &wrappers) {
     /* Module level */
-    py::class_<CameraSysPrefix> clsCameraSysPrefix(mod, "CameraSysPrefix");
-    py::class_<CameraSys> clsCameraSys(mod, "CameraSys");
+     wrappers.wrapType(  py::class_<CameraSysPrefix>(wrappers.module,"CameraSysPrefix"),
+            [](auto &mod,auto &cls) {
+          declareCommonSysMethods<CameraSysPrefix>(cls);
+          cls.def(py::init<std::string const &>(), "sysName"_a);
+     });
+  wrappers.wrapType(  py::class_<CameraSys> (wrappers.module,"CameraSys"),
+            [](auto &mod,auto &cls) {
+        declareCommonSysMethods<CameraSys>(cls);
+         /* Constructors */
+    cls.def(py::init<std::string const &>(), "sysName"_a);
+    cls.def(py::init<std::string const &, std::string const &>(), "sysName"_a,
+                     "detectorName"_a = "");
+    cls.def(py::init<CameraSysPrefix const &, std::string const &>(), "sysPrefix"_a,
+                     "detectorName"_a = "");
+    /* Members */
+    cls.def("getDetectorName", &CameraSys::getDetectorName);
+    cls.def("hasDetectorName", &CameraSys::hasDetectorName);
+  });
+
 
     // The following must come after the associated pybind11 class is declared
     // (e.g. FOCAL_PLANE is a CameraSys, so clsCameraSys must have been declared
-    mod.attr("FOCAL_PLANE") = py::cast(FOCAL_PLANE);
-    mod.attr("FIELD_ANGLE") = py::cast(FIELD_ANGLE);
-    mod.attr("PIXELS") = py::cast(PIXELS);
-    mod.attr("TAN_PIXELS") = py::cast(TAN_PIXELS);
-    mod.attr("ACTUAL_PIXELS") = py::cast(ACTUAL_PIXELS);
-
-    /* Member types and enums */
-    declareCommonSysMethods<CameraSysPrefix>(clsCameraSysPrefix);
-    declareCommonSysMethods<CameraSys>(clsCameraSys);
-
-    /* Constructors */
-    clsCameraSysPrefix.def(py::init<std::string const &>(), "sysName"_a);
-    clsCameraSys.def(py::init<std::string const &, std::string const &>(), "sysName"_a,
-                     "detectorName"_a = "");
-    clsCameraSys.def(py::init<CameraSysPrefix const &, std::string const &>(), "sysPrefix"_a,
-                     "detectorName"_a = "");
-
-    /* Operators */
-
-    /* Members */
-    clsCameraSys.def("getDetectorName", &CameraSys::getDetectorName);
-    clsCameraSys.def("hasDetectorName", &CameraSys::hasDetectorName);
+     wrappers.wrap([](auto &mod) {
+         mod.attr("FOCAL_PLANE") = py::cast(FOCAL_PLANE);
+         mod.attr("FIELD_ANGLE") = py::cast(FIELD_ANGLE);
+         mod.attr("PIXELS") = py::cast(PIXELS);
+         mod.attr("TAN_PIXELS") = py::cast(TAN_PIXELS);
+         mod.attr("ACTUAL_PIXELS") = py::cast(ACTUAL_PIXELS);
+     });
 }
 }
 }

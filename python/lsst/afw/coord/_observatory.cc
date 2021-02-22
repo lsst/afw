@@ -21,6 +21,7 @@
  */
 
 #include <pybind11/pybind11.h>
+#include <lsst/utils/python.h>
 
 #include "lsst/afw/coord/Observatory.h"
 
@@ -31,8 +32,8 @@ namespace lsst {
 namespace afw {
 namespace coord {
 
-PYBIND11_MODULE(observatory, mod) {
-    py::class_<Observatory, std::shared_ptr<Observatory>> cls(mod, "Observatory");
+void wrapObservatory(lsst::utils::python::WrapperCollection &wrappers) {
+     wrappers.wrapType(py::class_<Observatory, std::shared_ptr<Observatory>>(wrappers.module,"Observatory"), [](auto &mod,auto &cls) {
 
     /* Constructors */
     cls.def(py::init<lsst::geom::Angle const, lsst::geom::Angle const, double const>());
@@ -52,6 +53,7 @@ PYBIND11_MODULE(observatory, mod) {
     cls.def("setLongitude", &Observatory::setLongitude, "longitude"_a);
     cls.def("setLatitude", &Observatory::setLatitude, "latitude"_a);
     cls.def("setElevation", &Observatory::setElevation, "elevation"_a);
+    });
 }
 }
 }

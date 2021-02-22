@@ -35,8 +35,9 @@ namespace lsst {
 namespace afw {
 namespace coord {
 
-PYBIND11_MODULE(weather, mod) {
-    py::class_<lsst::afw::coord::Weather> cls(mod, "Weather");
+void wrapWeather(lsst::utils::python::WrapperCollection &wrappers) {
+    wrappers.wrapType( py::class_<lsst::afw::coord::Weather>  (wrappers.module,"Weather"),
+            [](auto &mod,auto &cls) {
 
     /* Constructors */
     cls.def(py::init<double, double, double>(), "airTemperature"_a, "airPressure"_a, "humidity"_a);
@@ -54,6 +55,7 @@ PYBIND11_MODULE(weather, mod) {
     cls.def("getHumidity", &lsst::afw::coord::Weather::getHumidity);
     utils::python::addOutputOp(cls, "__str__");
     utils::python::addOutputOp(cls, "__repr__");
+    });
 }
 }
 }
