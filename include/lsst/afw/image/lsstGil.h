@@ -55,6 +55,13 @@
 #include "boost/gil.hpp"
 #endif
 
+#ifndef BOOST_GIL_DEFINE_BASE_TYPEDEFS
+// Boost >=1.72 redefines GIL_ -> BOOST_GIL
+// Add these for compatibility
+#define BOOST_GIL_DEFINE_BASE_TYPEDEFS GIL_DEFINE_BASE_TYPEDEFS
+#define BOOST_GIL_DEFINE_ALL_TYPEDEFS_INTERNAL GIL_DEFINE_ALL_TYPEDEFS_INTERNAL
+#endif
+
 #if defined(__ICC)
 #pragma warning(pop)
 #endif
