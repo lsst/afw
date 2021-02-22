@@ -88,8 +88,14 @@ typename ImageBase<PixelT>::_view_t ImageBase<PixelT>::_makeSubView(lsst::geom::
                  view.height())
                         .str());
     }
-    return boost::gil::subimage_view(view, offset.getX(), offset.getY(), dimensions.getX(),
-                                     dimensions.getY());
+    if (dimensions.getX() == 0 && dimensions.getY() == 0
+        && view.width() == 0 && view.height() == 0) {
+        // Getting a zero-extent subview of a zero-extent view returns itself
+        return view;
+    } else {
+        return boost::gil::subimage_view(view, offset.getX(), offset.getY(), dimensions.getX(),
+                                         dimensions.getY());
+    }
 }
 
 template <typename PixelT>
@@ -698,6 +704,12 @@ lsst::geom::Box2I bboxFromMetadata(daf::base::PropertySet& metadata) {
 
 template <typename T1, typename T2>
 bool imagesOverlap(ImageBase<T1> const& image1, ImageBase<T2> const& image2) {
+
+    if (image1.getArea() == 0 || image2.getArea() == 0) {
+        // zero-area images cannot overlap.
+        return false;
+    }
+
     auto arr1 = image1.getArray();
     // get the address of the first and one-past-the-last element of arr1 using ndarray iterators;
     // this works because the iterators for contiguous 1-d ndarray Arrays are just pointers

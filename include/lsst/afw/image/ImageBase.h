@@ -294,6 +294,8 @@ public:
     int getWidth() const { return _gilView.width(); }
     /// Return the number of rows in the %image
     int getHeight() const { return _gilView.height(); }
+    /// Return the area of the %image
+    int getArea() const { return getWidth()*getHeight(); }
     /**
      * Return the %image's column-origin
      *
@@ -472,16 +474,30 @@ void swap(ImageBase<PixelT>& a, ImageBase<PixelT>& b);
 
 template <typename PixelT>
 typename ImageBase<PixelT>::Array ImageBase<PixelT>::getArray() {
-    int rowStride = reinterpret_cast<PixelT*>(row_begin(1)) - reinterpret_cast<PixelT*>(row_begin(0));
-    return ndarray::external(reinterpret_cast<PixelT*>(row_begin(0)),
+    int rowStride = 1;
+    PixelT * data = nullptr;
+    if (getArea() > 0) {
+        data = reinterpret_cast<PixelT*>(row_begin(0));
+    }
+    if (getHeight() > 1) {
+        rowStride = reinterpret_cast<PixelT*>(row_begin(1)) - reinterpret_cast<PixelT*>(row_begin(0));
+    }
+    return ndarray::external(data,
                              ndarray::makeVector(getHeight(), getWidth()), ndarray::makeVector(rowStride, 1),
                              this->_manager);
 }
 
 template <typename PixelT>
 typename ImageBase<PixelT>::ConstArray ImageBase<PixelT>::getArray() const {
-    int rowStride = reinterpret_cast<PixelT*>(row_begin(1)) - reinterpret_cast<PixelT*>(row_begin(0));
-    return ndarray::external(reinterpret_cast<PixelT*>(row_begin(0)),
+    int rowStride = 1;
+    PixelT * data = nullptr;
+    if (getArea() > 0) {
+        data = reinterpret_cast<PixelT*>(row_begin(0));
+    }
+    if (getHeight() > 1) {
+        rowStride = reinterpret_cast<PixelT*>(row_begin(1)) - reinterpret_cast<PixelT*>(row_begin(0));
+    }
+    return ndarray::external(data,
                              ndarray::makeVector(getHeight(), getWidth()), ndarray::makeVector(rowStride, 1),
                              this->_manager);
 }

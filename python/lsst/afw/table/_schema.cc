@@ -355,6 +355,7 @@ void declareSchemaType(WrapperCollection &wrappers) {
         cls.def(py::init<>());
         cls.def("__eq__", [](Key<T> const &self, Key<T> const &other) -> bool { return self == other; },
                 py::is_operator());
+        utils::python::addHash(cls);
         cls.def("__ne__", [](Key<T> const &self, Key<T> const &other) -> bool { return self != other; },
                 py::is_operator());
         cls.def("isValid", &Key<T>::isValid);
