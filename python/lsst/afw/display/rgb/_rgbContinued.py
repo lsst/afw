@@ -24,7 +24,7 @@ import numpy as np
 
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
-from .rgb import replaceSaturatedPixels, getZScale
+from ._rgb import replaceSaturatedPixels, getZScale
 
 
 def computeIntensity(imageR, imageG=None, imageB=None):

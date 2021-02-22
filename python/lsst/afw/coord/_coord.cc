@@ -18,30 +18,31 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this progra
-
-/*
- * Definitions to write a FITS image
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#if !defined(SIMPLE_FITS_H)
-#define SIMPLE_FITS_H 1
 
-#include "lsst/afw/image/Image.h"
-#include "lsst/afw/image/Mask.h"
-#include "lsst/afw/geom/SkyWcs.h"
+#include "pybind11/pybind11.h"
+
+#include "lsst/utils/python.h"
+
+namespace py = pybind11;
+using namespace pybind11::literals;
 
 namespace lsst {
 namespace afw {
-namespace display {
+namespace coord {
 
-template <typename ImageT>
-void writeBasicFits(int fd, ImageT const& data, lsst::afw::geom::SkyWcs const* Wcs = NULL,
-                    char const* title = NULL);
+using utils::python::WrapperCollection;
+void wrapObservatory(WrapperCollection&);
+void wrapWeather(WrapperCollection&);
 
-template <typename ImageT>
-void writeBasicFits(std::string const& filename, ImageT const& data, lsst::afw::geom::SkyWcs const* Wcs = NULL,
-                    const char* title = NULL);
+PYBIND11_MODULE(_coord, mod) {
+    WrapperCollection wrappers(mod, "lsst.afw.coord");
+    wrapObservatory(wrappers);
+    wrapWeather(wrappers);
+    wrappers.finish();
 }
-}
-}  // namespace lsst::afw::display
-#endif
+
+}  // namespace coord
+}  // namespace afw
+}  // namespace lsst

@@ -207,7 +207,7 @@ void declareExposureInfo(lsst::utils::python::WrapperCollection &wrappers) {
 void wrapExposureInfo(lsst::utils::python::WrapperCollection &wrappers) {
     wrappers.addSignatureDependency("lsst.daf.base");
     wrappers.addSignatureDependency("lsst.afw.geom");
-    wrappers.addSignatureDependency("lsst.afw.cameraGeom.detector");
+    wrappers.addSignatureDependency("lsst.afw.cameraGeom");
     wrappers.addSignatureDependency("lsst.afw.detection");  // For Psf
     declareExposureInfo(wrappers);
 }

@@ -1,3 +1,4 @@
+# This file is part of afw.
 #
 # Developed for the LSST Data Management System.
 # This product includes software developed by the LSST Project
@@ -17,13 +18,10 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-#
-
-__all__ = []
 
 from lsst.utils import TemplateMeta
-from ..detector import Detector
-from .detectorCollection import DetectorCollectionDetectorBase, DetectorCollectionBuilderBase
+from ._cameraGeom import Detector
+from ._cameraGeom import DetectorCollectionDetectorBase, DetectorCollectionBuilderBase
 
 
 class DetectorCollectionBase(metaclass=TemplateMeta):  # noqa: F811

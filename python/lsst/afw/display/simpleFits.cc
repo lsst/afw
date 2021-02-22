@@ -1,9 +1,11 @@
 /*
- * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
+ * This file is part of afw.
  *
- * This product includes software developed by the
- * LSST Project (http://www.lsst.org/).
+ * Developed for the LSST Data Management System.
+ * This product includes software developed by the LSST Project
+ * (https://www.lsst.org).
+ * See the COPYRIGHT file at the top-level directory of this distribution
+ * for details of code ownership.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,9 +17,8 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the LSST License Statement and
- * the GNU General Public License along with this program.  If not,
- * see <http://www.lsstcorp.org/LegalNotices/>.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 /*
@@ -29,7 +30,7 @@
 namespace posix {  // here so no-one includes them first outside namespace posix {}
 #include <unistd.h>
 #include <fcntl.h>
-}
+}  // namespace posix
 #endif  // !DOXYGEN
 using namespace posix;
 #include <cstdint>
@@ -136,7 +137,7 @@ void flip_high_bit(char *arr,      // array that needs bits swapped
         *uarr ^= 0x8000;
     }
 }
-}
+}  // namespace
 
 /*
  * Byte swap ABABAB -> BABABAB in place
@@ -259,7 +260,7 @@ int write_fits_hdr(int fd, int bitpix, int naxis, int *naxes, std::list<Card> &c
 void pad_to_fits_record(int fd,      // output file descriptor
                         int npixel,  // number of pixels already written to HDU
                         int bitpix   // bitpix for this datatype
-                        ) {
+) {
     const int bytes_per_pixel = (bitpix > 0 ? bitpix : -bitpix) / 8;
     int nbyte = npixel * bytes_per_pixel;
 
@@ -333,38 +334,34 @@ int write_fits_data(int fd, int bitpix, char *begin, char *end) {
         delete buff;
     }
 
-
     return (nbyte == 0 ? 0 : -1);
 }
 
-void
-addWcs(std::string const & wcsName, std::list<Card> & cards, int x0=0.0, int y0=0.0)
-{
-    cards.push_back(Card(str(boost::format("CRVAL1%s") % wcsName),
-                         x0, "(output) Column pixel of Reference Pixel"));
-    cards.push_back(Card(str(boost::format("CRVAL2%s") % wcsName),
-                         y0, "(output) Row pixel of Reference Pixel"));
-    cards.push_back(Card(str(boost::format("CRPIX1%s") % wcsName), 1.0,
-                         "Column Pixel Coordinate of Reference"));
-    cards.push_back(Card(str(boost::format("CRPIX2%s") % wcsName), 1.0,
-                         "Row Pixel Coordinate of Reference"));
+void addWcs(std::string const &wcsName, std::list<Card> &cards, int x0 = 0.0, int y0 = 0.0) {
+    cards.push_back(
+            Card(str(boost::format("CRVAL1%s") % wcsName), x0, "(output) Column pixel of Reference Pixel"));
+    cards.push_back(
+            Card(str(boost::format("CRVAL2%s") % wcsName), y0, "(output) Row pixel of Reference Pixel"));
+    cards.push_back(
+            Card(str(boost::format("CRPIX1%s") % wcsName), 1.0, "Column Pixel Coordinate of Reference"));
+    cards.push_back(Card(str(boost::format("CRPIX2%s") % wcsName), 1.0, "Row Pixel Coordinate of Reference"));
     cards.push_back(Card(str(boost::format("CTYPE1%s") % wcsName), "LINEAR", "Type of projection"));
     cards.push_back(Card(str(boost::format("CTYPE1%s") % wcsName), "LINEAR", "Type of projection"));
     cards.push_back(Card(str(boost::format("CUNIT1%s") % wcsName), "PIXEL", "Column unit"));
     cards.push_back(Card(str(boost::format("CUNIT2%s") % wcsName), "PIXEL", "Row unit"));
 }
-}
+}  // namespace
 
 namespace lsst {
 namespace afw {
 namespace display {
 
 template <typename ImageT>
-void writeBasicFits(int fd,                 // file descriptor to write to
-                    ImageT const &data,     // The data to write
+void writeBasicFits(int fd,                   // file descriptor to write to
+                    ImageT const &data,       // The data to write
                     geom::SkyWcs const *Wcs,  // which Wcs to use for pixel
-                    char const *title       // title to write to DS9
-                    ) {
+                    char const *title         // title to write to DS9
+) {
     /*
      * Allocate cards for FITS headers
      */
@@ -396,7 +393,7 @@ void writeBasicFits(int fd,                 // file descriptor to write to
      * Was there something else?
      */
     if (Wcs == NULL) {
-        addWcs("", cards);              // works around a ds9 bug that WCSA/B is ignored if no Wcs is present
+        addWcs("", cards);  // works around a ds9 bug that WCSA/B is ignored if no Wcs is present
     } else {
         typedef std::vector<std::string> NameList;
 
@@ -448,9 +445,9 @@ void writeBasicFits(int fd,                 // file descriptor to write to
 template <typename ImageT>
 void writeBasicFits(std::string const &filename,  // file to write, or "| cmd"
                     ImageT const &data,           // The data to write
-                    geom::SkyWcs const *Wcs,        // which Wcs to use for pixel
+                    geom::SkyWcs const *Wcs,      // which Wcs to use for pixel
                     char const *title             // title to write to DS9
-                    ) {
+) {
     int fd;
     if ((filename.c_str())[0] == '|') {  // a command
         const char *cmd = filename.c_str() + 1;
@@ -479,7 +476,7 @@ void writeBasicFits(std::string const &filename,  // file to write, or "| cmd"
 }
 
 /// @cond
-#define INSTANTIATE(IMAGET)                                                              \
+#define INSTANTIATE(IMAGET)                                                                \
     template void writeBasicFits(int, IMAGET const &, geom::SkyWcs const *, char const *); \
     template void writeBasicFits(std::string const &, IMAGET const &, geom::SkyWcs const *, char const *)
 
@@ -495,6 +492,6 @@ INSTANTIATE_IMAGE(std::uint64_t);
 INSTANTIATE_MASK(std::uint16_t);
 INSTANTIATE_MASK(image::MaskPixel);
 /// @endcond
-}
-}
-}
+}  // namespace display
+}  // namespace afw
+}  // namespace lsst

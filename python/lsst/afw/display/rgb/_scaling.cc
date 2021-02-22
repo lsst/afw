@@ -223,6 +223,6 @@ std::pair<double, double> getZScale(image::Image<T> const& image, int const nSam
 
 INSTANTIATE_GETZSCALE(std::uint16_t);
 INSTANTIATE_GETZSCALE(float);
-}
-}
-}
+}  // namespace display
+}  // namespace afw
+}  // namespace lsst

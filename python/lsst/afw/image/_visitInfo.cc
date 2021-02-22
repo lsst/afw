@@ -122,8 +122,7 @@ void declareRotType(lsst::utils::python::WrapperCollection &wrappers) {
 void wrapVisitInfo(lsst::utils::python::WrapperCollection &wrappers) {
     wrappers.addInheritanceDependency("lsst.daf.base");
     wrappers.addInheritanceDependency("lsst.geom");
-    wrappers.addInheritanceDependency("lsst.afw.coord.observatory");
-    wrappers.addInheritanceDependency("lsst.afw.coord.weather");
+    wrappers.addInheritanceDependency("lsst.afw.coord");
     wrappers.addInheritanceDependency("lsst.afw.typehandling");
     declareRotType(wrappers);
     declareVisitInfo(wrappers);

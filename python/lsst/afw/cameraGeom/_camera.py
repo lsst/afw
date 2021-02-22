@@ -19,12 +19,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-# Camera object below is the same one exported by the pybind11 camera
-# module, so we don't need to re-export it here.
-__all__ = []
+__all__ = ['Camera']
 
 from lsst.utils import continueClass, doImport
-from .camera import Camera
+from ._cameraGeom import Camera
 
 
 @continueClass  # noqa: F811 (FIXME: remove for py 3.8+)

@@ -24,10 +24,10 @@ __all__ = ["addDetectorBuilderFromConfig",
 
 import os.path
 from lsst.afw.table import BaseCatalog
-from .cameraGeomLib import FOCAL_PLANE, FIELD_ANGLE, PIXELS, TAN_PIXELS, ACTUAL_PIXELS, CameraSys, \
-    Amplifier
-from .camera import Camera
-from .makePixelToTanPixel import makePixelToTanPixel
+from ._cameraGeom import FOCAL_PLANE, FIELD_ANGLE, PIXELS, TAN_PIXELS, ACTUAL_PIXELS, CameraSys
+from ._cameraGeom import Amplifier
+from ._camera import Camera
+from ._makePixelToTanPixel import makePixelToTanPixel
 from .pupil import PupilFactory
 
 cameraSysList = [FIELD_ANGLE, FOCAL_PLANE, PIXELS, TAN_PIXELS, ACTUAL_PIXELS]

@@ -1,9 +1,10 @@
+# This file is part of afw.
 #
-# LSST Data Management System
-# Copyright 2008, 2009, 2010 LSST Corporation.
-#
-# This product includes software developed by the
-# LSST Project (http://www.lsst.org/).
+# Developed for the LSST Data Management System.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org).
+# See the COPYRIGHT file at the top-level directory of this distribution
+# for details of code ownership.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,23 +16,23 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
-# You should have received a copy of the LSST License Statement and
-# the GNU General Public License along with this program.  If not,
-# see <http://www.lsstcorp.org/LegalNotices/>.
-#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
 """Application Framework classes to handle a mosaic camera's geometry
 """
-from .cameraGeomLib import *
+from ._cameraGeom import *
+from ._detector import *
+from ._amplifier import *
 from .cameraConfig import *
-from .detectorCollection import *
-from .camera import *
-from .cameraFactory import *
-from .cameraGeomEnumDicts import *
-from .makePixelToTanPixel import *
-from .assembleImage import *
-from .rotateBBoxBy90 import *
+from ._detectorCollection import *
+from ._camera import *
+from ._cameraFactory import *
+from ._cameraGeomEnumDicts import *
+from ._makePixelToTanPixel import *
+from ._assembleImage import *
+from ._rotateBBoxBy90 import *
 from .pupil import *
-from .transformConfig import *
+from ._transformConfig import *
 NullLinearityType = "None"  # linearity type indicating no linearity correction wanted

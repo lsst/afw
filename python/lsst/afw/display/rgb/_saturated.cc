@@ -5,7 +5,7 @@
 #include "boost/format.hpp"
 #include "lsst/afw/detection.h"
 #include "lsst/afw/image/MaskedImage.h"
-#include "rgb/Rgb.h"
+#include "Rgb.h"
 
 namespace lsst {
 namespace afw {
@@ -19,12 +19,14 @@ public:
 
     void setValue(float value) { _value = value; }
 
-    void operator()(lsst::geom::Point2I const& point, typename ImageT::Pixel& arrayInput) { arrayInput = _value; }
+    void operator()(lsst::geom::Point2I const& point, typename ImageT::Pixel& arrayInput) {
+        arrayInput = _value;
+    }
 
 private:
     float _value;
 };
-}
+}  // namespace
 
 template <typename ImageT>
 void replaceSaturatedPixels(ImageT& rim,      // R image (e.g. i)
@@ -32,7 +34,7 @@ void replaceSaturatedPixels(ImageT& rim,      // R image (e.g. i)
                             ImageT& bim,      // B image (e.g. g)
                             int borderWidth,  // width of border used to estimate colour of saturated regions
                             float saturatedPixelValue  // the brightness of a saturated pixel, once fixed
-                            ) {
+) {
     int const width = rim.getWidth(), height = rim.getHeight();
     int const x0 = rim.getX0(), y0 = rim.getY0();
 
@@ -153,6 +155,6 @@ void replaceSaturatedPixels(ImageT& rim,      // R image (e.g. i)
 template void replaceSaturatedPixels(image::MaskedImage<float>& rim, image::MaskedImage<float>& gim,
                                      image::MaskedImage<float>& bim, int borderWidth,
                                      float saturatedPixelValue);
-}
-}
-}
+}  // namespace display
+}  // namespace afw
+}  // namespace lsst
