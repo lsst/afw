@@ -18,32 +18,16 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
+from ._imageLib import *
 from . import pixel
-
-from .apCorrMap import *
-from .calib import *
-from .coaddInputs import *
-from .color import *
-from .defect import *
-from .filter import *
-from .filterContinued import *  # just here to support deprecation
-from .filterLabel import *
 from .image import *
-from .imageSlice import *
+from .apCorrMap import *
 from .maskedImage import *
-from .visitInfo import *
-from .transmissionCurve import *
-from .exposureInfo import *
-from .exposureInfoContinued import *
+from ._filter import *  # just here to support deprecation
 from .exposure import *
-from .photoCalib import *
-from .imagePca import *
-from .imageUtils import *
-from .exposureSummaryStats import *
-
+from ._exposureInfoContinued import *
+from ._exposureSummaryStats import *
 from .basicUtils import *
 from .testUtils import *
 
-from .readers import *
-from .exposureFitsReaderContinued import *  # just here to support deprecation
+from ._exposureFitsReaderContinued import *  # just here to support deprecation

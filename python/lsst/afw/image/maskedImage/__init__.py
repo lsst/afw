@@ -19,5 +19,5 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from .maskedImage import *
-from .maskedImageContinued import *
+from ._maskedImage import *
+from ._maskedImageContinued import *
