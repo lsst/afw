@@ -43,7 +43,7 @@ template <typename ImageT>
 void declareAll(lsst::utils::python::WrapperCollection &wrappers) {
     wrappers.wrap([](auto &mod) {
         mod.def("writeFitsImage",
-                (void (*)(int, ImageT const &, geom::SkyWcs const *, char const *)) &writeBasicFits<ImageT>,
+                (void (*)(int, ImageT const &, geom::SkyWcs const *, char const *)) & writeBasicFits<ImageT>,
                 "fd"_a, "data"_a, "wcs"_a = NULL, "title"_a = NULL);
 
         mod.def("writeFitsImage",
@@ -53,7 +53,7 @@ void declareAll(lsst::utils::python::WrapperCollection &wrappers) {
     });
 }
 
-}  // <anonymous>
+}  // namespace
 
 PYBIND11_MODULE(_simpleFits, mod) {
     lsst::utils::python::WrapperCollection wrappers(mod, "lsst.afw.display");
@@ -67,6 +67,6 @@ PYBIND11_MODULE(_simpleFits, mod) {
     wrappers.finish();
 }
 
-}  // display
-}  // afw
-}  // lsst
+}  // namespace display
+}  // namespace afw
+}  // namespace lsst

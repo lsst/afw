@@ -39,63 +39,46 @@ namespace cameraGeom {
 namespace {
 
 template <typename T>
-using PyDetectorCollectionBase = py::class_<DetectorCollectionBase<T>,
-                                            std::shared_ptr<DetectorCollectionBase<T>>>;
+using PyDetectorCollectionBase =
+        py::class_<DetectorCollectionBase<T>, std::shared_ptr<DetectorCollectionBase<T>>>;
 
 using PyDetectorCollection = py::class_<DetectorCollection, DetectorCollectionBase<Detector const>,
                                         std::shared_ptr<DetectorCollection>>;
 
 template <typename T>
-void declareDetectorCollectionBase(PyDetectorCollectionBase<T> & cls) {
+void declareDetectorCollectionBase(PyDetectorCollectionBase<T> &cls) {
     cls.def("getNameMap", &DetectorCollectionBase<T>::getNameMap);
     cls.def("getIdMap", &DetectorCollectionBase<T>::getIdMap);
     cls.def("__len__", &DetectorCollectionBase<T>::size);
-    cls.def(
-        "get",
-        py::overload_cast<std::string const &, std::shared_ptr<T>>(
-            &DetectorCollectionBase<T>::get, py::const_
-        ),
-        "name"_a, "default"_a=nullptr
-    );
-    cls.def(
-        "get",
-        py::overload_cast<int, std::shared_ptr<T>>(
-            &DetectorCollectionBase<T>::get, py::const_
-        ),
-        "id"_a, "default"_a=nullptr
-    );
-    cls.def(
-        "__contains__",
-        [](DetectorCollectionBase<T> const & self, std::string const &name) {
-            return self.get(name) != nullptr;
-        }
-    );
-    cls.def(
-        "__contains__",
-        [](DetectorCollectionBase<T> const & self, int id) {
-            return self.get(id) != nullptr;
-        }
-    );
+    cls.def("get",
+            py::overload_cast<std::string const &, std::shared_ptr<T>>(&DetectorCollectionBase<T>::get,
+                                                                       py::const_),
+            "name"_a, "default"_a = nullptr);
+    cls.def("get", py::overload_cast<int, std::shared_ptr<T>>(&DetectorCollectionBase<T>::get, py::const_),
+            "id"_a, "default"_a = nullptr);
+    cls.def("__contains__", [](DetectorCollectionBase<T> const &self, std::string const &name) {
+        return self.get(name) != nullptr;
+    });
+    cls.def("__contains__",
+            [](DetectorCollectionBase<T> const &self, int id) { return self.get(id) != nullptr; });
 }
-}
+}  // namespace
 void wrapDetectorCollection(lsst::utils::python::WrapperCollection &wrappers) {
     wrappers.addInheritanceDependency("lsst.afw.table.io");
- wrappers.wrapType(PyDetectorCollectionBase<Detector const>(wrappers.module, "DetectorCollectionDetectorBase"),
-  [](auto &mod,auto &cls) {
- declareDetectorCollectionBase(cls);
-});
-   wrappers.wrapType(PyDetectorCollection (wrappers.module,"DetectorCollection"),
-            [](auto &mod,auto &cls) {;
-                cls.def(py::init<DetectorCollection::List>());
-                cls.def("getFpBBox", &DetectorCollection::getFpBBox);
-                table::io::python::addPersistableMethods(cls);
-            });
-
-     wrappers.wrapType( PyDetectorCollectionBase<Detector::InCameraBuilder> (wrappers.module,"DetectorCollectionBuilderBase"),
-            [](auto &mod,auto &cls) {
-            declareDetectorCollectionBase(cls);
+    wrappers.wrapType(
+            PyDetectorCollectionBase<Detector const>(wrappers.module, "DetectorCollectionDetectorBase"),
+            [](auto &mod, auto &cls) { declareDetectorCollectionBase(cls); });
+    wrappers.wrapType(PyDetectorCollection(wrappers.module, "DetectorCollection"), [](auto &mod, auto &cls) {
+        ;
+        cls.def(py::init<DetectorCollection::List>());
+        cls.def("getFpBBox", &DetectorCollection::getFpBBox);
+        table::io::python::addPersistableMethods(cls);
     });
+
+    wrappers.wrapType(PyDetectorCollectionBase<Detector::InCameraBuilder>(wrappers.module,
+                                                                          "DetectorCollectionBuilderBase"),
+                      [](auto &mod, auto &cls) { declareDetectorCollectionBase(cls); });
 }
-} // cameraGeom
-} // afw
-} // lsst
+}  // namespace cameraGeom
+}  // namespace afw
+}  // namespace lsst

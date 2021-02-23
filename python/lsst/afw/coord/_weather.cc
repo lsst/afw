@@ -37,27 +37,28 @@ namespace afw {
 namespace coord {
 
 void wrapWeather(lsst::utils::python::WrapperCollection &wrappers) {
-    wrappers.wrapType( py::class_<lsst::afw::coord::Weather>  (wrappers.module,"Weather"),
-            [](auto &mod,auto &cls) {
+    wrappers.wrapType(py::class_<lsst::afw::coord::Weather>(wrappers.module, "Weather"), [](auto &mod,
+                                                                                            auto &cls) {
+        /* Constructors */
+        cls.def(py::init<double, double, double>(), "airTemperature"_a, "airPressure"_a, "humidity"_a);
+        cls.def(py::init<Weather const &>(), "weather"_a);
 
-    /* Constructors */
-    cls.def(py::init<double, double, double>(), "airTemperature"_a, "airPressure"_a, "humidity"_a);
-    cls.def(py::init<Weather const &>(), "weather"_a);
+        /* Operators */
+        cls.def(
+                "__eq__", [](Weather const &self, Weather const &other) { return self == other; },
+                py::is_operator());
+        cls.def(
+                "__ne__", [](Weather const &self, Weather const &other) { return self != other; },
+                py::is_operator());
 
-    /* Operators */
-    cls.def("__eq__", [](Weather const &self, Weather const &other) { return self == other; },
-            py::is_operator());
-    cls.def("__ne__", [](Weather const &self, Weather const &other) { return self != other; },
-            py::is_operator());
-
-    /* Members */
-    cls.def("getAirPressure", &lsst::afw::coord::Weather::getAirPressure);
-    cls.def("getAirTemperature", &lsst::afw::coord::Weather::getAirTemperature);
-    cls.def("getHumidity", &lsst::afw::coord::Weather::getHumidity);
-    utils::python::addOutputOp(cls, "__str__");
-    utils::python::addOutputOp(cls, "__repr__");
+        /* Members */
+        cls.def("getAirPressure", &lsst::afw::coord::Weather::getAirPressure);
+        cls.def("getAirTemperature", &lsst::afw::coord::Weather::getAirTemperature);
+        cls.def("getHumidity", &lsst::afw::coord::Weather::getHumidity);
+        utils::python::addOutputOp(cls, "__str__");
+        utils::python::addOutputOp(cls, "__repr__");
     });
 }
-}
-}
-}  // namespace lsst::afw::coord
+}  // namespace coord
+}  // namespace afw
+}  // namespace lsst

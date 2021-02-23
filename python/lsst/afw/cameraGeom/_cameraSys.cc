@@ -47,9 +47,11 @@ namespace {
 template <typename CppClass, typename PyClass>
 void declareCommonSysMethods(PyClass &cls) {
     /* Operators */
-    cls.def("__eq__", [](CppClass const &self, CppClass const &other) { return self == other; },
+    cls.def(
+            "__eq__", [](CppClass const &self, CppClass const &other) { return self == other; },
             py::is_operator());
-    cls.def("__ne__", [](CppClass const &self, CppClass const &other) { return self != other; },
+    cls.def(
+            "__ne__", [](CppClass const &self, CppClass const &other) { return self != other; },
             py::is_operator());
     utils::python::addOutputOp(cls, "__str__");
     utils::python::addOutputOp(cls, "__repr__");
@@ -58,40 +60,37 @@ void declareCommonSysMethods(PyClass &cls) {
     /* Methods */
     cls.def("getSysName", &CppClass::getSysName);
 }
-}
+}  // namespace
 
 void wrapCameraSys(lsst::utils::python::WrapperCollection &wrappers) {
     /* Module level */
-     wrappers.wrapType(  py::class_<CameraSysPrefix>(wrappers.module,"CameraSysPrefix"),
-            [](auto &mod,auto &cls) {
-          declareCommonSysMethods<CameraSysPrefix>(cls);
-          cls.def(py::init<std::string const &>(), "sysName"_a);
-     });
-  wrappers.wrapType(  py::class_<CameraSys> (wrappers.module,"CameraSys"),
-            [](auto &mod,auto &cls) {
+    wrappers.wrapType(py::class_<CameraSysPrefix>(wrappers.module, "CameraSysPrefix"),
+                      [](auto &mod, auto &cls) {
+                          declareCommonSysMethods<CameraSysPrefix>(cls);
+                          cls.def(py::init<std::string const &>(), "sysName"_a);
+                      });
+    wrappers.wrapType(py::class_<CameraSys>(wrappers.module, "CameraSys"), [](auto &mod, auto &cls) {
         declareCommonSysMethods<CameraSys>(cls);
-         /* Constructors */
-    cls.def(py::init<std::string const &>(), "sysName"_a);
-    cls.def(py::init<std::string const &, std::string const &>(), "sysName"_a,
-                     "detectorName"_a = "");
-    cls.def(py::init<CameraSysPrefix const &, std::string const &>(), "sysPrefix"_a,
-                     "detectorName"_a = "");
-    /* Members */
-    cls.def("getDetectorName", &CameraSys::getDetectorName);
-    cls.def("hasDetectorName", &CameraSys::hasDetectorName);
-  });
-
+        /* Constructors */
+        cls.def(py::init<std::string const &>(), "sysName"_a);
+        cls.def(py::init<std::string const &, std::string const &>(), "sysName"_a, "detectorName"_a = "");
+        cls.def(py::init<CameraSysPrefix const &, std::string const &>(), "sysPrefix"_a,
+                "detectorName"_a = "");
+        /* Members */
+        cls.def("getDetectorName", &CameraSys::getDetectorName);
+        cls.def("hasDetectorName", &CameraSys::hasDetectorName);
+    });
 
     // The following must come after the associated pybind11 class is declared
     // (e.g. FOCAL_PLANE is a CameraSys, so clsCameraSys must have been declared
-     wrappers.wrap([](auto &mod) {
-         mod.attr("FOCAL_PLANE") = py::cast(FOCAL_PLANE);
-         mod.attr("FIELD_ANGLE") = py::cast(FIELD_ANGLE);
-         mod.attr("PIXELS") = py::cast(PIXELS);
-         mod.attr("TAN_PIXELS") = py::cast(TAN_PIXELS);
-         mod.attr("ACTUAL_PIXELS") = py::cast(ACTUAL_PIXELS);
-     });
+    wrappers.wrap([](auto &mod) {
+        mod.attr("FOCAL_PLANE") = py::cast(FOCAL_PLANE);
+        mod.attr("FIELD_ANGLE") = py::cast(FIELD_ANGLE);
+        mod.attr("PIXELS") = py::cast(PIXELS);
+        mod.attr("TAN_PIXELS") = py::cast(TAN_PIXELS);
+        mod.attr("ACTUAL_PIXELS") = py::cast(ACTUAL_PIXELS);
+    });
 }
-}
-}
-}
+}  // namespace cameraGeom
+}  // namespace afw
+}  // namespace lsst

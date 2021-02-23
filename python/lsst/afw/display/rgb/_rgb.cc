@@ -39,13 +39,13 @@ PYBIND11_MODULE(_rgb, mod) {
     /* Module level */
     lsst::utils::python::WrapperCollection wrappers(mod, "lsst.afw.display.rbg");
     wrappers.wrap([](auto &mod) {
-        mod.def("replaceSaturatedPixels", replaceSaturatedPixels<lsst::afw::image::MaskedImage<float>>, "rim"_a,
-                "gim"_a, "bim"_a, "borderWidth"_a = 2, "saturatedPixelValue"_a = 65535);
+        mod.def("replaceSaturatedPixels", replaceSaturatedPixels<lsst::afw::image::MaskedImage<float>>,
+                "rim"_a, "gim"_a, "bim"_a, "borderWidth"_a = 2, "saturatedPixelValue"_a = 65535);
         mod.def("getZScale", getZScale<std::uint16_t>, "image"_a, "nsamples"_a = 1000, "contrast"_a = 0.25);
         mod.def("getZScale", getZScale<float>, "image"_a, "nsamples"_a = 1000, "contrast"_a = 0.25);
     });
     wrappers.finish();
 }
-}
-}
-}
+}  // namespace display
+}  // namespace afw
+}  // namespace lsst

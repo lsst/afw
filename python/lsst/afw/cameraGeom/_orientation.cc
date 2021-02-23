@@ -35,13 +35,13 @@ namespace cameraGeom {
 
 void wrapOrientation(lsst::utils::python::WrapperCollection &wrappers) {
     wrappers.addSignatureDependency("lsst.geom");
- wrappers.wrapType(  py::class_<Orientation>(wrappers.module,"Orientation"),
-            [](auto &mod,auto &cls)
-    {
+    wrappers.wrapType(py::class_<Orientation>(wrappers.module, "Orientation"), [](auto &mod, auto &cls) {
         /* Constructors */
-        cls.def(py::init<lsst::geom::Point2D, lsst::geom::Point2D, lsst::geom::Angle, lsst::geom::Angle, lsst::geom::Angle>(),
+        cls.def(py::init<lsst::geom::Point2D, lsst::geom::Point2D, lsst::geom::Angle, lsst::geom::Angle,
+                         lsst::geom::Angle>(),
                 "fpPosition"_a = lsst::geom::Point2D(0, 0), "refPoint"_a = lsst::geom::Point2D(-0.5, -0.5),
-                "yaw"_a = lsst::geom::Angle(0), "pitch"_a = lsst::geom::Angle(0), "roll"_a = lsst::geom::Angle(0));
+                "yaw"_a = lsst::geom::Angle(0), "pitch"_a = lsst::geom::Angle(0),
+                "roll"_a = lsst::geom::Angle(0));
 
         /* Operators */
 
@@ -60,6 +60,6 @@ void wrapOrientation(lsst::utils::python::WrapperCollection &wrappers) {
         cls.def("getFpPosition", &Orientation::getFpPosition);
     });
 }
-}
-}
-}
+}  // namespace cameraGeom
+}  // namespace afw
+}  // namespace lsst

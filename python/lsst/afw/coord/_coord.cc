@@ -36,8 +36,6 @@ using utils::python::WrapperCollection;
 void wrapObservatory(WrapperCollection&);
 void wrapWeather(WrapperCollection&);
 
-
-
 PYBIND11_MODULE(_coord, mod) {
     WrapperCollection wrappers(mod, "lsst.afw.coord");
     wrapObservatory(wrappers);

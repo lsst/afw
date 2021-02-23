@@ -33,29 +33,34 @@ namespace lsst {
 namespace afw {
 namespace coord {
 
-void wrapObservatory(lsst::utils::python::WrapperCollection &wrappers) {
-     wrappers.wrapType(py::class_<Observatory, std::shared_ptr<Observatory>>(wrappers.module,"Observatory"), [](auto &mod,auto &cls) {
+void wrapObservatory(lsst::utils::python::WrapperCollection& wrappers) {
+    wrappers.wrapType(
+            py::class_<Observatory, std::shared_ptr<Observatory>>(wrappers.module, "Observatory"),
+            [](auto& mod, auto& cls) {
+                /* Constructors */
+                cls.def(py::init<lsst::geom::Angle const, lsst::geom::Angle const, double const>());
 
-    /* Constructors */
-    cls.def(py::init<lsst::geom::Angle const, lsst::geom::Angle const, double const>());
+                /* Operators */
+                cls.def(
+                        "__eq__",
+                        [](Observatory const& self, Observatory const& other) { return self == other; },
+                        py::is_operator());
+                cls.def(
+                        "__ne__",
+                        [](Observatory const& self, Observatory const& other) { return self != other; },
+                        py::is_operator());
+                cls.def("__str__", &Observatory::toString);
+                cls.def("__repr__", &Observatory::toString);
 
-    /* Operators */
-    cls.def("__eq__", [](Observatory const& self, Observatory const& other) { return self == other; },
-            py::is_operator());
-    cls.def("__ne__", [](Observatory const& self, Observatory const& other) { return self != other; },
-            py::is_operator());
-    cls.def("__str__", &Observatory::toString);
-    cls.def("__repr__", &Observatory::toString);
-
-    /* Members */
-    cls.def("getLongitude", &Observatory::getLongitude);
-    cls.def("getLatitude", &Observatory::getLatitude);
-    cls.def("getElevation", &Observatory::getElevation);
-    cls.def("setLongitude", &Observatory::setLongitude, "longitude"_a);
-    cls.def("setLatitude", &Observatory::setLatitude, "latitude"_a);
-    cls.def("setElevation", &Observatory::setElevation, "elevation"_a);
-    });
+                /* Members */
+                cls.def("getLongitude", &Observatory::getLongitude);
+                cls.def("getLatitude", &Observatory::getLatitude);
+                cls.def("getElevation", &Observatory::getElevation);
+                cls.def("setLongitude", &Observatory::setLongitude, "longitude"_a);
+                cls.def("setLatitude", &Observatory::setLatitude, "latitude"_a);
+                cls.def("setElevation", &Observatory::setElevation, "elevation"_a);
+            });
 }
-}
-}
-}  // namespace lsst::afw::coord
+}  // namespace coord
+}  // namespace afw
+}  // namespace lsst

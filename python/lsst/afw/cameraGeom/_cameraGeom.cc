@@ -35,7 +35,6 @@ void wrapDetectorCollection(lsst::utils::python::WrapperCollection &);
 void wrapOrientation(lsst::utils::python::WrapperCollection &);
 void wrapTransformMap(lsst::utils::python::WrapperCollection &);
 
-
 PYBIND11_MODULE(_cameraGeom, mod) {
     lsst::utils::python::WrapperCollection wrappers(mod, "lsst.afw.cameraGeom");
     wrapAmplifier(wrappers);
@@ -47,6 +46,6 @@ PYBIND11_MODULE(_cameraGeom, mod) {
     wrapTransformMap(wrappers);
     wrappers.finish();
 }
-}  // namespace math
+}  // namespace cameraGeom
 }  // namespace afw
 }  // namespace lsst
