@@ -34,7 +34,7 @@
 #include "boost/test/unit_test.hpp"
 #pragma clang diagnostic pop
 #include "boost/test/floating_point_comparison.hpp"
-#include "boost/timer.hpp"
+#include "boost/timer/timer.hpp"
 
 #include "lsst/geom.h"
 #include "lsst/afw/image/Image.h"
@@ -50,7 +50,7 @@ typedef image::Image<float> Image;
 /*
  * This test verifies that turning off NanSafe will slow down the Statistics computation.
  *
- * It uses boost::timer to measure stats on an 8k x 8k image (ramp pixel values).
+ * It uses boost::timer::cpu_timer to measure stats on an 8k x 8k image (ramp pixel values).
  * - The time for NanSafe = true should be slower
  */
 BOOST_AUTO_TEST_CASE(StatisticsNanSafeSlower) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6
@@ -86,31 +86,34 @@ BOOST_AUTO_TEST_CASE(StatisticsNanSafeSlower) { /* parasoft-suppress  LsstDm-3-2
     }
     stdev = sqrt(stdev / (nx * ny - 1));
 
-    boost::timer timer;
+    boost::timer::cpu_timer timer;
 
     {
         // turn off NanSafe - should be fastest
         math::StatisticsControl sctrl = math::StatisticsControl();
         sctrl.setNanSafe(false);
-        timer.restart();
+        timer.start();
         math::Statistics statsSimple = math::makeStatistics(imgSimple, math::NPOINT | math::MEAN, sctrl);
+        timer.stop();
         BOOST_CHECK_EQUAL(statsSimple.getValue(math::MEAN), mean);
-        double tSimple = timer.elapsed();
+        auto tSimple = timer.elapsed().user;
 
         // turn on NanSafe
         sctrl.setNanSafe(true);
-        timer.restart();
+        timer.start();
         math::Statistics statsNanSafe = math::makeStatistics(imgNanSafe, math::NPOINT | math::MEAN, sctrl);
+        timer.stop();
         BOOST_CHECK_EQUAL(statsNanSafe.getValue(math::MEAN), 2 * mean);
-        double tNanSafe = timer.elapsed();
+        auto tNanSafe = timer.elapsed().user;
 
         // turn on max/min  - should be slowest
         sctrl.setNanSafe(true);
-        timer.restart();
+        timer.start();
         math::Statistics statsMinMax =
                 math::makeStatistics(imgMinMax, math::NPOINT | math::MEAN | math::MIN, sctrl);
+        timer.stop();
         BOOST_CHECK_EQUAL(statsMinMax.getValue(math::MIN), 3 * z0);
-        double tMinMax = timer.elapsed();
+        auto tMinMax = timer.elapsed().user;
 
         bool isFasterWithSimple = (tSimple < tNanSafe && tSimple < tMinMax);
         bool isSlowerWithMinMax = (tMinMax > tNanSafe && tMinMax > tSimple);
@@ -126,9 +129,5 @@ BOOST_AUTO_TEST_CASE(StatisticsNanSafeSlower) { /* parasoft-suppress  LsstDm-3-2
             std::cerr << "  This is should resolve with g++ >= 4.2, and opt=3" << std::endl;
         }
 
-#if 0
-        BOOST_CHECK(isFasterWithSimple);
-        BOOST_CHECK(isSlowerWithMinMax);
-#endif
     }
 }
