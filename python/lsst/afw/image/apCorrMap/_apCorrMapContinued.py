@@ -18,6 +18,21 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
+from lsst.utils import continueClass
+from ._apCorrMap import ApCorrMap
 
-from ._apCorrMap import *
-from ._apCorrMapContinued import *
+__all__ = ['ApCorrMap']
+
+
+@continueClass  # noqa: F811 (FIXME: remove for py 3.8+)
+class ApCorrMap:  # noqa: F811
+
+    def keys(self):
+        for item in self.items():
+            yield item[0]
+
+    def values(self):
+        for item in self.items():
+            yield item[1]
+
+    __iter__ = keys

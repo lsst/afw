@@ -25,7 +25,9 @@ import numpy as np
 
 from lsst.geom import Point2I
 from lsst.afw.geom import SpanSet
-from lsst.afw.image import Mask, Image, MaskedImage, MultibandImage, MultibandMaskedImage
+from lsst.afw.image.image import Mask, Image, MultibandImage, MultibandMaskedImage
+from lsst.afw.image.maskedImage import MaskedImage
+
 from lsst.afw.multiband import MultibandBase
 from . import Footprint, makeHeavyFootprint
 

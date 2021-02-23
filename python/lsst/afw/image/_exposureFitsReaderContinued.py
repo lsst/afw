@@ -18,6 +18,13 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
+"""This file only exists to deprecate the get/setFilter methods.
+"""
+from lsst.utils.deprecated import deprecate_pybind11
 
-from ._apCorrMap import *
-from ._apCorrMapContinued import *
+from ._imageLib import ExposureFitsReader
+
+ExposureFitsReader.readFilter = deprecate_pybind11(
+    ExposureFitsReader.readFilter,
+    reason="Replaced by readFilterLabel. Will be removed after v22.",
+    version="v22.0")
