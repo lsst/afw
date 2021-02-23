@@ -444,7 +444,7 @@ static void addGeneralizedCopyConstructors(PyClass &cls) {
     cls.def("convertFloat", [](Image<PixelT> const &self) { return Image<float>(self, true); });
     cls.def("convertDouble", [](Image<PixelT> const &self) { return Image<double>(self, true); });
 }
-} // namespace
+}  // namespace
 void wrapImage(lsst::utils::python::WrapperCollection &wrappers) {
     wrappers.addSignatureDependency("lsst.daf.base");
     wrappers.addSignatureDependency("lsst.geom");

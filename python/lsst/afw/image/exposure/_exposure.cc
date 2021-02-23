@@ -169,7 +169,6 @@ PYBIND11_MODULE(_exposure, mod) {
     wrappers.addSignatureDependency("lsst.afw.geom");
     wrappers.addSignatureDependency("lsst.afw.detection");
     wrappers.addSignatureDependency("lsst.afw.image.maskedImage");
-    
 
     auto clsExposureF = declareExposure<float>(wrappers, "F");
     auto clsExposureD = declareExposure<double>(wrappers, "D");

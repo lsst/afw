@@ -27,7 +27,6 @@
 namespace lsst {
 namespace afw {
 namespace image {
-  //void wrapApCorrMap(lsst::utils::python::WrapperCollection &);
 void wrapCalib(lsst::utils::python::WrapperCollection &);
 void wrapColor(lsst::utils::python::WrapperCollection &);
 void wrapCoaddInputs(lsst::utils::python::WrapperCollection &);
@@ -38,8 +37,6 @@ void wrapFilter(lsst::utils::python::WrapperCollection &);
 void wrapFilterLabel(lsst::utils::python::WrapperCollection &);
 void wrapImagePca(lsst::utils::python::WrapperCollection &);
 void wrapImageUtils(lsst::utils::python::WrapperCollection &);
-void wrapMaskedImage(lsst::utils::python::WrapperCollection &);
-namespace pixel {void wrapPixel(lsst::utils::python::WrapperCollection &);}
 void wrapPhotoCalib(lsst::utils::python::WrapperCollection &);
 void wrapReaders(lsst::utils::python::WrapperCollection &);
 void wrapTransmissionCurve(lsst::utils::python::WrapperCollection &);
@@ -47,19 +44,15 @@ void wrapVisitInfo(lsst::utils::python::WrapperCollection &);
 
 PYBIND11_MODULE(_imageLib, mod) {
     lsst::utils::python::WrapperCollection wrappers(mod, "lsst.afw.image");
-    //    wrapApCorrMap(wrappers);
     wrapCalib(wrappers);
     wrapColor(wrappers);
     wrapCoaddInputs(wrappers);
     wrapDefect(wrappers);
-    //   wrapExposure(wrappers);
     wrapExposureInfo(wrappers);
     wrapFilter(wrappers);
     wrapFilterLabel(wrappers);
     wrapImagePca(wrappers);
     wrapImageUtils(wrappers);
-    //    wrapMaskedImage(wrappers);
-    //   pixel::wrapPixel(wrappers);
     wrapPhotoCalib(wrappers);
     wrapReaders(wrappers);
     wrapTransmissionCurve(wrappers);

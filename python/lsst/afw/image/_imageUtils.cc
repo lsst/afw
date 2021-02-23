@@ -39,6 +39,6 @@ void wrapImageUtils(lsst::utils::python::WrapperCollection &wrappers) {
         mod.def("positionToIndex", (std::pair<int, double>(*)(double const, bool))positionToIndex);
     });
 }
-}
-}
-}
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst

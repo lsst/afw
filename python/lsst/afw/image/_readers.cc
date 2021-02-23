@@ -336,10 +336,10 @@ void declareExposureFitsReader(lsst::utils::python::WrapperCollection &wrappers)
 }
 }  // namespace
 void wrapReaders(lsst::utils::python::WrapperCollection &wrappers) {
-    //wrappers.addInheritanceDependency("lsst.daf.base");
+    // wrappers.addInheritanceDependency("lsst.daf.base");
     wrappers.addSignatureDependency("lsst.geom");
     wrappers.addSignatureDependency("lsst.afw.image.image");
-    wrappers.addSignatureDependency ("lsst.afw.image.maskedImage");
+    wrappers.addSignatureDependency("lsst.afw.image.maskedImage");
     wrappers.addSignatureDependency("lsst.afw.image.exposure");
     declareImageFitsReader(wrappers);
     declareMaskFitsReader(wrappers);

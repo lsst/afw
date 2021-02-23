@@ -120,7 +120,6 @@ void wrapFilterLabel(lsst::utils::python::WrapperCollection &wrappers) {
     wrappers.wrap(
             [](auto &mod) { mod.def("getDatabaseFilterLabel", &getDatabaseFilterLabel, "filterLabel"_a); });
 }
-
 }  // namespace image
 }  // namespace afw
 }  // namespace lsst

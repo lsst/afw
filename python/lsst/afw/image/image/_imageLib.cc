@@ -27,7 +27,7 @@
 namespace lsst {
 namespace afw {
 namespace image {
-  //void wrapApCorrMap(lsst::utils::python::WrapperCollection &);
+
 void wrapImage(lsst::utils::python::WrapperCollection &);
 void wrapImageSlice(lsst::utils::python::WrapperCollection &);
 

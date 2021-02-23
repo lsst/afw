@@ -73,7 +73,6 @@ void wrapTransmissionCurve(lsst::utils::python::WrapperCollection &wrappers) {
     });
 }
 
-
 }  // namespace image
 }  // namespace afw
 }  // namespace lsst
