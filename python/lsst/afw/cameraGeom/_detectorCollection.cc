@@ -1,4 +1,6 @@
 /*
+ * This file is part of afw.
+ *
  * Developed for the LSST Data Management System.
  * This product includes software developed by the LSST Project
  * (https://www.lsst.org).
