@@ -42,7 +42,7 @@ def imageReadFitsWithOptions(cls, source, options):
     source : `str`
         Fits file path from which to read image, mask, masked image
         or exposure.
-    options : `lsst.daf.base.PropertySet`
+    options : `lsst.daf.base.PropertySet` or `dict`
         Read options:
 
         - llcX: bbox minimum x (int)
@@ -52,6 +52,9 @@ def imageReadFitsWithOptions(cls, source, options):
         - imageOrigin: one of "LOCAL" or "PARENT" (has no effect unless
             a bbox is specified by llcX, etc.)
 
+        Alternatively, a bounding box () can be passed on with the
+        ``"bbox"'' (`lsst.geom.Box2I`) key.
+
     Raises
     ------
     RuntimeError
@@ -60,22 +63,24 @@ def imageReadFitsWithOptions(cls, source, options):
         If options contains "llcX" and is missing any of
         "llcY", "width", or "height".
     """
-    bbox = lsst.geom.Box2I()
-    if options.exists("llcX"):
-        llcX = options.getInt("llcX")
-        llcY = options.getInt("llcY")
-        width = options.getInt("width")
-        height = options.getInt("height")
-        bbox = lsst.geom.Box2I(lsst.geom.Point2I(llcX, llcY), lsst.geom.Extent2I(width, height))
     origin = ImageOrigin.PARENT
-    if options.exists("imageOrigin"):
-        originStr = options.getString("imageOrigin")
-        if (originStr == "LOCAL"):
-            origin = ImageOrigin.LOCAL
-        elif (originStr == "PARENT"):
-            origin = ImageOrigin.PARENT
-        else:
-            raise RuntimeError("Unknown ImageOrigin type {}".format(originStr))
+    bbox = lsst.geom.Box2I()
+    if "bbox" in options:
+        bbox = options["bbox"]
+    elif "llcX" in options:
+        llcX = int(options["llcX"])
+        llcY = int(options["llcY"])
+        width = int(options["width"])
+        height = int(options["height"])
+        bbox = lsst.geom.Box2I(lsst.geom.Point2I(llcX, llcY), lsst.geom.Extent2I(width, height))
+        if "imageOrigin" in options:
+            originStr = str(options["imageOrigin"])
+            if (originStr == "LOCAL"):
+                origin = ImageOrigin.LOCAL
+            elif (originStr == "PARENT"):
+                origin = ImageOrigin.PARENT
+            else:
+                raise RuntimeError("Unknown ImageOrigin type {}".format(originStr))
 
     return cls(source, bbox=bbox, origin=origin)
 
