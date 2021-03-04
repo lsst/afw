@@ -214,7 +214,7 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
                 (afwImage.MaskedImageF, afwImage.MaskedImageD),
                 (None, "LOCAL", "PARENT"),
             ):
-                with self.subTest(ImageClass=ImageClass, imageOrigin=imageOrigin):
+                with self.subTest(ImageClass=str(ImageClass), imageOrigin=imageOrigin):
                     fullImage = ImageClass(filepath)
                     options = dafBase.PropertySet()
                     options.set("llcX", bbox.getMinX())
@@ -232,7 +232,7 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
                     for name in ("llcY", "width", "height"):
                         badOptions = options.deepCopy()
                         badOptions.remove(name)
-                        with self.assertRaises(pexEx.NotFoundError):
+                        with self.assertRaises(LookupError):
                             ImageClass.readFitsWithOptions(filepath, badOptions)
 
                         badOptions = options.deepCopy()
