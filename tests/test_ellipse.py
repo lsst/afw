@@ -54,7 +54,7 @@ class EllipseTestCase(lsst.utils.tests.TestCase):
 
     def testRadii(self):
         for core, det, trace in zip(self.cores, [144, 14], [25, 8]):
-            with self.subTest(core=core):
+            with self.subTest(core=str(core)):
                 detRadius = det**0.25
                 traceRadius = (0.5 * trace)**0.5
                 area = np.pi * det**0.5
@@ -78,7 +78,7 @@ class EllipseTestCase(lsst.utils.tests.TestCase):
 
     def testAccessors(self):
         for core in self.cores:
-            with self.subTest(core=core):
+            with self.subTest(core=str(core)):
                 vec = np.random.randn(3) * 1E-3 + core.getParameterVector()
                 core.setParameterVector(vec)
                 self.assertImagesEqual(core.getParameterVector(), vec)
@@ -103,7 +103,7 @@ class EllipseTestCase(lsst.utils.tests.TestCase):
 
     def testTransform(self):
         for core in self.cores:
-            with self.subTest(core=core):
+            with self.subTest(core=str(core)):
                 transform = lsst.geom.LinearTransform(np.random.randn(2, 2))
                 t1 = core.transform(transform)
                 core.transformInPlace(transform)
@@ -113,7 +113,7 @@ class EllipseTestCase(lsst.utils.tests.TestCase):
 
     def testPixelRegion(self):
         for core in self.cores:
-            with self.subTest(core=core):
+            with self.subTest(core=str(core)):
                 e = lsst.afw.geom.ellipses.Ellipse(
                     core, lsst.geom.Point2D(*np.random.randn(2)))
                 region = lsst.afw.geom.ellipses.PixelRegion(e)

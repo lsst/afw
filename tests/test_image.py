@@ -136,7 +136,7 @@ class ImageTestCase(lsst.utils.tests.TestCase):
         imageClasses = (afwImage.ImageF, afwImage.ImageD, afwImage.ImageI, afwImage.Mask)
 
         for ImageClass1, ImageClass2 in itertools.product(imageClasses, imageClasses):
-            with self.subTest(ImageClass1=ImageClass1, ImageClass2=ImageClass2):
+            with self.subTest(ImageClass1=str(ImageClass1), ImageClass2=str(ImageClass2)):
                 image1 = ImageClass1(dim)
                 self.assertTrue(afwImage.imagesOverlap(image1, image1))
 
