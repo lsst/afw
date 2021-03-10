@@ -169,7 +169,7 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
             images = [ImageClass1(dim), ImageClass2(dim)]
             for image1, mask1, variance1, image2, mask2, variance2 in itertools.product(
                     images, masks, variances, images, masks, variances):
-                with self.subTest(ImageClass1=ImageClass1, ImageClass2=ImageClass2,
+                with self.subTest(ImageClass1=str(ImageClass1), ImageClass2=str(ImageClass2),
                                   image1=image1, mask1=mask1, variance1=variance1,
                                   image2=image2, mask2=mask2, variance2=variance2):
                     shouldOverlap = (image1 is image2) or (mask1 is mask2) or (variance1 is variance2)
