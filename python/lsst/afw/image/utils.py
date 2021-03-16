@@ -29,7 +29,7 @@ import numpy as np
 import lsst.afw.detection as afwDetect
 from .maskedImage import MaskedImage, makeMaskedImage
 from .image import Mask
-from .filter import Filter, FilterProperty
+from ._filter import Filter, FilterProperty
 
 
 def clipImage(im, minClip, maxClip):
