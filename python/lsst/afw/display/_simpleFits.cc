@@ -1,9 +1,11 @@
 /*
- * LSST Data Management System
- * Copyright 2008-2017  AURA/LSST.
+ * This file is part of afw.
  *
- * This product includes software developed by the
- * LSST Project (http://www.lsst.org/).
+ * Developed for the LSST Data Management System.
+ * This product includes software developed by the LSST Project
+ * (https://www.lsst.org).
+ * See the COPYRIGHT file at the top-level directory of this distribution
+ * for details of code ownership.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,13 +17,14 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the LSST License Statement and
- * the GNU General Public License along with this program.  If not,
- * see <https://www.lsstcorp.org/LegalNotices/>.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+
 #include <cstdint>
 
 #include <pybind11/pybind11.h>
+#include <lsst/utils/python.h>
 
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/Mask.h"
@@ -37,29 +40,33 @@ namespace display {
 namespace {
 
 template <typename ImageT>
-void declareAll(py::module &mod) {
-    mod.def("writeFitsImage",
-            (void (*)(int, ImageT const &, geom::SkyWcs const *, char const *)) & writeBasicFits<ImageT>,
-            "fd"_a, "data"_a, "wcs"_a = NULL, "title"_a = NULL);
+void declareAll(lsst::utils::python::WrapperCollection &wrappers) {
+    wrappers.wrap([](auto &mod) {
+        mod.def("writeFitsImage",
+                (void (*)(int, ImageT const &, geom::SkyWcs const *, char const *)) & writeBasicFits<ImageT>,
+                "fd"_a, "data"_a, "wcs"_a = NULL, "title"_a = NULL);
 
-    mod.def("writeFitsImage",
-            (void (*)(std::string const &, ImageT const &, geom::SkyWcs const *, char const *)) &
-                    writeBasicFits<ImageT>,
-            "filename"_a, "data"_a, "wcs"_a = NULL, "title"_a = NULL);
+        mod.def("writeFitsImage",
+                (void (*)(std::string const &, ImageT const &, geom::SkyWcs const *, char const *)) &
+                        writeBasicFits<ImageT>,
+                "filename"_a, "data"_a, "wcs"_a = NULL, "title"_a = NULL);
+    });
 }
 
-}  // <anonymous>
+}  // namespace
 
 PYBIND11_MODULE(_simpleFits, mod) {
-    declareAll<image::Image<std::uint16_t>>(mod);
-    declareAll<image::Image<std::uint64_t>>(mod);
-    declareAll<image::Image<int>>(mod);
-    declareAll<image::Image<float>>(mod);
-    declareAll<image::Image<double>>(mod);
-    declareAll<image::Mask<std::uint16_t>>(mod);
-    declareAll<image::Mask<image::MaskPixel>>(mod);
+    lsst::utils::python::WrapperCollection wrappers(mod, "lsst.afw.display");
+    declareAll<image::Image<std::uint16_t>>(wrappers);
+    declareAll<image::Image<std::uint64_t>>(wrappers);
+    declareAll<image::Image<int>>(wrappers);
+    declareAll<image::Image<float>>(wrappers);
+    declareAll<image::Image<double>>(wrappers);
+    declareAll<image::Mask<std::uint16_t>>(wrappers);
+    declareAll<image::Mask<image::MaskPixel>>(wrappers);
+    wrappers.finish();
 }
 
-}  // display
-}  // afw
-}  // lsst
+}  // namespace display
+}  // namespace afw
+}  // namespace lsst
