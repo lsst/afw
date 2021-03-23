@@ -19,6 +19,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+__all__ = ['DetectorCollectionBase', 'DetectorCollectionBuilderBase']
+
 from lsst.utils import TemplateMeta
 from ._cameraGeom import Detector
 from ._cameraGeom import DetectorCollectionDetectorBase, DetectorCollectionBuilderBase
