@@ -165,6 +165,7 @@ void declareSkyWcs(lsst::utils::python::WrapperCollection &wrappers) {
 void wrapSkyWcs(lsst::utils::python::WrapperCollection &wrappers) {
     wrappers.addInheritanceDependency("lsst.afw.table.io");
     wrappers.addInheritanceDependency("lsst.afw.typehandling");
+    wrappers.addSignatureDependency("astshim");
     declareSkyWcs(wrappers);
 }
 }  // namespace geom

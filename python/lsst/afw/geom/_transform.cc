@@ -128,6 +128,7 @@ void declareTransform(lsst::utils::python::WrapperCollection &wrappers) {
 }  // namespace
 void wrapTransform(lsst::utils::python::WrapperCollection &wrappers) {
     wrappers.addSignatureDependency("lsst.afw.table.io");
+    wrappers.addSignatureDependency("astshim");
     declareTransform<GenericEndpoint, GenericEndpoint>(wrappers);
     declareTransform<GenericEndpoint, Point2Endpoint>(wrappers);
     declareTransform<GenericEndpoint, SpherePointEndpoint>(wrappers);

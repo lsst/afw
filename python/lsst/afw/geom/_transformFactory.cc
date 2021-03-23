@@ -65,6 +65,7 @@ void declareTransformFactory(lsst::utils::python::WrapperCollection &wrappers) {
 }  // namespace
 void wrapTransformFactory(lsst::utils::python::WrapperCollection &wrappers) {
     declareTransformFactory(wrappers);
+    wrappers.addSignatureDependency("astshim");
 }
 }  // namespace geom
 }  // namespace afw
