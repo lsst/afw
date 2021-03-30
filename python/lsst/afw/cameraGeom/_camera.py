@@ -21,8 +21,9 @@
 
 __all__ = ['Camera']
 
+import numpy as np
 from lsst.utils import continueClass, doImport
-from ._cameraGeom import Camera
+from ._cameraGeom import Camera, FOCAL_PLANE
 
 
 @continueClass  # noqa: F811 (FIXME: remove for py 3.8+)
@@ -52,3 +53,18 @@ class Camera:  # noqa: F811
     def telescopeDiameter(self):
         cls = doImport(self.getPupilFactoryName())
         return cls.telescopeDiameter
+
+    def computeMaxFocalPlaneRadius(self):
+        """Compute the maximum radius on the focal plane of the corners of all
+        detectors in this camera.
+
+        Returns
+        -------
+        focalRadius : `float`
+            Maximum focal plane radius in FOCAL_PLANE units (mm).
+        """
+        radii = []
+        for detector in self:
+            for corner in detector.getCorners(FOCAL_PLANE):
+                radii.append(np.hypot(*corner))
+        return np.max(radii)
