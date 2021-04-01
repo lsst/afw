@@ -110,6 +110,8 @@ Instead, we read a FITS image with an origin of ``(1, 1)`` into LSST image objec
 We also adjust any FITS WCS in the image headers to account for this change in conventions, and *also* write an extra (trivial, shift-only) WCS that offsets the pixel grid by ``xy0``, providing FITS access to our `PARENT` coordinate system.
 
 
+.. _float-int-bounding-boxes:
+
 Floating-Point and Integer Bounding Boxes
 =========================================
 
