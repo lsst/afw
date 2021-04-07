@@ -3,5 +3,5 @@ from lsst.sconsUtils import scripts
 scripts.BasicSConscript.pybind11(
     ['_io', ],
     # Need .cc here or Scons will look for the wrong file type
-    extraSrc={'_io': ['_fits.cc', '_persistable.cc'], },
+    extraSrc={'_io': ['_fits.cc', '_persistable.cc', '_inputArchive.cc', '_outputArchive.cc'], },
     addUnderscore=False)
