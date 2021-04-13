@@ -25,6 +25,7 @@
 
 #include "lsst/afw/table/io/OutputArchive.h"
 #include "lsst/afw/fits.h"
+#include "lsst/afw/table/io/Persistable.h"
 
 namespace py = pybind11;
 using namespace py::literals;
@@ -41,6 +42,8 @@ void wrapOutputArchive(utils::python::WrapperCollection &wrappers) {
     // wrappers.addSignatureDependency("lsst.afw.fits");
 
     wrappers.wrapType(PyOutputArchive(wrappers.module, "OutputArchive"), [](auto &mod, auto &cls) {
+        cls.def(py::init<>());
+        cls.def("writeFits", &OutputArchive::writeFits);
     });
 }
 
