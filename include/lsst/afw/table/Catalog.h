@@ -608,7 +608,9 @@ public:
      *  In Python, this method returns a Record, not an iterator.
      *
      *  @note The catalog must be sorted in ascending order according to the given key
-     *        before calling find (i.e. isSorted(key) must be true).
+     *        before calling find (i.e. isSorted(key) must be true) for maximal efficiency.
+     *        If the value searched for is not found, it assumes that the catalog is unsorted
+     *        and performs a brute-force search instead of failing immediately.
      *
      *  Returns end() if the Record cannot be found.
      */
@@ -758,9 +760,15 @@ typename CatalogT<RecordT>::iterator CatalogT<RecordT>::find(typename Field<T>::
     detail::KeyExtractionFunctor<RecordT, T> f = {key};
     // Iterator adaptor that makes a CatalogT iterator work like an iterator over field values.
     typedef boost::transform_iterator<detail::KeyExtractionFunctor<RecordT, T>, iterator> SearchIter;
-    // Use binary search for log n search; requires sorted table.
+    // Try binary search for log n search assuming the table is sorted.
+    // If the search is unsuccessful, try a brute-force search before quitting.
     SearchIter i = std::lower_bound(SearchIter(begin(), f), SearchIter(end(), f), value);
-    if (i.base() == end() || *i != value) return end();
+    if (i.base() == end() || *i != value)
+    {
+        i = std::find(SearchIter(begin(), f), SearchIter(end(), f), value);
+        if (i.base() == end() || *i != value)
+            return end();
+    }
     return i.base();
 }
 
@@ -771,9 +779,15 @@ typename CatalogT<RecordT>::const_iterator CatalogT<RecordT>::find(typename Fiel
     detail::KeyExtractionFunctor<RecordT, T> f = {key};
     // Iterator adaptor that makes a CatalogT iterator work like an iterator over field values.
     typedef boost::transform_iterator<detail::KeyExtractionFunctor<RecordT, T>, const_iterator> SearchIter;
-    // Use binary search for log n search; requires sorted table.
+    // Try binary search for log n search assuming the table is sorted.
+    // If the search is unsuccessful, try a brute-force search before quitting.
     SearchIter i = std::lower_bound(SearchIter(begin(), f), SearchIter(end(), f), value);
-    if (i.base() == end() || *i != value) return end();
+    if (i.base() == end() || *i != value)
+    {
+        i = std::find(SearchIter(begin(), f), SearchIter(end(), f), value);
+        if (i.base() == end() || *i != value)
+            return end();
+    }
     return i.base();
 }
 
