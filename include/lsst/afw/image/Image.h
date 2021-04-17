@@ -125,7 +125,7 @@ public:
      * this may not be what you want.  See also assign(rhs) to copy pixels between Image%s
      */
     Image(const Image& rhs, const bool deep = false);
-    Image(Image&& rhs);
+    Image(Image&& rhs) noexcept;
 
     /**
      *  Construct an Image by reading a regular FITS file.
@@ -142,7 +142,7 @@ public:
      *                              when on-disk values may overflow or truncate.
      */
     explicit Image(std::string const& fileName, int hdu = fits::DEFAULT_HDU,
-                   std::shared_ptr<lsst::daf::base::PropertySet> metadata =
+                   const std::shared_ptr<lsst::daf::base::PropertySet>& metadata =
                            std::shared_ptr<lsst::daf::base::PropertySet>(),
                    lsst::geom::Box2I const& bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT,
                    bool allowUnsafe = false);
@@ -162,7 +162,7 @@ public:
      *                              when on-disk values may overflow or truncate.
      */
     explicit Image(fits::MemFileManager& manager, int hdu = fits::DEFAULT_HDU,
-                   std::shared_ptr<lsst::daf::base::PropertySet> metadata =
+                   const std::shared_ptr<lsst::daf::base::PropertySet>& metadata =
                            std::shared_ptr<lsst::daf::base::PropertySet>(),
                    lsst::geom::Box2I const& bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT,
                    bool allowUnsafe = false);
@@ -179,7 +179,7 @@ public:
      *                              when on-disk values may overflow or truncate.
      */
     explicit Image(fits::Fits& fitsfile,
-                   std::shared_ptr<lsst::daf::base::PropertySet> metadata =
+                   const std::shared_ptr<lsst::daf::base::PropertySet>& metadata =
                            std::shared_ptr<lsst::daf::base::PropertySet>(),
                    lsst::geom::Box2I const& bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT,
                    bool allowUnsafe = false);
@@ -208,7 +208,7 @@ public:
      * private
      */
     Image& operator=(const Image& rhs);
-    Image& operator=(Image&& rhs);
+    Image& operator=(Image&& rhs) noexcept;
 
     /**
      * Return a subimage corresponding to the given box.

@@ -80,13 +80,6 @@ public:
 
     typedef detail::Mask_tag image_category;
 
-    /// A templated class to return this classes' type (present in Image/Mask/MaskedImage)
-    template <typename MaskPT = MaskPixelT>
-    struct ImageTypeFactory {
-        /// Return the desired type
-        typedef Mask<MaskPT> type;
-    };
-
     // Constructors
     /**
      * Construct a Mask initialized to 0x0
@@ -161,7 +154,7 @@ public:
      *  on-disk version.
      */
     explicit Mask(std::string const& fileName, int hdu = fits::DEFAULT_HDU,
-                  std::shared_ptr<lsst::daf::base::PropertySet> metadata =
+                  const std::shared_ptr<lsst::daf::base::PropertySet>& metadata =
                           std::shared_ptr<lsst::daf::base::PropertySet>(),
                   lsst::geom::Box2I const& bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT,
                   bool conformMasks = false, bool allowUnsafe = false);
@@ -187,7 +180,7 @@ public:
      *  on-disk version.
      */
     explicit Mask(fits::MemFileManager& manager, int hdu = fits::DEFAULT_HDU,
-                  std::shared_ptr<lsst::daf::base::PropertySet> metadata =
+                  const std::shared_ptr<lsst::daf::base::PropertySet>& metadata =
                           std::shared_ptr<lsst::daf::base::PropertySet>(),
                   lsst::geom::Box2I const& bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT,
                   bool conformMasks = false, bool allowUnsafe = false);
@@ -210,7 +203,7 @@ public:
      *  on-disk version.
      */
     explicit Mask(fits::Fits& fitsfile,
-                  std::shared_ptr<lsst::daf::base::PropertySet> metadata =
+                  const std::shared_ptr<lsst::daf::base::PropertySet>& metadata =
                           std::shared_ptr<lsst::daf::base::PropertySet>(),
                   lsst::geom::Box2I const& bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT,
                   bool conformMasks = false, bool allowUnsafe = false);
@@ -226,8 +219,8 @@ public:
      * @param src mask to copy
      * @param deep deep copy? (construct a view with shared pixels if false)
      */
-    Mask(const Mask& src, const bool deep = false);
-    Mask(Mask&& src);
+    Mask(const Mask& src, bool deep = false);
+    Mask(Mask&& src) noexcept;
     ~Mask() override;
     /**
      * Construct a Mask from a subregion of another Mask
@@ -237,8 +230,8 @@ public:
      * @param origin coordinate system of the bbox
      * @param deep deep copy? (construct a view with shared pixels if false)
      */
-    Mask(const Mask& src, const lsst::geom::Box2I& bbox, ImageOrigin const origin = PARENT,
-         const bool deep = false);
+    Mask(const Mask& src, const lsst::geom::Box2I& bbox, ImageOrigin origin = PARENT,
+         bool deep = false);
 
     explicit Mask(ndarray::Array<MaskPixelT, 2, 1> const& array, bool deep = false,
                   lsst::geom::Point2I const& xy0 = lsst::geom::Point2I());
@@ -246,19 +239,19 @@ public:
     void swap(Mask& rhs);
     // Operators
 
-    Mask& operator=(MaskPixelT const rhs);
+    Mask& operator=(MaskPixelT rhs);
     Mask& operator=(const Mask& rhs);
-    Mask& operator=(Mask&& rhs);
+    Mask& operator=(Mask&& rhs) noexcept;
 
     /// OR a Mask into a Mask
     Mask& operator|=(Mask const& rhs);
     /// OR a bitmask into a Mask
-    Mask& operator|=(MaskPixelT const rhs);
+    Mask& operator|=(MaskPixelT rhs);
 
     /// AND a Mask into a Mask
     Mask& operator&=(Mask const& rhs);
     /// AND a bitmask into a Mask
-    Mask& operator&=(MaskPixelT const rhs);
+    Mask& operator&=(MaskPixelT rhs);
 
     /**
      * Return a subimage corresponding to the given box.
@@ -292,7 +285,7 @@ public:
     /// XOR a Mask into a Mask
     Mask& operator^=(Mask const& rhs);
     /// XOR a bitmask into a Mask
-    Mask& operator^=(MaskPixelT const rhs);
+    Mask& operator^=(MaskPixelT rhs);
 
     /**
      * get a reference to the specified pixel
@@ -447,14 +440,14 @@ public:
     /**
      * Set the bit specified by "planeId" for pixels (x0, y) ... (x1, y)
      */
-    void setMaskPlaneValues(const int plane, const int x0, const int x1, const int y);
+    void setMaskPlaneValues(int plane, int x0, int x1, int y);
     /**
      * Given a PropertySet that contains the MaskPlane assignments, setup the MaskPlanes.
      *
      * @param metadata metadata from a Mask
      * @returns a dictionary of mask plane name: plane ID
      */
-    static MaskPlaneDict parseMaskPlaneMetadata(std::shared_ptr<lsst::daf::base::PropertySet const> metadata);
+    static MaskPlaneDict parseMaskPlaneMetadata(const std::shared_ptr<lsst::daf::base::PropertySet const>& metadata);
     //
     // Operations on the mask plane dictionary
     //
@@ -471,7 +464,7 @@ public:
      *
      * @throws lsst::pex::exceptions::InvalidParameterError if plane is invalid
      */
-    void removeAndClearMaskPlane(const std::string& name, bool const removeFromDefault = false);
+    void removeAndClearMaskPlane(const std::string& name, bool removeFromDefault = false);
 
     /**
      * Return the mask plane number corresponding to a plane name

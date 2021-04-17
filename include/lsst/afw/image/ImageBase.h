@@ -190,7 +190,7 @@ public:
      * this may not be what you want.  See also assign(rhs) to copy pixels between Image%s
      */
     ImageBase(const ImageBase& src, const bool deep = false);
-    ImageBase(ImageBase&& src);
+    ImageBase(ImageBase&& src) noexcept;
     /**
      * Copy constructor to make a copy of part of an %image.
      *
@@ -237,7 +237,7 @@ public:
      *  will be deep-copied in Python, but the constructor will fail to compile in pure C++.
      */
     explicit ImageBase(Array const& array, bool deep = false,
-                       lsst::geom::Point2I const& xy0 = lsst::geom::Point2I());
+                       lsst::geom::Point2I  xy0 = lsst::geom::Point2I());
 
     virtual ~ImageBase() = default;
     /** Shallow assignment operator.
@@ -249,8 +249,9 @@ public:
      * declare this function private
      */
     ImageBase& operator=(const ImageBase& rhs);
-    ImageBase& operator=(ImageBase&& rhs);
-    /// Set the %image's pixels to rhs
+    ImageBase& operator=(ImageBase&& rhs) noexcept;
+
+    virtual /// Set the %image's pixels to rhs
     ImageBase& operator=(const PixelT rhs);
 
     /**
@@ -267,15 +268,18 @@ public:
     void assign(ImageBase const& rhs, lsst::geom::Box2I const& bbox = lsst::geom::Box2I(),
                 ImageOrigin origin = PARENT);
 
-    // TODO: should deprecate these, but the replacement should take two ints
+    virtual // TODO: should deprecate these, but the replacement should take two ints
     // rather than a Point2I, to keep C++ loops simple
     /// Return a reference to the pixel `(x, y)` in LOCAL coordinates
     PixelReference operator()(int x, int y);
-    /// Return a reference to the pixel `(x, y)` in LOCAL coordinates with bounds checking
+
+    virtual /// Return a reference to the pixel `(x, y)` in LOCAL coordinates with bounds checking
     PixelReference operator()(int x, int y, CheckIndices const&);
-    /// Return a const reference to the pixel `(x, y)` in LOCAL coordinates
+
+    virtual /// Return a const reference to the pixel `(x, y)` in LOCAL coordinates
     PixelConstReference operator()(int x, int y) const;
-    /// Return a const reference to the pixel `(x, y)` in LOCAL coordinates with bounds checking
+
+    virtual /// Return a const reference to the pixel `(x, y)` in LOCAL coordinates with bounds checking
     PixelConstReference operator()(int x, int y, CheckIndices const&) const;
 
     /// Return a reference to a single pixel (with no bounds check).

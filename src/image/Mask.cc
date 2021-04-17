@@ -36,7 +36,6 @@
 #pragma clang diagnostic ignored "-Wunused-variable"
 #pragma clang diagnostic pop
 #include "boost/format.hpp"
-#include "boost/filesystem/path.hpp"
 
 #include "boost/functional/hash.hpp"
 
@@ -119,7 +118,7 @@ Mask<MaskPixelT>::Mask(Mask const& rhs, bool deep)
         : ImageBase<MaskPixelT>(rhs, deep), _maskDict(rhs._maskDict) {}
 // Delegate to copy-constructor for backwards compatibility
 template <typename MaskPixelT>
-Mask<MaskPixelT>::Mask(Mask&& rhs) : Mask(rhs, false) {}
+Mask<MaskPixelT>::Mask(Mask&& rhs) noexcept : Mask(rhs, false) {}
 
 template <typename MaskPixelT>
 Mask<MaskPixelT>::~Mask() = default;
@@ -144,15 +143,14 @@ void swap(Mask<PixelT>& a, Mask<PixelT>& b) {
 
 template <typename MaskPixelT>
 Mask<MaskPixelT>& Mask<MaskPixelT>::operator=(const Mask<MaskPixelT>& rhs) {
-    Mask tmp(rhs);
-    swap(tmp);  // See Meyers, Effective C++, Item 11
-
+    Mask(rhs).swap(*this);
     return *this;
 }
 // Delegate to copy-assignment for backwards compatibility
 template <typename MaskPixelT>
-Mask<MaskPixelT>& Mask<MaskPixelT>::operator=(Mask<MaskPixelT>&& rhs) {
-    return *this = rhs;
+Mask<MaskPixelT>& Mask<MaskPixelT>::operator=(Mask<MaskPixelT>&& rhs) noexcept {
+    *this = rhs;
+    return *this;
 }
 
 template <typename MaskPixelT>
@@ -165,7 +163,7 @@ Mask<MaskPixelT>& Mask<MaskPixelT>::operator=(MaskPixelT const rhs) {
 #ifndef DOXYGEN  // doc for this section is already in header
 
 template <typename MaskPixelT>
-Mask<MaskPixelT>::Mask(std::string const& fileName, int hdu, std::shared_ptr<daf::base::PropertySet> metadata,
+Mask<MaskPixelT>::Mask(std::string const& fileName, int hdu, const std::shared_ptr<daf::base::PropertySet>& metadata,
                        lsst::geom::Box2I const& bbox, ImageOrigin origin, bool conformMasks, bool allowUnsafe)
         : ImageBase<MaskPixelT>(), _maskDict(detail::MaskDict::getDefault()) {
     MaskFitsReader reader(fileName, hdu);
@@ -177,7 +175,7 @@ Mask<MaskPixelT>::Mask(std::string const& fileName, int hdu, std::shared_ptr<daf
 
 template <typename MaskPixelT>
 Mask<MaskPixelT>::Mask(fits::MemFileManager& manager, int hdu,
-                       std::shared_ptr<daf::base::PropertySet> metadata, lsst::geom::Box2I const& bbox,
+                       const std::shared_ptr<daf::base::PropertySet>& metadata, lsst::geom::Box2I const& bbox,
                        ImageOrigin origin, bool conformMasks, bool allowUnsafe)
         : ImageBase<MaskPixelT>(), _maskDict(detail::MaskDict::getDefault()) {
     MaskFitsReader reader(manager, hdu);
@@ -188,7 +186,7 @@ Mask<MaskPixelT>::Mask(fits::MemFileManager& manager, int hdu,
 }
 
 template <typename MaskPixelT>
-Mask<MaskPixelT>::Mask(fits::Fits& fitsFile, std::shared_ptr<daf::base::PropertySet> metadata,
+Mask<MaskPixelT>::Mask(fits::Fits& fitsFile, const std::shared_ptr<daf::base::PropertySet>& metadata,
                        lsst::geom::Box2I const& bbox, ImageOrigin const origin, bool const conformMasks,
                        bool allowUnsafe)
         : ImageBase<MaskPixelT>(), _maskDict(detail::MaskDict::getDefault()) {
@@ -250,14 +248,14 @@ void Mask<MaskPixelT>::writeFits(fits::Fits& fitsfile, fits::ImageWriteOptions c
 
 template <typename MaskPixelT>
 std::string Mask<MaskPixelT>::interpret(MaskPixelT value) {
-    std::string result = "";
+    std::string result;
     MaskPlaneDict const& mpd = _maskPlaneDict()->getMaskPlaneDict();
-    for (MaskPlaneDict::const_iterator iter = mpd.begin(); iter != mpd.end(); ++iter) {
-        if (value & getBitMask(iter->second)) {
-            if (result.size() > 0) {
+    for (const auto & iter : mpd) {
+        if (value & getBitMask(iter.second)) {
+            if (!result.empty()) {
                 result += ",";
             }
-            result += iter->first;
+            result += iter.first;
         }
     }
     return result;
@@ -319,7 +317,6 @@ void Mask<MaskPixelT>::removeAndClearMaskPlane(const std::string& name, bool con
     clearMaskPlane(getMaskPlane(name));  // clear this bits in this Mask
 
     if (_maskDict == detail::MaskDict::getDefault() && removeFromDefault) {  // we are the default
-        ;
     } else {
         _maskDict = _maskDict->clone();
     }
@@ -340,8 +337,8 @@ template <typename MaskPixelT>
 MaskPixelT Mask<MaskPixelT>::getBitMask(int planeId) {
     MaskPlaneDict const& mpd = _maskPlaneDict()->getMaskPlaneDict();
 
-    for (MaskPlaneDict::const_iterator i = mpd.begin(); i != mpd.end(); ++i) {
-        if (planeId == i->second) {
+    for (const auto & i : mpd) {
+        if (planeId == i.second) {
             MaskPixelT const bitmask = getBitMaskNoThrow(planeId);
             if (bitmask == 0) {  // failed
                 break;
@@ -378,8 +375,8 @@ MaskPixelT Mask<MaskPixelT>::getPlaneBitMask(const std::string& name) {
 template <typename MaskPixelT>
 MaskPixelT Mask<MaskPixelT>::getPlaneBitMask(const std::vector<std::string>& name) {
     MaskPixelT mpix = 0x0;
-    for (std::vector<std::string>::const_iterator it = name.begin(); it != name.end(); ++it) {
-        mpix |= getBitMask(getMaskPlane(*it));
+    for (const auto & it : name) {
+        mpix |= getBitMask(getMaskPlane(it));
     }
     return mpix;
 }
@@ -421,9 +418,9 @@ void Mask<MaskPixelT>::conformMaskPlanes(MaskPlaneDict const& currentPlaneDict) 
         MaskPixelT currentMask[sizeof(MaskPixelT) * 8];    //           mapped to these bits
         int numReMap = 0;
 
-        for (MaskPlaneDict::const_iterator i = currentPlaneDict.begin(); i != currentPlaneDict.end(); i++) {
-            std::string const name = i->first;                     // name of mask plane
-            int const currentPlaneNumber = i->second;              // plane number currently in use
+        for (const auto & i : currentPlaneDict) {
+            std::string const name = i.first;                     // name of mask plane
+            int const currentPlaneNumber = i.second;              // plane number currently in use
             int canonicalPlaneNumber = getMaskPlaneNoThrow(name);  // plane number in lsst::afw::image::Mask
 
             if (canonicalPlaneNumber < 0) {  // no such plane; add it
@@ -484,14 +481,12 @@ typename ImageBase<MaskPixelT>::PixelConstReference Mask<MaskPixelT>::operator()
 
 template <typename MaskPixelT>
 bool Mask<MaskPixelT>::operator()(int x, int y, int planeId) const {
-    // !! converts an int to a bool
-    return !!(this->ImageBase<MaskPixelT>::operator()(x, y) & getBitMask(planeId));
+    return (this->ImageBase<MaskPixelT>::operator()(x, y) & getBitMask(planeId));
 }
 
 template <typename MaskPixelT>
 bool Mask<MaskPixelT>::operator()(int x, int y, int planeId, CheckIndices const& check) const {
-    // !! converts an int to a bool
-    return !!(this->ImageBase<MaskPixelT>::operator()(x, y, check) & getBitMask(planeId));
+    return this->ImageBase<MaskPixelT>::operator()(x, y, check) & getBitMask(planeId);
 }
 
 template <typename MaskPixelT>
@@ -581,20 +576,20 @@ void Mask<MaskPixelT>::addMaskPlanesToMetadata(std::shared_ptr<dafBase::Property
     // First, clear existing MaskPlane metadata
     typedef std::vector<std::string> NameList;
     NameList paramNames = metadata->paramNames(false);
-    for (NameList::const_iterator i = paramNames.begin(); i != paramNames.end(); ++i) {
-        if (i->compare(0, maskPlanePrefix.size(), maskPlanePrefix) == 0) {
-            metadata->remove(*i);
+    for (const auto & paramName : paramNames) {
+        if (paramName.compare(0, maskPlanePrefix.size(), maskPlanePrefix) == 0) {
+            metadata->remove(paramName);
         }
     }
 
     MaskPlaneDict const& mpd = _maskPlaneDict()->getMaskPlaneDict();
 
     // Add new MaskPlane metadata
-    for (MaskPlaneDict::const_iterator i = mpd.begin(); i != mpd.end(); ++i) {
-        std::string const& planeName = i->first;
-        int const planeNumber = i->second;
+    for (const auto & i : mpd) {
+        std::string const& planeName = i.first;
+        int const planeNumber = i.second;
 
-        if (planeName != "") {
+        if (!planeName.empty()) {
             metadata->add(maskPlanePrefix + planeName, planeNumber);
         }
     }
@@ -602,7 +597,7 @@ void Mask<MaskPixelT>::addMaskPlanesToMetadata(std::shared_ptr<dafBase::Property
 
 template <typename MaskPixelT>
 typename Mask<MaskPixelT>::MaskPlaneDict Mask<MaskPixelT>::parseMaskPlaneMetadata(
-        std::shared_ptr<dafBase::PropertySet const> metadata) {
+        const std::shared_ptr<dafBase::PropertySet const>& metadata) {
     MaskPlaneDict newDict;
 
     // First, clear existing MaskPlane metadata
@@ -611,11 +606,11 @@ typename Mask<MaskPixelT>::MaskPlaneDict Mask<MaskPixelT>::parseMaskPlaneMetadat
     int numPlanesUsed = 0;  // number of planes used
 
     // Iterate over childless properties with names starting with maskPlanePrefix
-    for (NameList::const_iterator i = paramNames.begin(); i != paramNames.end(); ++i) {
-        if (i->compare(0, maskPlanePrefix.size(), maskPlanePrefix) == 0) {
+    for (const auto & paramName : paramNames) {
+        if (paramName.compare(0, maskPlanePrefix.size(), maskPlanePrefix) == 0) {
             // split off maskPlanePrefix to obtain plane name
-            std::string planeName = i->substr(maskPlanePrefix.size());
-            int const planeId = metadata->getAsInt(*i);
+            std::string planeName = paramName.substr(maskPlanePrefix.size());
+            int const planeId = metadata->getAsInt(paramName);
 
             MaskPlaneDict::const_iterator plane = newDict.find(planeName);
             if (plane != newDict.end() && planeId != plane->second) {

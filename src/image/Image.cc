@@ -26,22 +26,13 @@
  * Implementation for ImageBase and Image
  */
 #include <cstdint>
-#include <iostream>
 #include <functional>
-#include <type_traits>
-#include "boost/mpl/vector.hpp"
+#include <utility>
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-variable"
 #pragma clang diagnostic pop
 #include "boost/format.hpp"
-#include "boost/filesystem/path.hpp"
-
-#include "boost/version.hpp"
-#if BOOST_VERSION < 106900
-#include "boost/gil/gil_all.hpp"
-#else
 #include "boost/gil.hpp"
-#endif
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/geom/wcsUtils.h"
@@ -119,7 +110,7 @@ ImageBase<PixelT>::ImageBase(ImageBase const& rhs, bool const deep
 }
 // Delegate to copy-constructor for backwards compatibility
 template <typename PixelT>
-ImageBase<PixelT>::ImageBase(ImageBase&& rhs) : ImageBase(rhs, false) {}
+ImageBase<PixelT>::ImageBase(ImageBase&& rhs) noexcept : ImageBase(rhs, false) {}
 
 template <typename PixelT>
 ImageBase<PixelT>::ImageBase(ImageBase const& rhs, lsst::geom::Box2I const& bbox, ImageOrigin const origin,
@@ -137,8 +128,8 @@ ImageBase<PixelT>::ImageBase(ImageBase const& rhs, lsst::geom::Box2I const& bbox
 }
 
 template <typename PixelT>
-ImageBase<PixelT>::ImageBase(Array const& array, bool deep, lsst::geom::Point2I const& xy0)
-        : _origin(xy0),
+ImageBase<PixelT>::ImageBase(Array const& array, bool deep, lsst::geom::Point2I  xy0)
+        : _origin(std::move(xy0)),
           _manager(array.getManager()),
           _gilView(boost::gil::interleaved_view(array.template getSize<1>(), array.template getSize<0>(),
                                                 (typename _view_t::value_type*)array.getData(),
@@ -158,8 +149,9 @@ ImageBase<PixelT>& ImageBase<PixelT>::operator=(ImageBase const& rhs) {
 }
 // Delegate to copy-assignment for backwards compatibility
 template <typename PixelT>
-ImageBase<PixelT>& ImageBase<PixelT>::operator=(ImageBase&& rhs) {
-    return *this = rhs;
+ImageBase<PixelT>& ImageBase<PixelT>::operator=(ImageBase&& rhs) noexcept {
+    *this = rhs;
+    return *this;
 }
 
 template <typename PixelT>
@@ -339,7 +331,7 @@ template <typename PixelT>
 Image<PixelT>::Image(Image const& rhs, bool const deep) : ImageBase<PixelT>(rhs, deep) {}
 // Delegate to copy-constructor for backwards compatibility
 template <typename PixelT>
-Image<PixelT>::Image(Image&& rhs) : Image(rhs, false) {}
+Image<PixelT>::Image(Image&& rhs) noexcept : Image(rhs, false)  {}
 
 template <typename PixelT>
 Image<PixelT>::Image(Image const& rhs, lsst::geom::Box2I const& bbox, ImageOrigin const origin,
@@ -361,14 +353,15 @@ Image<PixelT>& Image<PixelT>::operator=(Image const& rhs) {
 }
 // Delegate to copy-assignment for backwards compatibility
 template <typename PixelT>
-Image<PixelT>& Image<PixelT>::operator=(Image&& rhs) {
-    return *this = rhs;
+Image<PixelT>& Image<PixelT>::operator=(Image&& rhs) noexcept {
+    *this = rhs;
+    return *this;
 }
 
 #ifndef DOXYGEN  // doc for this section has been moved to header
 
 template <typename PixelT>
-Image<PixelT>::Image(std::string const& fileName, int hdu, std::shared_ptr<daf::base::PropertySet> metadata,
+Image<PixelT>::Image(std::string const& fileName, int hdu, const std::shared_ptr<daf::base::PropertySet>& metadata,
                      lsst::geom::Box2I const& bbox, ImageOrigin origin, bool allowUnsafe) {
     ImageFitsReader reader(fileName, hdu);
     *this = reader.read<PixelT>(bbox, origin, allowUnsafe);
@@ -379,7 +372,7 @@ Image<PixelT>::Image(std::string const& fileName, int hdu, std::shared_ptr<daf::
 
 template <typename PixelT>
 Image<PixelT>::Image(fits::MemFileManager& manager, int const hdu,
-                     std::shared_ptr<daf::base::PropertySet> metadata, lsst::geom::Box2I const& bbox,
+                     const std::shared_ptr<daf::base::PropertySet>& metadata, lsst::geom::Box2I const& bbox,
                      ImageOrigin const origin, bool allowUnsafe) {
     ImageFitsReader reader(manager, hdu);
     *this = reader.read<PixelT>(bbox, origin, allowUnsafe);
@@ -389,7 +382,7 @@ Image<PixelT>::Image(fits::MemFileManager& manager, int const hdu,
 }
 
 template <typename PixelT>
-Image<PixelT>::Image(fits::Fits& fitsFile, std::shared_ptr<daf::base::PropertySet> metadata,
+Image<PixelT>::Image(fits::Fits& fitsFile, const std::shared_ptr<daf::base::PropertySet>& metadata,
                      lsst::geom::Box2I const& bbox, ImageOrigin const origin, bool allowUnsafe) {
     ImageFitsReader reader(&fitsFile);
     *this = reader.read<PixelT>(bbox, origin, allowUnsafe);
@@ -449,7 +442,7 @@ template <typename PixelT>
 void Image<PixelT>::swap(Image& rhs) {
     using std::swap;  // See Meyers, Effective C++, Item 25
     ImageBase<PixelT>::swap(rhs);
-    ;  // no private variables to swap
+     // no private variables to swap
 }
 
 template <typename PixelT>
@@ -699,7 +692,7 @@ lsst::geom::Box2I bboxFromMetadata(daf::base::PropertySet& metadata) {
         dims = lsst::geom::Extent2I(metadata.getAsInt("NAXIS1"), metadata.getAsInt("NAXIS2"));
     }
     lsst::geom::Point2I xy0 = geom::getImageXY0FromMetadata(metadata, detail::wcsNameForXY0);
-    return lsst::geom::Box2I(xy0, dims);
+    return {xy0, dims};
 }
 
 template <typename T1, typename T2>
@@ -733,7 +726,7 @@ bool imagesOverlap(ImageBase<T1> const& image1, ImageBase<T2> const& image2) {
     template Image<T>& operator OP_EQ(Image<T>& lhs, Image<int> const& rhs);           \
     template Image<T>& operator OP_EQ(Image<T>& lhs, Image<float> const& rhs);         \
     template Image<T>& operator OP_EQ(Image<T>& lhs, Image<double> const& rhs);        \
-    template Image<T>& operator OP_EQ(Image<T>& lhs, Image<std::uint64_t> const& rhs);
+    template Image<T>& operator OP_EQ(Image<T>& lhs, Image<std::uint64_t> const& rhs)
 
 #define INSTANTIATE(T)           \
     template class ImageBase<T>; \
@@ -743,7 +736,7 @@ bool imagesOverlap(ImageBase<T1> const& image1, ImageBase<T2> const& image2) {
     INSTANTIATE_OPERATOR(*=, T); \
     INSTANTIATE_OPERATOR(/=, T)
 
-#define INSTANTIATE2(T1, T2) template bool imagesOverlap<T1, T2>(ImageBase<T1> const&, ImageBase<T2> const&);
+#define INSTANTIATE2(T1, T2) template bool imagesOverlap<T1, T2>(ImageBase<T1> const&, ImageBase<T2> const&)
 
 INSTANTIATE(std::uint16_t);
 INSTANTIATE(int);

@@ -312,7 +312,7 @@ public:
     std::string getFileName() const;
 
     /// Return the current HDU (0-indexed; 0 is the Primary HDU).
-    int getHdu();
+    int getHdu() const;
 
     /**
      *  Set the current HDU.
@@ -669,8 +669,8 @@ public:
  * - names in `second`, omitting "COMMENT" and "HISTORY" if valid versions appear in `first`
  */
 std::shared_ptr<daf::base::PropertyList> combineMetadata(
-        std::shared_ptr<const daf::base::PropertyList> first,
-        std::shared_ptr<const daf::base::PropertyList> second);
+        const std::shared_ptr<const daf::base::PropertyList>& first,
+        const std::shared_ptr<const daf::base::PropertyList>& second);
 
 /** Read FITS header
  *
