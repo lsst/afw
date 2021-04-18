@@ -766,7 +766,7 @@ typename CatalogT<RecordT>::iterator CatalogT<RecordT>::find(typename Field<T>::
     SearchIter i = std::lower_bound(SearchIter(begin(), f), SearchIter(end(), f), value);
     if (i.base() == end() || *i != value) {
         i = std::find(SearchIter(begin(), f), SearchIter(end(), f), value);
-        if (i.base() == end() || *i != value) {
+        if (i.base() == end()) {
             return end();
         }
     }
@@ -786,7 +786,7 @@ typename CatalogT<RecordT>::const_iterator CatalogT<RecordT>::find(typename Fiel
     SearchIter i = std::lower_bound(SearchIter(begin(), f), SearchIter(end(), f), value);
     if (i.base() == end() || *i != value) {
         i = std::find(SearchIter(begin(), f), SearchIter(end(), f), value);
-        if (i.base() == end() || *i != value) {
+        if (i.base() == end()) {
             return end();
         }
     }
