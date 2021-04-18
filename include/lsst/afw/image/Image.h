@@ -197,7 +197,7 @@ public:
     // Assignment operators are not inherited
     //
     /// Set the %image's pixels to rhs
-    Image& operator=(const PixelT rhs);
+    Image& operator=(const PixelT rhs) override;
     /**
      * Assignment operator.
      *

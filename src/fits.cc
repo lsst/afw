@@ -7,7 +7,6 @@
 #include <sstream>
 #include <unordered_set>
 #include <unordered_map>
-#include <filesystem>
 
 #include "fitsio.h"
 extern "C" {
@@ -18,6 +17,7 @@ extern "C" {
 #include "boost/regex.hpp"
 #include "boost/preprocessor/seq/for_each.hpp"
 #include "boost/format.hpp"
+#include "boost/filesystem.hpp"
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/log/Log.h"
@@ -1061,10 +1061,10 @@ void writeKeyFromProperty(Fits &fits, daf::base::PropertySet const &metadata, st
         } else {
             writeKeyImpl(fits, key.c_str(), metadata.get<std::string>(key), comment);
         }
-    } else if (valueType == typeid(nullptr_t)) {
+    } else if (valueType == typeid(std::nullptr_t)) {
         if (metadata.isArray(key)) {
             // Write multiple undefined values for the same key
-            auto tmp = metadata.getArray<nullptr_t>(key);
+            auto tmp = metadata.getArray<std::nullptr_t>(key);
             for (std::size_t i = 0; i != tmp.size(); ++i) {
                 writeKeyImpl(fits, key.c_str(), comment);
             }
@@ -1557,7 +1557,7 @@ Fits::Fits(std::string const &filename, std::string const &mode, int behavior_)
         fits_open_file(reinterpret_cast<fitsfile **>(&fptr), const_cast<char *>(filename.c_str()), READONLY,
                        &status);
     } else if (mode == "w" || mode == "wb") {
-        std::filesystem::remove(filename);  // cfitsio doesn't like over-writing files
+        boost::filesystem::remove(filename);  // cfitsio doesn't like over-writing files
         fits_create_file(reinterpret_cast<fitsfile **>(&fptr), const_cast<char *>(filename.c_str()), &status);
     } else if (mode == "a" || mode == "ab") {
         fits_open_file(reinterpret_cast<fitsfile **>(&fptr), const_cast<char *>(filename.c_str()), READWRITE,

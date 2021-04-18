@@ -22,7 +22,6 @@
 
 #include <cstdio>
 #include <string>
-#include <algorithm>
 
 #include "lsst/geom.h"
 #include "lsst/utils/Utils.h"

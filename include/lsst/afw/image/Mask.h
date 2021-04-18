@@ -239,7 +239,7 @@ public:
     void swap(Mask& rhs);
     // Operators
 
-    Mask& operator=(MaskPixelT rhs);
+    Mask& operator=(MaskPixelT rhs) override;
     Mask& operator=(const Mask& rhs);
     Mask& operator=(Mask&& rhs) noexcept;
 
@@ -293,14 +293,14 @@ public:
      * @param x x index
      * @param y y index
      */
-    typename ImageBase<MaskPixelT>::PixelReference operator()(int x, int y);
+    typename ImageBase<MaskPixelT>::PixelReference operator()(int x, int y) override;
     /**
      * get the specified pixel (const version)
      *
      * @param x x index
      * @param y y index
      */
-    typename ImageBase<MaskPixelT>::PixelConstReference operator()(int x, int y) const;
+    typename ImageBase<MaskPixelT>::PixelConstReference operator()(int x, int y) const override;
     /**
      * is the specified mask plane set in the specified pixel?
      *
@@ -316,7 +316,7 @@ public:
      * @param y y index
      * @param check Check array bounds?
      */
-    typename ImageBase<MaskPixelT>::PixelReference operator()(int x, int y, CheckIndices const& check);
+    typename ImageBase<MaskPixelT>::PixelReference operator()(int x, int y, CheckIndices const& check) override;
     /**
      * get the specified pixel with array checking (const version)
      *
@@ -325,7 +325,7 @@ public:
      * @param check Check array bounds?
      */
     typename ImageBase<MaskPixelT>::PixelConstReference operator()(int x, int y,
-                                                                   CheckIndices const& check) const;
+                                                                   CheckIndices const& check) const override;
     /**
      * is the specified mask plane set in the specified pixel, checking array bounds?
      *
