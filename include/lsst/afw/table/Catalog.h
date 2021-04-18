@@ -15,6 +15,7 @@
 #include "lsst/afw/table/io/FitsWriter.h"
 #include "lsst/afw/table/io/FitsReader.h"
 #include "lsst/afw/table/SchemaMapper.h"
+#include "lsst/log/Log.h"
 
 namespace lsst {
 namespace afw {
@@ -769,6 +770,7 @@ typename CatalogT<RecordT>::iterator CatalogT<RecordT>::find(typename Field<T>::
         if (i.base() == end()) {
             return end();
         }
+        LOGL_DEBUG("afw.table.Catalog", "Catalog is not sorted by the key. Finding a record may be slow.");
     }
     return i.base();
 }
@@ -789,6 +791,7 @@ typename CatalogT<RecordT>::const_iterator CatalogT<RecordT>::find(typename Fiel
         if (i.base() == end()) {
             return end();
         }
+        LOGL_DEBUG("afw.table.Catalog", "Catalog is not sorted by the key. Finding a record may be slow.");
     }
     return i.base();
 }
