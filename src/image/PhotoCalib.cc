@@ -95,7 +95,7 @@ void toNanojanskyVariance(ndarray::Array<float const, 2, 1> const &instFlux,
 }
 
 double toMagnitudeErr(double instFlux, double instFluxErr, double scale, double scaleErr) {
-    return 2.5 / log(10.0) * hypot(instFluxErr / instFlux, scaleErr / scale);
+    return 2.5 / std::log(10.0) * hypot(instFluxErr / instFlux, scaleErr / scale);
 }
 
 }  // anonymous namespace
