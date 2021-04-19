@@ -47,8 +47,9 @@ namespace python {
  * This allows your class to be used without importing lsst.afw.table in Python.
  *
  * Use as follows:
- * - When declaring the pybind11 class that wraps your Class do *not* list
- *   table::io::PersistableFacade<Class> and table::io::Persistable as base classes.
+ * - When declaring the pybind11 class that wraps your Class in afw, do *not* list
+ *   table::io::PersistableFacade<Class> and table::io::Persistable as base classes
+ *   unless you have to, and in that case be prepared for possible trouble.
  * - Call this function to wrap the methods that make your object persistable.
  */
 template <typename Class, typename... Args>

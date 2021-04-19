@@ -32,6 +32,7 @@
 #include "ndarray/pybind11.h"
 
 #include "lsst/afw/table/io/python.h"
+#include "lsst/afw/table/io/Persistable.h"
 #include "lsst/afw/geom/Endpoint.h"
 #include "lsst/afw/geom/Transform.h"
 
@@ -78,7 +79,7 @@ void declareTransform(lsst::utils::python::WrapperCollection &wrappers) {
 
     std::string const pyClassName = Class::getShortClassName();
     wrappers.wrapType(
-            py::class_<Class, std::shared_ptr<Class>>(wrappers.module, pyClassName.c_str()),
+            py::class_<Class, std::shared_ptr<Class>, table::io::Persistable>(wrappers.module, pyClassName.c_str()),
             [](auto &mod, auto &cls) {
                 std::string const pyClassName = Class::getShortClassName();
                 cls.def(py::init<ast::FrameSet const &, bool>(), "frameSet"_a, "simplify"_a = true);
