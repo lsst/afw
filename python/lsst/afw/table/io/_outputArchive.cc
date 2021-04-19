@@ -43,6 +43,10 @@ void wrapOutputArchive(utils::python::WrapperCollection &wrappers) {
 
     wrappers.wrapType(PyOutputArchive(wrappers.module, "OutputArchive"), [](auto &mod, auto &cls) {
         cls.def(py::init<>());
+        cls.def("put",
+                py::overload_cast<std::shared_ptr<Persistable const>, bool>(&OutputArchive::put),
+                "obj"_a, "permissive"_a=false
+                );
         cls.def("writeFits", &OutputArchive::writeFits);
     });
 }
