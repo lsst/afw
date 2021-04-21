@@ -1,5 +1,5 @@
 # -*- python -*-
-from lsst.sconsUtils import scripts
+from lsst.sconsUtils import scripts, env
 
 for flag in ("-D_LIBCPP_DISABLE_AVAILABILITY=1", ):
     env["CFLAGS"].append(flag)
