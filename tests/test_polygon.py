@@ -91,7 +91,7 @@ class PolygonTest(lsst.utils.tests.TestCase):
             for p1, p2 in poly.getEdges():
                 perimeter += np.hypot(p1.getX() - p2.getX(),
                                       p1.getY() - p2.getY())
-            self.assertFloatAlmostEqual(poly.calculatePerimeter(), perimeter)
+            self.assertAlmostEqual(poly.calculatePerimeter(), perimeter)
 
         size = 3.0
         poly = self.square(size=size)
@@ -265,7 +265,7 @@ class PolygonTest(lsst.utils.tests.TestCase):
                 disp.mtv(image, title=f"Polygon nside={num}")
                 for p1, p2 in poly.getEdges():
                     disp.line((p1, p2))
-            self.assertAlmostEqual(
+            self.assertFloatsAlmostEqual(
                 image.getArray().sum()/poly.calculateArea(), 1.0, 6)
 
     def testTransform(self):
