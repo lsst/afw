@@ -91,7 +91,7 @@ class PolygonTest(lsst.utils.tests.TestCase):
             for p1, p2 in poly.getEdges():
                 perimeter += np.hypot(p1.getX() - p2.getX(),
                                       p1.getY() - p2.getY())
-            self.assertAlmostEqual(poly.calculatePerimeter(), perimeter)
+            self.assertFloatAlmostEqual(poly.calculatePerimeter(), perimeter)
 
         size = 3.0
         poly = self.square(size=size)
