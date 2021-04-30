@@ -2,6 +2,7 @@
 #ifndef AFW_TABLE_Field_h_INCLUDED
 #define AFW_TABLE_Field_h_INCLUDED
 
+#include <string>
 #include <iostream>
 
 #include "lsst/afw/table/FieldBase.h"

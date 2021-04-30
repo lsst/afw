@@ -5,6 +5,8 @@
 #include <map>
 #include <string>
 
+#include "lsst/afw/table/fwd.h"
+
 namespace lsst {
 namespace afw {
 namespace table {

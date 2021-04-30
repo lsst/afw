@@ -22,7 +22,7 @@
  */
 
 #include "lsst/afw/geom/ellipses/Quadrupole.h"
-#include "lsst/geom/Box.h"
+#include "lsst/afw/geom/ellipses/Ellipse.h"
 #include "lsst/afw/table/aggregates.h"
 #include "lsst/afw/table/BaseRecord.h"
 

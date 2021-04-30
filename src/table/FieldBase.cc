@@ -8,7 +8,7 @@
 #include "boost/preprocessor/tuple/to_seq.hpp"
 
 #include "lsst/afw/table/FieldBase.h"
-#include "lsst/afw/table/Flag.h"
+#include "lsst/afw/table/types.h"
 
 namespace lsst {
 namespace afw {

@@ -4,6 +4,9 @@
 
 #include <memory>
 
+#include "lsst/afw/table/Key.h"
+#include "lsst/afw/table/Field.h"
+#include "lsst/afw/table/Schema.h"
 #include "lsst/afw/table/detail/SchemaMapperImpl.h"
 
 namespace lsst {
