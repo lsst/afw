@@ -473,7 +473,7 @@ def assertAmplifiersEqual(self, amp1, amp2):
 
 
 @inTestCase
-def assertDetectorsEqual(self, detector1, detector2, **kwds):
+def assertDetectorsEqual(self, detector1, detector2, *, compareTransforms=True, **kwds):
     """Compare two Detectors.
     """
     self.assertEqual(detector1.getName(), detector2.getName())
@@ -490,7 +490,8 @@ def assertDetectorsEqual(self, detector1, detector2, **kwds):
     self.assertEqual(orientationIn.getPitch(), orientationOut.getPitch())
     self.assertEqual(orientationIn.getRoll(), orientationOut.getRoll())
     self.assertFloatsEqual(detector1.getCrosstalk(), detector2.getCrosstalk())
-    self.assertTransformMapsEqual(detector1.getTransformMap(), detector2.getTransformMap(), **kwds)
+    if compareTransforms:
+        self.assertTransformMapsEqual(detector1.getTransformMap(), detector2.getTransformMap(), **kwds)
     self.assertEqual(len(detector1.getAmplifiers()), len(detector2.getAmplifiers()))
     for amp1, amp2 in zip(detector1.getAmplifiers(), detector2.getAmplifiers()):
         self.assertAmplifiersEqual(amp1, amp2)
