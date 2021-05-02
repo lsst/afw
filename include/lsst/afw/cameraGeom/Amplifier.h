@@ -159,71 +159,100 @@ public:
     std::string getLinearityUnits() const { return getFields().linearityUnits; }
 
     /**
-     *  Bounding box of all amplifier pixels on untrimmed, assembled raw
-     *  image.
+     *  Bounding box of the untrimmed amplifier in the image to which it is
+     *  attached, which is assumed to be untrimmed.
+     *
+     *  This attribute should never be accessed on an amplifier attached to a
+     *  trimmed image.
      */
     lsst::geom::Box2I getRawBBox() const { return getFields().rawBBox; }
 
     /**
-     *  Bounding box of amplifier image pixels on untrimmed, assembled raw
-     *  image.
+     *  Bounding box of amplifier data pixels in the image to which it is
+     *  attached, which is assumed to be untrimmed.
+     *
+     *  This attribute should never be accessed on an amplifier attached to a
+     *  trimmed image.
      */
     lsst::geom::Box2I getRawDataBBox() const { return getFields().rawDataBBox; }
 
     /**
-     *  Flip row order in transformation from untrimmed, assembled raw image
-     *  to trimmed, assembled post-ISR image?
+     *  Is this amplifier (and the image to which it is attached) flipped in
+     *  the X direction, relative to the physical orientation used for
+     *  assembled (but still untrimmed) raws?
      */
     bool getRawFlipX() const { return getFields().rawFlipX; }
 
     /**
-     *  Flip column order in transformation from untrimmed, assembled raw
-     *  image to trimmed, assembled post-ISR image?
+     *  Is this amplifier (and the image to which it is attached) flipped in
+     *  the Y direction, relative to the physical orientation used for
+     *  assembled (but still untrimmed) raws?
      */
     bool getRawFlipY() const { return getFields().rawFlipY; }
 
     /**
-     *  Offset in transformation from pre-raw, unassembled image to trimmed,
-     *  assembled post-ISR image: final xy0 - pre-raw xy0.
+     *  Offset in transformation from this amplifier (and the image to which it
+     *  is attached) to trimmed, assembled post-ISR image:
+     *  final xy0 - current xy0.
      */
     lsst::geom::Extent2I getRawXYOffset() const { return getFields().rawXYOffset; }
 
     /**
-     * The bounding box of horizontal overscan pixels in the assembled,
-     * untrimmed raw image.
+     *  The bounding box of horizontal overscan pixels in the image to which it
+     *  is attached, which is assumed to be untrimmed.
+     *
+     *  This attribute should never be accessed on an amplifier attached to a
+     *  trimmed image.
      */
     lsst::geom::Box2I getRawHorizontalOverscanBBox() const { return getFields().rawHorizontalOverscanBBox; }
 
     /**
-     * The bounding box of vertical overscan pixels in the assembled,
-     * untrimmed raw image.
+     *  The bounding box of vertical overscan pixels in the image to which it
+     *  is attached, which is assumed to be untrimmed.
+     *
+     *  This attribute should never be accessed on an amplifier attached to a
+     *  trimmed image.
      */
     lsst::geom::Box2I getRawVerticalOverscanBBox() const { return getFields().rawVerticalOverscanBBox; }
 
     /**
-     * The bounding box of (horizontal) prescan pixels in the assembled,
-     * untrimmed raw image.
+     *  The bounding box of (horizontal) prescan pixels in the image to which it
+     *  is attached, which is assumed to be untrimmed.
+     *
+     *  This attribute should never be accessed on an amplifier attached to a
+     *  trimmed image.
      */
     lsst::geom::Box2I getRawPrescanBBox() const { return getFields().rawPrescanBBox; }
 
     /**
-     * The bounding box of serial overscan pixels (equivalent to horizontal
-     * overscan pixels) in the assembled, untrimmed raw image. This duplicates
-     * the getRawHorizontalOverscanBBox method for legacy reasons.
+     *  The bounding box of serial overscan pixels (equivalent to horizontal
+     *  overscan pixels) in the image to which it is attached, which is assumed
+     *  to be untrimmed.
+     *
+     *  This attribute should never be accessed on an amplifier attached to a
+     *  trimmed image.  This duplicates the getRawHorizontalOverscanBBox method
+     *  for legacy reasons.
      */
     lsst::geom::Box2I getRawSerialOverscanBBox() const { return getFields().rawHorizontalOverscanBBox; }
 
     /**
-     * The bounding box of parallel overscan pixels (equivalent to vertical
-     * overscan pixels) in the assembled, untrimmed raw image. This duplicates
-     * the getRawVerticalOverscanBBox method for legacy reasons.
+     *  The bounding box of parallel overscan pixels (equivalent to vertical
+     *  overscan pixels) in the image to which it is attached, which is assumed
+     *  to be untrimmed.
+     *
+     *  This attribute should never be accessed on an amplifier attached to a
+     *  trimmed image.  This duplicates the getRawVerticalOverscanBBox method
+     *  for legacy reasons.
      */
     lsst::geom::Box2I getRawParallelOverscanBBox() const { return getFields().rawVerticalOverscanBBox; }
 
     /**
-     * The bounding box of horizontal/serial prescan pixels in the assembled,
-     * untrimmed raw image. This duplicates the getRawPrescanBBox method for
-     * legacy reasons.
+     *  The bounding box of horizontal/serial prescan pixels in the image to
+     *  which it is attached, which is assumed to be untrimmed.
+     *
+     *  This attribute should never be accessed on an amplifier attached to a
+     *  trimmed image. This duplicates the getRawPrescanBBox method for legacy
+     *  reasons.
      */
     lsst::geom::Box2I getRawSerialPrescanBBox() const { return getFields().rawPrescanBBox; }
 
