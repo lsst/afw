@@ -22,8 +22,6 @@
 __all__ = ['assembleAmplifierImage', 'assembleAmplifierRawImage',
            'makeUpdatedDetector']
 
-import lsst.geom
-
 # dict of doFlip: slice
 _SliceDict = {
     False: slice(None, None, 1),
@@ -126,36 +124,5 @@ def makeUpdatedDetector(ccd):
     """
     builder = ccd.rebuild()
     for amp in builder.getAmplifiers():
-        bbox = amp.getRawBBox()
-        awidth, aheight = bbox.getDimensions()
-        #
-        # Figure out how far flipping the amp LR and/or TB offsets the bboxes
-        #
-        boxMin0 = bbox.getMin()     # initial position of rawBBox's LLC corner
-        if amp.getRawFlipX():
-            bbox.flipLR(awidth)
-        if amp.getRawFlipY():
-            bbox.flipTB(aheight)
-        shift = boxMin0 - bbox.getMin()
-
-        for bboxName in ("",
-                         "HorizontalOverscan",
-                         "Data",
-                         "VerticalOverscan",
-                         "Prescan"):
-            bbox = getattr(amp, f"getRaw{bboxName}BBox")()
-            if amp.getRawFlipX():
-                bbox.flipLR(awidth)
-            if amp.getRawFlipY():
-                bbox.flipTB(aheight)
-            bbox.shift(amp.getRawXYOffset() + shift)
-
-            getattr(amp, f"setRaw{bboxName}BBox")(bbox)
-        #
-        # All of these have now been transferred to the per-amp geometry
-        #
-        amp.setRawXYOffset(lsst.geom.ExtentI(0, 0))
-        amp.setRawFlipX(False)
-        amp.setRawFlipY(False)
-
+        amp.transform()
     return builder.finish()
