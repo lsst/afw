@@ -48,21 +48,61 @@ class SourceCatalog:
 
         Parameters
         ----------
-        parent : `int`
-            ID of the parent to get children for.
+        parent : `int` or `iterable` of `int`
+            ID(s) of the parent(s) to get children for.
         args : `~lsst.afw.table.Catalog`
-            Additional catalogs to subset for the childrens to return.
+            Additional catalogs to subset for the children to return.
 
         Returns
         -------
-        children : iterable of `~lsst.afw.table.SourceRecord`
-            Children sources.
+        children : a single iterable of `~lsst.afw.table.SourceRecord`
+            Children sources if ``parent`` is of type `int`, or a generator
+            yielding a `~lsst.afw.table.SourceRecord`s Children sources for
+            each parent if ``parent`` is an `iterable`.
+
+        Raises
+        ------
+        AssertionError
+            Raised if the catalog is not sorted by the parent key.
+
+        Notes
+        -----
+        Each call to this function checks if the catalog is sorted, which is
+        of O(n) complexity, while fetching the children is of O(log n). To
+        minimize the computational overhead, it is preferable to prepare an
+        iterable of parent ids for which the children need to be fetched and
+        pass the iterable as ``parent``.
         """
         if not self.isSorted(SourceTable.getParentKey()):
             raise AssertionError(
                 "The table is not sorted by parent, so cannot getChildren")
-        s = self.equal_range(parent, SourceTable.getParentKey())
-        if args:
-            return (self[s],) + tuple(arg[s] for arg in args)
-        else:
-            return self[s]
+
+        def _getChildrenWithoutChecking(parent):
+            """Return the subset of self for which the parent field equals the
+            given value.
+
+            This function works as desired only if `self` is sorted by the
+            parent key, but does not check if it is sorted. This function must
+            be used only after ensuring outside of the function that
+            self.isSorted(SourceTable.getParentKey() evaluates to True.
+
+            Parameter
+            ---------
+            parent : `int`
+                ID of the parent to get children for.
+
+            Returns
+            -------
+            children : iterable of `~lsst.afw.table.SourceRecord`
+                Children sources.
+            """
+            s = self.equal_range(parent, SourceTable.getParentKey())
+            if args:
+                return (self[s],) + tuple(arg[s] for arg in args)
+            else:
+                return self[s]
+
+        try:
+            return (_getChildrenWithoutChecking(p) for p in parent)
+        except TypeError:
+            return _getChildrenWithoutChecking(parent)
