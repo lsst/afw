@@ -28,8 +28,8 @@ from ._table import SourceCatalog, SourceTable
 Catalog.register("Source", SourceCatalog)
 
 
-@continueClass  # noqa: F811 (FIXME: remove for py 3.8+)
-class SourceCatalog:  # noqa: F811
+@continueClass
+class SourceCatalog:
 
     def getChildren(self, parent, *args):
         """Return the subset of self for which the parent field equals the
