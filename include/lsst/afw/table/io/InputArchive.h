@@ -63,6 +63,12 @@ public:
         return p;
     }
 
+    /*template <>
+    std::shared_ptr<Persistable> get<Persistable>(int id) const{
+        return _impl->get(id, *this);
+    }*/
+
+
     /// Load and return all objects in the archive.
     Map const& getAll() const;
 
@@ -72,6 +78,7 @@ public:
      *  @param[in]  fitsfile     FITS object to read from, already positioned at the desired HDU.
      */
     static InputArchive readFits(fits::Fits& fitsfile);
+  //static InputArchive readFits(fits::Fits& fitsfile, int hdu);
 
 private:
     class Impl;
@@ -80,6 +87,11 @@ private:
 
     std::shared_ptr<Impl> _impl;
 };
+
+  /*template<>
+std::shared_ptr<Persistable> InputArchive::get(int id) const{
+        return _impl->get(id, *this);
+        }*/
 }  // namespace io
 }  // namespace table
 }  // namespace afw

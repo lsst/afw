@@ -179,7 +179,7 @@ InputArchive& InputArchive::operator=(InputArchive&& other) { return *this = oth
 
 InputArchive::~InputArchive() = default;
 
-std::shared_ptr<Persistable> InputArchive::get(int id) const { return _impl->get(id, *this); }
+//*std::shared_ptr<Persistable> InputArchive::get(int id) const { return _impl->get(id, *this); }
 
 InputArchive::Map const& InputArchive::getAll() const { return _impl->getAll(*this); }
 
@@ -214,6 +214,29 @@ InputArchive InputArchive::readFits(fits::Fits& fitsfile) {
     std::shared_ptr<Impl> impl(new Impl(index, catalogs));
     return InputArchive(impl);
 }
+
+  /*InputArchive InputArchive::readFits(fits::Fits& fitsfile, int hdu) {
+    BaseCatalog index = BaseCatalog::readFits(fitsfile);
+    std::shared_ptr<daf::base::PropertyList> metadata = index.getTable()->popMetadata();
+    assert(metadata);  // BaseCatalog::readFits should always read metadata, even if there's nothing there
+    if (metadata->get<std::string>("EXTTYPE") != "ARCHIVE_INDEX") {
+        throw LSST_FITS_EXCEPT(fits::FitsError, fitsfile,
+                               boost::format("Wrong value for archive index EXTTYPE: '%s'") %
+                                       metadata->get<std::string>("EXTTYPE"));
+    }
+    fitsfile.setHdu(hdu);
+    CatalogVector catalogs;
+    catalogs.reserve(1);
+    catalogs.push_back(BaseCatalog::readFits(fitsfile));
+    metadata = catalogs.back().getTable()->popMetadata();
+    if (metadata->get<std::string>("EXTTYPE") != "ARCHIVE_DATA") {
+      throw LSST_FITS_EXCEPT(fits::FitsError, fitsfile,
+                             boost::format("Wrong value for archive data EXTTYPE: '%s'") %
+                                     metadata->get<std::string>("EXTTYPE"));
+    }
+    std::shared_ptr<Impl> impl(new Impl(index, catalogs));
+    return InputArchive(impl);
+    }*/
 }  // namespace io
 }  // namespace table
 }  // namespace afw

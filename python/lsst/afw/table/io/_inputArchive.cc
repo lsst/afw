@@ -41,6 +41,16 @@ void wrapInputArchive(utils::python::WrapperCollection &wrappers) {
     // wrappers.addSignatureDependency("lsst.afw.fits");
 
     wrappers.wrapType(PyInputArchive(wrappers.module, "InputArchive"), [](auto &mod, auto &cls) {
+      /*cls.def("readFits",
+              py::overload_cast<fits::Fits &, int>(&InputArchive::readFits, py::const_),
+              "fitsFile"_a, "hdu"_a
+              );*/
+        cls.def("readFits", &InputArchive::readFits);
+        //cls.def("get", &InputArchive::get);
+        /*cls.def("get",
+                py::overload_cast<int>(&InputArchive::get, py::const_),
+                "id"_a
+                );*/
     });
 }
 
