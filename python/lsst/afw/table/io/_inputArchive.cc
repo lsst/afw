@@ -46,6 +46,10 @@ void wrapInputArchive(utils::python::WrapperCollection &wrappers) {
               "fitsFile"_a, "hdu"_a
               );*/
         cls.def("readFits", &InputArchive::readFits);
+        // lambda version; also works to disambiguate with the templated version
+        cls.def("get", [](const InputArchive& ia, int id){
+            return ia.get(id);
+            });
         //cls.def("get", &InputArchive::get);
         /*cls.def("get",
                 py::overload_cast<int>(&InputArchive::get, py::const_),
