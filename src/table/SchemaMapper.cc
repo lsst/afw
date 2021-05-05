@@ -11,29 +11,22 @@ namespace table {
 namespace {
 
 // Variant visitation functor used in SchemaMapper::invert()
-struct SwapKeyPair : public boost::static_visitor<> {
-    template <typename T>
-    void operator()(std::pair<Key<T>, Key<T> > &pair) const {
-        std::swap(pair.first, pair.second);
+struct SwapKeyPair {
+    void operator()(detail::SchemaMapperImpl::KeyPairVariant &v) const {
+        std::visit([](auto & pair) { std::swap(pair.first, pair.second); }, v);
     }
-
-    void operator()(detail::SchemaMapperImpl::KeyPairVariant &v) const { boost::apply_visitor(*this, v); }
 };
 
 // Variant visitation functor that returns true if the input key in a KeyPairVariant matches a
 // the Key the functor was initialized with.
 template <typename T>
-struct KeyPairCompareEqual : public boost::static_visitor<bool> {
-    template <typename U>
-    bool operator()(std::pair<Key<U>, Key<U> > const &pair) const {
-        return _target == pair.first;
-    }
+struct KeyPairCompareEqual {
 
     bool operator()(detail::SchemaMapperImpl::KeyPairVariant const &v) const {
-        return boost::apply_visitor(*this, v);
+        return std::visit([this](auto const & pair) -> bool { return this->_target == pair.first; }, v);
     }
 
-    KeyPairCompareEqual(Key<T> const &target) : _target(target) {}
+    explicit KeyPairCompareEqual(Key<T> const &target) : _target(target) {}
 
 private:
     Key<T> const &_target;
@@ -139,7 +132,7 @@ Key<T> SchemaMapper::addMapping(Key<T> const &inputKey, bool doReplace) {
             std::find_if(_impl->_map.begin(), _impl->_map.end(), KeyPairCompareEqual<T>(inputKey));
     Field<T> inputField = _impl->_input.find(inputKey).field;
     if (i != _impl->_map.end()) {
-        Key<T> const &outputKey = boost::get<std::pair<Key<T>, Key<T> > >(*i).second;
+        Key<T> const &outputKey = std::get<std::pair<Key<T>, Key<T>>>(*i).second;
         _impl->_output.replaceField(outputKey, inputField);
         return outputKey;
     } else {
@@ -154,7 +147,7 @@ Key<T> SchemaMapper::addMapping(Key<T> const &inputKey, Field<T> const &field, b
     typename Impl::KeyPairMap::iterator i =
             std::find_if(_impl->_map.begin(), _impl->_map.end(), KeyPairCompareEqual<T>(inputKey));
     if (i != _impl->_map.end()) {
-        Key<T> const &outputKey = boost::get<std::pair<Key<T>, Key<T> > >(*i).second;
+        Key<T> const &outputKey = std::get<std::pair<Key<T>, Key<T>>>(*i).second;
         _impl->_output.replaceField(outputKey, field);
         return outputKey;
     } else {
@@ -169,7 +162,7 @@ Key<T> SchemaMapper::addMapping(Key<T> const &inputKey, std::string const &outpu
     typename Impl::KeyPairMap::iterator i =
             std::find_if(_impl->_map.begin(), _impl->_map.end(), KeyPairCompareEqual<T>(inputKey));
     if (i != _impl->_map.end()) {
-        Key<T> const &outputKey = boost::get<std::pair<Key<T>, Key<T> > >(*i).second;
+        Key<T> const &outputKey = std::get<std::pair<Key<T>, Key<T>>>(*i).second;
         Field<T> field = _impl->_output.find(outputKey).field;
         field = field.copyRenamed(outputName);
         _impl->_output.replaceField(outputKey, field);
@@ -216,7 +209,7 @@ Key<T> SchemaMapper::getMapping(Key<T> const &inputKey) const {
     if (i == _impl->_map.end()) {
         throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundError, "Input Key is not mapped.");
     }
-    return boost::get<std::pair<Key<T>, Key<T> > >(*i).second;
+    return std::get<std::pair<Key<T>, Key<T>>>(*i).second;
 }
 
 std::vector<SchemaMapper> SchemaMapper::join(std::vector<Schema> const &inputs,
@@ -231,7 +224,7 @@ std::vector<SchemaMapper> SchemaMapper::join(std::vector<Schema> const &inputs,
     }
     std::vector<SchemaMapper> result;
     for (std::size_t i = 0; i < size; ++i) {
-        result.push_back(SchemaMapper(inputs[i]));
+        result.emplace_back(inputs[i]);
     }
     for (std::size_t i = 0; i < size; ++i) {
         for (std::size_t j = 0; j < size; ++j) {

@@ -6,7 +6,6 @@
 #include <cstring>
 #include <iostream>
 
-#include "boost/mpl/vector.hpp"
 #include "boost/preprocessor/punctuation/paren.hpp"
 #include "Eigen/Core"
 
@@ -47,11 +46,12 @@ namespace lsst {
 namespace afw {
 namespace table {
 
-/// An MPL vector of scalar field types.
-typedef boost::mpl::vector<AFW_TABLE_SCALAR_FIELD_TYPES> ScalarFieldTypes;
+template <typename ...E> struct TypeList {};
 
-/// An MPL vector of all field types.
-typedef boost::mpl::vector<AFW_TABLE_FIELD_TYPES> FieldTypes;
+
+/// A compile-time list of all field types.
+using FieldTypes = TypeList<AFW_TABLE_FIELD_TYPES>;
+
 }  // namespace table
 }  // namespace afw
 }  // namespace lsst

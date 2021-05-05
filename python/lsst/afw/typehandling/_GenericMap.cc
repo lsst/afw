@@ -28,28 +28,13 @@
 #include <exception>
 #include <iostream>
 #include <utility>
+#include <variant>
 
 #include "lsst/utils/python.h"
 #include "lsst/pex/exceptions.h"
 
 #include "lsst/afw/typehandling/GenericMap.h"
 #include "lsst/afw/typehandling/python.h"
-
-// From https://pybind11.readthedocs.io/en/stable/advanced/cast/stl.html#c-17-library-containers
-// Not needed once we can use std::variant
-namespace pybind11 {
-namespace detail {
-template <typename... Ts>
-struct type_caster<boost::variant<Ts...>> : variant_caster<boost::variant<Ts...>> {};
-template <>
-struct visit_helper<boost::variant> {
-    template <typename... Args>
-    static auto call(Args&&... args) -> decltype(boost::apply_visitor(args...)) {
-        return boost::apply_visitor(args...);
-    }
-};
-}  // namespace detail
-}  // namespace pybind11
 
 namespace py = pybind11;
 using namespace py::literals;
@@ -66,26 +51,46 @@ template <typename K>
 class Publicist : public MutableGenericMap<K> {
 public:
     using typename GenericMap<K>::ConstValueReference;
+    using typename GenericMap<K>::StorableType;
     using GenericMap<K>::unsafeLookup;
     using MutableGenericMap<K>::unsafeErase;
 };
 
+// A combination std::variant visitor and helper function (apply()) that
+// invokes it, to implement item lookup for Python.
+//
+// We copy/clone because there's no good way to prevent other ++ calls from
+// destroying the any reference we might give to Python.
+//
+// Pybind11 does have its own automatic caster for std::variant, but it doesn't
+// handle reference_wrapper types within it (let alone polymorphic Storables),
+// and since we need a visitor to deal with that, there's no point in going
+// back to std::variant instead of straight to Python.
 template <typename K>
-py::object get(GenericMap<K>& self, K const& key) {
-    auto callable = static_cast<typename Publicist<K>::ConstValueReference (GenericMap<K>::*)(K) const>(
-            &Publicist<K>::unsafeLookup);
-    auto variant = (self.*callable)(key);
+class Getter {
+public:
 
-    // py::cast can't convert PolymorphicValue to Storable; do it by hand
-    PolymorphicValue const* storableHolder = boost::get<PolymorphicValue const&>(&variant);
-    if (storableHolder) {
-        Storable const& value = *storableHolder;
-        // Prevent segfaults when assigning a Key<Storable> to Python variable, then deleting from map
-        // No existing code depends on being able to modify an item stored by value
-        return py::cast(value.cloneStorable());
-    } else {
-        return py::cast(variant);
+    template <typename T>
+    py::object operator()(std::reference_wrapper<T const> const & value) const {
+        T copy(value);
+        return py::cast(copy);
     }
+
+    py::object operator()(std::reference_wrapper<PolymorphicValue const> const & value) const {
+        // Specialization for polymorphic Storables: extract the Storable,
+        // clone it explicitly, and return that (letting pybind11's downcasting
+        // take over from there).
+        Storable const& storable = value.get();
+        return py::cast(storable.cloneStorable());
+    }
+
+    py::object apply(GenericMap<K>& self, K const& key) const {
+        auto callable = static_cast<typename Publicist<K>::ConstValueReference (GenericMap<K>::*)(K) const>(
+            &Publicist<K>::unsafeLookup);
+        auto variant = (self.*callable)(key);
+        return std::visit(*this, variant);
+    }
+
 };
 
 template <typename K>
@@ -112,7 +117,7 @@ void declareGenericMap(utils::python::WrapperCollection& wrappers, std::string c
         cls.def("__getitem__",
                 [](Class& self, K const& key) {
                     try {
-                        return get(self, key);
+                        return Getter<K>().apply(self, key);
                     } catch (pex::exceptions::OutOfRangeError const& e) {
                         // pybind11 doesn't seem to recognize chained exceptions
                         std::stringstream buffer;
@@ -124,7 +129,7 @@ void declareGenericMap(utils::python::WrapperCollection& wrappers, std::string c
         cls.def("get",
                 [](Class& self, K const& key, py::object const& def) {
                     try {
-                        return get(self, key);
+                        return Getter<K>().apply(self, key);
                     } catch (pex::exceptions::OutOfRangeError const& e) {
                         return def;
                     }
@@ -199,7 +204,7 @@ void declareMutableGenericMap(utils::python::WrapperCollection& wrappers, std::s
                           cls.def("popitem", [](Class& self) {
                               if (!self.empty()) {
                                   K key = self.keys().back();
-                                  auto result = std::make_pair(key, get(self, key));
+                                  auto result = std::make_pair(key, Getter<K>().apply(self, key));
                                   auto callable = &Publicist<K>::unsafeErase;
                                   (self.*callable)(key);
                                   return result;

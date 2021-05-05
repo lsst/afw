@@ -29,8 +29,7 @@
 #include <sstream>
 #include <unordered_map>
 #include <utility>
-
-#include "boost/variant.hpp"
+#include <variant>
 
 #include "lsst/afw/typehandling/GenericMap.h"
 
@@ -105,7 +104,10 @@ public:
 protected:
     ConstValueReference unsafeLookup(K key) const override {
         try {
-            return _storage.at(key);
+            return std::visit(
+                [](auto const & v) { return ConstValueReference(std::cref(v)); },
+                _storage.at(key)
+            );
         } catch (std::out_of_range& e) {
             std::stringstream message;
             message << "Key not found: " << key;

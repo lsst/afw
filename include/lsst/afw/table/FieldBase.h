@@ -91,9 +91,8 @@ protected:
  *
  *  The Array tag is used for both fixed-length (same size in every record, accessible via ColumnView)
  *  and variable-length arrays; variable-length arrays are initialized with a size of 0.  Ideally,
- *  we'd use complete different tag classes for those two very different types, but boost::variant and
- *  boost::mpl put a limit of 20 on the number of field types, and we're running out.  In a future
- *  reimplementation of afw::table, we should fix this.
+ *  we'd use complete different tag classes for those two very different types, but this was limited in
+ *  the original (pre-C++11) implementation and now it would be an API change.
  */
 template <typename U>
 struct FieldBase<Array<U> > {
