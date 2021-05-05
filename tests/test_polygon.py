@@ -266,7 +266,7 @@ class PolygonTest(lsst.utils.tests.TestCase):
                 for p1, p2 in poly.getEdges():
                     disp.line((p1, p2))
             self.assertAlmostEqual(
-                image.getArray().sum()/poly.calculateArea(), 1.0, 6)
+                image.getArray().sum()/poly.calculateArea(), 1.0, 4)
 
     def testTransform(self):
         """Test constructor for Polygon involving transforms"""
