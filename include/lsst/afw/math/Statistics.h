@@ -140,11 +140,17 @@ public:
     bool getCalcErrorFromInputVariance() const noexcept { return _calcErrorFromInputVariance; }
 
     void setNumSigmaClip(double numSigmaClip) {
-        assert(numSigmaClip > 0);
+        if (!(numSigmaClip > 0)) {
+            throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
+                              "numSigmaClip has to be positive.");
+        }
         _numSigmaClip = numSigmaClip;
     }
     void setNumIter(int numIter) {
-        assert(numIter > 0);
+        if (!(numIter > 0)) {
+            throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
+                              "numIter has to be positive.");
+        }
         _numIter = numIter;
     }
     void setAndMask(int andMask) { _andMask = andMask; }
