@@ -117,8 +117,20 @@ void declareStatistics(lsst::utils::python::WrapperCollection &wrappers) {
         cls.def("getWeighted", &StatisticsControl::getWeighted);
         cls.def("getWeightedIsSet", &StatisticsControl::getWeightedIsSet);
         cls.def("getCalcErrorFromInputVariance", &StatisticsControl::getCalcErrorFromInputVariance);
-        cls.def("setNumSigmaClip", &StatisticsControl::setNumSigmaClip);
-        cls.def("setNumIter", &StatisticsControl::setNumIter);
+        cls.def("setNumSigmaClip", [](StatisticsControl& sctrl, double numSigmaClip) {
+            if (numSigmaClip <= 0) {
+                throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
+                                  "numSigmaClip has to be positive");
+            }
+            sctrl.setNumSigmaClip(numSigmaClip);
+        });
+        cls.def("setNumIter", [](StatisticsControl& sctrl, int numIter) {
+            if (numIter <= 0) {
+                throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
+                                  "numIter has to be positive");
+            }
+            sctrl.setNumIter(numIter);
+        });
         cls.def("setAndMask", &StatisticsControl::setAndMask);
         cls.def("setNoGoodPixelsMask", &StatisticsControl::setNoGoodPixelsMask);
         cls.def("setNanSafe", &StatisticsControl::setNanSafe);
