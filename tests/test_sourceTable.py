@@ -419,9 +419,9 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
                 child = self.catalog.addNew()
                 self.fillRecord(child)
                 child.set(parentKey, parent.getId())
-        childrenIter = self.catalog.getChildren([parent.getId() for parent in parents],
-                                                [record.getId() for record in self.catalog])
-        for parent, (children, ids) in zip(parents, childrenIter):
+        for parent in parents:
+            children, ids = self.catalog.getChildren(
+                parent.getId(), [record.getId() for record in self.catalog])
             self.assertEqual(len(children), 10)
             self.assertEqual(len(children), len(ids))
             for child, id in zip(children, ids):
