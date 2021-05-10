@@ -454,6 +454,7 @@ void processPlaneMetadata(std::shared_ptr<daf::base::PropertySet const> metadata
     }
     hdr->set("INHERIT", true);
     hdr->set("EXTTYPE", exttype);
+    hdr->set("EXTNAME", exttype);
 }
 
 }  // namespace

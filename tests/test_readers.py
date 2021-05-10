@@ -179,6 +179,10 @@ class FitsReaderTestCase(lsst.utils.tests.TestCase):
         reader = ExposureFitsReader(fileName)
         self.assertIn('EXPINFO_V', reader.readMetadata().toDict(), "metadata is automatically versioned")
         reader.readMetadata().remove('EXPINFO_V')
+        self.assertIn('EXTNAME', reader.readMetadata().toDict(), "EXTNAME is added upon writing")
+        reader.readMetadata().remove('EXTNAME')
+        self.assertIn('EXTVER', reader.readMetadata().toDict(), "EXTVER is added upon writing")
+        reader.readMetadata().remove('EXTVER')
         self.assertGreaterEqual(reader.readSerializationVersion(), 0)
         self.assertEqual(exposureIn.getMetadata().toDict(), reader.readMetadata().toDict())
         self.assertWcsAlmostEqualOverBBox(exposureIn.getWcs(), reader.readWcs(), self.bbox,
