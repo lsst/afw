@@ -19,6 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+from types import SimpleNamespace
 import unittest
 import numpy as np
 
@@ -29,75 +30,74 @@ from lsst.afw.cameraGeom import Amplifier, ReadoutCorner
 
 class AmplifierTestCase(unittest.TestCase):
 
-    def testBasics(self):
-        name = "Amp1"
-        gain = 1.2345
-        saturation = 65535
-        readNoise = -0.523
-        linearityCoeffs = np.array([1.1, 2.2, 3.3, 4.4], dtype=float)
-        linearityType = "Polynomial"
-        bbox = lsst.geom.Box2I(lsst.geom.Point2I(3, -2),
-                               lsst.geom.Extent2I(231, 320))
-        rawFlipX = True
-        rawFlipY = False
-        readoutCorner = ReadoutCorner.UL
-        rawBBox = lsst.geom.Box2I(lsst.geom.Point2I(-25, 2),
-                                  lsst.geom.Extent2I(550, 629))
-        rawXYOffset = lsst.geom.Extent2I(-97, 253)
-        rawDataBBox = lsst.geom.Box2I(lsst.geom.Point2I(-2, 29),
-                                      lsst.geom.Extent2I(123, 307))
-        rawHorizontalOverscanBBox = lsst.geom.Box2I(
-            lsst.geom.Point2I(150, 29), lsst.geom.Extent2I(25, 307))
-        rawVerticalOverscanBBox = lsst.geom.Box2I(
-            lsst.geom.Point2I(-2, 201), lsst.geom.Extent2I(123, 6))
-        rawPrescanBBox = lsst.geom.Box2I(
-            lsst.geom.Point2I(-20, 2), lsst.geom.Extent2I(5, 307))
-
+    def setUp(self):
+        self.data = SimpleNamespace(
+            name="Amp1",
+            gain=1.2345,
+            saturation=65535,
+            readNoise=-0.523,
+            linearityCoeffs=np.array([1.1, 2.2, 3.3, 4.4], dtype=float),
+            linearityType="Polynomial",
+            bbox=lsst.geom.Box2I(lsst.geom.Point2I(3, -2), lsst.geom.Extent2I(231, 320)),
+            rawFlipX=True,
+            rawFlipY=False,
+            readoutCorner=ReadoutCorner.UL,
+            rawBBox=lsst.geom.Box2I(lsst.geom.Point2I(-25, 2), lsst.geom.Extent2I(550, 629)),
+            rawXYOffset=lsst.geom.Extent2I(-97, 253),
+            rawDataBBox=lsst.geom.Box2I(lsst.geom.Point2I(-2, 29), lsst.geom.Extent2I(123, 307)),
+            rawHorizontalOverscanBBox=lsst.geom.Box2I(
+                lsst.geom.Point2I(150, 29),
+                lsst.geom.Extent2I(25, 307),
+            ),
+            rawVerticalOverscanBBox=lsst.geom.Box2I(
+                lsst.geom.Point2I(-2, 201),
+                lsst.geom.Extent2I(123, 6),
+            ),
+            rawPrescanBBox=lsst.geom.Box2I(
+                lsst.geom.Point2I(-20, 2),
+                lsst.geom.Extent2I(5, 307),
+            ),
+        )
         builder = Amplifier.Builder()
-        builder.setBBox(bbox)
-        builder.setName(name)
-        builder.setGain(gain)
-        builder.setSaturation(saturation)
-        builder.setReadNoise(readNoise)
-        builder.setReadoutCorner(readoutCorner)
-        builder.setLinearityCoeffs(linearityCoeffs)
-        builder.setLinearityType(linearityType)
-        builder.setRawFlipX(rawFlipX)
-        builder.setRawFlipY(rawFlipY)
-        builder.setRawBBox(rawBBox)
-        builder.setRawXYOffset(rawXYOffset)
-        builder.setRawDataBBox(rawDataBBox)
-        builder.setRawHorizontalOverscanBBox(rawHorizontalOverscanBBox)
-        builder.setRawVerticalOverscanBBox(rawVerticalOverscanBBox)
-        builder.setRawPrescanBBox(rawPrescanBBox)
-        amplifier = builder.finish()
+        builder.setBBox(self.data.bbox)
+        builder.setName(self.data.name)
+        builder.setGain(self.data.gain)
+        builder.setSaturation(self.data.saturation)
+        builder.setReadNoise(self.data.readNoise)
+        builder.setReadoutCorner(self.data.readoutCorner)
+        builder.setLinearityCoeffs(self.data.linearityCoeffs)
+        builder.setLinearityType(self.data.linearityType)
+        builder.setRawFlipX(self.data.rawFlipX)
+        builder.setRawFlipY(self.data.rawFlipY)
+        builder.setRawBBox(self.data.rawBBox)
+        builder.setRawXYOffset(self.data.rawXYOffset)
+        builder.setRawDataBBox(self.data.rawDataBBox)
+        builder.setRawHorizontalOverscanBBox(self.data.rawHorizontalOverscanBBox)
+        builder.setRawVerticalOverscanBBox(self.data.rawVerticalOverscanBBox)
+        builder.setRawPrescanBBox(self.data.rawPrescanBBox)
+        self.amplifier = builder.finish()
 
-        self.assertEqual(name, amplifier.getName())
-        self.assertEqual(gain, amplifier.getGain())
-        self.assertEqual(saturation, amplifier.getSaturation())
-        self.assertEqual(readNoise, amplifier.getReadNoise())
-        self.assertEqual(readoutCorner, amplifier.getReadoutCorner())
-        self.assertEqual(list(linearityCoeffs),
-                         list(amplifier.getLinearityCoeffs()))
-        self.assertEqual(linearityType, amplifier.getLinearityType())
-        self.assertEqual(bbox, amplifier.getBBox())
-        self.assertEqual(rawBBox, amplifier.getRawBBox())
-        self.assertEqual(rawDataBBox, amplifier.getRawDataBBox())
-        self.assertEqual(rawHorizontalOverscanBBox,
-                         amplifier.getRawHorizontalOverscanBBox())
-        self.assertEqual(rawVerticalOverscanBBox,
-                         amplifier.getRawVerticalOverscanBBox())
-        self.assertEqual(rawPrescanBBox, amplifier.getRawPrescanBBox())
-        self.assertEqual(rawHorizontalOverscanBBox,
-                         amplifier.getRawSerialOverscanBBox())
-        self.assertEqual(rawVerticalOverscanBBox,
-                         amplifier.getRawParallelOverscanBBox())
-        self.assertEqual(rawPrescanBBox, amplifier.getRawSerialPrescanBBox())
-        self.assertEqual(rawPrescanBBox,
-                         amplifier.getRawHorizontalPrescanBBox())
-        self.assertEqual(rawFlipX, amplifier.getRawFlipX())
-        self.assertEqual(rawFlipY, amplifier.getRawFlipY())
-        self.assertEqual(rawXYOffset, amplifier.getRawXYOffset())
+    def testBasics(self):
+        self.assertEqual(self.data.name, self.amplifier.getName())
+        self.assertEqual(self.data.gain, self.amplifier.getGain())
+        self.assertEqual(self.data.saturation, self.amplifier.getSaturation())
+        self.assertEqual(self.data.readNoise, self.amplifier.getReadNoise())
+        self.assertEqual(self.data.readoutCorner, self.amplifier.getReadoutCorner())
+        self.assertEqual(list(self.data.linearityCoeffs), list(self.amplifier.getLinearityCoeffs()))
+        self.assertEqual(self.data.linearityType, self.amplifier.getLinearityType())
+        self.assertEqual(self.data.bbox, self.amplifier.getBBox())
+        self.assertEqual(self.data.rawBBox, self.amplifier.getRawBBox())
+        self.assertEqual(self.data.rawDataBBox, self.amplifier.getRawDataBBox())
+        self.assertEqual(self.data.rawHorizontalOverscanBBox, self.amplifier.getRawHorizontalOverscanBBox())
+        self.assertEqual(self.data.rawVerticalOverscanBBox, self.amplifier.getRawVerticalOverscanBBox())
+        self.assertEqual(self.data.rawPrescanBBox, self.amplifier.getRawPrescanBBox())
+        self.assertEqual(self.data.rawHorizontalOverscanBBox, self.amplifier.getRawSerialOverscanBBox())
+        self.assertEqual(self.data.rawVerticalOverscanBBox, self.amplifier.getRawParallelOverscanBBox())
+        self.assertEqual(self.data.rawPrescanBBox, self.amplifier.getRawSerialPrescanBBox())
+        self.assertEqual(self.data.rawPrescanBBox, self.amplifier.getRawHorizontalPrescanBBox())
+        self.assertEqual(self.data.rawFlipX, self.amplifier.getRawFlipX())
+        self.assertEqual(self.data.rawFlipY, self.amplifier.getRawFlipY())
+        self.assertEqual(self.data.rawXYOffset, self.amplifier.getRawXYOffset())
 
         # Test get/set methods for overscan/prescan alias names.
         # Change slightly, don't care about contiguity, make smaller.
@@ -108,6 +108,7 @@ class AmplifierTestCase(unittest.TestCase):
         newPrescanBBox = lsst.geom.Box2I(
             lsst.geom.Point2I(-20, 2), lsst.geom.Extent2I(4, 306))
 
+        builder = self.amplifier.rebuild()
         builder.setRawSerialOverscanBBox(newHorizontalOverscanBBox)
         builder.setRawParallelOverscanBBox(newVerticalOverscanBBox)
         builder.setRawSerialPrescanBBox(newPrescanBBox)
