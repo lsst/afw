@@ -30,6 +30,7 @@ import lsst.geom
 import lsst.afw.image as afwImage
 import lsst.afw.display as afwDisplay
 from lsst.afw.cameraGeom import (
+    AmplifierIsolator,
     assembleAmplifierImage,
     assembleAmplifierRawImage,
     Camera,
@@ -39,6 +40,7 @@ from lsst.afw.cameraGeom import (
     DetectorCollection,
     FIELD_ANGLE,
     FOCAL_PLANE,
+    makeUpdatedDetector,
     PIXELS,
 )
 import lsst.afw.cameraGeom.testUtils as testUtils
@@ -289,6 +291,23 @@ class CameraGeomTestCase(lsst.utils.tests.TestCase):
                     for amp, im in zip(det, imList):
                         assemble(outImage, im, amp)
                     self.assertImagesEqual(outImage, detectorImageMap[trim])
+                    # Test going from detector images back to single-amplifier
+                    # images.
+                    detector_exposure = afwImage.ExposureU(afwImage.MaskedImageU(detectorImageMap[trim]))
+                    detector_exposure.setDetector(makeUpdatedDetector(det))
+                    for amp, im in zip(det, imList):
+                        amp_exposure = AmplifierIsolator.apply(detector_exposure, amp)
+                        self.assertEqual(len(amp_exposure.getDetector()), 1)
+                        self.assertEqual(amp_exposure.getDetector().getBBox(), amp.getBBox())
+                        self.assertAmplifiersEqual(amp, amp_exposure.getDetector()[0])
+                        if not trim:
+                            self.assertEqual(cameraGeomUtils.calcRawCcdBBox(amp_exposure.getDetector()),
+                                             amp_exposure.getBBox())
+                            self.assertImagesEqual(im[amp.getRawBBox()], amp_exposure.image)
+                        else:
+                            self.assertEqual(amp_exposure.getDetector().getBBox(),
+                                             amp_exposure.getBBox())
+                            self.assertImagesEqual(im[amp.getRawDataBBox()], amp_exposure.image)
 
     @unittest.skipIf(not display, "display variable not set; skipping cameraGeomUtils test")
     def testCameraGeomUtils(self):
