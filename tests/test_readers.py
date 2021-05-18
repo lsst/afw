@@ -23,6 +23,7 @@ import unittest
 
 import os
 import numpy as np
+import astropy.io.fits
 
 import lsst.utils.tests
 from lsst.daf.base import PropertyList
@@ -179,6 +180,17 @@ class FitsReaderTestCase(lsst.utils.tests.TestCase):
         reader = ExposureFitsReader(fileName)
         self.assertIn('EXPINFO_V', reader.readMetadata().toDict(), "metadata is automatically versioned")
         reader.readMetadata().remove('EXPINFO_V')
+        # ensure EXTNAMEs can be read and make sense
+        extnames = set(('PRIMARY', 'IMAGE', 'MASK', 'VARIANCE', 'ARCHIVE_INDEX',
+                        'Detector', 'TransformMap', 'TransformPoint2ToPoint2',
+                        'FilterLabel', 'SkyWcs', 'ApCorrMap', 'PhotoCalib',
+                        'ChebyshevBoundedField', 'CoaddInputs', 'GaussianPsf',
+                        'Polygon', 'VisitInfo'))
+        with astropy.io.fits.open(fileName) as astropyReadFile:
+            for hdu in astropyReadFile:
+                self.assertIn(hdu.name, extnames)
+        self.assertIn('EXTNAME', reader.readMetadata().toDict(), "EXTNAME is added upon writing")
+        reader.readMetadata().remove('EXTNAME')
         self.assertGreaterEqual(reader.readSerializationVersion(), 0)
         self.assertEqual(exposureIn.getMetadata().toDict(), reader.readMetadata().toDict())
         self.assertWcsAlmostEqualOverBBox(exposureIn.getWcs(), reader.readWcs(), self.bbox,

@@ -1,6 +1,4 @@
 /*
- * This file is part of afw.
- *
  * Developed for the LSST Data Management System.
  * This product includes software developed by the LSST Project
  * (https://www.lsst.org).
@@ -25,28 +23,24 @@
 
 #include "lsst/utils/python.h"
 
+#include "lsst/afw/table/io/InputArchive.h"
+#include "lsst/afw/fits.h"
+
 namespace py = pybind11;
-using namespace pybind11::literals;
+using namespace py::literals;
 
 namespace lsst {
 namespace afw {
 namespace table {
 namespace io {
 
-using utils::python::WrapperCollection;
+using PyInputArchive = py::class_<InputArchive, std::shared_ptr<InputArchive>>;
 
-void wrapFits(WrapperCollection&);
-void wrapPersistable(WrapperCollection&);
-void wrapInputArchive(WrapperCollection&);
-void wrapOutputArchive(WrapperCollection&);
-
-PYBIND11_MODULE(_io, mod) {
-    WrapperCollection wrappers(mod, "lsst.afw.table.io");
-    wrapPersistable(wrappers);
-    wrapFits(wrappers);
-    wrapInputArchive(wrappers);
-    wrapOutputArchive(wrappers);
-    wrappers.finish();
+void wrapInputArchive(utils::python::WrapperCollection &wrappers) {
+    wrappers.wrapType(PyInputArchive(wrappers.module, "InputArchive"), [](auto &mod, auto &cls) {
+        cls.def("get", &InputArchive::get<Persistable>);
+        cls.def("readFits", &InputArchive::readFits);
+    });
 }
 
 }  // namespace io

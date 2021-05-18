@@ -1,6 +1,4 @@
 /*
- * This file is part of afw.
- *
  * Developed for the LSST Data Management System.
  * This product includes software developed by the LSST Project
  * (https://www.lsst.org).
@@ -25,28 +23,29 @@
 
 #include "lsst/utils/python.h"
 
+#include "lsst/afw/table/io/OutputArchive.h"
+#include "lsst/afw/fits.h"
+#include "lsst/afw/table/io/Persistable.h"
+
 namespace py = pybind11;
-using namespace pybind11::literals;
+using namespace py::literals;
 
 namespace lsst {
 namespace afw {
 namespace table {
 namespace io {
 
-using utils::python::WrapperCollection;
+using PyOutputArchive = py::class_<OutputArchive, std::shared_ptr<OutputArchive>>;
 
-void wrapFits(WrapperCollection&);
-void wrapPersistable(WrapperCollection&);
-void wrapInputArchive(WrapperCollection&);
-void wrapOutputArchive(WrapperCollection&);
-
-PYBIND11_MODULE(_io, mod) {
-    WrapperCollection wrappers(mod, "lsst.afw.table.io");
-    wrapPersistable(wrappers);
-    wrapFits(wrappers);
-    wrapInputArchive(wrappers);
-    wrapOutputArchive(wrappers);
-    wrappers.finish();
+void wrapOutputArchive(utils::python::WrapperCollection &wrappers) {
+    wrappers.wrapType(PyOutputArchive(wrappers.module, "OutputArchive"), [](auto &mod, auto &cls) {
+        cls.def(py::init<>());
+        cls.def("put",
+                py::overload_cast<std::shared_ptr<Persistable const>, bool>(&OutputArchive::put),
+                "obj"_a, "permissive"_a=false
+                );
+        cls.def("writeFits", &OutputArchive::writeFits);
+    });
 }
 
 }  // namespace io

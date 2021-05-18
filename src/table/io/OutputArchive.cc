@@ -99,6 +99,8 @@ public:
         } catch (pex::exceptions::NotFoundError &) {
             iter->getTable()->getMetadata()->add("AR_NAME", name, "Class name for objects stored here");
         }
+        // Also add an EXTNAME. The most recent AR_NAME given will be used.
+        iter->getTable()->getMetadata()->set("EXTNAME", name);
         indexRecord->set(indexKeys.row0, iter->size());
         indexRecord->set(indexKeys.catArchive, catArchive);
         iter->insert(iter->end(), catalog.begin(), catalog.end(), false);
@@ -142,6 +144,7 @@ public:
     Impl() : _nextId(1), _map(), _index(ArchiveIndexSchema::get().schema) {
         std::shared_ptr<daf::base::PropertyList> metadata(new daf::base::PropertyList());
         metadata->set("EXTTYPE", "ARCHIVE_INDEX");
+        metadata->set("EXTNAME", "ARCHIVE_INDEX");
         metadata->set("AR_CATN", 0, "# of this catalog relative to the start of this archive");
         _index.getTable()->setMetadata(metadata);
     }
