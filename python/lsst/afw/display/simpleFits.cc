@@ -39,11 +39,10 @@ using namespace posix;
 #include <cstring>
 #include <cassert>
 #include <cctype>
+#include <any>
 
 #include "lsst/pex/exceptions.h"
-#include "boost/any.hpp"
 #include "lsst/afw/fits.h"
-
 #include "simpleFits.h"
 
 namespace image = lsst::afw::image;
@@ -72,7 +71,7 @@ public:
     int write(int fd, int ncard, char *record) const;
 
     std::string keyword;
-    boost::any value;
+    std::any value;
     std::string comment;
 };
 
@@ -83,7 +82,7 @@ int Card::write(int fd, int ncard, char *record) const {
     char *card = &record[80 * ncard];
 
     if (value.type() == typeid(std::string)) {
-        const char *str = boost::any_cast<std::string>(value).c_str();
+        const char *str = std::any_cast<std::string>(value).c_str();
         if (keyword == "" || keyword == "COMMENT" || keyword == "END" || keyword == "HISTORY") {
             sprintf(card, "%-8.8s%-72s", keyword.c_str(), str);
         } else {
@@ -94,13 +93,13 @@ int Card::write(int fd, int ncard, char *record) const {
         sprintf(card, "%-8.8s= ", keyword.c_str());
         card += 10;
         if (value.type() == typeid(bool)) {
-            sprintf(card, "%20s", boost::any_cast<bool>(value) ? "T" : "F");
+            sprintf(card, "%20s", std::any_cast<bool>(value) ? "T" : "F");
         } else if (value.type() == typeid(int)) {
-            sprintf(card, "%20d", boost::any_cast<int>(value));
+            sprintf(card, "%20d", std::any_cast<int>(value));
         } else if (value.type() == typeid(double)) {
-            sprintf(card, "%20.10f", boost::any_cast<double>(value));
+            sprintf(card, "%20.10f", std::any_cast<double>(value));
         } else if (value.type() == typeid(float)) {
-            sprintf(card, "%20.7f", boost::any_cast<float>(value));
+            sprintf(card, "%20.7f", std::any_cast<float>(value));
         }
         card += 20;
         sprintf(card, " %c%-48s", (comment == "" ? ' ' : '/'), comment.c_str());
