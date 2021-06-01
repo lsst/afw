@@ -75,6 +75,10 @@ void wrapPsf(utils::python::WrapperCollection& wrappers) {
                         "color"_a = image::Color());
                 cls.def("computeBBox", &Psf::computeBBox, "position"_a = NullPoint,
                         "color"_a = image::Color());
+                cls.def("computeImageBBox", &Psf::computeImageBBox, "position"_a = NullPoint,
+                        "color"_a = image::Color());
+                cls.def("computeKernelBBox", &Psf::computeKernelBBox, "position"_a = NullPoint,
+                        "color"_a = image::Color());
                 cls.def("getLocalKernel", &Psf::getLocalKernel, "position"_a = NullPoint,
                         "color"_a = image::Color());
                 cls.def("getAverageColor", &Psf::getAverageColor);

@@ -153,6 +153,22 @@ class PsfTrampolineTestSuite(lsst.utils.tests.TestCase):
                 pgp.computeBBox(),
                 gp.computeBBox()
             )
+            self.assertEqual(
+                pgp.computeKernelBBox(),
+                gp.computeKernelBBox(),
+            )
+            self.assertEqual(
+                pgp.computeImageBBox(),
+                gp.computeImageBBox(),
+            )
+            self.assertEqual(
+                pgp.computeImage().getBBox(),
+                pgp.computeImageBBox()
+            )
+            self.assertEqual(
+                pgp.computeKernelImage().getBBox(),
+                pgp.computeKernelBBox()
+            )
 
     def testShape(self):
         for pgp, gp in zip(self.pgps, self.gps):

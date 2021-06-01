@@ -106,6 +106,9 @@ class GaussianPsfTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(self.psf.computeKernelImage(lsst.geom.Point2D(0.0, 0.0)).getBBox(),
                          self.psf.computeBBox(lsst.geom.Point2D(0.0, 0.0)))
 
+        self.assertEqual(self.psf.computeImage().getBBox(),
+                         self.psf.computeImageBBox())
+
     def testResized(self):
         for pad in [0, -10, 10]:
             newLen = self.kernelSize - pad
