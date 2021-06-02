@@ -180,6 +180,7 @@ tests/data/Dest
 tests/data/kernel*.boost
 ups/*.cfgc
 extensions/
+.vscode/
 
 # Output of tests
 doc/htmlDir
