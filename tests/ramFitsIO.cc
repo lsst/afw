@@ -28,7 +28,6 @@
 #include <sstream>
 #include <stdexcept>
 #include <memory>
-#include "boost/filesystem.hpp"
 #include "lsst/afw/geom/SkyWcs.h"
 #include "lsst/afw/image.h"
 #include "lsst/afw/image/Image.h"

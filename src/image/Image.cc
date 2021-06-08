@@ -34,7 +34,6 @@
 #pragma clang diagnostic ignored "-Wunused-variable"
 #pragma clang diagnostic pop
 #include "boost/format.hpp"
-#include "boost/filesystem/path.hpp"
 
 #include "boost/version.hpp"
 #if BOOST_VERSION < 106900

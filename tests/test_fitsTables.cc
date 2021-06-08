@@ -11,8 +11,7 @@
 #include <algorithm>
 #include <cmath>
 #include <map>
-
-#include "boost/filesystem.hpp"
+#include <filesystem>
 
 #include "lsst/utils/Utils.h"
 #include "lsst/afw/table/Source.h"
@@ -180,7 +179,7 @@ BOOST_AUTO_TEST_CASE(testFits) {
         BOOST_CHECK_EQUAL(fp2a.getBBox(), fp2b.getBBox());
     }
 
-    boost::filesystem::remove(filename);
+    std::filesystem::remove(filename);
 }
 
 BOOST_AUTO_TEST_CASE(ticket2164) {

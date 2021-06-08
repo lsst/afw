@@ -12,8 +12,8 @@
 #include <algorithm>
 #include <cmath>
 #include <map>
+#include <filesystem>
 
-#include "boost/filesystem.hpp"
 #include "Eigen/Core"
 
 #include "lsst/utils/Utils.h"
@@ -674,11 +674,11 @@ BOOST_AUTO_TEST_CASE(ArchiveImporter) {
     std::cerr << "The following warning is expected, and is an indication the test has passed.\n";
     std::cerr << "--------------------------------------------------------------------------------------\n";
 
-    boost::filesystem::path testFilePath(lsst::utils::getPackageDir("afw"));
-    boost::filesystem::path testsDir("tests");
-    boost::filesystem::path dataDir("data");
-    boost::filesystem::path filename("archiveImportTest.fits");
-    boost::filesystem::path testPath = testFilePath / testsDir / dataDir / filename;
+    std::filesystem::path testFilePath(lsst::utils::getPackageDir("afw"));
+    std::filesystem::path testsDir("tests");
+    std::filesystem::path dataDir("data");
+    std::filesystem::path filename("archiveImportTest.fits");
+    std::filesystem::path testPath = testFilePath / testsDir / dataDir / filename;
 
     lsst::afw::image::Exposure<float> exposure(testPath.string());
     BOOST_CHECK(!exposure.getPsf());
