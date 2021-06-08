@@ -7,6 +7,7 @@
 #include <sstream>
 #include <unordered_set>
 #include <unordered_map>
+#include <filesystem>
 
 #include "fitsio.h"
 extern "C" {
@@ -15,7 +16,6 @@ extern "C" {
 
 #include "boost/algorithm/string.hpp"
 #include "boost/regex.hpp"
-#include "boost/filesystem.hpp"
 #include "boost/preprocessor/seq/for_each.hpp"
 #include "boost/format.hpp"
 
@@ -1555,7 +1555,7 @@ Fits::Fits(std::string const &filename, std::string const &mode, int behavior_)
         fits_open_file(reinterpret_cast<fitsfile **>(&fptr), const_cast<char *>(filename.c_str()), READONLY,
                        &status);
     } else if (mode == "w" || mode == "wb") {
-        boost::filesystem::remove(filename);  // cfitsio doesn't like over-writing files
+        std::filesystem::remove(filename);  // cfitsio doesn't like over-writing files
         fits_create_file(reinterpret_cast<fitsfile **>(&fptr), const_cast<char *>(filename.c_str()), &status);
     } else if (mode == "a" || mode == "ab") {
         fits_open_file(reinterpret_cast<fitsfile **>(&fptr), const_cast<char *>(filename.c_str()), READWRITE,

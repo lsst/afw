@@ -36,7 +36,6 @@
 #pragma clang diagnostic ignored "-Wunused-variable"
 #pragma clang diagnostic pop
 #include "boost/format.hpp"
-#include "boost/filesystem/path.hpp"
 
 #include "boost/functional/hash.hpp"
 
