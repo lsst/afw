@@ -7,8 +7,8 @@
 #include <string>
 #include <algorithm>
 #include <cctype>
+#include <regex>
 
-#include "boost/regex.hpp"
 #include "boost/multi_index_container.hpp"
 #include "boost/multi_index/sequenced_index.hpp"
 #include "boost/multi_index/ordered_index.hpp"
@@ -278,9 +278,9 @@ FitsSchemaInputMapper::FitsSchemaInputMapper(daf::base::PropertyList &metadata, 
         // Regex to unpack a FITS TFORM value for a bit array column (TFORM code 'X').  The number
         // that precedes the code is the size of the array; the number that follows it (if present)
         // is ignored.
-        static boost::regex const regex("(\\d+)?X\\(?(\\d)*\\)?", boost::regex::perl);
-        boost::smatch m;
-        if (!boost::regex_match(iter->tform, m, regex)) {
+        static std::regex const regex("(\\d+)?X\\(?(\\d)*\\)?");
+        std::smatch m;
+        if (!std::regex_match(iter->tform, m, regex)) {
             throw LSST_EXCEPT(
                     afw::fits::FitsError,
                     (boost::format("Invalid TFORM key for flags column: '%s'") % iter->tform).str());
@@ -585,9 +585,9 @@ template <typename T, int N>
 class CovarianceConversionReader : public FitsColumnReader {
 public:
     static std::string guessUnits(std::string const &oldUnits) {
-        static boost::regex const regex("(.*)(\\^(\\d+))?", boost::regex::perl);
-        boost::smatch m;
-        if (!boost::regex_match(oldUnits, m, regex)) {
+        static std::regex const regex("(.*)(\\^(\\d+))?");
+        std::smatch m;
+        if (!std::regex_match(oldUnits, m, regex)) {
             int oldPower = std::stoi(m[2]);
             int newPower = std::sqrt(oldPower);
             return std::to_string(newPower);
@@ -628,10 +628,10 @@ std::unique_ptr<FitsColumnReader> makeColumnReader(Schema &schema, FitsSchemaIte
     // Regex to unpack a FITS TFORM value.  The first number is the size of the array (1 if not present),
     // followed by an alpha code indicating the type (preceded by P or Q for variable size array).
     // The last number is ignored.
-    static boost::regex const regex("(\\d+)?([PQ])?(\\u)\\(?(\\d)*\\)?", boost::regex::perl);
+    static std::regex const regex("(\\d+)?([PQ])?([A-Z])\\(?(\\d)*\\)?");
     // start by parsing the format; this tells the element type of the field and the number of elements
-    boost::smatch m;
-    if (!boost::regex_match(item.tform, m, regex)) {
+    std::smatch m;
+    if (!std::regex_match(item.tform, m, regex)) {
         return std::unique_ptr<FitsColumnReader>();
     }
     int size = 1;
