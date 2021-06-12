@@ -29,8 +29,20 @@ import lsst.pex.exceptions as pexExcept
 import lsst.geom
 import lsst.afw.image as afwImage
 import lsst.afw.display as afwDisplay
-from lsst.afw.cameraGeom import PIXELS, FIELD_ANGLE, FOCAL_PLANE, CameraSys, CameraSysPrefix, \
-    Camera, Detector, assembleAmplifierImage, assembleAmplifierRawImage, DetectorCollection
+from lsst.afw.cameraGeom import (
+    AmplifierIsolator,
+    assembleAmplifierImage,
+    assembleAmplifierRawImage,
+    Camera,
+    CameraSys,
+    CameraSysPrefix,
+    Detector,
+    DetectorCollection,
+    FIELD_ANGLE,
+    FOCAL_PLANE,
+    makeUpdatedDetector,
+    PIXELS,
+)
 import lsst.afw.cameraGeom.testUtils as testUtils
 import lsst.afw.cameraGeom.utils as cameraGeomUtils
 
@@ -255,28 +267,47 @@ class CameraGeomTestCase(lsst.utils.tests.TestCase):
 
     def testAssembly(self):
         ccdNames = ('R:0,0 S:1,0', 'R:0,0 S:0,1')
-        compMap = {True: afwImage.ImageU(os.path.join(testPath, 'test_comp_trimmed.fits.gz'),
-                                         allowUnsafe=True),
-                   False: afwImage.ImageU(os.path.join(testPath, 'test_comp.fits.gz'), allowUnsafe=True)}
+        detectorImageMap = {True: afwImage.ImageU(os.path.join(testPath, 'test_comp_trimmed.fits.gz'),
+                                                  allowUnsafe=True),
+                            False: afwImage.ImageU(os.path.join(testPath, 'test_comp.fits.gz'),
+                                                   allowUnsafe=True)}
         for cw in self.cameraList:
             camera = cw.camera
             imList = self.assemblyList[camera.getName()]
             for ccdName in ccdNames:
+                det = camera[ccdName]
+                if len(imList) == 1:
+                    # There's one test image because it's the same for all
+                    # amplifiers, not because there's only one amplifier.
+                    imList *= len(det)
+                # Test going from possibly-separate amp images to detector
+                # images.
                 for trim, assemble in ((False, assembleAmplifierRawImage), (True, assembleAmplifierImage)):
-                    det = camera[ccdName]
                     if not trim:
                         outBbox = cameraGeomUtils.calcRawCcdBBox(det)
                     else:
                         outBbox = det.getBBox()
                     outImage = afwImage.ImageU(outBbox)
-                    if len(imList) == 1:
-                        for amp in det:
-                            assemble(outImage, imList[0], amp)
-                    else:
-                        for amp, im in zip(det, imList):
-                            assemble(outImage, im, amp)
-                    self.assertListEqual(outImage.getArray().flatten().tolist(),
-                                         compMap[trim].getArray().flatten().tolist())
+                    for amp, im in zip(det, imList):
+                        assemble(outImage, im, amp)
+                    self.assertImagesEqual(outImage, detectorImageMap[trim])
+                    # Test going from detector images back to single-amplifier
+                    # images.
+                    detector_exposure = afwImage.ExposureU(afwImage.MaskedImageU(detectorImageMap[trim]))
+                    detector_exposure.setDetector(makeUpdatedDetector(det))
+                    for amp, im in zip(det, imList):
+                        amp_exposure = AmplifierIsolator.apply(detector_exposure, amp)
+                        self.assertEqual(len(amp_exposure.getDetector()), 1)
+                        self.assertEqual(amp_exposure.getDetector().getBBox(), amp.getBBox())
+                        self.assertAmplifiersEqual(amp, amp_exposure.getDetector()[0])
+                        if not trim:
+                            self.assertEqual(cameraGeomUtils.calcRawCcdBBox(amp_exposure.getDetector()),
+                                             amp_exposure.getBBox())
+                            self.assertImagesEqual(im[amp.getRawBBox()], amp_exposure.image)
+                        else:
+                            self.assertEqual(amp_exposure.getDetector().getBBox(),
+                                             amp_exposure.getBBox())
+                            self.assertImagesEqual(im[amp.getRawDataBBox()], amp_exposure.image)
 
     @unittest.skipIf(not display, "display variable not set; skipping cameraGeomUtils test")
     def testCameraGeomUtils(self):
