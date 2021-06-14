@@ -131,6 +131,12 @@ lsst::geom::Box2I Psf::computeBBox(lsst::geom::Point2D position, image::Color co
     return doComputeBBox(position, color);
 }
 
+lsst::geom::Box2I Psf::computeImageBBox(lsst::geom::Point2D position, image::Color color) const {
+    if (isPointNull(position)) position = getAveragePosition();
+    if (color.isIndeterminate()) color = getAverageColor();
+    return doComputeImageBBox(position, color);
+}
+
 std::shared_ptr<math::Kernel const> Psf::getLocalKernel(lsst::geom::Point2D position,
                                                         image::Color color) const {
     if (isPointNull(position)) position = getAveragePosition();
@@ -163,6 +169,12 @@ std::shared_ptr<Psf::Image> Psf::doComputeImage(lsst::geom::Point2D const &posit
                                                 image::Color const &color) const {
     std::shared_ptr<Psf::Image> im = computeKernelImage(position, color, COPY);
     return recenterKernelImage(im, position);
+}
+
+lsst::geom::Box2I Psf::doComputeImageBBox(lsst::geom::Point2D const& position,
+                                          image::Color const& color) const {
+    std::shared_ptr<Psf::Image> im = computeImage(position, color, INTERNAL);
+    return im->getBBox();
 }
 
 lsst::geom::Point2D Psf::getAveragePosition() const { return lsst::geom::Point2D(); }

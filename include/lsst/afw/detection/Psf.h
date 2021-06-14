@@ -246,6 +246,20 @@ public:
                                   image::Color color = image::Color()) const;
 
     /**
+     *  Return the bounding box of the image returned by computeImage()
+     */
+    lsst::geom::Box2I computeImageBBox(lsst::geom::Point2D position = makeNullPoint(),
+                                       image::Color color = image::Color()) const;
+
+    /**
+     *  Alias for computeBBox
+     */
+    lsst::geom::Box2I computeKernelBBox(lsst::geom::Point2D position = makeNullPoint(),
+                                        image::Color color = image::Color()) const {
+        return computeBBox(position, color);
+    }
+
+    /**
      * Helper function for Psf::doComputeImage(): converts a kernel image (centered at (0,0) when xy0
      * is taken into account) to an image centered at position when xy0 is taken into account.
      *
@@ -290,13 +304,20 @@ protected:
      */
     explicit Psf(bool isFixed = false, std::size_t capacity = 100);
 
+    //@{
     /**
-     * This virtual member is protected (rather than private) so that python-implemented derived
-     * classes may opt to use the default implementation.  C++ derived classes may override this
-     * method, but should not call it.
+     * These virtual members are protected (rather than private) so that python-implemented derived
+     * classes may opt to use the default implementations.  C++ derived classes may override these
+     * methods, but should not call them.  Derived classes should call the corresponding compute*
+     * member functions instead so as to let the Psf base class handle caching properly.
+     *
+     * Derived classes are responsible for ensuring that returned images sum to one.
      */
     virtual std::shared_ptr<Image> doComputeImage(lsst::geom::Point2D const& position,
                                                   image::Color const& color) const;
+    virtual lsst::geom::Box2I doComputeImageBBox(lsst::geom::Point2D const& position,
+                                                 image::Color const& color) const;
+    //@}
 
 private:
     //@{

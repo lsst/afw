@@ -91,6 +91,15 @@ public:
         );
     }
 
+    lsst::geom::Box2I doComputeImageBBox(
+        lsst::geom::Point2D const& position,
+        image::Color const& color
+    ) const override {
+        PYBIND11_OVERLOAD_NAME(
+            lsst::geom::Box2I, Base, "_doComputeImageBBox", doComputeImageBBox, position, color
+        );
+    }
+
     std::shared_ptr<Image> doComputeKernelImage(
         lsst::geom::Point2D const& position,
         image::Color const& color
