@@ -163,11 +163,33 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(visitInfo.getBoresightHourAngle(), hourAngle)
         self.assertEqual(visitInfo.getId(), data.id)
 
+    def _testProperties(self, data, localEra, hourAngle):
+        """Test property attribute accessors."""
+        visitInfo = makeVisitInfo(data)
+        self.assertEqual(visitInfo.exposureTime, data.exposureTime)
+        self.assertEqual(visitInfo.darkTime, data.darkTime)
+        self.assertEqual(visitInfo.date, data.date)
+        self.assertEqual(visitInfo.ut1, data.ut1)
+        self.assertEqual(visitInfo.era, data.era)
+        self.assertEqual(visitInfo.boresightRaDec, data.boresightRaDec)
+        self.assertEqual(visitInfo.boresightAzAlt, data.boresightAzAlt)
+        self.assertEqual(visitInfo.boresightAirmass, data.boresightAirmass)
+        self.assertEqual(visitInfo.boresightRotAngle, data.boresightRotAngle)
+        self.assertEqual(visitInfo.rotType, data.rotType)
+        self.assertEqual(visitInfo.observatory, data.observatory)
+        self.assertEqual(visitInfo.instrumentLabel, data.instrumentLabel)
+        self.assertEqual(visitInfo.weather, data.weather)
+        self.assertEqual(visitInfo.localEra, localEra)
+        self.assertEqual(visitInfo.boresightHourAngle, hourAngle)
+        self.assertEqual(visitInfo.id, data.id)
+
     def testValueConstructor_data1(self):
         self._testValueConstructor(self.data1, self.localEra1, self.hourAngle1)
+        self._testProperties(self.data1, self.localEra1, self.hourAngle1)
 
     def testValueConstructor_data2(self):
         self._testValueConstructor(self.data2, self.localEra2, self.hourAngle2)
+        self._testProperties(self.data2, self.localEra2, self.hourAngle2)
 
     def testTablePersistence(self):
         """Test that VisitInfo can be round-tripped with current code.

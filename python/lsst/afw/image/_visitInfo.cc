@@ -107,6 +107,26 @@ void declareVisitInfo(lsst::utils::python::WrapperCollection &wrappers) {
                 cls.def("getInstrumentLabel", &VisitInfo::getInstrumentLabel);
                 cls.def("getId", &VisitInfo::getId);
 
+                /* readonly property accessors */
+                cls.def_property_readonly("exposureTime", &VisitInfo::getExposureTime);
+                cls.def_property_readonly("darkTime", &VisitInfo::getDarkTime);
+                cls.def_property_readonly("date", &VisitInfo::getDate);
+                cls.def_property_readonly("ut1", &VisitInfo::getUt1);
+                cls.def_property_readonly("era", &VisitInfo::getEra);
+                cls.def_property_readonly("boresightRaDec", &VisitInfo::getBoresightRaDec);
+                cls.def_property_readonly("boresightAzAlt", &VisitInfo::getBoresightAzAlt);
+                cls.def_property_readonly("boresightAirmass", &VisitInfo::getBoresightAirmass);
+                cls.def_property_readonly("boresightParAngle", &VisitInfo::getBoresightParAngle);
+                cls.def_property_readonly("boresightRotAngle", &VisitInfo::getBoresightRotAngle);
+                cls.def_property_readonly("rotType", &VisitInfo::getRotType);
+                cls.def_property_readonly("observatory", &VisitInfo::getObservatory);
+                cls.def_property_readonly("weather", &VisitInfo::getWeather);
+                cls.def_property_readonly("isPersistable", &VisitInfo::isPersistable);
+                cls.def_property_readonly("localEra", &VisitInfo::getLocalEra);
+                cls.def_property_readonly("boresightHourAngle", &VisitInfo::getBoresightHourAngle);
+                cls.def_property_readonly("instrumentLabel", &VisitInfo::getInstrumentLabel);
+                cls.def_property_readonly("id", &VisitInfo::getId);
+
                 utils::python::addOutputOp(cls, "__str__");
             });
 }
