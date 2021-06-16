@@ -25,11 +25,9 @@
 #include <memory>
 #include <string>
 
-#include "ndarray/eigen.h"
 #include "astshim.h"
 #include "lsst/afw/formatters/Utils.h"
 #include "lsst/afw/math/TransformBoundedField.h"
-#include "lsst/afw/table/io/InputArchive.h"
 #include "lsst/afw/table/io/OutputArchive.h"
 #include "lsst/afw/table/io/CatalogVector.h"
 #include "lsst/afw/table/aggregates.h"

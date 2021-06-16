@@ -32,11 +32,10 @@
 #include <utility>
 #include <vector>
 
-#include "boost/mpl/or.hpp"
+#include "boost/format.hpp"
 
 #include "lsst/geom.h"
 #include "lsst/afw/image/Image.h"
-#include "lsst/afw/image/Utils.h"
 #include "lsst/afw/math/Function.h"
 #include "lsst/afw/math/traits.h"
 

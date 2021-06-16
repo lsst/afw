@@ -37,8 +37,6 @@
 #pragma clang diagnostic pop
 #include "boost/format.hpp"
 
-#include "boost/functional/hash.hpp"
-
 #include "lsst/daf/base.h"
 #include "lsst/geom.h"
 #include "lsst/pex/exceptions.h"

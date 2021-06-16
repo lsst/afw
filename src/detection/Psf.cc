@@ -1,6 +1,5 @@
 // -*- LSST-C++ -*-
 #include <limits>
-#include <typeinfo>
 #include <cmath>
 #include <memory>
 

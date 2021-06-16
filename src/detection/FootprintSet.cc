@@ -45,7 +45,6 @@
 #include <cassert>
 #include <set>
 #include <string>
-#include <typeinfo>
 #include "boost/format.hpp"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image/MaskedImage.h"

@@ -23,7 +23,6 @@
 /*
  * Bin an Image or MaskedImage by an integral factor (the same in x and y)
  */
-#include <cstdint>
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/offsetImage.h"

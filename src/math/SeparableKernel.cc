@@ -23,7 +23,6 @@
  */
 #include <algorithm>
 #include <iterator>
-#include <sstream>
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/Kernel.h"

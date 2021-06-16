@@ -22,7 +22,6 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-#include <sstream>
 #include <string>
 
 #include "boost/format.hpp"

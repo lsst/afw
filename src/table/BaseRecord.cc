@@ -1,6 +1,5 @@
 // -*- lsst-c++ -*-
 
-#include <cstring>
 #include <iostream>
 
 #include "lsst/pex/exceptions.h"

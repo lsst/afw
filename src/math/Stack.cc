@@ -30,7 +30,6 @@
 #include <cassert>
 #include <memory>
 
-#include "lsst/base.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/Stack.h"
 #include "lsst/afw/math/MaskedVector.h"

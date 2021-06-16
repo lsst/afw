@@ -25,7 +25,6 @@
 #include <iterator>
 #include "lsst/afw/geom/SpanSet.h"
 #include "lsst/afw/table/io/CatalogVector.h"
-#include "lsst/afw/table/io/InputArchive.h"
 #include "lsst/afw/table/io/OutputArchive.h"
 #include "lsst/afw/geom/ellipses/PixelRegion.h"
 #include "lsst/afw/geom/transformFactory.h"

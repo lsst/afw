@@ -31,8 +31,6 @@
  *  Note: do not include directly; use the main ellipse header file.
  */
 
-#include <boost/tuple/tuple.hpp>
-
 #include "lsst/afw/geom/ellipses/Ellipse.h"
 
 namespace lsst {

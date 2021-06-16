@@ -6,7 +6,6 @@ extern "C" {
 }
 
 #include "lsst/pex/exceptions.h"
-#include "lsst/afw/math/Random.h"
 
 #include "lsst/afw/fitsCompression.h"
 

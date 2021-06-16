@@ -21,7 +21,6 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-#include <algorithm>
 #include <vector>
 
 #include "lsst/utils/hashCombine.h"

@@ -27,7 +27,6 @@
 #include "lsst/afw/math/LeastSquares.h"
 #include "lsst/afw/math/ChebyshevBoundedField.h"
 #include "lsst/afw/math/detail/TrapezoidalPacker.h"
-#include "lsst/afw/table/io/InputArchive.h"
 #include "lsst/afw/table/io/OutputArchive.h"
 #include "lsst/afw/table/io/CatalogVector.h"
 #include "lsst/afw/table/aggregates.h"

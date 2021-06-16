@@ -25,6 +25,7 @@
 #include <string>
 #include <memory>
 
+
 #include "lsst/geom/Box.h"
 #include "lsst/daf/base/PropertyList.h"
 #include "lsst/afw/fits.h"

@@ -4,7 +4,6 @@
 
 #include "boost/shared_ptr.hpp"  // only for ndarray
 
-#include "lsst/afw/table/BaseColumnView.h"
 #include "lsst/afw/table/BaseRecord.h"
 #include "lsst/afw/table/BaseTable.h"
 #include "lsst/afw/table/Catalog.h"

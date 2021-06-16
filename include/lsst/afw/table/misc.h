@@ -4,7 +4,6 @@
 
 #include <cstdint>
 
-#include "boost/mpl/if.hpp"
 
 #include "lsst/geom/Angle.h"
 #include "lsst/geom/SpherePoint.h"

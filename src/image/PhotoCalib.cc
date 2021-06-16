@@ -26,7 +26,6 @@
 #include "lsst/geom/Point.h"
 #include "lsst/afw/image/PhotoCalib.h"
 #include "lsst/afw/math/BoundedField.h"
-#include "lsst/afw/table.h"
 #include "lsst/afw/table/io/CatalogVector.h"
 #include "lsst/afw/table/io/OutputArchive.h"
 #include "lsst/daf/base/PropertySet.h"

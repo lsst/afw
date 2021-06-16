@@ -36,13 +36,8 @@
 #include <string>
 #include <utility>
 
-#include "boost/format.hpp"
-#include "boost/mpl/bool.hpp"
 #include <memory>
 
-#include "lsst/afw/image/lsstGil.h"
-#include "lsst/daf/base.h"
-#include "lsst/pex/exceptions.h"
 #include "lsst/afw/fits.h"
 
 namespace lsst {

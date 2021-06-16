@@ -23,11 +23,8 @@
 /*
  * Rotate an Image (or Mask or MaskedImage) by a fixed angle or number of quarter turns
  */
-#include <cstdint>
-
 #include "lsst/geom.h"
 #include "lsst/afw/math/offsetImage.h"
-#include "lsst/afw/image/LsstImageTypes.h"
 
 namespace afwImage = lsst::afw::image;
 

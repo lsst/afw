@@ -25,7 +25,6 @@
 #include <memory>
 #include <vector>
 
-#include "lsst/pex/exceptions.h"
 #include "lsst/afw/table/fwd.h"
 #include "lsst/afw/table/aggregates.h"
 #include "lsst/afw/table/Simple.h"

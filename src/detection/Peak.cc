@@ -20,8 +20,6 @@
  * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
-#include <typeinfo>
-
 #include "lsst/afw/table/io/FitsWriter.h"
 #include "lsst/afw/detection/Peak.h"
 #include "lsst/afw/table/detail/Access.h"

@@ -23,7 +23,6 @@
 #include <algorithm>
 #include <vector>
 
-#include "Eigen/SVD"
 #include "Eigen/QR"
 #include "lsst/afw/geom/SipApproximation.h"
 #include "lsst/geom/polynomials/PolynomialFunction2d.h"

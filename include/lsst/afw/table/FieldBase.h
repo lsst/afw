@@ -5,8 +5,6 @@
 #include <cstring>
 #include <iostream>
 
-#include "boost/mpl/vector.hpp"
-#include "boost/preprocessor/punctuation/paren.hpp"
 #include "Eigen/Core"
 
 #include "lsst/base.h"

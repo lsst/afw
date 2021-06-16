@@ -27,7 +27,6 @@
  */
 #include <iostream>
 #include <limits>
-#include <cmath>
 #include <vector>
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/math/Interpolate.h"

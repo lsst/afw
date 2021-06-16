@@ -21,10 +21,8 @@
  */
 
 #include <ostream>
-#include <sstream>
 #include <string>
 #include <memory>
-#include <typeinfo>
 #include <vector>
 
 #include "astshim.h"

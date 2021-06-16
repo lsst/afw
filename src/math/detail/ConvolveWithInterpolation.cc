@@ -26,9 +26,6 @@
  * Definition of convolveWithInterpolation and helper functions declared in detail/ConvolveImage.h
  */
 #include <algorithm>
-#include <cmath>
-#include <cstdint>
-#include <sstream>
 #include <vector>
 #include <iostream>
 

@@ -21,7 +21,6 @@
  * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
-#include <numeric>
 #include <sstream>
 #include <stdexcept>
 #include <typeinfo>
@@ -30,7 +29,6 @@
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/geom.h"
-#include "lsst/afw/math/FunctionLibrary.h"
 #include "lsst/afw/math/Kernel.h"
 #include "lsst/afw/math/KernelPersistenceHelper.h"
 #include "lsst/afw/table/io/Persistable.cc"
