@@ -68,6 +68,10 @@ class ExposureSummaryStats(Storable):
     raCorners: list[float] = field(default_factory=_default_corners)
     # Declination of bounding box corners (degrees)
     decCorners: list[float] = field(default_factory=_default_corners)
+    # Astrometry match offset mean
+    astromOffsetMean: float = float('nan')
+    # Astrometry match offset stddev
+    astromOffsetStd: float = float('nan')
 
     def __post_init__(self):
         Storable.__init__(self)
