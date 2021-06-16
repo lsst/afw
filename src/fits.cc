@@ -8,6 +8,7 @@
 #include <unordered_set>
 #include <unordered_map>
 #include <filesystem>
+#include <regex>
 
 #include "fitsio.h"
 extern "C" {
@@ -15,7 +16,6 @@ extern "C" {
 }
 
 #include "boost/algorithm/string.hpp"
-#include "boost/regex.hpp"
 #include "boost/preprocessor/seq/for_each.hpp"
 #include "boost/format.hpp"
 
@@ -915,24 +915,24 @@ public:
 
 void MetadataIterationFunctor::operator()(std::string const &key, std::string const &value,
                                           std::string const &comment) {
-    static boost::regex const boolRegex("[tTfF]");
-    static boost::regex const intRegex("[+-]?[0-9]+");
-    static boost::regex const doubleRegex("[+-]?([0-9]*\\.?[0-9]+|[0-9]+\\.?[0-9]*)([eE][+-]?[0-9]+)?");
-    static boost::regex const fitsStringRegex("'(.*?) *'");
+    static std::regex const boolRegex("[tTfF]");
+    static std::regex const intRegex("[+-]?[0-9]+");
+    static std::regex const doubleRegex("[+-]?([0-9]*\\.?[0-9]+|[0-9]+\\.?[0-9]*)([eE][+-]?[0-9]+)?");
+    static std::regex const fitsStringRegex("'(.*?) *'");
     // regex for two-line comment added to all FITS headers by CFITSIO
-    static boost::regex const fitsDefinitionCommentRegex(
+    static std::regex const fitsDefinitionCommentRegex(
         " *(FITS \\(Flexible Image Transport System\\)|and Astrophysics', volume 376, page 359).*");
-    boost::smatch matchStrings;
+    std::smatch matchStrings;
 
     if (strip && isKeyIgnored(key)) {
         return;
     }
 
     std::istringstream converter(value);
-    if (boost::regex_match(value, boolRegex)) {
+    if (std::regex_match(value, boolRegex)) {
         // convert the string to an bool
         add(key, bool(value == "T" || value == "t"), comment);
-    } else if (boost::regex_match(value, intRegex)) {
+    } else if (std::regex_match(value, intRegex)) {
         // convert the string to an int
         std::int64_t val;
         converter >> val;
@@ -941,12 +941,12 @@ void MetadataIterationFunctor::operator()(std::string const &key, std::string co
         } else {
             add(key, val, comment);
         }
-    } else if (boost::regex_match(value, doubleRegex)) {
+    } else if (std::regex_match(value, doubleRegex)) {
         // convert the string to a double
         double val;
         converter >> val;
         add(key, val, comment);
-    } else if (boost::regex_match(value, matchStrings, fitsStringRegex)) {
+    } else if (std::regex_match(value, matchStrings, fitsStringRegex)) {
         std::string const str = matchStrings[1].str();  // strip off the enclosing single quotes
         double val = stringToNonFiniteDouble(str);
         if (val != 0.0) {
@@ -956,7 +956,7 @@ void MetadataIterationFunctor::operator()(std::string const &key, std::string co
         }
     } else if (key == "HISTORY") {
         add(key, comment, "");
-    } else if (key == "COMMENT" && !(strip && boost::regex_match(comment, fitsDefinitionCommentRegex))) {
+    } else if (key == "COMMENT" && !(strip && std::regex_match(comment, fitsDefinitionCommentRegex))) {
         add(key, comment, "");
     } else if (key.empty() && value.empty()) {
         // This is a blank keyword comment. Since comments do not retain

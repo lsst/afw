@@ -35,10 +35,10 @@
 #include <vector>
 #include <utility>
 #include <ctime>
+#include <regex>
 
 #include <memory>
 #include "boost/pointer_cast.hpp"
-#include "boost/regex.hpp"
 #include "astshim.h"
 
 #include "lsst/log/Log.h"
@@ -160,14 +160,13 @@ std::string NearestWarpingKernel::NearestFunction1::toString(std::string const &
 
 std::shared_ptr<SeparableKernel> makeWarpingKernel(std::string name) {
     typedef std::shared_ptr<SeparableKernel> KernelPtr;
-    boost::cmatch matches;
-    static const boost::regex LanczosRE("lanczos(\\d+)");
+    std::smatch matches;
+    static const std::regex LanczosRE("lanczos(\\d+)");
     if (name == "bilinear") {
         return KernelPtr(new BilinearWarpingKernel());
-    } else if (boost::regex_match(name.c_str(), matches, LanczosRE)) {
+    } else if (std::regex_match(name, matches, LanczosRE)) {
         std::string orderStr(matches[1].first, matches[1].second);
-        int order;
-        std::istringstream(orderStr) >> order;
+        int order = std::stoi(orderStr);
         return KernelPtr(new LanczosWarpingKernel(order));
     } else if (name == "nearest") {
         return KernelPtr(new NearestWarpingKernel());
