@@ -153,6 +153,9 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         # Check Exposure.getWidth() returns the MaskedImage's width
         self.assertEqual(crOnlyWidth, self.exposureCrOnly.getWidth())
         self.assertEqual(crOnlyHeight, self.exposureCrOnly.getHeight())
+        # check width/height properties
+        self.assertEqual(crOnlyWidth, self.exposureCrOnly.width)
+        self.assertEqual(crOnlyHeight, self.exposureCrOnly.height)
 
     def testProperties(self):
         self.assertMaskedImagesEqual(self.exposureMiOnly.maskedImage,
@@ -180,6 +183,9 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         var3.array[:] = 2.0
         self.exposureMiOnly.variance = var3
         self.assertImagesEqual(self.exposureMiOnly.variance, var3)
+
+        # Test the property getter for a null VisitInfo.
+        self.assertIsNone(self.exposureMiOnly.visitInfo)
 
     def testGetWcs(self):
         """Test that a WCS can be obtained from each Exposure created with
@@ -217,6 +223,8 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(exposure.getFilterLabel(), gFilterLabel)
 
         self.assertTrue(exposure.getInfo().hasWcs())
+        # check the ExposureInfo property
+        self.assertTrue(exposure.info.hasWcs())
         self.assertEqual(exposure.getInfo().getWcs().getPixelOrigin(),
                          self.wcs.getPixelOrigin())
         self.assertEqual(exposure.getInfo().getDetector().getName(),
@@ -274,6 +282,11 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(exposure.getFilter(), gFilter)
         self.assertEqual(exposure.getFilterLabel(), gFilterLabel)
 
+        # test properties
+        self.assertEqual(exposure.detector.getName(), self.detector.getName())
+        self.assertEqual(exposure.filterLabel, gFilterLabel)
+        self.assertEqual(exposure.wcs, self.wcs)
+
     def testDefaultFilter(self):
         """Test that old convention of having a "default" filter replaced with `None`.
         """
@@ -314,6 +327,12 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(rtExposure.getPhotoCalib(), photoCalib)
         self.assertEqual(rtExposure.getFilter(), gFilter)
         self.assertEqual(rtExposure.getFilterLabel(), gFilterLabel)
+
+        # Test property getters.
+        self.assertEqual(rtExposure.photoCalib, photoCalib)
+        self.assertEqual(rtExposure.filterLabel, gFilterLabel)
+        # NOTE: we can't test visitInfo equality, because most fields are NaN.
+        self.assertIsNotNone(rtExposure.visitInfo)
 
     def testSetMembers(self):
         """
@@ -495,6 +514,8 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
             psf = readExposure.getPsf()
             self.assertIsNotNone(psf)
             self.assertEqual(psf, self.psf)
+            # check psf property getter
+            self.assertEqual(readExposure.psf, self.psf)
 
     def checkWcs(self, parentExposure, subExposure):
         """Compare WCS at corner points of a sub-exposure and its parent exposure

@@ -86,6 +86,7 @@ public:
      * @param[in] observatory  observatory longitude, latitude and altitude
      * @param[in] weather  basic weather information for computing air mass
      * @param[in] instrumentLabel  The short name of the instrument that took this data (e.g. "HSC")
+     * @param[in] id  The identifier of this full focal plane data.
      */
     explicit VisitInfo(table::RecordId exposureId, double exposureTime, double darkTime,
                        daf::base::DateTime const &date, double ut1, lsst::geom::Angle const &era,
@@ -93,7 +94,7 @@ public:
                        lsst::geom::SpherePoint const &boresightAzAlt, double boresightAirmass,
                        lsst::geom::Angle const &boresightRotAngle, RotType const &rotType,
                        coord::Observatory const &observatory, coord::Weather const &weather,
-                       std::string const &instrumentLabel)
+                       std::string const &instrumentLabel, table::RecordId const &id)
             : _exposureId(exposureId),
               _exposureTime(exposureTime),
               _darkTime(darkTime),
@@ -107,7 +108,8 @@ public:
               _rotType(rotType),
               _observatory(observatory),
               _weather(weather),
-              _instrumentLabel(instrumentLabel){};
+              _instrumentLabel(instrumentLabel),
+              _id(id){};
 
     explicit VisitInfo(daf::base::PropertySet const &metadata);
 
@@ -181,6 +183,8 @@ public:
 
     std::string getInstrumentLabel() const { return _instrumentLabel; }
 
+    table::RecordId getId() const { return _id; }
+
     /**
      * Get parallactic angle at the boresight
      *
@@ -225,6 +229,7 @@ private:
     coord::Observatory _observatory;
     coord::Weather _weather;
     std::string _instrumentLabel;
+    table::RecordId _id;
 };
 
 std::ostream &operator<<(std::ostream &os, VisitInfo const &visitInfo);

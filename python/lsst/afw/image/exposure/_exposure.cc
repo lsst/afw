@@ -98,29 +98,45 @@ PyExposure<PixelT> declareExposure(lsst::utils::python::WrapperCollection &wrapp
                 cls.def("setMetadata", &ExposureT::setMetadata, "metadata"_a);
                 cls.def("getWidth", &ExposureT::getWidth);
                 cls.def("getHeight", &ExposureT::getHeight);
+                cls.def_property_readonly("width", &ExposureT::getWidth);
+                cls.def_property_readonly("height", &ExposureT::getHeight);
                 cls.def("getDimensions", &ExposureT::getDimensions);
                 cls.def("getX0", &ExposureT::getX0);
                 cls.def("getY0", &ExposureT::getY0);
+                cls.def_property_readonly("x0", &ExposureT::getX0);
+                cls.def_property_readonly("y0", &ExposureT::getY0);
                 cls.def("getXY0", &ExposureT::getXY0);
                 cls.def("setXY0", &ExposureT::setXY0, "xy0"_a);
                 cls.def("getBBox", &ExposureT::getBBox, "origin"_a = PARENT);
                 cls.def("getWcs", (std::shared_ptr<geom::SkyWcs>(ExposureT::*)()) & ExposureT::getWcs);
+                cls.def_property_readonly(
+                        "wcs", (std::shared_ptr<geom::SkyWcs>(ExposureT::*)()) & ExposureT::getWcs);
                 cls.def("setWcs", &ExposureT::setWcs, "wcs"_a);
                 cls.def("hasWcs", &ExposureT::hasWcs);
                 cls.def("getDetector", &ExposureT::getDetector);
+                cls.def_property_readonly("detector", &ExposureT::getDetector);
                 cls.def("setDetector", &ExposureT::setDetector, "detector"_a);
                 cls.def("getFilter", &ExposureT::getFilter);
                 cls.def("setFilter", &ExposureT::setFilter, "filter"_a);
                 cls.def("getFilterLabel", &ExposureT::getFilterLabel);
+                cls.def_property_readonly("filterLabel", &ExposureT::getFilterLabel);
                 cls.def("setFilterLabel", &ExposureT::setFilterLabel, "filterLabel"_a);
 
                 cls.def("getPhotoCalib", &ExposureT::getPhotoCalib);
+                cls.def_property_readonly("photoCalib", &ExposureT::getPhotoCalib);
                 cls.def("setPhotoCalib", &ExposureT::setPhotoCalib, "photoCalib"_a);
                 cls.def("getPsf", (std::shared_ptr<detection::Psf>(ExposureT::*)()) & ExposureT::getPsf);
+                cls.def_property_readonly(
+                        "psf", (std::shared_ptr<detection::Psf>(ExposureT::*)()) & ExposureT::getPsf);
                 cls.def("setPsf", &ExposureT::setPsf, "psf"_a);
                 cls.def("hasPsf", &ExposureT::hasPsf);
                 cls.def("getInfo", (std::shared_ptr<ExposureInfo>(ExposureT::*)()) & ExposureT::getInfo);
+                cls.def_property_readonly(
+                        "info", (std::shared_ptr<ExposureInfo>(ExposureT::*)()) & ExposureT::getInfo);
                 cls.def("setInfo", &ExposureT::setInfo, "exposureInfo"_a);
+
+                cls.def_property_readonly("visitInfo",
+                                          [](ExposureT &self) { return self.getInfo()->getVisitInfo(); });
 
                 cls.def("subset", &ExposureT::subset, "bbox"_a, "origin"_a = PARENT);
 
