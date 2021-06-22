@@ -382,7 +382,7 @@ private:
      */
     void _testWarpingKernels(SeparableKernel const &warpingKernel,     ///< warping kernel
                              SeparableKernel const &maskWarpingKernel  ///< mask warping kernel
-                             ) const;
+    ) const;
 
     std::shared_ptr<SeparableKernel> _warpingKernelPtr;
     std::shared_ptr<SeparableKernel> _maskWarpingKernelPtr;
