@@ -42,6 +42,7 @@
 #include "lsst/afw/math/Function.h"
 #include "lsst/afw/math/FunctionLibrary.h"
 #include "lsst/afw/math/Kernel.h"
+#include "lsst/afw/table/io/Persistable.h"
 
 namespace lsst {
 namespace afw {
@@ -271,7 +272,8 @@ std::shared_ptr<SeparableKernel> makeWarpingKernel(std::string name);
  *
  * @ingroup afw
  */
-class WarpingControl {
+class WarpingControl final : public table::io::PersistableFacade<WarpingControl>,
+                             public table::io::Persistable {
 public:
     /**
      * Construct a WarpingControl object
@@ -396,6 +398,13 @@ public:
     ) {
         _growFullMask = growFullMask;
     }
+
+    bool isPersistable() const noexcept override;
+
+protected:
+    std::string getPersistenceName() const override;
+    std::string getPythonModule() const override;
+    void write(OutputArchiveHandle &handle) const override;
 
 private:
     /**

@@ -161,6 +161,7 @@ void declareWarpExposure(lsst::utils::python::WrapperCollection &wrappers) {
         cls.def("setMaskWarpingKernel", &WarpingControl::setMaskWarpingKernel, "maskWarpingKernel"_a);
         cls.def("getGrowFullMask", &WarpingControl::getGrowFullMask);
         cls.def("setGrowFullMask", &WarpingControl::setGrowFullMask, "growFullMask"_a);
+        table::io::python::addPersistableMethods(cls);
     });
 }
 }  // namespace

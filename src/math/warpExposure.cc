@@ -300,6 +300,99 @@ void WarpingControl::_testWarpingKernels(SeparableKernel const &warpingKernel,
     }
 }
 
+namespace {
+
+struct WarpingControlPersistenceHelper {
+    table::Schema schema;
+    table::Key<int> warpingKernelIndex;
+    table::Key<table::Flag> hasMaskKernel;
+    table::Key<int> maskKernelIndex;  // undefined if !hasMaskKernel
+    table::Key<int> cacheSize;
+    table::Key<int> interpLength;
+    table::Key<image::MaskPixel> growFullMask;
+
+    static WarpingControlPersistenceHelper const &get() {
+        static WarpingControlPersistenceHelper const instance;
+        return instance;
+    }
+
+    WarpingControlPersistenceHelper(WarpingControlPersistenceHelper const &) = delete;
+    WarpingControlPersistenceHelper(WarpingControlPersistenceHelper &&) = delete;
+    WarpingControlPersistenceHelper &operator=(WarpingControlPersistenceHelper const &) = delete;
+    WarpingControlPersistenceHelper &operator=(WarpingControlPersistenceHelper &&) = delete;
+
+private:
+    WarpingControlPersistenceHelper()
+            : schema(),
+              warpingKernelIndex(
+                      schema.addField<int>("warpingKernelIndex", "archive ID of nested warping kernel")),
+              hasMaskKernel(schema.addField<table::Flag>("hasMaskKernel", "whether a mask kernel is stored")),
+              maskKernelIndex(schema.addField<int>("maskKernelIndex",
+                                                   "archive ID of nested mask kernel. "
+                                                   "Valid only if hasMaskKernel")),
+              cacheSize(schema.addField<int>("cacheSize", "Cache size for warping kernel(s)")),
+              interpLength(schema.addField<int>("interpLength",
+                                                "Distance over which WCS can be linearly interpolated")),
+              growFullMask(schema.addField<image::MaskPixel>(
+                      "growFullMask", "bits to grow to full width of image/variance kernel")) {}
+};
+
+std::string _getWarpingControlPersistenceName() { return "WarpingControl"; }
+
+class : public table::io::PersistableFactory {
+    std::shared_ptr<table::io::Persistable> read(table::io::InputArchive const &archive,
+                                                 table::io::CatalogVector const &catalogs) const override {
+        auto const &keys = WarpingControlPersistenceHelper::get();
+        LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
+        LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
+        afw::table::BaseRecord const &record = catalogs.front().front();
+        LSST_ARCHIVE_ASSERT(record.getSchema() == keys.schema);
+
+        // Warping kernels are dummy values, set true kernels later
+        auto control = std::make_shared<WarpingControl>("bilinear", "", record.get(keys.cacheSize),
+                                                        record.get(keys.interpLength),
+                                                        record.get(keys.growFullMask));
+        // archive.get returns a shared_ptr, so this code depends on the
+        // undocumented fact that setWarpingKernel and setMaskWarpingKernel
+        // make defensive copies.
+        control->setWarpingKernel(*archive.get<SeparableKernel>(record.get(keys.warpingKernelIndex)));
+        if (record.get(keys.hasMaskKernel)) {
+            control->setMaskWarpingKernel(*archive.get<SeparableKernel>(record.get(keys.maskKernelIndex)));
+        }
+        return control;
+    }
+
+    using table::io::PersistableFactory::PersistableFactory;
+} controlFactory(_getWarpingControlPersistenceName());
+
+}  // namespace
+
+std::string WarpingControl::getPersistenceName() const { return _getWarpingControlPersistenceName(); }
+
+std::string WarpingControl::getPythonModule() const { return "lsst.afw.math"; }
+
+bool WarpingControl::isPersistable() const noexcept {
+    return _warpingKernelPtr->isPersistable() &&
+           (!hasMaskWarpingKernel() || _maskWarpingKernelPtr->isPersistable());
+}
+
+void WarpingControl::write(OutputArchiveHandle &handle) const {
+    auto const &keys = WarpingControlPersistenceHelper::get();
+    table::BaseCatalog catalog = handle.makeCatalog(keys.schema);
+    std::shared_ptr<table::BaseRecord> record = catalog.addNew();
+
+    record->set(keys.warpingKernelIndex, handle.put(_warpingKernelPtr));
+    record->set(keys.hasMaskKernel, hasMaskWarpingKernel());
+    if (hasMaskWarpingKernel()) {
+        record->set(keys.maskKernelIndex, handle.put(_maskWarpingKernelPtr));
+    }
+    record->set(keys.cacheSize, _cacheSize);
+    record->set(keys.interpLength, _interpLength);
+    record->set(keys.growFullMask, _growFullMask);
+
+    handle.saveCatalog(catalog);
+}
+
 template <typename DestExposureT, typename SrcExposureT>
 int warpExposure(DestExposureT &destExposure, SrcExposureT const &srcExposure, WarpingControl const &control,
                  typename DestExposureT::MaskedImageT::SinglePixel padValue) {
@@ -672,6 +765,8 @@ template std::shared_ptr<math::BilinearWarpingKernel> table::io::PersistableFaca
         math::BilinearWarpingKernel>::dynamicCast(std::shared_ptr<table::io::Persistable> const &);
 template std::shared_ptr<math::NearestWarpingKernel> table::io::PersistableFacade<
         math::NearestWarpingKernel>::dynamicCast(std::shared_ptr<table::io::Persistable> const &);
+template std::shared_ptr<math::WarpingControl> table::io::PersistableFacade<
+        math::WarpingControl>::dynamicCast(std::shared_ptr<table::io::Persistable> const &);
 
 }  // namespace afw
 }  // namespace lsst

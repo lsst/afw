@@ -230,6 +230,22 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
                 self.assertEqual(
                     wc.getMaskWarpingKernel().getCacheSize(), newCacheSize)
 
+        wc = afwMath.WarpingControl("lanczos4", "nearest", 64, 7, 42)
+        self.assertTrue(wc.isPersistable())
+        with lsst.utils.tests.getTempFilePath(".fits", expectOutput=True) as tempFile:
+            wc.writeFits(tempFile)
+            wc2 = afwMath.WarpingControl.readFits(tempFile)
+        self.assertEqual(wc.getCacheSize(), wc2.getCacheSize())
+        self.assertEqual(wc.getInterpLength(), wc2.getInterpLength())
+        self.assertEqual(wc.getWarpingKernel().getBBox(), wc2.getWarpingKernel().getBBox())
+        self.assertEqual(wc.getWarpingKernel().getKernelParameters(),
+                         wc2.getWarpingKernel().getKernelParameters())
+        self.assertEqual(wc.hasMaskWarpingKernel(), wc2.hasMaskWarpingKernel())
+        self.assertEqual(wc.getMaskWarpingKernel().getBBox(), wc2.getMaskWarpingKernel().getBBox())
+        self.assertEqual(wc.getMaskWarpingKernel().getKernelParameters(),
+                         wc2.getMaskWarpingKernel().getKernelParameters())
+        self.assertEqual(wc.getGrowFullMask(), wc2.getGrowFullMask())
+
     def testWarpingControlError(self):
         """Test error handling of WarpingControl
         """
