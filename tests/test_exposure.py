@@ -28,6 +28,7 @@ import unittest
 
 import numpy as np
 from numpy.testing import assert_allclose
+import yaml
 
 import lsst.utils
 import lsst.utils.tests
@@ -1016,6 +1017,19 @@ class ExposureNoAfwdataTestCase(lsst.utils.tests.TestCase):
         reader = afwImage.ExposureFitsReader(filename)
         self.assertEqual(reader.readExposureInfo().getPhotoCalib(), self.v1PhotoCalib)
         self.assertEqual(reader.readPhotoCalib(), self.v1PhotoCalib)
+
+    def testExposureSummaryExtraComponents(self):
+        """Test that we can read an exposure summary with extra components.
+        """
+        testDict = {'ra': 0.0,
+                    'decl': 0.0,
+                    'nonsense': 1.0}
+        bytes = yaml.dump(testDict, encoding='utf-8')
+        with self.assertWarns(FutureWarning):
+            summaryStats = lsst.afw.image.ExposureSummaryStats._read(bytes)
+
+        self.assertEqual(summaryStats.ra, testDict['ra'])
+        self.assertEqual(summaryStats.decl, testDict['decl'])
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):

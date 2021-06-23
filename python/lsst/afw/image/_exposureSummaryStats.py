@@ -21,7 +21,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, asdict, field
+from typing import List
 import yaml
+import warnings
 
 from ..typehandling import Storable, StorableHelperFactory
 
@@ -65,9 +67,13 @@ class ExposureSummaryStats(Storable):
     # Mean variance of the weight plane (ADU**2)
     meanVar: float = float('nan')
     # Right Ascension of bounding box corners (degrees)
-    raCorners: list[float] = field(default_factory=_default_corners)
+    raCorners: List[float] = field(default_factory=_default_corners)
     # Declination of bounding box corners (degrees)
-    decCorners: list[float] = field(default_factory=_default_corners)
+    decCorners: List[float] = field(default_factory=_default_corners)
+    # Astrometry match offset mean
+    astromOffsetMean: float = float('nan')
+    # Astrometry match offset stddev
+    astromOffsetStd: float = float('nan')
 
     def __post_init__(self):
         Storable.__init__(self)
@@ -86,4 +92,16 @@ class ExposureSummaryStats(Storable):
 
     @staticmethod
     def _read(bytes):
-        return ExposureSummaryStats(**yaml.load(bytes, Loader=yaml.SafeLoader))
+        yamlDict = yaml.load(bytes, Loader=yaml.SafeLoader)
+        # For forwards compatibility, filter out any fields that are
+        # not defined in the dataclass.
+        droppedFields = []
+        for _field in list(yamlDict.keys()):
+            if _field not in ExposureSummaryStats.__dataclass_fields__:
+                droppedFields.append(_field)
+                yamlDict.pop(_field)
+        if len(droppedFields) > 0:
+            droppedFieldString = ', '.join([str(f) for f in droppedFields])
+            warnings.warn((f"Could not read summary fields [{droppedFieldString}]. "
+                           "Please use a newer stack."), FutureWarning)
+        return ExposureSummaryStats(**yamlDict)
