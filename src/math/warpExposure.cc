@@ -49,6 +49,10 @@
 #include "lsst/afw/math/Kernel.h"
 #include "lsst/afw/image/PhotoCalib.h"
 #include "lsst/afw/math/detail/WarpAtOnePoint.h"
+#include "lsst/afw/table/io/InputArchive.h"
+#include "lsst/afw/table/io/OutputArchive.h"
+#include "lsst/afw/table/io/CatalogVector.h"
+#include "lsst/afw/table/io/Persistable.cc"  // Needed for PersistableFacade::dynamicCast
 
 namespace pexExcept = lsst::pex::exceptions;
 
@@ -157,6 +161,69 @@ std::string NearestWarpingKernel::NearestFunction1::toString(std::string const &
     os << Function1<Kernel::Pixel>::toString(prefix);
     return os.str();
 }
+
+namespace {
+
+struct LanczosKernelPersistenceHelper {
+    table::Schema schema;
+    table::Key<int> order;
+
+    static LanczosKernelPersistenceHelper const &get() {
+        static LanczosKernelPersistenceHelper const instance;
+        return instance;
+    }
+
+    LanczosKernelPersistenceHelper(LanczosKernelPersistenceHelper const &) = delete;
+    LanczosKernelPersistenceHelper(LanczosKernelPersistenceHelper &&) = delete;
+    LanczosKernelPersistenceHelper &operator=(LanczosKernelPersistenceHelper const &) = delete;
+    LanczosKernelPersistenceHelper &operator=(LanczosKernelPersistenceHelper &&) = delete;
+
+private:
+    LanczosKernelPersistenceHelper()
+            : schema(), order(schema.addField<int>("order", "order of Lanczos function")) {}
+};
+
+class : public table::io::PersistableFactory {
+    std::shared_ptr<table::io::Persistable> read(table::io::InputArchive const &archive,
+                                                 table::io::CatalogVector const &catalogs) const override {
+        auto const &keys = LanczosKernelPersistenceHelper::get();
+        LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
+        LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
+        afw::table::BaseRecord const &record = catalogs.front().front();
+        LSST_ARCHIVE_ASSERT(record.getSchema() == keys.schema);
+        return std::make_shared<LanczosWarpingKernel>(record.get(keys.order));
+    }
+
+    using table::io::PersistableFactory::PersistableFactory;
+} lanczosFactory("LanczosWarpingKernel");
+
+template <class T>
+class DefaultPersistableFactory : public table::io::PersistableFactory {
+    std::shared_ptr<table::io::Persistable> read(table::io::InputArchive const &archive,
+                                                 table::io::CatalogVector const &catalogs) const override {
+        LSST_ARCHIVE_ASSERT(catalogs.empty());
+        return std::make_shared<T>();
+    }
+
+    using table::io::PersistableFactory::PersistableFactory;
+};
+
+DefaultPersistableFactory<BilinearWarpingKernel> bilinearFactory("BilinearWarpingKernel");
+DefaultPersistableFactory<NearestWarpingKernel> nearestFactory("NearestWarpingKernel");
+
+}  // namespace
+
+void LanczosWarpingKernel::write(OutputArchiveHandle &handle) const {
+    auto const &keys = LanczosKernelPersistenceHelper::get();
+    table::BaseCatalog catalog = handle.makeCatalog(keys.schema);
+    std::shared_ptr<table::BaseRecord> record = catalog.addNew();
+    record->set(keys.order, getOrder());
+    handle.saveCatalog(catalog);
+}
+
+void BilinearWarpingKernel::write(OutputArchiveHandle &handle) const { handle.saveEmpty(); }
+
+void NearestWarpingKernel::write(OutputArchiveHandle &handle) const { handle.saveEmpty(); }
 
 std::shared_ptr<SeparableKernel> makeWarpingKernel(std::string name) {
     typedef std::shared_ptr<SeparableKernel> KernelPtr;
@@ -598,5 +665,13 @@ INSTANTIATE(int, int)
 INSTANTIATE(std::uint16_t, std::uint16_t)
 /// @endcond
 }  // namespace math
+
+template std::shared_ptr<math::LanczosWarpingKernel> table::io::PersistableFacade<
+        math::LanczosWarpingKernel>::dynamicCast(std::shared_ptr<table::io::Persistable> const &);
+template std::shared_ptr<math::BilinearWarpingKernel> table::io::PersistableFacade<
+        math::BilinearWarpingKernel>::dynamicCast(std::shared_ptr<table::io::Persistable> const &);
+template std::shared_ptr<math::NearestWarpingKernel> table::io::PersistableFacade<
+        math::NearestWarpingKernel>::dynamicCast(std::shared_ptr<table::io::Persistable> const &);
+
 }  // namespace afw
 }  // namespace lsst

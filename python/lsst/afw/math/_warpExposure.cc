@@ -33,6 +33,7 @@
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/math/Kernel.h"
 #include "lsst/afw/math/warpExposure.h"
+#include "lsst/afw/table/io/python.h"
 
 namespace py = pybind11;
 using namespace py::literals;
@@ -57,6 +58,7 @@ void declareWarpingKernel(lsst::utils::python::WrapperCollection &wrappers, std:
         cls.def(py::init<int>(), "order"_a);
         cls.def("getOrder", &KernelT::getOrder);
         cls.def("clone", &KernelT::clone);
+        table::io::python::addPersistableMethods(cls);
     });
 }
 
@@ -74,6 +76,7 @@ void declareSimpleWarpingKernel(lsst::utils::python::WrapperCollection &wrappers
     wrappers.wrapType(PyClass(wrappers.module, name.c_str()), [](auto &mod, auto &cls) {
         cls.def(py::init<>());
         cls.def("clone", &KernelT::clone);
+        table::io::python::addPersistableMethods(cls);
     });
 }
 

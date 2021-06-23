@@ -83,8 +83,16 @@ public:
      */
     int getOrder() const;
 
+    bool isPersistable() const noexcept override { return true; }
+
 protected:
     void setKernelParameter(unsigned int ind, double value) const override;
+
+    std::string getPersistenceName() const override { return "LanczosWarpingKernel"; }
+
+    std::string getPythonModule() const override { return "lsst.afw.math"; }
+
+    void write(OutputArchiveHandle &handle) const override;
 };
 
 /**
@@ -109,6 +117,8 @@ public:
     ~BilinearWarpingKernel() override = default;
 
     std::shared_ptr<Kernel> clone() const override;
+
+    bool isPersistable() const noexcept override { return true; }
 
     /**
      * 1-dimensional bilinear interpolation function.
@@ -149,6 +159,12 @@ public:
 
 protected:
     void setKernelParameter(unsigned int ind, double value) const override;
+
+    std::string getPersistenceName() const override { return "BillinearWarpingKernel"; }
+
+    std::string getPythonModule() const override { return "lsst.afw.math"; }
+
+    void write(OutputArchiveHandle &handle) const override;
 };
 
 /**
@@ -172,6 +188,8 @@ public:
     ~NearestWarpingKernel() override = default;
 
     std::shared_ptr<Kernel> clone() const override;
+
+    bool isPersistable() const noexcept override { return true; }
 
     /**
      * 1-dimensional nearest neighbor interpolation function.
@@ -212,6 +230,12 @@ public:
 
 protected:
     void setKernelParameter(unsigned int ind, double value) const override;
+
+    std::string getPersistenceName() const override { return "NearestWarpingKernel"; }
+
+    std::string getPythonModule() const override { return "lsst.afw.math"; }
+
+    void write(OutputArchiveHandle &handle) const override;
 };
 
 /**
