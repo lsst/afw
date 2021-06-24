@@ -64,7 +64,7 @@ LSST_EXCEPTION_TYPE(MalformedArchiveError, lsst::afw::table::io::PersistenceErro
  *  A concrete class that inherits (possibly indirectly) from Persistable should inherit from
  *  PersistableFacade<Derived> (though this just provides a slightly nicer interface to users),
  *  implement isPersistable(), getPersistenceName(), getPythonModule(), and write(),
- *  and define a subclass of PersistenceFactory.  Inheritance from PersistableFacade should
+ *  and define a subclass of PersistableFactory.  Inheritance from PersistableFacade should
  *  always precede inheritance from Persistable.
  *
  *  Persistable has no pure virtual member functions, and instead contains a default implementation

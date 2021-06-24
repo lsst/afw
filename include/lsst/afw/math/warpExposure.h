@@ -42,6 +42,7 @@
 #include "lsst/afw/math/Function.h"
 #include "lsst/afw/math/FunctionLibrary.h"
 #include "lsst/afw/math/Kernel.h"
+#include "lsst/afw/table/io/Persistable.h"
 
 namespace lsst {
 namespace afw {
@@ -83,8 +84,16 @@ public:
      */
     int getOrder() const;
 
+    bool isPersistable() const noexcept override { return true; }
+
 protected:
     void setKernelParameter(unsigned int ind, double value) const override;
+
+    std::string getPersistenceName() const override { return "LanczosWarpingKernel"; }
+
+    std::string getPythonModule() const override { return "lsst.afw.math"; }
+
+    void write(OutputArchiveHandle &handle) const override;
 };
 
 /**
@@ -109,6 +118,8 @@ public:
     ~BilinearWarpingKernel() override = default;
 
     std::shared_ptr<Kernel> clone() const override;
+
+    bool isPersistable() const noexcept override { return true; }
 
     /**
      * 1-dimensional bilinear interpolation function.
@@ -149,6 +160,12 @@ public:
 
 protected:
     void setKernelParameter(unsigned int ind, double value) const override;
+
+    std::string getPersistenceName() const override { return "BillinearWarpingKernel"; }
+
+    std::string getPythonModule() const override { return "lsst.afw.math"; }
+
+    void write(OutputArchiveHandle &handle) const override;
 };
 
 /**
@@ -172,6 +189,8 @@ public:
     ~NearestWarpingKernel() override = default;
 
     std::shared_ptr<Kernel> clone() const override;
+
+    bool isPersistable() const noexcept override { return true; }
 
     /**
      * 1-dimensional nearest neighbor interpolation function.
@@ -212,6 +231,12 @@ public:
 
 protected:
     void setKernelParameter(unsigned int ind, double value) const override;
+
+    std::string getPersistenceName() const override { return "NearestWarpingKernel"; }
+
+    std::string getPythonModule() const override { return "lsst.afw.math"; }
+
+    void write(OutputArchiveHandle &handle) const override;
 };
 
 /**
@@ -247,7 +272,8 @@ std::shared_ptr<SeparableKernel> makeWarpingKernel(std::string name);
  *
  * @ingroup afw
  */
-class WarpingControl {
+class WarpingControl final : public table::io::PersistableFacade<WarpingControl>,
+                             public table::io::Persistable {
 public:
     /**
      * Construct a WarpingControl object
@@ -373,6 +399,13 @@ public:
         _growFullMask = growFullMask;
     }
 
+    bool isPersistable() const noexcept override;
+
+protected:
+    std::string getPersistenceName() const override;
+    std::string getPythonModule() const override;
+    void write(OutputArchiveHandle &handle) const override;
+
 private:
     /**
      * Throw an exception if the two kernels are not compatible in shape
@@ -382,7 +415,7 @@ private:
      */
     void _testWarpingKernels(SeparableKernel const &warpingKernel,     ///< warping kernel
                              SeparableKernel const &maskWarpingKernel  ///< mask warping kernel
-                             ) const;
+    ) const;
 
     std::shared_ptr<SeparableKernel> _warpingKernelPtr;
     std::shared_ptr<SeparableKernel> _maskWarpingKernelPtr;
