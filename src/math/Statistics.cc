@@ -726,7 +726,7 @@ std::shared_ptr<std::vector<typename ImageT::Pixel> > makeVectorCopy(ImageT cons
 
 double StatisticsControl::getMaskPropagationThreshold(int bit) const {
     int oldSize = _maskPropagationThresholds.size();
-    if (oldSize < bit) {
+    if (oldSize <= bit) {
         return 1.0;
     }
     return _maskPropagationThresholds[bit];
