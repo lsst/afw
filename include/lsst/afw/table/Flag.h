@@ -35,7 +35,7 @@ struct FieldBase<Flag> {
     typedef std::int64_t Element;  ///< the actual storage type (shared by multiple flag fields)
 
     /// Return the number of subfield elements (always one for scalars).
-    int getElementCount() const { return 1; }
+    std::size_t getElementCount() const { return 1; }
 
     /// Return a string description of the field type.
     static std::string getTypeString() { return "Flag"; }
@@ -44,7 +44,7 @@ struct FieldBase<Flag> {
     // it's convenient to be able to instantiate both, since the other is used
     // by other specializations.
     FieldBase() = default;
-    FieldBase(int) {
+    FieldBase(std::size_t) {
         throw LSST_EXCEPT(lsst::pex::exceptions::LogicError,
                           "Constructor disabled (this Field type is not sized).");
     }
@@ -123,10 +123,10 @@ public:
     }
 
     /// Return the offset in bytes of the integer element that holds this field's bit.
-    int getOffset() const { return _offset; }
+    std::size_t getOffset() const { return _offset; }
 
     /// The index of this field's bit within the integer it shares with other Flag fields.
-    int getBit() const { return _bit; }
+    std::size_t getBit() const { return _bit; }
 
     /**
      *  Return true if the key was initialized to valid offset.
@@ -136,14 +136,14 @@ public:
      *
      *  A key that is default constructed will always be invalid.
      */
-    bool isValid() const { return _offset >= 0; }
+    bool isValid() const { return _valid; }
 
     /**
      *  Default construct a field.
      *
      *  The new field will be invalid until a valid Key is assigned to it.
      */
-    Key() : FieldBase<Flag>(), _offset(-1), _bit(0) {}
+    Key() : FieldBase<Flag>(), _offset(0), _bit(0), _valid(false) {}
 
     Key(Key const &) = default;
     Key(Key &&) = default;
@@ -175,10 +175,11 @@ private:
         }
     }
 
-    explicit Key(int offset, int bit) : _offset(offset), _bit(bit) {}
+    explicit Key(std::size_t offset, std::size_t bit) : _offset(offset), _bit(bit), _valid(true) {}
 
-    int _offset;
-    int _bit;
+    std::size_t _offset;
+    std::size_t _bit;
+    bool _valid;
 };
 }  // namespace table
 }  // namespace afw

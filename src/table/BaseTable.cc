@@ -80,7 +80,7 @@ public:
     // and pad it if not.
     static void padSchema(Schema &schema) {
         static int const MIN_RECORD_ALIGN = sizeof(AllocType);
-        int remainder = schema.getRecordSize() % MIN_RECORD_ALIGN;
+        std::size_t remainder = schema.getRecordSize() % MIN_RECORD_ALIGN;
         if (remainder) {
             detail::Access::padSchema(schema, MIN_RECORD_ALIGN - remainder);
         }
@@ -156,7 +156,7 @@ BaseTable::BaseTable(Schema const &schema) : _schema(schema) {
     _schema.getAliasMap()->_table = this;
 }
 
-BaseTable::~BaseTable() { _schema.getAliasMap()->_table = 0; }
+BaseTable::~BaseTable() { _schema.getAliasMap()->_table = nullptr; }
 
 namespace {
 

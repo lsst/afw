@@ -32,9 +32,9 @@ public:
 
     void assignVector(BaseRecord& record, std::vector<U> const& values) const;
 
-    Key<U> operator[](int i) const;  ///< Return a subfield key for the i-th element of the array.
+    Key<U> operator[](std::size_t i) const;  ///< Return a subfield key for the i-th element of the array.
 
-    Key<Array<U> > slice(int begin, int end) const;  ///< Return a key for a range of elements
+    Key<Array<U> > slice(std::size_t begin, std::size_t end) const;  ///< Return a key for a range of elements
 };
 }  // namespace table
 }  // namespace afw

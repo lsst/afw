@@ -84,7 +84,7 @@ public:
     }
 
     /// Return the offset (in bytes) of this field within a record.
-    int getOffset() const noexcept { return _offset; }
+    std::size_t getOffset() const noexcept { return _offset; }
 
     /**
      *  Return true if the key was initialized to valid offset.
@@ -94,14 +94,14 @@ public:
      *
      *  A key that is default constructed will always be invalid.
      */
-    bool isValid() const noexcept { return _offset >= 0; }
+    bool isValid() const noexcept { return _valid; }
 
     /**
      *  Default construct a field.
      *
      *  The new field will be invalid until a valid Key is assigned to it.
      */
-    Key() noexcept : FieldBase<T>(FieldBase<T>::makeDefault()), _offset(-1) {}
+    Key() noexcept : FieldBase<T>(FieldBase<T>::makeDefault()), _offset(0), _valid(false) {}
 
     Key(Key const&) noexcept = default;
     Key(Key&&) noexcept = default;
@@ -119,10 +119,11 @@ private:
     friend class detail::Access;
     friend class BaseRecord;
 
-    explicit Key(int offset, FieldBase<T> const& fb = FieldBase<T>()) noexcept
-            : FieldBase<T>(fb), _offset(offset) {}
+    explicit Key(std::size_t offset, FieldBase<T> const& fb = FieldBase<T>()) noexcept
+            : FieldBase<T>(fb), _offset(offset), _valid(true) {}
 
-    int _offset;
+    std::size_t _offset;
+    bool _valid;
 };
 }  // namespace table
 }  // namespace afw

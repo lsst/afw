@@ -247,14 +247,14 @@ void declareKeySpecializations(PyKey<Array<T>> &cls) {
     declareKeyAccessors(cls);
     cls.def_property_readonly("subfields", [](Key<Array<T>> const &self) -> py::object {
         py::list result;
-        for (int i = 0; i < self.getSize(); ++i) {
+        for (std::size_t i = 0; i < self.getSize(); ++i) {
             result.append(py::cast(i));
         }
         return py::tuple(result);
     });
     cls.def_property_readonly("subkeys", [](Key<Array<T>> const &self) -> py::object {
         py::list result;
-        for (int i = 0; i < self.getSize(); ++i) {
+        for (std::size_t i = 0; i < self.getSize(); ++i) {
             result.append(py::cast(self[i]));
         }
         return py::tuple(result);

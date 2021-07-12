@@ -40,7 +40,7 @@ ArrayKey<T> ArrayKey<T>::addFields(Schema &schema, std::string const &name, std:
     result._begin = schema.addField<T>(
             schema.join(name, "0"),  // we use getPrefix in order to get the version-dependent delimiter
             (boost::format(doc) % docData.front()).str(), unit);
-    for (int i = 1; i < result._size; ++i) {
+    for (std::size_t i = 1; i < result._size; ++i) {
         schema.addField<T>(schema.join(name, std::to_string(i)), (boost::format(doc) % docData[i]).str(),
                            unit);
     }
@@ -49,14 +49,14 @@ ArrayKey<T> ArrayKey<T>::addFields(Schema &schema, std::string const &name, std:
 
 template <typename T>
 ArrayKey<T> ArrayKey<T>::addFields(Schema &schema, std::string const &name, std::string const &doc,
-                                   std::string const &unit, int size) {
+                                   std::string const &unit, size_t size) {
     ArrayKey result;
     if (size == 0) return result;
     result._size = size;
     result._begin = schema.addField<T>(
             schema.join(name, "0"),  // we use getPrefix in order to get the version-dependent delimiter
             doc, unit);
-    for (int i = 1; i < result._size; ++i) {
+    for (std::size_t i = 1; i < result._size; ++i) {
         schema.addField<T>(schema.join(name, std::to_string(i)), doc, unit);
     }
     return result;
@@ -66,8 +66,8 @@ template <typename T>
 ArrayKey<T>::ArrayKey(std::vector<Key<T> > const &keys) : _begin(), _size(keys.size()) {
     if (keys.empty()) return;
     _begin = keys.front();
-    for (int i = 1; i < _size; ++i) {
-        if (keys[i].getOffset() - _begin.getOffset() != static_cast<int>(i * sizeof(T))) {
+    for (std::size_t i = 1; i < _size; ++i) {
+        if (keys[i].getOffset() - _begin.getOffset() != (i * sizeof(T))) {
             throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
                               "Keys passed to ArrayKey constructor are not contiguous");
         }
@@ -86,7 +86,7 @@ ArrayKey<T>::ArrayKey(SubSchema const &s) : _begin(s["0"]), _size(1) {
         } catch (pex::exceptions::NotFoundError &) {
             return;
         }
-        if (current.getOffset() - _begin.getOffset() != static_cast<int>(_size * sizeof(T))) {
+        if (current.getOffset() - _begin.getOffset() != (_size * sizeof(T))) {
             throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
                               "Keys discovered in Schema are not contiguous");
         }
@@ -132,16 +132,16 @@ ndarray::ArrayRef<T const, 1, 1> ArrayKey<T>::getConstReference(BaseRecord const
 }
 
 template <typename T>
-Key<T> ArrayKey<T>::operator[](int i) const {
-    if (i < 0 || i >= _size) {
+Key<T> ArrayKey<T>::operator[](std::size_t i) const {
+    if (i >= _size) {
         throw LSST_EXCEPT(pex::exceptions::LengthError, "ArrayKey index does not fit within valid range");
     }
     return detail::Access::makeKey<T>(_begin.getOffset() + i * sizeof(T));
 }
 
 template <typename T>
-ArrayKey<T> ArrayKey<T>::slice(int begin, int end) const {
-    if (begin < 0 || end > _size) {
+ArrayKey<T> ArrayKey<T>::slice(std::size_t begin, std::size_t end) const {
+    if (begin >= end || end > _size) {
         throw LSST_EXCEPT(pex::exceptions::LengthError,
                           "ArrayKey slice range does not fit within valid range");
     }

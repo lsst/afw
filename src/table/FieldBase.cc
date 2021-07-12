@@ -66,10 +66,7 @@ std::string FieldBase<Array<U> >::getTypeString() {
 
 //----- String ----------------------------------------------------------------------------------------------
 
-FieldBase<std::string>::FieldBase(int size) : _size(size) {
-    if (size < 0)
-        throw LSST_EXCEPT(lsst::pex::exceptions::LengthError,
-                          "Size must be provided when constructing a string field.");
+FieldBase<std::string>::FieldBase(std::size_t size) : _size(size) {
 }
 
 std::string FieldBase<std::string>::getTypeString() { return "String"; }
@@ -94,7 +91,7 @@ void FieldBase<std::string>::setValue(Element *p, ndarray::Manager::Ptr const &,
         *reinterpret_cast<std::string *>(p) = value;
     } else {
         // copy the contents of `value` to p through p + _size, null extra characters, if any
-        if (value.size() > std::size_t(_size)) {
+        if (value.size() > _size) {
             throw LSST_EXCEPT(
                     lsst::pex::exceptions::LengthError,
                     (boost::format("String (%d) is too large for field (%d).") % value.size() % _size).str());

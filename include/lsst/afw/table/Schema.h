@@ -146,16 +146,16 @@ public:
     std::set<std::string> getNames(bool topOnly = false) const;
 
     /// Return the raw size of a record in bytes.
-    int getRecordSize() const { return _impl->getRecordSize(); }
+    std::size_t getRecordSize() const { return _impl->getRecordSize(); }
 
     /// The total number of fields.
-    int getFieldCount() const { return _impl->getFieldCount(); }
+    std::size_t getFieldCount() const { return _impl->getFieldCount(); }
 
     /// The number of Flag fields.
-    int getFlagFieldCount() const { return _impl->getFlagFieldCount(); }
+    std::size_t getFlagFieldCount() const { return _impl->getFlagFieldCount(); }
 
     /// The number of non-Flag fields.
-    int getNonFlagFieldCount() const { return _impl->getNonFlagFieldCount(); }
+    std::size_t getNonFlagFieldCount() const { return _impl->getNonFlagFieldCount(); }
 
     /**
      *  Add a new field to the Schema, and return the associated Key.

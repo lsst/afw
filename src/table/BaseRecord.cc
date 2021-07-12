@@ -17,17 +17,17 @@ namespace {
 // using placement new.  All other fields are left alone, as they should already be zero.
 struct RecordInitializer {
     template <typename T>
-    static void fill(T *element, int size) {}  // this matches all non-floating-point-element fields.
+    static void fill(T *element, std::size_t size) {}  // this matches all non-floating-point-element fields.
 
-    static void fill(float *element, int size) {
+    static void fill(float *element, std::size_t size) {
         std::fill(element, element + size, std::numeric_limits<float>::quiet_NaN());
     }
 
-    static void fill(double *element, int size) {
+    static void fill(double *element, std::size_t size) {
         std::fill(element, element + size, std::numeric_limits<double>::quiet_NaN());
     }
 
-    static void fill(lsst::geom::Angle *element, int size) {
+    static void fill(lsst::geom::Angle *element, std::size_t size) {
         fill(reinterpret_cast<double *>(element), size);
     }
 

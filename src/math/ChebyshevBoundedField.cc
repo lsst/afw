@@ -340,8 +340,8 @@ public:
         table::BaseRecord const& record = catalogs.front().front();
         PersistenceHelper const keys(record.getSchema());
         lsst::geom::Box2I bbox(record.get(keys.bbox));
-        int nx = record.get(keys.orderX) + 1;
-        int ny = keys.coefficients.getSize() / nx;
+        std::size_t nx = record.get(keys.orderX) + 1;
+        std::size_t ny = keys.coefficients.getSize() / nx;
         LSST_ARCHIVE_ASSERT(nx * ny == keys.coefficients.getSize());
         ndarray::Array<double, 2, 2> coefficients = ndarray::allocate(ny, nx);
         ndarray::flatten<1>(coefficients) = record.get(keys.coefficients);

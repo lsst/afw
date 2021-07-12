@@ -56,23 +56,23 @@ public:
     /// A std::vector whose elements can be any of the allowed SchemaItem types.
     typedef std::vector<ItemVariant> ItemContainer;
     /// A map from field names to position in the vector, so we can do name lookups.
-    typedef std::map<std::string, int> NameMap;
+    typedef std::map<std::string, std::size_t> NameMap;
     /// A map from standard field offsets to position in the vector, so we can do field lookups.
-    typedef std::map<int, int> OffsetMap;
+    typedef std::map<std::size_t, std::size_t> OffsetMap;
     /// A map from Flag field offset/bit pairs to position in the vector, so we can do Flag field lookups.
-    typedef std::map<std::pair<int, int>, int> FlagMap;
+    typedef std::map<std::pair<std::size_t, std::size_t>, std::size_t> FlagMap;
 
     /// The size of a record in bytes.
-    int getRecordSize() const { return _recordSize; }
+    std::size_t getRecordSize() const { return _recordSize; }
 
     /// The total number of fields.
-    int getFieldCount() const { return _names.size(); }
+    std::size_t getFieldCount() const { return _names.size(); }
 
     /// The number of Flag fields.
-    int getFlagFieldCount() const { return _flags.size(); }
+    std::size_t getFlagFieldCount() const { return _flags.size(); }
 
     /// The number of non-Flag fields.
-    int getNonFlagFieldCount() const { return _offsets.size(); }
+    std::size_t getNonFlagFieldCount() const { return _offsets.size(); }
 
     /// Find an item by name (used to implement Schema::find).
     template <typename T>
@@ -133,21 +133,22 @@ public:
     ItemContainer const& getItems() const { return _items; }
 
     /// Default constructor.
-    explicit SchemaImpl() : _recordSize(0), _lastFlagField(-1), _lastFlagBit(-1), _items() {}
+    SchemaImpl() : _recordSize(0), _lastFlagField(0), _lastFlagBit(0), _items(), _initFlag(false) {}
 
 private:
     friend class detail::Access;
 
     template <typename T>
-    Key<T> addFieldImpl(int elementSize, int elementCount, Field<T> const& field, bool doReplace);
+    Key<T> addFieldImpl(std::size_t elementSize, std::size_t elementCount, Field<T> const& field, bool doReplace);
 
-    int _recordSize;       // Size of a record in bytes.
-    int _lastFlagField;    // Offset of the last flag field in bytes.
-    int _lastFlagBit;      // Bit of the last flag field.
+    std::size_t _recordSize;       // Size of a record in bytes.
+    std::size_t _lastFlagField;    // Offset of the last flag field in bytes.
+    std::size_t _lastFlagBit;      // Bit of the last flag field.
     ItemContainer _items;  // Vector of variants of SchemaItem<T>.
     NameMap _names;        // Field name to vector-index map.
     OffsetMap _offsets;    // Offset to vector-index map for regular fields.
     FlagMap _flags;        // Offset to vector-index map for flags.
+    bool _initFlag;        // Indicates if record is valid
 };
 }  // namespace detail
 }  // namespace table

@@ -41,24 +41,24 @@ class BaseColumnView;
  */
 class BitsColumn final {
 public:
-    typedef std::int64_t IntT;
+    typedef std::size_t SizeT;
 
-    ndarray::Array<IntT, 1, 1> getArray() const { return _array; }
+    ndarray::Array<SizeT, 1, 1> getArray() const { return _array; }
 
-    IntT getBit(Key<Flag> const& key) const;
-    IntT getBit(std::string const& name) const;
+    SizeT getBit(Key<Flag> const& key) const;
+    SizeT getBit(std::string const& name) const;
 
-    IntT getMask(Key<Flag> const& key) const { return IntT(1) << getBit(key); }
-    IntT getMask(std::string const& name) const { return IntT(1) << getBit(name); }
+    SizeT getMask(Key<Flag> const& key) const { return SizeT(1) << getBit(key); }
+    SizeT getMask(std::string const& name) const { return SizeT(1) << getBit(name); }
 
     std::vector<SchemaItem<Flag> > const& getSchemaItems() const { return _items; }
 
 private:
     friend class BaseColumnView;
 
-    explicit BitsColumn(int size);
+    explicit BitsColumn(std::size_t size);
 
-    ndarray::Array<IntT, 1, 1> _array;
+    ndarray::Array<SizeT, 1, 1> _array;
     std::vector<SchemaItem<Flag> > _items;
 };
 
@@ -155,7 +155,7 @@ public:
     ~BaseColumnView();
 
 protected:
-    BaseColumnView(std::shared_ptr<BaseTable> const& table, int recordCount, void* buf,
+    BaseColumnView(std::shared_ptr<BaseTable> const& table, std::size_t recordCount, void* buf,
                    ndarray::Manager::Ptr const& manager);
 
 private:

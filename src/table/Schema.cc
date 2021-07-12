@@ -154,8 +154,8 @@ namespace {
 // Find an exact SchemaItem by key ('exact' means no subfields, unlike the find member function above)
 // Return the index into the item container.
 template <typename T>
-inline int findKey(SchemaImpl::OffsetMap const &offsets, SchemaImpl::FlagMap const &flags, Key<T> const &key,
-                   bool throwIfMissing = true) {
+inline std::size_t findKey(SchemaImpl::OffsetMap const &offsets, SchemaImpl::FlagMap const &flags, Key<T> const &key,
+                           bool throwIfMissing = true) {
     SchemaImpl::OffsetMap::const_iterator i = offsets.find(key.getOffset());
     if (i == offsets.end()) {
         if (throwIfMissing) {
@@ -164,15 +164,15 @@ inline int findKey(SchemaImpl::OffsetMap const &offsets, SchemaImpl::FlagMap con
                                Field<T>::getTypeString() % key.getOffset())
                                       .str());
         } else {
-            return -1;
+            return std::numeric_limits<size_t>::max();
         }
     }
     return i->second;
 }
 
 // Like the above, but special-cased for Flag
-inline int findKey(SchemaImpl::OffsetMap const &offsets, SchemaImpl::FlagMap const &flags,
-                   Key<Flag> const &key, bool throwIfMissing = true) {
+inline std::size_t findKey(SchemaImpl::OffsetMap const &offsets, SchemaImpl::FlagMap const &flags,
+                           Key<Flag> const &key, bool throwIfMissing = true) {
     SchemaImpl::FlagMap::const_iterator i = flags.find(std::make_pair(key.getOffset(), key.getBit()));
     if (i == flags.end()) {
         if (throwIfMissing) {
@@ -182,7 +182,7 @@ inline int findKey(SchemaImpl::OffsetMap const &offsets, SchemaImpl::FlagMap con
                      key.getOffset() % key.getBit())
                             .str());
         } else {
-            return -1;
+            return std::numeric_limits<size_t>::max();
         }
     }
     return i->second;
@@ -193,7 +193,7 @@ inline int findKey(SchemaImpl::OffsetMap const &offsets, SchemaImpl::FlagMap con
 template <typename T>
 void SchemaImpl::replaceField(Key<T> const &key, Field<T> const &field) {
     NameMap::iterator j = _names.find(field.getName());
-    SchemaItem<T> *item = 0;
+    SchemaItem<T> *item = nullptr;
     if (j != _names.end()) {
         // The field name is already present in the Schema; see if it's the one we're replacing.
         // If we can get the old item with this, we don't need to update the name map at all.
@@ -207,14 +207,14 @@ void SchemaImpl::replaceField(Key<T> const &key, Field<T> const &field) {
         }
     }
     if (!item) {  // Need to find the original item by key, since it's a new name.
-        int index = findKey(_offsets, _flags, key);
+        std::size_t index = findKey(_offsets, _flags, key);
         item = std::get_if<SchemaItem<T>>(&_items[index]);
         if (!item) {
             throw LSST_EXCEPT(lsst::pex::exceptions::TypeError,
                               (boost::format("Incorrect key type '%s'.") % key).str());
         }
         j = _names.find(item->field.getName());
-        _names.insert(j, std::pair<std::string, int>(field.getName(), j->second));
+        _names.insert(j, std::pair<std::string, std::size_t>(field.getName(), j->second));
         _names.erase(j);
     }
     item->field = field;
@@ -228,9 +228,9 @@ int SchemaImpl::contains(SchemaItem<T> const &item, int flags) const {
         throw LSST_EXCEPT(pex::exceptions::LogicError,
                           "Can only check whether item is in schema if flags & EQUAL_KEYS");
     }
-    SchemaItem<T> const *cmpItem = 0;
-    int index = findKey(_offsets, _flags, item.key, false);
-    if (index >= 0) {
+    SchemaItem<T> const *cmpItem = nullptr;
+    std::size_t index = findKey(_offsets, _flags, item.key, false);
+    if (index != std::numeric_limits<size_t>::max()) {
         cmpItem = std::get_if<SchemaItem<T> >(&_items[index]);
         if (!cmpItem) {
             if ((flags & Schema::EQUAL_NAMES) && cmpItem->field.getName() != item.field.getName()) {
@@ -317,9 +317,9 @@ Key<T> SchemaImpl::addField(Field<T> const &field, bool doReplace) {
 }
 
 Key<Flag> SchemaImpl::addField(Field<Flag> const &field, bool doReplace) {
-    static int const ELEMENT_SIZE = sizeof(Field<Flag>::Element);
+    static std::size_t const ELEMENT_SIZE = sizeof(Field<Flag>::Element);
     std::pair<NameMap::iterator, bool> result =
-            _names.insert(std::pair<std::string, int>(field.getName(), _items.size()));
+            _names.insert(std::pair<std::string, std::size_t>(field.getName(), _items.size()));
     if (!result.second) {
         if (doReplace) {
             SchemaItem<Flag> *item = std::get_if<SchemaItem<Flag>>(&_items[result.first->second]);
@@ -346,18 +346,19 @@ Key<Flag> SchemaImpl::addField(Field<Flag> const &field, bool doReplace) {
                             .str());
         }
     } else {
-        if (_lastFlagField < 0 || _lastFlagBit >= ELEMENT_SIZE * 8) {
-            int padding = ELEMENT_SIZE - _recordSize % ELEMENT_SIZE;
+        if (!_initFlag || _lastFlagBit >= ELEMENT_SIZE * 8) {
+            std::size_t padding = ELEMENT_SIZE - _recordSize % ELEMENT_SIZE;
             if (padding != ELEMENT_SIZE) {
                 _recordSize += padding;
             }
             _lastFlagField = _recordSize;
             _lastFlagBit = 0;
+            _initFlag = true;
             _recordSize += field.getElementCount() * ELEMENT_SIZE;
         }
         SchemaItem<Flag> item(detail::Access::makeKey(_lastFlagField, _lastFlagBit), field);
         ++_lastFlagBit;
-        _flags.insert(std::pair<std::pair<int, int>, int>(
+        _flags.insert(std::pair<std::pair<size_t, size_t>, size_t>(
                 std::make_pair(item.key.getOffset(), item.key.getBit()), _items.size()));
         _items.push_back(item);
         return item.key;
@@ -365,9 +366,9 @@ Key<Flag> SchemaImpl::addField(Field<Flag> const &field, bool doReplace) {
 }
 
 template <typename T>
-Key<T> SchemaImpl::addFieldImpl(int elementSize, int elementCount, Field<T> const &field, bool doReplace) {
+Key<T> SchemaImpl::addFieldImpl(std::size_t elementSize, std::size_t elementCount, Field<T> const &field, bool doReplace) {
     std::pair<NameMap::iterator, bool> result =
-            _names.insert(std::pair<std::string, int>(field.getName(), _items.size()));
+            _names.insert(std::pair<std::string, std::size_t>(field.getName(), _items.size()));
     if (!result.second) {
         if (doReplace) {
             SchemaItem<T> *item = std::get_if<SchemaItem<T>>(&_items[result.first->second]);
@@ -397,13 +398,13 @@ Key<T> SchemaImpl::addFieldImpl(int elementSize, int elementCount, Field<T> cons
                             .str());
         }
     } else {
-        int padding = elementSize - _recordSize % elementSize;
+        std::size_t padding = elementSize - _recordSize % elementSize;
         if (padding != elementSize) {
             _recordSize += padding;
         }
         SchemaItem<T> item(detail::Access::makeKey(field, _recordSize), field);
         _recordSize += elementCount * elementSize;
-        _offsets.insert(std::pair<int, int>(item.key.getOffset(), _items.size()));
+        _offsets.insert(std::pair<std::size_t, std::size_t>(item.key.getOffset(), _items.size()));
         _items.push_back(item);
         return item.key;
     }

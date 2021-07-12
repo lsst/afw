@@ -372,12 +372,12 @@ void LinearCombinationKernel::write(OutputArchiveHandle &handle) const {
     LinearCombinationKernelPersistenceHelper const keys(getNBasisKernels(), isVarying);
     std::shared_ptr<afw::table::BaseRecord> record = keys.write(handle, *this);
     if (isVarying) {
-        for (int n = 0; n < keys.components.getSize(); ++n) {
+        for (std::size_t n = 0; n < keys.components.getSize(); ++n) {
             record->set(keys.components[n], handle.put(_kernelList[n]));
             record->set(keys.spatialFunctions[n], handle.put(_spatialFunctionList[n]));
         }
     } else {
-        for (int n = 0; n < keys.components.getSize(); ++n) {
+        for (std::size_t n = 0; n < keys.components.getSize(); ++n) {
             record->set(keys.components[n], handle.put(_kernelList[n]));
             record->set(keys.amplitudes[n], _kernelParams[n]);
         }

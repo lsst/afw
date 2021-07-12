@@ -32,29 +32,29 @@ void KeyBase<Array<U>>::assignVector(BaseRecord &record, std::vector<U> const &v
 }
 
 template <typename U>
-Key<U> KeyBase<Array<U>>::operator[](int i) const {
+Key<U> KeyBase<Array<U>>::operator[](std::size_t i) const {
     Key<Array<U>> const *self = static_cast<Key<Array<U>> const *>(this);
     if (self->isVariableLength()) {
         throw LSST_EXCEPT(lsst::pex::exceptions::LogicError,
                           "Cannot get Keys to elements of variable-length arrays.");
     }
-    if (i >= self->getSize() || i < 0) {
+    if (i >= self->getSize()) {
         throw LSST_EXCEPT(lsst::pex::exceptions::LengthError, "Array key index out of range.");
     }
     return detail::Access::extractElement(*this, i);
 }
 
 template <typename U>
-Key<Array<U>> KeyBase<Array<U>>::slice(int begin, int end) const {
+Key<Array<U>> KeyBase<Array<U>>::slice(std::size_t begin, std::size_t end) const {
     Key<Array<U>> const *self = static_cast<Key<Array<U>> const *>(this);
     if (self->isVariableLength()) {
         throw LSST_EXCEPT(lsst::pex::exceptions::LogicError,
                           "Cannot get Keys to slices of variable-length arrays.");
     }
-    if (begin > self->getSize() || begin < 0) {
+    if (begin > self->getSize()) {
         throw LSST_EXCEPT(lsst::pex::exceptions::LengthError, "Array key begin index out of range.");
     }
-    if (end > self->getSize() || end < 0) {
+    if (end > self->getSize()) {
         throw LSST_EXCEPT(lsst::pex::exceptions::LengthError, "Array key end index out of range.");
     }
     return detail::Access::extractRange(*this, begin, end);
