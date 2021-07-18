@@ -171,6 +171,13 @@ public:
      */
     static std::shared_ptr<BaseTable> make(Schema const& schema);
 
+    /**
+     *  Return a minimal schema for Base tables and records.
+     *
+     *  The returned empty schema can and generally should be modified further.
+     */
+    static Schema makeMinimalSchema();
+
     // Tables are not assignable to prevent type slicing.
     BaseTable& operator=(BaseTable const& other) = delete;
     BaseTable& operator=(BaseTable&& other) = delete;

@@ -122,6 +122,10 @@ std::shared_ptr<BaseTable> BaseTable::make(Schema const &schema) {
     return std::shared_ptr<BaseTable>(new BaseTable(schema));
 }
 
+Schema BaseTable::makeMinimalSchema() {
+    return Schema();
+}
+
 std::shared_ptr<BaseRecord> BaseTable::copyRecord(BaseRecord const &input) {
     std::shared_ptr<BaseRecord> output = makeRecord();
     output->assign(input);
