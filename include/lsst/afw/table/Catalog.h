@@ -120,11 +120,15 @@ public:
     /**
      *  Construct a catalog from a table (or nothing).
      *
-     *  A catalog with no table is considered invalid; a valid table must be assigned to it
-     *  before it can be used.
+     * A table is always initialized with a minimal schema.
      */
     explicit CatalogT(std::shared_ptr<Table> const& table = std::shared_ptr<Table>())
-            : _table(table), _internal() {}
+            : _table(table), _internal() {
+        if(!_table) {
+            auto schema=Table::makeMinimalSchema();
+            _table=Table::make(schema);
+        }
+    }
 
     /// Construct a catalog from a schema, creating a table with Table::make(schema).
     explicit CatalogT(Schema const& schema) : _table(Table::make(schema)), _internal() {}
