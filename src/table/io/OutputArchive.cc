@@ -201,7 +201,7 @@ BaseCatalog const &OutputArchive::getCatalog(int n) const {
     return _impl->_catalogs[n - 1];
 }
 
-int OutputArchive::countCatalogs() const { return _impl->_catalogs.size() + 1; }
+std::size_t OutputArchive::countCatalogs() const { return _impl->_catalogs.size() + 1; }
 
 void OutputArchive::writeFits(fits::Fits &fitsfile) const { _impl->writeFits(fitsfile); }
 

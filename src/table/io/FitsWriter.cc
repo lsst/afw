@@ -38,7 +38,7 @@ struct ProcessSchema {
 
     void operator()(SchemaItem<std::string> const& item) const {
         std::string name = item.field.getName();
-        int n = fits->addColumn<std::string>(name, item.field.getElementCount(), item.field.getDoc());
+        std::size_t n = fits->addColumn<std::string>(name, item.field.getElementCount(), item.field.getDoc());
         if (!item.field.getDoc().empty()) {
             fits->writeColumnKey("TDOC", n, item.field.getDoc());
         }
@@ -82,7 +82,7 @@ struct ProcessSchema {
         fits->writeColumnKey("TCCLS", n, "Array", "Field template used by lsst.afw.table");
     }
 
-    void specialize(SchemaItem<std::string> const& item, int n) const {
+    void specialize(SchemaItem<std::string> const& item, std::size_t n) const {
         if (!item.field.getUnits().empty()) fits->writeColumnKey("TUNIT", n, item.field.getUnits());
         fits->writeColumnKey("TCCLS", n, "String", "Field template used by lsst.afw.table");
     }
@@ -104,7 +104,7 @@ void FitsWriter::_writeTable(std::shared_ptr<BaseTable const> const& table, std:
     Schema schema = table->getSchema();
     _fits->createTable();
     LSST_FITS_CHECK_STATUS(*_fits, "creating table");
-    int nFlags = schema.getFlagFieldCount();
+    std::size_t nFlags = schema.getFlagFieldCount();
     if (nFlags > 0) {
         int n = _fits->addColumn<bool>("flags", nFlags, "bits for all Flag fields; see also TFLAGn");
         _fits->writeKey("FLAGCOL", n + 1, "Column number for the bitflags.");

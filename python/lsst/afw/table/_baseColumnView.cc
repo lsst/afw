@@ -112,13 +112,13 @@ static void declareBitsColumn(WrapperCollection &wrappers) {
     wrappers.wrapType(PyBitsColumn(wrappers.module, "BitsColumn"), [](auto &mod, auto &cls) {
         cls.def("getArray", &BitsColumn::getArray);
         cls.def_property_readonly("array", &BitsColumn::getArray);
-        cls.def("getBit", (BitsColumn::IntT(BitsColumn::*)(Key<Flag> const &) const) & BitsColumn::getBit,
+        cls.def("getBit", (BitsColumn::SizeT(BitsColumn::*)(Key<Flag> const &) const) & BitsColumn::getBit,
                 "key"_a);
-        cls.def("getBit", (BitsColumn::IntT(BitsColumn::*)(std::string const &) const) & BitsColumn::getBit,
+        cls.def("getBit", (BitsColumn::SizeT(BitsColumn::*)(std::string const &) const) & BitsColumn::getBit,
                 "name"_a);
-        cls.def("getMask", (BitsColumn::IntT(BitsColumn::*)(Key<Flag> const &) const) & BitsColumn::getMask,
+        cls.def("getMask", (BitsColumn::SizeT(BitsColumn::*)(Key<Flag> const &) const) & BitsColumn::getMask,
                 "key"_a);
-        cls.def("getMask", (BitsColumn::IntT(BitsColumn::*)(std::string const &) const) & BitsColumn::getMask,
+        cls.def("getMask", (BitsColumn::SizeT(BitsColumn::*)(std::string const &) const) & BitsColumn::getMask,
                 "name"_a);
     });
 }

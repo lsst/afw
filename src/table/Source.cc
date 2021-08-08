@@ -209,8 +209,8 @@ public:
         std::vector<geom::Span> spansVector;
 
         // Load a regular Footprint from the span and peak columns.
-        int spanElementCount = fits.getTableArraySize(row, _spanCol);
-        int peakElementCount = fits.getTableArraySize(row, _peakCol);
+        std::size_t spanElementCount = fits.getTableArraySize(row, _spanCol);
+        std::size_t peakElementCount = fits.getTableArraySize(row, _peakCol);
         if (spanElementCount) {
             if (spanElementCount % 3) {
                 throw LSST_EXCEPT(
@@ -257,11 +257,11 @@ public:
         if (_heavyPixCol < 0) {
             return;
         }
-        int heavyPixElementCount = fits.getTableArraySize(row, _heavyPixCol);
-        int heavyMaskElementCount = fits.getTableArraySize(row, _heavyMaskCol);
-        int heavyVarElementCount = fits.getTableArraySize(row, _heavyVarCol);
+        std::size_t heavyPixElementCount = fits.getTableArraySize(row, _heavyPixCol);
+        std::size_t heavyMaskElementCount = fits.getTableArraySize(row, _heavyMaskCol);
+        std::size_t heavyVarElementCount = fits.getTableArraySize(row, _heavyVarCol);
         if (heavyPixElementCount > 0) {
-            int N = fp->getArea();
+            std::size_t N = fp->getArea();
             if ((heavyPixElementCount != N) || (heavyMaskElementCount != N) || (heavyVarElementCount != N)) {
                 throw LSST_EXCEPT(
                         afw::fits::FitsError,

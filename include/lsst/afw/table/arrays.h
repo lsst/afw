@@ -72,7 +72,7 @@ public:
      *  @param[in]     size    Number of fields to add.
      */
     static ArrayKey addFields(Schema& schema, std::string const& name, std::string const& doc,
-                              std::string const& unit, int size);
+                              std::string const& unit, size_t size);
 
     /// Default constructor; instance will not be usable unless subsequently assigned to.
     ArrayKey() noexcept : _begin(), _size(0) {}
@@ -96,7 +96,7 @@ public:
      *
      *      ArrayKey<T> k(schema["a"]);
      */
-    ArrayKey(SubSchema const& s);
+    explicit ArrayKey(SubSchema const& s);
 
     ArrayKey(ArrayKey const&) noexcept;
     ArrayKey(ArrayKey&&) noexcept;
@@ -105,7 +105,7 @@ public:
     ~ArrayKey() noexcept override;
 
     /// Return the number of elements in the array.
-    int getSize() const noexcept { return _size; }
+    [[nodiscard]] std::size_t getSize() const noexcept { return _size; }
 
     /// Get an array from the given record
     ndarray::Array<T const, 1, 1> get(BaseRecord const& record) const override;
@@ -128,25 +128,25 @@ public:
     //@}
 
     /// Return a hash of this object.
-    std::size_t hash_value() const noexcept {
+    [[nodiscard]] std::size_t hash_value() const noexcept {
         // Completely arbitrary seed
         return utils::hashCombine(17, _begin, _size);
     }
 
     /// Return True if the FunctorKey contains valid scalar keys.
-    bool isValid() const noexcept { return _begin.isValid(); }
+    [[nodiscard]] bool isValid() const noexcept { return _begin.isValid(); }
 
     /// Return a scalar Key for an element of the array
-    Key<T> operator[](int i) const;
+    Key<T> operator[](std::size_t i) const;
 
     /// Return a FunctorKey corresponding to a range of elements
-    ArrayKey slice(int begin, int end) const;
+    ArrayKey slice(std::size_t begin, std::size_t end) const;
 
 private:
-    ArrayKey(Key<T> const& begin, int size) noexcept : _begin(begin), _size(size) {}
+    ArrayKey(Key<T> const& begin, std::size_t size) noexcept : _begin(begin), _size(size) {}
 
     Key<T> _begin;
-    int _size;
+    std::size_t _size;
 };
 }  // namespace table
 }  // namespace afw

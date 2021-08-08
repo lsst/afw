@@ -92,7 +92,7 @@ public:
     BaseCatalog const& getCatalog(int n) const;
 
     /// Return the total number of catalogs, including the index.
-    int countCatalogs() const;
+    std::size_t countCatalogs() const;
 
     /**
      *  Write the archive to an already-open FITS object.

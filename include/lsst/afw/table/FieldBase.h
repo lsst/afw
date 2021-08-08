@@ -29,10 +29,10 @@ class TableImpl;
  *
  *  This storage is equivalent to LAPACK 'UPLO=U'.
  */
-inline int indexCovariance(int i, int j) { return (i < j) ? (i + j * (j + 1) / 2) : (j + i * (i + 1) / 2); }
+inline std::size_t indexCovariance(std::size_t i, std::size_t j) { return (i < j) ? (i + j * (j + 1) / 2) : (j + i * (i + 1) / 2); }
 
 /// Defines the packed size of a covariance matrices.
-inline int computeCovariancePackedSize(int size) { return size * (size + 1) / 2; }
+inline std::size_t computeCovariancePackedSize(std::size_t size) { return size * (size + 1) / 2; }
 
 }  // namespace detail
 
@@ -47,7 +47,7 @@ struct FieldBase {
     typedef T Element;                ///< the type of subfields (the same as the type itself for scalars)
 
     /// Return the number of subfield elements (always one for scalars).
-    int getElementCount() const noexcept { return 1; }
+    std::size_t getElementCount() const noexcept { return 1; }
 
     /// Return a string description of the field type.
     static std::string getTypeString();
@@ -56,7 +56,7 @@ struct FieldBase {
     // it's convenient to be able to instantiate both, since the other is used
     // by other specializations.
     FieldBase() = default;
-    FieldBase(int) {
+    FieldBase(std::size_t) {
         throw LSST_EXCEPT(lsst::pex::exceptions::LogicError,
                           "Constructor disabled (this Field type is not sized).");
     }
@@ -119,10 +119,7 @@ struct FieldBase<Array<U> > {
      *
      *  ...even though the third argument to the Field constructor takes a FieldBase, not an int.
      */
-    FieldBase(int size = 0) : _size(size) {
-        if (size < 0)
-            throw LSST_EXCEPT(lsst::pex::exceptions::LogicError,
-                              "A non-negative size must be provided when constructing an array field.");
+    FieldBase(size_t size = 0) : _size(size) {
     }
 
     FieldBase(FieldBase const &) noexcept = default;
@@ -136,11 +133,11 @@ struct FieldBase<Array<U> > {
 
     /// Return the number of subfield elements (equal to the size of the array),
     /// or 0 for a variable-length array.
-    int getElementCount() const noexcept { return _size; }
+    std::size_t getElementCount() const noexcept { return _size; }
 
     /// Return the size of the array (equal to the number of subfield elements),
     /// or 0 for a variable-length array.
-    int getSize() const noexcept { return _size; }
+    std::size_t getSize() const noexcept { return _size; }
 
     /// Return true if the field is variable-length (each record can have a different size array).
     bool isVariableLength() const noexcept { return _size == 0; }
@@ -210,10 +207,10 @@ private:
             throw LSST_EXCEPT(lsst::pex::exceptions::LengthError,
                               "Incorrect size in array field assignment.");
         }
-        for (int i = 0; i < _size; ++i) p[i] = value[i];
+        for (std::size_t i = 0; i < _size; ++i) p[i] = value[i];
     }
 
-    int _size;
+    std::size_t _size;
 };
 
 /**
@@ -244,7 +241,7 @@ struct FieldBase<std::string> {
      *
      *  ...even though the third argument to the Field constructor takes a FieldBase, not an int.
      */
-    FieldBase(int size = -1);
+    FieldBase(std::size_t size=std::numeric_limits<size_t>::max());
 
     FieldBase(FieldBase const &) noexcept = default;
     FieldBase(FieldBase &&) noexcept = default;
@@ -257,11 +254,11 @@ struct FieldBase<std::string> {
 
     /// @brief Return the number of subfield elements (equal to the size of the string,
     ///        including a null terminator), or 0 for a variable-length string.
-    int getElementCount() const noexcept { return _size; }
+    std::size_t getElementCount() const noexcept { return _size; }
 
     /// @brief Return the maximum length of the string, including a null terminator
     ///        (equal to the number of subfield elements), or 0 for a variable-length string.
-    int getSize() const noexcept { return _size; }
+    std::size_t getSize() const noexcept { return _size; }
 
     /// Return true if the field is variable-length (each record can have a different size array).
     bool isVariableLength() const noexcept { return _size == 0; }
@@ -304,7 +301,7 @@ protected:
     void setValue(Element *p, ndarray::Manager::Ptr const &, std::string const &value) const;
 
 private:
-    int _size;
+    std::size_t _size;
 };
 }  // namespace table
 }  // namespace afw

@@ -65,7 +65,7 @@ void declareArrayKey(WrapperCollection &wrappers, std::string const &suffix) {
                                "schema"_a, "name"_a, "doc"_a, "unit"_a, "docData"_a);
                 cls.def_static("addFields",
                                (ArrayKey<T>(*)(Schema &, std::string const &, std::string const &,
-                                               std::string const &, int size)) &
+                                               std::string const &, std::size_t size)) &
                                        ArrayKey<T>::addFields,
                                "schema"_a, "name"_a, "doc"_a, "unit"_a, "size"_a);
                 cls.def("get", &ArrayKey<T>::get);

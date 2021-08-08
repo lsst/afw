@@ -30,8 +30,8 @@ struct MatchName {
 
 }  // namespace
 
-BitsColumn::IntT BitsColumn::getBit(Key<Flag> const &key) const {
-    IntT r = std::find_if(_items.begin(), _items.end(), MatchKey(key)) - _items.begin();
+BitsColumn::SizeT BitsColumn::getBit(Key<Flag> const &key) const {
+    SizeT r = std::find_if(_items.begin(), _items.end(), MatchKey(key)) - _items.begin();
     if (std::size_t(r) == _items.size()) {
         throw LSST_EXCEPT(pex::exceptions::NotFoundError,
                           (boost::format("'%s' not found in BitsColumn") % key).str());
@@ -39,8 +39,8 @@ BitsColumn::IntT BitsColumn::getBit(Key<Flag> const &key) const {
     return r;
 }
 
-BitsColumn::IntT BitsColumn::getBit(std::string const &name) const {
-    IntT r = std::find_if(_items.begin(), _items.end(), MatchName(name)) - _items.begin();
+BitsColumn::SizeT BitsColumn::getBit(std::string const &name) const {
+    SizeT r = std::find_if(_items.begin(), _items.end(), MatchName(name)) - _items.begin();
     if (std::size_t(r) == _items.size()) {
         throw LSST_EXCEPT(pex::exceptions::NotFoundError,
                           (boost::format("'%s' not found in BitsColumn") % name).str());
@@ -48,17 +48,17 @@ BitsColumn::IntT BitsColumn::getBit(std::string const &name) const {
     return r;
 }
 
-BitsColumn::BitsColumn(int size) : _array(ndarray::allocate(size)) { _array.deep() = IntT(0); }
+BitsColumn::BitsColumn(std::size_t size) : _array(ndarray::allocate(size)) { _array.deep() = SizeT(0); }
 
 // =============== BaseColumnView private Impl object =======================================================
 
 struct BaseColumnView::Impl {
-    int recordCount;                   // number of records
+    std::size_t recordCount;                   // number of records
     void *buf;                         // pointer to the beginning of the first record's data
     std::shared_ptr<BaseTable> table;  // table that owns the records
     ndarray::Manager::Ptr manager;     // manages lifetime of 'buf'
 
-    Impl(std::shared_ptr<BaseTable> const &table_, int recordCount_, void *buf_,
+    Impl(std::shared_ptr<BaseTable> const &table_, size_t recordCount_, void *buf_,
          ndarray::Manager::Ptr const &manager_)
             : recordCount(recordCount_), buf(buf_), table(table_), manager(manager_) {}
 };
@@ -76,7 +76,7 @@ typename ndarray::ArrayRef<T, 1> const BaseColumnView::operator[](Key<T> const &
     }
     return ndarray::external(reinterpret_cast<T *>(reinterpret_cast<char *>(_impl->buf) + key.getOffset()),
                              ndarray::makeVector(_impl->recordCount),
-                             ndarray::makeVector(int(_impl->table->getSchema().getRecordSize() / sizeof(T))),
+                             ndarray::makeVector(_impl->table->getSchema().getRecordSize() / sizeof(T)),
                              _impl->manager);
 }
 
@@ -93,7 +93,7 @@ typename ndarray::ArrayRef<T, 2, 1> const BaseColumnView::operator[](Key<Array<T
     return ndarray::external(
             reinterpret_cast<T *>(reinterpret_cast<char *>(_impl->buf) + key.getOffset()),
             ndarray::makeVector(_impl->recordCount, key.getSize()),
-            ndarray::makeVector(int(_impl->table->getSchema().getRecordSize() / sizeof(T)), 1),
+            ndarray::makeVector(_impl->table->getSchema().getRecordSize() / sizeof(T), std::size_t(1)),
             _impl->manager);
 }
 
@@ -109,23 +109,23 @@ ndarray::result_of::vectorize<detail::FlagExtractor, ndarray::Array<Field<Flag>:
                                       reinterpret_cast<Field<Flag>::Element *>(
                                               reinterpret_cast<char *>(_impl->buf) + key.getOffset()),
                                       ndarray::makeVector(_impl->recordCount),
-                                      ndarray::makeVector(int(_impl->table->getSchema().getRecordSize() /
-                                                              sizeof(Field<Flag>::Element))),
+                                      ndarray::makeVector(_impl->table->getSchema().getRecordSize() /
+                                                              sizeof(Field<Flag>::Element)),
                                       _impl->manager)));
 }
 
 BitsColumn BaseColumnView::getBits(std::vector<Key<Flag> > const &keys) const {
     BitsColumn result(_impl->recordCount);
-    ndarray::ArrayRef<BitsColumn::IntT, 1, 1> array = result._array.deep();
-    if (keys.size() > sizeof(BitsColumn::IntT)) {
+    ndarray::ArrayRef<BitsColumn::SizeT, 1, 1> array = result._array.deep();
+    if (keys.size() > sizeof(BitsColumn::SizeT)) {
         throw LSST_EXCEPT(pex::exceptions::LengthError,
                           (boost::format("Too many keys passed to getBits(); %d > %d.") % keys.size() %
-                           sizeof(BitsColumn::IntT))
+                           sizeof(BitsColumn::SizeT))
                                   .str());
     }
-    BitsColumn::IntT const size = keys.size();  // just for unsigned/signed comparisons
-    for (BitsColumn::IntT i = 0; i < size; ++i) {
-        array |= (BitsColumn::IntT(1) << i) * (*this)[keys[i]];
+    BitsColumn::SizeT const size = keys.size();  // just for unsigned/signed comparisons
+    for (BitsColumn::SizeT i = 0; i < size; ++i) {
+        array |= (BitsColumn::SizeT(1) << i) * (*this)[keys[i]];
         result._items.push_back(getSchema().find(keys[i]));
     }
     return result;
@@ -148,16 +148,16 @@ BitsColumn BaseColumnView::getAllBits() const {
     BitsColumn result(_impl->recordCount);
     ExtractFlagItems func = {&result._items};
     getSchema().forEach(func);
-    if (result._items.size() > sizeof(BitsColumn::IntT)) {
+    if (result._items.size() > sizeof(BitsColumn::SizeT)) {
         throw LSST_EXCEPT(pex::exceptions::LengthError,
                           (boost::format("Too many Flag keys in schema; %d > %d.") % result._items.size() %
-                           sizeof(BitsColumn::IntT))
+                           sizeof(BitsColumn::SizeT))
                                   .str());
     }
-    ndarray::ArrayRef<BitsColumn::IntT, 1, 1> array = result._array.deep();
-    BitsColumn::IntT const size = result._items.size();  // just for unsigned/signed comparisons
-    for (BitsColumn::IntT i = 0; i < size; ++i) {
-        array |= (BitsColumn::IntT(1) << i) * (*this)[result._items[i].key];
+    ndarray::ArrayRef<BitsColumn::SizeT, 1, 1> array = result._array.deep();
+    BitsColumn::SizeT const size = result._items.size();  // just for unsigned/signed comparisons
+    for (BitsColumn::SizeT i = 0; i < size; ++i) {
+        array |= (BitsColumn::SizeT(1) << i) * (*this)[result._items[i].key];
     }
     return result;
 }
@@ -170,7 +170,7 @@ BaseColumnView &BaseColumnView::operator=(BaseColumnView &&) = default;
 // needs to be in source file so it can (implicitly) call Impl's (implicit) dtor
 BaseColumnView::~BaseColumnView() = default;
 
-BaseColumnView::BaseColumnView(std::shared_ptr<BaseTable> const &table, int recordCount, void *buf,
+BaseColumnView::BaseColumnView(std::shared_ptr<BaseTable> const &table, std::size_t recordCount, void *buf,
                                ndarray::Manager::Ptr const &manager)
         : _impl(std::make_shared<Impl>(table, recordCount, buf, manager)) {}
 
