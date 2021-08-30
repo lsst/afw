@@ -399,7 +399,7 @@ private:
 
 class PhotoCalibFactory : public table::io::PersistableFactory {
 public:
-    PTR(table::io::Persistable)
+    std::shared_ptr<table::io::Persistable>
     read(InputArchive const &archive, CatalogVector const &catalogs) const override {
         table::BaseRecord const &record = catalogs.front().front();
         PhotoCalibSchema const &keys = PhotoCalibSchema::get();
