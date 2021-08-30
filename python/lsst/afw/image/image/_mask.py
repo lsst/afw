@@ -48,7 +48,27 @@ class Mask(metaclass=TemplateMeta):
 
     readFitsWithOptions = classmethod(imageReadFitsWithOptions)
 
-    writeFitsWithOptions = imageWriteFitsWithOptions
+    def writeFitsWithOptions(self, dest, options, item=None):
+        """Write an Mask to FITS, with options
+
+        Parameters
+        ----------
+        dest : `str`
+            Fits file path to which to write the mask.
+        options : `lsst.daf.base.PropertySet`
+            Write options. The item ``item`` is read.
+            It must contain an `lsst.daf.base.PropertySet` with data for
+            ``lsst.afw.fits.ImageWriteOptions``.
+        item : `str`, optional
+            Item to read from the ``options`` parameter.
+            If not specified it will default to "mask" if present, else
+            will fallback to the generic "image" options.
+        """
+        if item is None:
+            # Fallback to "image" if "mask" is missing. This allows older
+            # code that assumed "image" to still function.
+            item = "mask" if "mask" in options else "image"
+        return imageWriteFitsWithOptions(self, dest, options, item=item)
 
 
 Mask.register(MaskPixel, MaskX)

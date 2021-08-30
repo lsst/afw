@@ -85,24 +85,26 @@ def imageReadFitsWithOptions(cls, source, options):
     return cls(source, bbox=bbox, origin=origin)
 
 
-def imageWriteFitsWithOptions(self, dest, options):
+def imageWriteFitsWithOptions(self, dest, options, item="image"):
     """Write an Image or Mask to FITS, with options
 
     Parameters
     ----------
     dest : `str`
         Fits file path to which to write the image or mask.
-    options : `lsst.daf.base.PropertySet
-        Write options. The item "image" is read. It must contain an
-        `lsst.daf.base.PropertySet` with data for
+    options : `lsst.daf.base.PropertySet`
+        Write options. The item ``item`` is read (which defaults to "image").
+        It must contain an `lsst.daf.base.PropertySet` with data for
         ``lsst.afw.fits.ImageWriteOptions``.
+    item : `str`, optional
+        Item to read from the ``options`` parameter.
     """
     if options is not None:
         try:
-            writeOptions = ImageWriteOptions(options.getPropertySet("image"))
+            writeOptions = ImageWriteOptions(options.getPropertySet(item))
         except Exception as e:
             log = Log.getLogger("lsst.afw.image")
-            log.warn("Could not parse options; writing with defaults: {}".format(e))
+            log.warning("Could not parse item %s from options; writing with defaults: %s", item, e)
         else:
             self.writeFits(dest, writeOptions)
             return
@@ -127,7 +129,7 @@ def exposureWriteFitsWithOptions(self, dest, options):
                                for name in ("image", "mask", "variance")}
         except Exception as e:
             log = Log.getLogger("lsst.afw.image")
-            log.warn("Could not parse options; writing with defaults: {}".format(e))
+            log.warning("Could not parse options; writing with defaults: %s", e)
         else:
             self.writeFits(dest, **writeOptionDict)
             return
