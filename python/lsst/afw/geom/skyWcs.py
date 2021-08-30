@@ -26,10 +26,12 @@ from ._python import reduceTransform
 from ._geom import (SkyWcs, makeCdMatrix, makeFlippedWcs, makeModifiedWcs,
                     makeSkyWcs, makeTanSipWcs, makeWcsPairTransform,
                     getIntermediateWorldCoordsToSky, getPixelToIntermediateWorldCoords)
+from ._hpxUtils import makeHpxWcs
 
 __all__ = ["SkyWcs", "makeCdMatrix", "makeFlippedWcs", "makeSkyWcs",
            "makeModifiedWcs", "makeTanSipWcs", "makeWcsPairTransform",
-           "getIntermediateWorldCoordsToSky", "getPixelToIntermediateWorldCoords"]
+           "getIntermediateWorldCoordsToSky", "getPixelToIntermediateWorldCoords",
+           "makeHpxWcs"]
 
 
 @continueClass  # noqa: F811 (FIXME: remove for py 3.8+)
