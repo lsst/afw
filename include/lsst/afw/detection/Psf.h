@@ -79,8 +79,8 @@ class Psf : public afw::table::io::PersistableFacade<Psf>,
     }
 
 public:
-    typedef math::Kernel::Pixel Pixel;  ///< Pixel type of Image returned by computeImage
-    typedef image::Image<Pixel> Image;  ///< Image type returned by computeImage
+    using Pixel = math::Kernel::Pixel;  ///< Pixel type of Image returned by computeImage
+    using Image = image::Image<Pixel>;  ///< Image type returned by computeImage
 
     /// Enum passed to computeImage and computeKernelImage to determine image ownership.
     enum ImageOwnerEnum {

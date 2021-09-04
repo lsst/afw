@@ -31,7 +31,7 @@ namespace afwImage = lsst::afw::image;
 
 template <typename PixelT>
 void print(afwImage::Image<PixelT>& src, const std::string& title = "") {
-    typedef typename afwImage::Image<PixelT>::x_iterator XIter;
+    using XIter = typename afwImage::Image<PixelT>::x_iterator;
     if (title.size() > 0) {
         printf("%s:\n", title.c_str());
     }
@@ -89,7 +89,7 @@ template <typename PixelT>
 void y_gradient(const afwImage::Image<PixelT>& src, const afwImage::Image<PixelT>& dst) {
     assert(src.getDimensions() == dst.getDimensions());
 
-    typedef typename afwImage::Image<PixelT>::const_xy_locator xy_loc;
+    using xy_loc = typename afwImage::Image<PixelT>::const_xy_locator;
     xy_loc src_loc = src.xy_at(0, 1);
 
 #define USE_CACHE_LOCATION 1

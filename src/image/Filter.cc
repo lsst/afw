@@ -47,7 +47,7 @@ namespace lsst {
 namespace afw {
 namespace image {
 
-FilterProperty::PropertyMap* FilterProperty::_propertyMap = NULL;
+FilterProperty::PropertyMap* FilterProperty::_propertyMap = nullptr;
 
 FilterProperty::FilterProperty(std::string const& name, lsst::daf::base::PropertySet const& prop, bool force)
         : _name(name), _lambdaEff(NAN), _lambdaMin(NAN), _lambdaMax(NAN) {
@@ -147,9 +147,9 @@ std::vector<std::string> Filter::getAliases() const {
     std::vector<std::string> aliases;
 
     std::string const& canonicalName = getCanonicalName();
-    for (AliasMap::iterator ptr = _aliasMap->begin(), end = _aliasMap->end(); ptr != end; ++ptr) {
-        if (ptr->second == canonicalName) {
-            aliases.push_back(ptr->first);
+    for (auto const &ptr : *_aliasMap) {
+        if (ptr.second == canonicalName) {
+            aliases.push_back(ptr.first);
         }
     }
 
@@ -163,9 +163,9 @@ std::vector<std::string> Filter::getNames() {
 
     std::vector<std::string> names;
 
-    for (NameMap::const_iterator ptr = _nameMap->begin(), end = _nameMap->end(); ptr != end; ++ptr) {
-        if (ptr->first != unknownFilter) {
-            names.push_back(ptr->first);
+    for (auto const &ptr : *_nameMap) {
+        if (ptr.first != unknownFilter) {
+            names.push_back(ptr.first);
         }
     }
     std::sort(names.begin(), names.end());
@@ -249,9 +249,9 @@ void Filter::_initRegistry() {
 int Filter::_id0 = Filter::UNKNOWN;
 
 // dynamically allocated as that avoids an intel bug with static variables in dynamic libraries
-Filter::AliasMap* Filter::_aliasMap = NULL;
-Filter::NameMap* Filter::_nameMap = NULL;
-Filter::IdMap* Filter::_idMap = NULL;
+Filter::AliasMap* Filter::_aliasMap = nullptr;
+Filter::NameMap* Filter::_nameMap = nullptr;
+Filter::IdMap* Filter::_idMap = nullptr;
 
 int Filter::define(FilterProperty const& fp, int id, bool force) {
     if (!_nameMap) {

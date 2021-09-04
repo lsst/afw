@@ -56,7 +56,7 @@ enum SourceFitsFlags {
     SOURCE_IO_NO_HEAVY_FOOTPRINTS = 0x2  ///< Read/write heavy footprints as non-heavy footprints
 };
 
-typedef lsst::afw::detection::Footprint Footprint;
+using Footprint = lsst::afw::detection::Footprint;
 
 class SourceRecord;
 class SourceTable;
@@ -79,10 +79,10 @@ class SourceColumnViewT;
  */
 class SourceRecord : public SimpleRecord {
 public:
-    typedef SourceTable Table;
-    typedef SourceColumnViewT<SourceRecord> ColumnView;
-    typedef SortedCatalogT<SourceRecord> Catalog;
-    typedef SortedCatalogT<SourceRecord const> ConstCatalog;
+    using Table = SourceTable;
+    using ColumnView = SourceColumnViewT<SourceRecord>;
+    using Catalog = SortedCatalogT<SourceRecord>;
+    using ConstCatalog = SortedCatalogT<const SourceRecord>;
 
     /**
      *  Constructor used by SourceTable.
@@ -218,10 +218,10 @@ private:
  */
 class SourceTable : public SimpleTable {
 public:
-    typedef SourceRecord Record;
-    typedef SourceColumnViewT<SourceRecord> ColumnView;
-    typedef SortedCatalogT<Record> Catalog;
-    typedef SortedCatalogT<Record const> ConstCatalog;
+    using Record = SourceRecord;
+    using ColumnView = SourceColumnViewT<SourceRecord>;
+    using Catalog = SortedCatalogT<Record>;
+    using ConstCatalog = SortedCatalogT<const Record>;
 
     /**
      *  Construct a new table.
@@ -422,8 +422,8 @@ private:
 template <typename RecordT>
 class SourceColumnViewT : public ColumnViewT<RecordT> {
 public:
-    typedef RecordT Record;
-    typedef typename RecordT::Table Table;
+    using Record = RecordT;
+    using Table = typename RecordT::Table;
 
     // See the documentation for BaseColumnView for an explanation of why these
     // accessors *appear* to violate const-correctness.
@@ -507,7 +507,7 @@ protected:
     explicit SourceColumnViewT(BaseColumnView const &base) : ColumnViewT<RecordT>(base) {}
 };
 
-typedef SourceColumnViewT<SourceRecord> SourceColumnView;
+using SourceColumnView = SourceColumnViewT<SourceRecord>;
 
 inline FluxSlotDefinition::MeasValue SourceRecord::getPsfInstFlux() const {
     return this->get(getTable()->getPsfFluxSlot().getMeasKey());

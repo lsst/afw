@@ -238,7 +238,7 @@ private:
         bool doReplace;
     };
 
-    typedef detail::SchemaMapperImpl Impl;
+    using Impl = detail::SchemaMapperImpl;
 
     std::unique_ptr<Impl> _impl;
 };

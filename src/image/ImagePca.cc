@@ -173,7 +173,7 @@ void ImagePca<ImageT>::analyze() {
     lambdaAndIndex.reserve(nImage);
 
     for (int i = 0; i != nImage; ++i) {
-        lambdaAndIndex.push_back(std::make_pair(lambda(i), i));
+        lambdaAndIndex.emplace_back(lambda(i), i);
     }
     std::sort(lambdaAndIndex.begin(), lambdaAndIndex.end(), SortEvalueDecreasing<double>());
     //
@@ -223,7 +223,7 @@ std::shared_ptr<typename MaskedImageT::Image> fitEigenImagesToImage(
         int nEigen,                                                     // Number of eigen images to use
         MaskedImageT const& image                                       // The image to be fit
 ) {
-    typedef typename MaskedImageT::Image ImageT;
+    using ImageT = typename MaskedImageT::Image;
 
     if (nEigen == 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::LengthError, "You must have at least one eigen image");

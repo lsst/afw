@@ -49,20 +49,20 @@ namespace afw {
 namespace geom {
 namespace ellipses {
 
-typedef Separable<Distortion, DeterminantRadius> SeparableDistortionDeterminantRadius;
-typedef Separable<Distortion, TraceRadius> SeparableDistortionTraceRadius;
-typedef Separable<Distortion, LogDeterminantRadius> SeparableDistortionLogDeterminantRadius;
-typedef Separable<Distortion, LogTraceRadius> SeparableDistortionLogTraceRadius;
+using SeparableDistortionDeterminantRadius = Separable<Distortion, DeterminantRadius>;
+using SeparableDistortionTraceRadius = Separable<Distortion, TraceRadius>;
+using SeparableDistortionLogDeterminantRadius = Separable<Distortion, LogDeterminantRadius>;
+using SeparableDistortionLogTraceRadius = Separable<Distortion, LogTraceRadius>;
 
-typedef Separable<ConformalShear, DeterminantRadius> SeparableConformalShearDeterminantRadius;
-typedef Separable<ConformalShear, TraceRadius> SeparableConformalShearTraceRadius;
-typedef Separable<ConformalShear, LogDeterminantRadius> SeparableConformalShearLogDeterminantRadius;
-typedef Separable<ConformalShear, LogTraceRadius> SeparableConformalShearLogTraceRadius;
+using SeparableConformalShearDeterminantRadius = Separable<ConformalShear, DeterminantRadius>;
+using SeparableConformalShearTraceRadius = Separable<ConformalShear, TraceRadius>;
+using SeparableConformalShearLogDeterminantRadius = Separable<ConformalShear, LogDeterminantRadius>;
+using SeparableConformalShearLogTraceRadius = Separable<ConformalShear, LogTraceRadius>;
 
-typedef Separable<ReducedShear, DeterminantRadius> SeparableReducedShearDeterminantRadius;
-typedef Separable<ReducedShear, TraceRadius> SeparableReducedShearTraceRadius;
-typedef Separable<ReducedShear, LogDeterminantRadius> SeparableReducedShearLogDeterminantRadius;
-typedef Separable<ReducedShear, LogTraceRadius> SeparableReducedShearLogTraceRadius;
+using SeparableReducedShearDeterminantRadius = Separable<ReducedShear, DeterminantRadius>;
+using SeparableReducedShearTraceRadius = Separable<ReducedShear, TraceRadius>;
+using SeparableReducedShearLogDeterminantRadius = Separable<ReducedShear, LogDeterminantRadius>;
+using SeparableReducedShearLogTraceRadius = Separable<ReducedShear, LogTraceRadius>;
 }  // namespace ellipses
 }  // namespace geom
 }  // namespace afw

@@ -41,10 +41,10 @@ class PeakTable;
  */
 class PeakRecord : public afw::table::BaseRecord {
 public:
-    typedef PeakTable Table;
-    typedef afw::table::ColumnViewT<PeakRecord> ColumnView;
-    typedef afw::table::CatalogT<PeakRecord> Catalog;
-    typedef afw::table::CatalogT<PeakRecord const> ConstCatalog;
+    using Table = PeakTable;
+    using ColumnView = afw::table::ColumnViewT<PeakRecord>;
+    using Catalog = afw::table::CatalogT<PeakRecord>;
+    using ConstCatalog = afw::table::CatalogT<const PeakRecord>;
 
     /**
      *  Constructor used by PeakTable.
@@ -101,10 +101,10 @@ private:
  */
 class PeakTable : public afw::table::BaseTable {
 public:
-    typedef PeakRecord Record;
-    typedef afw::table::ColumnViewT<PeakRecord> ColumnView;
-    typedef afw::table::CatalogT<Record> Catalog;
-    typedef afw::table::CatalogT<Record const> ConstCatalog;
+    using Record = PeakRecord;
+    using ColumnView = afw::table::ColumnViewT<PeakRecord>;
+    using Catalog = afw::table::CatalogT<Record>;
+    using ConstCatalog = afw::table::CatalogT<const Record>;
 
     ~PeakTable() override;
     PeakTable& operator=(PeakTable const&) = delete;
@@ -240,9 +240,9 @@ inline void PeakRecord::setFy(float fy) { set(PeakTable::getFyKey(), fy); }
 inline float PeakRecord::getPeakValue() const { return get(PeakTable::getPeakValueKey()); }
 inline void PeakRecord::setPeakValue(float peakValue) { set(PeakTable::getPeakValueKey(), peakValue); }
 
-typedef afw::table::ColumnViewT<PeakRecord> PeakColumnView;
-typedef afw::table::CatalogT<PeakRecord> PeakCatalog;
-typedef afw::table::CatalogT<PeakRecord const> ConstPeakCatalog;
+using PeakColumnView = afw::table::ColumnViewT<PeakRecord>;
+using PeakCatalog = afw::table::CatalogT<PeakRecord>;
+using ConstPeakCatalog = afw::table::CatalogT<const PeakRecord>;
 }  // namespace detection
 }  // namespace afw
 }  // namespace lsst

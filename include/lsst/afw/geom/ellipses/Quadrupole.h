@@ -49,7 +49,7 @@ public:
     enum ParameterEnum { IXX = 0, IYY = 1, IXY = 2 };  ///< Definitions for elements of a core vector.
 
     /// Matrix type for the matrix representation of Quadrupole parameters.
-    typedef Eigen::Matrix<double, 2, 2, Eigen::DontAlign> Matrix;
+    using Matrix = Eigen::Matrix<double, 2, 2, Eigen::DontAlign>;
 
     double const getIxx() const { return _matrix(0, 0); }
     void setIxx(double ixx) { _matrix(0, 0) = ixx; }

@@ -226,7 +226,7 @@ void BilinearWarpingKernel::write(OutputArchiveHandle &handle) const { handle.sa
 void NearestWarpingKernel::write(OutputArchiveHandle &handle) const { handle.saveEmpty(); }
 
 std::shared_ptr<SeparableKernel> makeWarpingKernel(std::string name) {
-    typedef std::shared_ptr<SeparableKernel> KernelPtr;
+    using KernelPtr = std::shared_ptr<SeparableKernel>;
     std::smatch matches;
     static const std::regex LanczosRE("lanczos(\\d+)");
     if (name == "bilinear") {
@@ -547,8 +547,7 @@ int warpImage(DestImageT &destImage, SrcImageT const &srcImage,
         endColPosList.reserve(numColEdges);
 
         // Initialize srcPosList for row -1
-        for (int colBand = 0, endBand = edgeColList.size(); colBand < endBand; ++colBand) {
-            int const endCol = edgeColList[colBand];
+        for (int endCol : edgeColList) {
             endColPosList.emplace_back(lsst::geom::Point2D(endCol, -1));
         }
         auto rightSrcPosList = localDestToParentSrc->applyForward(endColPosList);
@@ -581,8 +580,7 @@ int warpImage(DestImageT &destImage, SrcImageT const &srcImage,
             // Set yDeltaSrcPosList for this horizontal interpolation band
             std::vector<lsst::geom::Point2D> destRowPosList;
             destRowPosList.reserve(edgeColList.size());
-            for (int colBand = 0, endBand = edgeColList.size(); colBand < endBand; ++colBand) {
-                int endCol = edgeColList[colBand];
+            for (int endCol : edgeColList) {
                 destRowPosList.emplace_back(lsst::geom::Point2D(endCol, endRow));
             }
             auto bottomSrcPosList = localDestToParentSrc->applyForward(destRowPosList);

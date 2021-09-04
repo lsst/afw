@@ -23,7 +23,7 @@ namespace table {
 template <typename T>
 struct Field : public FieldBase<T> {
     /// Type used to store field data in the table (a field may have multiple elements).
-    typedef typename FieldBase<T>::Element Element;
+    using Element = typename FieldBase<T>::Element;
 
     /**
      *  Construct a new field.

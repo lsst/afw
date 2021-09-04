@@ -51,8 +51,8 @@ class Separable : public BaseCore {
 public:
     enum ParameterEnum { E1 = 0, E2 = 1, RADIUS = 2 };  ///< Definitions for elements of a core vector.
 
-    typedef Ellipticity_ Ellipticity;
-    typedef Radius_ Radius;
+    using Ellipticity = Ellipticity_;
+    using Radius = Radius_;
 
     double const getE1() const { return _ellipticity.getE1(); }
     void setE1(double e1) { _ellipticity.setE1(e1); }

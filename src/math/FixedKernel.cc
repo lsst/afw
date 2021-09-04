@@ -43,7 +43,7 @@ FixedKernel::FixedKernel() : Kernel(), _image(), _sum(0) {}
 
 FixedKernel::FixedKernel(image::Image<Pixel> const& image)
         : Kernel(image.getWidth(), image.getHeight(), 0), _image(image, true), _sum(0) {
-    typedef image::Image<Pixel>::x_iterator XIter;
+    using XIter = image::Image<Pixel>::x_iterator;
     double imSum = 0.0;
     for (int y = 0; y != image.getHeight(); ++y) {
         for (XIter imPtr = image.row_begin(y), imEnd = image.row_end(y); imPtr != imEnd; ++imPtr) {
@@ -112,7 +112,7 @@ double FixedKernel::doComputeImage(image::Image<Pixel>& image, bool doNormalize)
         imSum = 1.0;
     }
 
-    typedef image::Image<Pixel>::x_iterator XIter;
+    using XIter = image::Image<Pixel>::x_iterator;
 
     for (int y = 0; y != this->getHeight(); ++y) {
         for (XIter imPtr = image.row_begin(y), imEnd = image.row_end(y), kPtr = this->_image.row_begin(y);

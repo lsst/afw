@@ -200,7 +200,7 @@ template <typename ImageT>
 typename ImageT::SinglePixel edgePixel(lsst::afw::image::detail::Image_tag
                                        ///< lsst::afw::image::detail::image_traits<ImageT>::image_category()
 ) {
-    typedef typename ImageT::SinglePixel SinglePixelT;
+    using SinglePixelT = typename ImageT::SinglePixel;
     return SinglePixelT(std::numeric_limits<SinglePixelT>::has_quiet_NaN
                                 ? std::numeric_limits<SinglePixelT>::quiet_NaN()
                                 : 0);
@@ -222,8 +222,8 @@ typename MaskedImageT::SinglePixel edgePixel(
         lsst::afw::image::detail::MaskedImage_tag
         ///< lsst::afw::image::detail::image_traits<MaskedImageT>::image_category()
 ) {
-    typedef typename MaskedImageT::Image::Pixel ImagePixelT;
-    typedef typename MaskedImageT::Variance::Pixel VariancePixelT;
+    using ImagePixelT = typename MaskedImageT::Image::Pixel;
+    using VariancePixelT = typename MaskedImageT::Variance::Pixel;
 
     auto imagePixel = std::numeric_limits<ImagePixelT>::has_quiet_NaN
                               ? std::numeric_limits<ImagePixelT>::quiet_NaN()
@@ -295,12 +295,11 @@ template <typename OutImageT, typename InImageT>
 inline typename OutImageT::SinglePixel convolveAtAPoint(typename InImageT::const_xy_locator inImageLocator,
                                                         std::vector<Kernel::Pixel> const& kernelXList,
                                                         std::vector<Kernel::Pixel> const& kernelYList) {
-    typedef typename std::vector<Kernel::Pixel>::const_iterator k_iter;
+    using k_iter = typename std::vector<Kernel::Pixel>::const_iterator;
 
-    typedef typename OutImageT::SinglePixel OutT;
+    using OutT = typename OutImageT::SinglePixel;
     OutT outValue = 0;
-    for (k_iter kernelYIter = kernelYList.begin(), yEnd = kernelYList.end(); kernelYIter != yEnd;
-         ++kernelYIter) {
+    for (double kValY : kernelYList) {
         OutT outValueY = 0;
         for (k_iter kernelXIter = kernelXList.begin(), xEnd = kernelXList.end(); kernelXIter != xEnd;
              ++kernelXIter, ++inImageLocator.x()) {
@@ -310,7 +309,6 @@ inline typename OutImageT::SinglePixel convolveAtAPoint(typename InImageT::const
             }
         }
 
-        double const kValY = *kernelYIter;
         if (kValY != 0) {
             outValue += outValueY * kValY;
         }

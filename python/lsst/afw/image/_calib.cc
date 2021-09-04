@@ -42,8 +42,8 @@ namespace {
 template <typename T>
 void declareVectorOperations(lsst::utils::python::WrapperCollection &wrappers) {
     wrappers.wrap([](auto &mod) {
-        typedef ndarray::Array<T, 1> Array;
-        typedef ndarray::Array<T const, 1> ConstArray;
+        using Array = ndarray::Array<T, 1>;
+        using ConstArray = ndarray::Array<const T, 1>;
         mod.def("abMagFromFlux", (Array(*)(ConstArray const &)) & abMagFromFlux<T>, "flux"_a);
         mod.def("abMagErrFromFluxErr",
                 (Array(*)(ConstArray const &, ConstArray const &)) & abMagErrFromFluxErr<T>, "fluxErr"_a,

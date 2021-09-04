@@ -105,7 +105,7 @@ public:
     ~ArrayKey() noexcept override;
 
     /// Return the number of elements in the array.
-    [[nodiscard]] std::size_t getSize() const noexcept { return _size; }
+    std::size_t getSize() const noexcept { return _size; }
 
     /// Get an array from the given record
     ndarray::Array<T const, 1, 1> get(BaseRecord const& record) const override;
@@ -128,13 +128,13 @@ public:
     //@}
 
     /// Return a hash of this object.
-    [[nodiscard]] std::size_t hash_value() const noexcept {
+    std::size_t hash_value() const noexcept {
         // Completely arbitrary seed
         return utils::hashCombine(17, _begin, _size);
     }
 
     /// Return True if the FunctorKey contains valid scalar keys.
-    [[nodiscard]] bool isValid() const noexcept { return _begin.isValid(); }
+    bool isValid() const noexcept { return _begin.isValid(); }
 
     /// Return a scalar Key for an element of the array
     Key<T> operator[](std::size_t i) const;

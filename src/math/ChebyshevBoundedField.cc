@@ -74,8 +74,8 @@ ChebyshevBoundedField::~ChebyshevBoundedField() = default;
 
 namespace {
 
-typedef ChebyshevBoundedField::Control Control;
-typedef detail::TrapezoidalPacker Packer;
+using Control = ChebyshevBoundedField::Control;
+using Packer = detail::TrapezoidalPacker;
 
 // fill an array with 1-d Chebyshev functions of the 1st kind T(x), evaluated at the given point x
 void evaluateBasis1d(ndarray::Array<double, 1, 1> const& t, double x) {

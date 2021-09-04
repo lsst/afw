@@ -33,7 +33,7 @@
 // Note: only specific types are supported; for the list of available types
 // see the explicit instantiation code at the end of lsst/afw/image/src/MaskedImage.cc
 namespace afwImage = lsst::afw::image;
-typedef afwImage::MaskedImage<int> ImageT;
+using ImageT = afwImage::MaskedImage<int>;
 
 int main() {
     // Declare a MaskedImage; its pixels are not yet initialized.

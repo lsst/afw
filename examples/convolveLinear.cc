@@ -40,7 +40,7 @@ int main(int argc, char **argv) {
     LOG_CONFIG();
     LOG_SET_LVL("TRACE5.afw.math.convolve", LOG_LVL_INFO);
 
-    typedef float ImagePixel;
+    using ImagePixel = float;
     unsigned int const KernelCols = 19;
     unsigned int const KernelRows = 19;
     double const MinSigma = 1.5;

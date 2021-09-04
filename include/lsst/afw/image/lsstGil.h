@@ -125,8 +125,8 @@ memory_based_2d_locator<T>& operator-=(memory_based_2d_locator<T>& loc, std::pai
 /*
  * Define types that are pure (un)signed long, without scaling into [0, 1]
  */
-typedef uint64_t bits64;
-typedef int64_t bits64s;
+using bits64 = uint64_t;
+using bits64s = int64_t;
 
 BOOST_GIL_DEFINE_BASE_TYPEDEFS(64, bits64, gray)
 BOOST_GIL_DEFINE_ALL_TYPEDEFS_INTERNAL(64, bits64, dev2n, devicen_t<2>, devicen_layout_t<2>)
@@ -136,7 +136,7 @@ BOOST_GIL_DEFINE_ALL_TYPEDEFS_INTERNAL(64s, bits64s, dev2n, devicen_t<2>, device
 /*
  * Define a type that's a pure float, without scaling into [0, 1]
  */
-typedef float bits32f_noscale;
+using bits32f_noscale = float;
 
 BOOST_GIL_DEFINE_BASE_TYPEDEFS(32f_noscale, bits32f_noscale, gray)
 BOOST_GIL_DEFINE_ALL_TYPEDEFS_INTERNAL(32f_noscale, bits32f_noscale, dev2n, devicen_t<2>, devicen_layout_t<2>)
@@ -150,7 +150,7 @@ struct channel_multiplier<bits32f_noscale>
 /*
  * Define a type that's a pure double, without scaling into [0, 1]
  */
-typedef double bits64f_noscale;
+using bits64f_noscale = double;
 
 BOOST_GIL_DEFINE_BASE_TYPEDEFS(64f_noscale, bits64f_noscale, gray)
 BOOST_GIL_DEFINE_ALL_TYPEDEFS_INTERNAL(64f_noscale, bits64f_noscale, dev2n, devicen_t<2>, devicen_layout_t<2>)
@@ -264,74 +264,74 @@ struct types_traits {
 
 template <>
 struct types_traits<unsigned char, false> {
-    typedef boost::gil::gray8_image_t image_t;
-    typedef boost::gil::gray8_view_t view_t;
-    typedef boost::gil::gray8c_view_t const_view_t;
-    typedef boost::gil::channel_traits<char>::reference reference;
-    typedef boost::gil::channel_traits<char>::const_reference const_reference;
+    using image_t = boost::gil::gray8_image_t;
+    using view_t = boost::gil::gray8_view_t;
+    using const_view_t = boost::gil::gray8c_view_t;
+    using reference = boost::gil::channel_traits<char>::reference;
+    using const_reference = boost::gil::channel_traits<char>::const_reference;
 };
 
 template <>
 struct types_traits<short, false> {
-    typedef boost::gil::gray16s_image_t image_t;
-    typedef boost::gil::gray16s_view_t view_t;
-    typedef boost::gil::gray16sc_view_t const_view_t;
-    typedef boost::gil::channel_traits<short>::reference reference;
-    typedef boost::gil::channel_traits<short>::const_reference const_reference;
+    using image_t = boost::gil::gray16s_image_t;
+    using view_t = boost::gil::gray16s_view_t;
+    using const_view_t = boost::gil::gray16sc_view_t;
+    using reference = boost::gil::channel_traits<short>::reference;
+    using const_reference = boost::gil::channel_traits<short>::const_reference;
 };
 
 template <>
 struct types_traits<unsigned short, false> {
-    typedef boost::gil::gray16_image_t image_t;
-    typedef boost::gil::gray16_view_t view_t;
-    typedef boost::gil::gray16c_view_t const_view_t;
-    typedef boost::gil::channel_traits<unsigned short>::reference reference;
-    typedef boost::gil::channel_traits<unsigned short>::const_reference const_reference;
+    using image_t = boost::gil::gray16_image_t;
+    using view_t = boost::gil::gray16_view_t;
+    using const_view_t = boost::gil::gray16c_view_t;
+    using reference = boost::gil::channel_traits<unsigned short>::reference;
+    using const_reference = boost::gil::channel_traits<unsigned short>::const_reference;
 };
 
 template <>
 struct types_traits<int, false> {
-    typedef boost::gil::gray32s_image_t image_t;
-    typedef boost::gil::gray32s_view_t view_t;
-    typedef boost::gil::gray32sc_view_t const_view_t;
-    typedef boost::gil::channel_traits<int>::reference reference;
-    typedef boost::gil::channel_traits<int>::const_reference const_reference;
+    using image_t = boost::gil::gray32s_image_t;
+    using view_t = boost::gil::gray32s_view_t;
+    using const_view_t = boost::gil::gray32sc_view_t;
+    using reference = boost::gil::channel_traits<int>::reference;
+    using const_reference = boost::gil::channel_traits<int>::const_reference;
 };
 
 template <>
 struct types_traits<unsigned int, false> {
-    typedef boost::gil::gray32_image_t image_t;
-    typedef boost::gil::gray32_view_t view_t;
-    typedef boost::gil::gray32c_view_t const_view_t;
-    typedef boost::gil::channel_traits<int>::reference reference;
-    typedef boost::gil::channel_traits<int>::const_reference const_reference;
+    using image_t = boost::gil::gray32_image_t;
+    using view_t = boost::gil::gray32_view_t;
+    using const_view_t = boost::gil::gray32c_view_t;
+    using reference = boost::gil::channel_traits<int>::reference;
+    using const_reference = boost::gil::channel_traits<int>::const_reference;
 };
 
 template <>
 struct types_traits<float, false> {
-    typedef boost::gil::gray32f_noscale_image_t image_t;
-    typedef boost::gil::gray32f_noscale_view_t view_t;
-    typedef boost::gil::gray32f_noscalec_view_t const_view_t;
-    typedef boost::gil::channel_traits<float>::reference reference;
-    typedef boost::gil::channel_traits<float>::const_reference const_reference;
+    using image_t = boost::gil::gray32f_noscale_image_t;
+    using view_t = boost::gil::gray32f_noscale_view_t;
+    using const_view_t = boost::gil::gray32f_noscalec_view_t;
+    using reference = boost::gil::channel_traits<float>::reference;
+    using const_reference = boost::gil::channel_traits<float>::const_reference;
 };
 
 template <>
 struct types_traits<long, false> {
-    typedef boost::gil::gray64s_image_t image_t;
-    typedef boost::gil::gray64s_view_t view_t;
-    typedef boost::gil::gray64sc_view_t const_view_t;
-    typedef boost::gil::channel_traits<long>::reference reference;
-    typedef boost::gil::channel_traits<long>::const_reference const_reference;
+    using image_t = boost::gil::gray64s_image_t;
+    using view_t = boost::gil::gray64s_view_t;
+    using const_view_t = boost::gil::gray64sc_view_t;
+    using reference = boost::gil::channel_traits<long>::reference;
+    using const_reference = boost::gil::channel_traits<long>::const_reference;
 };
 
 template <>
 struct types_traits<unsigned long, false> {
-    typedef boost::gil::gray64_image_t image_t;
-    typedef boost::gil::gray64_view_t view_t;
-    typedef boost::gil::gray64c_view_t const_view_t;
-    typedef boost::gil::channel_traits<long>::reference reference;
-    typedef boost::gil::channel_traits<long>::const_reference const_reference;
+    using image_t = boost::gil::gray64_image_t;
+    using view_t = boost::gil::gray64_view_t;
+    using const_view_t = boost::gil::gray64c_view_t;
+    using reference = boost::gil::channel_traits<long>::reference;
+    using const_reference = boost::gil::channel_traits<long>::const_reference;
 };
 
 namespace {
@@ -342,50 +342,49 @@ struct unknown_u {};
  * We also need unsigned long long (as type_u), because "unsigned unknown" won't compile
  */
 struct CheckBoost64 {
-    typedef boost::mpl::if_<std::is_same<long long, std::int64_t>, long long, struct unknown>::type type;
-    typedef boost::mpl::if_<std::is_same<long long, std::int64_t>, unsigned long long, struct unknown_u>::type
-            type_u;
+    using type = boost::mpl::if_<std::is_same<long long, std::int64_t>, long long, struct unknown>::type;
+    using type_u = boost::mpl::if_<std::is_same<long long, std::int64_t>, unsigned long long, struct unknown_u>::type;
 };
 }  // namespace
 
 template <>
 struct types_traits<CheckBoost64::type, false> {
-    typedef boost::gil::gray64s_image_t image_t;
-    typedef boost::gil::gray64s_view_t view_t;
-    typedef boost::gil::gray64sc_view_t const_view_t;
-    typedef boost::gil::channel_traits<long>::reference reference;
-    typedef boost::gil::channel_traits<long>::const_reference const_reference;
+    using image_t = boost::gil::gray64s_image_t;
+    using view_t = boost::gil::gray64s_view_t;
+    using const_view_t = boost::gil::gray64sc_view_t;
+    using reference = boost::gil::channel_traits<long>::reference;
+    using const_reference = boost::gil::channel_traits<long>::const_reference;
 };
 
 template <>
 struct types_traits<CheckBoost64::type_u, false> {
-    typedef boost::gil::gray64_image_t image_t;
-    typedef boost::gil::gray64_view_t view_t;
-    typedef boost::gil::gray64c_view_t const_view_t;
-    typedef boost::gil::channel_traits<long>::reference reference;
-    typedef boost::gil::channel_traits<long>::const_reference const_reference;
+    using image_t = boost::gil::gray64_image_t;
+    using view_t = boost::gil::gray64_view_t;
+    using const_view_t = boost::gil::gray64c_view_t;
+    using reference = boost::gil::channel_traits<long>::reference;
+    using const_reference = boost::gil::channel_traits<long>::const_reference;
 };
 
 template <>
 struct types_traits<double, false> {
-    typedef boost::gil::gray64f_noscale_image_t image_t;
-    typedef boost::gil::gray64f_noscale_view_t view_t;
-    typedef boost::gil::gray64f_noscalec_view_t const_view_t;
-    typedef boost::gil::channel_traits<double>::reference reference;
-    typedef boost::gil::channel_traits<double>::const_reference const_reference;
+    using image_t = boost::gil::gray64f_noscale_image_t;
+    using view_t = boost::gil::gray64f_noscale_view_t;
+    using const_view_t = boost::gil::gray64f_noscalec_view_t;
+    using reference = boost::gil::channel_traits<double>::reference;
+    using const_reference = boost::gil::channel_traits<double>::const_reference;
 };
 
 template <typename T>
 struct const_iterator_type {
-    typedef typename boost::gil::const_iterator_type<T>::type type;
+    using type = typename boost::gil::const_iterator_type<T>::type;
 };
 
 template <typename T>
 struct const_locator_type {  // should assert that T is a locator
-    typedef typename T::const_t type;
+    using type = typename T::const_t;
 };
 
-typedef boost::gil::point2<std::ptrdiff_t> difference_type;  // type used to advance locators
+using difference_type = boost::gil::point2<std::ptrdiff_t>;  // type used to advance locators
 }
 }  // namespace image
 }  // namespace afw

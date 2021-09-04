@@ -132,9 +132,8 @@ bool KernelImagesForRegion::computeNextRow(RowOfKernelImagesForRegion &regionRow
     if (hasData) {
         // Move each region up one segment
         bool isFirst = true;
-        for (RowOfKernelImagesForRegion::Iterator rgnIter = regionRow.begin(), rgnEnd = regionRow.end();
-             rgnIter != rgnEnd; ++rgnIter) {
-            (*rgnIter)->_moveUp(isFirst, height);
+        for (auto & rgnIter : regionRow) {
+            rgnIter->_moveUp(isFirst, height);
             isFirst = false;
         }
 
@@ -148,8 +147,7 @@ bool KernelImagesForRegion::computeNextRow(RowOfKernelImagesForRegion &regionRow
 
         int remWidth = this->_bbox.getWidth();
         int remXDiv = regionRow.getNX();
-        for (RowOfKernelImagesForRegion::Iterator rgnIter = regionRow.begin(), rgnEnd = regionRow.end();
-             rgnIter != rgnEnd; ++rgnIter) {
+        for (auto & rgnIter : regionRow) {
             int width = _computeNextSubregionLength(remWidth, remXDiv);
             --remXDiv;
             remWidth -= width;
@@ -157,7 +155,7 @@ bool KernelImagesForRegion::computeNextRow(RowOfKernelImagesForRegion &regionRow
             std::shared_ptr<KernelImagesForRegion> regionPtr(new KernelImagesForRegion(
                     _kernelPtr, lsst::geom::Box2I(blCorner, lsst::geom::Extent2I(width, height)), _xy0,
                     _doNormalize, blImagePtr, brImagePtr, tlImagePtr, trImageNullPtr));
-            *rgnIter = regionPtr;
+            rgnIter = regionPtr;
 
             if (!tlImagePtr) {
                 regionPtr->getImage(TOP_LEFT);

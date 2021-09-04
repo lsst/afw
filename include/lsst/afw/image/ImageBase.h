@@ -64,7 +64,7 @@ struct Image_tag : public basic_tag {};
 /// traits class for image categories
 template <typename ImageT>
 struct image_traits {
-    typedef typename ImageT::image_category image_category;
+    using image_category = typename ImageT::image_category;
 };
 //
 std::string const wcsNameForXY0 = "A";  // the name of the WCS to use to save (X0, Y0) to FITS files; e.g. "A"
@@ -83,12 +83,12 @@ private:
 /// metafunction to extract reference type from PixelT
 template <typename PixelT>
 struct Reference {
-    typedef typename boost::gil::channel_traits<PixelT>::reference type;  ///< reference type
+    using type = typename boost::gil::channel_traits<PixelT>::reference;  ///< reference type
 };
 /// metafunction to extract const reference type from PixelT
 template <typename PixelT>
 struct ConstReference {
-    typedef typename boost::gil::channel_traits<PixelT>::const_reference type;  ///< const reference type
+    using type = typename boost::gil::channel_traits<PixelT>::const_reference;  ///< const reference type
 };
 
 enum ImageOrigin { PARENT, LOCAL };
@@ -101,54 +101,54 @@ enum ImageOrigin { PARENT, LOCAL };
 template <typename PixelT>
 class ImageBase {
 private:
-    typedef typename lsst::afw::image::detail::types_traits<PixelT>::view_t _view_t;
-    typedef typename lsst::afw::image::detail::types_traits<PixelT>::const_view_t _const_view_t;
+    using _view_t = typename lsst::afw::image::detail::types_traits<PixelT>::view_t;
+    using _const_view_t = typename lsst::afw::image::detail::types_traits<PixelT>::const_view_t;
 
-    typedef ndarray::Manager Manager;
+    using Manager = ndarray::Manager;
 
 public:
-    typedef detail::basic_tag image_category;  ///< trait class to identify type of %image
+    using image_category = detail::basic_tag;  ///< trait class to identify type of %image
 
     /// A single Pixel of the same type as those in the ImageBase
-    typedef PixelT SinglePixel;
+    using SinglePixel = PixelT;
     /// A pixel in this ImageBase
-    typedef PixelT Pixel;
+    using Pixel = PixelT;
     /// A Reference to a PixelT
-    typedef typename Reference<PixelT>::type PixelReference;
+    using PixelReference = typename Reference<PixelT>::type;
     /// A ConstReference to a PixelT
-    typedef typename ConstReference<PixelT>::type PixelConstReference;
+    using PixelConstReference = typename ConstReference<PixelT>::type;
     /// An xy_locator
-    typedef typename _view_t::xy_locator xy_locator;
+    using xy_locator = typename _view_t::xy_locator;
     /// A const_xy_locator
-    typedef typename _view_t::xy_locator::const_t const_xy_locator;
+    using const_xy_locator = typename _view_t::xy_locator::const_t;
     /// An STL compliant iterator
-    typedef typename _view_t::iterator iterator;
+    using iterator = typename _view_t::iterator;
     /// An STL compliant const iterator
-    typedef typename _const_view_t::iterator const_iterator;
+    using const_iterator = typename _const_view_t::iterator;
     /// An STL compliant reverse iterator
-    typedef typename _view_t::reverse_iterator reverse_iterator;
+    using reverse_iterator = typename _view_t::reverse_iterator;
     /// An STL compliant const reverse iterator
-    typedef typename _const_view_t::reverse_iterator const_reverse_iterator;
+    using const_reverse_iterator = typename _const_view_t::reverse_iterator;
     /// An iterator for traversing the pixels in a row
-    typedef typename _view_t::x_iterator x_iterator;
+    using x_iterator = typename _view_t::x_iterator;
     /** A fast STL compliant iterator for contiguous images
      * N.b. The order of pixel access is undefined
      */
-    typedef x_iterator fast_iterator;
+    using fast_iterator = x_iterator;
     /// An iterator for traversing the pixels in a row, created from an xy_locator
-    typedef typename _view_t::x_iterator xy_x_iterator;
+    using xy_x_iterator = typename _view_t::x_iterator;
     /// A const iterator for traversing the pixels in a row
-    typedef typename _const_view_t::x_iterator const_x_iterator;
+    using const_x_iterator = typename _const_view_t::x_iterator;
     /// An iterator for traversing the pixels in a column
-    typedef typename _view_t::y_iterator y_iterator;
+    using y_iterator = typename _view_t::y_iterator;
     /// An iterator for traversing the pixels in a row, created from an xy_locator
-    typedef typename _view_t::y_iterator xy_y_iterator;
+    using xy_y_iterator = typename _view_t::y_iterator;
     /// A const iterator for traversing the pixels in a column
-    typedef typename _const_view_t::y_iterator const_y_iterator;
+    using const_y_iterator = typename _const_view_t::y_iterator;
     /// A mutable ndarray representation of the image
-    typedef typename ndarray::Array<PixelT, 2, 1> Array;
+    using Array = typename ndarray::Array<PixelT, 2, 1>;
     /// An immutable ndarray representation of the image
-    typedef typename ndarray::Array<PixelT const, 2, 1> ConstArray;
+    using ConstArray = typename ndarray::Array<const PixelT, 2, 1>;
 
     template <typename OtherPixelT>
     friend class ImageBase;  // needed by generalised copy constructors

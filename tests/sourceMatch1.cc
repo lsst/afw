@@ -31,7 +31,7 @@
 #pragma clang diagnostic ignored "-Wunused-variable"
 #include "boost/test/unit_test.hpp"
 #pragma clang diagnostic pop
-#include "boost/test/floating_point_comparison.hpp"
+#include "boost/test/tools/floating_point_comparison.hpp"
 
 #include "lsst/geom.h"
 #include "lsst/afw/table/Source.h"
@@ -44,8 +44,8 @@ namespace afwTable = lsst::afw::table;
 namespace {
 
 math::Random &rng() {
-    static math::Random *generator = 0;
-    if (generator == 0) {
+    static math::Random *generator = nullptr;
+    if (generator == nullptr) {
         generator = new math::Random(math::Random::MT19937);
     }
     return *generator;
@@ -120,8 +120,8 @@ std::vector<afwTable::SourceMatch> bruteMatch(afwTable::SourceCatalog const &set
             }
             double d = distFun(i1, i2);
             if (d <= radius) {
-                matches.push_back(afwTable::SourceMatch(i1, i2, d));
-                matches.push_back(afwTable::SourceMatch(i2, i1, d));
+                matches.emplace_back(i1, i2, d);
+                matches.emplace_back(i2, i1, d);
             }
         }
     }
@@ -140,7 +140,7 @@ std::vector<afwTable::SourceMatch> bruteMatch(afwTable::SourceCatalog const &set
         for (afwTable::SourceCatalog::const_iterator i2(set2.begin()), e2(set2.end()); i2 != e2; ++i2) {
             double d = distFun(i1, i2);
             if (d <= radius) {
-                matches.push_back(afwTable::SourceMatch(i1, i2, d));
+                matches.emplace_back(i1, i2, d);
             }
         }
     }

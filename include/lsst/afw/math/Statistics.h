@@ -55,7 +55,7 @@ namespace math {
 template <typename>
 class MaskedVector;  // forward declaration
 
-typedef lsst::afw::image::VariancePixel WeightPixel;  // Type used for weights
+using WeightPixel = lsst::afw::image::VariancePixel;  // Type used for weights
 
 /**
  * control what is calculated
@@ -221,7 +221,7 @@ private:
 class Statistics final {
 public:
     /// The type used to report (value, error) for desired statistics
-    typedef std::pair<double, double> Value;
+    using Value = std::pair<double, double>;
 
     /**
      * Constructor for Statistics object
@@ -344,7 +344,7 @@ private:
 template <typename ValueT>
 class MaskImposter {
 public:
-    typedef infinite_iterator<ValueT> x_iterator;
+    using x_iterator = infinite_iterator<ValueT>;
     explicit MaskImposter(ValueT val = 0) noexcept { _val[0] = val; }
     x_iterator row_begin(int) const noexcept { return x_iterator(_val); }
 
@@ -442,9 +442,9 @@ template <typename ValueT>
 class ImageImposter final {
 public:
     // types we'll use in Statistics
-    typedef typename std::vector<ValueT>::const_iterator x_iterator;
-    typedef typename std::vector<ValueT>::const_iterator fast_iterator;
-    typedef ValueT Pixel;
+    using x_iterator = typename std::vector<ValueT>::const_iterator;
+    using fast_iterator = typename std::vector<ValueT>::const_iterator;
+    using Pixel = ValueT;
 
     // constructors for std::vector<>, and copy constructor
     // These are both shallow! ... no actual copying of values

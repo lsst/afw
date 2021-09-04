@@ -35,7 +35,7 @@ namespace afwImage = lsst::afw::image;
  * of memory management
  */
 void test(char *name, char *masterName) {
-    typedef afwImage::MaskPixel MaskPixel;
+    using MaskPixel = afwImage::MaskPixel;
 
     afwImage::Mask<afwImage::MaskPixel> testMask(name);
 

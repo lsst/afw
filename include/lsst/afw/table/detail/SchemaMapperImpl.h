@@ -34,7 +34,7 @@ public:
     /// A Variant type that can hold any one of the allowed pairx types.
     using KeyPairVariant = decltype(makeKeyPairVariantType(FieldTypes{}));
     /// A std::vector whose elements can be any of the allowed pair types.
-    typedef std::vector<KeyPairVariant> KeyPairMap;
+    using KeyPairMap = std::vector<KeyPairVariant>;
 
     /// Constructor from the given input and output schemas
     explicit SchemaMapperImpl(Schema const& input, Schema const& output) : _input(input), _output(output) {}

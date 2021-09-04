@@ -402,7 +402,7 @@ std::shared_ptr<ExposureTable> ExposureTable::make(Schema const &schema) {
 
 ExposureTable::ExposureTable(Schema const &schema) : BaseTable(schema) {}
 
-ExposureTable::ExposureTable(ExposureTable const &other) : BaseTable(other) {}
+ExposureTable::ExposureTable(ExposureTable const &other)  = default;
 // Delegate to copy-constructor for backward compatibility
 ExposureTable::ExposureTable(ExposureTable &&other) : ExposureTable(other) {}
 

@@ -26,6 +26,7 @@
  * An example executible which calls the example 'stack' code
  */
 #include <iostream>
+#include <memory>
 
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE Stacker
@@ -34,7 +35,7 @@
 #pragma clang diagnostic ignored "-Wunused-variable"
 #include "boost/test/unit_test.hpp"
 #pragma clang diagnostic pop
-#include "boost/test/floating_point_comparison.hpp"
+#include "boost/test/tools/floating_point_comparison.hpp"
 
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/math/Stack.h"
@@ -42,9 +43,9 @@
 namespace image = lsst::afw::image;
 namespace math = lsst::afw::math;
 
-typedef image::Image<float> ImageF;
-typedef image::MaskedImage<float> MImageF;
-typedef std::vector<float> VecF;
+using ImageF = image::Image<float>;
+using MImageF = image::MaskedImage<float>;
+using VecF = std::vector<float>;
 
 BOOST_AUTO_TEST_CASE(
         MeanStack) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
@@ -85,7 +86,7 @@ BOOST_AUTO_TEST_CASE(
     // regular image
     std::vector<std::shared_ptr<ImageF>> imgList;
     for (int iImg = 0; iImg < nImg; ++iImg) {
-        std::shared_ptr<ImageF> img = std::shared_ptr<ImageF>(new ImageF(lsst::geom::Extent2I(nX, nY), iImg));
+        std::shared_ptr<ImageF> img = std::make_shared<ImageF>(lsst::geom::Extent2I(nX, nY), iImg);
         imgList.push_back(img);
     }
     std::shared_ptr<ImageF> imgStack = math::statisticsStack<float>(imgList, math::MEAN);
@@ -97,7 +98,7 @@ BOOST_AUTO_TEST_CASE(
     // masked image
     std::vector<std::shared_ptr<MImageF>> mimgList;
     for (int iImg = 0; iImg < nImg; ++iImg) {
-        std::shared_ptr<MImageF> mimg = std::shared_ptr<MImageF>(new MImageF(lsst::geom::Extent2I(nX, nY)));
+        std::shared_ptr<MImageF> mimg = std::make_shared<MImageF>(lsst::geom::Extent2I(nX, nY));
         *mimg->getImage() = iImg;
         *mimg->getMask() = 0x0;
         *mimg->getVariance() = iImg;

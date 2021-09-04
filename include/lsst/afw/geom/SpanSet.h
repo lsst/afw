@@ -77,10 +77,10 @@ enum class Stencil { CIRCLE, BOX, MANHATTAN };
 class SpanSet : public afw::table::io::PersistableFacade<lsst::afw::geom::SpanSet>,
                 public afw::table::io::Persistable {
 public:
-    typedef std::vector<Span>::const_iterator const_iterator;
-    typedef std::vector<Span>::size_type size_type;
-    typedef Span value_type;
-    typedef value_type const &const_reference;
+    using const_iterator = std::vector<Span>::const_iterator;
+    using size_type = std::vector<Span>::size_type;
+    using value_type = Span;
+    using const_reference = const value_type &;
 
     // Expose properties of the underlying vector containing spans such that the
     // SpanSet can be considered a container.

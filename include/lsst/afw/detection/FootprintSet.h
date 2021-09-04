@@ -45,7 +45,7 @@ namespace detection {
  * including it within FootprintSet makes it difficult for SWIG to interpret
  * the type.
  */
-typedef std::uint64_t FootprintIdPixel;
+using FootprintIdPixel = std::uint64_t;
 
 /**
  * A set of Footprints, associated with a MaskedImage
@@ -53,7 +53,7 @@ typedef std::uint64_t FootprintIdPixel;
 class FootprintSet {
 public:
     /// The FootprintSet's set of Footprint%s
-    typedef std::vector<std::shared_ptr<Footprint>> FootprintList;
+    using FootprintList = std::vector<std::shared_ptr<Footprint>>;
 
     /**
      * Find a FootprintSet given an Image and a threshold
@@ -230,7 +230,7 @@ public:
      */
     template <typename ImagePixelT, typename MaskPixelT>
     void makeHeavy(image::MaskedImage<ImagePixelT, MaskPixelT> const& mimg,
-                   HeavyFootprintCtrl const* ctrl = NULL);
+                   HeavyFootprintCtrl const* ctrl = nullptr);
 
 private:
     std::shared_ptr<FootprintList> _footprints;  ///< the Footprints of detected objects

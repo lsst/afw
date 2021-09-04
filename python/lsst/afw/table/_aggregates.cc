@@ -164,9 +164,9 @@ static void declareCovarianceMatrixKey(WrapperCollection &wrappers, const ::std:
     wrappers.wrapType(
             PyCovarianceMatrixKey<T, N>(wrappers.module, ("CovarianceMatrix" + suffix + "Key").c_str()),
             [](auto &mod, auto &cls) {
-                typedef std::vector<Key<T>> ErrKeyArray;
-                typedef std::vector<Key<T>> CovarianceKeyArray;
-                typedef std::vector<std::string> NameArray;
+                using ErrKeyArray = std::vector<Key<T>>;
+                using CovarianceKeyArray = std::vector<Key<T>>;
+                using NameArray = std::vector<std::string>;
 
                 cls.def(py::init<>());
                 // Ordering of the next two ctor declaration matters, as a workaround for DM-8580.

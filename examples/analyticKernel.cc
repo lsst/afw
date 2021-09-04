@@ -32,7 +32,7 @@
  * Demonstrate an AnalyticKernel, both spatially invariant and spatially varying.
  */
 
-typedef lsst::afw::math::Kernel::Pixel Pixel;
+using Pixel = lsst::afw::math::Kernel::Pixel;
 
 using namespace std;
 

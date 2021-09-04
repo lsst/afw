@@ -168,9 +168,9 @@ std::shared_ptr<Kernel> LinearCombinationKernel::refactor() const {
         return std::shared_ptr<Kernel>();
     }
 
-    typedef image::Image<Kernel::Pixel> KernelImage;
-    typedef std::shared_ptr<KernelImage> KernelImagePtr;
-    typedef std::vector<KernelImagePtr> KernelImageList;
+    using KernelImage = image::Image<Kernel::Pixel>;
+    using KernelImagePtr = std::shared_ptr<KernelImage>;
+    using KernelImageList = std::vector<KernelImagePtr>;
 
     // create kernel images for new refactored basis kernels
     int const nSpatialParameters = this->getNSpatialParameters();
@@ -228,8 +228,8 @@ std::string LinearCombinationKernel::toString(std::string const &prefix) const {
     std::ostringstream os;
     os << prefix << "LinearCombinationKernel:" << std::endl;
     os << prefix << "..Kernels:" << std::endl;
-    for (KernelList::const_iterator i = _kernelList.begin(); i != _kernelList.end(); ++i) {
-        os << (*i)->toString(prefix + "\t");
+    for (auto const &i : _kernelList) {
+        os << i->toString(prefix + "\t");
     }
     os << "..parameters: [ ";
     for (std::vector<double>::const_iterator i = _kernelParams.begin(); i != _kernelParams.end(); ++i) {
@@ -279,10 +279,9 @@ void LinearCombinationKernel::_setKernelList(KernelList const &kernelList) {
     _kernelImagePtrList.clear();
     _kernelList.clear();
     _isDeltaFunctionBasis = true;
-    for (KernelList::const_iterator kIter = kernelList.begin(), kEnd = kernelList.end(); kIter != kEnd;
-         ++kIter) {
-        std::shared_ptr<Kernel> basisKernelPtr = (*kIter)->clone();
-        if (dynamic_cast<DeltaFunctionKernel const *>(&(*basisKernelPtr)) == 0) {
+    for (auto const &kIter : kernelList) {
+        std::shared_ptr<Kernel> basisKernelPtr = kIter->clone();
+        if (dynamic_cast<DeltaFunctionKernel const *>(&(*basisKernelPtr)) == nullptr) {
             _isDeltaFunctionBasis = false;
         }
         _kernelList.push_back(basisKernelPtr);

@@ -182,7 +182,7 @@ CovarianceMatrixKey<T, N> CovarianceMatrixKey<T, N>::addFields(Schema &schema, s
 }
 
 template <typename T, int N>
-CovarianceMatrixKey<T, N>::CovarianceMatrixKey() {}
+CovarianceMatrixKey<T, N>::CovarianceMatrixKey() = default;
 
 template <typename T, int N>
 CovarianceMatrixKey<T, N>::CovarianceMatrixKey(ErrKeyArray const &err, CovarianceKeyArray const &cov)

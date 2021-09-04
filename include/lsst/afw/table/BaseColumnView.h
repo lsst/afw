@@ -14,8 +14,8 @@ namespace detail {
 
 /// Functor to compute a flag bit, used to create an ndarray expression template for flag columns.
 struct FlagExtractor {
-    typedef Field<Flag>::Element argument_type;
-    typedef bool result_type;
+    using argument_type = Field<Flag>::Element;
+    using result_type = bool;
 
     result_type operator()(argument_type element) const { return element & _mask; }
 
@@ -41,7 +41,7 @@ class BaseColumnView;
  */
 class BitsColumn final {
 public:
-    typedef std::size_t SizeT;
+    using SizeT = std::size_t;
 
     ndarray::Array<SizeT, 1, 1> getArray() const { return _array; }
 
@@ -169,8 +169,8 @@ private:
 template <typename RecordT>
 class ColumnViewT : public BaseColumnView {
 public:
-    typedef RecordT Record;
-    typedef typename RecordT::Table Table;
+    using Record = RecordT;
+    using Table = typename RecordT::Table;
 
     /// @copydoc BaseColumnView::getTable
     std::shared_ptr<Table> getTable() const {
@@ -197,7 +197,7 @@ template <typename InputIterator>
 BaseColumnView BaseColumnView::make(std::shared_ptr<BaseTable> const& table, InputIterator first,
                                     InputIterator last) {
     if (first == last) {
-        return BaseColumnView(table, 0, 0, ndarray::Manager::Ptr());
+        return BaseColumnView(table, 0, nullptr, ndarray::Manager::Ptr());
     }
     Schema schema = table->getSchema();
     std::size_t recordSize = schema.getRecordSize();

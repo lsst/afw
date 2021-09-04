@@ -34,7 +34,7 @@ void printVector(std::vector<T> v) {
 }
 
 int main(int argc, char** argv) {
-    typedef double FuncReturn;
+    using FuncReturn = double;
     const unsigned int order = 3;
     const unsigned int npts = 10;
 

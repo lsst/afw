@@ -78,13 +78,13 @@ struct Match final {
     Match(Match<R1, R2> const &other) : first(other.first), second(other.second), distance(other.distance) {}
 };
 
-typedef Match<SimpleRecord, SimpleRecord> SimpleMatch;
-typedef Match<SimpleRecord, SourceRecord> ReferenceMatch;
-typedef Match<SourceRecord, SourceRecord> SourceMatch;
+using SimpleMatch = Match<SimpleRecord, SimpleRecord>;
+using ReferenceMatch = Match<SimpleRecord, SourceRecord>;
+using SourceMatch = Match<SourceRecord, SourceRecord>;
 
-typedef std::vector<SimpleMatch> SimpleMatchVector;
-typedef std::vector<ReferenceMatch> ReferenceMatchVector;
-typedef std::vector<SourceMatch> SourceMatchVector;
+using SimpleMatchVector = std::vector<SimpleMatch>;
+using ReferenceMatchVector = std::vector<ReferenceMatch>;
+using SourceMatchVector = std::vector<SourceMatch>;
 
 /**
  * Compute all tuples (s1,s2,d) where s1 belings to `cat1`, s2 belongs to `cat2` and

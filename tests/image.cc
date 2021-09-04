@@ -32,7 +32,7 @@
 #pragma clang diagnostic ignored "-Wunused-variable"
 #include "boost/test/unit_test.hpp"
 #pragma clang diagnostic pop
-#include "boost/test/floating_point_comparison.hpp"
+#include "boost/test/tools/floating_point_comparison.hpp"
 
 #include "lsst/geom.h"
 #include "lsst/afw/image/LsstImageTypes.h"
@@ -42,10 +42,10 @@ namespace image = lsst::afw::image;
 
 using namespace std;
 
-typedef float PixelT;
-typedef image::MaskPixel MaskPixelT;
-typedef image::Image<PixelT> ImageT;
-typedef image::Mask<MaskPixelT> MaskT;
+using PixelT = float;
+using MaskPixelT = image::MaskPixel;
+using ImageT = image::Image<PixelT>;
+using MaskT = image::Mask<>;
 
 template <typename PixelT>
 void y_gradient(ImageT& src, ImageT& dst) {
@@ -55,7 +55,7 @@ void y_gradient(ImageT& src, ImageT& dst) {
 #if CONST
     typedef typename ImageT::const_xy_locator xyl;
 #else
-    typedef typename ImageT::xy_locator xyl;
+    using xyl = typename ImageT::xy_locator;
 #endif
     xyl src_loc = src.xy_at(0, 1);
 

@@ -28,7 +28,7 @@
 #pragma clang diagnostic ignored "-Wunused-variable"
 #include "boost/test/unit_test.hpp"
 #pragma clang diagnostic pop
-#include "boost/test/floating_point_comparison.hpp"
+#include "boost/test/tools/floating_point_comparison.hpp"
 
 #include "lsst/geom.h"
 #include "lsst/afw/image/MaskedImage.h"
@@ -43,7 +43,7 @@ void setImage(afwImage::MaskedImage<float> &image, float im, float var) {
 
 BOOST_AUTO_TEST_CASE(
         Ticket1145) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
-    typedef afwImage::MaskedImage<float>::x_iterator XIterator;
+    using XIterator = afwImage::MaskedImage<float>::x_iterator;
     afwImage::MaskedImage<float> image(lsst::geom::Extent2I(1, 1));
 
     XIterator xIter = image.row_begin(0);

@@ -341,7 +341,7 @@ void Amplifier::toRecord(table::BaseRecord & record) const {
     record.set(helper.rawVerticalOverscanBBox, fields.rawVerticalOverscanBBox);
     record.set(helper.rawPrescanBBox, fields.rawPrescanBBox);
     // Set not-always-present fields only when present.
-    auto setIfValid = [this, &record](auto value, auto & key) {
+    auto setIfValid = [&record](auto value, auto & key) {
         if (key.isValid()) {
             record.set(key, value);
         }

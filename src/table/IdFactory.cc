@@ -18,10 +18,10 @@ public:
 
     std::shared_ptr<IdFactory> clone() const override { return std::make_shared<SimpleIdFactory>(*this); }
 
-    SimpleIdFactory() : _current(0) {}
+    SimpleIdFactory()  {}
 
 private:
-    RecordId _current;
+    RecordId _current{0};
 };
 
 class SourceIdFactory : public IdFactory {

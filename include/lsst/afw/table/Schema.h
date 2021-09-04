@@ -49,7 +49,7 @@ class BaseRecord;
  *  converted to return by value (%returnCopy) to ensure proper memory management and encapsulation.
  */
 class Schema final {
-    typedef detail::SchemaImpl Impl;
+    using Impl = detail::SchemaImpl;
 
 public:
     // This variable is defined in SchemaImpl, but is replicated here as
@@ -365,7 +365,7 @@ private:
  *      assert(schema.find("a_p_x") == a_p.getX());
  */
 class SubSchema final {
-    typedef detail::SchemaImpl Impl;
+    using Impl = detail::SchemaImpl;
 
 public:
     //@{

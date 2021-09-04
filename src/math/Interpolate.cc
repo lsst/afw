@@ -79,7 +79,7 @@ class InterpolateConstant : public Interpolate {
                                                         Interpolate::Style const style);
 
 public:
-    ~InterpolateConstant() override {}
+    ~InterpolateConstant() override = default;
     double interpolate(double const x) const override;
 
 private:

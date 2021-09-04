@@ -130,7 +130,7 @@ public:
      */
     class BilinearFunction1 : public Function1<Kernel::Pixel> {
     public:
-        typedef std::shared_ptr<Function1<Kernel::Pixel>> Function1Ptr;
+        using Function1Ptr = std::shared_ptr<Function1<Kernel::Pixel>>;
 
         /**
          * Construct a Bilinear interpolation function
@@ -201,7 +201,7 @@ public:
      */
     class NearestFunction1 : public Function1<Kernel::Pixel> {
     public:
-        typedef std::shared_ptr<Function1<Kernel::Pixel>> Function1Ptr;
+        using Function1Ptr = std::shared_ptr<Function1<Kernel::Pixel>>;
 
         /**
          * Construct a Nearest interpolation function

@@ -69,7 +69,7 @@ void timePixelAccess(ImageT const &image, typename ImageT::SinglePixel const pix
 }
 
 int main(int argc, char **argv) {
-    typedef float ImagePixel;
+    using ImagePixel = float;
 
     int const DefNIter = 100;
     int const DefNCols = 1024;

@@ -32,7 +32,7 @@
 using namespace std;
 
 int main() {
-    typedef lsst::afw::math::Kernel::Pixel Pixel;
+    using Pixel = lsst::afw::math::Kernel::Pixel;
 
     unsigned int kernelCols = 6;
     unsigned int kernelRows = 5;

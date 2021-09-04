@@ -139,11 +139,10 @@ public:
                 typename SrcImageT::Mask::const_xy_locator srcMaskLoc =
                         _srcImage.getMask()->xy_at(maskStartX, maskStartY);
 
-                typedef typename std::vector<lsst::afw::math::Kernel::Pixel>::const_iterator k_iter;
+                using k_iter = typename std::vector<lsst::afw::math::Kernel::Pixel>::const_iterator;
 
                 typename DestImageT::Mask::SinglePixel destMaskValue = 0;
-                for (k_iter kernelYIter = _maskYList.begin(), yEnd = _maskYList.end(); kernelYIter != yEnd;
-                     ++kernelYIter) {
+                for (double kValY : _maskYList) {
                     typename DestImageT::Mask::SinglePixel destMaskValueY = 0;
                     for (k_iter kernelXIter = _maskXList.begin(), xEnd = _maskXList.end();
                          kernelXIter != xEnd; ++kernelXIter, ++srcMaskLoc.x()) {
@@ -153,7 +152,6 @@ public:
                         }
                     }
 
-                    double const kValY = *kernelYIter;
                     if (kValY != 0) {
                         destMaskValue |= destMaskValueY;
                     }

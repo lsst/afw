@@ -31,7 +31,7 @@
 namespace image = lsst::afw::image;
 
 int main(int argc, char **argv) {
-    typedef image::Image<float> ImageT;
+    using ImageT = image::Image<float>;
 
     int const DefNIter = 100;
     int const DefNCols = 1024;
@@ -116,8 +116,8 @@ int main(int argc, char **argv) {
     }
     startTime = clock();
     for (unsigned iter = 0; iter < nIter; ++iter) {
-        for (std::vector<ImageT::Pixel>::iterator ptr = vec.begin(), end = vec.end(); ptr != end; ++ptr) {
-            *ptr += 1;
+        for (float & ptr : vec) {
+            ptr += 1;
         }
     }
 

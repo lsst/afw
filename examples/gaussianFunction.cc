@@ -29,7 +29,7 @@
 using namespace std;
 
 int main() {
-    typedef double FuncReturn;
+    using FuncReturn = double;
     double sigma = 2.0;
     lsst::afw::math::GaussianFunction1<FuncReturn> gaussFunc(sigma);
 

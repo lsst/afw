@@ -33,7 +33,7 @@
 #pragma clang diagnostic ignored "-Wunused-variable"
 #include "boost/test/unit_test.hpp"
 #pragma clang diagnostic pop
-#include "boost/test/floating_point_comparison.hpp"
+#include "boost/test/tools/floating_point_comparison.hpp"
 #include "boost/timer/timer.hpp"
 
 #include "lsst/geom.h"
@@ -45,7 +45,7 @@ using namespace std;
 namespace image = lsst::afw::image;
 namespace math = lsst::afw::math;
 
-typedef image::Image<float> Image;
+using Image = image::Image<float>;
 
 /*
  * This test verifies that turning off NanSafe will slow down the Statistics computation.

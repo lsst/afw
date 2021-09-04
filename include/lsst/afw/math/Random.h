@@ -151,7 +151,7 @@ public:
      *  We use string here because it's a format Python and afw::table understand; the actual
      *  value is a binary blob that is not expected to be human-readable.
      */
-    typedef std::string State;
+    using State = std::string;
     State getState() const;
     void setState(State const &state);
     std::size_t getStateSize() const;

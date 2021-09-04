@@ -33,7 +33,7 @@
 #pragma clang diagnostic ignored "-Wunused-variable"
 #include "boost/test/unit_test.hpp"
 #pragma clang diagnostic pop
-#include "boost/test/floating_point_comparison.hpp"
+#include "boost/test/tools/floating_point_comparison.hpp"
 
 #include "lsst/utils/Utils.h"
 #include "lsst/pex/exceptions.h"
@@ -47,8 +47,8 @@ namespace image = lsst::afw::image;
 namespace math = lsst::afw::math;
 namespace utf = boost::unit_test;
 
-typedef image::Image<float> Image;
-typedef image::DecoratedImage<float> DecoratedImage;
+using Image = image::Image<float>;
+using DecoratedImage = image::DecoratedImage<float>;
 
 BOOST_AUTO_TEST_CASE(StatisticsBasic) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25
                                            "Boost non-Std" */
@@ -248,14 +248,14 @@ BOOST_AUTO_TEST_CASE(StatisticsTestImages,
      */
     {
         vector<string> imgfiles;
-        imgfiles.push_back("v1_i1_g_m400_s20_f.fits");
-        imgfiles.push_back("v1_i1_g_m400_s20_u16.fits");
-        imgfiles.push_back("v1_i2_g_m400_s20_f.fits");
-        imgfiles.push_back("v1_i2_g_m400_s20_u16.fits");
-        imgfiles.push_back("v2_i1_p_m9_f.fits");
-        imgfiles.push_back("v2_i1_p_m9_u16.fits");
-        imgfiles.push_back("v2_i2_p_m9_f.fits");
-        imgfiles.push_back("v2_i2_p_m9_u16.fits");
+        imgfiles.emplace_back("v1_i1_g_m400_s20_f.fits");
+        imgfiles.emplace_back("v1_i1_g_m400_s20_u16.fits");
+        imgfiles.emplace_back("v1_i2_g_m400_s20_f.fits");
+        imgfiles.emplace_back("v1_i2_g_m400_s20_u16.fits");
+        imgfiles.emplace_back("v2_i1_p_m9_f.fits");
+        imgfiles.emplace_back("v2_i1_p_m9_u16.fits");
+        imgfiles.emplace_back("v2_i2_p_m9_f.fits");
+        imgfiles.emplace_back("v2_i2_p_m9_u16.fits");
 
         std::string afwdata_dir;
         try {
@@ -264,8 +264,8 @@ BOOST_AUTO_TEST_CASE(StatisticsTestImages,
             cerr << "Skipping: Test requires afwdata to be available" << endl;
             return;
         }
-        for (vector<string>::iterator imgfile = imgfiles.begin(); imgfile != imgfiles.end(); ++imgfile) {
-            string img_path = afwdata_dir + "/Statistics/" + *imgfile;
+        for (auto const &imgfile : imgfiles) {
+            string img_path = afwdata_dir + "/Statistics/" + imgfile;
 
             // get the image and header
             DecoratedImage dimg(img_path);

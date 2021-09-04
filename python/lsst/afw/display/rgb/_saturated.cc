@@ -15,7 +15,7 @@ namespace {
 template <typename ImageT>
 class SetPixels {
 public:
-    explicit SetPixels() : _value(0) {}
+    explicit SetPixels()  {}
 
     void setValue(float value) { _value = value; }
 
@@ -24,7 +24,7 @@ public:
     }
 
 private:
-    float _value;
+    float _value{0};
 };
 }  // namespace
 
@@ -66,27 +66,25 @@ void replaceSaturatedPixels(ImageT& rim,      // R image (e.g. i)
     sat.merge(detection::FootprintSet(*gim.getMask(), satThresh, npixMin));
     sat.merge(detection::FootprintSet(*bim.getMask(), satThresh, npixMin));
     // go through the list of saturated regions, determining the mean colour of the surrounding pixels
-    typedef detection::FootprintSet::FootprintList FootprintList;
+    using FootprintList = detection::FootprintSet::FootprintList;
     std::shared_ptr<FootprintList> feet = sat.getFootprints();
-    for (FootprintList::const_iterator ptr = feet->begin(), end = feet->end(); ptr != end; ++ptr) {
-        std::shared_ptr<detection::Footprint> const foot = *ptr;
+    for (const auto& foot : *feet) {
         auto const bigFoot = std::make_shared<detection::Footprint>(foot->getSpans()->dilated(borderWidth),
                                                                     foot->getRegion());
 
         double sumR = 0, sumG = 0, sumB = 0;  // sum of all non-saturated adjoining pixels
         double maxR = 0, maxG = 0, maxB = 0;  // maximum of non-saturated adjoining pixels
 
-        for (auto span = bigFoot->getSpans()->begin(), send = bigFoot->getSpans()->end(); span != send;
-             ++span) {
-            int const y = span->getY() - y0;
+        for (auto span : *bigFoot->getSpans()) {
+            int const y = span.getY() - y0;
             if (y < 0 || y >= height) {
                 continue;
             }
-            int sx0 = span->getX0() - x0;
+            int sx0 = span.getX0() - x0;
             if (sx0 < 0) {
                 sx0 = 0;
             }
-            int sx1 = span->getX1() - x0;
+            int sx1 = span.getX1() - x0;
             if (sx1 >= width) {
                 sx1 = width - 1;
             }

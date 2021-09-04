@@ -155,7 +155,7 @@ template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 double HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::dot(
         HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT> const& rhs) const {
     // Coordinated cycling through the iterators while juggling the offsets into the arrays
-    typedef typename ndarray::Array<ImagePixelT const, 1, 1>::Iterator ArrayIter;
+    using ArrayIter = typename ndarray::Array<const ImagePixelT, 1, 1>::Iterator;
     ArrayIter lhsArray = getImageArray().begin(), rhsArray = rhs.getImageArray().begin();
     auto lhsIter = getSpans()->begin(), rhsIter = rhs.getSpans()->begin();
     auto const lhsEnd = getSpans()->end(), rhsEnd = rhs.getSpans()->end();

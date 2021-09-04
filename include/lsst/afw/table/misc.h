@@ -19,7 +19,7 @@ namespace table {
  *  FITS isn't fond of uint64, so we can save a lot of pain by using signed ints here unless
  *  we really need unsigned.
  */
-typedef std::int64_t RecordId;
+using RecordId = std::int64_t;
 
 //@{
 /**
@@ -31,8 +31,8 @@ typedef std::int64_t RecordId;
 template <typename T>
 class Array;
 class Flag;
-typedef lsst::geom::Angle Angle;
-typedef lsst::geom::SpherePoint SpherePoint;
+using Angle = lsst::geom::Angle;
+using SpherePoint = lsst::geom::SpherePoint;
 //@}
 }  // namespace table
 }  // namespace afw

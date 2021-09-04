@@ -55,7 +55,7 @@ namespace detail {
 /// tag for a Mask
 struct Mask_tag : public detail::basic_tag {};
 
-typedef std::map<std::string, int> MaskPlaneDict;
+using MaskPlaneDict = std::map<std::string, int>;
 }  // namespace detail
 
 /**
@@ -76,15 +76,15 @@ typedef std::map<std::string, int> MaskPlaneDict;
 template <typename MaskPixelT = lsst::afw::image::MaskPixel>
 class Mask : public ImageBase<MaskPixelT> {
 public:
-    typedef detail::MaskPlaneDict MaskPlaneDict;
+    using MaskPlaneDict = detail::MaskPlaneDict;
 
-    typedef detail::Mask_tag image_category;
+    using image_category = detail::Mask_tag;
 
     /// A templated class to return this classes' type (present in Image/Mask/MaskedImage)
     template <typename MaskPT = MaskPixelT>
     struct ImageTypeFactory {
         /// Return the desired type
-        typedef Mask<MaskPT> type;
+        using type = Mask<MaskPT>;
     };
 
     // Constructors

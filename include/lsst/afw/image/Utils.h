@@ -60,7 +60,7 @@ template <typename ImageT>
 typename ImageT::SinglePixel badPixel(
         typename ImageT::Pixel bad = 0  ///< The bad value if NaN isn't supported
 ) {
-    typedef typename ImageT::SinglePixel SinglePixelT;
+    using SinglePixelT = typename ImageT::SinglePixel;
     return SinglePixelT(std::numeric_limits<SinglePixelT>::has_quiet_NaN
                                 ? std::numeric_limits<SinglePixelT>::quiet_NaN()
                                 : bad);

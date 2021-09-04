@@ -79,13 +79,12 @@ void convolveWithInterpolation(OutImageT &outImage, InImageT const &inImage, mat
     ConvolveWithInterpolationWorkingImages workingImages(kernel.getDimensions());
     RowOfKernelImagesForRegion regionRow(nx, ny);
     while (goodRegion.computeNextRow(regionRow)) {
-        for (RowOfKernelImagesForRegion::ConstIterator rgnIter = regionRow.begin(), rgnEnd = regionRow.end();
-             rgnIter != rgnEnd; ++rgnIter) {
+        for (auto const &rgnIter : regionRow) {
             LOGL_DEBUG("TRACE5.afw.math.convolve.convolveWithInterpolation",
                        "convolveWithInterpolation: bbox minimum=(%d, %d), extent=(%d, %d)",
-                       (*rgnIter)->getBBox().getMinX(), (*rgnIter)->getBBox().getMinY(),
-                       (*rgnIter)->getBBox().getWidth(), (*rgnIter)->getBBox().getHeight());
-            convolveRegionWithInterpolation(outImage, inImage, **rgnIter, workingImages);
+                       rgnIter->getBBox().getMinX(), rgnIter->getBBox().getMinY(),
+                       rgnIter->getBBox().getWidth(), rgnIter->getBBox().getHeight());
+            convolveRegionWithInterpolation(outImage, inImage, *rgnIter, workingImages);
         }
     }
 }
@@ -94,10 +93,10 @@ template <typename OutImageT, typename InImageT>
 void convolveRegionWithInterpolation(OutImageT &outImage, InImageT const &inImage,
                                      KernelImagesForRegion const &region,
                                      ConvolveWithInterpolationWorkingImages &workingImages) {
-    typedef typename OutImageT::xy_locator OutLocator;
-    typedef typename InImageT::const_xy_locator InConstLocator;
-    typedef KernelImagesForRegion::Image KernelImage;
-    typedef KernelImage::const_xy_locator KernelConstLocator;
+    using OutLocator = typename OutImageT::xy_locator;
+    using InConstLocator = typename InImageT::const_xy_locator;
+    using KernelImage = KernelImagesForRegion::Image;
+    using KernelConstLocator = KernelImage::const_xy_locator;
 
     std::shared_ptr<Kernel const> kernelPtr = region.getKernel();
     lsst::geom::Extent2I const kernelDimensions(kernelPtr->getDimensions());

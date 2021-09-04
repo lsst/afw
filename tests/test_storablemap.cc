@@ -52,7 +52,7 @@ namespace detail {
 namespace {
 class SimpleStorable : public typehandling::Storable {
 public:
-    virtual ~SimpleStorable() = default;
+    ~SimpleStorable() override = default;
 
     shared_ptr<typehandling::Storable> cloneStorable() const override {
         return make_shared<SimpleStorable>();

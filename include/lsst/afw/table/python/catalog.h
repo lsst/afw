@@ -112,8 +112,8 @@ void declareCatalogOverloads(PyCatalog<Record> &cls) {
     namespace py = pybind11;
     using namespace pybind11::literals;
 
-    typedef CatalogT<Record> Catalog;
-    typedef typename Field<T>::Value Value;
+    using Catalog = CatalogT<Record>;
+    using Value = typename Field<T>::Value;
 
     cls.def("isSorted", (bool (Catalog::*)(Key<T> const &) const) & Catalog::isSorted);
     cls.def("sort", (void (Catalog::*)(Key<T> const &)) & Catalog::sort);

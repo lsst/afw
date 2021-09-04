@@ -28,7 +28,7 @@ ArchiveIndexSchema const &indexKeys = ArchiveIndexSchema::get();
 using Map = std::map<std::weak_ptr<Persistable const>, int,
                      std::owner_less<std::weak_ptr<Persistable const>>>;
 
-typedef Map::value_type MapItem;
+using MapItem = Map::value_type;
 
 }  // namespace
 
@@ -141,7 +141,7 @@ public:
         }
     }
 
-    Impl() : _nextId(1), _map(), _index(ArchiveIndexSchema::get().schema) {
+    Impl() :  _map(), _index(ArchiveIndexSchema::get().schema) {
         std::shared_ptr<daf::base::PropertyList> metadata(new daf::base::PropertyList());
         metadata->set("EXTTYPE", "ARCHIVE_INDEX");
         metadata->set("EXTNAME", "ARCHIVE_INDEX");
@@ -149,7 +149,7 @@ public:
         _index.getTable()->setMetadata(metadata);
     }
 
-    int _nextId;
+    int _nextId{1};
     Map _map;
     BaseCatalog _index;
     CatalogVector _catalogs;
@@ -159,14 +159,11 @@ public:
 
 OutputArchive::OutputArchive() : _impl(new Impl()) {}
 
-OutputArchive::OutputArchive(OutputArchive const &other) : _impl(other._impl) {}
+OutputArchive::OutputArchive(OutputArchive const &other)  = default;
 // Delegate to copy constructor for backward compatibility
 OutputArchive::OutputArchive(OutputArchive &&other) : OutputArchive(other) {}
 
-OutputArchive &OutputArchive::operator=(OutputArchive const &other) {
-    _impl = other._impl;
-    return *this;
-}
+OutputArchive &OutputArchive::operator=(OutputArchive const &other) = default;
 // Delegate to copy assignment for backward compatibility
 OutputArchive &OutputArchive::operator=(OutputArchive &&other) { return *this = other; }
 
@@ -232,7 +229,7 @@ OutputArchiveHandle::OutputArchiveHandle(int id, std::string const &name, std::s
                                          std::shared_ptr<OutputArchive::Impl> impl)
         : _id(id), _catPersistable(0), _name(name), _module(module), _impl(impl) {}
 
-OutputArchiveHandle::~OutputArchiveHandle() {}
+OutputArchiveHandle::~OutputArchiveHandle() = default;
 }  // namespace io
 }  // namespace table
 }  // namespace afw

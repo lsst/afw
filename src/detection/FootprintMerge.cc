@@ -21,7 +21,6 @@
  */
 #include <cstdint>
 
-#include "boost/bind.hpp"
 
 #include "lsst/afw/detection/FootprintMerge.h"
 #include "lsst/afw/detection/FootprintSet.h"
@@ -33,8 +32,8 @@ namespace detection {
 
 class FootprintMerge {
 public:
-    typedef FootprintMergeList::KeyTuple KeyTuple;
-    typedef FootprintMergeList::FilterMap FilterMap;
+    using KeyTuple = FootprintMergeList::KeyTuple;
+    using FilterMap = FootprintMergeList::FilterMap;
 
     explicit FootprintMerge(std::shared_ptr<Footprint> footprint,
                             std::shared_ptr<afw::table::SourceTable> sourceTable,
@@ -90,7 +89,7 @@ public:
         if (addSpans(footprint)) {
             _footprints.push_back(footprint);
             _source->set(keys.footprint, true);
-            _addPeaks(footprint->getPeaks(), &peakSchemaMapper, &keys, minNewPeakDist, maxSamePeakDist, NULL);
+            _addPeaks(footprint->getPeaks(), &peakSchemaMapper, &keys, minNewPeakDist, maxSamePeakDist, nullptr);
         }
     }
 
@@ -112,11 +111,11 @@ public:
         if (addSpans(other.getMergedFootprint())) {
             _footprints.insert(_footprints.end(), other._footprints.begin(), other._footprints.end());
             // Set source flags to the OR of the flags of the two inputs
-            for (FilterMap::const_iterator i = keys.begin(); i != keys.end(); ++i) {
-                afw::table::Key<afw::table::Flag> const &flagKey = i->second.footprint;
+            for (auto const &key : keys) {
+                afw::table::Key<afw::table::Flag> const &flagKey = key.second.footprint;
                 _source->set(flagKey, _source->get(flagKey) || other._source->get(flagKey));
             }
-            _addPeaks(other.getMergedFootprint()->getPeaks(), NULL, NULL, minNewPeakDist, maxSamePeakDist,
+            _addPeaks(other.getMergedFootprint()->getPeaks(), nullptr, nullptr, minNewPeakDist, maxSamePeakDist,
                       &keys);
         }
     }
@@ -177,8 +176,8 @@ private:
                 if (peakSchemaMapper) {
                     nearestPeak->set(keys->peak, true);
                 } else {
-                    for (FilterMap::const_iterator i = filterMap->begin(); i != filterMap->end(); ++i) {
-                        afw::table::Key<afw::table::Flag> const &flagKey = i->second.peak;
+                    for (auto const &i : *filterMap) {
+                        afw::table::Key<afw::table::Flag> const &flagKey = i.second.peak;
                         nearestPeak->set(flagKey, nearestPeak->get(flagKey) || otherIter->get(flagKey));
                     }
                 }
@@ -226,14 +225,13 @@ void FootprintMergeList::_initialize(afw::table::Schema &sourceSchema,
                                      std::vector<std::string> const &filterList) {
     _peakSchemaMapper.addMinimalSchema(_peakSchemaMapper.getInputSchema(), true);
     // Add Flags for the filters
-    for (std::vector<std::string>::const_iterator iter = filterList.begin(); iter != filterList.end();
-         ++iter) {
-        KeyTuple &keys = _filterMap[*iter];
+    for (auto const &iter : filterList) {
+        KeyTuple &keys = _filterMap[iter];
         keys.footprint = sourceSchema.addField<afw::table::Flag>(
-                "merge_footprint_" + *iter,
-                "Detection footprint overlapped with a detection from filter " + *iter);
+                "merge_footprint_" + iter,
+                "Detection footprint overlapped with a detection from filter " + iter);
         keys.peak = _peakSchemaMapper.editOutputSchema().addField<afw::table::Flag>(
-                "merge_peak_" + *iter, "Peak detected in filter " + *iter);
+                "merge_peak_" + iter, "Peak detected in filter " + iter);
     }
     _peakTable = PeakTable::make(_peakSchemaMapper.getOutputSchema());
 }
@@ -300,8 +298,8 @@ void FootprintMergeList::addCatalog(std::shared_ptr<afw::table::SourceTable> sou
 
 void FootprintMergeList::getFinalSources(afw::table::SourceCatalog &outputCat) {
     // Now set the merged footprint as the footprint of the SourceRecord
-    for (FootprintMergeVec::iterator iter = _mergeList.begin(); iter != _mergeList.end(); ++iter) {
-        outputCat.push_back((**iter).getSource());
+    for (auto const &iter : _mergeList) {
+        outputCat.push_back((*iter).getSource());
     }
 }
 }  // namespace detection

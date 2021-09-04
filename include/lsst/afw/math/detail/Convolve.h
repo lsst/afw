@@ -171,10 +171,10 @@ class RowOfKernelImagesForRegion;
  */
 class KernelImagesForRegion {
 public:
-    typedef std::shared_ptr<lsst::afw::math::Kernel const> KernelConstPtr;
-    typedef lsst::afw::image::Image<lsst::afw::math::Kernel::Pixel> Image;
-    typedef std::shared_ptr<Image> ImagePtr;
-    typedef std::shared_ptr<Image const> ImageConstPtr;
+    using KernelConstPtr = std::shared_ptr<const lsst::afw::math::Kernel>;
+    using Image = lsst::afw::image::Image<lsst::afw::math::Kernel::Pixel>;
+    using ImagePtr = std::shared_ptr<Image>;
+    using ImageConstPtr = std::shared_ptr<const Image>;
 
     /**
      * locations of various points in the region
@@ -278,7 +278,7 @@ public:
     static int getMinInterpolationSize() { return _MinInterpolationSize; };
 
 private:
-    typedef std::vector<Location> LocationList;
+    using LocationList = std::vector<Location>;
 
     /**
      * Compute image at a particular location
@@ -333,9 +333,9 @@ private:
  */
 class RowOfKernelImagesForRegion final {
 public:
-    typedef std::vector<std::shared_ptr<KernelImagesForRegion>> RegionList;
-    typedef RegionList::iterator Iterator;
-    typedef RegionList::const_iterator ConstIterator;
+    using RegionList = std::vector<std::shared_ptr<KernelImagesForRegion>>;
+    using Iterator = RegionList::iterator;
+    using ConstIterator = RegionList::const_iterator;
 
     /**
      * Construct a RowOfKernelImagesForRegion
@@ -417,7 +417,7 @@ void convolveWithInterpolation(OutImageT& outImage, InImageT const& inImage,
  */
 struct ConvolveWithInterpolationWorkingImages final {
 public:
-    typedef lsst::afw::image::Image<lsst::afw::math::Kernel::Pixel> Image;
+    using Image = lsst::afw::image::Image<lsst::afw::math::Kernel::Pixel>;
     ConvolveWithInterpolationWorkingImages(lsst::geom::Extent2I const& dimensions)
             : leftImage(dimensions),
               rightImage(dimensions),

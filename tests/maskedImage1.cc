@@ -22,8 +22,9 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-#include <typeinfo>
 #include <cstdio>
+#include <memory>
+#include <typeinfo>
 
 #include "lsst/daf/base.h"
 #include "lsst/pex/exceptions.h"
@@ -60,14 +61,14 @@ int test(int argc, char **argv) {
 
     LOG_CONFIG();
 
-    typedef image::MaskedImage<float> MaskedImage;
+    using MaskedImage = image::MaskedImage<float>;
 
     //
     // We want to construct the MaskedImage within a try block, so declare a pointer outside
     //
     std::shared_ptr<MaskedImage> testMaskedImage1;
     try {
-        testMaskedImage1 = std::shared_ptr<MaskedImage>(new MaskedImage(inImagePath1));
+        testMaskedImage1 = std::make_shared<MaskedImage>(inImagePath1);
     } catch (pexEx::Exception &e) {
         cerr << "Failed to open " << inImagePath1 << ": " << e.what() << endl;
         return EXIT_FAILURE;
@@ -86,7 +87,7 @@ int test(int argc, char **argv) {
 
     std::shared_ptr<MaskedImage> testFlat;
     try {
-        testFlat = std::shared_ptr<MaskedImage>(new MaskedImage(inImagePath2));
+        testFlat = std::make_shared<MaskedImage>(inImagePath2);
     } catch (pexEx::Exception &e) {
         cerr << "Failed to open " << inImagePath2 << ": " << e.what() << endl;
         return EXIT_FAILURE;

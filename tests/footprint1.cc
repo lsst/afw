@@ -30,7 +30,7 @@
 #pragma clang diagnostic ignored "-Wunused-variable"
 #include "boost/test/unit_test.hpp"
 #pragma clang diagnostic pop
-#include "boost/test/floating_point_comparison.hpp"
+#include "boost/test/tools/floating_point_comparison.hpp"
 
 #include "lsst/log/Log.h"
 #include "lsst/afw/detection.h"
@@ -39,7 +39,7 @@ namespace image = lsst::afw::image;
 namespace detection = lsst::afw::detection;
 namespace geom = lsst::afw::geom;
 
-typedef float ImagePixelT;
+using ImagePixelT = float;
 
 BOOST_AUTO_TEST_CASE(FootprintSets) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25
                                          "Boost non-Std" */

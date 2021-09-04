@@ -100,7 +100,7 @@ std::size_t AliasMap::hash_value() const noexcept {
     // Warning: this algorithm will be invalid if _internal is replaced by an unsorted map
     // Completely arbitrary seed
     std::size_t result = 42;
-    for (auto entry : _internal) {
+    for (const auto& entry : _internal) {
         result = utils::hashCombine(result, entry.first, entry.second);
     }
     return result;

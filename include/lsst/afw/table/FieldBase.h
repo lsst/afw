@@ -41,10 +41,10 @@ inline std::size_t computeCovariancePackedSize(std::size_t size) { return size *
  */
 template <typename T>
 struct FieldBase {
-    typedef T Value;                  ///< the type returned by BaseRecord::get
-    typedef T &Reference;             ///< the type returned by BaseRecord::operator[] (non-const)
-    typedef T const &ConstReference;  ///< the type returned by BaseRecord::operator[] (const)
-    typedef T Element;                ///< the type of subfields (the same as the type itself for scalars)
+    using Value = T;                  ///< the type returned by BaseRecord::get
+    using Reference = T &;             ///< the type returned by BaseRecord::operator[] (non-const)
+    using ConstReference = const T &;  ///< the type returned by BaseRecord::operator[] (const)
+    using Element = T;                ///< the type of subfields (the same as the type itself for scalars)
 
     /// Return the number of subfield elements (always one for scalars).
     std::size_t getElementCount() const noexcept { return 1; }
@@ -96,15 +96,15 @@ protected:
  */
 template <typename U>
 struct FieldBase<Array<U> > {
-    typedef ndarray::Array<U const, 1, 1> Value;  ///< the type returned by BaseRecord::get
+    using Value = ndarray::Array<const U, 1, 1>;  ///< the type returned by BaseRecord::get
 
     /// the type returned by BaseRecord::operator[]
-    typedef ndarray::ArrayRef<U, 1, 1> Reference;
+    using Reference = ndarray::ArrayRef<U, 1, 1>;
 
     /// the type returned by BaseRecord::operator[] (const)
-    typedef ndarray::ArrayRef<U const, 1, 1> ConstReference;
+    using ConstReference = ndarray::ArrayRef<const U, 1, 1>;
 
-    typedef U Element;  ///< the type of subfields and array elements
+    using Element = U;  ///< the type of subfields and array elements
 
     /**
      *  Construct a FieldBase with the given size.
@@ -218,15 +218,15 @@ private:
  */
 template <>
 struct FieldBase<std::string> {
-    typedef std::string Value;  ///< the type returned by BaseRecord::get
+    using Value = std::string;  ///< the type returned by BaseRecord::get
 
     /// the type returned by BaseRecord::operator[]
-    typedef char *Reference;
+    using Reference = char *;
 
     /// the type returned by BaseRecord::operator[] (const)
-    typedef char const *ConstReference;
+    using ConstReference = const char *;
 
-    typedef char Element;  ///< the type of subfields and array elements
+    using Element = char;  ///< the type of subfields and array elements
 
     /**
      *  Construct a FieldBase with the given size.

@@ -45,7 +45,7 @@ namespace image {
 template <typename ImageT>
 class ImagePca {
 public:
-    typedef std::vector<std::shared_ptr<ImageT>> ImageList;
+    using ImageList = std::vector<std::shared_ptr<ImageT>>;
 
     /**
      * ctor

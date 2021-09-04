@@ -166,14 +166,11 @@ InputArchive::InputArchive(std::shared_ptr<Impl> impl) : _impl(impl) {}
 InputArchive::InputArchive(BaseCatalog const& index, CatalogVector const& catalogs)
         : _impl(new Impl(index, catalogs)) {}
 
-InputArchive::InputArchive(InputArchive const& other) : _impl(other._impl) {}
+InputArchive::InputArchive(InputArchive const& other)  = default;
 // Delegate to copy constructor for backwards compatibility
 InputArchive::InputArchive(InputArchive&& other) : InputArchive(other) {}
 
-InputArchive& InputArchive::operator=(InputArchive const& other) {
-    _impl = other._impl;
-    return *this;
-}
+InputArchive& InputArchive::operator=(InputArchive const& other) = default;
 // Delegate to copy assignment for backwards compatibility
 InputArchive& InputArchive::operator=(InputArchive&& other) { return *this = other; }
 

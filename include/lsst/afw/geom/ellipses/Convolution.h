@@ -46,7 +46,7 @@ namespace ellipses {
 class BaseCore::Convolution final {
 public:
     /// Matrix type for derivative with respect to input ellipse parameters.
-    typedef Eigen::Matrix3d DerivativeMatrix;
+    using DerivativeMatrix = Eigen::Matrix3d;
 
     /// Standard constructor.
     Convolution(BaseCore &self, BaseCore const &other) : self(self), other(other) {}
@@ -72,7 +72,7 @@ public:
 class Ellipse::Convolution final {
 public:
     /// Matrix type for derivative with respect to input ellipse parameters.
-    typedef Eigen::Matrix<double, 5, 5> DerivativeMatrix;
+    using DerivativeMatrix = Eigen::Matrix<double, 5, 5>;
 
     /// Standard constructor.
     Convolution(Ellipse &self, Ellipse const &other) : self(self), other(other) {}

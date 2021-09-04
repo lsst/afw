@@ -65,16 +65,16 @@ public:
     BaseRecord& operator=(BaseRecord&&) = delete;
 
     /// The associated table class.
-    typedef BaseTable Table;
+    using Table = BaseTable;
 
     /// The associated ColumnView class.
-    typedef BaseColumnView ColumnView;
+    using ColumnView = BaseColumnView;
 
     /// Template of CatalogT used to hold records of this type.
-    typedef CatalogT<BaseRecord> Catalog;
+    using Catalog = CatalogT<BaseRecord>;
 
     /// Template of CatalogT used to hold const records of this type.
-    typedef CatalogT<BaseRecord const> ConstCatalog;
+    using ConstCatalog = CatalogT<const BaseRecord>;
 
     /// Return the Schema that holds this record's fields and keys.
     Schema getSchema() const { return _table->getSchema(); }

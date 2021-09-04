@@ -54,7 +54,7 @@ public:
     class GridTransform;  ///< Proxy return type for Ellipse::getGridTransform().
     class Convolution;    ///< Proxy return type for Ellipse::convolve().
 
-    typedef Eigen::Matrix<double, 5, 1> ParameterVector;  ///< Parameter vector type.
+    using ParameterVector = Eigen::Matrix<double, 5, 1>;  ///< Parameter vector type.
 
     enum ParameterEnum { X = 3, Y = 4 };  ///< Definitions for elements of an ellipse vector.
 

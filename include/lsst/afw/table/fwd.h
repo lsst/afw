@@ -69,44 +69,44 @@ class ExposureCatalogT;
 class BaseRecord;
 class BaseTable;
 class BaseColumnView;
-typedef CatalogT<BaseRecord> BaseCatalog;
-typedef CatalogT<BaseRecord const> ConstBaseCatalog;
+using BaseCatalog = CatalogT<BaseRecord>;
+using ConstBaseCatalog = CatalogT<const BaseRecord>;
 
 class IdFactory;
 class SimpleRecord;
 class SimpleTable;
-typedef ColumnViewT<SimpleRecord> SimpleColumnView;
-typedef SortedCatalogT<SimpleRecord> SimpleCatalog;
-typedef SortedCatalogT<SimpleRecord const> ConstSimpleCatalog;
+using SimpleColumnView = ColumnViewT<SimpleRecord>;
+using SimpleCatalog = SortedCatalogT<SimpleRecord>;
+using ConstSimpleCatalog = SortedCatalogT<const SimpleRecord>;
 
 class SourceRecord;
 class SourceTable;
-typedef SourceColumnViewT<SourceRecord> SourceColumnView;
-typedef SortedCatalogT<SourceRecord> SourceCatalog;
-typedef SortedCatalogT<SourceRecord const> ConstSourceCatalog;
+using SourceColumnView = SourceColumnViewT<SourceRecord>;
+using SourceCatalog = SortedCatalogT<SourceRecord>;
+using ConstSourceCatalog = SortedCatalogT<const SourceRecord>;
 
 class ExposureRecord;
 class ExposureTable;
-typedef ColumnViewT<ExposureRecord> ExposureColumnView;
-typedef ExposureCatalogT<ExposureRecord> ExposureCatalog;
-typedef ExposureCatalogT<ExposureRecord const> ConstExposureCatalog;
+using ExposureColumnView = ColumnViewT<ExposureRecord>;
+using ExposureCatalog = ExposureCatalogT<ExposureRecord>;
+using ConstExposureCatalog = ExposureCatalogT<const ExposureRecord>;
 
 class AmpInfoRecord;
 class AmpInfoTable;
-typedef ColumnViewT<AmpInfoRecord> AmpInfoColumnView;
-typedef CatalogT<AmpInfoRecord> AmpInfoCatalog;
-typedef CatalogT<AmpInfoRecord const> ConstAmpInfoCatalog;
+using AmpInfoColumnView = ColumnViewT<AmpInfoRecord>;
+using AmpInfoCatalog = CatalogT<AmpInfoRecord>;
+using ConstAmpInfoCatalog = CatalogT<const AmpInfoRecord>;
 
 template <typename Record1, typename Record2>
 struct Match;
 
-typedef Match<SimpleRecord, SimpleRecord> SimpleMatch;
-typedef Match<SimpleRecord, SourceRecord> ReferenceMatch;
-typedef Match<SourceRecord, SourceRecord> SourceMatch;
+using SimpleMatch = Match<SimpleRecord, SimpleRecord>;
+using ReferenceMatch = Match<SimpleRecord, SourceRecord>;
+using SourceMatch = Match<SourceRecord, SourceRecord>;
 
-typedef std::vector<SimpleMatch> SimpleMatchVector;
-typedef std::vector<ReferenceMatch> ReferenceMatchVector;
-typedef std::vector<SourceMatch> SourceMatchVector;
+using SimpleMatchVector = std::vector<SimpleMatch>;
+using ReferenceMatchVector = std::vector<ReferenceMatch>;
+using SourceMatchVector = std::vector<SourceMatch>;
 
 namespace io {
 

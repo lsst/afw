@@ -35,7 +35,7 @@ namespace {
 
 class Block : public ndarray::Manager {
 public:
-    typedef boost::intrusive_ptr<Block> Ptr;
+    using Ptr = boost::intrusive_ptr<Block>;
 
     // If the last chunk allocated isn't needed after all (usually because of an exception in a constructor)
     // we reuse it immediately.  If it wasn't the last chunk allocated, it can't be reclaimed until
@@ -168,7 +168,7 @@ struct RecordDestroyer {
 
     template <typename T>
     void operator()(SchemaItem<Array<T> > const &item) const {
-        typedef ndarray::Array<T, 1, 1> Element;
+        using Element = ndarray::Array<T, 1, 1>;
         if (item.key.isVariableLength()) {
             (*reinterpret_cast<Element *>(data + item.key.getOffset())).~Element();
         }

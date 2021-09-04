@@ -33,7 +33,7 @@
 // Note: only specific types are supported; for the list of available types
 // see the explicit instantiation code at the end of lsst/afw/image/src/Image.cc
 namespace afwImage = lsst::afw::image;
-typedef afwImage::Image<int> ImageT;
+using ImageT = afwImage::Image<int>;
 
 int main() {
     // Declare an Image; its pixels are not yet initialized.

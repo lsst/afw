@@ -62,7 +62,7 @@ std::shared_ptr<Persistable> Persistable::_readFits(fits::Fits &fitsfile) {
 
 namespace {
 
-typedef std::map<std::string, PersistableFactory const *> RegistryMap;
+using RegistryMap = std::map<std::string, const PersistableFactory *>;
 
 RegistryMap &getRegistry() {
     static RegistryMap instance;

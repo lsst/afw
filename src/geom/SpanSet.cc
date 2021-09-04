@@ -158,12 +158,12 @@ std::shared_ptr<SpanSet> maskIntersect(SpanSet const& spanSet, image::Mask<T> co
                 if (x == endX) {
                     // We have reached the end of a row and the pixel evaluates true, should add the
                     // Span
-                    newVec.push_back(Span(y, minX, maxX));
+                    newVec.emplace_back(y, minX, maxX);
                 }
             } else if (started) {
                 // A span was started but the current pixel is not to be included in the new SpanSet,
                 // the current SpanSet should be close and added to the vector
-                newVec.push_back(Span(y, minX, maxX));
+                newVec.emplace_back(y, minX, maxX);
                 started = false;
             }
         }
@@ -185,7 +185,7 @@ SpanSet::SpanSet(lsst::geom::Box2I const& box) : _bbox(box), _area(box.getArea()
     int maxX = box.getMaxX();
 
     for (int i = beginY; i < _bbox.getEndY(); ++i) {
-        _spanVector.push_back(Span(i, beginX, maxX));
+        _spanVector.emplace_back(i, beginX, maxX);
     }
 }
 
@@ -242,7 +242,7 @@ void SpanSet::_runNormalize() {
             newSpansEnd = Span(newSpansEnd.getY(), std::min(newSpansEnd.getMinX(), iter->getMinX()),
                                std::max(newSpansEnd.getMaxX(), iter->getMaxX()));
         } else {
-            newSpans.push_back(Span(*iter));
+            newSpans.emplace_back(*iter);
         }
     }
 
@@ -432,7 +432,7 @@ std::shared_ptr<SpanSet> SpanSet::makeShift(int x, int y) const {
     std::vector<Span> tempVec;
     tempVec.reserve(_spanVector.size());
     for (auto const& spn : _spanVector) {
-        tempVec.push_back(Span(spn.getY() + y, spn.getMinX() + x, spn.getMaxX() + x));
+        tempVec.emplace_back(spn.getY() + y, spn.getMinX() + x, spn.getMaxX() + x);
     }
     return std::make_shared<SpanSet>(std::move(tempVec), false);
 }
@@ -445,8 +445,8 @@ std::shared_ptr<SpanSet> SpanSet::clippedTo(lsst::geom::Box2I const& box) const 
     for (auto const& spn : _spanVector) {
         if (spn.getY() >= box.getMinY() && spn.getY() <= box.getMaxY() &&
             spansOverlap(spn, Span(spn.getY(), box.getMinX(), box.getMaxX()))) {
-            tempVec.push_back(Span(spn.getY(), std::max(box.getMinX(), spn.getMinX()),
-                                   std::min(box.getMaxX(), spn.getMaxX())));
+            tempVec.emplace_back(spn.getY(), std::max(box.getMinX(), spn.getMinX()),
+                                   std::min(box.getMaxX(), spn.getMaxX()));
         }
     }
     return std::make_shared<SpanSet>(std::move(tempVec), false);
@@ -563,7 +563,7 @@ std::shared_ptr<SpanSet> SpanSet::dilated(SpanSet const& other) const {
             int const xmin = spn.getMinX() + otherSpn.getMinX();
             int const xmax = spn.getMaxX() + otherSpn.getMaxX();
             int const yval = spn.getY() + otherSpn.getY();
-            tempVec.push_back(Span(yval, xmin, xmax));
+            tempVec.emplace_back(yval, xmin, xmax);
         }
     }
     // Allow constructor to handle merging adjacent and overlapping spans
@@ -670,7 +670,7 @@ std::shared_ptr<SpanSet> SpanSet::eroded(SpanSet const& other) const {
             }
         }
         for (auto& run : goodRuns) {
-            tempVec.push_back(Span(run.y, run.xmin, run.xmax));
+            tempVec.emplace_back(run.y, run.xmin, run.xmax);
         }
     }
     return std::make_shared<SpanSet>(std::move(tempVec));
@@ -694,19 +694,19 @@ std::shared_ptr<SpanSet> SpanSet::fromShape(int r, Stencil s, lsst::geom::Point2
         case Stencil::CIRCLE:
             for (auto dy = -r; dy <= r; ++dy) {
                 int dx = static_cast<int>(sqrt(r * r - dy * dy));
-                tempVec.push_back(Span(dy + offset.getY(), -dx + offset.getX(), dx + offset.getX()));
+                tempVec.emplace_back(dy + offset.getY(), -dx + offset.getX(), dx + offset.getX());
             }
             break;
         case Stencil::MANHATTAN:
             for (auto dy = -r; dy <= r; ++dy) {
                 int dx = r - abs(dy);
-                tempVec.push_back(Span(dy + offset.getY(), -dx + offset.getX(), dx + offset.getX()));
+                tempVec.emplace_back(dy + offset.getY(), -dx + offset.getX(), dx + offset.getX());
             }
             break;
         case Stencil::BOX:
             for (auto dy = -r; dy <= r; ++dy) {
                 int dx = r;
-                tempVec.push_back(Span(dy + offset.getY(), -dx + offset.getX(), dx + offset.getX()));
+                tempVec.emplace_back(dy + offset.getY(), -dx + offset.getX(), dx + offset.getX());
             }
             break;
     }
@@ -782,7 +782,7 @@ std::shared_ptr<SpanSet> SpanSet::intersectNot(SpanSet const& other) const {
                 if (!spanStarted) {
                     // If the minimum value of the Span in  *this is less than that of other, add a new Span
                     if (spn.getMinX() < otherIter->getMinX()) {
-                        tempVec.push_back(Span(spn.getY(), spn.getMinX(), otherIter->getMinX() - 1));
+                        tempVec.emplace_back(spn.getY(), spn.getMinX(), otherIter->getMinX() - 1);
                     }
                     // Conversely if the maximum value of the Span in *this is greater than that of other,
                     // Start a new span, and record what the minimum value of that span should be. This is
@@ -794,8 +794,7 @@ std::shared_ptr<SpanSet> SpanSet::intersectNot(SpanSet const& other) const {
                     }
                 } else {
                     // A span is in the process of being created and should be finished and added
-                    tempVec.push_back(
-                            Span(spn.getY(), spanBottom, std::min(spn.getMaxX(), otherIter->getMinX() - 1)));
+                    tempVec.emplace_back(spn.getY(), spanBottom, std::min(spn.getMaxX(), otherIter->getMinX() - 1));
                     spanStarted = false;
                     // Check if the span in *this extends past that of the Span from other, if so
                     // begin a new Span
@@ -813,13 +812,13 @@ std::shared_ptr<SpanSet> SpanSet::intersectNot(SpanSet const& other) const {
         // Check if a span has been started but not finished, if that is the case that means there are
         // no further spans on this row to consider and the span should be closed and added
         if (spanStarted) {
-            tempVec.push_back(Span(spn.getY(), spanBottom, spn.getMaxX()));
+            tempVec.emplace_back(spn.getY(), spanBottom, spn.getMaxX());
         }
         /* If added is still zero, that means it did not overlap any of the spans in other
          * and should be included in the new span
          */
         if (!added) {
-            tempVec.push_back(Span(spn));
+            tempVec.emplace_back(spn);
         }
     }
     return std::make_shared<SpanSet>(std::move(tempVec));
@@ -892,11 +891,11 @@ std::shared_ptr<SpanSet> SpanSet::transformedBy(TransformPoint2ToPoint2 const& t
                 }
             } else if (inSpan) {
                 inSpan = false;
-                tempVec.push_back(Span(y, start, x - 1));
+                tempVec.emplace_back(y, start, x - 1);
             }
         }
         if (inSpan) {
-            tempVec.push_back(Span(y, start, newBBoxI.getMaxX()));
+            tempVec.emplace_back(y, start, newBBoxI.getMaxX());
         }
     }
     return std::make_shared<SpanSet>(std::move(tempVec));
@@ -1010,7 +1009,7 @@ public:
         std::vector<Span> tempVec;
         tempVec.reserve(spansCatalog.size());
         for (auto const& val : spansCatalog) {
-            tempVec.push_back(Span(val.get(keys.spanY), val.get(keys.spanX0), val.get(keys.spanX1)));
+            tempVec.emplace_back(val.get(keys.spanY), val.get(keys.spanX0), val.get(keys.spanX1));
         }
         return std::make_shared<SpanSet>(std::move(tempVec));
     }

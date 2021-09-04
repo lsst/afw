@@ -76,7 +76,7 @@ public:
 class ChebyshevBoundedField : public table::io::PersistableFacade<ChebyshevBoundedField>,
                               public BoundedField {
 public:
-    typedef ChebyshevBoundedFieldControl Control;
+    using Control = ChebyshevBoundedFieldControl;
 
     /**
      *  Initialize the field from its bounding box an coefficients.

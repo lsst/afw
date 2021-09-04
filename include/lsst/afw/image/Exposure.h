@@ -71,7 +71,7 @@ template <typename ImageT, typename MaskT = lsst::afw::image::MaskPixel,
           typename VarianceT = lsst::afw::image::VariancePixel>
 class Exposure {
 public:
-    typedef MaskedImage<ImageT, MaskT, VarianceT> MaskedImageT;
+    using MaskedImageT = MaskedImage<ImageT, MaskT, VarianceT>;
 
     // Class Constructors and Destructor
     /** @brief Construct an Exposure with a blank MaskedImage of specified size (default 0x0) and

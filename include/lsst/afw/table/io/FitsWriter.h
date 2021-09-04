@@ -24,7 +24,7 @@ namespace io {
  */
 class FitsWriter {
 public:
-    typedef afw::fits::Fits Fits;
+    using Fits = afw::fits::Fits;
 
     /**
      *  Driver for writing FITS files.
@@ -60,9 +60,8 @@ public:
         for (typename ContainerT::const_iterator i = container.begin(); i != container.end(); ++i) {
             if (i->getTable() != container.getTable()) tables.insert(i->getTable());
         }
-        for (std::set<std::shared_ptr<BaseTable const>>::iterator j = tables.begin(); j != tables.end();
-             ++j) {
-            if ((**j).getSchema().compare(container.getTable()->getSchema(), Schema::IDENTICAL) !=
+        for (auto const &table : tables) {
+            if ((*table).getSchema().compare(container.getTable()->getSchema(), Schema::IDENTICAL) !=
                 Schema::IDENTICAL) {
                 throw LSST_EXCEPT(pex::exceptions::LogicError,
                                   "Cannot save Catalog with heterogenous schemas");

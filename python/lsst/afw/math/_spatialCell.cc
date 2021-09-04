@@ -183,8 +183,8 @@ void declareTestClasses(lsst::utils::python::WrapperCollection &wrappers) {
                 : SpatialCellCandidate(xCenter, yCenter), _flux(flux) {}
 
         /// @internal Return candidates rating
-        virtual double getCandidateRating() const { return _flux; }
-        virtual void setCandidateRating(double flux) { _flux = flux; }
+        double getCandidateRating() const override { return _flux; }
+        void setCandidateRating(double flux) override { _flux = flux; }
 
     private:
         double _flux;
@@ -193,23 +193,23 @@ void declareTestClasses(lsst::utils::python::WrapperCollection &wrappers) {
     /// @internal A class to pass around to all our TestCandidates
     class TestCandidateVisitor : public CandidateVisitor {
     public:
-        TestCandidateVisitor() : CandidateVisitor(), _n(0) {}
+        TestCandidateVisitor() : CandidateVisitor() {}
 
         // Called by SpatialCellSet::visitCandidates before visiting any Candidates
-        void reset() { _n = 0; }
+        void reset() override { _n = 0; }
 
         // Called by SpatialCellSet::visitCandidates for each Candidate
-        void processCandidate(SpatialCellCandidate *candidate) { ++_n; }
+        void processCandidate(SpatialCellCandidate *candidate) override { ++_n; }
 
         int getN() const { return _n; }
 
     private:
-        int _n;  // number of TestCandidates
+        int _n{0};  // number of TestCandidates
     };
 
     class TestImageCandidate : public SpatialCellImageCandidate {
     public:
-        typedef image::MaskedImage<float> MaskedImageT;
+        using MaskedImageT = image::MaskedImage<float>;
 
         TestImageCandidate(float const xCenter,  ///< @internal The object's column-centre
                            float const yCenter,  ///< @internal The object's row-centre
@@ -218,7 +218,7 @@ void declareTestClasses(lsst::utils::python::WrapperCollection &wrappers) {
                 : SpatialCellImageCandidate(xCenter, yCenter), _flux(flux) {}
 
         /// @internal Return candidates rating
-        double getCandidateRating() const { return _flux; }
+        double getCandidateRating() const override { return _flux; }
 
         /// @internal Return the %image
         std::shared_ptr<MaskedImageT const> getMaskedImage() const {

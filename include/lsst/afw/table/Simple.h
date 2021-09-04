@@ -47,10 +47,10 @@ class SimpleTable;
  */
 class SimpleRecord : public BaseRecord {
 public:
-    typedef SimpleTable Table;
-    typedef ColumnViewT<SimpleRecord> ColumnView;
-    typedef SortedCatalogT<SimpleRecord> Catalog;
-    typedef SortedCatalogT<SimpleRecord const> ConstCatalog;
+    using Table = SimpleTable;
+    using ColumnView = ColumnViewT<SimpleRecord>;
+    using Catalog = SortedCatalogT<SimpleRecord>;
+    using ConstCatalog = SortedCatalogT<const SimpleRecord>;
 
     /**
      *  Constructor used by SimpleTable.
@@ -101,10 +101,10 @@ private:
  */
 class SimpleTable : public BaseTable {
 public:
-    typedef SimpleRecord Record;
-    typedef ColumnViewT<SimpleRecord> ColumnView;
-    typedef SortedCatalogT<Record> Catalog;
-    typedef SortedCatalogT<Record const> ConstCatalog;
+    using Record = SimpleRecord;
+    using ColumnView = ColumnViewT<SimpleRecord>;
+    using Catalog = SortedCatalogT<Record>;
+    using ConstCatalog = SortedCatalogT<const Record>;
 
     /**
      *  Construct a new table.

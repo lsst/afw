@@ -60,22 +60,22 @@ public:
     double var2;
     ndarray::Array<float, 1, 1> var3;
 
-    virtual bool operator==(Comparable const &other) const {
+    bool operator==(Comparable const &other) const override {
         ExampleA const *b = dynamic_cast<ExampleA const *>(&other);
         return b && var1 == b->var1 && var2 == b->var2 && ndarray::allclose(var3, b->var3);
     }
 
-    virtual void stream(std::ostream &os) const {
+    void stream(std::ostream &os) const override {
         os << "ExampleA(var1=" << var1 << ", var2=" << var2 << ", var3=" << var3 << ")";
     }
 
     ExampleA(int v1, double v2, ndarray::Array<float, 1, 1> const &v3) : var1(v1), var2(v2), var3(v3) {}
 
-    virtual bool isPersistable() const noexcept { return true; }
+    bool isPersistable() const noexcept override { return true; }
 
-    virtual std::string getPersistenceName() const { return "ExampleA"; }
+    std::string getPersistenceName() const override { return "ExampleA"; }
 
-    virtual void write(OutputArchiveHandle &handle) const {
+    void write(OutputArchiveHandle &handle) const override {
         Schema schema;
         Key<int> k1 = schema.addField<int>("var1", "doc for var1");
         Key<double> k2 = schema.addField<double>("var2", "doc for var2");
@@ -92,8 +92,8 @@ public:
     public:
         explicit Factory(std::string const &name) : PersistableFactory(name) {}
 
-        virtual std::shared_ptr<Persistable> read(InputArchive const &archive,
-                                                  CatalogVector const &catalogs) const {
+        std::shared_ptr<Persistable> read(InputArchive const &archive,
+                                                  CatalogVector const &catalogs) const override {
             BaseRecord const &record = catalogs.front().front();
             Schema const &schema = record.getSchema();
             Key<int> k1 = schema["var1"];
@@ -111,26 +111,26 @@ public:
     int var1;
     std::vector<double> var2;
 
-    virtual bool operator==(Comparable const &other) const {
+    bool operator==(Comparable const &other) const override {
         ExampleB const *b = dynamic_cast<ExampleB const *>(&other);
         return b && var1 == b->var1 && var2 == b->var2;
     }
 
-    virtual void stream(std::ostream &os) const {
+    void stream(std::ostream &os) const override {
         os << "ExampleB(var1=" << var1 << ", var2=[";
-        for (std::vector<double>::const_iterator i = var2.begin(); i != var2.end(); ++i) {
-            os << (*i) << ", ";
+        for (double i : var2) {
+            os << i << ", ";
         }
         os << "])";
     }
 
     ExampleB(int v1, std::vector<double> const &v2) : var1(v1), var2(v2) {}
 
-    virtual bool isPersistable() const noexcept { return true; }
+    bool isPersistable() const noexcept override { return true; }
 
-    virtual std::string getPersistenceName() const { return "ExampleB"; }
+    std::string getPersistenceName() const override { return "ExampleB"; }
 
-    virtual void write(OutputArchiveHandle &handle) const {
+    void write(OutputArchiveHandle &handle) const override {
         Schema schema1;
         Key<int> k1 = schema1.addField<int>("var1", "doc for var1");
         Schema schema2;
@@ -139,8 +139,8 @@ public:
         std::shared_ptr<BaseRecord> record1 = catalog1.addNew();
         record1->set(k1, var1);
         BaseCatalog catalog2 = handle.makeCatalog(schema2);
-        for (std::vector<double>::const_iterator i = var2.begin(); i != var2.end(); ++i) {
-            catalog2.addNew()->set(k2, *i);
+        for (double i : var2) {
+            catalog2.addNew()->set(k2, i);
         }
         handle.saveCatalog(catalog1);
         handle.saveCatalog(catalog2);
@@ -150,8 +150,8 @@ public:
     public:
         explicit Factory(std::string const &name) : PersistableFactory(name) {}
 
-        virtual std::shared_ptr<Persistable> read(InputArchive const &archive,
-                                                  CatalogVector const &catalogs) const {
+        std::shared_ptr<Persistable> read(InputArchive const &archive,
+                                                  CatalogVector const &catalogs) const override {
             BaseRecord const &record1 = catalogs.front().front();
             Schema const &schema1 = record1.getSchema();
             Key<int> k1 = schema1["var1"];
@@ -174,7 +174,7 @@ public:
     std::shared_ptr<Comparable> var2;
     std::shared_ptr<Comparable> var3;
 
-    virtual bool operator==(Comparable const &other) const {
+    bool operator==(Comparable const &other) const override {
         ExampleC const *c = dynamic_cast<ExampleC const *>(&other);
         if (!c) return false;
         if ((!var2 && c->var2) || (var2 && !c->var2)) return false;
@@ -183,7 +183,7 @@ public:
                (var3 == c->var3 || (*var3) == (*c->var3));
     }
 
-    virtual void stream(std::ostream &os) const {
+    void stream(std::ostream &os) const override {
         os << "ExampleC(var1=" << var1 << ", var2=";
         if (var2) {
             os << (*var2);
@@ -203,11 +203,11 @@ public:
              std::shared_ptr<Comparable> v3 = std::shared_ptr<Comparable>())
             : var1(v1), var2(v2), var3(v3) {}
 
-    virtual bool isPersistable() const noexcept { return true; }
+    bool isPersistable() const noexcept override { return true; }
 
-    virtual std::string getPersistenceName() const { return "ExampleC"; }
+    std::string getPersistenceName() const override { return "ExampleC"; }
 
-    virtual void write(OutputArchiveHandle &handle) const {
+    void write(OutputArchiveHandle &handle) const override {
         Schema schema;
         Key<int> k1 = schema.addField<int>("var1", "doc for var1");
         Key<int> k2 = schema.addField<int>("var2", "doc for var2");
@@ -226,8 +226,8 @@ public:
     public:
         explicit Factory(std::string const &name) : PersistableFactory(name) {}
 
-        virtual std::shared_ptr<Persistable> read(InputArchive const &archive,
-                                                  CatalogVector const &catalogs) const {
+        std::shared_ptr<Persistable> read(InputArchive const &archive,
+                                                  CatalogVector const &catalogs) const override {
             BaseRecord const &record = catalogs.front().front();
             Schema const &schema = record.getSchema();
             Key<int> k1 = schema["var1"];
@@ -255,31 +255,31 @@ public:
     ExampleD &operator=(ExampleD const &) = delete;
     ExampleD &operator=(ExampleD &&) = delete;
 
-    virtual bool operator==(Comparable const &other) const {
+    bool operator==(Comparable const &other) const override {
         return static_cast<Comparable const *>(this) == &other;
     }
 
-    virtual void stream(std::ostream &os) const { os << "ExampleD()"; }
+    void stream(std::ostream &os) const override { os << "ExampleD()"; }
 
-    virtual bool isPersistable() const noexcept { return true; }
+    bool isPersistable() const noexcept override { return true; }
 
-    virtual std::string getPersistenceName() const { return "ExampleD"; }
+    std::string getPersistenceName() const override { return "ExampleD"; }
 
-    virtual void write(OutputArchiveHandle &handle) const { handle.saveEmpty(); }
+    void write(OutputArchiveHandle &handle) const override { handle.saveEmpty(); }
 
     class Factory : public PersistableFactory {
     public:
         explicit Factory(std::string const &name) : PersistableFactory(name) {}
 
-        virtual std::shared_ptr<Persistable> read(InputArchive const &archive,
-                                                  CatalogVector const &catalogs) const {
+        std::shared_ptr<Persistable> read(InputArchive const &archive,
+                                                  CatalogVector const &catalogs) const override {
             LSST_ARCHIVE_ASSERT(catalogs.size() == 0u);
             return ExampleD::get();
         }
     };
 
 private:
-    ExampleD() {}
+    ExampleD() = default;
 };
 
 static ExampleA::Factory const registrationA("ExampleA");
@@ -451,18 +451,18 @@ BOOST_AUTO_TEST_CASE(Nested) {
 
     std::vector<ndarray::Vector<std::shared_ptr<Comparable>, 1>> r2 =
             roundtripAndCompare(ndarray::makeVector(c2), ndarray::makeVector<ndarray::Size>(1, 1));
-    for (std::size_t i = 0; i < r2.size(); ++i) {
-        std::shared_ptr<ExampleC> c3 = std::dynamic_pointer_cast<ExampleC>(r2[i][0]);
+    for (auto const &i : r2) {
+        std::shared_ptr<ExampleC> c3 = std::dynamic_pointer_cast<ExampleC>(i[0]);
         BOOST_REQUIRE(c3);
         BOOST_CHECK_EQUAL(c3->var2, c3->var3);
     }
 
     std::vector<ndarray::Vector<std::shared_ptr<Comparable>, 2>> r3 =
             roundtripAndCompare(ndarray::makeVector(a2, c2), ndarray::makeVector<ndarray::Size>(1, 1));
-    for (std::size_t i = 0; i < r3.size(); ++i) {
-        std::shared_ptr<ExampleC> c3 = std::dynamic_pointer_cast<ExampleC>(r3[i][1]);
+    for (auto const &i : r3) {
+        std::shared_ptr<ExampleC> c3 = std::dynamic_pointer_cast<ExampleC>(i[1]);
         BOOST_CHECK_EQUAL(c3->var3, c3->var3);
-        BOOST_CHECK_EQUAL(c3->var3, r3[i][0]);
+        BOOST_CHECK_EQUAL(c3->var3, i[0]);
     }
 }
 
