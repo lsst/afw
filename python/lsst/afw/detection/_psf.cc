@@ -44,9 +44,6 @@ namespace lsst {
 namespace afw {
 namespace detection {
 
-namespace {
-auto const NullPoint = lsst::geom::Point2D(std::numeric_limits<double>::quiet_NaN());
-}
 
 void wrapPsf(utils::python::WrapperCollection& wrappers) {
     wrappers.addInheritanceDependency("lsst.afw.typehandling");
@@ -63,31 +60,187 @@ void wrapPsf(utils::python::WrapperCollection& wrappers) {
                 cls.def(py::init<bool, size_t>(), "isFixed"_a=false, "capacity"_a=100);  // Constructor for pure-Python subclasses
                 cls.def("clone", &Psf::clone);
                 cls.def("resized", &Psf::resized, "width"_a, "height"_a);
-                cls.def("computeImage", &Psf::computeImage, "position"_a = NullPoint,
-                        "color"_a = image::Color(), "owner"_a = Psf::ImageOwnerEnum::COPY);
-                cls.def("computeKernelImage", &Psf::computeKernelImage, "position"_a = NullPoint,
-                        "color"_a = image::Color(), "owner"_a = Psf::ImageOwnerEnum::COPY);
-                cls.def("computePeak", &Psf::computePeak, "position"_a = NullPoint,
-                        "color"_a = image::Color());
-                cls.def("computeApertureFlux", &Psf::computeApertureFlux, "radius"_a,
-                        "position"_a = NullPoint, "color"_a = image::Color());
-                cls.def("computeShape", &Psf::computeShape, "position"_a = NullPoint,
-                        "color"_a = image::Color());
-                cls.def("computeBBox", &Psf::computeBBox, "position"_a = NullPoint,
-                        "color"_a = image::Color());
-                cls.def("computeImageBBox", &Psf::computeImageBBox, "position"_a = NullPoint,
-                        "color"_a = image::Color());
-                cls.def("computeKernelBBox", &Psf::computeKernelBBox, "position"_a = NullPoint,
-                        "color"_a = image::Color());
-                cls.def("getLocalKernel", &Psf::getLocalKernel, "position"_a = NullPoint,
-                        "color"_a = image::Color());
+
+                // Position-required overloads. Can (likely) remove overload_cast<> once deprecation period for
+                // default position argument ends.
+                cls.def("computeImage",
+                        py::overload_cast<lsst::geom::Point2D, image::Color, Psf::ImageOwnerEnum>(&Psf::computeImage, py::const_),
+                        "position"_a,
+                        "color"_a = image::Color(),
+                        "owner"_a = Psf::ImageOwnerEnum::COPY
+                );
+                cls.def("computeKernelImage",
+                        py::overload_cast<lsst::geom::Point2D, image::Color, Psf::ImageOwnerEnum>(&Psf::computeKernelImage, py::const_),
+                        "position"_a,
+                        "color"_a = image::Color(),
+                        "owner"_a = Psf::ImageOwnerEnum::COPY
+                );
+                cls.def("computePeak",
+                        py::overload_cast<lsst::geom::Point2D, image::Color>(&Psf::computePeak, py::const_),
+                        "position"_a,
+                        "color"_a = image::Color()
+                );
+                cls.def("computeApertureFlux",
+                        py::overload_cast<double, lsst::geom::Point2D, image::Color>(&Psf::computeApertureFlux, py::const_),
+                        "radius"_a,
+                        "position"_a,
+                        "color"_a = image::Color()
+                );
+                cls.def("computeShape",
+                        py::overload_cast<lsst::geom::Point2D, image::Color>(&Psf::computeShape, py::const_),
+                        "position"_a,
+                        "color"_a = image::Color()
+                );
+                cls.def("computeBBox",
+                        py::overload_cast<lsst::geom::Point2D, image::Color>(&Psf::computeBBox, py::const_),
+                        "position"_a,
+                        "color"_a = image::Color()
+                );
+                cls.def("computeImageBBox",
+                        py::overload_cast<lsst::geom::Point2D, image::Color>(&Psf::computeImageBBox, py::const_),
+                        "position"_a,
+                        "color"_a = image::Color()
+                );
+                cls.def("computeKernelBBox",
+                        py::overload_cast<lsst::geom::Point2D, image::Color>(&Psf::computeKernelBBox, py::const_),
+                        "position"_a,
+                        "color"_a = image::Color()
+                );
+                cls.def("getLocalKernel",
+                        py::overload_cast<lsst::geom::Point2D, image::Color>(&Psf::getLocalKernel, py::const_),
+                        "position"_a,
+                        "color"_a = image::Color()
+                );
+
+                // Deprecated default position argument overloads.
+                cls.def("computeImage",
+                        [](const Psf& psf) {
+                            py::gil_scoped_acquire gil;
+                            auto warnings = py::module::import("warnings");
+                            auto FutureWarning = py::handle(PyEval_GetBuiltins())["FutureWarning"];
+                            warnings.attr("warn")(
+                                "Default position argument overload is deprecated and will be "
+                                "removed in version 24.0.  Please explicitly specify a position.",
+                                "category"_a=FutureWarning
+                            );
+                            return psf.computeImage();
+                        }
+                );
+                cls.def("computeKernelImage",
+                        [](const Psf& psf) {
+                            py::gil_scoped_acquire gil;
+                            auto warnings = py::module::import("warnings");
+                            auto FutureWarning = py::handle(PyEval_GetBuiltins())["FutureWarning"];
+                            warnings.attr("warn")(
+                                "Default position argument overload is deprecated and will be "
+                                "removed in version 24.0.  Please explicitly specify a position.",
+                                "category"_a=FutureWarning
+                            );
+                            return psf.computeKernelImage();
+                        }
+                );
+                cls.def("computePeak",
+                        [](const Psf& psf) {
+                            py::gil_scoped_acquire gil;
+                            auto warnings = py::module::import("warnings");
+                            auto FutureWarning = py::handle(PyEval_GetBuiltins())["FutureWarning"];
+                            warnings.attr("warn")(
+                                "Default position argument overload is deprecated and will be "
+                                "removed in version 24.0.  Please explicitly specify a position.",
+                                "category"_a=FutureWarning
+                            );
+                            return psf.computePeak();
+                        }
+                );
+                cls.def("computeApertureFlux",
+                        [](const Psf& psf, double radius) {
+                            py::gil_scoped_acquire gil;
+                            auto warnings = py::module::import("warnings");
+                            auto FutureWarning = py::handle(PyEval_GetBuiltins())["FutureWarning"];
+                            warnings.attr("warn")(
+                                "Default position argument overload is deprecated and will be "
+                                "removed in version 24.0.  Please explicitly specify a position.",
+                                "category"_a=FutureWarning
+                            );
+                            return psf.computeApertureFlux(radius);
+                        },
+                        "radius"_a
+                );
+                cls.def("computeShape",
+                        [](const Psf& psf) {
+                            py::gil_scoped_acquire gil;
+                            auto warnings = py::module::import("warnings");
+                            auto FutureWarning = py::handle(PyEval_GetBuiltins())["FutureWarning"];
+                            warnings.attr("warn")(
+                                "Default position argument overload is deprecated and will be "
+                                "removed in version 24.0.  Please explicitly specify a position.",
+                                "category"_a=FutureWarning
+                            );
+                            return psf.computeShape();
+                        }
+                );
+                cls.def("computeBBox",
+                        [](const Psf& psf) {
+                            py::gil_scoped_acquire gil;
+                            auto warnings = py::module::import("warnings");
+                            auto FutureWarning = py::handle(PyEval_GetBuiltins())["FutureWarning"];
+                            warnings.attr("warn")(
+                                "Default position argument overload is deprecated and will be "
+                                "removed in version 24.0.  Please explicitly specify a position.",
+                                "category"_a=FutureWarning
+                            );
+                            return psf.computeBBox();
+                        }
+                );
+                cls.def("computeImageBBox",
+                        [](const Psf& psf) {
+                            py::gil_scoped_acquire gil;
+                            auto warnings = py::module::import("warnings");
+                            auto FutureWarning = py::handle(PyEval_GetBuiltins())["FutureWarning"];
+                            warnings.attr("warn")(
+                                "Default position argument overload is deprecated and will be "
+                                "removed in version 24.0.  Please explicitly specify a position.",
+                                "category"_a=FutureWarning
+                            );
+                            return psf.computeImageBBox();
+                        }
+                );
+                cls.def("computeKernelBBox",
+                        [](const Psf& psf) {
+                            py::gil_scoped_acquire gil;
+                            auto warnings = py::module::import("warnings");
+                            auto FutureWarning = py::handle(PyEval_GetBuiltins())["FutureWarning"];
+                            warnings.attr("warn")(
+                                "Default position argument overload is deprecated and will be "
+                                "removed in version 24.0.  Please explicitly specify a position.",
+                                "category"_a=FutureWarning
+                            );
+                            return psf.computeKernelBBox();
+                        }
+                );
+                cls.def("getLocalKernel",
+                        [](const Psf& psf) {
+                            py::gil_scoped_acquire gil;
+                            auto warnings = py::module::import("warnings");
+                            auto FutureWarning = py::handle(PyEval_GetBuiltins())["FutureWarning"];
+                            warnings.attr("warn")(
+                                "Default position argument overload is deprecated and will be "
+                                "removed in version 24.0.  Please explicitly specify a position.",
+                                "category"_a=FutureWarning
+                            );
+                            return psf.getLocalKernel();
+                        }
+                );
+                // End deprecated default position argument overloads.
+
                 cls.def("getAverageColor", &Psf::getAverageColor);
                 cls.def("getAveragePosition", &Psf::getAveragePosition);
                 cls.def_static("recenterKernelImage", &Psf::recenterKernelImage, "im"_a, "position"_a,
                                "warpAlgorithm"_a = "lanczos5", "warpBuffer"_a = 5);
                 cls.def("getCacheCapacity", &Psf::getCacheCapacity);
                 cls.def("setCacheCapacity", &Psf::setCacheCapacity);
-            });
+            }
+    );
 
     wrappers.wrapType(py::enum_<Psf::ImageOwnerEnum>(clsPsf, "ImageOwnerEnum"), [](auto& mod, auto& enm) {
         enm.value("COPY", Psf::ImageOwnerEnum::COPY);

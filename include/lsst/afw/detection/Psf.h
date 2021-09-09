@@ -133,7 +133,7 @@ public:
      *
      *  The returned image is normalized to sum to unity.
      *
-     *  @param[in]  position     Position to evaluate the PSF at; defaults to getAveragePosition().
+     *  @param[in]  position     Position at which to evaluate the PSF.
      *  @param[in]  color        Color of the source for which to evaluate the PSF; defaults to
      *                           getAverageColor().
      *  @param[in]  owner        Whether to copy the return value or return an internal image that
@@ -145,9 +145,16 @@ public:
      *  @note The real work is done in the virtual private member function Psf::doComputeImage;
      *        computeImage only handles caching and default arguments.
      */
-    std::shared_ptr<Image> computeImage(lsst::geom::Point2D position = makeNullPoint(),
+    std::shared_ptr<Image> computeImage(lsst::geom::Point2D position,
                                         image::Color color = image::Color(),
                                         ImageOwnerEnum owner = COPY) const;
+
+    // Using the default position automatically implies use of the default color, owner.
+    [[deprecated(
+        "Default position argument overload is deprecated and will be removed "
+        "in version 24.0.  Please use overload with explicit position."
+    )]]
+    std::shared_ptr<Image> computeImage() const;
 
     /**
      *  Return an Image of the PSF, in a form suitable for convolution.
@@ -159,7 +166,7 @@ public:
      *
      *  The returned image is normalized to sum to unity.
      *
-     *  @param[in]  position     Position to evaluate the PSF at; defaults to getAveragePosition().
+     *  @param[in]  position     Position at which to evaluate the PSF.
      *  @param[in]  color        Color of the source for which to evaluate the PSF; defaults to
      *                           getAverageColor().
      *  @param[in]  owner        Whether to copy the return value or return an internal image that
@@ -171,14 +178,20 @@ public:
      *  @note The real work is done in the virtual private member function Psf::doComputeKernelImage;
      *        computeKernelImage only handles caching and default arguments.
      */
-    std::shared_ptr<Image> computeKernelImage(lsst::geom::Point2D position = makeNullPoint(),
+    std::shared_ptr<Image> computeKernelImage(lsst::geom::Point2D position,
                                               image::Color color = image::Color(),
                                               ImageOwnerEnum owner = COPY) const;
+    // Using the default position automatically implies use of the default color, owner.
+    [[deprecated(
+        "Default position argument overload is deprecated and will be removed "
+        "in version 24.0.  Please use overload with explicit position."
+    )]]
+    std::shared_ptr<Image> computeKernelImage() const;
 
     /**
      *   Return the peak value of the PSF image.
      *
-     *  @param[in]  position     Position to evaluate the PSF at; defaults to getAveragePosition().
+     *  @param[in]  position     Position at which to evaluate the PSF.
      *  @param[in]  color        Color of the source for which to evaluate the PSF; defaults to
      *                           getAverageColor().
      *
@@ -186,44 +199,72 @@ public:
      *  be expensive (but be careful not to accidentally call it with no arguments when you actually
      *  want to call it with the same arguments just used to call computeImage or computeKernelImage).
      */
-    double computePeak(lsst::geom::Point2D position = makeNullPoint(),
+    double computePeak(lsst::geom::Point2D position,
                        image::Color color = image::Color()) const;
+
+    [[deprecated(
+        "Default position argument overload is deprecated and will be removed "
+        "in version 24.0.  Please use overload with explicit position."
+    )]]
+    double computePeak() const;
 
     /**
      *  Compute the "flux" of the Psf model within a circular aperture of the given radius.
      *
      *  @param[in]  radius       Radius of the aperture to measure.
-     *  @param[in]  position     Position to evaluate the PSF at; defaults to getAveragePosition().
+     *  @param[in]  position     Position at which to evaluate the PSF.
      *  @param[in]  color        Color of the source for which to evaluate the PSF; defaults to
      *                           getAverageColor().
      *
      *  The flux is relative to a Psf image that has been normalized to unit integral, and the radius
      *  is in pixels.
      */
-    double computeApertureFlux(double radius, lsst::geom::Point2D position = makeNullPoint(),
+    double computeApertureFlux(double radius, lsst::geom::Point2D position,
                                image::Color color = image::Color()) const;
+
+    [[deprecated(
+        "Default position argument overload is deprecated and will be removed "
+        "in version 24.0.  Please use overload with explicit position."
+    )]]
+    double computeApertureFlux(double radius) const;
 
     /**
      *  Compute the ellipse corresponding to the second moments of the Psf.
      *
-     *  @param[in]  position     Position to evaluate the PSF at; defaults to getAveragePosition().
+     *  @param[in]  position     Position at which to evaluate the PSF.
      *  @param[in]  color        Color of the source for which to evaluate the PSF; defaults to
      *                           getAverageColor().
      *
      *  The algorithm used to compute the moments is up to the derived class, and hence this
      *  method should not be used when a particular algorithm or weight function is required.
      */
-    geom::ellipses::Quadrupole computeShape(lsst::geom::Point2D position = makeNullPoint(),
+    geom::ellipses::Quadrupole computeShape(lsst::geom::Point2D position,
                                             image::Color color = image::Color()) const;
+
+    [[deprecated(
+        "Default position argument overload is deprecated and will be removed "
+        "in version 24.0.  Please use overload with explicit position."
+    )]]
+    geom::ellipses::Quadrupole computeShape() const;
 
     /**
      *  Return a FixedKernel corresponding to the Psf image at the given point.
      *
+     *  @param[in]  position     Position at which to evaluate the PSF.
+     *  @param[in]  color        Color of the source for which to evaluate the PSF; defaults to
+     *                           getAverageColor().
+     *
      *  This is implemented by calling computeKernelImage, and is simply provided for
      *  convenience.
      */
-    std::shared_ptr<math::Kernel const> getLocalKernel(lsst::geom::Point2D position = makeNullPoint(),
+    std::shared_ptr<math::Kernel const> getLocalKernel(lsst::geom::Point2D position,
                                                        image::Color color = image::Color()) const;
+
+    [[deprecated(
+        "Default position argument overload is deprecated and will be removed "
+        "in version 24.0.  Please use overload with explicit position."
+    )]]
+    std::shared_ptr<math::Kernel const> getLocalKernel() const;
 
     /**
      *  Return the average Color of the stars used to construct the Psf
@@ -241,22 +282,55 @@ public:
 
     /**
      *  Return the bounding box of the image returned by computeKernelImage()
+     *
+     *  @param[in]  position     Position at which to evaluate the PSF.
+     *  @param[in]  color        Color of the source for which to evaluate the PSF; defaults to
+     *                           getAverageColor().
      */
-    lsst::geom::Box2I computeBBox(lsst::geom::Point2D position = makeNullPoint(),
+    lsst::geom::Box2I computeBBox(lsst::geom::Point2D position,
                                   image::Color color = image::Color()) const;
+
+    [[deprecated(
+        "Default position argument overload is deprecated and will be removed "
+        "in version 24.0.  Please use overload with explicit position."
+    )]]
+    lsst::geom::Box2I computeBBox() const;
 
     /**
      *  Return the bounding box of the image returned by computeImage()
+     *
+     *  @param[in]  position     Position at which to evaluate the PSF.
+     *  @param[in]  color        Color of the source for which to evaluate the PSF; defaults to
+     *                           getAverageColor().
      */
-    lsst::geom::Box2I computeImageBBox(lsst::geom::Point2D position = makeNullPoint(),
+    lsst::geom::Box2I computeImageBBox(lsst::geom::Point2D position,
                                        image::Color color = image::Color()) const;
 
+    [[deprecated(
+        "Default position argument overload is deprecated and will be removed "
+        "in version 24.0.  Please use overload with explicit position."
+    )]]
+    lsst::geom::Box2I computeImageBBox() const;
+
     /**
+     *  Return the bounding box of the image returned by computeImage()
+     *
+     *  @param[in]  position     Position at which to evaluate the PSF.
+     *  @param[in]  color        Color of the source for which to evaluate the PSF; defaults to
+     *                           getAverageColor().
      *  Alias for computeBBox
      */
-    lsst::geom::Box2I computeKernelBBox(lsst::geom::Point2D position = makeNullPoint(),
+    lsst::geom::Box2I computeKernelBBox(lsst::geom::Point2D position,
                                         image::Color color = image::Color()) const {
         return computeBBox(position, color);
+    }
+
+    [[deprecated(
+        "Default position argument overload is deprecated and will be removed "
+        "in version 24.0.  Please use overload with explicit position."
+    )]]
+    lsst::geom::Box2I computeKernelBBox() const {
+        return computeBBox();
     }
 
     /**
