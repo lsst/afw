@@ -61,8 +61,8 @@ namespace lsst { namespace afw { namespace image { namespace detail {
 class MaskDict final {
 public:
 
-    typedef MaskPlaneDict::value_type value_type;
-    typedef MaskPlaneDict::const_iterator const_iterator;
+    using value_type = MaskPlaneDict::value_type;
+    using const_iterator = MaskPlaneDict::const_iterator;
 
     // Return a new MaskDict with the same plane definitions as the given
     // MaskPlaneDict, or return the default mask dict if it is empty.

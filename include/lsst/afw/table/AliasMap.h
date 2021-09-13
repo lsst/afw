@@ -34,18 +34,18 @@ class BaseTable;
  *  aliases are set or removed.
  */
 class AliasMap final {
-    typedef std::map<std::string, std::string> Internal;
+    using Internal = std::map<std::string, std::string>;
 
 public:
     // Create an empty AliasMap
-    AliasMap() : _internal(), _table(0) {}
+    AliasMap() : _internal(), _table(nullptr) {}
 
     /**
      *  Deep-copy an AliasMap
      *
      *  The new AliasMap will not be linked to any tables, even if other is.
      */
-    AliasMap(AliasMap const& other) : _internal(other._internal), _table(0) {}
+    AliasMap(AliasMap const& other) : _internal(other._internal), _table(nullptr) {}
     // Delegate to copy-constructor for backwards compatibility
     AliasMap(AliasMap&& other) : AliasMap(other) {}
 
@@ -54,7 +54,7 @@ public:
     ~AliasMap() = default;
 
     /// An iterator over alias->target pairs.
-    typedef std::map<std::string, std::string>::const_iterator Iterator;
+    using Iterator = std::map<std::string, std::string>::const_iterator;
 
     /// Return a iterator to the beginning of the map
     Iterator begin() const { return _internal.begin(); }

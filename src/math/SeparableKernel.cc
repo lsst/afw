@@ -254,12 +254,12 @@ double SeparableKernel::basicComputeVectors(std::vector<Pixel>& colList, std::ve
         if ((colSum == 0) || (rowSum == 0)) {
             throw LSST_EXCEPT(pexExcept::OverflowError, "Cannot normalize; kernel sum is 0");
         }
-        for (std::vector<Pixel>::iterator colIter = colList.begin(); colIter != colList.end(); ++colIter) {
-            *colIter /= colSum;
+        for (double & colIter : colList) {
+            colIter /= colSum;
         }
 
-        for (std::vector<Pixel>::iterator rowIter = rowList.begin(); rowIter != rowList.end(); ++rowIter) {
-            *rowIter /= rowSum;
+        for (double & rowIter : rowList) {
+            rowIter /= rowSum;
         }
         imSum = 1.0;
     }

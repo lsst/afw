@@ -57,8 +57,8 @@ class SpatialCellCandidate;
 
 class CandidateVisitor {
 public:
-    CandidateVisitor() {}
-    virtual ~CandidateVisitor() {}
+    CandidateVisitor() = default;
+    virtual ~CandidateVisitor() = default;
 
     virtual void reset() {}
     virtual void processCandidate(SpatialCellCandidate*) {}
@@ -78,8 +78,6 @@ public:
 
     SpatialCellCandidate(SpatialCellCandidate const&) = default;
     SpatialCellCandidate(SpatialCellCandidate&&) = default;
-    SpatialCellCandidate& operator=(SpatialCellCandidate const&) = default;
-    SpatialCellCandidate& operator=(SpatialCellCandidate&&) = default;
 
     /**
      * (virtual) destructor -- this is a base class you know
@@ -132,8 +130,6 @@ public:
             : SpatialCellCandidate(xCenter, yCenter), _chi2(std::numeric_limits<double>::max()) {}
     SpatialCellImageCandidate(SpatialCellImageCandidate const&) = default;
     SpatialCellImageCandidate(SpatialCellImageCandidate&&) = default;
-    SpatialCellImageCandidate& operator=(SpatialCellImageCandidate const&) = default;
-    SpatialCellImageCandidate& operator=(SpatialCellImageCandidate&&) = default;
     ~SpatialCellImageCandidate() override = default;
 
     /// Set the width of the image that getImage should return
@@ -162,7 +158,7 @@ private:
  */
 class SpatialCellCandidateIterator {
     friend class SpatialCell;
-    typedef std::vector<std::shared_ptr<SpatialCellCandidate>> CandidateList;
+    using CandidateList = std::vector<std::shared_ptr<SpatialCellCandidate>>;
 
 public:
     // ctors are protected
@@ -226,8 +222,8 @@ private:
  */
 class SpatialCell {
 public:
-    typedef std::vector<std::shared_ptr<SpatialCellCandidate>> CandidateList;
-    typedef SpatialCellCandidateIterator iterator;
+    using CandidateList = std::vector<std::shared_ptr<SpatialCellCandidate>>;
+    using iterator = SpatialCellCandidateIterator;
     /**
      * Constructor
      *
@@ -386,7 +382,7 @@ private:
  */
 class SpatialCellSet {
 public:
-    typedef std::vector<std::shared_ptr<SpatialCell>> CellList;
+    using CellList = std::vector<std::shared_ptr<SpatialCell>>;
 
     /**
      * Constructor

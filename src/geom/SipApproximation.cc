@@ -254,7 +254,7 @@ SipApproximation::SipApproximation(
     )
 {}
 
-SipApproximation::~SipApproximation() noexcept {}
+SipApproximation::~SipApproximation() noexcept = default;
 
 int SipApproximation::getOrder() const noexcept {
     return _solution->a.getBasis().getOrder();

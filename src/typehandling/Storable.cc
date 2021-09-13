@@ -31,7 +31,7 @@ namespace lsst {
 namespace afw {
 namespace typehandling {
 
-Storable::~Storable() noexcept {}
+Storable::~Storable() noexcept = default;
 
 std::shared_ptr<Storable> Storable::cloneStorable() const {
     throw LSST_EXCEPT(UnsupportedOperationException, "Cloning is not supported.");

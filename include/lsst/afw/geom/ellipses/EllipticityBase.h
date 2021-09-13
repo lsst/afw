@@ -44,7 +44,7 @@ namespace detail {
  */
 class EllipticityBase {
 public:
-    typedef Eigen::Matrix2d Jacobian;
+    using Jacobian = Eigen::Matrix2d;
 
     enum ParameterEnum { E1 = 0, E2 = 1 };
 

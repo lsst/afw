@@ -159,7 +159,7 @@ std::vector<Match<typename Cat1::Record, typename Cat2::Record> > matchRaDec(Cat
                                                                              Cat2 const &cat2,
                                                                              lsst::geom::Angle radius,
                                                                              MatchControl const &mc) {
-    typedef Match<typename Cat1::Record, typename Cat2::Record> MatchT;
+    using MatchT = Match<typename Cat1::Record, typename Cat2::Record>;
     std::vector<MatchT> matches;
 
     if (doSelfMatchIfSame(matches, cat1, cat2, radius)) return matches;
@@ -177,8 +177,8 @@ std::vector<Match<typename Cat1::Record, typename Cat2::Record> > matchRaDec(Cat
     size_t len1 = cat1.size();
     size_t len2 = cat2.size();
 
-    typedef RecordPos<typename Cat1::Record> Pos1;
-    typedef RecordPos<typename Cat2::Record> Pos2;
+    using Pos1 = RecordPos<typename Cat1::Record>;
+    using Pos2 = RecordPos<typename Cat2::Record>;
     std::unique_ptr<Pos1[]> pos1(new Pos1[len1]);
     std::unique_ptr<Pos2[]> pos2(new Pos2[len2]);
     len1 = makeRecordPositions(cat1, pos1.get());
@@ -249,7 +249,7 @@ template <typename Cat>
 std::vector<Match<typename Cat::Record, typename Cat::Record> > matchRaDec(Cat const &cat,
                                                                            lsst::geom::Angle radius,
                                                                            MatchControl const &mc) {
-    typedef Match<typename Cat::Record, typename Cat::Record> MatchT;
+    using MatchT = Match<typename Cat::Record, typename Cat::Record>;
     std::vector<MatchT> matches;
 
     if (radius < 0.0 || radius > (45.0 * lsst::geom::degrees)) {
@@ -263,7 +263,7 @@ std::vector<Match<typename Cat::Record, typename Cat::Record> > matchRaDec(Cat c
 
     // Build position list
     size_t len = cat.size();
-    typedef RecordPos<typename Cat::Record> Pos;
+    using Pos = RecordPos<typename Cat::Record>;
     std::unique_ptr<Pos[]> pos(new Pos[len]);
     len = makeRecordPositions(cat, pos.get());
 
@@ -437,7 +437,7 @@ BaseCatalog packMatches(std::vector<Match<Record1, Record2> > const &matches) {
     BaseCatalog result(schema);
     result.getTable()->preallocate(matches.size());
     result.reserve(matches.size());
-    typedef typename std::vector<Match<Record1, Record2> >::const_iterator Iter;
+    using Iter = typename std::vector<Match<Record1, Record2>>::const_iterator;
     for (Iter i = matches.begin(); i != matches.end(); ++i) {
         std::shared_ptr<BaseRecord> record = result.addNew();
         record->set(outKey1, i->first->getId());
@@ -462,7 +462,7 @@ std::vector<Match<typename Cat1::Record, typename Cat2::Record> > unpackMatches(
     if (!first.isSorted() || !second.isSorted())
         throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
                           "Catalogs passed to unpackMatches must be sorted.");
-    typedef Match<typename Cat1::Record, typename Cat2::Record> MatchT;
+    using MatchT = Match<typename Cat1::Record, typename Cat2::Record>;
     std::vector<MatchT> result;
     result.resize(matches.size());
     typename std::vector<MatchT>::iterator j = result.begin();

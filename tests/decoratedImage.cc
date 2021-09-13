@@ -33,7 +33,7 @@
 #pragma clang diagnostic ignored "-Wunused-variable"
 #include "boost/test/unit_test.hpp"
 #pragma clang diagnostic pop
-#include "boost/test/floating_point_comparison.hpp"
+#include "boost/test/tools/floating_point_comparison.hpp"
 
 #include "lsst/afw/image/Image.h"
 
@@ -42,9 +42,9 @@ namespace image = lsst::afw::image;
 
 using namespace std;
 
-typedef float PixelT;
-typedef image::Image<PixelT> ImageT;
-typedef image::DecoratedImage<PixelT> DecoratedImageT;
+using PixelT = float;
+using ImageT = image::Image<PixelT>;
+using DecoratedImageT = image::DecoratedImage<PixelT>;
 
 DecoratedImageT make_image(int const width = 5, int const height = 6) {
     DecoratedImageT dimg(lsst::geom::Extent2I(width, height));

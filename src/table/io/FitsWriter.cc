@@ -13,7 +13,7 @@ namespace io {
 
 namespace {
 
-typedef FitsWriter::Fits Fits;
+using Fits = FitsWriter::Fits;
 
 //----- Code to write FITS headers --------------------------------------------------------------------------
 
@@ -92,8 +92,8 @@ struct ProcessSchema {
 };
 
 void writeAliasMap(Fits& fits, AliasMap const& aliases) {
-    for (AliasMap::Iterator i = aliases.begin(); i != aliases.end(); ++i) {
-        fits.writeKey("ALIAS", i->first + ":" + i->second);
+    for (auto const &aliase : aliases) {
+        fits.writeKey("ALIAS", aliase.first + ":" + aliase.second);
     }
 }
 

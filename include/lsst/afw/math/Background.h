@@ -259,7 +259,7 @@ protected:
     explicit Background(lsst::geom::Box2I const imageBBox, int const nx, int const ny);
 
 public:
-    typedef float InternalPixelT;  ///< type used for any internal images, and returned by getApproximate
+    using InternalPixelT = float;  ///< type used for any internal images, and returned by getApproximate
 
     Background(Background const&) = delete;
     Background(Background&&) = delete;

@@ -49,10 +49,10 @@ namespace ellipses {
 class BaseCore::Transformer final {
 public:
     /// Matrix type for derivative with respect to input ellipse parameters.
-    typedef Eigen::Matrix3d DerivativeMatrix;
+    using DerivativeMatrix = Eigen::Matrix3d;
 
     /// Matrix type for derivative with respect to transform parameters.
-    typedef Eigen::Matrix<double, 3, 4> TransformDerivativeMatrix;
+    using TransformDerivativeMatrix = Eigen::Matrix<double, 3, 4>;
 
     /// Standard constructor.
     Transformer(BaseCore &input_, lsst::geom::LinearTransform const &transform_)
@@ -86,10 +86,10 @@ public:
 class Ellipse::Transformer final {
 public:
     /// Matrix type for derivative with respect to input ellipse parameters.
-    typedef Eigen::Matrix<double, 5, 5> DerivativeMatrix;
+    using DerivativeMatrix = Eigen::Matrix<double, 5, 5>;
 
     /// Matrix type for derivative with respect to transform parameters.
-    typedef Eigen::Matrix<double, 5, 6> TransformDerivativeMatrix;
+    using TransformDerivativeMatrix = Eigen::Matrix<double, 5, 6>;
 
     /// Standard constructor.
     Transformer(Ellipse &input_, lsst::geom::AffineTransform const &transform_)

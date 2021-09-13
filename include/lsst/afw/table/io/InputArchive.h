@@ -14,7 +14,7 @@ namespace table {
 class BaseRecord;
 template <typename RecordT>
 class CatalogT;
-typedef CatalogT<BaseRecord> BaseCatalog;
+using BaseCatalog = CatalogT<BaseRecord>;
 
 namespace io {
 
@@ -30,7 +30,7 @@ class CatalogVector;
  */
 class InputArchive final {
 public:
-    typedef std::map<int, std::shared_ptr<Persistable>> Map;
+    using Map = std::map<int, std::shared_ptr<Persistable>>;
 
     /// Construct an empty InputArchive that contains no objects.
     InputArchive();

@@ -49,7 +49,7 @@ namespace afwImage = lsst::afw::image;
 using lsst::daf::base::PropertySet;
 
 int main(int argc, char **argv) {
-    typedef double Pixel;
+    using Pixel = double;
     LOG_CONFIG();
 
     std::string inImagePath;

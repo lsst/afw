@@ -650,7 +650,7 @@ std::shared_ptr<ExposureInfo> ExposureFitsReader::readExposureInfo() {
         }
         LOGLS_WARN(_log, msg);
     }
-    for (auto keyValue : readExtraComponents()) {
+    for (const auto& keyValue : readExtraComponents()) {
         using StorablePtr = std::shared_ptr<typehandling::Storable const>;
         std::string key = keyValue.first;
         StorablePtr object = std::dynamic_pointer_cast<StorablePtr::element_type>(keyValue.second);

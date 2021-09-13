@@ -35,7 +35,7 @@ using namespace std;
 namespace image = lsst::afw::image;
 namespace math = lsst::afw::math;
 
-typedef image::Image<float> ImageF;
+using ImageF = image::Image<float>;
 
 int main() {
     // First we'll try a regular image

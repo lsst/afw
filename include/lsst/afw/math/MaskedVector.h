@@ -38,7 +38,7 @@ class MaskedVector : private lsst::afw::image::MaskedImage<EntryT> {
 public:
     // typedef typename lsst::afw::image::Mask<typename lsst::afw::image::MaskPixel>::MaskPlaneDict
     // MaskPlaneDict;
-    typedef typename lsst::afw::image::MaskedImage<EntryT>::Pixel Pixel;
+    using Pixel = typename lsst::afw::image::MaskedImage<EntryT>::Pixel;
 
     explicit MaskedVector(int width = 0)
             :  //, MaskPlaneDict const& planeDict=MaskPlaneDict()) :

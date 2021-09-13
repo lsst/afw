@@ -58,8 +58,8 @@ LSST_EXCEPTION_TYPE(SinglePolygonException, lsst::pex::exceptions::RuntimeError,
 
 class Polygon final : public afw::table::io::PersistableFacade<Polygon>, public afw::typehandling::Storable {
 public:
-    typedef lsst::geom::Box2D Box;
-    typedef lsst::geom::Point2D Point;
+    using Box = lsst::geom::Box2D;
+    using Point = lsst::geom::Point2D;
 
     /**
      * Construct a rectangular Polygon whose vertices are the corners of a box

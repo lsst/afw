@@ -37,10 +37,10 @@
 namespace image = lsst::afw::image;
 namespace math = lsst::afw::math;
 
-typedef image::Image<float> ImageF;
-typedef image::MaskedImage<float> MaskedImageF;
-typedef math::Statistics ImgStat;
-typedef math::MaskedVector<float> MaskedVectorF;
+using ImageF = image::Image<float>;
+using MaskedImageF = image::MaskedImage<float>;
+using ImgStat = math::Statistics;
+using MaskedVectorF = math::MaskedVector<float>;
 
 /*
  * An example of how to use the Statistics class

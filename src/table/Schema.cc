@@ -38,7 +38,7 @@ std::string join(std::string const &a, std::string const &b, char delimiter) {
 
 // Functor to compare two ItemVariants for Key equality.
 class ItemFunctors {
-    typedef detail::SchemaImpl::ItemVariant ItemVariant;
+    using ItemVariant = detail::SchemaImpl::ItemVariant;
 
     // Compares keys (including types).
     struct KeyHelper {
@@ -252,17 +252,17 @@ int SchemaImpl::contains(SchemaItem<T> const &item, int flags) const {
 std::set<std::string> SchemaImpl::getNames(bool topOnly) const {
     std::set<std::string> result;
     if (topOnly) {
-        for (NameMap::const_iterator i = _names.begin(); i != _names.end(); ++i) {
-            std::size_t sep = i->first.find(getDelimiter());
+        for (auto const &_name : _names) {
+            std::size_t sep = _name.first.find(getDelimiter());
             if (sep == std::string::npos) {
-                result.insert(result.end(), i->first);
+                result.insert(result.end(), _name.first);
             } else {
-                result.insert(result.end(), i->first.substr(0, sep));
+                result.insert(result.end(), _name.first.substr(0, sep));
             }
         }
     } else {
-        for (NameMap::const_iterator i = _names.begin(); i != _names.end(); ++i) {
-            result.insert(result.end(), i->first);
+        for (auto const &_name : _names) {
+            result.insert(result.end(), _name.first);
         }
     }
     return result;
@@ -420,7 +420,7 @@ int const Schema::VERSION;
 
 Schema::Schema() : _impl(std::make_shared<Impl>()), _aliases(std::make_shared<AliasMap>()) {}
 
-Schema::Schema(Schema const &other) : _impl(other._impl), _aliases(other._aliases) {}
+Schema::Schema(Schema const &other)  = default;
 // Delegate to copy constructor  for backwards compatibility
 Schema::Schema(Schema &&other) : Schema(other) {}
 
@@ -546,7 +546,7 @@ namespace {
 
 // Schema::forEach functor used for stringificationx
 struct Stream {
-    typedef void result_type;
+    using result_type = void;
 
     template <typename T>
     void operator()(SchemaItem<T> const &item) const {
@@ -563,8 +563,8 @@ struct Stream {
 std::ostream &operator<<(std::ostream &os, Schema const &schema) {
     os << "Schema(\n";
     schema.forEach(Stream(&os));
-    for (auto iter = schema.getAliasMap()->begin(); iter != schema.getAliasMap()->end(); ++iter) {
-        os << "    '" << iter->first << "'->'" << iter->second << "'\n";
+    for (auto const &iter : *schema.getAliasMap()) {
+        os << "    '" << iter.first << "'->'" << iter.second << "'\n";
     }
     return os << ")\n";
 }

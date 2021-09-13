@@ -123,12 +123,12 @@ public:
 };
 
 // define some abbreviated typenames for the test templates
-typedef CheckFinite ChkFin;
-typedef CheckValueLtMin ChkMin;
-typedef CheckValueGtMax ChkMax;
-typedef CheckClipRange ChkClip;
-typedef AlwaysTrue AlwaysT;
-typedef AlwaysFalse AlwaysF;
+using ChkFin = CheckFinite;
+using ChkMin = CheckValueLtMin;
+using ChkMax = CheckValueGtMax;
+using ChkClip = CheckClipRange;
+using AlwaysT = AlwaysTrue;
+using AlwaysF = AlwaysFalse;
 
 /** @internal Return the variance of a variance, assuming a Gaussian
  * There is apparently an attempt to correct for bias in the factor (n - 1)/n.  RHL
@@ -138,15 +138,7 @@ inline double varianceError(double const variance, int const n) {
 }
 
 /// @internal return type for processPixels
-typedef std::tuple<int,                // n
-                   double,             // sum
-                   Statistics::Value,  // mean
-                   Statistics::Value,  // variance
-                   double,             // min
-                   double,             // max
-                   image::MaskPixel    // allPixelOrMask
-                   >
-        StandardReturn;
+using StandardReturn = std::tuple<int, double, Statistics::Value, Statistics::Value, double, double, image::MaskPixel>;
 
 /*
  * Functions which convert the booleans into calls to the proper templated types, one type per
@@ -572,7 +564,7 @@ namespace {
     }
 }
 
-typedef std::tuple<double, double, double> MedianQuartileReturn;
+using MedianQuartileReturn = std::tuple<double, double, double>;
 namespace {
     /**
      * A wrapper using the nth_element() built-in to compute median and Quartiles for an image
@@ -1086,7 +1078,7 @@ Statistics::Statistics(image::Mask<image::MaskPixel> const &msk, image::Mask<ima
                           "Statistics<Mask> only supports NPOINT and SUM");
     }
 
-    typedef image::Mask<image::MaskPixel> Mask;
+    using Mask = image::Mask<>;
 
     _n = msk.getWidth() * msk.getHeight();
     if (_n == 0) {
@@ -1125,7 +1117,7 @@ Statistics makeStatistics(image::Mask<image::MaskPixel> const &msk, int const fl
 //
 #define STAT Statistics
 
-typedef image::VariancePixel VPixel;
+using VPixel = image::VariancePixel;
 
 #define INSTANTIATE_MASKEDIMAGE_STATISTICS(TYPE)                                                       \
     template STAT::Statistics(image::Image<TYPE> const &img, image::Mask<image::MaskPixel> const &msk, \

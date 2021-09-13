@@ -78,10 +78,10 @@ class InputArchive;
  */
 class ExposureRecord : public BaseRecord {
 public:
-    typedef ExposureTable Table;
-    typedef ColumnViewT<ExposureRecord> ColumnView;
-    typedef ExposureCatalogT<ExposureRecord> Catalog;
-    typedef ExposureCatalogT<ExposureRecord const> ConstCatalog;
+    using Table = ExposureTable;
+    using ColumnView = ColumnViewT<ExposureRecord>;
+    using Catalog = ExposureCatalogT<ExposureRecord>;
+    using ConstCatalog = ExposureCatalogT<const ExposureRecord>;
 
     /**
      *  Constructor used by ExposureTable.
@@ -194,10 +194,10 @@ private:
  */
 class ExposureTable : public BaseTable {
 public:
-    typedef ExposureRecord Record;
-    typedef ColumnViewT<ExposureRecord> ColumnView;
-    typedef ExposureCatalogT<Record> Catalog;
-    typedef ExposureCatalogT<Record const> ConstCatalog;
+    using Record = ExposureRecord;
+    using ColumnView = ColumnViewT<ExposureRecord>;
+    using Catalog = ExposureCatalogT<Record>;
+    using ConstCatalog = ExposureCatalogT<const Record>;
 
     /**
      *  Construct a new table.
@@ -309,14 +309,14 @@ private:
  */
 template <typename RecordT>
 class ExposureCatalogT : public SortedCatalogT<RecordT> {
-    typedef SortedCatalogT<RecordT> Base;
+    using Base = SortedCatalogT<RecordT>;
 
 public:
-    typedef RecordT Record;
-    typedef typename Record::Table Table;
+    using Record = RecordT;
+    using Table = typename Record::Table;
 
-    typedef typename Base::iterator iterator;
-    typedef typename Base::const_iterator const_iterator;
+    using iterator = typename Base::iterator;
+    using const_iterator = typename Base::const_iterator;
 
     /**
      *  Construct a vector from a table (or nothing).
@@ -485,9 +485,9 @@ protected:
     explicit ExposureCatalogT(Base const& other) : Base(other) {}
 };
 
-typedef ColumnViewT<ExposureRecord> ExposureColumnView;
-typedef ExposureCatalogT<ExposureRecord> ExposureCatalog;
-typedef ExposureCatalogT<ExposureRecord const> ConstExposureCatalog;
+using ExposureColumnView = ColumnViewT<ExposureRecord>;
+using ExposureCatalog = ExposureCatalogT<ExposureRecord>;
+using ConstExposureCatalog = ExposureCatalogT<const ExposureRecord>;
 
 inline RecordId ExposureRecord::getId() const { return get(ExposureTable::getIdKey()); }
 inline void ExposureRecord::setId(RecordId id) { set(ExposureTable::getIdKey(), id); }

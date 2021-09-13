@@ -161,7 +161,7 @@ inline const std::vector<T>& gkp_wa(int level) {
             0.01866711437596752016025132};
     static const std::vector<T> vw175a(aw175a, aw175a + 43);
 
-    static const std::vector<T>* wa[NGKPLEVELS] = {0, &vw21a, &vw43a, &vw87a, &vw175a};
+    static const std::vector<T>* wa[NGKPLEVELS] = {nullptr, &vw21a, &vw43a, &vw87a, &vw175a};
 
     assert(level >= 1 && level < NGKPLEVELS);
     return *wa[level];

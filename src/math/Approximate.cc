@@ -201,7 +201,7 @@ ApproximateChebyshev<PixelT>::ApproximateChebyshev(
 
 /// @internal dtor
 template <typename PixelT>
-ApproximateChebyshev<PixelT>::~ApproximateChebyshev() {}
+ApproximateChebyshev<PixelT>::~ApproximateChebyshev() = default;
 
 /**
  * @internal worker function for getImage
@@ -224,7 +224,7 @@ ApproximateChebyshev<PixelT>::doGetImage(int orderX, int orderY) const {
                                                      ? _poly
                                                      : _poly.truncate(orderX);
 
-    typedef typename image::Image<typename Approximate<PixelT>::OutPixelT> ImageT;
+    using ImageT = typename image::Image<typename Approximate<PixelT>::OutPixelT>;
 
     std::shared_ptr<ImageT> im(new ImageT(Approximate<PixelT>::_bbox));
     for (int iy = 0; iy != im->getHeight(); ++iy) {
@@ -254,7 +254,7 @@ ApproximateChebyshev<PixelT>::doGetImage(int orderX, int orderY) const {
 template <typename PixelT>
 std::shared_ptr<image::MaskedImage<typename Approximate<PixelT>::OutPixelT>>
 ApproximateChebyshev<PixelT>::doGetMaskedImage(int orderX, int orderY) const {
-    typedef typename image::MaskedImage<typename Approximate<PixelT>::OutPixelT> MImageT;
+    using MImageT = typename image::MaskedImage<typename Approximate<PixelT>::OutPixelT>;
 
     std::shared_ptr<MImageT> mi(new MImageT(Approximate<PixelT>::_bbox));
     std::shared_ptr<typename MImageT::Image> im = mi->getImage();

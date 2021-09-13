@@ -110,13 +110,13 @@ namespace math {
  */
 class Kernel : public afw::table::io::PersistableFacade<Kernel>, public afw::table::io::Persistable {
 public:
-    typedef double Pixel;
-    typedef std::shared_ptr<lsst::afw::math::Function2<double>> SpatialFunctionPtr;
-    typedef lsst::afw::math::Function2<double> SpatialFunction;
-    typedef lsst::afw::math::NullFunction2<double> NullSpatialFunction;
+    using Pixel = double;
+    using SpatialFunctionPtr = std::shared_ptr<lsst::afw::math::Function2<double>>;
+    using SpatialFunction = lsst::afw::math::Function2<double>;
+    using NullSpatialFunction = lsst::afw::math::NullFunction2<double>;
 
     // Traits values for this class of Kernel
-    typedef generic_kernel_tag kernel_fill_factor;
+    using kernel_fill_factor = generic_kernel_tag;
 
     /**
      * Construct a null Kernel of size 0,0.
@@ -460,7 +460,7 @@ private:
     virtual void _setKernelXY() {}
 };
 
-typedef std::vector<std::shared_ptr<Kernel>> KernelList;
+using KernelList = std::vector<std::shared_ptr<Kernel>>;
 
 /**
  * A kernel created from an Image
@@ -535,8 +535,8 @@ private:
  */
 class AnalyticKernel : public afw::table::io::PersistableFacade<AnalyticKernel>, public Kernel {
 public:
-    typedef lsst::afw::math::Function2<Pixel> KernelFunction;
-    typedef std::shared_ptr<lsst::afw::math::Function2<Pixel>> KernelFunctionPtr;
+    using KernelFunction = lsst::afw::math::Function2<Pixel>;
+    using KernelFunctionPtr = std::shared_ptr<lsst::afw::math::Function2<Pixel>>;
 
     /**
      * Construct an empty spatially invariant AnalyticKernel of size 0x0
@@ -644,7 +644,7 @@ protected:
 class DeltaFunctionKernel : public afw::table::io::PersistableFacade<DeltaFunctionKernel>, public Kernel {
 public:
     // Traits values for this class of Kernel
-    typedef deltafunction_kernel_tag kernel_fill_factor;
+    using kernel_fill_factor = deltafunction_kernel_tag;
 
     /**
      * Construct a spatially invariant DeltaFunctionKernel
@@ -860,8 +860,8 @@ private:
  */
 class SeparableKernel : public afw::table::io::PersistableFacade<SeparableKernel>, public Kernel {
 public:
-    typedef lsst::afw::math::Function1<Pixel> KernelFunction;
-    typedef std::shared_ptr<KernelFunction> KernelFunctionPtr;
+    using KernelFunction = lsst::afw::math::Function1<Pixel>;
+    using KernelFunctionPtr = std::shared_ptr<KernelFunction>;
 
     /**
      * Construct an empty spatially invariant SeparableKernel of size 0x0

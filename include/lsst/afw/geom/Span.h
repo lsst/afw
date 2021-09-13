@@ -47,7 +47,7 @@ namespace geom {
 class Span final {
 public:
     /// An iterator over points in the Span.
-    typedef SpanPixelIterator Iterator;
+    using Iterator = SpanPixelIterator;
 
     Span(int y,   ///< Row that Span's in
          int x0,  ///< Starting column (inclusive)

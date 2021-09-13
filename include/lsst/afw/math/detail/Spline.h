@@ -226,7 +226,7 @@ public:
      * Functions', Numer. Math. 47 p.99 (1985)
      */
     SmoothedSpline(std::vector<double> const& x, std::vector<double> const& y, std::vector<double> const& dy,
-                   double s, double* chisq = NULL, std::vector<double>* errs = NULL);
+                   double s, double* chisq = nullptr, std::vector<double>* errs = nullptr);
 };
 }  // namespace detail
 }  // namespace math

@@ -9,8 +9,8 @@
 #include "ndarray/eigen.h"
 #include "lsst/afw/math/detail/TrapezoidalPacker.h"
 
-typedef lsst::afw::math::detail::TrapezoidalPacker Packer;
-typedef lsst::afw::math::ChebyshevBoundedFieldControl Control;
+using Packer = lsst::afw::math::detail::TrapezoidalPacker;
+using Control = lsst::afw::math::ChebyshevBoundedFieldControl;
 
 ndarray::Array<double, 1, 1> makeRandomArray(int n) {
     ndarray::Array<double, 1, 1> result = ndarray::allocate(n);

@@ -251,12 +251,12 @@ template <typename MaskPixelT>
 std::string Mask<MaskPixelT>::interpret(MaskPixelT value) {
     std::string result = "";
     MaskPlaneDict const& mpd = _maskPlaneDict()->getMaskPlaneDict();
-    for (MaskPlaneDict::const_iterator iter = mpd.begin(); iter != mpd.end(); ++iter) {
-        if (value & getBitMask(iter->second)) {
+    for (auto const &iter : mpd) {
+        if (value & getBitMask(iter.second)) {
             if (result.size() > 0) {
                 result += ",";
             }
-            result += iter->first;
+            result += iter.first;
         }
     }
     return result;
@@ -339,8 +339,8 @@ template <typename MaskPixelT>
 MaskPixelT Mask<MaskPixelT>::getBitMask(int planeId) {
     MaskPlaneDict const& mpd = _maskPlaneDict()->getMaskPlaneDict();
 
-    for (MaskPlaneDict::const_iterator i = mpd.begin(); i != mpd.end(); ++i) {
-        if (planeId == i->second) {
+    for (auto const &i : mpd) {
+        if (planeId == i.second) {
             MaskPixelT const bitmask = getBitMaskNoThrow(planeId);
             if (bitmask == 0) {  // failed
                 break;
@@ -377,8 +377,8 @@ MaskPixelT Mask<MaskPixelT>::getPlaneBitMask(const std::string& name) {
 template <typename MaskPixelT>
 MaskPixelT Mask<MaskPixelT>::getPlaneBitMask(const std::vector<std::string>& name) {
     MaskPixelT mpix = 0x0;
-    for (std::vector<std::string>::const_iterator it = name.begin(); it != name.end(); ++it) {
-        mpix |= getBitMask(getMaskPlane(*it));
+    for (auto const &it : name) {
+        mpix |= getBitMask(getMaskPlane(it));
     }
     return mpix;
 }
@@ -420,9 +420,9 @@ void Mask<MaskPixelT>::conformMaskPlanes(MaskPlaneDict const& currentPlaneDict) 
         MaskPixelT currentMask[sizeof(MaskPixelT) * 8];    //           mapped to these bits
         int numReMap = 0;
 
-        for (MaskPlaneDict::const_iterator i = currentPlaneDict.begin(); i != currentPlaneDict.end(); i++) {
-            std::string const name = i->first;                     // name of mask plane
-            int const currentPlaneNumber = i->second;              // plane number currently in use
+        for (auto const &i : currentPlaneDict) {
+            std::string const name = i.first;                     // name of mask plane
+            int const currentPlaneNumber = i.second;              // plane number currently in use
             int canonicalPlaneNumber = getMaskPlaneNoThrow(name);  // plane number in lsst::afw::image::Mask
 
             if (canonicalPlaneNumber < 0) {  // no such plane; add it
@@ -578,20 +578,20 @@ void Mask<MaskPixelT>::addMaskPlanesToMetadata(std::shared_ptr<dafBase::Property
     }
 
     // First, clear existing MaskPlane metadata
-    typedef std::vector<std::string> NameList;
+    using NameList = std::vector<std::string>;
     NameList paramNames = metadata->paramNames(false);
-    for (NameList::const_iterator i = paramNames.begin(); i != paramNames.end(); ++i) {
-        if (i->compare(0, maskPlanePrefix.size(), maskPlanePrefix) == 0) {
-            metadata->remove(*i);
+    for (auto const &paramName : paramNames) {
+        if (paramName.compare(0, maskPlanePrefix.size(), maskPlanePrefix) == 0) {
+            metadata->remove(paramName);
         }
     }
 
     MaskPlaneDict const& mpd = _maskPlaneDict()->getMaskPlaneDict();
 
     // Add new MaskPlane metadata
-    for (MaskPlaneDict::const_iterator i = mpd.begin(); i != mpd.end(); ++i) {
-        std::string const& planeName = i->first;
-        int const planeNumber = i->second;
+    for (auto const &i : mpd) {
+        std::string const& planeName = i.first;
+        int const planeNumber = i.second;
 
         if (planeName != "") {
             metadata->add(maskPlanePrefix + planeName, planeNumber);
@@ -605,16 +605,16 @@ typename Mask<MaskPixelT>::MaskPlaneDict Mask<MaskPixelT>::parseMaskPlaneMetadat
     MaskPlaneDict newDict;
 
     // First, clear existing MaskPlane metadata
-    typedef std::vector<std::string> NameList;
+    using NameList = std::vector<std::string>;
     NameList paramNames = metadata->paramNames(false);
     int numPlanesUsed = 0;  // number of planes used
 
     // Iterate over childless properties with names starting with maskPlanePrefix
-    for (NameList::const_iterator i = paramNames.begin(); i != paramNames.end(); ++i) {
-        if (i->compare(0, maskPlanePrefix.size(), maskPlanePrefix) == 0) {
+    for (auto const &paramName : paramNames) {
+        if (paramName.compare(0, maskPlanePrefix.size(), maskPlanePrefix) == 0) {
             // split off maskPlanePrefix to obtain plane name
-            std::string planeName = i->substr(maskPlanePrefix.size());
-            int const planeId = metadata->getAsInt(*i);
+            std::string planeName = paramName.substr(maskPlanePrefix.size());
+            int const planeId = metadata->getAsInt(paramName);
 
             MaskPlaneDict::const_iterator plane = newDict.find(planeName);
             if (plane != newDict.end() && planeId != plane->second) {

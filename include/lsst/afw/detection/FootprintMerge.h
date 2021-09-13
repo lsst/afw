@@ -121,15 +121,15 @@ public:
     void getFinalSources(afw::table::SourceCatalog &outputCat);
 
 private:
-    typedef afw::table::Key<afw::table::Flag> FlagKey;
+    using FlagKey = afw::table::Key<afw::table::Flag>;
 
     struct KeyTuple {
         FlagKey footprint;
         FlagKey peak;
     };
 
-    typedef std::vector<std::shared_ptr<FootprintMerge>> FootprintMergeVec;
-    typedef std::map<std::string, KeyTuple> FilterMap;
+    using FootprintMergeVec = std::vector<std::shared_ptr<FootprintMerge>>;
+    using FilterMap = std::map<std::string, KeyTuple>;
 
     friend class FootprintMerge;
 

@@ -59,8 +59,8 @@ using PyBaseTable = py::class_<BaseTable, std::shared_ptr<BaseTable>>;
 
 template <typename T>
 void declareBaseRecordOverloads(PyBaseRecord &cls, std::string const &suffix) {
-    typedef typename Field<T>::Value (BaseRecord::*Getter)(Key<T> const &) const;
-    typedef void (BaseRecord::*Setter)(Key<T> const &, typename Field<T>::Value const &);
+    using Getter = typename Field<T>::Value (BaseRecord::*)(const Key<T> &) const;
+    using Setter = void (BaseRecord::*)(const Key<T> &, const typename Field<T>::Value &);
     cls.def(("get" + suffix).c_str(), (Getter)&BaseRecord::get);
     cls.def(("set" + suffix).c_str(), (Setter)&BaseRecord::set);
 }

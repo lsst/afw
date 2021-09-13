@@ -9,7 +9,7 @@ namespace io {
 
 namespace {
 
-typedef std::map<std::string, FitsReader const*> Registry;
+using Registry = std::map<std::string, const FitsReader *>;
 
 Registry& getRegistry() {
     static Registry it;

@@ -43,7 +43,7 @@ namespace image {
  *  underyling container in the future).
  */
 class ApCorrMap final : public table::io::PersistableFacade<ApCorrMap>, public typehandling::Storable {
-    typedef std::map<std::string, std::shared_ptr<math::BoundedField>> Internal;
+    using Internal = std::map<std::string, std::shared_ptr<math::BoundedField>>;
 
 public:
     /// Maximum number of characters for an aperture correction name (required for persistence).
@@ -51,7 +51,7 @@ public:
 
     /// Iterator type returned by begin() and end().  Dereferences to a
     /// pair<string,std::shared_ptr<BoundedField>>.
-    typedef Internal::const_iterator Iterator;
+    using Iterator = Internal::const_iterator;
 
     ApCorrMap() = default;
     ApCorrMap(ApCorrMap const&) = default;

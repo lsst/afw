@@ -66,7 +66,7 @@ public:
     Card(const std::string &name, const char *val, const char *commnt = "")
             : keyword(name), value(std::string(val)), comment(commnt) {}
 
-    ~Card() {}
+    ~Card() = default;
 
     int write(int fd, int ncard, char *record) const;
 
@@ -82,12 +82,12 @@ int Card::write(int fd, int ncard, char *record) const {
     char *card = &record[80 * ncard];
 
     if (value.type() == typeid(std::string)) {
-        const char *str = std::any_cast<std::string>(value).c_str();
+        std::string const &str = std::any_cast<std::string>(value);
         if (keyword == "" || keyword == "COMMENT" || keyword == "END" || keyword == "HISTORY") {
-            sprintf(card, "%-8.8s%-72s", keyword.c_str(), str);
+            sprintf(card, "%-8.8s%-72s", keyword.c_str(), str.c_str());
         } else {
-            sprintf(card, "%-8.8s= '%s' %c%-*s", keyword.c_str(), str, (comment == "" ? ' ' : '/'),
-                    (int)(80 - 14 - strlen(str)), comment.c_str());
+            sprintf(card, "%-8.8s= '%s' %c%-*s", keyword.c_str(), str.c_str(), (comment == "" ? ' ' : '/'),
+                    (int)(80 - 14 - str.size()), comment.c_str());
         }
     } else {
         sprintf(card, "%-8.8s= ", keyword.c_str());
@@ -284,7 +284,7 @@ int write_fits_data(int fd, int bitpix, char *begin, char *end) {
     }
 #endif
 
-    char *buff = NULL;       // I/O buffer
+    char *buff = nullptr;       // I/O buffer
     bool allocated = false;  // do I need to free it?
     if (swap_bytes || bitpix == 16) {
         buff = new char[FITS_SIZE * bytes_per_pixel];
@@ -337,17 +337,14 @@ int write_fits_data(int fd, int bitpix, char *begin, char *end) {
 }
 
 void addWcs(std::string const &wcsName, std::list<Card> &cards, int x0 = 0.0, int y0 = 0.0) {
-    cards.push_back(
-            Card(str(boost::format("CRVAL1%s") % wcsName), x0, "(output) Column pixel of Reference Pixel"));
-    cards.push_back(
-            Card(str(boost::format("CRVAL2%s") % wcsName), y0, "(output) Row pixel of Reference Pixel"));
-    cards.push_back(
-            Card(str(boost::format("CRPIX1%s") % wcsName), 1.0, "Column Pixel Coordinate of Reference"));
-    cards.push_back(Card(str(boost::format("CRPIX2%s") % wcsName), 1.0, "Row Pixel Coordinate of Reference"));
-    cards.push_back(Card(str(boost::format("CTYPE1%s") % wcsName), "LINEAR", "Type of projection"));
-    cards.push_back(Card(str(boost::format("CTYPE1%s") % wcsName), "LINEAR", "Type of projection"));
-    cards.push_back(Card(str(boost::format("CUNIT1%s") % wcsName), "PIXEL", "Column unit"));
-    cards.push_back(Card(str(boost::format("CUNIT2%s") % wcsName), "PIXEL", "Row unit"));
+    cards.emplace_back(str(boost::format("CRVAL1%s") % wcsName), x0, "(output) Column pixel of Reference Pixel");
+    cards.emplace_back(str(boost::format("CRVAL2%s") % wcsName), y0, "(output) Row pixel of Reference Pixel");
+    cards.emplace_back(str(boost::format("CRPIX1%s") % wcsName), 1.0, "Column Pixel Coordinate of Reference");
+    cards.emplace_back(str(boost::format("CRPIX2%s") % wcsName), 1.0, "Row Pixel Coordinate of Reference");
+    cards.emplace_back(str(boost::format("CTYPE1%s") % wcsName), "LINEAR", "Type of projection");
+    cards.emplace_back(str(boost::format("CTYPE1%s") % wcsName), "LINEAR", "Type of projection");
+    cards.emplace_back(str(boost::format("CUNIT1%s") % wcsName), "PIXEL", "Column unit");
+    cards.emplace_back(str(boost::format("CUNIT2%s") % wcsName), "PIXEL", "Row unit");
 }
 }  // namespace
 
@@ -370,8 +367,8 @@ void writeBasicFits(int fd,                   // file descriptor to write to
      */
     int bitpix = lsst::afw::fits::getBitPix<typename ImageT::Pixel>();
     if (bitpix == 20) {  // cfitsio for "Unsigned short"
-        cards.push_back(Card("BZERO", 32768.0, ""));
-        cards.push_back(Card("BSCALE", 1.0, ""));
+        cards.emplace_back("BZERO", 32768.0, "");
+        cards.emplace_back("BSCALE", 1.0, "");
         bitpix = 16;
     } else if (bitpix == 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unsupported image type");
@@ -386,15 +383,15 @@ void writeBasicFits(int fd,                   // file descriptor to write to
     addWcs("B", cards);
 
     if (title) {
-        cards.push_back(Card("OBJECT", title, "Image being displayed"));
+        cards.emplace_back("OBJECT", title, "Image being displayed");
     }
     /*
      * Was there something else?
      */
-    if (Wcs == NULL) {
+    if (Wcs == nullptr) {
         addWcs("", cards);  // works around a ds9 bug that WCSA/B is ignored if no Wcs is present
     } else {
-        typedef std::vector<std::string> NameList;
+        using NameList = std::vector<std::string>;
 
         auto shift = lsst::geom::Extent2D(-data.getX0(), -data.getY0());
         auto newWcs = Wcs->copyAtShiftedPixelOrigin(shift);
@@ -403,22 +400,22 @@ void writeBasicFits(int fd,                   // file descriptor to write to
 
         NameList paramNames = metadata->paramNames();
 
-        for (NameList::const_iterator i = paramNames.begin(), end = paramNames.end(); i != end; ++i) {
-            if (*i == "SIMPLE" || *i == "BITPIX" || *i == "NAXIS" || *i == "NAXIS1" || *i == "NAXIS2" ||
-                *i == "XTENSION" || *i == "PCOUNT" || *i == "GCOUNT") {
+        for (auto const &paramName : paramNames) {
+            if (paramName == "SIMPLE" || paramName == "BITPIX" || paramName == "NAXIS" || paramName == "NAXIS1" || paramName == "NAXIS2" ||
+                paramName == "XTENSION" || paramName == "PCOUNT" || paramName == "GCOUNT") {
                 continue;
             }
-            std::type_info const &type = metadata->typeOf(*i);
+            std::type_info const &type = metadata->typeOf(paramName);
             if (type == typeid(bool)) {
-                cards.push_back(Card(*i, metadata->get<bool>(*i)));
+                cards.emplace_back(paramName, metadata->get<bool>(paramName));
             } else if (type == typeid(int)) {
-                cards.push_back(Card(*i, metadata->get<int>(*i)));
+                cards.emplace_back(paramName, metadata->get<int>(paramName));
             } else if (type == typeid(float)) {
-                cards.push_back(Card(*i, metadata->get<float>(*i)));
+                cards.emplace_back(paramName, metadata->get<float>(paramName));
             } else if (type == typeid(double)) {
-                cards.push_back(Card(*i, metadata->get<double>(*i)));
+                cards.emplace_back(paramName, metadata->get<double>(paramName));
             } else {
-                cards.push_back(Card(*i, metadata->get<std::string>(*i)));
+                cards.emplace_back(paramName, metadata->get<std::string>(paramName));
             }
         }
     }

@@ -62,7 +62,7 @@ char const *const Random::_seedEnvVarName = "LSST_RNG_SEED";
 
 void Random::initialize() {
     ::gsl_rng *rng = ::gsl_rng_alloc(_gslRngTypes[_algorithm]);
-    if (rng == 0) {
+    if (rng == nullptr) {
         throw std::bad_alloc();
     }
     // This seed is guaranteed to be non-zero.
@@ -132,8 +132,8 @@ std::string Random::getAlgorithmName() const { return std::string(_algorithmName
 std::vector<std::string> const &Random::getAlgorithmNames() {
     static std::vector<std::string> names;
     if (names.size() == 0) {
-        for (int i = 0; i < NUM_ALGORITHMS; ++i) {
-            names.push_back(_algorithmNames[i]);
+        for (auto _algorithmName : _algorithmNames) {
+            names.emplace_back(_algorithmName);
         }
     }
     return names;

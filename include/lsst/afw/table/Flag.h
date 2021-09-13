@@ -31,8 +31,8 @@ class Access;
  */
 template <>
 struct FieldBase<Flag> {
-    typedef bool Value;            ///< the type returned by BaseRecord::get
-    typedef std::int64_t Element;  ///< the actual storage type (shared by multiple flag fields)
+    using Value = bool;            ///< the type returned by BaseRecord::get
+    using Element = std::int64_t;  ///< the actual storage type (shared by multiple flag fields)
 
     /// Return the number of subfield elements (always one for scalars).
     std::size_t getElementCount() const { return 1; }

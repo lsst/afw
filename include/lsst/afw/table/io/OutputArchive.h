@@ -13,7 +13,7 @@ class Schema;
 class BaseRecord;
 template <typename RecordT>
 class CatalogT;
-typedef CatalogT<BaseRecord> BaseCatalog;
+using BaseCatalog = CatalogT<BaseRecord>;
 
 namespace io {
 

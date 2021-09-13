@@ -246,14 +246,14 @@ void basicConvolve(OutImageT& convolvedImage, InImageT const& inImage,
 template <typename OutImageT, typename InImageT>
 void basicConvolve(OutImageT& convolvedImage, InImageT const& inImage, math::SeparableKernel const& kernel,
                    math::ConvolutionControl const& convolutionControl) {
-    typedef typename math::Kernel::Pixel KernelPixel;
-    typedef typename std::vector<KernelPixel> KernelVector;
-    typedef KernelVector::const_iterator KernelIterator;
-    typedef typename InImageT::const_x_iterator InXIterator;
-    typedef typename InImageT::const_xy_locator InXYLocator;
-    typedef typename OutImageT::x_iterator OutXIterator;
-    typedef typename OutImageT::y_iterator OutYIterator;
-    typedef typename OutImageT::SinglePixel OutPixel;
+    using KernelPixel = typename math::Kernel::Pixel;
+    using KernelVector = typename std::vector<KernelPixel>;
+    using KernelIterator = KernelVector::const_iterator;
+    using InXIterator = typename InImageT::const_x_iterator;
+    using InXYLocator = typename InImageT::const_xy_locator;
+    using OutXIterator = typename OutImageT::x_iterator;
+    using OutYIterator = typename OutImageT::y_iterator;
+    using OutPixel = typename OutImageT::SinglePixel;
 
     assertDimensionsOK(convolvedImage, inImage, kernel);
 
@@ -357,15 +357,15 @@ void convolveWithBruteForce(OutImageT& convolvedImage, InImageT const& inImage, 
                             math::ConvolutionControl const& convolutionControl) {
     bool doNormalize = convolutionControl.getDoNormalize();
 
-    typedef typename math::Kernel::Pixel KernelPixel;
-    typedef image::Image<KernelPixel> KernelImage;
+    using KernelPixel = typename math::Kernel::Pixel;
+    using KernelImage = image::Image<KernelPixel>;
 
-    typedef typename KernelImage::const_x_iterator KernelXIterator;
-    typedef typename KernelImage::const_xy_locator KernelXYLocator;
-    typedef typename InImageT::const_x_iterator InXIterator;
-    typedef typename InImageT::const_xy_locator InXYLocator;
-    typedef typename OutImageT::x_iterator OutXIterator;
-    typedef typename OutImageT::SinglePixel OutPixel;
+    using KernelXIterator = typename KernelImage::const_x_iterator;
+    using KernelXYLocator = typename KernelImage::const_xy_locator;
+    using InXIterator = typename InImageT::const_x_iterator;
+    using InXYLocator = typename InImageT::const_xy_locator;
+    using OutXIterator = typename OutImageT::x_iterator;
+    using OutPixel = typename OutImageT::SinglePixel;
 
     assertDimensionsOK(convolvedImage, inImage, kernel);
 

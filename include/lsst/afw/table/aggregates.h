@@ -114,8 +114,8 @@ private:
     Key<T> _y;
 };
 
-typedef PointKey<int> Point2IKey;
-typedef PointKey<double> Point2DKey;
+using Point2IKey = PointKey<int>;
+using Point2DKey = PointKey<double>;
 
 /**
  *  A FunctorKey used to get or set a lsst::geom::Box2I or Box2D from a (min, max) pair of PointKeys.
@@ -431,9 +431,9 @@ private:
 template <typename T, int N>
 class CovarianceMatrixKey : public FunctorKey<Eigen::Matrix<T, N, N> > {
 public:
-    typedef std::vector<Key<T> > ErrKeyArray;
-    typedef std::vector<Key<T> > CovarianceKeyArray;
-    typedef std::vector<std::string> NameArray;
+    using ErrKeyArray = std::vector<Key<T>>;
+    using CovarianceKeyArray = std::vector<Key<T>>;
+    using NameArray = std::vector<std::string>;
 
     /**
      *  Add covariance matrix fields to a Schema, and return a CovarianceMatrixKey to manage them.

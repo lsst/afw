@@ -227,7 +227,7 @@ public:
                 int y = *j++;
                 int x0 = *j++;
                 int x1 = *j++;
-                spansVector.push_back(geom::Span(y, x0, x1));
+                spansVector.emplace_back(y, x0, x1);
             }
         }
         std::shared_ptr<Footprint> fp = std::make_shared<detection::Footprint>(
@@ -273,7 +273,7 @@ public:
                                         N));
             }
             // float HeavyFootprints were the only kind we ever saved using the old format
-            typedef detection::HeavyFootprint<float, image::MaskPixel, image::VariancePixel> HeavyFootprint;
+            using HeavyFootprint = detection::HeavyFootprint<float>;
             std::shared_ptr<HeavyFootprint> heavy = std::make_shared<HeavyFootprint>(*fp);
             fits.readTableArray(row, _heavyPixCol, N, heavy->getImageArray().getData());
             fits.readTableArray(row, _heavyMaskCol, N, heavy->getMaskArray().getData());
@@ -391,7 +391,7 @@ std::shared_ptr<SourceTable> SourceTable::make(Schema const &schema,
 SourceTable::SourceTable(Schema const &schema, std::shared_ptr<IdFactory> const &idFactory)
         : SimpleTable(schema, idFactory), _slots(schema) {}
 
-SourceTable::SourceTable(SourceTable const &other) : SimpleTable(other), _slots(other._slots) {}
+SourceTable::SourceTable(SourceTable const &other)  = default;
 // Delegate to copy constructor for backward compatibility
 SourceTable::SourceTable(SourceTable &&other) : SourceTable(other) {}
 

@@ -96,20 +96,20 @@ private:
  */
 template <typename RecordT>
 class CatalogT {
-    typedef std::vector<std::shared_ptr<RecordT>> Internal;
+    using Internal = std::vector<std::shared_ptr<RecordT>>;
 
 public:
-    typedef RecordT Record;
-    typedef typename Record::Table Table;
-    typedef typename Record::ColumnView ColumnView;
+    using Record = RecordT;
+    using Table = typename Record::Table;
+    using ColumnView = typename Record::ColumnView;
 
-    typedef RecordT value_type;
-    typedef RecordT& reference;
-    typedef std::shared_ptr<RecordT> pointer;
-    typedef typename Internal::size_type size_type;
-    typedef typename Internal::difference_type difference_type;
-    typedef CatalogIterator<typename Internal::iterator> iterator;
-    typedef CatalogIterator<typename Internal::const_iterator> const_iterator;
+    using value_type = RecordT;
+    using reference = RecordT &;
+    using pointer = std::shared_ptr<RecordT>;
+    using size_type = typename Internal::size_type;
+    using difference_type = typename Internal::difference_type;
+    using iterator = CatalogIterator<typename Internal::iterator>;
+    using const_iterator = CatalogIterator<typename Internal::const_iterator>;
 
     /// Return the table associated with the catalog.
     std::shared_ptr<Table> getTable() const { return _table; }
@@ -517,7 +517,7 @@ public:
     template <typename InputIterator>
     void insert(iterator pos, InputIterator first, InputIterator last, bool deep = false) {
         _maybeReserve(pos, first, last, deep,
-                      (typename std::iterator_traits<InputIterator>::iterator_category*)0);
+                      (typename std::iterator_traits<InputIterator>::iterator_category*)nullptr);
         if (deep) {
             while (first != last) {
                 pos = insert(pos, *first);
@@ -542,7 +542,7 @@ public:
                               "SchemaMapper's output schema does not match catalog's schema");
         }
         _maybeReserve(pos, first, last, true,
-                      (typename std::iterator_traits<InputIterator>::iterator_category*)0);
+                      (typename std::iterator_traits<InputIterator>::iterator_category*)nullptr);
         while (first != last) {
             pos = insert(pos, _table->copyRecord(*first, mapper));
             ++pos;
@@ -712,7 +712,7 @@ struct ComparisonAdaptor {
 
 template <typename RecordT, typename T>
 struct KeyExtractionFunctor {
-    typedef typename Field<T>::Value result_type;
+    using result_type = typename Field<T>::Value;
 
     result_type operator()(RecordT const& r) const { return r.get(key); }
 
@@ -764,7 +764,7 @@ typename CatalogT<RecordT>::iterator CatalogT<RecordT>::find(typename Field<T>::
                                                              Key<T> const& key) {
     detail::KeyExtractionFunctor<RecordT, T> f = {key};
     // Iterator adaptor that makes a CatalogT iterator work like an iterator over field values.
-    typedef boost::transform_iterator<detail::KeyExtractionFunctor<RecordT, T>, iterator> SearchIter;
+    using SearchIter = boost::transform_iterator<detail::KeyExtractionFunctor<RecordT, T>, iterator>;
     /* Try binary search for log n search assuming the table is sorted.
      * If the search is unsuccessful, try a brute-force search before quitting.
      */
@@ -785,7 +785,7 @@ typename CatalogT<RecordT>::const_iterator CatalogT<RecordT>::find(typename Fiel
                                                                    Key<T> const& key) const {
     detail::KeyExtractionFunctor<RecordT, T> f = {key};
     // Iterator adaptor that makes a CatalogT iterator work like an iterator over field values.
-    typedef boost::transform_iterator<detail::KeyExtractionFunctor<RecordT, T>, const_iterator> SearchIter;
+    using SearchIter = boost::transform_iterator<detail::KeyExtractionFunctor<RecordT, T>, const_iterator>;
     /* Try binary search for log n search assuming the table is sorted.
      * If the search is unsuccessful, try a brute-force search before quitting.
      */
@@ -806,7 +806,7 @@ typename CatalogT<RecordT>::iterator CatalogT<RecordT>::lower_bound(typename Fie
                                                                     Key<T> const& key) {
     detail::KeyExtractionFunctor<RecordT, T> f = {key};
     // Iterator adaptor that makes a CatalogT iterator work like an iterator over field values.
-    typedef boost::transform_iterator<detail::KeyExtractionFunctor<RecordT, T>, iterator> SearchIter;
+    using SearchIter = boost::transform_iterator<detail::KeyExtractionFunctor<RecordT, T>, iterator>;
     SearchIter i = std::lower_bound(SearchIter(begin(), f), SearchIter(end(), f), value);
     return i.base();
 }
@@ -817,7 +817,7 @@ typename CatalogT<RecordT>::const_iterator CatalogT<RecordT>::lower_bound(
         typename Field<T>::Value const& value, Key<T> const& key) const {
     detail::KeyExtractionFunctor<RecordT, T> f = {key};
     // Iterator adaptor that makes a CatalogT iterator work like an iterator over field values.
-    typedef boost::transform_iterator<detail::KeyExtractionFunctor<RecordT, T>, const_iterator> SearchIter;
+    using SearchIter = boost::transform_iterator<detail::KeyExtractionFunctor<RecordT, T>, const_iterator>;
     SearchIter i = std::lower_bound(SearchIter(begin(), f), SearchIter(end(), f), value);
     return i.base();
 }
@@ -828,7 +828,7 @@ typename CatalogT<RecordT>::iterator CatalogT<RecordT>::upper_bound(typename Fie
                                                                     Key<T> const& key) {
     detail::KeyExtractionFunctor<RecordT, T> f = {key};
     // Iterator adaptor that makes a CatalogT iterator work like an iterator over field values.
-    typedef boost::transform_iterator<detail::KeyExtractionFunctor<RecordT, T>, iterator> SearchIter;
+    using SearchIter = boost::transform_iterator<detail::KeyExtractionFunctor<RecordT, T>, iterator>;
     SearchIter i = std::upper_bound(SearchIter(begin(), f), SearchIter(end(), f), value);
     return i.base();
 }
@@ -839,7 +839,7 @@ typename CatalogT<RecordT>::const_iterator CatalogT<RecordT>::upper_bound(
         typename Field<T>::Value const& value, Key<T> const& key) const {
     detail::KeyExtractionFunctor<RecordT, T> f = {key};
     // Iterator adaptor that makes a CatalogT iterator work like an iterator over field values.
-    typedef boost::transform_iterator<detail::KeyExtractionFunctor<RecordT, T>, const_iterator> SearchIter;
+    using SearchIter = boost::transform_iterator<detail::KeyExtractionFunctor<RecordT, T>, const_iterator>;
     SearchIter i = std::upper_bound(SearchIter(begin(), f), SearchIter(end(), f), value);
     return i.base();
 }
@@ -850,7 +850,7 @@ std::pair<typename CatalogT<RecordT>::iterator, typename CatalogT<RecordT>::iter
 CatalogT<RecordT>::equal_range(typename Field<T>::Value const& value, Key<T> const& key) {
     detail::KeyExtractionFunctor<RecordT, T> f = {key};
     // Iterator adaptor that makes a CatalogT iterator work like an iterator over field values.
-    typedef boost::transform_iterator<detail::KeyExtractionFunctor<RecordT, T>, iterator> SearchIter;
+    using SearchIter = boost::transform_iterator<detail::KeyExtractionFunctor<RecordT, T>, iterator>;
     std::pair<SearchIter, SearchIter> i =
             std::equal_range(SearchIter(begin(), f), SearchIter(end(), f), value);
     return std::make_pair(i.first.base(), i.second.base());
@@ -862,7 +862,7 @@ std::pair<typename CatalogT<RecordT>::const_iterator, typename CatalogT<RecordT>
 CatalogT<RecordT>::equal_range(typename Field<T>::Value const& value, Key<T> const& key) const {
     detail::KeyExtractionFunctor<RecordT, T> f = {key};
     // Iterator adaptor that makes a CatalogT iterator work like an iterator over field values.
-    typedef boost::transform_iterator<detail::KeyExtractionFunctor<RecordT, T>, const_iterator> SearchIter;
+    using SearchIter = boost::transform_iterator<detail::KeyExtractionFunctor<RecordT, T>, const_iterator>;
     std::pair<SearchIter, SearchIter> i =
             std::equal_range(SearchIter(begin(), f), SearchIter(end(), f), value);
     return std::make_pair(i.first.base(), i.second.base());

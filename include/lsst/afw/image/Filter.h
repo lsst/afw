@@ -116,7 +116,7 @@ public:
     static FilterProperty const& lookup(std::string const& name);
 
 private:
-    typedef std::unordered_map<std::string, FilterProperty> PropertyMap;
+    using PropertyMap = std::unordered_map<std::string, FilterProperty>;
 
     /**
      * Initialise the Filter registry
@@ -251,9 +251,9 @@ protected:
     void write(OutputArchiveHandle & handle) const override;
 
 private:
-    typedef std::unordered_map<std::string, std::string const> AliasMap;
-    typedef std::unordered_map<std::string, unsigned int const> NameMap;
-    typedef std::unordered_map<unsigned int, std::string const> IdMap;
+    using AliasMap = std::unordered_map<std::string, const std::string>;
+    using NameMap = std::unordered_map<std::string, const unsigned int>;
+    using IdMap = std::unordered_map<unsigned int, const std::string>;
 
     /**
      * Initialise the Filter registry

@@ -26,6 +26,7 @@
  * Implementation of SpatialCell class
  */
 #include <algorithm>
+#include <memory>
 
 #include "lsst/afw/image/ImageUtils.h"
 #include "lsst/afw/image/Utils.h"
@@ -101,8 +102,8 @@ bool SpatialCell::empty() const {
     // and we don't (yet) have SpatialCellCandidateConstIterator
     SpatialCell *mthis = const_cast<SpatialCell *>(this);
 
-    for (SpatialCellCandidateIterator ptr = mthis->begin(), end = mthis->end(); ptr != end; ++ptr) {
-        if (!(_ignoreBad && (*ptr)->isBad())) {  // found a good candidate, or don't care
+    for (auto && mthi : *mthis) {
+        if (!(_ignoreBad && (mthi)->isBad())) {  // found a good candidate, or don't care
             return false;
         }
     }
@@ -335,7 +336,7 @@ SpatialCellSet::SpatialCellSet(lsst::geom::Box2I const &region, int xSize, int y
             lsst::geom::Box2I bbox(lsst::geom::Point2I(x0, y0), lsst::geom::Point2I(x1, y1));
             std::string label = (boost::format("Cell %dx%d") % x % y).str();
 
-            _cellList.push_back(std::shared_ptr<SpatialCell>(new SpatialCell(label, bbox)));
+            _cellList.push_back(std::make_shared<SpatialCell>(label, bbox));
 
             x0 = x1 + 1;
         }
@@ -372,8 +373,8 @@ void SpatialCellSet::insertCandidate(std::shared_ptr<SpatialCellCandidate> candi
 }
 
 void SpatialCellSet::sortCandidates() {
-    for (CellList::iterator cell = _cellList.begin(), end = _cellList.end(); cell != end; ++cell) {
-        (*cell)->sortCandidates();
+    for (auto const &cell : _cellList) {
+        cell->sortCandidates();
     }
 }
 
@@ -381,8 +382,8 @@ void SpatialCellSet::visitCandidates(CandidateVisitor *visitor, int const nMaxPe
                                      bool const ignoreExceptions) {
     visitor->reset();
 
-    for (CellList::iterator cell = _cellList.begin(), end = _cellList.end(); cell != end; ++cell) {
-        (*cell)->visitCandidates(visitor, nMaxPerCell, ignoreExceptions, false);
+    for (auto const &cell : _cellList) {
+        cell->visitCandidates(visitor, nMaxPerCell, ignoreExceptions, false);
     }
 }
 
@@ -390,8 +391,8 @@ void SpatialCellSet::visitCandidates(CandidateVisitor *visitor, int const nMaxPe
                                      bool const ignoreExceptions) const {
     visitor->reset();
 
-    for (CellList::const_iterator cell = _cellList.begin(), end = _cellList.end(); cell != end; ++cell) {
-        SpatialCell const *ccell = cell->get();  // the SpatialCellSet's SpatialCells should be const too
+    for (auto const &cell : _cellList) {
+        SpatialCell const *ccell = cell.get();  // the SpatialCellSet's SpatialCells should be const too
         ccell->visitCandidates(visitor, nMaxPerCell, ignoreExceptions, false);
     }
 }
@@ -399,23 +400,23 @@ void SpatialCellSet::visitCandidates(CandidateVisitor *visitor, int const nMaxPe
 void SpatialCellSet::visitAllCandidates(CandidateVisitor *visitor, bool const ignoreExceptions) {
     visitor->reset();
 
-    for (CellList::iterator cell = _cellList.begin(), end = _cellList.end(); cell != end; ++cell) {
-        (*cell)->visitAllCandidates(visitor, ignoreExceptions, false);
+    for (auto const &cell : _cellList) {
+        cell->visitAllCandidates(visitor, ignoreExceptions, false);
     }
 }
 
 void SpatialCellSet::visitAllCandidates(CandidateVisitor *visitor, bool const ignoreExceptions) const {
     visitor->reset();
 
-    for (CellList::const_iterator cell = _cellList.begin(), end = _cellList.end(); cell != end; ++cell) {
-        SpatialCell const *ccell = cell->get();  // the SpatialCellSet's SpatialCells should be const too
+    for (auto const &cell : _cellList) {
+        SpatialCell const *ccell = cell.get();  // the SpatialCellSet's SpatialCells should be const too
         ccell->visitAllCandidates(visitor, ignoreExceptions, false);
     }
 }
 
 std::shared_ptr<SpatialCellCandidate> SpatialCellSet::getCandidateById(int id, bool noThrow) {
-    for (CellList::iterator cell = _cellList.begin(), end = _cellList.end(); cell != end; ++cell) {
-        std::shared_ptr<SpatialCellCandidate> cand = (*cell)->getCandidateById(id, true);
+    for (auto const &cell : _cellList) {
+        std::shared_ptr<SpatialCellCandidate> cand = cell->getCandidateById(id, true);
 
         if (cand) {
             return cand;
@@ -431,8 +432,8 @@ std::shared_ptr<SpatialCellCandidate> SpatialCellSet::getCandidateById(int id, b
 }
 
 void SpatialCellSet::setIgnoreBad(bool ignoreBad) {
-    for (CellList::iterator cell = _cellList.begin(), end = _cellList.end(); cell != end; ++cell) {
-        (*cell)->setIgnoreBad(ignoreBad);
+    for (auto const &cell : _cellList) {
+        cell->setIgnoreBad(ignoreBad);
     }
 }
 }  // namespace math

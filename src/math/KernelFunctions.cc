@@ -36,7 +36,7 @@ namespace afw {
 namespace math {
 
 void printKernel(Kernel const &kernel, bool doNormalize, double xPos, double yPos, std::string pixelFmt) {
-    typedef Kernel::Pixel Pixel;
+    using Pixel = Kernel::Pixel;
 
     image::Image<Pixel> kImage(kernel.getDimensions());
     double kSum = kernel.computeImage(kImage, doNormalize, xPos, yPos);

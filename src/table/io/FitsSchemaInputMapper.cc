@@ -49,30 +49,20 @@ public:
     // on column number, flag bit, and name (ttype).  This allows us to insert fields into the
     // schema in the correct order, regardless of which order they appear in the
     // FITS header.
-    typedef boost::multi_index_container<
-            FitsSchemaItem,
-            boost::multi_index::indexed_by<
-                    boost::multi_index::ordered_non_unique<
-                            boost::multi_index::member<FitsSchemaItem, int, &FitsSchemaItem::column>>,
-                    boost::multi_index::ordered_non_unique<
-                            boost::multi_index::member<FitsSchemaItem, int, &FitsSchemaItem::bit>>,
-                    boost::multi_index::hashed_unique<
-                            boost::multi_index::member<FitsSchemaItem, std::string, &FitsSchemaItem::ttype>>,
-                    boost::multi_index::sequenced<>>>
-            InputContainer;
+    using InputContainer = boost::multi_index_container<FitsSchemaItem, boost::multi_index::indexed_by<boost::multi_index::ordered_non_unique<boost::multi_index::member<FitsSchemaItem, int, &FitsSchemaItem::column>>, boost::multi_index::ordered_non_unique<boost::multi_index::member<FitsSchemaItem, int, &FitsSchemaItem::bit>>, boost::multi_index::hashed_unique<boost::multi_index::member<FitsSchemaItem, std::string, &FitsSchemaItem::ttype>>, boost::multi_index::sequenced<>>>;
 
     // Typedefs for the special functors used to set data members.
-    typedef SetFitsSchemaString<&FitsSchemaItem::ttype> SetTTYPE;
-    typedef SetFitsSchemaString<&FitsSchemaItem::tform> SetTFORM;
-    typedef SetFitsSchemaString<&FitsSchemaItem::tccls> SetTCCLS;
-    typedef SetFitsSchemaString<&FitsSchemaItem::tunit> SetTUNIT;
-    typedef SetFitsSchemaString<&FitsSchemaItem::doc> SetDoc;
+    using SetTTYPE = SetFitsSchemaString<&FitsSchemaItem::ttype>;
+    using SetTFORM = SetFitsSchemaString<&FitsSchemaItem::tform>;
+    using SetTCCLS = SetFitsSchemaString<&FitsSchemaItem::tccls>;
+    using SetTUNIT = SetFitsSchemaString<&FitsSchemaItem::tunit>;
+    using SetDoc = SetFitsSchemaString<&FitsSchemaItem::doc>;
 
     // Typedefs for the different indices.
-    typedef InputContainer::nth_index<0>::type ByColumn;
-    typedef InputContainer::nth_index<1>::type ByBit;
-    typedef InputContainer::nth_index<2>::type ByName;
-    typedef InputContainer::nth_index<3>::type AsList;
+    using ByColumn = InputContainer::nth_index<0>::type;
+    using ByBit = InputContainer::nth_index<1>::type;
+    using ByName = InputContainer::nth_index<2>::type;
+    using AsList = InputContainer::nth_index<3>::type;
 
     // Getters for the different indices.
     ByColumn &byColumn() { return inputs.get<0>(); }
@@ -80,12 +70,12 @@ public:
     ByName &byName() { return inputs.get<2>(); }
     AsList &asList() { return inputs.get<3>(); }
 
-    Impl() : version(0), flagColumn(0), archiveHdu(-1) {}
+    Impl()  {}
 
-    int version;
+    int version{0};
     std::string type;
-    int flagColumn;
-    int archiveHdu;
+    int flagColumn{0};
+    int archiveHdu{-1};
     Schema schema;
     std::vector<std::unique_ptr<FitsColumnReader>> readers;
     std::vector<Key<Flag>> flagKeys;
@@ -125,13 +115,13 @@ FitsSchemaInputMapper::FitsSchemaInputMapper(daf::base::PropertyList &metadata, 
     // Read aliases, stored as header entries with key 'ALIAS'
     try {
         std::vector<std::string> rawAliases = metadata.getArray<std::string>("ALIAS");
-        for (std::vector<std::string>::const_iterator i = rawAliases.begin(); i != rawAliases.end(); ++i) {
-            std::size_t pos = i->find_first_of(':');
+        for (auto const &rawAliase : rawAliases) {
+            std::size_t pos = rawAliase.find_first_of(':');
             if (pos == std::string::npos) {
                 throw LSST_EXCEPT(afw::fits::FitsError,
-                                  (boost::format("Malformed alias definition: '%s'") % (*i)).str());
+                                  (boost::format("Malformed alias definition: '%s'") % rawAliase).str());
             }
-            _impl->schema.getAliasMap()->set(i->substr(0, pos), i->substr(pos + 1, std::string::npos));
+            _impl->schema.getAliasMap()->set(rawAliase.substr(0, pos), rawAliase.substr(pos + 1, std::string::npos));
         }
         if (stripMetadata) {
             metadata.remove("ALIAS");
@@ -149,14 +139,14 @@ FitsSchemaInputMapper::FitsSchemaInputMapper(daf::base::PropertyList &metadata, 
                  std::make_pair("MODEL_FLUX", "slot_ModelFlux"),
                  std::make_pair("CALIB_FLUX", "slot_CalibFlux"), std::make_pair("CENTROID", "slot_Centroid"),
                  std::make_pair("SHAPE", "slot_Shape")}};
-        for (std::size_t i = 0; i < oldSlotKeys.size(); ++i) {
-            std::string target = metadata.get(oldSlotKeys[i].first + "_SLOT", std::string(""));
+        for (auto const &oldSlotKey : oldSlotKeys) {
+            std::string target = metadata.get(oldSlotKey.first + "_SLOT", std::string(""));
             if (!target.empty()) {
-                _impl->schema.getAliasMap()->set(oldSlotKeys[i].second, target);
+                _impl->schema.getAliasMap()->set(oldSlotKey.second, target);
                 if (stripMetadata) {
-                    metadata.remove(oldSlotKeys[i].first);
-                    metadata.remove(oldSlotKeys[i].first + "_ERR_SLOT");
-                    metadata.remove(oldSlotKeys[i].first + "_FLAG_SLOT");
+                    metadata.remove(oldSlotKey.first);
+                    metadata.remove(oldSlotKey.first + "_ERR_SLOT");
+                    metadata.remove(oldSlotKey.first + "_FLAG_SLOT");
                 }
             }
         }
@@ -164,100 +154,100 @@ FitsSchemaInputMapper::FitsSchemaInputMapper(daf::base::PropertyList &metadata, 
 
     // Read the rest of the header into the intermediate inputs container.
     std::vector<std::string> keyList = metadata.getOrderedNames();
-    for (std::vector<std::string>::const_iterator key = keyList.begin(); key != keyList.end(); ++key) {
-        if (key->compare(0, 5, "TTYPE") == 0) {
-            int column = std::stoi(key->substr(5)) - 1;
+    for (auto const &key : keyList) {
+        if (key.compare(0, 5, "TTYPE") == 0) {
+            int column = std::stoi(key.substr(5)) - 1;
             auto iter = _impl->byColumn().lower_bound(column);
             if (iter == _impl->byColumn().end() || iter->column != column) {
                 iter = _impl->byColumn().insert(iter, FitsSchemaItem(column, -1));
             }
-            std::string v = metadata.get<std::string>(*key);
+            std::string v = metadata.get<std::string>(key);
             _impl->byColumn().modify(iter, Impl::SetTTYPE(v));
             if (iter->doc.empty()) {  // don't overwrite if already set with TDOCn
-                _impl->byColumn().modify(iter, Impl::SetDoc(metadata.getComment(*key)));
+                _impl->byColumn().modify(iter, Impl::SetDoc(metadata.getComment(key)));
             }
             if (stripMetadata) {
-                metadata.remove(*key);
+                metadata.remove(key);
             }
-        } else if (key->compare(0, 5, "TFLAG") == 0) {
-            int bit = std::stoi(key->substr(5)) - 1;
+        } else if (key.compare(0, 5, "TFLAG") == 0) {
+            int bit = std::stoi(key.substr(5)) - 1;
             auto iter = _impl->byBit().lower_bound(bit);
             if (iter == _impl->byBit().end() || iter->bit != bit) {
                 iter = _impl->byBit().insert(iter, FitsSchemaItem(-1, bit));
             }
-            std::string v = metadata.get<std::string>(*key);
+            std::string v = metadata.get<std::string>(key);
             _impl->byBit().modify(iter, Impl::SetTTYPE(v));
             if (iter->doc.empty()) {  // don't overwrite if already set with TFDOCn
-                _impl->byBit().modify(iter, Impl::SetDoc(metadata.getComment(*key)));
+                _impl->byBit().modify(iter, Impl::SetDoc(metadata.getComment(key)));
             }
             if (stripMetadata) {
-                metadata.remove(*key);
+                metadata.remove(key);
             }
-        } else if (key->compare(0, 4, "TDOC") == 0) {
-            int column = std::stoi(key->substr(4)) - 1;
+        } else if (key.compare(0, 4, "TDOC") == 0) {
+            int column = std::stoi(key.substr(4)) - 1;
             auto iter = _impl->byColumn().lower_bound(column);
             if (iter == _impl->byColumn().end() || iter->column != column) {
                 iter = _impl->byColumn().insert(iter, FitsSchemaItem(column, -1));
             }
-            _impl->byColumn().modify(iter, Impl::SetDoc(metadata.get<std::string>(*key)));
+            _impl->byColumn().modify(iter, Impl::SetDoc(metadata.get<std::string>(key)));
             if (stripMetadata) {
-                metadata.remove(*key);
+                metadata.remove(key);
             }
-        } else if (key->compare(0, 5, "TFDOC") == 0) {
-            int bit = std::stoi(key->substr(5)) - 1;
+        } else if (key.compare(0, 5, "TFDOC") == 0) {
+            int bit = std::stoi(key.substr(5)) - 1;
             auto iter = _impl->byBit().lower_bound(bit);
             if (iter == _impl->byBit().end() || iter->bit != bit) {
                 iter = _impl->byBit().insert(iter, FitsSchemaItem(-1, bit));
             }
-            _impl->byBit().modify(iter, Impl::SetDoc(metadata.get<std::string>(*key)));
+            _impl->byBit().modify(iter, Impl::SetDoc(metadata.get<std::string>(key)));
             if (stripMetadata) {
-                metadata.remove(*key);
+                metadata.remove(key);
             }
-        } else if (key->compare(0, 5, "TUNIT") == 0) {
-            int column = std::stoi(key->substr(5)) - 1;
+        } else if (key.compare(0, 5, "TUNIT") == 0) {
+            int column = std::stoi(key.substr(5)) - 1;
             auto iter = _impl->byColumn().lower_bound(column);
             if (iter == _impl->byColumn().end() || iter->column != column) {
                 iter = _impl->byColumn().insert(iter, FitsSchemaItem(column, -1));
             }
-            _impl->byColumn().modify(iter, Impl::SetTUNIT(metadata.get<std::string>(*key)));
+            _impl->byColumn().modify(iter, Impl::SetTUNIT(metadata.get<std::string>(key)));
             if (stripMetadata) {
-                metadata.remove(*key);
+                metadata.remove(key);
             }
-        } else if (key->compare(0, 5, "TCCLS") == 0) {
-            int column = std::stoi(key->substr(5)) - 1;
+        } else if (key.compare(0, 5, "TCCLS") == 0) {
+            int column = std::stoi(key.substr(5)) - 1;
             auto iter = _impl->byColumn().lower_bound(column);
             if (iter == _impl->byColumn().end() || iter->column != column) {
                 iter = _impl->byColumn().insert(iter, FitsSchemaItem(column, -1));
             }
-            _impl->byColumn().modify(iter, Impl::SetTCCLS(metadata.get<std::string>(*key)));
+            _impl->byColumn().modify(iter, Impl::SetTCCLS(metadata.get<std::string>(key)));
             if (stripMetadata) {
-                metadata.remove(*key);
+                metadata.remove(key);
             }
-        } else if (key->compare(0, 5, "TFORM") == 0) {
-            int column = std::stoi(key->substr(5)) - 1;
+        } else if (key.compare(0, 5, "TFORM") == 0) {
+            int column = std::stoi(key.substr(5)) - 1;
             auto iter = _impl->byColumn().lower_bound(column);
             if (iter == _impl->byColumn().end() || iter->column != column) {
                 iter = _impl->byColumn().insert(iter, FitsSchemaItem(column, -1));
             }
-            _impl->byColumn().modify(iter, Impl::SetTFORM(metadata.get<std::string>(*key)));
+            _impl->byColumn().modify(iter, Impl::SetTFORM(metadata.get<std::string>(key)));
             if (stripMetadata) {
-                metadata.remove(*key);
+                metadata.remove(key);
             }
-        } else if (key->compare(0, 5, "TZERO") == 0) {
+        } else if (key.compare(0, 5, "TZERO") == 0) {
             if (stripMetadata) {
-                metadata.remove(*key);
+                metadata.remove(key);
             }
-        } else if (key->compare(0, 5, "TSCAL") == 0) {
+        } else if (key.compare(0, 5, "TSCAL") == 0) {
             if (stripMetadata) {
-                metadata.remove(*key);
+                metadata.remove(key);
             }
-        } else if (key->compare(0, 5, "TNULL") == 0) {
+        } else if (key.compare(0, 5, "TNULL") == 0) {
             if (stripMetadata) {
-                metadata.remove(*key);
+                metadata.remove(key);
             }
-        } else if (key->compare(0, 5, "TDISP") == 0) {
+        } else if (key.compare(0, 5, "TDISP") == 0) {
             if (stripMetadata) {
-                metadata.remove(*key);
+                metadata.remove(key);
             }
         }
     }
@@ -326,7 +316,7 @@ bool FitsSchemaInputMapper::hasArchive() const { return static_cast<bool>(_impl-
 FitsSchemaItem const *FitsSchemaInputMapper::find(std::string const &ttype) const {
     auto iter = _impl->byName().find(ttype);
     if (iter == _impl->byName().end()) {
-        return 0;
+        return nullptr;
     }
     return &(*iter);
 }
@@ -334,7 +324,7 @@ FitsSchemaItem const *FitsSchemaInputMapper::find(std::string const &ttype) cons
 FitsSchemaItem const *FitsSchemaInputMapper::find(int column) const {
     auto iter = _impl->byColumn().lower_bound(column);
     if (iter == _impl->byColumn().end() || iter->column != column) {
-        return 0;
+        return nullptr;
     }
     return &(*iter);
 }
@@ -888,7 +878,7 @@ void FitsSchemaInputMapper::readRecord(BaseRecord &record, afw::fits::Fits &fits
         // Give readers a chance to read and cache up to nRowsToPrep rows-
         // worth of values.
         std::size_t size = std::min(_impl->nRowsToPrep, fits.countRows() - row);
-        for (auto & reader : _impl->readers) {
+        for (auto const &reader : _impl->readers) {
             reader->prepRead(row, size, fits);
         }
     }

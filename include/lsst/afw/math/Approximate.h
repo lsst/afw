@@ -108,7 +108,7 @@ std::shared_ptr<Approximate<PixelT>> makeApproximate(std::vector<double> const& 
 template <typename PixelT>
 class Approximate {
 public:
-    typedef float OutPixelT;  ///< The pixel type of returned images
+    using OutPixelT = float;  ///< The pixel type of returned images
 
     friend std::shared_ptr<Approximate<PixelT>> makeApproximate<>(std::vector<double> const& x,
                                                                   std::vector<double> const& y,

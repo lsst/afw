@@ -30,7 +30,7 @@
 using namespace std;
 
 int main() {
-    typedef double FuncReturn;
+    using FuncReturn = double;
     const unsigned int order = 2;
     vector<double> params(order + 1);
     lsst::afw::math::PolynomialFunction1<FuncReturn> polyFunc(order);
@@ -41,8 +41,8 @@ int main() {
     polyFunc.setParameters(params);
 
     cout << "Polynomial function with parameters: ";
-    for (unsigned int ii = 0; ii < params.size(); ++ii) {
-        cout << params[ii] << " ";
+    for (double param : params) {
+        cout << param << " ";
     }
     cout << endl << endl;
 

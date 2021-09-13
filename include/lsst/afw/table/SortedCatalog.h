@@ -40,14 +40,14 @@ namespace table {
  */
 template <typename RecordT>
 class SortedCatalogT : public CatalogT<RecordT> {
-    typedef CatalogT<RecordT> Base;
+    using Base = CatalogT<RecordT>;
 
 public:
-    typedef RecordT Record;
-    typedef typename Record::Table Table;
+    using Record = RecordT;
+    using Table = typename Record::Table;
 
-    typedef typename Base::iterator iterator;
-    typedef typename Base::const_iterator const_iterator;
+    using iterator = typename Base::iterator;
+    using const_iterator = typename Base::const_iterator;
 
     using Base::isSorted;
     using Base::sort;

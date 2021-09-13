@@ -27,6 +27,7 @@
  *
  */
 #include <iostream>
+#include <memory>
 
 #include "lsst/geom.h"
 #include "lsst/afw/image/Image.h"
@@ -35,9 +36,9 @@
 
 namespace image = lsst::afw::image;
 namespace math = lsst::afw::math;
-typedef image::Image<float> ImageF;
-typedef image::ImageSlice<float> ImageSliceF;
-typedef image::MaskedImage<float> MImageF;
+using ImageF = image::Image<float>;
+using ImageSliceF = image::ImageSlice<float>;
+using MImageF = image::MaskedImage<float>;
 
 int main(int argc, char **argv) {
     int const nX = 8;
@@ -45,7 +46,7 @@ int main(int argc, char **argv) {
 
     // fill an image with a gradient
     // - we want something different in x and y so we can see the different projections
-    std::shared_ptr<ImageF> img = std::shared_ptr<ImageF>(new ImageF(lsst::geom::Extent2I(nX, nY), 0));
+    std::shared_ptr<ImageF> img = std::make_shared<ImageF>(lsst::geom::Extent2I(nX, nY), 0);
     for (int y = 0; y < img->getHeight(); ++y) {
         int x = 0;
         for (ImageF::x_iterator ptr = img->row_begin(y), end = img->row_end(y); ptr != end; ++ptr, ++x) {
@@ -75,10 +76,10 @@ int main(int argc, char **argv) {
 
     // output the pixel values and show the statistics projections
 
-    for (unsigned int i = 0; i < rows.size(); ++i) {
-        ImageF::x_iterator end = rows[i]->row_end(0);
+    for (auto const &row : rows) {
+        ImageF::x_iterator end = row->row_end(0);
         printf("%26s", " ");
-        for (ImageF::x_iterator ptr = rows[i]->row_begin(0); ptr != end; ++ptr) {
+        for (ImageF::x_iterator ptr = row->row_begin(0); ptr != end; ++ptr) {
             printf("%5.2f ", static_cast<float>(*ptr));
         }
         std::cout << std::endl;

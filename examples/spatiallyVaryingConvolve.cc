@@ -42,7 +42,7 @@ const std::string outImagePath("svcOut.fits");
  * ySigma varies linearly from minSigma to maxSigma as image row goes from 0 to max
  */
 int main(int argc, char **argv) {
-    typedef afwMath::Kernel::Pixel Pixel;
+    using Pixel = afwMath::Kernel::Pixel;
 
     LOG_CONFIG();
     LOG_SET_LVL("TRACE5.afw.math.convolve", LOG_LVL_INFO);

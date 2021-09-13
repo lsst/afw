@@ -55,7 +55,7 @@ public:
      * * `KEY5: VALUE5`
      * * `KEY6: VALUE6`
      */
-    virtual std::unique_ptr<GenericMap<int>> makeGenericMap() const {
+    std::unique_ptr<GenericMap<int>> makeGenericMap() const override {
         auto map = std::make_unique<SimpleGenericMap<int>>();
         map->insert(test::KEY0, test::VALUE0);
         map->insert(test::KEY1, test::VALUE1);
@@ -68,7 +68,7 @@ public:
     }
 
     /// Create an empty map.
-    virtual std::unique_ptr<MutableGenericMap<std::string>> makeMutableGenericMap() const {
+    std::unique_ptr<MutableGenericMap<std::string>> makeMutableGenericMap() const override {
         return std::make_unique<SimpleGenericMap<std::string>>();
     }
 };

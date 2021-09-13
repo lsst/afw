@@ -285,7 +285,7 @@ std::unique_ptr<Footprint> Footprint::readSpanSet(afw::table::BaseCatalog const&
         std::vector<geom::Span> tempVec;
         tempVec.reserve(catalog.size());
         for (auto const& val : catalog) {
-            tempVec.push_back(geom::Span(val.get(keys.spanY), val.get(keys.spanX0), val.get(keys.spanX1)));
+            tempVec.emplace_back(val.get(keys.spanY), val.get(keys.spanX0), val.get(keys.spanX1));
         }
         loadedSpanSet = std::make_shared<geom::SpanSet>(std::move(tempVec));
     }
@@ -350,7 +350,7 @@ std::shared_ptr<Footprint> mergeFootprints(Footprint const& footprint1, Footprin
 }
 
 std::vector<lsst::geom::Box2I> footprintToBBoxList(Footprint const& footprint) {
-    typedef std::uint16_t PixelT;
+    using PixelT = std::uint16_t;
     lsst::geom::Box2I fpBBox = footprint.getBBox();
     std::shared_ptr<image::Image<PixelT>> idImage(new image::Image<PixelT>(fpBBox));
     *idImage = 0;

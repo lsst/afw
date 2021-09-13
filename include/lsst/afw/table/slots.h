@@ -72,10 +72,10 @@ protected:
 /// SlotDefinition specialization for fluxes
 class FluxSlotDefinition : public SlotDefinition {
 public:
-    typedef double MeasValue;     ///< Type returned by accessing the slot measurement
-    typedef double ErrValue;      ///< Type returned by accessing the slot uncertainty
-    typedef Key<double> MeasKey;  ///< Key type used to access the slot measurement
-    typedef Key<double> ErrKey;   ///< Key type used to access the slot uncertainty
+    using MeasValue = double;     ///< Type returned by accessing the slot measurement
+    using ErrValue = double;      ///< Type returned by accessing the slot uncertainty
+    using MeasKey = Key<double>;  ///< Key type used to access the slot measurement
+    using ErrKey = Key<double>;   ///< Key type used to access the slot uncertainty
 
     /// Construct a SlotDefinition from the name of the slot (e.g. "PsfFlux")
     explicit FluxSlotDefinition(std::string const &name) : SlotDefinition(name) {}
@@ -119,10 +119,10 @@ private:
 /// SlotDefinition specialization for centroids
 class CentroidSlotDefinition : public SlotDefinition {
 public:
-    typedef lsst::geom::Point2D MeasValue;         ///< Type returned by accessing the slot measurement
-    typedef Eigen::Matrix<float, 2, 2> ErrValue;   ///< Type returned by accessing the slot uncertainty
-    typedef Point2DKey MeasKey;                    ///< Key type used to access the slot measurement
-    typedef CovarianceMatrixKey<float, 2> ErrKey;  ///< Key type used to access the slot uncertainty
+    using MeasValue = lsst::geom::Point2D;         ///< Type returned by accessing the slot measurement
+    using ErrValue = Eigen::Matrix<float, 2, 2>;   ///< Type returned by accessing the slot uncertainty
+    using MeasKey = Point2DKey;                    ///< Key type used to access the slot measurement
+    using ErrKey = CovarianceMatrixKey<float, 2>;  ///< Key type used to access the slot uncertainty
 
     /// Construct a SlotDefinition from the name of the slot (e.g. "Centroid")
     explicit CentroidSlotDefinition(std::string const &name) : SlotDefinition(name) {}
@@ -166,10 +166,10 @@ private:
 /// SlotDefinition specialization for shapes
 class ShapeSlotDefinition : public SlotDefinition {
 public:
-    typedef geom::ellipses::Quadrupole MeasValue;  ///< Type returned by accessing the slot measurement
-    typedef Eigen::Matrix<float, 3, 3> ErrValue;   ///< Type returned by accessing the slot uncertainty
-    typedef QuadrupoleKey MeasKey;                 ///< Key type used to access the slot measurement
-    typedef CovarianceMatrixKey<float, 3> ErrKey;  ///< Key type used to access the slot uncertainty
+    using MeasValue = geom::ellipses::Quadrupole;  ///< Type returned by accessing the slot measurement
+    using ErrValue = Eigen::Matrix<float, 3, 3>;   ///< Type returned by accessing the slot uncertainty
+    using MeasKey = QuadrupoleKey;                 ///< Key type used to access the slot measurement
+    using ErrKey = CovarianceMatrixKey<float, 3>;  ///< Key type used to access the slot uncertainty
 
     /// Construct a SlotDefinition from the name of the slot (e.g. "Shape")
     explicit ShapeSlotDefinition(std::string const &name) : SlotDefinition(name) {}

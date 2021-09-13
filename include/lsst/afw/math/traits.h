@@ -60,7 +60,7 @@ struct deltafunction_kernel_tag : public generic_kernel_tag {
 /// template trait class with information about Kernels
 template <typename KernelT>
 struct kernel_traits {
-    typedef typename KernelT::kernel_fill_factor kernel_fill_factor;  ///< Fraction of non-zero pixels
+    using kernel_fill_factor = typename KernelT::kernel_fill_factor;  ///< Fraction of non-zero pixels
 };
 
 extern generic_kernel_tag generic_kernel_tag_;

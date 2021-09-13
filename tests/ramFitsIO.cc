@@ -21,18 +21,18 @@
  */
 
 //  -*- lsst-c++ -*-
-#include <string>
-#include <vector>
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <stdexcept>
-#include <memory>
+#include "lsst/afw/fits.h"
 #include "lsst/afw/geom/SkyWcs.h"
 #include "lsst/afw/image.h"
 #include "lsst/afw/image/Image.h"
-#include "lsst/afw/fits.h"
 #include "lsst/utils/Utils.h"
+#include <fstream>
+#include <iostream>
+#include <memory>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <vector>
 
 using namespace std;
 
@@ -41,9 +41,9 @@ namespace afwImage = lsst::afw::image;
 namespace afwMath = lsst::afw::math;
 namespace afwFits = lsst::afw::fits;
 
-typedef afwImage::Image<float> ImageF;
-typedef afwImage::MaskedImage<float> MaskedImageF;
-typedef afwImage::Exposure<float> ExposureF;
+using ImageF = afwImage::Image<float>;
+using MaskedImageF = afwImage::MaskedImage<float>;
+using ExposureF = afwImage::Exposure<float>;
 
 namespace cfitsio {
 #if !defined(DOXYGEN)
@@ -83,7 +83,7 @@ std::shared_ptr<afwFits::MemFileManager> readFile(string filename) {
 string stripHierarchyFromPath(string filepath) {
     cout << "filepath A: " << filepath << endl;
 
-    size_t lastSlash = filepath.rfind("/");
+    size_t lastSlash = filepath.rfind('/');
     if (lastSlash != string::npos) filepath = filepath.substr(lastSlash + 1);
 
     cout << "filepath B: " << filepath << endl;
@@ -124,7 +124,7 @@ void test7() {
     // Read FITS file from disk into an Exposure
     std::shared_ptr<dafBase::PropertySet> miMetadata(new dafBase::PropertySet);
     std::shared_ptr<ImageF> image =
-            std::shared_ptr<ImageF>(new ImageF(gFilename, afwFits::DEFAULT_HDU, miMetadata));
+            std::make_shared<ImageF>(gFilename, afwFits::DEFAULT_HDU, miMetadata);
     MaskedImageF maskedImage(image);
     auto wcsFromFITS = std::make_shared<lsst::afw::geom::SkyWcs>(*miMetadata);
     ExposureF exposure(maskedImage, wcsFromFITS);

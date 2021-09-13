@@ -114,8 +114,8 @@ ApCorrMapFactory registration(getApCorrMapPersistenceName());
 }  // namespace
 
 bool ApCorrMap::isPersistable() const noexcept {
-    for (Iterator i = begin(); i != end(); ++i) {
-        if (!i->second->isPersistable()) return false;
+    for (auto const &i : *this) {
+        if (!i.second->isPersistable()) return false;
     }
     return true;
 }
@@ -127,18 +127,18 @@ std::string ApCorrMap::getPythonModule() const { return "lsst.afw.image"; }
 void ApCorrMap::write(OutputArchiveHandle& handle) const {
     PersistenceHelper const& keys = PersistenceHelper::get();
     table::BaseCatalog catalog = handle.makeCatalog(keys.schema);
-    for (Iterator i = begin(); i != end(); ++i) {
+    for (auto const &i : *this) {
         std::shared_ptr<table::BaseRecord> record = catalog.addNew();
-        record->set(keys.name, i->first);
-        record->set(keys.field, handle.put(i->second));
+        record->set(keys.name, i.first);
+        record->set(keys.field, handle.put(i.second));
     }
     handle.saveCatalog(catalog);
 }
 
 ApCorrMap& ApCorrMap::operator*=(double const scale) {
     Internal replacement;
-    for (Iterator i = begin(); i != end(); ++i) {
-        replacement[i->first] = (*i->second) * scale;
+    for (auto const &i : *this) {
+        replacement[i.first] = (*i.second) * scale;
     }
     _internal = replacement;
     return *this;

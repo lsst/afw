@@ -191,7 +191,7 @@ struct ImageCompressionOptions {
         RICE,          ///< RICE compression
         PLIO,          ///< PLIO compression
     };
-    typedef ndarray::Array<long, 1, 1> Tiles;
+    using Tiles = ndarray::Array<long, 1, 1>;
 
     CompressionAlgorithm algorithm;  ///< Compresion algorithm to use
     Tiles tiles;          ///< Tile size; a dimension with 0 means infinite (e.g., to specify one row: 0,1)

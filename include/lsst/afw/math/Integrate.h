@@ -28,18 +28,18 @@
  * Compute 1d
  */
 
-#include <functional>
-#include <vector>
-#include <queue>
-#include <map>
-#include <cmath>
 #include <algorithm>
-#include <assert.h>
-#include <limits>
-#include <ostream>
-#include <sstream>
+#include <cassert>
+#include <cmath>
 #include <complex>
+#include <functional>
+#include <limits>
+#include <map>
+#include <ostream>
+#include <queue>
+#include <sstream>
 #include <stdexcept>
+#include <vector>
 
 #include "lsst/pex/exceptions.h"
 
@@ -174,7 +174,7 @@ int nfeval = 0;
 template <class T>
 struct IntRegion final {
 public:
-    IntRegion(T const a, T const b, std::ostream *dbgout = 0)
+    IntRegion(T const a, T const b, std::ostream *dbgout = nullptr)
             : _a(a), _b(b), _error(0.0), _area(0), _dbgout(dbgout) {}
 
     IntRegion(IntRegion const &) = default;
@@ -297,7 +297,7 @@ inline T rescale_error(T err, T const &resabs, T const &resasc) {
 template <typename UnaryFunctionT, typename Arg>
 inline bool intGKPNA(UnaryFunctionT func, IntRegion<Arg> &reg,
 		     Arg const epsabs, Arg const epsrel,
-		     std::map<Arg, Arg> *fxmap = 0) {
+		     std::map<Arg, Arg> *fxmap = nullptr) {
     Arg const a = reg.Left();
     Arg const b = reg.Right();
 
@@ -425,7 +425,7 @@ inline bool intGKPNA(UnaryFunctionT func, IntRegion<Arg> &reg,
 template <typename UnaryFunctionT, typename Arg>
 inline void intGKP(UnaryFunctionT func, IntRegion<Arg> &reg,
 		   Arg const epsabs, Arg const epsrel,
-		   std::map<Arg, Arg> *fxmap = 0) {
+		   std::map<Arg, Arg> *fxmap = nullptr) {
     integ_dbg2 << "Start intGKP\n";
 
     assert(epsabs >= 0.0);
@@ -626,7 +626,7 @@ protected:
 
 template <class BF, class Tp>
 inline binder2_1<BF> bind21(const BF &oper, const Tp &x) {
-    typedef typename BF::first_argument_type Arg;
+    using Arg = typename BF::first_argument_type;
     return binder2_1<BF>(oper, static_cast<Arg>(x));
 }
 
@@ -669,7 +669,7 @@ protected:
 
 template <class TF, class Tp>
 inline binder3_1<TF> bind31(const TF &oper, const Tp &x) {
-    typedef typename TF::firstof3_argument_type Arg;
+    using Arg = typename TF::firstof3_argument_type;
     return binder3_1<TF>(oper, static_cast<Arg>(x));
 }
 

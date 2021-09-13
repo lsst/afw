@@ -126,7 +126,7 @@ public:
      *  The manager will still free the memory when it goes out of scope, but all allocation
      *  and reallocation will be performed by cfitsio as needed.
      */
-    MemFileManager() : _ptr(0), _len(0), _managed(true) {}
+    MemFileManager() : _ptr(nullptr), _len(0), _managed(true) {}
 
     /**
      *  Construct a MemFileManager with (len) bytes of initial memory.
@@ -134,7 +134,7 @@ public:
      *  The manager will free the memory when it goes out of scope, and cfitsio will be allowed
      *  to reallocate the internal memory as needed.
      */
-    explicit MemFileManager(std::size_t len) : _ptr(0), _len(0), _managed(true) { reset(len); }
+    explicit MemFileManager(std::size_t len) : _ptr(nullptr), _len(0), _managed(true) { reset(len); }
 
     /**
      *  Construct a MemFileManager that references and does not manage external memory.
@@ -606,7 +606,7 @@ public:
     long getTableArraySize(std::size_t row, int col);
 
     /// Default constructor; set all data members to 0.
-    Fits() : fptr(0), status(0), behavior(0) {}
+    Fits() : fptr(nullptr), status(0), behavior(0) {}
 
     /// Open or create a FITS file from disk.
     Fits(std::string const& filename, std::string const& mode, int behavior);

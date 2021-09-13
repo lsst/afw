@@ -61,16 +61,16 @@ struct RecordData {
 class BaseTable : public std::enable_shared_from_this<BaseTable> {
 public:
     /// The associated record class.
-    typedef BaseRecord Record;
+    using Record = BaseRecord;
 
     /// The associated ColumnView class.
-    typedef BaseColumnView ColumnView;
+    using ColumnView = BaseColumnView;
 
     /// Template of CatalogT used to hold records of the associated type.
-    typedef CatalogT<Record> Catalog;
+    using Catalog = CatalogT<Record>;
 
     /// Template of CatalogT used to hold const records of the associated type.
-    typedef CatalogT<Record const> ConstCatalog;
+    using ConstCatalog = CatalogT<const Record>;
 
     /// Number of records in each memory block.
     static int nRecordsPerBlock;

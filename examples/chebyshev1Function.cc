@@ -30,7 +30,7 @@
 using namespace std;
 
 int main() {
-    typedef double funcType;
+    using funcType = double;
     const unsigned int order = 3;
     vector<double> params(order + 1);
     lsst::afw::math::Chebyshev1Function1<funcType> chebyFunc(order);
@@ -41,8 +41,8 @@ int main() {
         }
         chebyFunc.setParameters(params);
         cout << "Chebychev polynomial of the first kind with parameters: ";
-        for (unsigned int ii = 0; ii < params.size(); ++ii) {
-            cout << params[ii] << " ";
+        for (double param : params) {
+            cout << param << " ";
         }
         cout << endl << endl;
         for (double x = -1.0; x < 1.1; x += 0.2) {

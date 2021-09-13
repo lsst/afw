@@ -41,7 +41,7 @@ void wrapQuadrupole(lsst::utils::python::WrapperCollection &wrappers) {
             py::class_<Quadrupole, std::shared_ptr<Quadrupole>, BaseCore>(wrappers.module, "Quadrupole"),
             [](auto &mod, auto &cls) {
                 /* Member types and enums */
-                typedef Eigen::Matrix<double, 2, 2, Eigen::DontAlign> Matrix;
+                using Matrix = Eigen::Matrix<double, 2, 2, Eigen::DontAlign>;
 
                 /* Constructors */
                 cls.def(py::init<double, double, double, bool>(), "ixx"_a = 1.0, "iyy"_a = 1.0, "ixy"_a = 0.0,

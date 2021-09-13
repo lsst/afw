@@ -32,8 +32,8 @@
  */
 class ExampleCandidate : public lsst::afw::math::SpatialCellImageCandidate {
 public:
-    typedef float PixelT;
-    typedef lsst::afw::image::MaskedImage<PixelT> MaskedImageT;
+    using PixelT = float;
+    using MaskedImageT = lsst::afw::image::MaskedImage<PixelT>;
 
     /** Constructor
      *

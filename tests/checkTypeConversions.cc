@@ -37,7 +37,7 @@
 #pragma clang diagnostic ignored "-Wunused-variable"
 #include "boost/test/unit_test.hpp"
 #pragma clang diagnostic pop
-#include "boost/test/floating_point_comparison.hpp"
+#include "boost/test/tools/floating_point_comparison.hpp"
 
 #include "lsst/utils/Demangle.h"
 #include "lsst/afw/image/lsstGil.h"
@@ -81,10 +81,7 @@ struct do_check_conversion {
 BOOST_AUTO_TEST_CASE(convertGilTypes) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25
                                            "Boost non-Std" */
     // List of types; we'll check all N^2 conversions between them
-    typedef boost::mpl::vector<gil::gray8_image_t, gil::gray16_image_t, gil::gray16s_image_t,
-                               gil::gray32s_image_t, gil::gray32f_noscale_image_t,
-                               gil::gray64f_noscale_image_t>
-            image_types;
+    using image_types = boost::mpl::vector<gil::gray8_image_t, gil::gray16_image_t, gil::gray16s_image_t, gil::gray32s_image_t, gil::gray32f_noscale_image_t, gil::gray64f_noscale_image_t>;
 
     boost::mpl::for_each<image_types>(do_check_conversion<image_types>());
 }

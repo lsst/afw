@@ -32,7 +32,7 @@
 namespace image = lsst::afw::image;
 
 int main(int argc, char **argv) {
-    typedef float imageType;
+    using imageType = float;
     const unsigned DefNIter = 100;
     const unsigned DefNCols = 1024;
 

@@ -105,7 +105,7 @@ public:
 
 protected:
     // convenient for derived classes not in afw::table::io
-    typedef io::OutputArchiveHandle OutputArchiveHandle;
+    using OutputArchiveHandle = io::OutputArchiveHandle;
 
     /**
      *  Return the unique name used to persist this object and look up its factory.
@@ -227,8 +227,8 @@ public:
  */
 class PersistableFactory {
 protected:
-    typedef io::InputArchive InputArchive;  // convenient for derived classes not in afw::table::io
-    typedef io::CatalogVector CatalogVector;
+    using InputArchive = io::InputArchive;  // convenient for derived classes not in afw::table::io
+    using CatalogVector = io::CatalogVector;
 
 public:
     /**

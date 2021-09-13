@@ -81,21 +81,20 @@ inline void setEdgePixels(OutImageT& outImage, Kernel const& kernel, InImageT co
     // left edge, right edge (both omitting pixels already in the bottom and top edge regions)
     int const numHeight = kHeight - (1 + kCtrY);
     int const numWidth = kWidth - (1 + kCtrX);
-    bboxList.push_back(lsst::geom::Box2I(lsst::geom::Point2I(0, 0), lsst::geom::Extent2I(imWidth, kCtrY)));
-    bboxList.push_back(lsst::geom::Box2I(lsst::geom::Point2I(0, imHeight - numHeight),
-                                         lsst::geom::Extent2I(imWidth, numHeight)));
-    bboxList.push_back(lsst::geom::Box2I(lsst::geom::Point2I(0, kCtrY),
-                                         lsst::geom::Extent2I(kCtrX, imHeight + 1 - kHeight)));
-    bboxList.push_back(lsst::geom::Box2I(lsst::geom::Point2I(imWidth - numWidth, kCtrY),
-                                         lsst::geom::Extent2I(numWidth, imHeight + 1 - kHeight)));
+    bboxList.emplace_back(lsst::geom::Point2I(0, 0), lsst::geom::Extent2I(imWidth, kCtrY));
+    bboxList.emplace_back(lsst::geom::Point2I(0, imHeight - numHeight),
+                                         lsst::geom::Extent2I(imWidth, numHeight));
+    bboxList.emplace_back(lsst::geom::Point2I(0, kCtrY),
+                                         lsst::geom::Extent2I(kCtrX, imHeight + 1 - kHeight));
+    bboxList.emplace_back(lsst::geom::Point2I(imWidth - numWidth, kCtrY),
+                                         lsst::geom::Extent2I(numWidth, imHeight + 1 - kHeight));
 
-    for (std::vector<lsst::geom::Box2I>::const_iterator bboxIter = bboxList.begin();
-         bboxIter != bboxList.end(); ++bboxIter) {
-        OutImageT outView(outImage, *bboxIter, image::LOCAL);
+    for (auto const &bboxIter : bboxList) {
+        OutImageT outView(outImage, bboxIter, image::LOCAL);
         if (doCopyEdge) {
             // note: set only works with data of the same type
             // so convert the input image to output format
-            outView.assign(OutImageT(InImageT(inImage, *bboxIter, image::LOCAL), true));
+            outView.assign(OutImageT(InImageT(inImage, bboxIter, image::LOCAL), true));
         } else {
             outView = edgePixel;
         }
@@ -133,22 +132,21 @@ inline void setEdgePixels(OutImageT& outImage, Kernel const& kernel, InImageT co
     // left edge, right edge (both omitting pixels already in the bottom and top edge regions)
     int const numHeight = kHeight - (1 + kCtrY);
     int const numWidth = kWidth - (1 + kCtrX);
-    bboxList.push_back(lsst::geom::Box2I(lsst::geom::Point2I(0, 0), lsst::geom::Extent2I(imWidth, kCtrY)));
-    bboxList.push_back(lsst::geom::Box2I(lsst::geom::Point2I(0, imHeight - numHeight),
-                                         lsst::geom::Extent2I(imWidth, numHeight)));
-    bboxList.push_back(lsst::geom::Box2I(lsst::geom::Point2I(0, kCtrY),
-                                         lsst::geom::Extent2I(kCtrX, imHeight + 1 - kHeight)));
-    bboxList.push_back(lsst::geom::Box2I(lsst::geom::Point2I(imWidth - numWidth, kCtrY),
-                                         lsst::geom::Extent2I(numWidth, imHeight + 1 - kHeight)));
+    bboxList.emplace_back(lsst::geom::Point2I(0, 0), lsst::geom::Extent2I(imWidth, kCtrY));
+    bboxList.emplace_back(lsst::geom::Point2I(0, imHeight - numHeight),
+                                         lsst::geom::Extent2I(imWidth, numHeight));
+    bboxList.emplace_back(lsst::geom::Point2I(0, kCtrY),
+                                         lsst::geom::Extent2I(kCtrX, imHeight + 1 - kHeight));
+    bboxList.emplace_back(lsst::geom::Point2I(imWidth - numWidth, kCtrY),
+                                         lsst::geom::Extent2I(numWidth, imHeight + 1 - kHeight));
 
     image::MaskPixel const edgeMask = image::Mask<image::MaskPixel>::getPlaneBitMask("EDGE");
-    for (std::vector<lsst::geom::Box2I>::const_iterator bboxIter = bboxList.begin();
-         bboxIter != bboxList.end(); ++bboxIter) {
-        OutImageT outView(outImage, *bboxIter, image::LOCAL);
+    for (auto const &bboxIter : bboxList) {
+        OutImageT outView(outImage, bboxIter, image::LOCAL);
         if (doCopyEdge) {
             // note: set only works with data of the same type
             // so convert the input image to output format
-            outView.assign(OutImageT(InImageT(inImage, *bboxIter, image::LOCAL), true));
+            outView.assign(OutImageT(InImageT(inImage, bboxIter, image::LOCAL), true));
             *(outView.getMask()) |= edgeMask;
         } else {
             outView = edgePixel;
@@ -173,8 +171,8 @@ void scaledPlus(OutImageT& outImage, double c1, InImageT const& inImage1, double
         throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
     }
 
-    typedef typename InImageT::const_x_iterator InConstXIter;
-    typedef typename OutImageT::x_iterator OutXIter;
+    using InConstXIter = typename InImageT::const_x_iterator;
+    using OutXIter = typename OutImageT::x_iterator;
     for (int y = 0; y != inImage1.getHeight(); ++y) {
         InConstXIter const end1 = inImage1.row_end(y);
         InConstXIter inIter1 = inImage1.row_begin(y);

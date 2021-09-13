@@ -90,7 +90,7 @@ struct FitsSchemaItem {
  */
 class FitsSchemaInputMapper {
 public:
-    typedef FitsSchemaItem Item;
+    using Item = FitsSchemaItem;
 
     /**
      *  When processing each column, divide this number by the record size (in

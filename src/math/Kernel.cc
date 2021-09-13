@@ -107,8 +107,8 @@ Kernel::Kernel(int width, int height, std::vector<SpatialFunctionPtr> spatialFun
         os << "kernel height = " << height << " and/or width = " << width << " < 1";
         throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
     }
-    for (unsigned int ii = 0; ii < spatialFunctionList.size(); ++ii) {
-        SpatialFunctionPtr spatialFunctionCopy = spatialFunctionList[ii]->clone();
+    for (auto const &ii : spatialFunctionList) {
+        SpatialFunctionPtr spatialFunctionCopy = ii->clone();
         this->_spatialFunctionList.push_back(spatialFunctionCopy);
     }
 }
@@ -165,9 +165,8 @@ Kernel::SpatialFunctionPtr Kernel::getSpatialFunction(unsigned int index) const 
 
 std::vector<Kernel::SpatialFunctionPtr> Kernel::getSpatialFunctionList() const {
     std::vector<SpatialFunctionPtr> spFuncCopyList;
-    for (std::vector<SpatialFunctionPtr>::const_iterator spFuncIter = _spatialFunctionList.begin();
-         spFuncIter != _spatialFunctionList.end(); ++spFuncIter) {
-        spFuncCopyList.push_back((**spFuncIter).clone());
+    for (auto const &spFuncIter : _spatialFunctionList) {
+        spFuncCopyList.push_back((*spFuncIter).clone());
     }
     return spFuncCopyList;
 }
@@ -201,9 +200,8 @@ std::string Kernel::toString(std::string const &prefix) const {
     os << prefix << "..isSpatiallyVarying: " << (this->isSpatiallyVarying() ? "True" : "False") << std::endl;
     if (this->isSpatiallyVarying()) {
         os << prefix << "..spatialFunctions:" << std::endl;
-        for (std::vector<SpatialFunctionPtr>::const_iterator spFuncPtr = _spatialFunctionList.begin();
-             spFuncPtr != _spatialFunctionList.end(); ++spFuncPtr) {
-            os << prefix << "...." << (*spFuncPtr)->toString() << std::endl;
+        for (auto const &spFuncPtr : _spatialFunctionList) {
+            os << prefix << "...." << spFuncPtr->toString() << std::endl;
         }
     }
     return os.str();

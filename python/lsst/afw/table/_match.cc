@@ -45,9 +45,9 @@ namespace {
 /// @internal Declare match code templated on two types of catalog
 template <typename Catalog1, typename Catalog2>
 void declareMatch2(WrapperCollection &wrappers, std::string const &prefix) {
-    typedef typename Catalog1::Record Record1;
-    typedef typename Catalog2::Record Record2;
-    typedef std::vector<Match<typename Catalog1::Record, typename Catalog2::Record>> MatchList;
+    using Record1 = typename Catalog1::Record;
+    using Record2 = typename Catalog2::Record;
+    using MatchList = std::vector<Match<typename Catalog1::Record, typename Catalog2::Record>>;
 
     using Class = Match<Record1, Record2>;
     using PyClass = py::class_<Class, std::shared_ptr<Class>>;
@@ -76,7 +76,7 @@ void declareMatch2(WrapperCollection &wrappers, std::string const &prefix) {
 /// @internal Declare match code templated on one type of catalog
 template <typename Catalog>
 void declareMatch1(WrapperCollection &wrappers) {
-    typedef std::vector<Match<typename Catalog::Record, typename Catalog::Record>> MatchList;
+    using MatchList = std::vector<Match<typename Catalog::Record, typename Catalog::Record>>;
     wrappers.wrap([](auto &mod) {
         mod.def("matchRaDec",
                 (MatchList(*)(Catalog const &, lsst::geom::Angle, MatchControl const &))matchRaDec<Catalog>,

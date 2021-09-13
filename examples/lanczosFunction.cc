@@ -28,7 +28,7 @@
 using namespace std;
 
 int main() {
-    typedef double FuncReturn;
+    using FuncReturn = double;
 
     unsigned int order = 2;
     lsst::afw::math::LanczosFunction2<FuncReturn> lancFunc(order);

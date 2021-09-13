@@ -73,25 +73,25 @@ template <typename ImagePixelT, typename MaskPixelT = lsst::afw::image::MaskPixe
 class MaskedImage {
 public:
     /// shared pointer to the Image
-    typedef std::shared_ptr<image::Image<ImagePixelT>> ImagePtr;
+    using ImagePtr = std::shared_ptr<image::Image<ImagePixelT>>;
     /// shared pointer to the Mask
-    typedef std::shared_ptr<image::Mask<MaskPixelT>> MaskPtr;
+    using MaskPtr = std::shared_ptr<image::Mask<MaskPixelT>>;
     /// shared pointer to the variance Image
-    typedef std::shared_ptr<image::Image<VariancePixelT>> VariancePtr;
+    using VariancePtr = std::shared_ptr<image::Image<VariancePixelT>>;
     /// The Mask's MaskPlaneDict
-    typedef typename Mask<MaskPixelT>::MaskPlaneDict MaskPlaneDict;
+    using MaskPlaneDict = typename Mask<MaskPixelT>::MaskPlaneDict;
 
-    typedef lsst::afw::image::Image<VariancePixelT> Variance;
-    typedef lsst::afw::image::Image<ImagePixelT> Image;
-    typedef lsst::afw::image::Mask<MaskPixelT> Mask;
+    using Variance = lsst::afw::image::Image<VariancePixelT>;
+    using Image = lsst::afw::image::Image<ImagePixelT>;
+    using Mask = lsst::afw::image::Mask<MaskPixelT>;
 
-    typedef detail::MaskedImage_tag image_category;
+    using image_category = detail::MaskedImage_tag;
 
     /// A templated class to return this classes' type (present in Image/Mask/MaskedImage)
     template <typename ImagePT = ImagePixelT, typename MaskPT = MaskPixelT, typename VarPT = VariancePixelT>
     struct ImageTypeFactory {
         /// Return the desired type
-        typedef MaskedImage<ImagePT, MaskPT, VarPT> type;
+        using type = MaskedImage<ImagePT, MaskPT, VarPT>;
     };
 
     /// An iterator to the MaskedImage
@@ -108,28 +108,28 @@ public:
     class const_MaskedImageLocator;
 
     /// A Pixel in the MaskedImage
-    typedef lsst::afw::image::pixel::Pixel<ImagePixelT, MaskPixelT, VariancePixelT> Pixel;
+    using Pixel = lsst::afw::image::pixel::Pixel<ImagePixelT, MaskPixelT, VariancePixelT>;
     /// A single Pixel of the same type as those in the MaskedImage
-    typedef lsst::afw::image::pixel::SinglePixel<ImagePixelT, MaskPixelT, VariancePixelT> SinglePixel;
+    using SinglePixel = lsst::afw::image::pixel::SinglePixel<ImagePixelT, MaskPixelT, VariancePixelT>;
 
     /// The base class for MaskedImageIterators (const and non-const)
     template <typename ImageIterator, typename MaskIterator, typename VarianceIterator,
               template <typename> class Ref = Reference>
     class MaskedImageIteratorBase {
-        typedef boost::tuple<ImageIterator, MaskIterator, VarianceIterator> IMV_iterator_tuple;
+        using IMV_iterator_tuple = boost::tuple<ImageIterator, MaskIterator, VarianceIterator>;
 
     public:
         /** The underlying iterator tuple
          * @note not really for public consumption;  could be made protected
          */
-        typedef typename boost::zip_iterator<IMV_iterator_tuple>::reference IMV_tuple;
+        using IMV_tuple = typename boost::zip_iterator<IMV_iterator_tuple>::reference;
         /** The underlying const iterator tuple
          * @note not really for public consumption;  could be made protected
          */
         template <typename, typename, typename>
         friend class const_MaskedImageIterator;
         /// Type pointed to by the iterator
-        typedef Pixel type;
+        using type = Pixel;
 
         /// Construct a MaskedImageIteratorBase from the image/mask/variance iterators
         MaskedImageIteratorBase(ImageIterator const& img, MaskIterator const& msk,
@@ -207,8 +207,7 @@ public:
     template <typename ImageIterator, typename MaskIterator, typename VarianceIterator>
     class MaskedImageIterator
             : public MaskedImageIteratorBase<ImageIterator, MaskIterator, VarianceIterator> {
-        typedef MaskedImageIteratorBase<ImageIterator, MaskIterator, VarianceIterator>
-                MaskedImageIteratorBase_t;
+        using MaskedImageIteratorBase_t = MaskedImageIteratorBase<ImageIterator, MaskIterator, VarianceIterator>;
 
     public:
         MaskedImageIterator(ImageIterator& img, MaskIterator& msk, VarianceIterator& var)
@@ -229,13 +228,11 @@ public:
                                              typename detail::const_iterator_type<MaskIterator>::type,
                                              typename detail::const_iterator_type<VarianceIterator>::type,
                                              ConstReference> {
-        typedef typename detail::const_iterator_type<ImageIterator>::type const_ImageIterator;
-        typedef typename detail::const_iterator_type<MaskIterator>::type const_MaskIterator;
-        typedef typename detail::const_iterator_type<VarianceIterator>::type const_VarianceIterator;
+        using const_ImageIterator = typename detail::const_iterator_type<ImageIterator>::type;
+        using const_MaskIterator = typename detail::const_iterator_type<MaskIterator>::type;
+        using const_VarianceIterator = typename detail::const_iterator_type<VarianceIterator>::type;
 
-        typedef MaskedImageIteratorBase<const_ImageIterator, const_MaskIterator, const_VarianceIterator,
-                                        ConstReference>
-                MaskedImageIteratorBase_t;
+        using MaskedImageIteratorBase_t = MaskedImageIteratorBase<const_ImageIterator, const_MaskIterator, const_VarianceIterator, ConstReference>;
 
     public:
         const_MaskedImageIterator(
@@ -259,7 +256,7 @@ public:
     template <typename ImageLocator, typename MaskLocator, typename VarianceLocator,
               template <typename> class Ref = Reference>
     class MaskedImageLocatorBase {
-        typedef typename boost::tuple<ImageLocator, MaskLocator, VarianceLocator> IMVLocator;
+        using IMVLocator = typename boost::tuple<ImageLocator, MaskLocator, VarianceLocator>;
         //
         // A class to provide _[xy]_iterator for MaskedImageLocator.  We can't just use
         // a zip_iterator as moving this iterator must be the same as moving the locator
@@ -324,7 +321,7 @@ public:
         // Two classes to provide .x() and .y() in _x_or_y_iterator
         template <typename LocT>
         class apply_x {
-            typedef typename LocT::x_iterator IterT;
+            using IterT = typename LocT::x_iterator;
 
         public:
             apply_x(LocT& loc) : _loc(loc) {}
@@ -336,7 +333,7 @@ public:
 
         template <typename LocT>
         class apply_y {
-            typedef typename LocT::y_iterator IterT;
+            using IterT = typename LocT::y_iterator;
 
         public:
             apply_y(LocT& loc) : _loc(loc) {}
@@ -347,14 +344,11 @@ public:
         };
 
     public:
-        typedef typename boost::tuple<typename ImageLocator::cached_location_t,
-                                      typename MaskLocator::cached_location_t,
-                                      typename VarianceLocator::cached_location_t>
-                IMVCachedLocation;
+        using IMVCachedLocation = typename boost::tuple<typename ImageLocator::cached_location_t, typename MaskLocator::cached_location_t, typename VarianceLocator::cached_location_t>;
         /// An x_iterator that provides a view of the xy_locator (i.e. advancing one advances the other)
-        typedef _x_or_y_iterator<apply_x> x_iterator;
+        using x_iterator = _x_or_y_iterator<apply_x>;
         /// A y_iterator that provides a view of the xy_locator (i.e. advancing one advances the other)
-        typedef _x_or_y_iterator<apply_y> y_iterator;
+        using y_iterator = _x_or_y_iterator<apply_y>;
         /// A saved relative position, providing efficient access to neighbouring pixels
         class cached_location_t {
         public:
@@ -417,7 +411,7 @@ public:
         // as we can't say int_<N> within a template<int N>.  So define a set of functions apply_IMV
         // to do the dirty work
         //
-        typedef typename boost::mpl::vector<ImagePixelT, MaskPixelT, VariancePixelT> PixelTVec;
+        using PixelTVec = typename boost::mpl::vector<ImagePixelT, MaskPixelT, VariancePixelT>;
 
         template <typename N>
         typename Ref<typename boost::mpl::at<PixelTVec, N>::type>::type apply_IMV(
@@ -502,7 +496,7 @@ public:
     /// A locator for a MaskedImage
     template <typename ImageLocator, typename MaskLocator, typename VarianceLocator>
     class MaskedImageLocator : public MaskedImageLocatorBase<ImageLocator, MaskLocator, VarianceLocator> {
-        typedef MaskedImageLocatorBase<ImageLocator, MaskLocator, VarianceLocator> MaskedImageLocatorBase_t;
+        using MaskedImageLocatorBase_t = MaskedImageLocatorBase<ImageLocator, MaskLocator, VarianceLocator>;
 
     public:
         MaskedImageLocator(ImageLocator& img, MaskLocator& msk, VarianceLocator& var)
@@ -516,13 +510,11 @@ public:
                                             typename detail::const_locator_type<MaskLocator>::type,
                                             typename detail::const_locator_type<VarianceLocator>::type,
                                             ConstReference> {
-        typedef typename detail::const_locator_type<ImageLocator>::type const_ImageLocator;
-        typedef typename detail::const_locator_type<MaskLocator>::type const_MaskLocator;
-        typedef typename detail::const_locator_type<VarianceLocator>::type const_VarianceLocator;
+        using const_ImageLocator = typename detail::const_locator_type<ImageLocator>::type;
+        using const_MaskLocator = typename detail::const_locator_type<MaskLocator>::type;
+        using const_VarianceLocator = typename detail::const_locator_type<VarianceLocator>::type;
 
-        typedef MaskedImageLocatorBase<const_ImageLocator, const_MaskLocator, const_VarianceLocator,
-                                       ConstReference>
-                MaskedImageLocatorBase_t;
+        using MaskedImageLocatorBase_t = MaskedImageLocatorBase<const_ImageLocator, const_MaskLocator, const_VarianceLocator, ConstReference>;
 
     public:
         const_MaskedImageLocator(MaskedImageLocator<ImageLocator, MaskLocator, VarianceLocator> const& iter)
@@ -534,58 +526,38 @@ public:
     };
 
     // An iterator to a MaskedImage
-    typedef MaskedImageIterator<typename Image::iterator, typename Mask::iterator,
-                                typename Variance::iterator>
-            iterator;
+    using iterator = MaskedImageIterator<typename Image::iterator, typename Mask::iterator, typename Variance::iterator>;
     // A const_iterator to a MaskedImage
-    typedef const_MaskedImageIterator<typename Image::iterator, typename Mask::iterator,
-                                      typename Variance::iterator>
-            const_iterator;
+    using const_iterator = const_MaskedImageIterator<typename Image::iterator, typename Mask::iterator, typename Variance::iterator>;
     // A reverse_iterator to a MaskedImage
-    typedef MaskedImageIterator<typename Image::reverse_iterator, typename Mask::reverse_iterator,
-                                typename Variance::reverse_iterator>
-            reverse_iterator;
+    using reverse_iterator = MaskedImageIterator<typename Image::reverse_iterator, typename Mask::reverse_iterator, typename Variance::reverse_iterator>;
 #if 0  // doesn't compile.  I should fix this, but it's low priority. RHL
     /// a const_reverse_iterator
     typedef const_MaskedImageIterator<typename Image::reverse_iterator,
                                 typename Mask::reverse_iterator, typename Variance::reverse_iterator> const_reverse_iterator;
 #endif
     /// An iterator to a row of a MaskedImage
-    typedef MaskedImageIterator<typename Image::x_iterator, typename Mask::x_iterator,
-                                typename Variance::x_iterator>
-            x_iterator;
+    using x_iterator = MaskedImageIterator<typename Image::x_iterator, typename Mask::x_iterator, typename Variance::x_iterator>;
     /// A const_iterator to a row of a MaskedImage
-    typedef const_MaskedImageIterator<typename Image::x_iterator, typename Mask::x_iterator,
-                                      typename Variance::x_iterator>
-            const_x_iterator;
+    using const_x_iterator = const_MaskedImageIterator<typename Image::x_iterator, typename Mask::x_iterator, typename Variance::x_iterator>;
     /** A fast STL compliant iterator for contiguous images
      * N.b. The order of pixel access is undefined
      */
-    typedef x_iterator fast_iterator;
+    using fast_iterator = x_iterator;
     /// An iterator to a column of a MaskedImage
-    typedef MaskedImageIterator<typename Image::y_iterator, typename Mask::y_iterator,
-                                typename Variance::y_iterator>
-            y_iterator;
+    using y_iterator = MaskedImageIterator<typename Image::y_iterator, typename Mask::y_iterator, typename Variance::y_iterator>;
     /// A const_iterator to a column of a MaskedImage
-    typedef const_MaskedImageIterator<typename Image::y_iterator, typename Mask::y_iterator,
-                                      typename Variance::y_iterator>
-            const_y_iterator;
+    using const_y_iterator = const_MaskedImageIterator<typename Image::y_iterator, typename Mask::y_iterator, typename Variance::y_iterator>;
 
     /// A locator for a MaskedImage
-    typedef MaskedImageLocator<typename Image::xy_locator, typename Mask::xy_locator,
-                               typename Variance::xy_locator>
-            xy_locator;
+    using xy_locator = MaskedImageLocator<typename Image::xy_locator, typename Mask::xy_locator, typename Variance::xy_locator>;
     /// A const_locator for a MaskedImage
-    typedef const_MaskedImageLocator<typename Image::xy_locator, typename Mask::xy_locator,
-                                     typename Variance::xy_locator>
-            const_xy_locator;
+    using const_xy_locator = const_MaskedImageLocator<typename Image::xy_locator, typename Mask::xy_locator, typename Variance::xy_locator>;
 
     /// an x_iterator associated with an xy_locator
-    typedef typename MaskedImageLocator<typename Image::xy_locator, typename Mask::xy_locator,
-                                        typename Variance::xy_locator>::x_iterator xy_x_iterator;
+    using xy_x_iterator = typename MaskedImageLocator<typename Image::xy_locator, typename Mask::xy_locator, typename Variance::xy_locator>::x_iterator;
     /// an y_iterator associated with an xy_locator
-    typedef typename MaskedImageLocator<typename Image::xy_locator, typename Mask::xy_locator,
-                                        typename Variance::xy_locator>::y_iterator xy_y_iterator;
+    using xy_y_iterator = typename MaskedImageLocator<typename Image::xy_locator, typename Mask::xy_locator, typename Variance::xy_locator>::y_iterator;
 
     // Constructors
     /**
@@ -1300,13 +1272,13 @@ bool imagesOverlap(MaskedImage<ImagePixelT1, MaskPixel, VariancePixel> const& im
 namespace {
 template <typename ImageT, typename TagT>
 struct GetImage_ {
-    typedef ImageT type;
+    using type = ImageT;
     static std::shared_ptr<type> getImage(std::shared_ptr<ImageT> image) { return image; }
 };
 
 template <typename ImageT>
 struct GetImage_<ImageT, typename image::detail::MaskedImage_tag> {
-    typedef typename ImageT::Image type;
+    using type = typename ImageT::Image;
     static std::shared_ptr<type> getImage(std::shared_ptr<ImageT> image) { return image->getImage(); }
 };
 }  // anonymous namespace

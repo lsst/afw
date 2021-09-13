@@ -34,7 +34,7 @@
 namespace image = lsst::afw::image;
 using namespace std;
 
-typedef double ImagePixelT;
+using ImagePixelT = double;
 
 template <typename PixelT>
 void y_gradient(image::MaskedImage<PixelT>& src, image::MaskedImage<PixelT>& dst) {
@@ -42,7 +42,7 @@ void y_gradient(image::MaskedImage<PixelT>& src, image::MaskedImage<PixelT>& dst
 
 #define CONST 1
 #if CONST
-    typedef typename image::MaskedImage<PixelT>::const_xy_locator xyl;
+    using xyl = typename image::MaskedImage<PixelT>::const_xy_locator;
 #else
     typedef typename image::MaskedImage<PixelT>::xy_locator xyl;
 #endif

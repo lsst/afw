@@ -39,7 +39,7 @@
 namespace afwDetect = lsst::afw::detection;
 namespace afwImage = lsst::afw::image;
 namespace afwMath = lsst::afw::math;
-typedef float PixelT;
+using PixelT = float;
 
 std::pair<std::shared_ptr<afwImage::MaskedImage<PixelT>>, std::shared_ptr<afwDetect::FootprintSet>>
 readImage();
@@ -58,10 +58,8 @@ void SpatialCellSetDemo() {
     /*
      * Populate the cellSet using the detected object in the FootprintSet
      */
-    for (afwDetect::FootprintSet::FootprintList::iterator ptr = fs->getFootprints()->begin(),
-                                                          end = fs->getFootprints()->end();
-         ptr != end; ++ptr) {
-        lsst::geom::Box2I const bbox = (*ptr)->getBBox();
+    for (auto const &ptr : *fs->getFootprints()) {
+        lsst::geom::Box2I const bbox = ptr->getBBox();
         float const xc = (bbox.getMinX() + bbox.getMaxX()) / 2.0;
         float const yc = (bbox.getMinY() + bbox.getMaxY()) / 2.0;
         std::shared_ptr<ExampleCandidate> tc(new ExampleCandidate(xc, yc, im, bbox));
@@ -80,16 +78,15 @@ void SpatialCellSetDemo() {
     for (unsigned int i = 0; i != cellSet.getCellList().size(); ++i) {
         std::shared_ptr<afwMath::SpatialCell> cell = cellSet.getCellList()[i];
 
-        for (afwMath::SpatialCell::iterator candidate = cell->begin(), candidateEnd = cell->end();
-             candidate != candidateEnd; ++candidate) {
-            lsst::geom::Box2I box = dynamic_cast<ExampleCandidate *>((*candidate).get())->getBBox();
+        for (auto && candidate : *cell) {
+            lsst::geom::Box2I box = dynamic_cast<ExampleCandidate *>((candidate).get())->getBBox();
 
 #if 0
             std::cout << boost::format("%d %5.2f %5.2f %d\n")
                 % i % (*candidate)->getXCenter() % (*candidate)->getYCenter() % (w*h);
 #endif
             if (box.getArea() < 75) {
-                (*candidate)->setStatus(afwMath::SpatialCellCandidate::BAD);
+                (candidate)->setStatus(afwMath::SpatialCellCandidate::BAD);
             }
         }
     }
@@ -170,7 +167,7 @@ readImage() {
 int main() {
     std::pair<std::shared_ptr<afwImage::MaskedImage<PixelT>>, std::shared_ptr<afwDetect::FootprintSet>> data =
             readImage();
-    assert(data.first != NULL);  // stop compiler complaining about data being unused
+    assert(data.first != nullptr);  // stop compiler complaining about data being unused
 
     SpatialCellSetDemo();
 }

@@ -31,8 +31,8 @@
 namespace lsst {
 namespace afw {
 namespace image {
-typedef std::int32_t MaskPixel;  ///< default type for Masks and MaskedImage Masks
-typedef float VariancePixel;     ///< default type for MaskedImage variance images
+using MaskPixel = std::int32_t;  ///< default type for Masks and MaskedImage Masks
+using VariancePixel = float;     ///< default type for MaskedImage variance images
 }  // namespace image
 }  // namespace afw
 }  // namespace lsst

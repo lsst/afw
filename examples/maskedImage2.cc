@@ -24,7 +24,7 @@
 #include "lsst/afw/image/MaskedImage.h"
 
 namespace image = lsst::afw::image;
-typedef image::MaskedImage<int> ImageT;
+using ImageT = image::MaskedImage<int>;
 
 int main() {
     ImageT in(lsst::geom::Extent2I(10, 6));
@@ -55,7 +55,7 @@ int main() {
     std::shared_ptr<ImageT> out2(new ImageT(in.getDimensions()));
     out2->assign(in);
 
-    typedef ImageT::const_xy_locator xy_loc;
+    using xy_loc = ImageT::const_xy_locator;
 
     for (int y = 1; y != in.getHeight() - 1; ++y) {
         // "dot" means "cursor location" in emacs

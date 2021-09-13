@@ -53,7 +53,7 @@ public:
     CppStorable(CppStorable&&) = default;
     CppStorable& operator=(CppStorable const&) = default;
     CppStorable& operator=(CppStorable&&) = default;
-    ~CppStorable() noexcept = default;
+    ~CppStorable() noexcept override = default;
 
     /**
      * Two CppStorables are equal if and only if their internal states are equal.

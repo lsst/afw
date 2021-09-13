@@ -35,7 +35,7 @@ namespace ellipses {
 
 namespace {
 
-typedef std::map<std::string, std::shared_ptr<BaseCore> > RegistryMap;
+using RegistryMap = std::map<std::string, std::shared_ptr<BaseCore>>;
 
 RegistryMap& getRegistry() {
     static RegistryMap instance;

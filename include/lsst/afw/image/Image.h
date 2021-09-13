@@ -60,13 +60,13 @@ public:
     template <typename, typename, typename>
     friend class MaskedImage;
 
-    typedef detail::Image_tag image_category;
+    using image_category = detail::Image_tag;
 
     /// A templated class to return this classes' type (present in Image/Mask/MaskedImage)
     template <typename ImagePT = PixelT>
     struct ImageTypeFactory {
         /// Return the desired type
-        typedef Image<ImagePT> type;
+        using type = Image<ImagePT>;
     };
     template <typename OtherPixelT>
     friend class Image;  // needed by generalised copy constructors

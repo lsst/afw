@@ -96,7 +96,7 @@ std::ostream& operator<<(std::ostream& os, PeakRecord const& record) {
 }
 
 std::shared_ptr<PeakTable> PeakTable::make(afw::table::Schema const& schema, bool forceNewTable) {
-    typedef std::list<std::weak_ptr<PeakTable> > CachedTableList;
+    using CachedTableList = std::list<std::weak_ptr<PeakTable>>;
     static CachedTableList cache;
     if (!checkSchema(schema)) {
         throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,

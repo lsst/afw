@@ -35,8 +35,8 @@
 namespace afwImage = lsst::afw::image;
 namespace afwMath = lsst::afw::math;
 
-typedef float ImageType;
-typedef double KernelType;
+using ImageType = float;
+using KernelType = double;
 
 const double Sigma = 3;
 const unsigned DefNIter = 10;
@@ -46,7 +46,7 @@ const unsigned DeltaKernelSize = 5;
 
 template <class ImageClass>
 void timeConvolution(ImageClass &image, unsigned int nIter) {
-    typedef double KernelType;
+    using KernelType = double;
 
     unsigned imWidth = image.getWidth();
     unsigned imHeight = image.getHeight();

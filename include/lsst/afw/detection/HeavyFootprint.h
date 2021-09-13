@@ -62,7 +62,7 @@ public:
     explicit HeavyFootprint(
             Footprint const& foot,
             lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> const& mimage,
-            HeavyFootprintCtrl const* ctrl = NULL);
+            HeavyFootprintCtrl const* ctrl = nullptr);
 
     /**
      * Create a HeavyFootprint from a regular Footprint, allocating space
@@ -72,7 +72,7 @@ public:
      * @param foot The Footprint defining the pixels to set
      * @param ctrl Control how we manipulate HeavyFootprints
      */
-    explicit HeavyFootprint(Footprint const& foot, HeavyFootprintCtrl const* ctrl = NULL);
+    explicit HeavyFootprint(Footprint const& foot, HeavyFootprintCtrl const* ctrl = nullptr);
 
     /**
      * Default constructor for HeavyFootprint. Most common use for this will be in combination
@@ -148,7 +148,7 @@ template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT> makeHeavyFootprint(
         Footprint const& foot,
         lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> const& img,
-        HeavyFootprintCtrl const* ctrl = NULL) {
+        HeavyFootprintCtrl const* ctrl = nullptr) {
     return HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>(foot, img, ctrl);
 }
 

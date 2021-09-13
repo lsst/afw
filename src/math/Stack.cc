@@ -47,7 +47,7 @@ namespace afw {
 namespace math {
 
 namespace {
-typedef std::vector<WeightPixel> WeightVector;  // vector of weights (yes, really)
+using WeightVector = std::vector<WeightPixel>;  // vector of weights (yes, really)
                                                 /**
                                                  * @internal A bit counter (to make sure that only one type of statistics has been requested)
                                                  */
@@ -124,7 +124,7 @@ void computeMaskedImageStack(image::MaskedImage<PixelT> &imgStack,
                              std::vector<std::pair<image::MaskPixel, image::MaskPixel>> const &maskMap,
                              WeightVector const &wvector = WeightVector()) {
     // get a list of row_begin iterators
-    typedef typename image::MaskedImage<PixelT>::x_iterator x_iterator;
+    using x_iterator = typename image::MaskedImage<PixelT>::x_iterator;
     std::vector<x_iterator> rows;
     rows.reserve(images.size());
 
@@ -211,7 +211,7 @@ void computeMaskedImageStack(image::MaskedImage<PixelT> &imgStack,
                              Property flags, StatisticsControl const &sctrl, image::MaskPixel const clipped,
                              image::MaskPixel const excuse, WeightVector const &wvector = WeightVector()) {
     std::vector<std::pair<image::MaskPixel, image::MaskPixel>> maskMap;
-    maskMap.push_back(std::make_pair(sctrl.getAndMask() & ~excuse, clipped));
+    maskMap.emplace_back(sctrl.getAndMask() & ~excuse, clipped);
     computeMaskedImageStack<PixelT, isWeighted, useVariance>(imgStack, images, flags, sctrl, clipped, maskMap,
                                                              wvector);
 }
@@ -389,7 +389,7 @@ std::vector<PixelT> computeVectorStack(
         std::vector<std::vector<PixelT>> &vectors, Property flags,
         StatisticsControl const &sctrl, WeightVector const &wvector = WeightVector()) {
     // create the image to be returned
-    typedef std::vector<PixelT> Vect;
+    using Vect = std::vector<PixelT>;
     Vect vecStack(vectors[0].size(), 0.0);
 
     MaskedVector<PixelT> pixelSet(vectors.size());  // values from a given pixel of each image
@@ -446,7 +446,7 @@ std::shared_ptr<image::MaskedImage<PixelT>> statisticsStack(image::Image<PixelT>
                                                             char dimension, StatisticsControl const &sctrl) {
     int x0 = image.getX0();
     int y0 = image.getY0();
-    typedef image::MaskedImage<PixelT> MImage;
+    using MImage = image::MaskedImage<PixelT>;
     std::shared_ptr<MImage> imgOut;
 
     // do each row or column, one at a time
@@ -490,7 +490,7 @@ std::shared_ptr<image::MaskedImage<PixelT>> statisticsStack(image::MaskedImage<P
                                                             StatisticsControl const &sctrl) {
     int const x0 = image.getX0();
     int const y0 = image.getY0();
-    typedef image::MaskedImage<PixelT> MImage;
+    using MImage = image::MaskedImage<PixelT>;
     std::shared_ptr<MImage> imgOut;
 
     // do each row or column, one at a time

@@ -33,7 +33,7 @@
 using namespace std;
 
 int main() {
-    typedef lsst::afw::math::Kernel::Pixel Pixel;
+    using Pixel = lsst::afw::math::Kernel::Pixel;
 
     double majorSigma = 2.5;
     double minorSigma = 2.0;

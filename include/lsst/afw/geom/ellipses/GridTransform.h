@@ -48,7 +48,7 @@ namespace ellipses {
 class BaseCore::GridTransform final {
 public:
     /// Matrix type for derivative with respect to ellipse parameters.
-    typedef Eigen::Matrix<double, 4, 3> DerivativeMatrix;
+    using DerivativeMatrix = Eigen::Matrix<double, 4, 3>;
 
     /// Standard constructor.
     explicit GridTransform(BaseCore const& input);
@@ -82,7 +82,7 @@ private:
 class Ellipse::GridTransform final {
 public:
     /// Matrix type for derivative with respect to input ellipse parameters.
-    typedef Eigen::Matrix<double, 6, 5> DerivativeMatrix;
+    using DerivativeMatrix = Eigen::Matrix<double, 6, 5>;
 
     /// Standard constructor.
     explicit GridTransform(Ellipse const& input);

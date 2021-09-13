@@ -33,7 +33,7 @@
 #pragma clang diagnostic ignored "-Wunused-variable"
 #include "boost/test/unit_test.hpp"
 #pragma clang diagnostic pop
-#include "boost/test/floating_point_comparison.hpp"
+#include "boost/test/tools/floating_point_comparison.hpp"
 
 #include "boost/iterator/zip_iterator.hpp"
 #include "lsst/afw/image/MaskedImage.h"
@@ -41,8 +41,8 @@
 namespace image = lsst::afw::image;
 using namespace std;
 
-typedef float PixelT;
-typedef image::MaskedImage<PixelT> ImageT;
+using PixelT = float;
+using ImageT = image::MaskedImage<PixelT>;
 
 template <typename PixelT>
 void y_gradient(ImageT& src, ImageT& dst) {
@@ -50,7 +50,7 @@ void y_gradient(ImageT& src, ImageT& dst) {
 
 #define CONST 1
 #if CONST
-    typedef typename ImageT::const_xy_locator xyl;
+    using xyl = typename ImageT::const_xy_locator;
 #else
     typedef typename ImageT::xy_locator xyl;
 #endif
@@ -226,7 +226,7 @@ BOOST_AUTO_TEST_CASE(
     BOOST_CHECK_EQUAL(ptr.mask(), 0xb);  // == 0x9 | 0x2
     BOOST_CHECK_EQUAL(ptr.variance(), 18.5);
 
-    typedef ImageT::SinglePixel SinglePixel;
+    using SinglePixel = ImageT::SinglePixel;
     *ptr = *ptr + *ptr2;
     BOOST_CHECK_EQUAL(ptr.image(), 14);
     BOOST_CHECK_EQUAL(ptr.mask(), 0xb);
@@ -258,9 +258,9 @@ BOOST_AUTO_TEST_CASE(
     using image::pixel::makeSinglePixel;
     using image::pixel::plus;  // otherwise we get std::plus even with Koenig lookup
 
-    typedef float ImagePixelT;
-    typedef int MaskPixelT;
-    typedef float VariancePixelT;
+    using ImagePixelT = float;
+    using MaskPixelT = int;
+    using VariancePixelT = float;
 
     ImagePixelT x = 10;
     MaskPixelT m = 0x2;

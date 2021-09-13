@@ -112,8 +112,8 @@ BOOST_AUTO_TEST_CASE(EndpointEqualsAlgebraic) {
     BOOST_TEST(*(endpoints[0]) == *(endpoints[2]));
     BOOST_TEST(*(endpoints[2]) == *(endpoints[0]));
 
-    for (auto const endpoint1 : endpoints) {
-        for (auto const endpoint2 : endpoints) {
+    for (auto const& endpoint1 : endpoints) {
+        for (auto const& endpoint2 : endpoints) {
             // == and != must always disagree
             if (*endpoint1 == *endpoint2) {
                 BOOST_TEST(!(*endpoint1 != *endpoint2));
@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(EndpointEqualsAlgebraic) {
                 BOOST_TEST(*endpoint1 != *endpoint2);
             }
 
-            for (auto const endpoint3 : endpoints) {
+            for (auto const& endpoint3 : endpoints) {
                 bool const equals12 = *endpoint1 == *endpoint2;
                 bool const equals13 = *endpoint1 == *endpoint3;
                 bool const equals23 = *endpoint2 == *endpoint3;

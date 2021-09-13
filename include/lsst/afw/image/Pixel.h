@@ -77,9 +77,9 @@ public:
     template <typename T>
     friend class PixelTypeTraits;
 
-    typedef _ImagePixelT ImagePixelT;
-    typedef _MaskPixelT MaskPixelT;
-    typedef _VariancePixelT VariancePixelT;
+    using ImagePixelT = _ImagePixelT;
+    using MaskPixelT = _MaskPixelT;
+    using VariancePixelT = _VariancePixelT;
 
     SinglePixel(ImagePixelT image, MaskPixelT mask = 0, VariancePixelT variance = 0)
             : _image(image), _mask(mask), _variance(variance) {}
@@ -126,7 +126,7 @@ struct PixelTypeTraits {
 /// Specialization for a %pixel of a MaskedImage
 template <typename _ImagePixelT, typename _MaskPixelT, typename _VariancePixelT>
 struct PixelTypeTraits<SinglePixel<_ImagePixelT, _MaskPixelT, _VariancePixelT> > {
-    typedef SinglePixel<_ImagePixelT, _MaskPixelT, _VariancePixelT> PixelT;
+    using PixelT = SinglePixel<_ImagePixelT, _MaskPixelT, _VariancePixelT>;
 
     /// The quantity to use when a pixel value is undefined
     static inline const PixelT padValue() { return PixelT(); }
@@ -147,9 +147,9 @@ SinglePixel<ImagePixelT, MaskPixelT, VariancePixelT> makeSinglePixel(ImagePixelT
 template <typename _ImagePixelT, typename _MaskPixelT, typename _VariancePixelT = double>
 class Pixel : public detail::MaskedImagePixel_tag {
 public:
-    typedef _ImagePixelT ImagePixelT;
-    typedef _MaskPixelT MaskPixelT;
-    typedef _VariancePixelT VariancePixelT;
+    using ImagePixelT = _ImagePixelT;
+    using MaskPixelT = _MaskPixelT;
+    using VariancePixelT = _VariancePixelT;
 
 /// Construct a Pixel from references to its image/mask/variance components
 #if 0
@@ -291,46 +291,46 @@ private:
 /// A traits class to return the types of the %image/mask/variance
 template <typename ExprT>
 struct exprTraits {
-    typedef ExprT expr_type;
-    typedef typename ExprT::ImagePixelT ImagePixelT;
-    typedef typename ExprT::MaskPixelT MaskPixelT;
-    typedef typename ExprT::VariancePixelT VariancePixelT;
+    using expr_type = ExprT;
+    using ImagePixelT = typename ExprT::ImagePixelT;
+    using MaskPixelT = typename ExprT::MaskPixelT;
+    using VariancePixelT = typename ExprT::VariancePixelT;
 };
 
 /// A specialisation of exprTraits for `double`
 template <>
 struct exprTraits<double> {
-    typedef double ImagePixelT;
-    typedef int MaskPixelT;
-    typedef double VariancePixelT;
-    typedef SinglePixel<ImagePixelT, MaskPixelT, VariancePixelT> expr_type;
+    using ImagePixelT = double;
+    using MaskPixelT = int;
+    using VariancePixelT = double;
+    using expr_type = SinglePixel<ImagePixelT, MaskPixelT>;
 };
 
 /// A specialisation of exprTraits for `float`
 template <>
 struct exprTraits<float> {
-    typedef float ImagePixelT;
-    typedef exprTraits<double>::MaskPixelT MaskPixelT;
-    typedef exprTraits<double>::VariancePixelT VariancePixelT;
-    typedef SinglePixel<ImagePixelT, MaskPixelT, VariancePixelT> expr_type;
+    using ImagePixelT = float;
+    using MaskPixelT = exprTraits<double>::MaskPixelT;
+    using VariancePixelT = exprTraits<double>::VariancePixelT;
+    using expr_type = SinglePixel<ImagePixelT, MaskPixelT>;
 };
 
 /// A specialisation of exprTraits for `int`
 template <>
 struct exprTraits<int> {
-    typedef int ImagePixelT;
-    typedef exprTraits<double>::MaskPixelT MaskPixelT;
-    typedef exprTraits<double>::VariancePixelT VariancePixelT;
-    typedef SinglePixel<ImagePixelT, MaskPixelT, VariancePixelT> expr_type;
+    using ImagePixelT = int;
+    using MaskPixelT = exprTraits<double>::MaskPixelT;
+    using VariancePixelT = exprTraits<double>::VariancePixelT;
+    using expr_type = SinglePixel<ImagePixelT, MaskPixelT>;
 };
 
 /// A specialisation of exprTraits for `unsigned short`
 template <>
 struct exprTraits<unsigned short> {
-    typedef int ImagePixelT;
-    typedef exprTraits<double>::MaskPixelT MaskPixelT;
-    typedef exprTraits<double>::VariancePixelT VariancePixelT;
-    typedef SinglePixel<ImagePixelT, MaskPixelT, VariancePixelT> expr_type;
+    using ImagePixelT = int;
+    using MaskPixelT = exprTraits<double>::MaskPixelT;
+    using VariancePixelT = exprTraits<double>::VariancePixelT;
+    using expr_type = SinglePixel<ImagePixelT, MaskPixelT>;
 };
 
 /// A noop functor (useful for e.g. masks and variances when changing the sign of the image)
@@ -419,9 +419,9 @@ private:
 template <typename ExprT1, typename ImageBinOp, typename MaskBinOp, typename VarianceBinOp>
 class UnaryExpr {
 public:
-    typedef typename exprTraits<ExprT1>::ImagePixelT ImagePixelT;
-    typedef typename exprTraits<ExprT1>::MaskPixelT MaskPixelT;
-    typedef typename exprTraits<ExprT1>::VariancePixelT VariancePixelT;
+    using ImagePixelT = typename exprTraits<ExprT1>::ImagePixelT;
+    using MaskPixelT = typename exprTraits<ExprT1>::MaskPixelT;
+    using VariancePixelT = typename exprTraits<ExprT1>::VariancePixelT;
     /// a unary expression, with three functors to represent the %image/mask/variance operations
     UnaryExpr(ExprT1 e1, ImageBinOp imageOp = ImageBinOp(), MaskBinOp maskOp = MaskBinOp(),
               VarianceBinOp varOp = VarianceBinOp())
@@ -447,9 +447,9 @@ private:
 template <typename ExprT1, typename ExprT2, typename ImageBinOp, typename MaskBinOp, typename VarianceBinOp>
 class BinaryExpr final {
 public:
-    typedef typename exprTraits<ExprT1>::ImagePixelT ImagePixelT;
-    typedef typename exprTraits<ExprT1>::MaskPixelT MaskPixelT;
-    typedef typename exprTraits<ExprT1>::VariancePixelT VariancePixelT;
+    using ImagePixelT = typename exprTraits<ExprT1>::ImagePixelT;
+    using MaskPixelT = typename exprTraits<ExprT1>::MaskPixelT;
+    using VariancePixelT = typename exprTraits<ExprT1>::VariancePixelT;
     /// A binary operation, with three functors to represent the %image/mask/variance operations
     BinaryExpr(ExprT1 e1, ExprT2 e2, ImageBinOp imageOp = ImageBinOp(), MaskBinOp maskOp = MaskBinOp(),
                VarianceBinOp varOp = VarianceBinOp())
@@ -486,9 +486,9 @@ private:
 template <typename ExprT1, typename ImageBinOp, typename MaskBinOp, typename VarianceBinOp>
 class BinaryExpr<ExprT1, double, ImageBinOp, MaskBinOp, VarianceBinOp> final {
 public:
-    typedef typename exprTraits<ExprT1>::ImagePixelT ImagePixelT;
-    typedef typename exprTraits<ExprT1>::MaskPixelT MaskPixelT;
-    typedef typename exprTraits<ExprT1>::VariancePixelT VariancePixelT;
+    using ImagePixelT = typename exprTraits<ExprT1>::ImagePixelT;
+    using MaskPixelT = typename exprTraits<ExprT1>::MaskPixelT;
+    using VariancePixelT = typename exprTraits<ExprT1>::VariancePixelT;
     /// A binary operation, with three functors to represent the %image/mask/variance operations
     BinaryExpr(ExprT1 e1, double e2, ImageBinOp imageOp = ImageBinOp(), MaskBinOp maskOp = MaskBinOp(),
                VarianceBinOp varOp = VarianceBinOp())

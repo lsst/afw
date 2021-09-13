@@ -54,13 +54,13 @@ public:
     /// A Boost.Variant type that can hold any one of the allowed SchemaItem types.
     using ItemVariant = decltype(makeItemVariantType(FieldTypes{}));
     /// A std::vector whose elements can be any of the allowed SchemaItem types.
-    typedef std::vector<ItemVariant> ItemContainer;
+    using ItemContainer = std::vector<ItemVariant>;
     /// A map from field names to position in the vector, so we can do name lookups.
-    typedef std::map<std::string, std::size_t> NameMap;
+    using NameMap = std::map<std::string, std::size_t>;
     /// A map from standard field offsets to position in the vector, so we can do field lookups.
-    typedef std::map<std::size_t, std::size_t> OffsetMap;
+    using OffsetMap = std::map<std::size_t, std::size_t>;
     /// A map from Flag field offset/bit pairs to position in the vector, so we can do Flag field lookups.
-    typedef std::map<std::pair<std::size_t, std::size_t>, std::size_t> FlagMap;
+    using FlagMap = std::map<std::pair<std::size_t, std::size_t>, std::size_t>;
 
     /// The size of a record in bytes.
     std::size_t getRecordSize() const { return _recordSize; }

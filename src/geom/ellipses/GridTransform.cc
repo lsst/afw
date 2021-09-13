@@ -53,7 +53,7 @@ BaseCore::GridTransform::DerivativeMatrix BaseCore::GridTransform::d() const {
        $\frac{r}{\sqrt{1-g^2}}(\sigma_x + g_1 \sigma_z + g2 \sigma_y)$, where $\sigma_i$ are the
        Pauli spin matrices.
     */
-    typedef Separable<ReducedShear, DeterminantRadius> C;
+    using C = Separable<ReducedShear, DeterminantRadius>;
     C core;
     Jacobian rhs = core.dAssign(_input);
     double g1 = core.getE1();

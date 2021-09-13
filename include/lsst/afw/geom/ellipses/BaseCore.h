@@ -60,8 +60,8 @@ public:
     template <typename Output>
     struct Converter;
 
-    typedef Eigen::Vector3d ParameterVector;  ///< Parameter vector type.
-    typedef Eigen::Matrix3d Jacobian;         ///< Parameter Jacobian matrix type.
+    using ParameterVector = Eigen::Vector3d;  ///< Parameter vector type.
+    using Jacobian = Eigen::Matrix3d;         ///< Parameter Jacobian matrix type.
 
     static std::shared_ptr<BaseCore> make(std::string const& name);
 
