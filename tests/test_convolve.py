@@ -38,7 +38,6 @@ import lsst.geom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.math.detail as mathDetail
-import lsst.pex.exceptions as pexExcept
 
 from test_kernel import makeDeltaFunctionKernelList, makeGaussianKernelList
 from lsst.log import Log
@@ -55,7 +54,7 @@ except NameError:
 
 try:
     dataDir = os.path.join(lsst.utils.getPackageDir("afwdata"), "data")
-except pexExcept.NotFoundError:
+except LookupError:
     dataDir = None
 else:
     InputMaskedImagePath = os.path.join(dataDir, "medexp.fits")

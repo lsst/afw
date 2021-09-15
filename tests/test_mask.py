@@ -48,7 +48,7 @@ except NameError:
 
 try:
     afwdataDir = lsst.utils.getPackageDir("afwdata")
-except pexExcept.NotFoundError:
+except LookupError:
     afwdataDir = None
 
 afwDisplay.setDefaultMaskTransparency(75)

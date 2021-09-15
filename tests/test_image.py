@@ -45,11 +45,10 @@ import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 from lsst.afw.fits import readMetadata
 import lsst.afw.display as afwDisplay
-import lsst.pex.exceptions as pexExcept
 
 try:
     afwdataDir = lsst.utils.getPackageDir("afwdata")
-except pexExcept.NotFoundError:
+except LookupError:
     afwdataDir = None
 
 try:

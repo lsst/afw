@@ -30,7 +30,6 @@ import lsst.geom
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
-import lsst.pex.exceptions as pexExcept
 from lsst.log import Log
 
 # Change the level to Log.DEBUG to see debug messages
@@ -40,7 +39,7 @@ Log.getLogger("TRACE4.afw.math.warp").setLevel(Log.INFO)
 
 try:
     afwdataDir = lsst.utils.getPackageDir("afwdata")
-except pexExcept.NotFoundError:
+except LookupError:
     afwdataDir = None
     dataDir = None
 else:

@@ -49,7 +49,7 @@ import lsst.pex.exceptions as pexEx
 
 try:
     dataDir = lsst.utils.getPackageDir("afwdata")
-except pexEx.NotFoundError:
+except LookupError:
     dataDir = None
 
 try:

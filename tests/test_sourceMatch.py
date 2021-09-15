@@ -37,11 +37,10 @@ import lsst.geom
 import lsst.afw.table as afwTable
 import lsst.daf.base as dafBase
 import lsst.utils.tests
-import lsst.pex.exceptions as pexExcept
 
 try:
     afwdataDir = lsst.utils.getPackageDir("afwdata")
-except pexExcept.NotFoundError:
+except LookupError:
     afwdataDir = None
 
 

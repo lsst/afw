@@ -33,7 +33,6 @@ import lsst.afw.image as afwImage
 import lsst.afw.fits as afwFits
 import lsst.utils.tests
 import lsst.afw.display as afwDisplay
-import lsst.pex.exceptions as pexExcept
 
 try:
     type(display)
@@ -42,7 +41,7 @@ except NameError:
 
 try:
     dataDir = os.path.join(lsst.utils.getPackageDir("afwdata"), "data")
-except pexExcept.NotFoundError:
+except LookupError:
     dataDir = None
 
 
