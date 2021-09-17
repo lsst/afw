@@ -23,7 +23,7 @@
 #include <iostream>
 #include <sstream>
 
-#include "lsst/utils/Utils.h"
+#include "lsst/utils/packaging.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image/MaskedImage.h"
 

@@ -34,7 +34,7 @@
 #include <memory>
 
 #include "lsst/geom.h"
-#include "lsst/utils/Utils.h"
+#include "lsst/utils/packaging.h"
 #include "lsst/log/Log.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/geom/SkyWcs.h"

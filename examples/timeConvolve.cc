@@ -24,7 +24,7 @@
 #include <sstream>
 #include <ctime>
 
-#include "lsst/utils/Utils.h"
+#include "lsst/utils/packaging.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/FunctionLibrary.h"
 #include "lsst/afw/image/Image.h"

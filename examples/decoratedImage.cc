@@ -24,7 +24,7 @@
 #include <string>
 #include <algorithm>
 
-#include "lsst/utils/Utils.h"
+#include "lsst/utils/packaging.h"
 #include "lsst/geom.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image/Image.h"

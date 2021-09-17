@@ -16,7 +16,7 @@
 
 #include "Eigen/Core"
 
-#include "lsst/utils/Utils.h"
+#include "lsst/utils/packaging.h"
 #include "lsst/geom.h"
 #include "lsst/afw/detection/Footprint.h"
 #include "lsst/afw/detection/HeavyFootprint.h"

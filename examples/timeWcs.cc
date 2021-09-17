@@ -25,7 +25,7 @@
 #include <ctime>
 #include <cmath>
 
-#include "lsst/utils/Utils.h"
+#include "lsst/utils/packaging.h"
 #include "lsst/geom.h"
 #include "lsst/afw/geom/SkyWcs.h"
 #include "lsst/afw/image.h"

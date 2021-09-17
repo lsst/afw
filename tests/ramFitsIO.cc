@@ -25,7 +25,7 @@
 #include "lsst/afw/geom/SkyWcs.h"
 #include "lsst/afw/image.h"
 #include "lsst/afw/image/Image.h"
-#include "lsst/utils/Utils.h"
+#include "lsst/utils/packaging.h"
 #include <fstream>
 #include <iostream>
 #include <memory>

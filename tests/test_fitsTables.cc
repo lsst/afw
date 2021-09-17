@@ -13,7 +13,7 @@
 #include <map>
 #include <filesystem>
 
-#include "lsst/utils/Utils.h"
+#include "lsst/utils/packaging.h"
 #include "lsst/afw/table/Source.h"
 #include "lsst/afw/geom/Span.h"
 #include "lsst/afw/geom/SpanSet.h"
