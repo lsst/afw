@@ -40,13 +40,12 @@ import lsst.geom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.display as afwDisplay
-import lsst.pex.exceptions as pexExcept
 
 afwDisplay.setDefaultMaskTransparency(75)
 
 try:
     afwdataDir = lsst.utils.getPackageDir("afwdata")
-except pexExcept.NotFoundError:
+except LookupError:
     afwdataDir = None
 
 try:

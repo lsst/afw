@@ -30,7 +30,7 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/log/Log.h"
 #include "lsst/afw/image.h"
-#include "lsst/utils/Utils.h"
+#include "lsst/utils/packaging.h"
 
 using namespace std;
 namespace pexEx = lsst::pex::exceptions;

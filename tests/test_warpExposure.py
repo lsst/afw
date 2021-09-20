@@ -54,7 +54,7 @@ SAVE_FAILED_FITS_FILES = True
 
 try:
     afwdataDir = lsst.utils.getPackageDir("afwdata")
-except pexExcept.NotFoundError:
+except LookupError:
     afwdataDir = None
 else:
     dataDir = os.path.join(afwdataDir, "data")

@@ -38,14 +38,13 @@ import numpy as np
 
 import lsst.afw.table as afwTable
 import lsst.geom
-import lsst.pex.exceptions as pexExcept
 import lsst.utils
 import lsst.utils.tests
 
 
 try:
     afwdataDir = lsst.utils.getPackageDir("afwdata")
-except pexExcept.NotFoundError:
+except LookupError:
     afwdataDir = None
 
 

@@ -35,7 +35,7 @@
 #pragma clang diagnostic pop
 #include "boost/test/tools/floating_point_comparison.hpp"
 
-#include "lsst/utils/Utils.h"
+#include "lsst/utils/packaging.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/math/Interpolate.h"

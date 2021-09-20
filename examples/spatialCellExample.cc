@@ -27,7 +27,7 @@
  */
 #include <string>
 #include "lsst/geom.h"
-#include "lsst/utils/Utils.h"
+#include "lsst/utils/packaging.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/daf/base.h"
 #include "lsst/afw/detection.h"

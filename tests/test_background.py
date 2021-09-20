@@ -35,7 +35,6 @@ import lsst.geom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.display as afwDisplay
-import lsst.pex.exceptions as pexExcept
 
 # Set to True to display debug messages and images
 debugMode = False
@@ -43,7 +42,7 @@ debugMode = False
 afwDisplay.setDefaultMaskTransparency(75)
 try:
     AfwdataDir = lsst.utils.getPackageDir("afwdata")
-except pexExcept.NotFoundError:
+except LookupError:
     AfwdataDir = None
 
 

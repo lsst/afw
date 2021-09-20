@@ -48,7 +48,7 @@ Log.getLogger("afw.image.Mask").setLevel(Log.INFO)
 
 try:
     dataDir = os.path.join(lsst.utils.getPackageDir("afwdata"), "data")
-except pexExcept.NotFoundError:
+except LookupError:
     dataDir = None
 else:
     InputMaskedImageName = "871034p_1_MI.fits"
