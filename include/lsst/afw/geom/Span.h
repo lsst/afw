@@ -49,10 +49,14 @@ public:
     /// An iterator over points in the Span.
     using Iterator = SpanPixelIterator;
 
+    using Interval = lsst::geom::IntervalI;
+
     Span(int y,   ///< Row that Span's in
          int x0,  ///< Starting column (inclusive)
          int x1)  ///< Ending column (inclusive)
             : _y(y), _x0(x0), _x1(x1) {}
+
+    Span(Interval const & x, int y) : _y(y), _x0(x.getMin()), _x1(x.getMax()) {}
 
     /// Construct an empty Span with zero width at the origin.
     Span() noexcept : _y(0), _x0(0), _x1(-1) {}
@@ -73,6 +77,7 @@ public:
     int& getX0() noexcept { return _x0; }                    ///< Return the starting x-value
     int getX1() const noexcept { return _x1; }               ///< Return the ending x-value
     int& getX1() noexcept { return _x1; }                    ///< Return the ending x-value
+    Interval getX() const noexcept { return Interval::fromMinMax(_x0, _x1); }
     int getY() const noexcept { return _y; }                 ///< Return the y-value
     int& getY() noexcept { return _y; }                      ///< Return the y-value
     int getWidth() const noexcept { return _x1 - _x0 + 1; }  ///< Return the number of pixels

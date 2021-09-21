@@ -23,12 +23,14 @@
 
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
+#include "pybind11/numpy.h"
 #include <lsst/utils/python.h>
 
 #include "lsst/afw/geom/Span.h"
 #include "lsst/afw/geom/SpanPixelIterator.h"
 
 namespace py = pybind11;
+using namespace pybind11::literals;
 
 namespace lsst {
 namespace afw {
@@ -66,6 +68,7 @@ static void declareSpanIterator(lsst::utils::python::WrapperCollection &wrappers
 void declareSpan(lsst::utils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(PySpan(wrappers.module, "Span"), [](auto &mod, auto &cls) {
         cls.def(py::init<int, int, int>());
+        cls.def(py::init<Span::Interval const &, int>());
         cls.def(py::init<>());
         cls.def("__eq__", &Span::operator==, py::is_operator());
         cls.def("__ne__", &Span::operator!=, py::is_operator());
@@ -78,6 +81,7 @@ void declareSpan(lsst::utils::python::WrapperCollection &wrappers) {
         cls.def("__iter__", [](const Span &s) { return SpanIterator(s); });
         cls.def("getX0", (int (Span::*)() const) & Span::getX0);
         cls.def("getX1", (int (Span::*)() const) & Span::getX1);
+        cls.def("getX", &Span::getX);
         cls.def("getY", (int (Span::*)() const) & Span::getY);
         cls.def("getWidth", &Span::getWidth);
         cls.def("getMinX", &Span::getMinX);
@@ -87,7 +91,7 @@ void declareSpan(lsst::utils::python::WrapperCollection &wrappers) {
         cls.def("getMin", &Span::getMin);
         cls.def("getMax", &Span::getMax);
         cls.def("contains", (bool (Span::*)(int) const) & Span::contains);
-        cls.def("contains", (bool (Span::*)(int, int) const) & Span::contains);
+        cls.def("contains", py::vectorize((bool (Span::*)(int, int) const)&Span::contains), "x"_a, "y"_a);
         cls.def("contains", (bool (Span::*)(lsst::geom::Point2I const &) const) & Span::contains);
         cls.def("isEmpty", &Span::isEmpty);
         cls.def("toString", &Span::toString);
