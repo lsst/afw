@@ -30,8 +30,8 @@
 #include "lsst/utils/packaging.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/daf/base.h"
-#include "lsst/afw/detection.h"
 #include "lsst/afw/image.h"
+#include "lsst/afw/detection.h"
 #include "lsst/afw/math.h"
 
 #include "testSpatialCell.h"

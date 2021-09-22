@@ -27,7 +27,6 @@
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/table/io/Persistable.cc"
-#include "lsst/afw/table/io/InputArchive.h"
 #include "lsst/afw/table/io/OutputArchive.h"
 #include "lsst/afw/table/io/CatalogVector.h"
 #include "lsst/afw/math/ProductBoundedField.h"

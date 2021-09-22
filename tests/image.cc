@@ -21,9 +21,7 @@
  */
 
 //  -*- lsst-c++ -*-
-#include <iostream>
 #include <string>
-#include <algorithm>
 
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE Image

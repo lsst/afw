@@ -34,7 +34,6 @@
  */
 #include <cmath>
 #include <vector>
-#include <functional>
 
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE Integrate

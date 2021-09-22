@@ -26,11 +26,7 @@
  * Implementation for MaskedImage
  */
 #include <cstdint>
-#include <typeinfo>
-#include <sys/stat.h>
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-variable"
-#pragma clang diagnostic pop
+
 #include "boost/format.hpp"
 #include "lsst/log/Log.h"
 #include "lsst/pex/exceptions.h"

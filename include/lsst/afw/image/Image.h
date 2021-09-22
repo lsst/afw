@@ -31,22 +31,15 @@
 #define LSST_AFW_IMAGE_IMAGE_H
 
 #include <string>
-#include <utility>
-#include <functional>
 
-#include "boost/mpl/bool.hpp"
 #include <climits>
 #include <memory>
 
 #include "lsst/geom.h"
 #include "lsst/afw/image/ImageBase.h"
-#include "lsst/afw/image/lsstGil.h"
-#include "lsst/afw/image/ImageUtils.h"
 #include "lsst/afw/image/Mask.h"
 #include "lsst/afw/math/Function.h"
-#include "lsst/afw/fitsDefaults.h"
 #include "lsst/daf/base/PropertySet.h"
-#include "lsst/pex/exceptions.h"
 #include "ndarray.h"
 
 namespace lsst {

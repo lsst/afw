@@ -30,7 +30,6 @@
 #include "gsl/gsl_errno.h"
 
 #include "lsst/afw/image/TransmissionCurve.h"
-#include "lsst/afw/table/io/InputArchive.h"
 #include "lsst/afw/table/io/OutputArchive.h"
 #include "lsst/afw/table/io/CatalogVector.h"
 #include "lsst/afw/table/io/Persistable.cc"

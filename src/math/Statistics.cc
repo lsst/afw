@@ -27,12 +27,11 @@
  */
 #include <cassert>
 #include <cmath>
-#include <cstdint>
-#include <iostream>
-#include <limits>
-#include <memory>
 #include <tuple>
 #include <type_traits>
+#include <string>
+#include <vector>
+#include <utility>
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image/Image.h"

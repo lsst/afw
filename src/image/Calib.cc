@@ -25,7 +25,6 @@
 /*
  * Classes to support calibration (e.g. photometric zero points, exposure times)
  */
-#include <cmath>
 #include <cstdint>
 
 #include "ndarray.h"

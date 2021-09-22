@@ -21,8 +21,8 @@
  */
 
 #include <iostream>
+#include <vector>
 
-#include <memory>
 #include "boost/format.hpp"
 
 #include "lsst/afw/math/FunctionLibrary.h"

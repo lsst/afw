@@ -25,17 +25,12 @@
 #include <memory>
 #include <ostream>
 #include <set>
-#include <sstream>
 #include <vector>
 #include <cmath>
 
 #include "boost/format.hpp"
 
 #include "astshim.h"
-
-#include "lsst/afw/formatters/Utils.h"
-#include "lsst/afw/fits.h"
-#include "lsst/geom/Angle.h"
 #include "lsst/geom/Point.h"
 #include "lsst/afw/geom/wcsUtils.h"
 #include "lsst/afw/geom/detail/frameSetUtils.h"

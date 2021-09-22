@@ -23,6 +23,7 @@
 #include <cstdio>
 #include <string>
 #include <algorithm>
+#include <iostream>
 
 #include "lsst/geom.h"
 #include "lsst/utils/packaging.h"

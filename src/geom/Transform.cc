@@ -20,9 +20,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-#include <exception>
 #include <memory>
-#include <ostream>
+#include <iostream>
 #include <sstream>
 #include <vector>
 

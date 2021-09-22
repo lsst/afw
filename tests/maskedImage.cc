@@ -24,7 +24,6 @@
 
 #include <iostream>
 #include <string>
-#include <algorithm>
 
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE MaskedImage
@@ -35,7 +34,6 @@
 #pragma clang diagnostic pop
 #include "boost/test/tools/floating_point_comparison.hpp"
 
-#include "boost/iterator/zip_iterator.hpp"
 #include "lsst/afw/image/MaskedImage.h"
 
 namespace image = lsst::afw::image;

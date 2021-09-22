@@ -23,7 +23,6 @@
  */
 #include "lsst/afw/geom/ellipses/BaseCore.h"
 #include "lsst/afw/geom/ellipses/Quadrupole.h"
-#include "lsst/afw/geom/ellipses/Axes.h"
 #include "lsst/geom/Angle.h"
 #include <boost/format.hpp>
 #include <map>

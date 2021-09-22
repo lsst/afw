@@ -21,7 +21,6 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 #include <cmath>
-#include <cstdint>
 #include <limits>
 #include <sstream>
 

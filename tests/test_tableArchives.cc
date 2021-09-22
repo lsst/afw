@@ -8,10 +8,7 @@
 #define PRINT_CATALOGS 0
 
 #include <iostream>
-#include <iterator>
 #include <algorithm>
-#include <cmath>
-#include <map>
 #include <filesystem>
 
 #include "Eigen/Core"

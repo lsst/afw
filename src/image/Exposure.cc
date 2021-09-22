@@ -27,18 +27,12 @@
 #include <sstream>
 #include <cstdint>
 
-#include "boost/format.hpp"
-#include "boost/algorithm/string/trim.hpp"
-
-#include "lsst/daf/base/PropertySet.h"
-#include "lsst/daf/base/PropertyList.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/cameraGeom/Detector.h"
 #include "lsst/afw/geom/SkyWcs.h"
 #include "lsst/afw/image/Exposure.h"
 #include "lsst/afw/detection/Psf.h"
 #include "lsst/afw/math/ConvolveImage.h"
-#include "lsst/afw/cameraGeom/Detector.h"
 #include "lsst/afw/fits.h"
 #include "lsst/afw/image/ExposureFitsReader.h"
 

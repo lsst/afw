@@ -6,11 +6,8 @@
 #include "boost/test/unit_test.hpp"
 #pragma clang diagnostic pop
 
-#include <iostream>
-#include <iterator>
 #include <algorithm>
 #include <cmath>
-#include <map>
 #include <filesystem>
 
 #include "lsst/utils/packaging.h"

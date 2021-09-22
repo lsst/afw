@@ -22,7 +22,6 @@
  */
 
 #include "lsst/afw/image/CoaddInputs.h"
-#include "lsst/afw/table/io/InputArchive.h"
 #include "lsst/afw/table/io/CatalogVector.h"
 #include "lsst/afw/table/io/Persistable.cc"
 

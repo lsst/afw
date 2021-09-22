@@ -24,9 +24,7 @@
 
 #include <cstdio>
 #include <memory>
-#include <typeinfo>
 
-#include "lsst/daf/base.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/log/Log.h"
 #include "lsst/afw/image.h"

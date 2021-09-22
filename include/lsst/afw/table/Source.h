@@ -24,8 +24,6 @@
 #ifndef AFW_TABLE_Source_h_INCLUDED
 #define AFW_TABLE_Source_h_INCLUDED
 
-#include "boost/array.hpp"
-#include "boost/type_traits/is_convertible.hpp"
 
 #include "lsst/afw/detection/Footprint.h"
 #include "lsst/afw/table/Simple.h"

@@ -45,7 +45,9 @@
 #include <cassert>
 #include <set>
 #include <string>
-#include <typeinfo>
+#include <map>
+#include <vector>
+
 #include "boost/format.hpp"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image/MaskedImage.h"

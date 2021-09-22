@@ -38,7 +38,6 @@
 #include <cassert>
 #include <limits>
 #include "boost/iterator/iterator_adaptor.hpp"
-#include "boost/tuple/tuple.hpp"
 #include <memory>
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/math/MaskedVector.h"

@@ -31,8 +31,6 @@
 
 #include <memory>
 #include <numeric>
-#include <set>
-#include <sstream>
 #include <string>
 
 #include "lsst/pex/exceptions.h"

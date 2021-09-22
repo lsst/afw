@@ -25,19 +25,12 @@
 /*
  * Definition of functions declared in ConvolveImage.h
  */
-#include <algorithm>
-#include <cmath>
 #include <cstdint>
-#include <functional>
 #include <iostream>
-#include <sstream>
-#include <limits>
 #include <vector>
 #include <string>
 
 #include "lsst/pex/exceptions.h"
-#include "lsst/log/Log.h"
-#include "lsst/afw/image/ImageUtils.h"
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/math/Kernel.h"
 #include "lsst/afw/math/detail/Convolve.h"

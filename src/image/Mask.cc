@@ -31,13 +31,7 @@
 #include <functional>
 #include <list>
 #include <string>
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-variable"
-#pragma clang diagnostic pop
 #include "boost/format.hpp"
-
-#include "boost/functional/hash.hpp"
 
 #include "lsst/daf/base.h"
 #include "lsst/geom.h"
