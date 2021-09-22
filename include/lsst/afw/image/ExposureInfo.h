@@ -25,6 +25,8 @@
 #ifndef LSST_AFW_IMAGE_ExposureInfo_h_INCLUDED
 #define LSST_AFW_IMAGE_ExposureInfo_h_INCLUDED
 
+#include <optional>
+
 #include "lsst/base.h"
 #include "lsst/daf/base.h"
 #include "lsst/geom/Point.h"
@@ -34,6 +36,7 @@
 #include "lsst/afw/image/CoaddInputs.h"
 #include "lsst/afw/image/VisitInfo.h"
 #include "lsst/afw/image/detail/StorableMap.h"
+#include "lsst/afw/table/misc.h"  // For table::RecordId
 
 namespace lsst {
 namespace afw {
@@ -105,6 +108,41 @@ public:
             KEY_TRANSMISSION_CURVE;
     /// Standard key for looking up filter information.
     static typehandling::Key<std::string, std::shared_ptr<FilterLabel const>> const KEY_FILTER;
+
+    /**
+     * Does this Exposure have an exposure id?
+     *
+     * Exposure IDs are unique per single-detector image, not per on-sky
+     * shutter opening. Some Exposures, such as coadds, do not have an ID.
+     *
+     * @returns Whether or not this exposure has a defined ID.
+     */
+    bool hasId() const noexcept;
+
+    /**
+     * Return the exposure ID.
+     *
+     * Exposure IDs are unique per single-detector image, not per on-sky
+     * shutter opening.
+     *
+     * @returns The ID.
+     * @throws lsst::pex::exceptions::NotFoundError Thrown if the exposure does
+     *     not have an ID.
+     */
+    table::RecordId getId() const;
+
+    /**
+     * Set the exposure ID.
+     *
+     * Exposure IDs are unique per single-detector image, not per on-sky
+     * shutter opening.
+     *
+     * @param id The new exposure ID to set.
+     */
+    void setId(table::RecordId id);
+
+    /// Unset the exposure ID, if any.
+    void clearId() noexcept;
 
     /// Does this exposure have a Wcs?
     bool hasWcs() const;
@@ -453,6 +491,7 @@ private:
         }
     }
 
+    std::optional<table::RecordId> _exposureId;
     std::shared_ptr<daf::base::PropertySet> _metadata;
     std::shared_ptr<image::VisitInfo const> _visitInfo;
 

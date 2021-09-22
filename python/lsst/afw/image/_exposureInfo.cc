@@ -151,6 +151,28 @@ void declareExposureInfo(lsst::utils::python::WrapperCollection &wrappers) {
         cls.def("getPhotoCalib", &ExposureInfo::getPhotoCalib);
         cls.def("setPhotoCalib", &ExposureInfo::setPhotoCalib, "photoCalib"_a);
 
+        cls.def("hasId", &ExposureInfo::hasId);
+        // Use exception handler to avoid overhead of calling hasId twice, and
+        // because asking for a nonexistent ID should be rare.
+        auto getId = [](ExposureInfo const &self) -> py::object {
+            try {
+                return py::cast(self.getId());
+            } catch (pex::exceptions::NotFoundError const &) {
+                return py::none();
+            }
+        };
+        auto setId = [](ExposureInfo &self, py::object id) {
+            if (id.is_none()) {
+                self.clearId();
+            } else {
+                self.setId(id.cast<table::RecordId>());
+            }
+        };
+        cls.def("getId", getId);
+        cls.def("setId", setId, "id"_a);
+        cls.def("clearId", &ExposureInfo::clearId);
+        cls.def_property("id", getId, setId);
+
         cls.def("getMetadata", &ExposureInfo::getMetadata);
         cls.def("setMetadata", &ExposureInfo::setMetadata, "metadata"_a);
 
