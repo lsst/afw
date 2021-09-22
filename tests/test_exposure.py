@@ -873,10 +873,7 @@ class ExposureInfoTestCase(lsst.utils.tests.TestCase):
         self.transmissionCurve = afwImage.TransmissionCurve.makeIdentity()
 
         self.exposureInfo = afwImage.ExposureInfo()
-        gFilter = afwImage.Filter("g")
-        gFilterLabel = afwImage.FilterLabel(band="g")
-        self.exposureInfo.setFilter(gFilter)
-        self.exposureInfo.setFilterLabel(gFilterLabel)
+        self.gFilterLabel = afwImage.FilterLabel(band="g")
 
     def _checkAlias(self, exposureInfo, key, value, has, get):
         self.assertFalse(has())
@@ -918,6 +915,8 @@ class ExposureInfoTestCase(lsst.utils.tests.TestCase):
                          self.exposureInfo.hasTransmissionCurve, self.exposureInfo.getTransmissionCurve)
         self._checkAlias(self.exposureInfo, cls.KEY_SUMMARY_STATS, self.summaryStats,
                          self.exposureInfo.hasSummaryStats, self.exposureInfo.getSummaryStats)
+        self._checkAlias(self.exposureInfo, cls.KEY_FILTER, self.gFilterLabel,
+                         self.exposureInfo.hasFilterLabel, self.exposureInfo.getFilterLabel)
 
     def testCopy(self):
         # Test that ExposureInfos have independently settable state
