@@ -347,6 +347,11 @@ ExposureInfo::FitsWriteData ExposureInfo::_startWriteFits(lsst::geom::Point2I co
         detail::setVisitInfoMetadata(*(data.metadata), *visitInfoPtr);
     }
 
+    // So long as VisitInfo also writes exposureId (until DM-32138), let ours take precedence.
+    if (hasId()) {
+        data.metadata->set("EXPID", getId());
+    }
+
     return data;
 }
 

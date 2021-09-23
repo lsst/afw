@@ -13,6 +13,10 @@ nx = 10
 ny = 10
 exp = lsst.afw.image.ExposureF(nx, ny)
 
+# Fill the ExposureInfo
+exposureId = 12345
+exp.getInfo().setId(exposureId)
+
 # Fill the maskedImage
 exp.maskedImage.image.array = np.arange(nx*ny, dtype='f').reshape(nx, ny)
 exp.maskedImage.variance.array = np.ones((nx, ny), dtype='f')
@@ -40,7 +44,6 @@ skyWcs = lsst.afw.geom.makeSkyWcs(crpix=crpix, crval=crval, cdMatrix=cdMatrix)
 exp.setWcs(skyWcs)
 
 # Fill the VisitInfo
-exposureId = 12345
 exposureTime = 30.0
 darkTime = 600.0
 date = lsst.daf.base.DateTime(2020, 1, 20, 12, 34, 56, lsst.daf.base.DateTime.TAI)

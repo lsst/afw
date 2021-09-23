@@ -20,6 +20,7 @@
  */
 
 #include <map>
+#include <optional>
 #include <regex>
 #include <set>
 
@@ -280,8 +281,16 @@ public:
             }
         }
 
+        // EXPID keyword used in all versions, but was VisitInfo's responsibility before VisitInfo v3.
+        if (metadata->exists("EXPID")) {
+            exposureId = metadata->getAsInt64("EXPID");
+        }
+
         visitInfo = std::make_shared<VisitInfo>(*metadata);
         detail::stripVisitInfoKeywords(*metadata);
+
+        // This keyword is no longer handled by VisitInfo version >= 3.
+        metadata->remove("EXPID");
 
         // Version 0 persisted Calib FLUXMAG0 in the metadata, >=1 persisted PhotoCalib as a binary table.
         if (version == 0) {
@@ -300,6 +309,7 @@ public:
     }
 
     int version;
+    std::optional<table::RecordId> exposureId;
     std::shared_ptr<daf::base::PropertyList> metadata;
     std::shared_ptr<FilterLabel> filterLabel;
     std::shared_ptr<afw::geom::SkyWcs> wcs;
@@ -509,6 +519,11 @@ std::shared_ptr<daf::base::PropertyList> ExposureFitsReader::readMetadata() {
     return _metadataReader->metadata;
 }
 
+std::optional<table::RecordId> ExposureFitsReader::readExposureId() {
+    _ensureReaders();
+    return _metadataReader->exposureId;
+}
+
 std::shared_ptr<afw::geom::SkyWcs> ExposureFitsReader::readWcs() {
     _ensureReaders();
     auto r = _archiveReader->readComponent<afw::geom::SkyWcs>(_getFitsFile(), ArchiveReader::WCS);
@@ -598,6 +613,11 @@ std::shared_ptr<ExposureInfo> ExposureFitsReader::readExposureInfo() {
     result->setMetadata(readMetadata());
     result->setPhotoCalib(readPhotoCalib());
     result->setVisitInfo(readVisitInfo());
+    // Override ID set in visitInfo, if necessary
+    std::optional<table::RecordId> exposureId = readExposureId();
+    if (exposureId) {
+        result->setId(*exposureId);
+    }
     // When reading an ExposureInfo (as opposed to reading individual
     // components), we warn and try to proceed when a component is present
     // but can't be read due its serialization factory not being set up
