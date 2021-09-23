@@ -254,7 +254,16 @@ public:
     bool hasVisitInfo() const { return static_cast<bool>(_visitInfo); }
 
     /// Set the exposure's visit info
-    void setVisitInfo(std::shared_ptr<image::VisitInfo const> const visitInfo) { _visitInfo = visitInfo; }
+    void setVisitInfo(std::shared_ptr<image::VisitInfo const> const visitInfo) {
+        _visitInfo = visitInfo;
+        // Ensure consistency with getId() until the VisitInfo::getExposureId() is removed in DM-32138.
+        if (_visitInfo != nullptr && _visitInfo->getExposureId() != 0) {
+            // Do not call setId, to avoid recursion
+            _exposureId = _visitInfo->getExposureId();
+        } else {
+            _exposureId.reset();
+        }
+    }
 
     /// Does this exposure have a transmission curve?
     bool hasTransmissionCurve() const;

@@ -924,8 +924,11 @@ class ExposureInfoTestCase(lsst.utils.tests.TestCase):
                          self.exposureInfo.hasFilterLabel, self.exposureInfo.getFilterLabel)
 
     def testId(self):
+        self.exposureInfo.setVisitInfo(afwImage.VisitInfo())
+
         self.assertFalse(self.exposureInfo.hasId())
         self.assertIsNone(self.exposureInfo.getId())
+        self.assertEqual(self.exposureInfo.getVisitInfo().getExposureId(), 0)
         self.assertIsNone(self.exposureInfo.id)
 
         self.exposureInfo.setId(self.exposureId)
@@ -933,10 +936,14 @@ class ExposureInfoTestCase(lsst.utils.tests.TestCase):
         self.assertIsNotNone(self.exposureInfo.getId())
         self.assertIsNotNone(self.exposureInfo.id)
         self.assertEqual(self.exposureInfo.getId(), self.exposureId)
+        self.assertEqual(self.exposureInfo.getVisitInfo().getExposureId(), self.exposureId)
         self.assertEqual(self.exposureInfo.id, self.exposureId)
 
         self.exposureInfo.id = 99899
         self.assertEqual(self.exposureInfo.getId(), 99899)
+
+        self.exposureInfo.setVisitInfo(afwImage.VisitInfo(exposureId=12321))
+        self.assertEqual(self.exposureInfo.id, 12321)
 
         self.exposureInfo.id = None
         self.assertFalse(self.exposureInfo.hasId())

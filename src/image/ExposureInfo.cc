@@ -138,7 +138,22 @@ table::RecordId ExposureInfo::getId() const {
     }
 }
 
-void ExposureInfo::setId(table::RecordId id) { _exposureId = id; }
+void ExposureInfo::setId(table::RecordId id) {
+    _exposureId = id;
+    // Ensure consistency with VisitInfo::getExposureId() until the latter is removed in DM-32138.
+    std::shared_ptr<VisitInfo const> oldVisitInfo = getVisitInfo();
+    if (oldVisitInfo) {
+        auto newVisitInfo = std::make_shared<VisitInfo>(
+                *_exposureId, oldVisitInfo->getExposureTime(), oldVisitInfo->getDarkTime(),
+                oldVisitInfo->getDate(), oldVisitInfo->getUt1(), oldVisitInfo->getEra(),
+                oldVisitInfo->getBoresightRaDec(), oldVisitInfo->getBoresightAzAlt(),
+                oldVisitInfo->getBoresightAirmass(), oldVisitInfo->getBoresightRotAngle(),
+                oldVisitInfo->getRotType(), oldVisitInfo->getObservatory(), oldVisitInfo->getWeather(),
+                oldVisitInfo->getInstrumentLabel(), oldVisitInfo->getId());
+        // Do not call setVisitInfo, to avoid recursion
+        _visitInfo = newVisitInfo;
+    }
+}
 
 void ExposureInfo::clearId() noexcept { _exposureId.reset(); }
 
