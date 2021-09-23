@@ -20,8 +20,6 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-#include <algorithm>
-#include <exception>
 #include <memory>
 
 #include "astshim.h"

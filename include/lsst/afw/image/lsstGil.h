@@ -40,20 +40,8 @@
 #include "boost/mpl/bool.hpp"
 #include "boost/mpl/if.hpp"
 
-//#define BOOST_GIL_USE_CONCEPT_CHECK 1
 
-#if defined(__ICC)
-#pragma warning(push)
-#pragma warning(disable : 68)
-#pragma warning(disable : 304)
-#endif
-
-#include "boost/version.hpp"
-#if BOOST_VERSION < 106900
-#include "boost/gil/gil_all.hpp"
-#else
 #include "boost/gil.hpp"
-#endif
 
 #ifndef BOOST_GIL_DEFINE_BASE_TYPEDEFS
 // Boost >=1.72 redefines GIL_ -> BOOST_GIL
@@ -62,9 +50,6 @@
 #define BOOST_GIL_DEFINE_ALL_TYPEDEFS_INTERNAL GIL_DEFINE_ALL_TYPEDEFS_INTERNAL
 #endif
 
-#if defined(__ICC)
-#pragma warning(pop)
-#endif
 
 namespace lsst {
 namespace afw {
@@ -248,19 +233,12 @@ namespace detail {
 //
 // Map typenames to gil's types
 //
-#if defined(__ICC)
-#pragma warning(push)
-#pragma warning(disable : 304)
-#endif
 
 template <typename T, bool rescale = false>
 struct types_traits {
     BOOST_MPL_ASSERT_MSG(boost::mpl::bool_<false>::value, I_DO_NOT_KNOW_HOW_TO_MAP_THIS_TYPE_TO_A_GIL_TYPE,
                          ());
 };
-#if defined(__ICC)
-#pragma warning(pop)
-#endif
 
 template <>
 struct types_traits<unsigned char, false> {

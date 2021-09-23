@@ -1,7 +1,7 @@
 // -*- lsst-c++ -*-
 #include <typeinfo>
 
-#include "boost/iterator/transform_iterator.hpp"
+#include "boost/format.hpp"
 
 #include "lsst/afw/table/io/FitsWriter.h"
 #include "lsst/afw/table/Source.h"

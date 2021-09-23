@@ -21,13 +21,10 @@
  */
 
 #include <cstdint>
-#include <cassert>
 #include <string>
-#include <typeinfo>
-#include <algorithm>
-#include "boost/format.hpp"
+#include <memory>
+
 #include "lsst/pex/exceptions.h"
-#include "lsst/afw/detection/Peak.h"
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/image/LsstImageTypes.h"
 #include "lsst/afw/detection/HeavyFootprint.h"
@@ -35,7 +32,6 @@
 #include "lsst/afw/detection/FootprintCtrl.h"
 #include "lsst/afw/table/io/CatalogVector.h"
 #include "lsst/afw/table/io/OutputArchive.h"
-#include "lsst/afw/table/io/InputArchive.h"
 #include "lsst/afw/table/io/Persistable.cc"
 
 namespace lsst {

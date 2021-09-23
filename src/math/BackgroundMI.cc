@@ -25,7 +25,6 @@
 /*
  * Background estimation class code
  */
-#include <iostream>
 #include <limits>
 #include <vector>
 #include <cmath>

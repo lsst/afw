@@ -31,7 +31,6 @@
 
 #include <cstdint>
 #include <iostream>
-#include <vector>
 
 #include "boost/format.hpp"
 #include "lsst/pex/exceptions.h"

@@ -26,12 +26,12 @@
  * Random number generator implementaion.
  */
 
-#include <cstdlib>
 #include <limits>
+#include <string>
+#include <exception>
 
 #include "boost/format.hpp"
 
-#include "gsl/gsl_errno.h"
 #include "gsl/gsl_randist.h"
 
 #include "lsst/pex/exceptions.h"

@@ -21,9 +21,7 @@
  */
 #include <cstdint>
 
-
 #include "lsst/afw/detection/FootprintMerge.h"
-#include "lsst/afw/detection/FootprintSet.h"
 #include "lsst/afw/table/IdFactory.h"
 
 namespace lsst {

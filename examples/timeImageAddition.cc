@@ -22,7 +22,6 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-#include <iostream>
 #include <sstream>
 #include <ctime>
 

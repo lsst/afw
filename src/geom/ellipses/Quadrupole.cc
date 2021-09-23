@@ -22,7 +22,6 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 #include "lsst/afw/geom/ellipses/Quadrupole.h"
-#include "lsst/afw/geom/ellipses/Axes.h"
 
 namespace lsst {
 namespace afw {

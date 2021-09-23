@@ -22,7 +22,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 #include <stdexcept>
-#include <numeric>
+#include <memory>
+#include <string>
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/Kernel.h"

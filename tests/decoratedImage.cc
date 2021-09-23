@@ -22,9 +22,7 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-#include <iostream>
 #include <string>
-#include <algorithm>
 
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE DecoratedImage

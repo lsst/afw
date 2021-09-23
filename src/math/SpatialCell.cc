@@ -29,9 +29,7 @@
 #include <memory>
 
 #include "lsst/afw/image/ImageUtils.h"
-#include "lsst/afw/image/Utils.h"
 
-#include "lsst/pex/exceptions/Exception.h"
 #include "lsst/log/Log.h"
 #include "lsst/afw/math/SpatialCell.h"
 

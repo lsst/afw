@@ -25,13 +25,9 @@
 /*
  * Definition of KernelImagesForRegion class declared in detail/ConvolveImage.h
  */
-#include <algorithm>
-#include <cmath>
-#include <iostream>
 #include <sstream>
 #include <vector>
 
-#include "boost/assign/list_of.hpp"
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/log/Log.h"

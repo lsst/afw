@@ -28,7 +28,6 @@
 #include "Eigen/Dense"
 #include "lsst/geom.h"
 #include "lsst/afw/geom/Transform.h"
-#include "lsst/afw/image/Utils.h"
 
 /*
  * Describe a Detector's orientation

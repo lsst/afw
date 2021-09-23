@@ -32,7 +32,6 @@
 #include <memory>
 #include "gsl/gsl_errno.h"
 #include "gsl/gsl_interp.h"
-#include "gsl/gsl_spline.h"
 #include "ndarray.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/Interpolate.h"

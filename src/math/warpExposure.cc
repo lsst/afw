@@ -27,18 +27,14 @@
 
 #include <cassert>
 #include <cmath>
-#include <cstdint>
 #include <limits>
 #include <memory>
 #include <sstream>
 #include <string>
 #include <vector>
 #include <utility>
-#include <ctime>
 #include <regex>
 
-#include <memory>
-#include "boost/pointer_cast.hpp"
 #include "astshim.h"
 
 #include "lsst/log/Log.h"

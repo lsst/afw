@@ -21,10 +21,7 @@
  */
 
 #include <iostream>
-#include <sstream>
 #include <cmath>
-#include <cstring>
-#include <limits>
 
 #include "lsst/daf/base.h"
 #include "lsst/pex/exceptions.h"

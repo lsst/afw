@@ -21,7 +21,8 @@
  */
 
 #include <iostream>
-#include <sstream>
+#include <vector>
+#include <string>
 
 #include "lsst/utils/packaging.h"
 #include "lsst/pex/exceptions.h"

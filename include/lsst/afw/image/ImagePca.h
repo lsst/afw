@@ -32,7 +32,6 @@
 #include <string>
 #include <utility>
 
-#include "boost/mpl/bool.hpp"
 #include <memory>
 
 #include "lsst/pex/exceptions.h"

@@ -26,13 +26,8 @@
 #include <memory>
 #include "lsst/afw/cameraGeom.h"
 #include "lsst/afw/detection.h"
-#include "lsst/afw/image.h"
-#include "lsst/afw/math.h"
-#include "lsst/afw/table.h"
 #include "lsst/afw/table/io/CatalogVector.h"
-#include "lsst/afw/table/io/InputArchive.h"
 #include "lsst/afw/table/io/OutputArchive.h"
-#include "lsst/log/Log.h"
 
 namespace py = pybind11;
 

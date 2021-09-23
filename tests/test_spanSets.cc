@@ -30,7 +30,6 @@
 #pragma clang diagnostic pop
 #include "boost/test/tools/floating_point_comparison.hpp"
 
-#include "lsst/log/Log.h"
 #include "lsst/geom.h"
 #include "lsst/afw/geom/SpanSet.h"
 #include "lsst/afw/image.h"

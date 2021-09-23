@@ -10,7 +10,6 @@
 #include "lsst/utils/hashCombine.h"
 #include "lsst/afw/table/Schema.h"
 #include "lsst/afw/table/detail/Access.h"
-#include "lsst/afw/table/io/FitsReader.h"
 #include "lsst/afw/table/io/FitsSchemaInputMapper.h"
 #include "lsst/afw/fits.h"
 

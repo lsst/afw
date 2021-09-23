@@ -24,7 +24,6 @@
 
 #include <iostream>
 #include <string>
-#include <algorithm>
 #include <typeinfo>
 
 #include "boost/mpl/for_each.hpp"

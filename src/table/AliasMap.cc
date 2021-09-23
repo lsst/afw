@@ -22,7 +22,7 @@
  */
 
 #include <algorithm>
-#include <vector>
+#include <string>
 
 #include "lsst/utils/hashCombine.h"
 

@@ -34,12 +34,9 @@
 #include <utility>
 #include <functional>
 
-#include "boost/mpl/bool.hpp"
+#include "boost/format.hpp"
 #include <memory>
 
-#include "lsst/afw/image/lsstGil.h"
-#include "lsst/afw/image/ImageUtils.h"
-#include "lsst/daf/base.h"
 #include "lsst/pex/exceptions.h"
 
 namespace lsst {

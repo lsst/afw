@@ -21,18 +21,9 @@
  * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
-#include <fstream>
 #include <sstream>
 
 #include "boost/format.hpp"
-#if defined(__ICC)
-#pragma warning(push)
-#pragma warning(disable : 444)
-#endif
-#include "boost/archive/text_oarchive.hpp"
-#if defined(__ICC)
-#pragma warning(pop)
-#endif
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/Kernel.h"

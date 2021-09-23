@@ -20,13 +20,10 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-#include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <exception>
 #include <memory>
-#include <ostream>
-#include <sstream>
 #include <vector>
 
 #include "astshim.h"
@@ -35,11 +32,9 @@
 #include "lsst/geom/Point.h"
 #include "lsst/geom/SpherePoint.h"
 #include "lsst/afw/formatters/Utils.h"
-#include "lsst/afw/table.h"
 #include "lsst/afw/table/io/CatalogVector.h"
 #include "lsst/afw/table/io/OutputArchive.h"
 #include "lsst/afw/geom/detail/frameSetUtils.h"
-#include "lsst/afw/geom/detail/transformUtils.h"
 #include "lsst/afw/geom/wcsUtils.h"
 #include "lsst/afw/geom/SkyWcs.h"
 #include "lsst/daf/base/PropertyList.h"

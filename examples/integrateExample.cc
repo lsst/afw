@@ -36,7 +36,7 @@
 
 #include <iostream>
 #include <stdexcept>
-#include <limits>
+#include <cmath>
 
 #include "lsst/afw/math/Integrate.h"
 

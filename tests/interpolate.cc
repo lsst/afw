@@ -22,8 +22,6 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-#include <iostream>
-#include <cmath>
 #include <vector>
 
 #define BOOST_TEST_DYN_LINK

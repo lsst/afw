@@ -31,7 +31,6 @@
 #include <memory>
 
 #include "Eigen/Core"
-#include "Eigen/SVD"
 #include "Eigen/Eigenvalues"
 
 #include "lsst/afw/image/ImagePca.h"

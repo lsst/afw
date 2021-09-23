@@ -28,19 +28,8 @@
 #include <cstdint>
 #include <iostream>
 #include <functional>
-#include <type_traits>
-#include "boost/mpl/vector.hpp"
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-variable"
-#pragma clang diagnostic pop
 #include "boost/format.hpp"
-
-#include "boost/version.hpp"
-#if BOOST_VERSION < 106900
-#include "boost/gil/gil_all.hpp"
-#else
 #include "boost/gil.hpp"
-#endif
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/geom/wcsUtils.h"

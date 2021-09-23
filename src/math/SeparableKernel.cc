@@ -21,9 +21,8 @@
  * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
-#include <algorithm>
-#include <iterator>
-#include <sstream>
+#include <vector>
+#include <iostream>
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/Kernel.h"

@@ -27,9 +27,6 @@
  * integrator (afw::math Quadrature) with a polar function.
  */
 #include <iostream>
-#include <vector>
-#include <cmath>
-#include <functional>
 
 #include "lsst/afw/math/Integrate.h"
 

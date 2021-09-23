@@ -26,7 +26,6 @@
  * Definition of basicConvolve and convolveWithBruteForce functions declared in detail/ConvolveImage.h
  */
 #include <algorithm>
-#include <cmath>
 #include <cstdint>
 #include <sstream>
 #include <vector>
