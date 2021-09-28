@@ -337,7 +337,7 @@ public:
      */
     Image& operator+=(lsst::afw::math::Function2<double> const& function);
     /// Add Image c*rhs to lhs
-    void scaledPlus(double const c, Image<PixelT> const& rhs);
+    void scaledPlus(PixelT const c, Image<PixelT> const& rhs);
     /// Subtract scalar rhs from lhs
     Image& operator-=(PixelT const rhs);
     /// Subtract Image rhs from lhs
@@ -349,13 +349,13 @@ public:
      */
     Image& operator-=(lsst::afw::math::Function2<double> const& function);
     /// Subtract Image c*rhs from lhs
-    void scaledMinus(double const c, Image<PixelT> const& rhs);
+    void scaledMinus(PixelT const c, Image<PixelT> const& rhs);
     /// Multiply lhs by scalar rhs
     Image& operator*=(PixelT const rhs);
     /// Multiply lhs by Image rhs (i.e. %pixel-by-%pixel multiplication)
     Image& operator*=(Image<PixelT> const& rhs);
     /// Multiply lhs by Image c*rhs (i.e. %pixel-by-%pixel multiplication)
-    void scaledMultiplies(double const c, Image<PixelT> const& rhs);
+    void scaledMultiplies(PixelT const c, Image<PixelT> const& rhs);
     /**
      * Divide lhs by scalar rhs
      *
@@ -365,7 +365,7 @@ public:
     /// Divide lhs by Image rhs (i.e. %pixel-by-%pixel division)
     Image& operator/=(Image<PixelT> const& rhs);
     /// Divide lhs by Image c*rhs (i.e. %pixel-by-%pixel division)
-    void scaledDivides(double const c, Image<PixelT> const& rhs);
+    void scaledDivides(PixelT const c, Image<PixelT> const& rhs);
 
     // In-place per-pixel sqrt().  Useful when handling variance planes.
     void sqrt();
