@@ -206,9 +206,11 @@ class FitsReaderTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(exposureIn.getPhotoCalib(), reader.readPhotoCalib())
         self.assertEqual(exposureIn.getPhotoCalib(),
                          reader.readComponent(ExposureInfo.KEY_PHOTO_CALIB))
-        self.assertImagesEqual(exposureIn.getPsf().computeImage(), reader.readPsf().computeImage())
-        self.assertImagesEqual(exposureIn.getPsf().computeImage(),
-                               reader.readComponent('PSF').computeImage())
+        center = exposureIn.getBBox().getCenter()
+        self.assertImagesEqual(exposureIn.getPsf().computeImage(center),
+                               reader.readPsf().computeImage(center))
+        self.assertImagesEqual(exposureIn.getPsf().computeImage(center),
+                               reader.readComponent('PSF').computeImage(center))
         self.assertEqual(exposureIn.getInfo().getValidPolygon(), reader.readValidPolygon())
         self.assertEqual(exposureIn.getInfo().getValidPolygon(),
                          reader.readComponent(ExposureInfo.KEY_VALID_POLYGON))
