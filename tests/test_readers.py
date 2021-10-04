@@ -33,7 +33,7 @@ from lsst.afw.table import ExposureTable
 from lsst.afw.image import (Image, Mask, Exposure, LOCAL, PARENT, MaskPixel, VariancePixel,
                             ImageFitsReader, MaskFitsReader, MaskedImageFitsReader, ExposureFitsReader,
                             Filter, FilterLabel, PhotoCalib, ApCorrMap, VisitInfo, TransmissionCurve,
-                            CoaddInputs, ExposureInfo)
+                            CoaddInputs, ExposureInfo, ExposureF)
 from lsst.afw.image.utils import defineFilter
 from lsst.afw.detection import GaussianPsf
 from lsst.afw.cameraGeom.testUtils import DetectorWrapper
@@ -206,9 +206,11 @@ class FitsReaderTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(exposureIn.getPhotoCalib(), reader.readPhotoCalib())
         self.assertEqual(exposureIn.getPhotoCalib(),
                          reader.readComponent(ExposureInfo.KEY_PHOTO_CALIB))
-        self.assertImagesEqual(exposureIn.getPsf().computeImage(), reader.readPsf().computeImage())
-        self.assertImagesEqual(exposureIn.getPsf().computeImage(),
-                               reader.readComponent('PSF').computeImage())
+        center = exposureIn.getBBox().getCenter()
+        self.assertImagesEqual(exposureIn.getPsf().computeImage(center),
+                               reader.readPsf().computeImage(center))
+        self.assertImagesEqual(exposureIn.getPsf().computeImage(center),
+                               reader.readComponent('PSF').computeImage(center))
         self.assertEqual(exposureIn.getInfo().getValidPolygon(), reader.readValidPolygon())
         self.assertEqual(exposureIn.getInfo().getValidPolygon(),
                          reader.readComponent(ExposureInfo.KEY_VALID_POLYGON))
@@ -298,6 +300,28 @@ class FitsReaderTestCase(lsst.utils.tests.TestCase):
                     exposureIn.writeFits(fileName)
                     self.checkMaskedImageFitsReader(exposureIn, fileName, self.dtypes[n:])
                     self.checkExposureFitsReader(exposureIn, fileName, self.dtypes[n:])
+
+    def test31035(self):
+        """Test that illegal values in the header can be round-tripped."""
+        with lsst.utils.tests.getTempFilePath(".fits") as fileName:
+            exp = ExposureF(width=100, height=100)
+            md = exp.getMetadata()
+            md['BORE-RA'] = 'NaN'
+            md['BORE-DEC'] = 'NaN'
+            md['BORE-AZ'] = 'NaN'
+            md['BORE-ALT'] = 'NaN'
+            md['BORE-AIRMASS'] = 'NaN'
+            md['BORE-ROTANG'] = 'NaN'
+            md['OBS-LONG'] = 'NaN'
+            md['OBS-LAT'] = 'NaN'
+            md['OBS-ELEV'] = 'NaN'
+            md['AIRTEMP'] = 'NaN'
+            md['AIRPRESS'] = 'NaN'
+            md['HUMIDITY'] = 'NaN'
+
+            exp.writeFits(fileName)
+
+            _ = ExposureF.readFits(fileName)
 
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):

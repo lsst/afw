@@ -71,7 +71,14 @@ auto const nan = std::numeric_limits<double>::quiet_NaN();
  *   with a value of nan if the key is not present
  */
 double getDouble(daf::base::PropertySet const& metadata, std::string const& key) {
-    return metadata.exists(key) ? metadata.getAsDouble(key) : nan;
+    try {
+        return metadata.exists(key) ? metadata.getAsDouble(key) : nan;
+    } catch (pex::exceptions::TypeError& err) {
+        // If an exposure has an invalid float here (often NaN)
+        // it should put NaN in the visitInfo because it's the same
+        // as it not being a valid key.
+        return nan;
+    }
 }
 
 /**
