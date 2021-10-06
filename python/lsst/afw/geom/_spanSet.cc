@@ -31,6 +31,7 @@
 #include <iostream>
 
 #include "ndarray/pybind11.h"
+#include "ndarray/Array.h"
 
 #include "lsst/afw/geom/ellipses/Quadrupole.h"
 #include "lsst/afw/geom/SpanSet.h"
@@ -259,19 +260,19 @@ void declareSpanSet(lsst::utils::python::WrapperCollection &wrappers) {
                        (std::shared_ptr<SpanSet>(*)(geom::ellipses::Ellipse const &)) & SpanSet::fromShape);
         cls.def("split", &SpanSet::split);
         cls.def("findEdgePixels", &SpanSet::findEdgePixels);
-        cls.def("indices", [](SpanSet const &self) -> std::pair<std::vector<int>, std::vector<int>> {
-            std::vector<int> yind;
-            std::vector<int> xind;
-            yind.reserve(self.getArea());
-            xind.reserve(self.getArea());
+        cls.def("indices", [](SpanSet const &self) -> ndarray::Array<int, 2, 2> {
+            unsigned long dims = 2;
+            ndarray::Array<int, 2, 2> inds = ndarray::allocate(ndarray::makeVector(dims, self.getArea()));
+            int element = 0;
             for (auto const &span : self) {
                 auto y = span.getY();
                 for (int x = span.getX0(); x <= span.getX1(); ++x) {
-                    yind.push_back(y);
-                    xind.push_back(x);
+                    inds[0][element] = y;
+                    inds[1][element] = x;
+                    element++;
                 }
             }
-            return std::make_pair(yind, xind);
+            return inds;
         });
 
         /* SpanSet Operators */
