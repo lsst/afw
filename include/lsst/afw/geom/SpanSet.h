@@ -405,6 +405,30 @@ public:
         applyFunctor(ndAssigner, ndarray::ndImage(output, xy0), ndarray::ndFlat(input));
     }
 
+    template <typename PixelIn, typename PixelOut, int inA, int outC, int inC>
+    void unflattenAndAdd(ndarray::Array<PixelOut, inA + 1, outC> const &output,
+                         ndarray::Array<PixelIn, inA, inC> const &input,
+                         lsst::geom::Point2I const &xy0 = lsst::geom::Point2I()) const {
+        // Populate 2D ndarray output with values from input, at locations defined by SpanSet, optionally
+        // offset by xy0
+        auto ndAdder = [](lsst::geom::Point2I const &point,
+                          typename details::ImageNdGetter<PixelOut, inA + 1, outC>::Reference out,
+                          typename details::FlatNdGetter<PixelIn, inA, inC>::Reference in) { out = out + in; };
+        applyFunctor(ndAdder, ndarray::ndImage(output, xy0), ndarray::ndFlat(input));
+    }
+
+    template <typename PixelIn, typename PixelOut, int inA, int outC, int inC>
+    void unflattenAndSubtract(ndarray::Array<PixelOut, inA + 1, outC> const &output,
+                              ndarray::Array<PixelIn, inA, inC> const &input,
+                              lsst::geom::Point2I const &xy0 = lsst::geom::Point2I()) const {
+        // Populate 2D ndarray output with values from input, at locations defined by SpanSet, optionally
+        // offset by xy0
+        auto ndSubtracter = [](lsst::geom::Point2I const &point,
+                               typename details::ImageNdGetter<PixelOut, inA + 1, outC>::Reference out,
+                               typename details::FlatNdGetter<PixelIn, inA, inC>::Reference in) { out = out - in; };
+        applyFunctor(ndSubtracter, ndarray::ndImage(output, xy0), ndarray::ndFlat(input));
+    }
+
     /** Copy contents of source Image into destination image at the positions defined in the SpanSet
      *
      * @tparam ImageT The pixel type of the Image

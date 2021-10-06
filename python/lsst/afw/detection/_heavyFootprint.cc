@@ -63,6 +63,10 @@ void declareHeavyFootprint(WrapperCollection &wrappers, std::string const &suffi
                                           Class::insert);
                 cls.def("insert",
                         (void (Class::*)(lsst::afw::image::Image<ImagePixelT> &) const) & Class::insert);
+                cls.def("addTo",
+                        (void (Class::*)(lsst::afw::image::Image<ImagePixelT> &) const) & Class::addTo);
+                cls.def("subtractFrom",
+                        (void (Class::*)(lsst::afw::image::Image<ImagePixelT> &) const) & Class::subtractFrom);
                 cls.def("getImageArray",
                         (ndarray::Array<ImagePixelT, 1, 1>(Class::*)()) & Class::getImageArray);
                 cls.def("getMaskArray", (ndarray::Array<MaskPixelT, 1, 1>(Class::*)()) & Class::getMaskArray);

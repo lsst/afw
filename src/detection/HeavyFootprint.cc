@@ -125,6 +125,16 @@ void HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::insert(image::Imag
 }
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+void HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::addTo(image::Image<ImagePixelT>& image) const {
+    getSpans()->unflattenAndAdd(image.getArray(), _image, image.getXY0());
+}
+
+template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+void HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::subtractFrom(image::Image<ImagePixelT>& image) const {
+    getSpans()->unflattenAndSubtract(image.getArray(), _image, image.getXY0());
+}
+
+template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 std::shared_ptr<HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>> mergeHeavyFootprints(
         HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT> const& h1,
         HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT> const& h2) {

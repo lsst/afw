@@ -104,6 +104,20 @@ public:
      */
     void insert(lsst::afw::image::Image<ImagePixelT>& image) const;
 
+    /**
+     * Add the HeavyFootprint to the pixels in the image.
+     *
+     * @param[out] image Image to add to
+     */
+    void addTo(lsst::afw::image::Image<ImagePixelT>& image) const;
+
+    /**
+     * Subtract the HeavyFootprint from the pixels in the image.
+     *
+     * @param[out] image Image to add to
+     */
+    void subtractFrom(lsst::afw::image::Image<ImagePixelT>& image) const;
+
     ndarray::Array<ImagePixelT, 1, 1> getImageArray() { return _image; }
     ndarray::Array<MaskPixelT, 1, 1> getMaskArray() { return _mask; }
     ndarray::Array<VariancePixelT, 1, 1> getVarianceArray() { return _variance; }
