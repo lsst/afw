@@ -26,7 +26,6 @@
  * Implementation for ImageBase and Image
  */
 #include <cstdint>
-#include <iostream>
 #include <functional>
 #include "boost/format.hpp"
 #include "boost/gil.hpp"
@@ -437,7 +436,6 @@ template <typename PixelT>
 void Image<PixelT>::swap(Image& rhs) {
     using std::swap;  // See Meyers, Effective C++, Item 25
     ImageBase<PixelT>::swap(rhs);
-    ;  // no private variables to swap
 }
 
 template <typename PixelT>
@@ -485,7 +483,7 @@ Image<PixelT>& Image<PixelT>::operator+=(math::Function2<double> const& function
 }
 
 template <typename PixelT>
-void Image<PixelT>::scaledPlus(double const c, Image<PixelT> const& rhs) {
+void Image<PixelT>::scaledPlus(PixelT const c, Image<PixelT> const& rhs) {
     if (this->getDimensions() != rhs.getDimensions()) {
         throw LSST_EXCEPT(pex::exceptions::LengthError,
                           (boost::format("Images are of different size, %dx%d v %dx%d") % this->getWidth() %
@@ -494,7 +492,7 @@ void Image<PixelT>::scaledPlus(double const c, Image<PixelT> const& rhs) {
     }
     transform_pixels(
             _getRawView(), rhs._getRawView(), _getRawView(),
-            [&c](PixelT const& l, PixelT const& r) -> PixelT { return l + static_cast<PixelT>(c * r); });
+            [&c](PixelT const& l, PixelT const& r) -> PixelT { return l + (c * r); });
 }
 
 template <typename PixelT>
@@ -517,7 +515,7 @@ Image<PixelT>& Image<PixelT>::operator-=(Image<PixelT> const& rhs) {
 }
 
 template <typename PixelT>
-void Image<PixelT>::scaledMinus(double const c, Image<PixelT> const& rhs) {
+void Image<PixelT>::scaledMinus(PixelT const c, Image<PixelT> const& rhs) {
     if (this->getDimensions() != rhs.getDimensions()) {
         throw LSST_EXCEPT(pex::exceptions::LengthError,
                           (boost::format("Images are of different size, %dx%d v %dx%d") % this->getWidth() %
@@ -526,7 +524,7 @@ void Image<PixelT>::scaledMinus(double const c, Image<PixelT> const& rhs) {
     }
     transform_pixels(
             _getRawView(), rhs._getRawView(), _getRawView(),
-            [&c](PixelT const& l, PixelT const& r) -> PixelT { return l - static_cast<PixelT>(c * r); });
+            [&c](PixelT const& l, PixelT const& r) -> PixelT { return l - (c * r); });
 }
 
 template <typename PixelT>
@@ -562,7 +560,7 @@ Image<PixelT>& Image<PixelT>::operator*=(Image<PixelT> const& rhs) {
 }
 
 template <typename PixelT>
-void Image<PixelT>::scaledMultiplies(double const c, Image<PixelT> const& rhs) {
+void Image<PixelT>::scaledMultiplies(PixelT c, Image<PixelT> const& rhs) {
     if (this->getDimensions() != rhs.getDimensions()) {
         throw LSST_EXCEPT(pex::exceptions::LengthError,
                           (boost::format("Images are of different size, %dx%d v %dx%d") % this->getWidth() %
@@ -571,7 +569,7 @@ void Image<PixelT>::scaledMultiplies(double const c, Image<PixelT> const& rhs) {
     }
     transform_pixels(
             _getRawView(), rhs._getRawView(), _getRawView(),
-            [&c](PixelT const& l, PixelT const& r) -> PixelT { return l * static_cast<PixelT>(c * r); });
+            [&c](PixelT const& l, PixelT const& r) -> PixelT { return l * (c * r); });
 }
 
 template <typename PixelT>
@@ -610,7 +608,7 @@ Image<PixelT>& Image<PixelT>::operator/=(Image<PixelT> const& rhs) {
 }
 
 template <typename PixelT>
-void Image<PixelT>::scaledDivides(double const c, Image<PixelT> const& rhs) {
+void Image<PixelT>::scaledDivides(PixelT c, Image<PixelT> const& rhs) {
     if (this->getDimensions() != rhs.getDimensions()) {
         throw LSST_EXCEPT(pex::exceptions::LengthError,
                           (boost::format("Images are of different size, %dx%d v %dx%d") % this->getWidth() %
@@ -619,7 +617,7 @@ void Image<PixelT>::scaledDivides(double const c, Image<PixelT> const& rhs) {
     }
     transform_pixels(
             _getRawView(), rhs._getRawView(), _getRawView(),
-            [&c](PixelT const& l, PixelT const& r) -> PixelT { return l / static_cast<PixelT>(c * r); });
+            [&c](PixelT const& l, PixelT const& r) -> PixelT { return l / (c * r); });
 }
 
 namespace {
