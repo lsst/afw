@@ -487,7 +487,7 @@ class ButlerImage(FakeImageDataSource):
                     # Lost by jupyterlab.
                     print(f"Reading {ccd.getId()}: {err}")
 
-                log.warning(f"Reading {ccd.getId()}: {err}")
+                log.warning("Reading %s: %s", ccd.getId(), err)
 
         if im is None:
             return self._prepareImage(ccd, imageFactory(*bbox.getDimensions()), binSize), ccd
@@ -504,7 +504,7 @@ class ButlerImage(FakeImageDataSource):
                 im = self.callback(im, ccd, imageSource=self)
             except Exception as e:
                 if self.verbose:
-                    log.error(f"callback failed: {e}")
+                    log.error("callback failed: %s", e)
                 im = imageFactory(*bbox.getDimensions())
             else:
                 allowRotate = False     # the callback was responsible for any rotations
@@ -921,7 +921,8 @@ def makeImageFromCamera(camera, detectorNameList=None, background=numpy.nan, buf
         try:
             imView[:] = im
         except pexExceptions.LengthError as e:
-            log.error(f"Unable to fit image for detector \"{det.getName()}\" into image of camera: {e}")
+            log.error("Unable to fit image for detector \"%s\" into image of camera: %s",
+                      det.getName(), e)
 
     return camIm
 
