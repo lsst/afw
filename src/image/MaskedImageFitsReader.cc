@@ -186,7 +186,7 @@ MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> MaskedImageFitsReader::read
     // If the mask and/or variance is unreadable, we log a warning and return
     // (blank) defaults.
 
-    LOG_LOGGER _log = LOG_GET("afw.image.MaskedImageFitsReader");
+    LOG_LOGGER _log = LOG_GET("lsst.afw.image.MaskedImageFitsReader");
 
     enum class Hdu { Primary = 0, Image, Mask, Variance };
 

@@ -455,7 +455,7 @@ template <typename Cat1, typename Cat2>
 std::vector<Match<typename Cat1::Record, typename Cat2::Record> > unpackMatches(BaseCatalog const &matches,
                                                                                 Cat1 const &first,
                                                                                 Cat2 const &second) {
-    LOG_LOGGER tableLog = LOG_GET("afw.table");
+    LOG_LOGGER tableLog = LOG_GET("lsst.afw.table");
     Key<RecordId> inKey1 = matches.getSchema()["first"];
     Key<RecordId> inKey2 = matches.getSchema()["second"];
     Key<double> keyD = matches.getSchema()["distance"];

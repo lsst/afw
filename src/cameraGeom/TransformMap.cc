@@ -38,7 +38,7 @@ namespace {
 // Allows conversions between LSST and AST data formats
 static lsst::afw::geom::Point2Endpoint const POINT2_ENDPOINT;
 
-static auto LOGGER = LOG_GET("afw.cameraGeom.TransformMap");
+static auto LOGGER = LOG_GET("lsst.afw.cameraGeom.TransformMap");
 
 // Make an AST Frame name for a CameraSys.
 std::string makeFrameName(CameraSys const & sys) {
