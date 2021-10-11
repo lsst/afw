@@ -487,7 +487,7 @@ class ButlerImage(FakeImageDataSource):
                     # Lost by jupyterlab.
                     print(f"Reading {ccd.getId()}: {err}")
 
-                log.warn(f"Reading {ccd.getId()}: {err}")
+                log.warning(f"Reading {ccd.getId()}: {err}")
 
         if im is None:
             return self._prepareImage(ccd, imageFactory(*bbox.getDimensions()), binSize), ccd
