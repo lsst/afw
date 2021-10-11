@@ -72,7 +72,7 @@ int SpatialCellImageCandidate::_height = 0;
 SpatialCell::SpatialCell(std::string const &label, lsst::geom::Box2I const &bbox,
                          CandidateList const &candidateList)
         : _label(label), _bbox(bbox), _candidateList(candidateList), _ignoreBad(true) {
-    LOGL_DEBUG("afw.math.SpatialCell", "Cell %s : created with %d candidates", this->_label.c_str(),
+    LOGL_DEBUG("lsst.afw.math.SpatialCell", "Cell %s : created with %d candidates", this->_label.c_str(),
                this->_candidateList.size());
     sortCandidates();
 }

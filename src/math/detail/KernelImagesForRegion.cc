@@ -48,7 +48,7 @@ KernelImagesForRegion::KernelImagesForRegion(KernelConstPtr kernelPtr, lsst::geo
     if (!_kernelPtr) {
         throw LSST_EXCEPT(pexExcept::InvalidParameterError, "kernelPtr is null");
     }
-    LOGL_DEBUG("TRACE5.afw.math.convolve.KernelImagesForRegion",
+    LOGL_DEBUG("TRACE5.lsst.afw.math.convolve.KernelImagesForRegion",
                "KernelImagesForRegion(bbox(minimum=(%d, %d), extent=(%d, %d)), xy0=(%d, %d), doNormalize=%d, "
                "images...)",
                _bbox.getMinX(), _bbox.getMinY(), _bbox.getWidth(), _bbox.getHeight(), _xy0[0], _xy0[1],
@@ -67,7 +67,7 @@ KernelImagesForRegion::KernelImagesForRegion(KernelConstPtr const kernelPtr, lss
     _insertImage(BOTTOM_RIGHT, bottomRightImagePtr);
     _insertImage(TOP_LEFT, topLeftImagePtr);
     _insertImage(TOP_RIGHT, topRightImagePtr);
-    LOGL_DEBUG("TRACE5.afw.math.convolve.KernelImagesForRegion",
+    LOGL_DEBUG("TRACE5.lsst.afw.math.convolve.KernelImagesForRegion",
                "KernelImagesForRegion(bbox(minimum=(%d, %d), extent=(%d, %d)), xy0=(%d, %d), doNormalize=%d, "
                "images...)",
                _bbox.getMinX(), _bbox.getMinY(), _bbox.getWidth(), _bbox.getHeight(), _xy0[0], _xy0[1],

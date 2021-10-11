@@ -72,7 +72,7 @@ std::string makeLimitedFitsHeaderImpl(std::vector<std::string> const &paramNames
                 // use G because FITS wants uppercase E for exponents
                 out += (boost::format("%#20.17G") % value).str();
             } else {
-                LOGLS_WARN("afw.fits",
+                LOGLS_WARN("lsst.afw.fits",
                             boost::format("In %s, found NaN in metadata item '%s'") %
                                           BOOST_CURRENT_FUNCTION % name);
                 // Convert it to FITS undefined
@@ -83,7 +83,7 @@ std::string makeLimitedFitsHeaderImpl(std::vector<std::string> const &paramNames
             if (!std::isnan(value)) {
                 out += (boost::format("%#20.15G") % value).str();
             } else {
-                LOGLS_WARN("afw.fits",
+                LOGLS_WARN("lsst.afw.fits",
                            boost::format("In %s, found NaN in metadata item '%s'") %
                                          BOOST_CURRENT_FUNCTION % name);
                 // Convert it to FITS undefined
@@ -795,7 +795,7 @@ void Fits::forEachKey(HeaderIterationFunctor &functor) {
         std::string upperKey(key);
         boost::to_upper(upperKey);
         if (upperKey.compare(key) != 0){
-            LOGLS_DEBUG("afw.fits",
+            LOGLS_DEBUG("lsst.afw.fits",
                         boost::format("In %s, standardizing key '%s' to uppercase '%s' on read.") %
                         BOOST_CURRENT_FUNCTION % key % upperKey);
         }
@@ -862,7 +862,7 @@ public:
         // previously we have an undefined value we must use set instead.
         if (list) {
             if (list->exists(key) && list->isUndefined(key)) {
-                LOGLS_WARN("afw.fits",
+                LOGLS_WARN("lsst.afw.fits",
                            boost::format("In %s, replacing undefined value for key '%s'.") %
                                          BOOST_CURRENT_FUNCTION % key);
                 list->set(key, value, comment);
@@ -871,7 +871,7 @@ public:
             }
         } else {
             if (set->exists(key) && set->isUndefined(key)) {
-                LOGLS_WARN("afw.fits",
+                LOGLS_WARN("lsst.afw.fits",
                            boost::format("In %s, replacing undefined value for key '%s'.") %
                                          BOOST_CURRENT_FUNCTION % key);
                 set->set(key, value);
@@ -889,7 +889,7 @@ public:
             if (list->exists(key) && !list->isUndefined(key)) {
                 // Do nothing. Assume the previously defined value takes
                 // precedence.
-                LOGLS_WARN("afw.fits",
+                LOGLS_WARN("lsst.afw.fits",
                            boost::format("In %s, dropping undefined value for key '%s'.") %
                                          BOOST_CURRENT_FUNCTION % key);
             } else {
@@ -899,7 +899,7 @@ public:
             if (set->exists(key) && !set->isUndefined(key)) {
                 // Do nothing. Assume the previously defined value takes
                 // precedence.
-                LOGLS_WARN("afw.fits",
+                LOGLS_WARN("lsst.afw.fits",
                            boost::format("In %s, dropping undefined value for key '%s'.") %
                                          BOOST_CURRENT_FUNCTION % key);
             } else {
@@ -982,7 +982,7 @@ void writeKeyFromProperty(Fits &fits, daf::base::PropertySet const &metadata, st
     std::string upperKey(key);
     boost::to_upper(upperKey);
     if (upperKey.compare(key) != 0){
-        LOGLS_WARN("afw.fits",
+        LOGLS_WARN("lsst.afw.fits",
                    boost::format("In %s, key '%s' may be standardized to uppercase '%s' on write.") %
                    BOOST_CURRENT_FUNCTION % key % upperKey);
     }
@@ -1072,7 +1072,7 @@ void writeKeyFromProperty(Fits &fits, daf::base::PropertySet const &metadata, st
         }
     } else {
         // FIXME: inherited this error handling from fitsIo.cc; need a better option.
-        LOGLS_WARN("afw.writeKeyFromProperty",
+        LOGLS_WARN("lsst.afw.fits.writeKeyFromProperty",
                    makeErrorMessage(fits.fptr, fits.status,
                                     boost::format("In %s, unknown type '%s' for key '%s'.") %
                                             BOOST_CURRENT_FUNCTION % valueType.name() % key));
@@ -1279,7 +1279,7 @@ public:
         try {
             fits.setImageCompression(old);
         } catch (...) {
-            LOGLS_WARN("afw.fits",
+            LOGLS_WARN("lsst.afw.fits",
                        makeErrorMessage(fits.fptr, fits.status, "Failed to restore compression settings"));
         }
         std::swap(status, fits.status);

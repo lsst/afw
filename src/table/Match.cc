@@ -90,7 +90,7 @@ size_t makeRecordPositions(Cat const &cat, RecordPos<typename Cat::Record> *posi
     }
     std::sort(positions, positions + n);
     if (n < cat.size()) {
-        LOGLS_WARN("afw.table.matchRaDec", "At least one source had ra or dec equal to NaN");
+        LOGLS_WARN("lsst.afw.table.matchRaDec", "At least one source had ra or dec equal to NaN");
     }
     return n;
 }
