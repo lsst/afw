@@ -39,9 +39,9 @@ import lsst.afw.display as afwDisplay
 from lsst.log import Log
 
 # Change the level to Log.DEBUG to see debug messages
-Log.getLogger("afw.image.Mask").setLevel(Log.INFO)
-Log.getLogger("TRACE2.afw.math.warp").setLevel(Log.INFO)
-Log.getLogger("TRACE3.afw.math.warp").setLevel(Log.INFO)
+Log.getLogger("lsst.afw.image.Mask").setLevel(Log.INFO)
+Log.getLogger("TRACE2.lsst.afw.math.warp").setLevel(Log.INFO)
+Log.getLogger("TRACE3.lsst.afw.math.warp").setLevel(Log.INFO)
 
 afwDisplay.setDefaultMaskTransparency(75)
 

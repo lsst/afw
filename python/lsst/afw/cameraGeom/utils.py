@@ -50,6 +50,8 @@ from lsst.afw.cameraGeom import DetectorType
 import lsst.afw.display as afwDisplay
 import lsst.afw.display.utils as displayUtils
 
+_LOG = lsst.log.Log.getLogger(__name__)
+
 
 def prepareWcsData(wcs, amp, isTrimmed=True):
     """Put Wcs from an Amp image into CCD coordinates
@@ -451,7 +453,7 @@ class ButlerImage(FakeImageDataSource):
     def getCcdImage(self, ccd, imageFactory=afwImage.ImageF, binSize=1, asMaskedImage=False):
         """Return an image of the specified ccd, and also the (possibly updated) ccd"""
 
-        log = lsst.log.Log.getLogger("afw.cameraGeom.utils.ButlerImage")
+        log = _LOG.getChild("ButlerImage")
 
         if self.isTrimmed:
             bbox = ccd.getBBox()
@@ -884,7 +886,7 @@ def makeImageFromCamera(camera, detectorNameList=None, background=numpy.nan, buf
     image : `lsst.afw.image.Image`
         Image of the entire camera.
     """
-    log = lsst.log.Log.getLogger("afw.cameraGeom.utils.makeImageFromCamera")
+    log = _LOG.getChild("makeImageFromCamera")
 
     if detectorNameList is None:
         ccdList = camera

@@ -36,7 +36,7 @@ import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.log
 
-logger = lsst.log.Log.getLogger("afw.display.interface")
+logger = lsst.log.Log.getLogger(__name__)
 
 #
 # Symbolic names for mask/line colors.  N.b. ds9 supports any X11 color for masks
