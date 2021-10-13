@@ -20,8 +20,10 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import numpy as np
+import scipy
 
 from lsst.utils import continueClass
+import lsst.geom
 from ._python import reduceTransform
 from ._geom import (SkyWcs, makeCdMatrix, makeFlippedWcs, makeModifiedWcs,
                     makeSkyWcs, makeTanSipWcs, makeWcsPairTransform,
@@ -98,6 +100,51 @@ class SkyWcs:  # noqa: F811
         x, y = np.vsplit(self.getTransform().getMapping().applyInverse(radec), 2)
 
         return x.ravel(), y.ravel()
+
+    def getRelativeRotationToWcs(self, otherWcs):
+        """Get the difference in sky rotation angle to the specified wcs.
+
+        Ignoring location on the sky, if another wcs were atop this one,
+        what would the difference in rotation be? i.e. for
+
+        otherWcs = createInitialSkyWcsFromBoresight(radec, rotation, detector)
+
+        what is the value that needs to be added to ``self.rotation`` (or
+        subtracted from `other.rotation``) to align them?
+
+        Parameters
+        ----------
+        otherWcs : `lsst.afw.geom.SkyWcs`
+            The wcs to calculate the angle to.
+
+        Returns
+        -------
+        angle : `lsst.geom.Angle`
+            The angle between this and the supplied wcs,
+            over the half-open range [0, 2pi).
+        """
+        # Note: tests for this function live in
+        # obs_lsst/tests/test_afwWcsUtil.py due to the need for an easy
+        # constructor and instantiated detector, and the fact that afw
+        # cannot depend on obs_base or obs_lsst.
+
+        m1 = self.getCdMatrix()
+        m2 = otherWcs.getCdMatrix()
+
+        svd1 = scipy.linalg.svd(m1)
+        svd2 = scipy.linalg.svd(m2)
+
+        m1rot = np.matmul(svd1[0], svd1[2])
+        m2rot = np.matmul(svd2[0], svd2[2])
+
+        v_rot = [1, 0]
+
+        v_rot = np.matmul(v_rot, m1rot)  # rotate by wcs1
+        v_rot = np.matmul(v_rot, m2rot.T)  # rotate _back_ by wcs2
+
+        rotation = np.arctan2(v_rot[1], v_rot[0])
+        rotation = rotation % (2*np.pi)
+        return lsst.geom.Angle(rotation, lsst.geom.radians)
 
 
 SkyWcs.__reduce__ = reduceTransform
