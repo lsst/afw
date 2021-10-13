@@ -36,7 +36,7 @@ __all__ = ["SkyWcs", "makeCdMatrix", "makeFlippedWcs", "makeSkyWcs",
            "makeHpxWcs"]
 
 
-@continueClass  # noqa: F811 (FIXME: remove for py 3.8+)
+@continueClass
 class SkyWcs:  # noqa: F811
     def pixelToSkyArray(self, x, y, degrees=False):
         """
