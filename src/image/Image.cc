@@ -452,7 +452,9 @@ void Image<PixelT>::sqrt() {
 
 template <typename PixelT>
 Image<PixelT>& Image<PixelT>::operator+=(PixelT const rhs) {
-    transform_pixels(_getRawView(), _getRawView(), [&rhs](PixelT const& l) -> PixelT { return l + rhs; });
+    //transform_pixels(_getRawView(), _getRawView(), [&rhs](PixelT const& l) -> PixelT { return l + rhs; });
+    PixelT * data=this->data();
+    for(int i=0;i<this->getArea();i++) data[i]+=rhs;
     return *this;
 }
 
@@ -465,7 +467,10 @@ Image<PixelT>& Image<PixelT>::operator+=(Image<PixelT> const& rhs) {
                                   .str());
     }
     transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(),
-                     [](PixelT const& l, PixelT const& r) -> PixelT { return l + r; });
+                    [](PixelT const& l, PixelT const& r) -> PixelT { return l + r; });
+    PixelT * data=this->data();
+    PixelT const * rhs_data=rhs.data();
+    //for(std::ptrdiff_t i=0;i<this->getArea();i++) data[i]+=rhs_data[i];
     return *this;
 }
 
@@ -490,9 +495,12 @@ void Image<PixelT>::scaledPlus(PixelT const c, Image<PixelT> const& rhs) {
                            this->getHeight() % rhs.getWidth() % rhs.getHeight())
                                   .str());
     }
-    transform_pixels(
-            _getRawView(), rhs._getRawView(), _getRawView(),
-            [&c](PixelT const& l, PixelT const& r) -> PixelT { return l + (c * r); });
+  //  transform_pixels(
+   //         _getRawView(), rhs._getRawView(), _getRawView(),
+   //         [&c](PixelT const& l, PixelT const& r) -> PixelT { return l + (c * r); });
+     PixelT * data=this->data();
+    PixelT const * rhs_data=rhs.data();
+    for(std::ptrdiff_t i=0;i<this->getArea();i++) data[i]+=c*rhs_data[i];
 }
 
 template <typename PixelT>

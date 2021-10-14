@@ -453,6 +453,9 @@ private:
     lsst::geom::Point2I _origin;
     Manager::Ptr _manager;
     _view_t _gilView;
+protected:
+    PixelT const *data() const;
+    PixelT *data();
 
     // oring of ImageBase in some larger image as returned to and manipulated
     // by the user
@@ -500,6 +503,21 @@ typename ImageBase<PixelT>::ConstArray ImageBase<PixelT>::getArray() const {
     return ndarray::external(data,
                              ndarray::makeVector(getHeight(), getWidth()), ndarray::makeVector(rowStride, 1),
                              this->_manager);
+}
+
+template <typename PixelT> PixelT const * ImageBase<PixelT>::data() const {
+     PixelT * data = nullptr;
+      if (getArea() > 0) {
+        data = reinterpret_cast<PixelT*>(row_begin(0));
+    }
+      return data;
+}
+template <typename PixelT> PixelT * ImageBase<PixelT>::data() {
+     PixelT * data = nullptr;
+      if (getArea() > 0) {
+        data = reinterpret_cast<PixelT*>(row_begin(0));
+      }
+      return data;
 }
 
 }  // namespace image
