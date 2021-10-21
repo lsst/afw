@@ -291,11 +291,11 @@ public:
     PixelConstReference operator[](lsst::geom::Point2I const& index) const { return get(index, PARENT); }
 
     /// Return the number of columns in the %image
-    int getWidth() const { return _gilView.width(); }
+    int getWidth() const { return _nd.getShape()[1]; }
     /// Return the number of rows in the %image
-    int getHeight() const { return _gilView.height(); }
+    int getHeight() const { return _nd.getShape()[0]; }
     /// Return the area of the %image
-    int getArea() const { return getWidth()*getHeight(); }
+    int getArea() const { return _nd.getShape()[0] * _nd.getShape()[1]; }
     /**
      * Return the %image's column-origin
      *
@@ -451,20 +451,19 @@ public:
 
 private:
     lsst::geom::Point2I _origin;
-    Manager::Ptr _manager;
+    ndarray::Array<PixelT,2,1> _nd;
     _view_t _gilView;
 
     // oring of ImageBase in some larger image as returned to and manipulated
     // by the user
 
-protected:
-    static _view_t _allocateView(lsst::geom::Extent2I const& dimensions, Manager::Ptr& manager);
+    _view_t _allocateView(lsst::geom::Extent2I const& dimensions, PixelT*);
     static _view_t _makeSubView(lsst::geom::Extent2I const& dimensions, lsst::geom::Extent2I const& offset,
                                 const _view_t& view);
-
-    _view_t _getRawView() const { return _gilView; }
-
     inline bool isContiguous() const { return begin() + getWidth() * getHeight() == end(); }
+
+protected:
+    _view_t _getRawView() const { return _gilView; }
 };
 
 template <typename PixelT>
@@ -484,7 +483,7 @@ typename ImageBase<PixelT>::Array ImageBase<PixelT>::getArray() {
     }
     return ndarray::external(data,
                              ndarray::makeVector(getHeight(), getWidth()), ndarray::makeVector(rowStride, 1),
-                             this->_manager);
+                             this->_nd.getManager());
 }
 
 template <typename PixelT>
@@ -499,7 +498,7 @@ typename ImageBase<PixelT>::ConstArray ImageBase<PixelT>::getArray() const {
     }
     return ndarray::external(data,
                              ndarray::makeVector(getHeight(), getWidth()), ndarray::makeVector(rowStride, 1),
-                             this->_manager);
+                             this->_nd.getManager());
 }
 
 }  // namespace image

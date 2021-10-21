@@ -43,7 +43,7 @@ namespace image {
 
 template <typename PixelT>
 typename ImageBase<PixelT>::_view_t ImageBase<PixelT>::_allocateView(lsst::geom::Extent2I const& dimensions,
-                                                                     Manager::Ptr& manager) {
+                                                                     PixelT* data) {
     if (dimensions.getX() < 0 || dimensions.getY() < 0) {
         throw LSST_EXCEPT(pex::exceptions::LengthError,
                           str(boost::format("Both width and height must be non-negative: %d, %d") %
@@ -54,11 +54,8 @@ typename ImageBase<PixelT>::_view_t ImageBase<PixelT>::_allocateView(lsst::geom:
                           str(boost::format("Image dimensions (%d x %d) too large; int overflow detected.") %
                               dimensions.getX() % dimensions.getY()));
     }
-    std::pair<Manager::Ptr, PixelT*> r =
-            ndarray::SimpleManager<PixelT>::allocate(dimensions.getX() * dimensions.getY());
-    manager = r.first;
     return boost::gil::interleaved_view(dimensions.getX(), dimensions.getY(),
-                                        (typename _view_t::value_type*)r.second,
+                                        (typename _view_t::value_type*)data,
                                         dimensions.getX() * sizeof(PixelT));
 }
 template <typename PixelT>
@@ -87,17 +84,31 @@ typename ImageBase<PixelT>::_view_t ImageBase<PixelT>::_makeSubView(lsst::geom::
 
 template <typename PixelT>
 ImageBase<PixelT>::ImageBase(lsst::geom::Extent2I const& dimensions)
-        : _origin(0, 0), _manager(), _gilView(_allocateView(dimensions, _manager)) {}
+        : _origin(0, 0), _nd() {
+            try {
+                _nd = ndarray::allocate(dimensions.getY(), dimensions.getX());
+            } catch (...) {
+                throw LSST_EXCEPT(pex::exceptions::LengthError,"");
+            }
+           _gilView=_allocateView(dimensions,_nd.getData());
+        }
 
 template <typename PixelT>
 ImageBase<PixelT>::ImageBase(lsst::geom::Box2I const& bbox)
-        : _origin(bbox.getMin()), _manager(), _gilView(_allocateView(bbox.getDimensions(), _manager)) {}
+        : _origin(bbox.getMin()), _nd() {
+            try {
+                _nd = ndarray::allocate(bbox.getDimensions().getY(), bbox.getDimensions().getX());
+            } catch (...) {
+                throw LSST_EXCEPT(pex::exceptions::LengthError,"");
+            }
+            _gilView=_allocateView(bbox.getDimensions(),_nd.getData());
+        }
 
 template <typename PixelT>
 ImageBase<PixelT>::ImageBase(ImageBase const& rhs, bool const deep
-
                              )
-        : _origin(rhs._origin), _manager(rhs._manager), _gilView(rhs._gilView) {
+        : _origin(rhs._origin), _nd(rhs._nd) , _gilView(rhs._gilView) {
+
     if (deep) {
         ImageBase tmp(getBBox());
         tmp.assign(*this);  // now copy the pixels
@@ -113,10 +124,12 @@ ImageBase<PixelT>::ImageBase(ImageBase const& rhs, lsst::geom::Box2I const& bbox
                              bool const deep
 
                              )
-        : _origin((origin == PARENT) ? bbox.getMin() : rhs._origin + lsst::geom::Extent2I(bbox.getMin())),
-          _manager(rhs._manager),  // reference counted pointer, don't copy pixels
-          _gilView(_makeSubView(bbox.getDimensions(), _origin - rhs._origin, rhs._gilView)) {
-    if (deep) {
+          {    _origin=(origin == PARENT) ? bbox.getMin() : rhs._origin + lsst::geom::Extent2I(bbox.getMin());
+               auto o=_origin-rhs._origin;
+               _gilView=_makeSubView(bbox.getDimensions(), o, rhs._gilView);
+               _nd=rhs._nd[ndarray::view(o.getY(), o.getY()+bbox.getDimensions().getY())
+                        (o.getX(), o.getX()+bbox.getDimensions().getX())];
+      if (deep) {
         ImageBase tmp(getBBox());
         tmp.assign(*this);  // now copy the pixels
         swap(tmp);
@@ -126,10 +139,11 @@ ImageBase<PixelT>::ImageBase(ImageBase const& rhs, lsst::geom::Box2I const& bbox
 template <typename PixelT>
 ImageBase<PixelT>::ImageBase(Array const& array, bool deep, lsst::geom::Point2I const& xy0)
         : _origin(xy0),
-          _manager(array.getManager()),
+          _nd(array),
           _gilView(boost::gil::interleaved_view(array.template getSize<1>(), array.template getSize<0>(),
-                                                (typename _view_t::value_type*)array.getData(),
-                                                array.template getStride<0>() * sizeof(PixelT))) {
+                                                (typename _view_t::value_type*)_nd.getData(),
+                                                array.template getStride<0>() * sizeof(PixelT)))
+{
     if (deep) {
         ImageBase tmp(*this, true);
         swap(tmp);
@@ -184,12 +198,12 @@ typename ImageBase<PixelT>::PixelReference ImageBase<PixelT>::operator()(int x, 
     }
 
     return const_cast<typename ImageBase<PixelT>::PixelReference>(
-            static_cast<typename ImageBase<PixelT>::PixelConstReference>(_gilView(x, y)[0]));
+            static_cast<typename ImageBase<PixelT>::PixelConstReference>(_nd(y,x)));
 }
 
 template <typename PixelT>
 typename ImageBase<PixelT>::PixelConstReference ImageBase<PixelT>::operator()(int x, int y) const {
-    return _gilView(x, y)[0];
+   return _nd(y,x);
 }
 
 template <typename PixelT>
@@ -201,8 +215,7 @@ typename ImageBase<PixelT>::PixelConstReference ImageBase<PixelT>::operator()(
                            (this->getWidth() - 1) % (this->getHeight() - 1))
                                   .str());
     }
-
-    return _gilView(x, y)[0];
+    return _nd(y,x);
 }
 
 template <typename PixelT>
@@ -214,7 +227,7 @@ typename ImageBase<PixelT>::PixelReference ImageBase<PixelT>::get(lsst::geom::Po
         x -= getX0();
         y -= getY0();
     }
-    return _gilView(x, y)[0];
+     return _nd(y,x);
 }
 
 template <typename PixelT>
@@ -226,14 +239,13 @@ typename ImageBase<PixelT>::PixelConstReference ImageBase<PixelT>::get(lsst::geo
         x -= getX0();
         y -= getY0();
     }
-    return _gilView(x, y)[0];
+    return _nd(y,x);
 }
 
 template <typename PixelT>
 void ImageBase<PixelT>::swap(ImageBase& rhs) {
     using std::swap;  // See Meyers, Effective C++, Item 25
-
-    swap(_manager, rhs._manager);  // just swapping the pointers
+    swap(_nd, rhs._nd);
     swap(_gilView, rhs._gilView);
     swap(_origin, rhs._origin);
 }
