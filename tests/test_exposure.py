@@ -79,6 +79,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         self.md = maskedImageMD
         self.psf = DummyPsf(2.0)
         self.detector = DetectorWrapper().detector
+        self.id = 42
         self.extras = {"MISC": DummyPsf(3.5)}
 
         self.exposureBlank = afwImage.ExposureF()
@@ -267,6 +268,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         gFilterLabel = afwImage.FilterLabel(band="g")
         exposureInfo.setFilter(gFilter)
         exposureInfo.setFilterLabel(gFilterLabel)
+        exposureInfo.setId(self.id)
         maskedImage = afwImage.MaskedImageF(inFilePathSmall)
         exposure = afwImage.ExposureF(maskedImage)
         self.assertFalse(exposure.hasWcs())
@@ -461,6 +463,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         """
         # This should pass without an exception
         mainExposure = afwImage.ExposureF(inFilePathSmall)
+        mainExposure.info.setId(self.id)
         mainExposure.setDetector(self.detector)
 
         subBBox = lsst.geom.Box2I(lsst.geom.Point2I(10, 10),
@@ -509,6 +512,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
             self.assertEqual(photoCalib, readExposure.getPhotoCalib())
 
             readInfo = readExposure.getInfo()
+            self.assertEqual(mainExposure.info.getId(), readInfo.id)
             for key, value in self.extras.items():
                 self.assertEqual(value, readInfo.getComponent(key))
 
@@ -873,10 +877,8 @@ class ExposureInfoTestCase(lsst.utils.tests.TestCase):
         self.transmissionCurve = afwImage.TransmissionCurve.makeIdentity()
 
         self.exposureInfo = afwImage.ExposureInfo()
-        gFilter = afwImage.Filter("g")
-        gFilterLabel = afwImage.FilterLabel(band="g")
-        self.exposureInfo.setFilter(gFilter)
-        self.exposureInfo.setFilterLabel(gFilterLabel)
+        self.gFilterLabel = afwImage.FilterLabel(band="g")
+        self.exposureId = 42
 
     def _checkAlias(self, exposureInfo, key, value, has, get):
         self.assertFalse(has())
@@ -918,6 +920,35 @@ class ExposureInfoTestCase(lsst.utils.tests.TestCase):
                          self.exposureInfo.hasTransmissionCurve, self.exposureInfo.getTransmissionCurve)
         self._checkAlias(self.exposureInfo, cls.KEY_SUMMARY_STATS, self.summaryStats,
                          self.exposureInfo.hasSummaryStats, self.exposureInfo.getSummaryStats)
+        self._checkAlias(self.exposureInfo, cls.KEY_FILTER, self.gFilterLabel,
+                         self.exposureInfo.hasFilterLabel, self.exposureInfo.getFilterLabel)
+
+    def testId(self):
+        self.exposureInfo.setVisitInfo(afwImage.VisitInfo())
+
+        self.assertFalse(self.exposureInfo.hasId())
+        self.assertIsNone(self.exposureInfo.getId())
+        self.assertEqual(self.exposureInfo.getVisitInfo().getExposureId(), 0)
+        self.assertIsNone(self.exposureInfo.id)
+
+        self.exposureInfo.setId(self.exposureId)
+        self.assertTrue(self.exposureInfo.hasId())
+        self.assertIsNotNone(self.exposureInfo.getId())
+        self.assertIsNotNone(self.exposureInfo.id)
+        self.assertEqual(self.exposureInfo.getId(), self.exposureId)
+        self.assertEqual(self.exposureInfo.getVisitInfo().getExposureId(), self.exposureId)
+        self.assertEqual(self.exposureInfo.id, self.exposureId)
+
+        self.exposureInfo.id = 99899
+        self.assertEqual(self.exposureInfo.getId(), 99899)
+
+        self.exposureInfo.setVisitInfo(afwImage.VisitInfo(exposureId=12321))
+        self.assertEqual(self.exposureInfo.id, 12321)
+
+        self.exposureInfo.id = None
+        self.assertFalse(self.exposureInfo.hasId())
+        self.assertIsNone(self.exposureInfo.getId())
+        self.assertIsNone(self.exposureInfo.id)
 
     def testCopy(self):
         # Test that ExposureInfos have independently settable state
@@ -931,6 +962,12 @@ class ExposureInfoTestCase(lsst.utils.tests.TestCase):
         copy.setWcs(newWcs)
         self.assertEqual(copy.getWcs(), newWcs)
         self.assertNotEqual(self.exposureInfo.getWcs(), copy.getWcs())
+
+    def testMissingProperties(self):
+        # Test that invalid properties return None instead of raising
+        exposureInfo = afwImage.ExposureInfo()
+
+        self.assertIsNone(exposureInfo.id)
 
 
 class ExposureNoAfwdataTestCase(lsst.utils.tests.TestCase):
@@ -949,6 +986,7 @@ class ExposureNoAfwdataTestCase(lsst.utils.tests.TestCase):
         mask = afwImage.MaskX(nx, ny)
         mask.array[5, 5] = 5
         self.maskedImage = afwImage.MaskedImageF(image, mask, variance)
+        self.exposureId = 12345
 
         self.v0PhotoCalib = afwImage.makePhotoCalibFromCalibZeroPoint(1e6, 2e4)
         self.v1PhotoCalib = afwImage.PhotoCalib(1e6, 2e4)
@@ -963,6 +1001,8 @@ class ExposureNoAfwdataTestCase(lsst.utils.tests.TestCase):
 
         self.assertMaskedImagesEqual(exposure.maskedImage, self.maskedImage)
 
+        self.assertEqual(exposure.info.id, self.exposureId)
+        self.assertEqual(exposure.info.getVisitInfo().getExposureId(), self.exposureId)
         self.assertEqual(exposure.getPhotoCalib(), self.v0PhotoCalib)
         self.assertEqual(exposure.getFilterLabel(), self.v1FilterLabel)
 
@@ -976,6 +1016,8 @@ class ExposureNoAfwdataTestCase(lsst.utils.tests.TestCase):
 
         self.assertMaskedImagesEqual(exposure.maskedImage, self.maskedImage)
 
+        self.assertEqual(exposure.info.id, self.exposureId)
+        self.assertEqual(exposure.info.getVisitInfo().getExposureId(), self.exposureId)
         self.assertEqual(exposure.getPhotoCalib(), self.v0PhotoCalib)
         self.assertEqual(exposure.getFilterLabel(), self.v1FilterLabel)
 
@@ -993,6 +1035,8 @@ class ExposureNoAfwdataTestCase(lsst.utils.tests.TestCase):
 
         self.assertMaskedImagesEqual(exposure.maskedImage, self.maskedImage)
 
+        self.assertEqual(exposure.info.id, self.exposureId)
+        self.assertEqual(exposure.info.getVisitInfo().getExposureId(), self.exposureId)
         self.assertEqual(exposure.getPhotoCalib(), self.v1PhotoCalib)
         self.assertEqual(exposure.getFilterLabel(), self.v1FilterLabel)
 
@@ -1010,6 +1054,8 @@ class ExposureNoAfwdataTestCase(lsst.utils.tests.TestCase):
 
         self.assertMaskedImagesEqual(exposure.maskedImage, self.maskedImage)
 
+        self.assertEqual(exposure.info.id, self.exposureId)
+        self.assertEqual(exposure.info.getVisitInfo().getExposureId(), self.exposureId)
         self.assertEqual(exposure.getPhotoCalib(), self.v1PhotoCalib)
         self.assertEqual(exposure.getFilterLabel(), self.v2FilterLabel)
 

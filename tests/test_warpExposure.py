@@ -103,6 +103,7 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
           from the output image when comparing masks.
         """
         originalExposure = afwImage.ExposureF(originalExposurePath)
+        originalExposure.getInfo().setId(10313423)
         originalExposure.getInfo().setVisitInfo(makeVisitInfo())
         originalFilterLabel = afwImage.FilterLabel(band="i")
         originalPhotoCalib = afwImage.PhotoCalib(1.0e5, 1.0e3)

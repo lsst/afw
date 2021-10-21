@@ -22,6 +22,8 @@
 #ifndef LSST_AFW_IMAGE_EXPOSUREFITSREADER_H
 #define LSST_AFW_IMAGE_EXPOSUREFITSREADER_H
 
+#include <optional>
+
 #include "lsst/afw/image/MaskedImageFitsReader.h"
 #include "lsst/afw/image/ExposureInfo.h"
 #include "lsst/afw/image/Exposure.h"
@@ -102,7 +104,6 @@ public:
     lsst::geom::Point2I readXY0(lsst::geom::Box2I const &bbox = lsst::geom::Box2I(),
                                 ImageOrigin origin = PARENT);
 
-
     /**
      * Read the serialization version number from the header.
      */
@@ -115,6 +116,9 @@ public:
      * stripped.
      */
     std::shared_ptr<daf::base::PropertyList> readMetadata();
+
+    /// Read the Exposure's exposure ID, if it exists.
+    std::optional<table::RecordId> readExposureId();
 
     /// Read the Exposure's world coordinate system.
     std::shared_ptr<afw::geom::SkyWcs> readWcs();

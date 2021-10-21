@@ -128,6 +128,35 @@ void ExposureInfo::setTransmissionCurve(std::shared_ptr<TransmissionCurve const>
     setComponent(KEY_TRANSMISSION_CURVE, tc);
 }
 
+bool ExposureInfo::hasId() const noexcept { return _exposureId.has_value(); }
+
+table::RecordId ExposureInfo::getId() const {
+    if (_exposureId) {
+        return *_exposureId;
+    } else {
+        throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundError, "Exposure does not have an ID.");
+    }
+}
+
+void ExposureInfo::setId(table::RecordId id) {
+    _exposureId = id;
+    // Ensure consistency with VisitInfo::getExposureId() until the latter is removed in DM-32138.
+    std::shared_ptr<VisitInfo const> oldVisitInfo = getVisitInfo();
+    if (oldVisitInfo) {
+        auto newVisitInfo = std::make_shared<VisitInfo>(
+                *_exposureId, oldVisitInfo->getExposureTime(), oldVisitInfo->getDarkTime(),
+                oldVisitInfo->getDate(), oldVisitInfo->getUt1(), oldVisitInfo->getEra(),
+                oldVisitInfo->getBoresightRaDec(), oldVisitInfo->getBoresightAzAlt(),
+                oldVisitInfo->getBoresightAirmass(), oldVisitInfo->getBoresightRotAngle(),
+                oldVisitInfo->getRotType(), oldVisitInfo->getObservatory(), oldVisitInfo->getWeather(),
+                oldVisitInfo->getInstrumentLabel(), oldVisitInfo->getId());
+        // Do not call setVisitInfo, to avoid recursion
+        _visitInfo = newVisitInfo;
+    }
+}
+
+void ExposureInfo::clearId() noexcept { _exposureId.reset(); }
+
 // Compatibility code defined inside ExposureFitsReader.cc, to be removed in DM-27177
 std::shared_ptr<FilterLabel> makeFilterLabel(Filter const& filter);
 Filter makeFilter(FilterLabel const& label);
@@ -185,7 +214,8 @@ ExposureInfo::ExposureInfo(std::shared_ptr<geom::SkyWcs const> const& wcs,
                            std::shared_ptr<ApCorrMap> const& apCorrMap,
                            std::shared_ptr<image::VisitInfo const> const& visitInfo,
                            std::shared_ptr<TransmissionCurve const> const& transmissionCurve)
-        : _metadata(metadata ? metadata
+        : _exposureId(),
+          _metadata(metadata ? metadata
                              : std::shared_ptr<daf::base::PropertySet>(new daf::base::PropertyList())),
           _visitInfo(visitInfo),
           _components(std::make_unique<MapClass>()) {
@@ -207,7 +237,8 @@ ExposureInfo::ExposureInfo(ExposureInfo const& other) : ExposureInfo(other, fals
 ExposureInfo::ExposureInfo(ExposureInfo&& other) : ExposureInfo(other) {}
 
 ExposureInfo::ExposureInfo(ExposureInfo const& other, bool copyMetadata)
-        : _metadata(other._metadata),
+        : _exposureId(other._exposureId),
+          _metadata(other._metadata),
           _visitInfo(other._visitInfo),
           // ExposureInfos can (historically) share objects, but should each have their own pointers to them
           _components(std::make_unique<MapClass>(*(other._components))) {
@@ -216,6 +247,7 @@ ExposureInfo::ExposureInfo(ExposureInfo const& other, bool copyMetadata)
 
 ExposureInfo& ExposureInfo::operator=(ExposureInfo const& other) {
     if (&other != this) {
+        _exposureId = other._exposureId;
         _metadata = other._metadata;
         _visitInfo = other._visitInfo;
         // ExposureInfos can (historically) share objects, but should each have their own pointers to them
@@ -328,6 +360,11 @@ ExposureInfo::FitsWriteData ExposureInfo::_startWriteFits(lsst::geom::Point2I co
     auto visitInfoPtr = getVisitInfo();
     if (visitInfoPtr) {
         detail::setVisitInfoMetadata(*(data.metadata), *visitInfoPtr);
+    }
+
+    // So long as VisitInfo also writes exposureId (until DM-32138), let ours take precedence.
+    if (hasId()) {
+        data.metadata->set("EXPID", getId());
     }
 
     return data;
