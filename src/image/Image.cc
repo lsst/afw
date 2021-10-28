@@ -29,6 +29,7 @@
 #include <functional>
 #include "boost/format.hpp"
 #include "boost/gil.hpp"
+#include "Eigen/Core"
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/geom/wcsUtils.h"
@@ -446,13 +447,24 @@ void swap(Image<PixelT>& a, Image<PixelT>& b) {
 // In-place, per-pixel, sqrt().
 template <typename PixelT>
 void Image<PixelT>::sqrt() {
-    transform_pixels(_getRawView(), _getRawView(),
-                     [](PixelT const& l) -> PixelT { return static_cast<PixelT>(std::sqrt(l)); });
+    const auto &src = _getRawView();
+    for (std::ptrdiff_t y = 0; y < src.height(); ++y) {
+        auto srcIt = src.row_begin(y);
+        for (std::ptrdiff_t x = 0; x < src.width(); ++x) {
+                    srcIt[x] = std::sqrt(PixelT(srcIt[x]));
+        }
+    }
 }
 
 template <typename PixelT>
 Image<PixelT>& Image<PixelT>::operator+=(PixelT const rhs) {
-    transform_pixels(_getRawView(), _getRawView(), [&rhs](PixelT const& l) -> PixelT { return l + rhs; });
+            const auto &dst = _getRawView();
+            for (std::ptrdiff_t y = 0; y < dst.height(); ++y) {
+                auto dstIt = dst.row_begin(y);
+                using Type=Eigen::Array<PixelT,1,Eigen::Dynamic>;
+                Eigen::Map<Type> d((PixelT*)&dstIt[0],dst.width());
+                d+=rhs;
+            }
     return *this;
 }
 
@@ -464,8 +476,16 @@ Image<PixelT>& Image<PixelT>::operator+=(Image<PixelT> const& rhs) {
                            this->getHeight() % rhs.getWidth() % rhs.getHeight())
                                   .str());
     }
-    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(),
-                     [](PixelT const& l, PixelT const& r) -> PixelT { return l + r; });
+            const auto &src = rhs._getRawView();
+            const auto &dst = _getRawView();
+            for (std::ptrdiff_t y = 0; y < src.height(); ++y) {
+                auto srcIt = src.row_begin(y);
+                auto dstIt = dst.row_begin(y);
+                using Type=Eigen::Array<PixelT,1,Eigen::Dynamic>;
+                Eigen::Map<Type> d((PixelT*)&dstIt[0],dst.width());
+                Eigen::Map<Type> s((PixelT*)&srcIt[0],src.width());
+                d+=s;
+            }
     return *this;
 }
 
@@ -490,14 +510,28 @@ void Image<PixelT>::scaledPlus(PixelT const c, Image<PixelT> const& rhs) {
                            this->getHeight() % rhs.getWidth() % rhs.getHeight())
                                   .str());
     }
-    transform_pixels(
-            _getRawView(), rhs._getRawView(), _getRawView(),
-            [&c](PixelT const& l, PixelT const& r) -> PixelT { return l + (c * r); });
+        const auto &src = rhs._getRawView();
+            const auto &dst = _getRawView();
+            for (std::ptrdiff_t y = 0; y < src.height(); ++y) {
+                auto srcIt = src.row_begin(y);
+                auto dstIt = dst.row_begin(y);
+                using Type=Eigen::Array<PixelT,1,Eigen::Dynamic>;
+                Eigen::Map<Type> d((PixelT*)&dstIt[0],dst.width());
+                Eigen::Map<Type> s((PixelT*)&srcIt[0],src.width());
+                d+=c*s;
+            }
 }
 
 template <typename PixelT>
 Image<PixelT>& Image<PixelT>::operator-=(PixelT const rhs) {
-    transform_pixels(_getRawView(), _getRawView(), [&rhs](PixelT const& l) -> PixelT { return l - rhs; });
+            const auto &dst = _getRawView();
+            for (std::ptrdiff_t y = 0; y < dst.height(); ++y) {
+                 auto dstIt = dst.row_begin(y);
+                for (std::ptrdiff_t x = 0; x < dst.width(); ++x) {
+                    dstIt[x] = dstIt[x] - rhs;
+                }
+            }
+
     return *this;
 }
 
@@ -509,8 +543,16 @@ Image<PixelT>& Image<PixelT>::operator-=(Image<PixelT> const& rhs) {
                            this->getHeight() % rhs.getWidth() % rhs.getHeight())
                                   .str());
     }
-    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(),
-                     [](PixelT const& l, PixelT const& r) -> PixelT { return l - r; });
+ const auto &src = rhs._getRawView();
+            const auto &dst = _getRawView();
+            for (std::ptrdiff_t y = 0; y < src.height(); ++y) {
+                auto srcIt = src.row_begin(y);
+                auto dstIt = dst.row_begin(y);
+                using Type=Eigen::Array<PixelT,1,Eigen::Dynamic>;
+                Eigen::Map<Type> d((PixelT*)&dstIt[0],dst.width());
+                Eigen::Map<Type> s((PixelT*)&srcIt[0],src.width());
+                d-=s;
+            }
     return *this;
 }
 
@@ -522,9 +564,17 @@ void Image<PixelT>::scaledMinus(PixelT const c, Image<PixelT> const& rhs) {
                            this->getHeight() % rhs.getWidth() % rhs.getHeight())
                                   .str());
     }
-    transform_pixels(
-            _getRawView(), rhs._getRawView(), _getRawView(),
-            [&c](PixelT const& l, PixelT const& r) -> PixelT { return l - (c * r); });
+    const auto &src = rhs._getRawView();
+            const auto &dst = _getRawView();
+            for (std::ptrdiff_t y = 0; y < src.height(); ++y) {
+                auto srcIt = src.row_begin(y);
+                auto dstIt = dst.row_begin(y);
+                using Type=Eigen::Array<PixelT,1,Eigen::Dynamic>;
+                Eigen::Map<Type> d((PixelT*)&dstIt[0],dst.width());
+                Eigen::Map<Type> s((PixelT*)&srcIt[0],src.width());
+                d-=c*s;
+
+            }
 }
 
 template <typename PixelT>
@@ -542,7 +592,13 @@ Image<PixelT>& Image<PixelT>::operator-=(math::Function2<double> const& function
 
 template <typename PixelT>
 Image<PixelT>& Image<PixelT>::operator*=(PixelT const rhs) {
-    transform_pixels(_getRawView(), _getRawView(), [&rhs](PixelT const& l) -> PixelT { return l * rhs; });
+            const auto &dst = _getRawView();
+            for (std::ptrdiff_t y = 0; y < dst.height(); ++y) {
+                auto dstIt = dst.row_begin(y);
+                using Type=Eigen::Array<PixelT,1,Eigen::Dynamic>;
+                Eigen::Map<Type> d((PixelT*)&dstIt[0],dst.width());
+                d*=rhs;
+            }
     return *this;
 }
 
@@ -554,8 +610,16 @@ Image<PixelT>& Image<PixelT>::operator*=(Image<PixelT> const& rhs) {
                            this->getHeight() % rhs.getWidth() % rhs.getHeight())
                                   .str());
     }
-    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(),
-                     [](PixelT const& l, PixelT const& r) -> PixelT { return l * r; });
+const auto &src = rhs._getRawView();
+            const auto &dst = _getRawView();
+            for (std::ptrdiff_t y = 0; y < src.height(); ++y) {
+                auto srcIt = src.row_begin(y);
+                auto dstIt = dst.row_begin(y);
+                using Type=Eigen::Array<PixelT,1,Eigen::Dynamic>;
+                Eigen::Map<Type> d((PixelT*)&dstIt[0],dst.width());
+                Eigen::Map<Type> s((PixelT*)&srcIt[0],src.width());
+                d*=s;
+            }
     return *this;
 }
 
@@ -567,14 +631,28 @@ void Image<PixelT>::scaledMultiplies(PixelT c, Image<PixelT> const& rhs) {
                            this->getHeight() % rhs.getWidth() % rhs.getHeight())
                                   .str());
     }
-    transform_pixels(
-            _getRawView(), rhs._getRawView(), _getRawView(),
-            [&c](PixelT const& l, PixelT const& r) -> PixelT { return l * (c * r); });
+const auto &src = rhs._getRawView();
+            const auto &dst = _getRawView();
+            for (std::ptrdiff_t y = 0; y < src.height(); ++y) {
+                auto srcIt = src.row_begin(y);
+                auto dstIt = dst.row_begin(y);
+                using Type=Eigen::Array<PixelT,1,Eigen::Dynamic>;
+                Eigen::Map<Type> d((PixelT*)&dstIt[0],dst.width());
+                Eigen::Map<Type> s((PixelT*)&srcIt[0],src.width());
+                d*=c*s;
+            }
+
 }
 
 template <typename PixelT>
 Image<PixelT>& Image<PixelT>::operator/=(PixelT const rhs) {
-    transform_pixels(_getRawView(), _getRawView(), [&rhs](PixelT const& l) -> PixelT { return l / rhs; });
+            const auto &dst = _getRawView();
+            for (std::ptrdiff_t y = 0; y < dst.height(); ++y) {
+                auto dstIt = dst.row_begin(y);
+                using Type=Eigen::Array<PixelT,1,Eigen::Dynamic>;
+                Eigen::Map<Type> d((PixelT*)&dstIt[0],dst.width());
+                d/=rhs;
+            }
     return *this;
 }
 //
@@ -602,8 +680,16 @@ Image<PixelT>& Image<PixelT>::operator/=(Image<PixelT> const& rhs) {
                            this->getHeight() % rhs.getWidth() % rhs.getHeight())
                                   .str());
     }
-    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(),
-                     [](PixelT const& l, PixelT const& r) -> PixelT { return l / r; });
+ const auto &src = rhs._getRawView();
+            const auto &dst = _getRawView();
+            for (std::ptrdiff_t y = 0; y < src.height(); ++y) {
+                auto srcIt = src.row_begin(y);
+                auto dstIt = dst.row_begin(y);
+                using Type=Eigen::Array<PixelT,1,Eigen::Dynamic>;
+                Eigen::Map<Type> d((PixelT*)&dstIt[0],dst.width());
+                Eigen::Map<Type> s((PixelT*)&srcIt[0],src.width());
+                d/=s;
+            }
     return *this;
 }
 
@@ -615,9 +701,16 @@ void Image<PixelT>::scaledDivides(PixelT c, Image<PixelT> const& rhs) {
                            this->getHeight() % rhs.getWidth() % rhs.getHeight())
                                   .str());
     }
-    transform_pixels(
-            _getRawView(), rhs._getRawView(), _getRawView(),
-            [&c](PixelT const& l, PixelT const& r) -> PixelT { return l / (c * r); });
+  const auto &src = rhs._getRawView();
+            const auto &dst = _getRawView();
+            for (std::ptrdiff_t y = 0; y < src.height(); ++y) {
+                auto srcIt = src.row_begin(y);
+                auto dstIt = dst.row_begin(y);
+                using Type=Eigen::Array<PixelT,1,Eigen::Dynamic>;
+                Eigen::Map<Type> d((PixelT*)&dstIt[0],dst.width());
+                Eigen::Map<Type> s((PixelT*)&srcIt[0],src.width());
+                d/=c*s;
+            }
 }
 
 namespace {
