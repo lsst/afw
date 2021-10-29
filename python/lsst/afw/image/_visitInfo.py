@@ -18,17 +18,18 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-from ._imageLib import *
-from . import pixel
-from .image import *
-from .apCorrMap import *
-from .maskedImage import *
-from ._filter import *  # just here to support deprecation
-from ._visitInfo import *  # just here to support deprecation
-from .exposure import *
-from ._exposureInfoContinued import *
-from ._exposureSummaryStats import *
-from .basicUtils import *
-from .testUtils import *
+"""This file only exists to deprecate the Filter and FilterProperty classes.
+"""
 
-from ._exposureFitsReaderContinued import *  # just here to support deprecation
+from lsst.utils.deprecated import deprecate_pybind11
+from ._imageLib import VisitInfo
+
+
+__all__ = []
+
+
+VisitInfo.getExposureId = deprecate_pybind11(
+    VisitInfo.getExposureId,
+    reason="Replaced by VisitInfo.id for full focal plane identifiers and by ExposureInfo.id for "
+           "detector-level identifiers. Will be removed after v25.",
+    version="v24.0")

@@ -88,6 +88,7 @@ public:
      * @param[in] instrumentLabel  The short name of the instrument that took this data (e.g. "HSC")
      * @param[in] id  The identifier of this full focal plane data.
      */
+    // TODO: remove exposureId on DM-32138
     explicit VisitInfo(table::RecordId exposureId, double exposureTime, double darkTime,
                        daf::base::DateTime const &date, double ut1, lsst::geom::Angle const &era,
                        lsst::geom::SpherePoint const &boresightRaDec,
@@ -127,7 +128,14 @@ public:
     std::size_t hash_value() const noexcept override;
 
     /// get exposure ID
-    table::RecordId getExposureId() const { return _exposureId; }
+    // TODO: remove on DM-32138
+    [[deprecated(
+            "Replaced by VisitInfo::getId() for full focal plane identifiers and by "
+            "ExposureInfo::getId() for detector-level identifiers. Will be removed after v25.")]] table::
+            RecordId
+            getExposureId() const {
+        return _exposureId;
+    }
 
     /// get exposure duration (shutter open time); (sec)
     double getExposureTime() const { return _exposureTime; }
@@ -215,7 +223,7 @@ protected:
     void write(OutputArchiveHandle &handle) const override;
 
 private:
-    table::RecordId _exposureId;
+    table::RecordId _exposureId;  // TODO: remove on DM-32138
     double _exposureTime;
     double _darkTime;
     daf::base::DateTime _date;
