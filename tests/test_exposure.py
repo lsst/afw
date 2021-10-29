@@ -928,7 +928,8 @@ class ExposureInfoTestCase(lsst.utils.tests.TestCase):
 
         self.assertFalse(self.exposureInfo.hasId())
         self.assertIsNone(self.exposureInfo.getId())
-        self.assertEqual(self.exposureInfo.getVisitInfo().getExposureId(), 0)
+        with self.assertWarns(FutureWarning):
+            self.assertEqual(self.exposureInfo.getVisitInfo().getExposureId(), 0)
         self.assertIsNone(self.exposureInfo.id)
 
         self.exposureInfo.setId(self.exposureId)
@@ -936,7 +937,8 @@ class ExposureInfoTestCase(lsst.utils.tests.TestCase):
         self.assertIsNotNone(self.exposureInfo.getId())
         self.assertIsNotNone(self.exposureInfo.id)
         self.assertEqual(self.exposureInfo.getId(), self.exposureId)
-        self.assertEqual(self.exposureInfo.getVisitInfo().getExposureId(), self.exposureId)
+        with self.assertWarns(FutureWarning):
+            self.assertEqual(self.exposureInfo.getVisitInfo().getExposureId(), self.exposureId)
         self.assertEqual(self.exposureInfo.id, self.exposureId)
 
         self.exposureInfo.id = 99899
@@ -1002,7 +1004,8 @@ class ExposureNoAfwdataTestCase(lsst.utils.tests.TestCase):
         self.assertMaskedImagesEqual(exposure.maskedImage, self.maskedImage)
 
         self.assertEqual(exposure.info.id, self.exposureId)
-        self.assertEqual(exposure.info.getVisitInfo().getExposureId(), self.exposureId)
+        with self.assertWarns(FutureWarning):
+            self.assertEqual(exposure.info.getVisitInfo().getExposureId(), self.exposureId)
         self.assertEqual(exposure.getPhotoCalib(), self.v0PhotoCalib)
         self.assertEqual(exposure.getFilterLabel(), self.v1FilterLabel)
 
@@ -1017,7 +1020,8 @@ class ExposureNoAfwdataTestCase(lsst.utils.tests.TestCase):
         self.assertMaskedImagesEqual(exposure.maskedImage, self.maskedImage)
 
         self.assertEqual(exposure.info.id, self.exposureId)
-        self.assertEqual(exposure.info.getVisitInfo().getExposureId(), self.exposureId)
+        with self.assertWarns(FutureWarning):
+            self.assertEqual(exposure.info.getVisitInfo().getExposureId(), self.exposureId)
         self.assertEqual(exposure.getPhotoCalib(), self.v0PhotoCalib)
         self.assertEqual(exposure.getFilterLabel(), self.v1FilterLabel)
 
@@ -1036,7 +1040,8 @@ class ExposureNoAfwdataTestCase(lsst.utils.tests.TestCase):
         self.assertMaskedImagesEqual(exposure.maskedImage, self.maskedImage)
 
         self.assertEqual(exposure.info.id, self.exposureId)
-        self.assertEqual(exposure.info.getVisitInfo().getExposureId(), self.exposureId)
+        with self.assertWarns(FutureWarning):
+            self.assertEqual(exposure.info.getVisitInfo().getExposureId(), self.exposureId)
         self.assertEqual(exposure.getPhotoCalib(), self.v1PhotoCalib)
         self.assertEqual(exposure.getFilterLabel(), self.v1FilterLabel)
 
@@ -1055,7 +1060,8 @@ class ExposureNoAfwdataTestCase(lsst.utils.tests.TestCase):
         self.assertMaskedImagesEqual(exposure.maskedImage, self.maskedImage)
 
         self.assertEqual(exposure.info.id, self.exposureId)
-        self.assertEqual(exposure.info.getVisitInfo().getExposureId(), self.exposureId)
+        with self.assertWarns(FutureWarning):
+            self.assertEqual(exposure.info.getVisitInfo().getExposureId(), self.exposureId)
         self.assertEqual(exposure.getPhotoCalib(), self.v1PhotoCalib)
         self.assertEqual(exposure.getFilterLabel(), self.v2FilterLabel)
 
