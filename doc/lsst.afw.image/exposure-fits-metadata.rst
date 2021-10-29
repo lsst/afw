@@ -37,7 +37,7 @@ HDU 0
    * - ``EXPID``
      - long int
      -
-     - `VisitInfo.getExposureId`
+     - `ExposureInfo.getId`
 
        Exposure ID.
 
