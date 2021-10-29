@@ -192,6 +192,7 @@ class FitsReaderTestCase(lsst.utils.tests.TestCase):
         self.assertIn('EXTNAME', reader.readMetadata().toDict(), "EXTNAME is added upon writing")
         reader.readMetadata().remove('EXTNAME')
         self.assertGreaterEqual(reader.readSerializationVersion(), 0)
+        self.assertEqual(exposureIn.info.id, reader.readExposureId())
         self.assertEqual(exposureIn.getMetadata().toDict(), reader.readMetadata().toDict())
         self.assertWcsAlmostEqualOverBBox(exposureIn.getWcs(), reader.readWcs(), self.bbox,
                                           maxDiffPix=0, maxDiffSky=0*degrees)
