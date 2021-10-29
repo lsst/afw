@@ -575,6 +575,9 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
         self.assertIn("darkTime=11.02", string)
         self.assertIn("rotType=1", string)
 
+        # Check that it at least doesn't throw
+        str(afwImage.VisitInfo())
+
     def testParallacticAngle(self):
         """Check that we get the same precomputed values for parallactic angle."""
         parallacticAngle = [141.39684140703142*degrees, 76.99982166973487*degrees]

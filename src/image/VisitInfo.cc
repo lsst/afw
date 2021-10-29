@@ -554,7 +554,8 @@ std::string VisitInfo::toString() const {
     buffer << "exposureId=" << getExposureId() << ", ";
     buffer << "exposureTime=" << getExposureTime() << ", ";
     buffer << "darkTime=" << getDarkTime() << ", ";
-    buffer << "date=" << getDate().toString(daf::base::DateTime::TAI) << ", ";
+    buffer << "date=" << (getDate().isValid() ? getDate().toString(daf::base::DateTime::TAI) : "<invalid>")
+           << ", ";
     buffer << "UT1=" << getUt1() << ", ";
     buffer << "ERA=" << getEra() << ", ";
     buffer << "boresightRaDec=" << getBoresightRaDec() << ", ";
