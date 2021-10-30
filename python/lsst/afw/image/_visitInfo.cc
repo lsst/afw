@@ -127,7 +127,7 @@ void declareVisitInfo(lsst::utils::python::WrapperCollection &wrappers) {
                 cls.def_property_readonly("instrumentLabel", &VisitInfo::getInstrumentLabel);
                 cls.def_property_readonly("id", &VisitInfo::getId);
 
-                utils::python::addOutputOp(cls, "__str__");
+                utils::python::addOutputOp(cls, "__repr__");
             });
 }
 void declareRotType(lsst::utils::python::WrapperCollection &wrappers) {

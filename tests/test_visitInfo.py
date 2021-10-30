@@ -351,6 +351,25 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(visitInfo.getInstrumentLabel(), "")
         self.assertEqual(visitInfo.getId(), 0)
 
+    def testEquals(self):
+        """Test that identical VisitInfo objects compare equal, even if some fields are NaN.
+        """
+        # objects with "equal state" should be equal
+        self.assertEqual(makeVisitInfo(self.data1), makeVisitInfo(self.data1))
+        self.assertEqual(makeVisitInfo(self.data2), makeVisitInfo(self.data2))
+        self.assertNotEqual(makeVisitInfo(self.data1), makeVisitInfo(self.data2))
+        self.assertEqual(afwImage.VisitInfo(), afwImage.VisitInfo())
+
+        # equality must be reflexive
+        info = makeVisitInfo(self.data1)
+        self.assertEqual(info, info)
+        info = makeVisitInfo(self.data2)
+        self.assertEqual(info, info)
+        info = afwImage.VisitInfo()
+        self.assertEqual(info, info)
+
+        # commutativity and transitivity difficult to test with this setup
+
     def testMetadataConstructor(self):
         """Test the metadata constructor
 
