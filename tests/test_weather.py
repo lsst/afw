@@ -24,6 +24,8 @@ Tests for lsst.afw.image.Weather
 """
 import unittest
 
+import numpy as np
+
 import lsst.utils.tests
 import lsst.pex.exceptions
 from lsst.afw.coord import Weather
@@ -60,6 +62,22 @@ class WeatherTestCase(unittest.TestCase):
         for humidity in (-1, -0.0001):
             with self.assertRaises(lsst.pex.exceptions.InvalidParameterError):
                 Weather(1.1, 2.2, humidity)
+
+    def testEquals(self):
+        weather1 = Weather(1.1, 100.1, 10.1)
+        weather2 = Weather(2.2, 200.2, 0.0)
+        weather3 = Weather(np.nan, np.nan, np.nan)
+
+        # objects with "same" values should be equal
+        self.assertEqual(Weather(1.1, 100.1, 10.1), Weather(1.1, 100.1, 10.1))
+        self.assertEqual(Weather(np.nan, np.nan, np.nan), Weather(np.nan, np.nan, np.nan))
+        self.assertNotEqual(weather1, weather2)
+        self.assertNotEqual(weather3, weather2)
+
+        # equality must be reflexive
+        self.assertEqual(weather1, weather1)
+        self.assertEqual(weather2, weather2)
+        self.assertEqual(weather3, weather3)
 
 
 def setup_module(module):
