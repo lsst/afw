@@ -301,6 +301,43 @@ class HeavyFootprintTestCase(lsst.utils.tests.TestCase):
             self.assertEqual(hfp1.dot(hfp2), dot)
             self.assertEqual(hfp2.dot(hfp1), dot)
 
+    def testAddSubtract(self):
+        """Test that we can add and subtract a HeavyFootprint."""
+        fs = afwDetect.FootprintSet(self.mi, afwDetect.Threshold(1))
+
+        fs.makeHeavy(self.mi)
+
+        bbox = lsst.geom.BoxI(lsst.geom.PointI(9, 1), lsst.geom.ExtentI(7, 4))
+        compImage = self.mi.Factory(self.mi, bbox, afwImage.LOCAL, True)
+        compImage.set((10, 0x0, 0))
+
+        blankImage = compImage.clone()
+        blankImage.set((0, 0x0, 0))
+
+        testImage = compImage.clone()
+
+        for foot in fs.getFootprints():
+            # Add via addTo
+            foot.addTo(testImage.image)
+
+            # Add by using a temporary image and insert
+            foot.insert(blankImage.image)
+            inserted = blankImage.image.array > 0
+            compImage.image.array[inserted] += blankImage.image.array[inserted]
+
+            np.testing.assert_array_almost_equal(testImage.image.array,
+                                                 compImage.image.array)
+
+            # Subtract via subtractFrom
+            foot.subtractFrom(testImage.image)
+
+            compImage.image.array[inserted] -= blankImage.image.array[inserted]
+
+            np.testing.assert_array_almost_equal(testImage.image.array,
+                                                 compImage.image.array)
+
+            blankImage.set((0, 0x0, 0))
+
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
