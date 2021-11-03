@@ -122,7 +122,8 @@ void addSubSampledEdge(std::vector<LsstPoint>& vertices,  // Vector of points to
 /// @internal Calculate area of overlap between polygon and pixel
 double pixelOverlap(BoostPolygon const& poly, int const x, int const y) {
     std::vector<BoostPolygon> overlap;  // Overlap between pixel and polygon
-    LsstBox const pixel(lsst::geom::Point2D(x - 0.5, y - 0.5), lsst::geom::Point2D(x + 0.5, y + 0.5));
+    LsstBox const pixel(lsst::geom::Point2D((double)x - 0.5, (double)y - 0.5),
+                        lsst::geom::Point2D((double)x + 0.5, (double)y + 0.5));
 
     // typedef boost::geometry::model::point<double, 2, boost::geometry::cs::cartesian> boost_point_t;
     // typedef boost::geometry::model::box<boost_point_t> boost_box_t;
@@ -146,9 +147,12 @@ double pixelOverlap(BoostPolygon const& poly, int const x, int const y) {
     boost::geometry::intersection(poly, pixel, overlap);
     double area = 0.0;
     for (auto const &i : overlap) {
+        if ((x == 64) && (y == 94)) {
+            std::cout << "about to compute problematic area...\n";
+        }
         double const polyArea = boost::geometry::area(i);
         if ((x == 64) && (y == 94)) {
-            std::cout << "polyArea, unclipped: " << polyArea << "\n";
+            std::cout << "polyArea, unclipped!!: " << polyArea << "\n";
         }
         area += std::min(polyArea, 1.0);  // remove any rounding error
     }
