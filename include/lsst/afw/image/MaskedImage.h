@@ -35,6 +35,7 @@
 #include <ostream>
 #include <string>
 
+#include "boost/mpl/vector.hpp"
 #include "boost/mpl/at.hpp"
 #include "boost/iterator/zip_iterator.hpp"
 #include "boost/tuple/tuple.hpp"  // cannot convert to std::tuple (yet) because of use with boost::gil
