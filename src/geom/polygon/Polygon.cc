@@ -1,5 +1,6 @@
 #include <cmath>
 #include <algorithm>
+#include <iostream>
 
 #include "boost/geometry/geometry.hpp"
 #include <boost/container_hash/hash.hpp>
@@ -122,11 +123,37 @@ void addSubSampledEdge(std::vector<LsstPoint>& vertices,  // Vector of points to
 double pixelOverlap(BoostPolygon const& poly, int const x, int const y) {
     std::vector<BoostPolygon> overlap;  // Overlap between pixel and polygon
     LsstBox const pixel(lsst::geom::Point2D(x - 0.5, y - 0.5), lsst::geom::Point2D(x + 0.5, y + 0.5));
+
+    // typedef boost::geometry::model::point<double, 2, boost::geometry::cs::cartesian> boost_point_t;
+    // typedef boost::geometry::model::box<boost_point_t> boost_box_t;
+
+    // boost_box_t box1;
+    // boost_box_t box2(boost_point_t(0.0, 0.0), boost_point_t(5.0, 5.0));
+
+    // boost_box_t boost_pixel(boost_point_t(x - 0.5, y - 0.5), boost_point_t(x + 0.5, y + 0.5));
+
+    /*
+    typedef boost::geometry::model::point<double, 2, bg::cs::cartesian> point_t;
+    typedef boost::geometry::model::polygon<point_t> polygon_t;
+
+    polygon_t const pixel({
+            {x - 0.5, y - 0.5},
+                {x - 0.5, y + 0.5},
+                    {x + 0.5, y + 0.5},
+                        {x + 0.5, y - 0.5},
+                        {x - 0.5, y - 0.5}});*/
+
     boost::geometry::intersection(poly, pixel, overlap);
     double area = 0.0;
     for (auto const &i : overlap) {
         double const polyArea = boost::geometry::area(i);
+        if ((x == 64) && (y == 94)) {
+            std::cout << "polyArea, unclipped: " << polyArea << "\n";
+        }
         area += std::min(polyArea, 1.0);  // remove any rounding error
+    }
+    if ((x == 64) && (y == 94)) {
+        std::cout << x << " " << y << " " << area << "\n";
     }
     return area;
 }
@@ -448,16 +475,21 @@ std::shared_ptr<afw::image::Image<float>> Polygon::createImage(lsst::geom::Box2I
     int xMax = std::min(static_cast<int>(::ceil(bounds.getMaxX())), bbox.getMaxX());
     int yMin = std::max(static_cast<int>(bounds.getMinY()), bbox.getMinY());
     int yMax = std::min(static_cast<int>(::ceil(bounds.getMaxY())), bbox.getMaxY());
+    //std::cout << xMin << " " << xMax << " " << yMin << " " << yMax << "\n";
     for (int y = yMin; y <= yMax; ++y) {
         double const yPixelMin = (double)y - 0.5, yPixelMax = (double)y + 0.5;
+        //std::cout << yPixelMin << " " << yPixelMax << "\n";
         BoostPolygon row;  // A polygon of row y
         boost::geometry::assign(
                 row, LsstBox(lsst::geom::Point2D(xMin, yPixelMin), lsst::geom::Point2D(xMax, yPixelMax)));
         std::vector<BoostPolygon> intersections;
         boost::geometry::intersection(_impl->poly, row, intersections);
 
+        // std::cout << _impl->poly << " " << row << " " << intersections << "\n";
+
         if (intersections.size() == 1 && boost::geometry::num_points(intersections[0]) == 5) {
             // This row is fairly tame, and should have a long run of pixels within the polygon
+            // std::cout << "In the special mode!\n";
             BoostPolygon const& row = intersections[0];
             std::vector<double> top, bottom;
             top.reserve(2);
@@ -466,6 +498,7 @@ std::shared_ptr<afw::image::Image<float>> Polygon::createImage(lsst::geom::Box2I
             for (std::vector<Point>::const_iterator i = row.outer().begin(); i != row.outer().end() - 1;
                  ++i) {
                 double const xCoord = i->getX(), yCoord = i->getY();
+                //std::cout << xCoord << " " << yCoord << "\n";
                 if (yCoord == yPixelMin) {
                     bottom.push_back(xCoord);
                 } else if (yCoord == yPixelMax) {
@@ -495,7 +528,7 @@ std::shared_ptr<afw::image::Image<float>> Polygon::createImage(lsst::geom::Box2I
                 continue;
             }
         }
-
+        // std::cout << "Last resort!\n";
         // Last resort: do each pixel independently...
         for (auto const &intersection : intersections) {
             double xMinRow = xMax, xMaxRow = xMin;
@@ -505,6 +538,8 @@ std::shared_ptr<afw::image::Image<float>> Polygon::createImage(lsst::geom::Box2I
                 if (x < xMinRow) xMinRow = x;
                 if (x > xMaxRow) xMaxRow = x;
             }
+            //std::cout << xMinRow << " " << xMaxRow << "\n";
+            //std::cout << static_cast<int>(::ceil(xMaxRow)) << " " << bbox.getMaxX() << " " << std::min(static_cast<int>(::ceil(xMaxRow)), bbox.getMaxX()) << "\n";
 
             pixelRowOverlap(image, _impl->poly, std::max(static_cast<int>(xMinRow), bbox.getMinX()),
                             std::min(static_cast<int>(::ceil(xMaxRow)), bbox.getMaxX()), y);
