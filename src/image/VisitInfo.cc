@@ -472,12 +472,32 @@ VisitInfo::VisitInfo(daf::base::PropertySet const& metadata)
     }
 }
 
+/**
+ * Test whether two numbers are exactly equal or both NaN.
+ *
+ * This function is exactly equivalent to `operator==(double, double)`, except
+ * that NaNs compare equal (NaNs of different values also compare equal).
+ */
+bool _eqOrNan(double lhs, double rhs) noexcept { return (std::isnan(lhs) && std::isnan(rhs)) || lhs == rhs; }
+
+/**
+ * Test whether two SpherePoints are exactly equal or invalid.
+ *
+ * This function is needed because SpherePoint::operation== is specifically
+ * designed to be ill-behaved when NaN values are involved.
+ */
+bool _eqOrNonFinite(lsst::geom::SpherePoint const& lhs, lsst::geom::SpherePoint const& rhs) noexcept {
+    return (!lhs.isFinite() && !rhs.isFinite()) || lhs == rhs;
+}
+
 bool VisitInfo::operator==(VisitInfo const& other) const {
-    return _exposureId == other.getExposureId() && _exposureTime == other.getExposureTime() &&
-           _darkTime == other.getDarkTime() && _date == other.getDate() && _ut1 == other.getUt1() &&
-           _era == other.getEra() && _boresightRaDec == other.getBoresightRaDec() &&
-           _boresightAzAlt == other.getBoresightAzAlt() && _boresightAirmass == other.getBoresightAirmass() &&
-           _boresightRotAngle == other.getBoresightRotAngle() && _rotType == other.getRotType() &&
+    return _exposureId == other.getExposureId() && _eqOrNan(_exposureTime, other.getExposureTime()) &&
+           _eqOrNan(_darkTime, other.getDarkTime()) && _date == other.getDate() &&
+           _eqOrNan(_ut1, other.getUt1()) && _eqOrNan(_era, other.getEra()) &&
+           _eqOrNonFinite(_boresightRaDec, other.getBoresightRaDec()) &&
+           _eqOrNonFinite(_boresightAzAlt, other.getBoresightAzAlt()) &&
+           _eqOrNan(_boresightAirmass, other.getBoresightAirmass()) &&
+           _eqOrNan(_boresightRotAngle, other.getBoresightRotAngle()) && _rotType == other.getRotType() &&
            _observatory == other.getObservatory() && _weather == other.getWeather() &&
            _instrumentLabel == other.getInstrumentLabel() && _id == other.getId();
 }
@@ -554,7 +574,8 @@ std::string VisitInfo::toString() const {
     buffer << "exposureId=" << getExposureId() << ", ";
     buffer << "exposureTime=" << getExposureTime() << ", ";
     buffer << "darkTime=" << getDarkTime() << ", ";
-    buffer << "date=" << getDate().toString(daf::base::DateTime::TAI) << ", ";
+    buffer << "date=" << (getDate().isValid() ? getDate().toString(daf::base::DateTime::TAI) : "<invalid>")
+           << ", ";
     buffer << "UT1=" << getUt1() << ", ";
     buffer << "ERA=" << getEra() << ", ";
     buffer << "boresightRaDec=" << getBoresightRaDec() << ", ";

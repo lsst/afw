@@ -85,10 +85,17 @@ public:
     std::string toString() const;
 
     bool operator==(Observatory const& rhs) const noexcept {
-        auto deltaLongitude = (_latitude - rhs.getLatitude()).wrapCtr();
-        auto deltaLatitude = (_longitude - rhs.getLongitude()).wrapCtr();
+        // Observatory may be initialized to NaN values as a placeholder, or to indicate "unknown".
+        auto deltaLongitude = std::isnan(_latitude.asRadians()) && std::isnan(rhs._latitude.asRadians())
+                                      ? 0.0 * lsst::geom::degrees
+                                      : (_latitude - rhs._latitude).wrapCtr();
+        auto deltaLatitude = std::isnan(_longitude.asRadians()) && std::isnan(rhs._longitude.asRadians())
+                                     ? 0.0 * lsst::geom::degrees
+                                     : (_longitude - rhs._longitude).wrapCtr();
         return (deltaLongitude == 0.0 * lsst::geom::degrees) &&
-               (deltaLatitude == 0.0 * lsst::geom::degrees) && ((_elevation - rhs._elevation) == 0.0);
+               (deltaLatitude == 0.0 * lsst::geom::degrees) &&
+               ((std::isnan(_elevation) && std::isnan(rhs._elevation)) ||
+                (_elevation - rhs._elevation) == 0.0);
     }
     bool operator!=(Observatory const& rhs) const noexcept { return !(*this == rhs); }
 

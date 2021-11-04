@@ -22,6 +22,7 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
+#include <cmath>
 #include <sstream>
 
 #include "lsst/utils/hashCombine.h"
@@ -38,8 +39,14 @@ Weather::Weather(double airTemperature, double airPressure, double humidity)
 }
 
 bool Weather::operator==(Weather const& other) const noexcept {
-    return (_airTemperature == other.getAirTemperature() && _airPressure == other.getAirPressure() &&
-            _humidity == other.getHumidity());
+    // Weather may be initialized to NaN values as a placeholder, or to indicate "unknown".
+    bool tempMatch = (std::isnan(_airTemperature) && std::isnan(other.getAirTemperature())) ||
+                     _airTemperature == other.getAirTemperature();
+    bool presMatch = (std::isnan(_airPressure) && std::isnan(other.getAirPressure())) ||
+                     _airPressure == other.getAirPressure();
+    bool humiMatch =
+            (std::isnan(_humidity) && std::isnan(other.getHumidity())) || _humidity == other.getHumidity();
+    return (tempMatch && presMatch && humiMatch);
 }
 
 std::size_t Weather::hash_value() const noexcept {

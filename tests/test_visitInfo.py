@@ -143,7 +143,8 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
 
     def _testValueConstructor(self, data, localEra, hourAngle):
         visitInfo = makeVisitInfo(data)
-        self.assertEqual(visitInfo.getExposureId(), data.exposureId)
+        with self.assertWarns(FutureWarning):
+            self.assertEqual(visitInfo.getExposureId(), data.exposureId)
         self.assertEqual(visitInfo.getExposureTime(), data.exposureTime)
         self.assertEqual(visitInfo.getDarkTime(), data.darkTime)
         self.assertEqual(visitInfo.getDate(), data.date)
@@ -219,7 +220,8 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
         visitInfo = afwImage.VisitInfo.readFits(filePath)
 
         if version >= 0:
-            self.assertEqual(visitInfo.getExposureId(), data.exposureId)
+            with self.assertWarns(FutureWarning):
+                self.assertEqual(visitInfo.getExposureId(), data.exposureId)
             self.assertEqual(visitInfo.getExposureTime(), data.exposureTime)
             self.assertEqual(visitInfo.getDarkTime(), data.darkTime)
             self.assertEqual(visitInfo.getDate(), data.date)
@@ -321,7 +323,8 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
     def _testIsEmpty(self, visitInfo):
         """Test that visitInfo is all NaN, 0, or empty string, as appropriate.
         """
-        self.assertEqual(visitInfo.getExposureId(), 0)
+        with self.assertWarns(FutureWarning):
+            self.assertEqual(visitInfo.getExposureId(), 0)
         self.assertTrue(math.isnan(visitInfo.getExposureTime()))
         self.assertTrue(math.isnan(visitInfo.getDarkTime()))
         self.assertEqual(visitInfo.getDate(), DateTime())
@@ -348,6 +351,25 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(visitInfo.getInstrumentLabel(), "")
         self.assertEqual(visitInfo.getId(), 0)
 
+    def testEquals(self):
+        """Test that identical VisitInfo objects compare equal, even if some fields are NaN.
+        """
+        # objects with "equal state" should be equal
+        self.assertEqual(makeVisitInfo(self.data1), makeVisitInfo(self.data1))
+        self.assertEqual(makeVisitInfo(self.data2), makeVisitInfo(self.data2))
+        self.assertNotEqual(makeVisitInfo(self.data1), makeVisitInfo(self.data2))
+        self.assertEqual(afwImage.VisitInfo(), afwImage.VisitInfo())
+
+        # equality must be reflexive
+        info = makeVisitInfo(self.data1)
+        self.assertEqual(info, info)
+        info = makeVisitInfo(self.data2)
+        self.assertEqual(info, info)
+        info = afwImage.VisitInfo()
+        self.assertEqual(info, info)
+
+        # commutativity and transitivity difficult to test with this setup
+
     def testMetadataConstructor(self):
         """Test the metadata constructor
 
@@ -361,7 +383,8 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
 
         metadata = propertySetFromDict({"EXPID": data.exposureId})
         visitInfo = afwImage.VisitInfo(metadata)
-        self.assertEqual(visitInfo.getExposureId(), data.exposureId)
+        with self.assertWarns(FutureWarning):
+            self.assertEqual(visitInfo.getExposureId(), data.exposureId)
         self.assertTrue(math.isnan(visitInfo.getExposureTime()))
 
         metadata = propertySetFromDict({"EXPTIME": data.exposureTime})
@@ -492,7 +515,8 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
         self._testIsEmpty(visitInfo)
 
         visitInfo = afwImage.VisitInfo(exposureId=data.exposureId)
-        self.assertEqual(visitInfo.getExposureId(), data.exposureId)
+        with self.assertWarns(FutureWarning):
+            self.assertEqual(visitInfo.getExposureId(), data.exposureId)
         self.assertTrue(math.isnan(visitInfo.getExposureTime()))
 
         visitInfo = afwImage.VisitInfo(exposureTime=data.exposureTime)
@@ -569,6 +593,9 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
         self.assertIn("exposureTime=10.01", string)
         self.assertIn("darkTime=11.02", string)
         self.assertIn("rotType=1", string)
+
+        # Check that it at least doesn't throw
+        str(afwImage.VisitInfo())
 
     def testParallacticAngle(self):
         """Check that we get the same precomputed values for parallactic angle."""
