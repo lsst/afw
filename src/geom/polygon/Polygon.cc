@@ -121,7 +121,12 @@ void addSubSampledEdge(std::vector<LsstPoint>& vertices,  // Vector of points to
 /// @internal Calculate area of overlap between polygon and pixel
 double pixelOverlap(BoostPolygon const& poly, int const x, int const y) {
     std::vector<BoostPolygon> overlap;  // Overlap between pixel and polygon
-    LsstBox const pixel(lsst::geom::Point2D(x - 0.5, y - 0.5), lsst::geom::Point2D(x + 0.5, y + 0.5));
+    LsstBox const pixel(lsst::geom::Point2D(static_cast<double>(x) - 0.5, static_cast<double>(y) - 0.5),
+                        lsst::geom::Point2D(static_cast<double>(x) + 0.5, static_cast<double>(y) + 0.5));
+    // Note that the output of boost::geometry::intersection depends
+    // on values down to the precision limit, so minor variations
+    // in poly input can lead to surprisingly large variations in the
+    // output overlap regions and area computation.
     boost::geometry::intersection(poly, pixel, overlap);
     double area = 0.0;
     for (auto const &i : overlap) {

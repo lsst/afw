@@ -255,18 +255,27 @@ class PolygonTest(lsst.utils.tests.TestCase):
         """Test Polygon.createImage"""
         if display:
             import lsst.afw.display as afwDisplay
+
         for i, num in enumerate(range(3, 30)):
-            poly = self.polygon(num, 25, 75, 75)
-            box = lsst.geom.Box2I(lsst.geom.Point2I(15, 15),
-                                  lsst.geom.Extent2I(115, 115))
-            image = poly.createImage(box)
-            if display:
-                disp = afwDisplay.Display(frame=i + 1)
-                disp.mtv(image, title=f"Polygon nside={num}")
-                for p1, p2 in poly.getEdges():
-                    disp.line((p1, p2))
-            self.assertAlmostEqual(
-                image.getArray().sum()/poly.calculateArea(), 1.0, 6)
+            # We need to test at different centers, because the
+            # boost::intersection algorithm depends sensitively on
+            # input floating-point values, and you will get different
+            # aliasing depending on the central pixel value when
+            # generating the polygon from numpy values.
+            for cent in [-75, -50, -25, 0, 25, 50, 75]:
+                poly = self.polygon(num, 25, cent, cent)
+                box = lsst.geom.Box2I(lsst.geom.Point2I(cent - 60, cent - 60),
+                                      lsst.geom.Extent2I(115, 115))
+                image = poly.createImage(box)
+                if display:
+                    disp = afwDisplay.Display(frame=i + 1)
+                    disp.mtv(image, title=f"Polygon nside={num}")
+                    for p1, p2 in poly.getEdges():
+                        disp.line((p1, p2))
+                # Some computations of the image area have such large aliasing
+                # in boost::intersection that the precision required here is 0.025.
+                self.assertFloatsAlmostEqual(
+                    image.getArray().sum(), poly.calculateArea(), rtol=0.025)
 
     def testTransform(self):
         """Test constructor for Polygon involving transforms"""
