@@ -22,6 +22,7 @@
  */
 
 #include "pybind11/pybind11.h"
+#include "pybind11/stl.h"
 #include "lsst/utils/python.h"
 
 #include "ndarray/pybind11.h"
@@ -283,6 +284,7 @@ void declareExposureFitsReader(lsst::utils::python::WrapperCollection &wrappers)
         declareCommonMethods(cls);
         declareMultiPlaneMethods(cls);
         cls.def("readSerializationVersion", &ExposureFitsReader::readSerializationVersion);
+        cls.def("readExposureId", &ExposureFitsReader::readExposureId);
         cls.def("readMetadata", &ExposureFitsReader::readMetadata);
         cls.def("readWcs", &ExposureFitsReader::readWcs);
         cls.def("readFilter", &ExposureFitsReader::readFilter);
