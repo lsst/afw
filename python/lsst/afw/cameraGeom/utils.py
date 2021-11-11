@@ -50,6 +50,8 @@ from lsst.afw.cameraGeom import DetectorType
 import lsst.afw.display as afwDisplay
 import lsst.afw.display.utils as displayUtils
 
+_LOG = lsst.log.Log.getLogger(__name__)
+
 
 def prepareWcsData(wcs, amp, isTrimmed=True):
     """Put Wcs from an Amp image into CCD coordinates
@@ -451,7 +453,7 @@ class ButlerImage(FakeImageDataSource):
     def getCcdImage(self, ccd, imageFactory=afwImage.ImageF, binSize=1, asMaskedImage=False):
         """Return an image of the specified ccd, and also the (possibly updated) ccd"""
 
-        log = lsst.log.Log.getLogger("afw.cameraGeom.utils.ButlerImage")
+        log = _LOG.getChild("ButlerImage")
 
         if self.isTrimmed:
             bbox = ccd.getBBox()
@@ -485,7 +487,7 @@ class ButlerImage(FakeImageDataSource):
                     # Lost by jupyterlab.
                     print(f"Reading {ccd.getId()}: {err}")
 
-                log.warn(f"Reading {ccd.getId()}: {err}")
+                log.warning("Reading %s: %s", ccd.getId(), err)
 
         if im is None:
             return self._prepareImage(ccd, imageFactory(*bbox.getDimensions()), binSize), ccd
@@ -502,7 +504,7 @@ class ButlerImage(FakeImageDataSource):
                 im = self.callback(im, ccd, imageSource=self)
             except Exception as e:
                 if self.verbose:
-                    log.error(f"callback failed: {e}")
+                    log.error("callback failed: %s", e)
                 im = imageFactory(*bbox.getDimensions())
             else:
                 allowRotate = False     # the callback was responsible for any rotations
@@ -884,7 +886,7 @@ def makeImageFromCamera(camera, detectorNameList=None, background=numpy.nan, buf
     image : `lsst.afw.image.Image`
         Image of the entire camera.
     """
-    log = lsst.log.Log.getLogger("afw.cameraGeom.utils.makeImageFromCamera")
+    log = _LOG.getChild("makeImageFromCamera")
 
     if detectorNameList is None:
         ccdList = camera
@@ -919,7 +921,8 @@ def makeImageFromCamera(camera, detectorNameList=None, background=numpy.nan, buf
         try:
             imView[:] = im
         except pexExceptions.LengthError as e:
-            log.error(f"Unable to fit image for detector \"{det.getName()}\" into image of camera: {e}")
+            log.error("Unable to fit image for detector \"%s\" into image of camera: %s",
+                      det.getName(), e)
 
     return camIm
 

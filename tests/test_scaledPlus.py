@@ -28,7 +28,7 @@ import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 from lsst.log import Log
 
-Log.getLogger("afw.image.Mask").setLevel(Log.INFO)
+Log.getLogger("lsst.afw.image.Mask").setLevel(Log.INFO)
 
 
 class ScaledPlus(lsst.utils.tests.TestCase):

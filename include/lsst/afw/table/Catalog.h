@@ -774,7 +774,7 @@ typename CatalogT<RecordT>::iterator CatalogT<RecordT>::find(typename Field<T>::
         if (i.base() == end()) {
             return end();
         }
-        LOGL_DEBUG("afw.table.Catalog", "Catalog is not sorted by the key. Finding a record may be slow.");
+        LOGL_DEBUG("lsst.afw.table.Catalog", "Catalog is not sorted by the key. Finding a record may be slow.");
     }
     return i.base();
 }
@@ -795,7 +795,7 @@ typename CatalogT<RecordT>::const_iterator CatalogT<RecordT>::find(typename Fiel
         if (i.base() == end()) {
             return end();
         }
-        LOGL_DEBUG("afw.table.Catalog", "Catalog is not sorted by the key. Finding a record may be slow.");
+        LOGL_DEBUG("lsst.afw.table.Catalog", "Catalog is not sorted by the key. Finding a record may be slow.");
     }
     return i.base();
 }

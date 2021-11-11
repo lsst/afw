@@ -33,7 +33,7 @@ import lsst.afw.math as afwMath
 from lsst.log import Log
 
 # Change the level to Log.DEBUG to see debug messages
-Log.getLogger("afw.math.KernelFormatter").setLevel(Log.INFO)
+Log.getLogger("lsst.afw.math.KernelFormatter").setLevel(Log.INFO)
 
 
 testPath = os.path.abspath(os.path.dirname(__file__))

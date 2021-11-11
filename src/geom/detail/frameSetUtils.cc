@@ -358,7 +358,7 @@ ast::FitsChan getFitsChanFromPropertyList(daf::base::PropertySet& metadata,
                     fc.setFitsF(name, value);
                 } else {
                     // Treat it like an undefined value but warn about it
-                    LOGLS_WARN("afw.geom.frameSetUtils",
+                    LOGLS_WARN("lsst.afw.geom.frameSetUtils",
                                boost::format("Found NaN in metadata item '%s'") % name);
                 }
             } else if (type == typeid(std::string)) {

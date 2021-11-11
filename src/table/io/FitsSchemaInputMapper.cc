@@ -840,7 +840,7 @@ Schema FitsSchemaInputMapper::finalize() {
             if (reader) {
                 _impl->readers.push_back(std::move(reader));
             } else {
-                LOGLS_WARN("afw.FitsSchemaInputMapper", "Format " << iter->tform << " for column "
+                LOGLS_WARN("lsst.afw.FitsSchemaInputMapper", "Format " << iter->tform << " for column "
                                                                   << iter->ttype
                                                                   << " not supported; skipping.");
             }

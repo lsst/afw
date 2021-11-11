@@ -33,9 +33,9 @@ import lsst.afw.math as afwMath
 from lsst.log import Log
 
 # Change the level to Log.DEBUG to see debug messages
-Log.getLogger("afw.image.Mask").setLevel(Log.INFO)
-Log.getLogger("TRACE3.afw.math.warp").setLevel(Log.INFO)
-Log.getLogger("TRACE4.afw.math.warp").setLevel(Log.INFO)
+Log.getLogger("lsst.afw.image.Mask").setLevel(Log.INFO)
+Log.getLogger("TRACE3.lsst.afw.math.warp").setLevel(Log.INFO)
+Log.getLogger("TRACE4.lsst.afw.math.warp").setLevel(Log.INFO)
 
 try:
     afwdataDir = lsst.utils.getPackageDir("afwdata")

@@ -57,10 +57,10 @@ void convolveWithInterpolation(OutImageT &outImage, InImageT const &inImage, mat
     lsst::geom::Box2I goodBBox = kernel.shrinkBBox(fullBBox);
     KernelImagesForRegion goodRegion(KernelImagesForRegion(kernel.clone(), goodBBox, inImage.getXY0(),
                                                            convolutionControl.getDoNormalize()));
-    LOGL_DEBUG("TRACE5.afw.math.convolve.convolveWithInterpolation",
+    LOGL_DEBUG("TRACE5.lsst.afw.math.convolve.convolveWithInterpolation",
                "convolveWithInterpolation: full bbox minimum=(%d, %d), extent=(%d, %d)", fullBBox.getMinX(),
                fullBBox.getMinY(), fullBBox.getWidth(), fullBBox.getHeight());
-    LOGL_DEBUG("TRACE5.afw.math.convolve.convolveWithInterpolation",
+    LOGL_DEBUG("TRACE5.lsst.afw.math.convolve.convolveWithInterpolation",
                "convolveWithInterpolation: goodRegion bbox minimum=(%d, %d), extent=(%d, %d)",
                goodRegion.getBBox().getMinX(), goodRegion.getBBox().getMinY(),
                goodRegion.getBBox().getWidth(), goodRegion.getBBox().getHeight());
@@ -68,14 +68,14 @@ void convolveWithInterpolation(OutImageT &outImage, InImageT const &inImage, mat
     // divide good region into subregions small enough to interpolate over
     int nx = 1 + (goodBBox.getWidth() / convolutionControl.getMaxInterpolationDistance());
     int ny = 1 + (goodBBox.getHeight() / convolutionControl.getMaxInterpolationDistance());
-    LOGL_DEBUG("TRACE3.afw.math.convolve.convolveWithInterpolation",
+    LOGL_DEBUG("TRACE3.lsst.afw.math.convolve.convolveWithInterpolation",
                "convolveWithInterpolation: divide into %d x %d subregions", nx, ny);
 
     ConvolveWithInterpolationWorkingImages workingImages(kernel.getDimensions());
     RowOfKernelImagesForRegion regionRow(nx, ny);
     while (goodRegion.computeNextRow(regionRow)) {
         for (auto const &rgnIter : regionRow) {
-            LOGL_DEBUG("TRACE5.afw.math.convolve.convolveWithInterpolation",
+            LOGL_DEBUG("TRACE5.lsst.afw.math.convolve.convolveWithInterpolation",
                        "convolveWithInterpolation: bbox minimum=(%d, %d), extent=(%d, %d)",
                        rgnIter->getBBox().getMinX(), rgnIter->getBBox().getMinY(),
                        rgnIter->getBBox().getWidth(), rgnIter->getBBox().getHeight());

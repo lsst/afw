@@ -38,7 +38,7 @@
 namespace pexExcept = lsst::pex::exceptions;
 
 namespace {
-    LOG_LOGGER _log = LOG_GET("afw.math.Stack");
+    LOG_LOGGER _log = LOG_GET("lsst.afw.math.Stack");
 }
 
 namespace lsst {

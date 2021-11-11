@@ -90,7 +90,7 @@ void checkExtType(ImageBaseFitsReader const & reader, std::shared_ptr<daf::base:
         }
         metadata->remove("EXTTYPE");
     } catch (pex::exceptions::NotFoundError const&) {
-        LOGL_WARN("afw.image.MaskedImageFitsReader", "Expected extension type not found: %s",
+        LOGL_WARN("lsst.afw.image.MaskedImageFitsReader", "Expected extension type not found: %s",
                   expected.c_str());
     }
 }
@@ -186,7 +186,7 @@ MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> MaskedImageFitsReader::read
     // If the mask and/or variance is unreadable, we log a warning and return
     // (blank) defaults.
 
-    LOG_LOGGER _log = LOG_GET("afw.image.MaskedImageFitsReader");
+    LOG_LOGGER _log = LOG_GET("lsst.afw.image.MaskedImageFitsReader");
 
     enum class Hdu { Primary = 0, Image, Mask, Variance };
 

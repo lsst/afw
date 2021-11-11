@@ -37,7 +37,7 @@
 using namespace std::string_literals;
 
 namespace {
-LOG_LOGGER _log = LOG_GET("afw.image.ExposureInfo");
+LOG_LOGGER _log = LOG_GET("lsst.afw.image.ExposureInfo");
 
 using MapClass = lsst::afw::image::detail::StorableMap;
 }  // namespace

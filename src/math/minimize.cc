@@ -210,7 +210,7 @@ FitResults minimize(Function1<ReturnT> const &function, std::vector<double> cons
     fitResults.chiSq = min.Fval();
     fitResults.isValid = min.IsValid() && std::isfinite(fitResults.chiSq);
     if (!fitResults.isValid) {
-        LOGL_WARN("afw.math.minimize", "Fit failed to converge");
+        LOGL_WARN("lsst.afw.math.minimize", "Fit failed to converge");
     }
 
     for (unsigned int i = 0; i < nParameters; ++i) {
@@ -267,7 +267,7 @@ FitResults minimize(Function2<ReturnT> const &function, std::vector<double> cons
     fitResults.chiSq = min.Fval();
     fitResults.isValid = min.IsValid() && std::isfinite(fitResults.chiSq);
     if (!fitResults.isValid) {
-        LOGL_WARN("afw.math.minimize", "Fit failed to converge");
+        LOGL_WARN("lsst.afw.math.minimize", "Fit failed to converge");
     }
 
     for (unsigned int i = 0; i < nParameters; ++i) {

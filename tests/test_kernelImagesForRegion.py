@@ -32,7 +32,7 @@ import lsst.afw.math.detail as mathDetail
 from lsst.log import Log
 
 # Change the level to Log.DEBUG to see debug messages
-Log.getLogger("TRACE5.afw.math.convolve").setLevel(Log.INFO)
+Log.getLogger("TRACE5.lsst.afw.math.convolve").setLevel(Log.INFO)
 
 LocNameDict = {
     mathDetail.KernelImagesForRegion.BOTTOM_LEFT: "BOTTOM_LEFT",

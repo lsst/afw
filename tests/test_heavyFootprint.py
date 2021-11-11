@@ -41,7 +41,7 @@ import lsst.afw.geom as afwGeom
 import lsst.afw.display as afwDisplay
 from lsst.log import Log
 
-Log.getLogger("afw.image.Mask").setLevel(Log.INFO)
+Log.getLogger("lsst.afw.image.Mask").setLevel(Log.INFO)
 afwDisplay.setDefaultMaskTransparency(75)
 
 try:

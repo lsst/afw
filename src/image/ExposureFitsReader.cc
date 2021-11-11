@@ -41,7 +41,7 @@ namespace image {
 
 namespace {
 
-LOG_LOGGER _log = LOG_GET("afw.image.fits.ExposureFitsReader");
+LOG_LOGGER _log = LOG_GET("lsst.afw.image.fits.ExposureFitsReader");
 
 template <typename T, std::size_t N>
 bool _contains(std::array<T, N> const& array, T const& value) {

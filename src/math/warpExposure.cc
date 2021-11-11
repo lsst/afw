@@ -485,14 +485,14 @@ int warpImage(DestImageT &destImage, SrcImageT const &srcImage,
     // Get the source MaskedImage and a pixel accessor to it.
     int const srcWidth = srcImage.getWidth();
     int const srcHeight = srcImage.getHeight();
-    LOGL_DEBUG("TRACE2.afw.math.warp", "source image width=%d; height=%d", srcWidth, srcHeight);
+    LOGL_DEBUG("TRACE2.lsst.afw.math.warp", "source image width=%d; height=%d", srcWidth, srcHeight);
 
     int const destWidth = destImage.getWidth();
     int const destHeight = destImage.getHeight();
-    LOGL_DEBUG("TRACE2.afw.math.warp", "remap image width=%d; height=%d", destWidth, destHeight);
+    LOGL_DEBUG("TRACE2.lsst.afw.math.warp", "remap image width=%d; height=%d", destWidth, destHeight);
 
     // Set each pixel of destExposure's MaskedImage
-    LOGL_DEBUG("TRACE3.afw.math.warp", "Remapping masked image");
+    LOGL_DEBUG("TRACE3.lsst.afw.math.warp", "Remapping masked image");
 
     int const maxCol = destWidth - 1;
     int const maxRow = destHeight - 1;

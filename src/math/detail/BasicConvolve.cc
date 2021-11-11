@@ -144,13 +144,13 @@ void basicConvolve(OutImageT& convolvedImage, InImageT const& inImage, math::Ker
     // dispatch the correct version of basicConvolve. The case that fails is convolving with a kernel
     // obtained from a pointer or reference to a Kernel (base class), e.g. as used in LinearCombinationKernel.
     if (IS_INSTANCE(kernel, math::DeltaFunctionKernel)) {
-        LOGL_DEBUG("TRACE3.afw.math.convolve.basicConvolve",
+        LOGL_DEBUG("TRACE3.lsst.afw.math.convolve.basicConvolve",
                    "generic basicConvolve: dispatch to DeltaFunctionKernel basicConvolve");
         basicConvolve(convolvedImage, inImage, *dynamic_cast<math::DeltaFunctionKernel const*>(&kernel),
                       convolutionControl);
         return;
     } else if (IS_INSTANCE(kernel, math::SeparableKernel)) {
-        LOGL_DEBUG("TRACE3.afw.math.convolve.basicConvolve",
+        LOGL_DEBUG("TRACE3.lsst.afw.math.convolve.basicConvolve",
                    "generic basicConvolve: dispatch to SeparableKernel basicConvolve");
         basicConvolve(convolvedImage, inImage, *dynamic_cast<math::SeparableKernel const*>(&kernel),
                       convolutionControl);
@@ -166,13 +166,13 @@ void basicConvolve(OutImageT& convolvedImage, InImageT const& inImage, math::Ker
     // OK, use general (and slower) form
     if (kernel.isSpatiallyVarying() && (convolutionControl.getMaxInterpolationDistance() > 1)) {
         // use linear interpolation
-        LOGL_DEBUG("TRACE2.afw.math.convolve.basicConvolve",
+        LOGL_DEBUG("TRACE2.lsst.afw.math.convolve.basicConvolve",
                    "generic basicConvolve: using linear interpolation");
         convolveWithInterpolation(convolvedImage, inImage, kernel, convolutionControl);
 
     } else {
         // use brute force
-        LOGL_DEBUG("TRACE2.afw.math.convolve.basicConvolve", "generic basicConvolve: using brute force");
+        LOGL_DEBUG("TRACE2.lsst.afw.math.convolve.basicConvolve", "generic basicConvolve: using brute force");
         convolveWithBruteForce(convolvedImage, inImage, kernel, convolutionControl);
     }
 }
@@ -193,7 +193,7 @@ void basicConvolve(OutImageT& convolvedImage, InImageT const& inImage,
     int const inStartX = kernel.getPixel().getX();
     int const inStartY = kernel.getPixel().getY();
 
-    LOGL_DEBUG("TRACE2.afw.math.convolve.basicConvolve", "DeltaFunctionKernel basicConvolve");
+    LOGL_DEBUG("TRACE2.lsst.afw.math.convolve.basicConvolve", "DeltaFunctionKernel basicConvolve");
 
     for (int i = 0; i < cnvHeight; ++i) {
         typename InImageT::x_iterator inPtr = inImage.x_at(inStartX, i + inStartY);
@@ -211,7 +211,7 @@ void basicConvolve(OutImageT& convolvedImage, InImageT const& inImage,
                    math::ConvolutionControl const& convolutionControl) {
     if (!kernel.isSpatiallyVarying()) {
         // use the standard algorithm for the spatially invariant case
-        LOGL_DEBUG("TRACE2.afw.math.convolve.basicConvolve",
+        LOGL_DEBUG("TRACE2.lsst.afw.math.convolve.basicConvolve",
                    "basicConvolve for LinearCombinationKernel: spatially invariant; using brute force");
         return convolveWithBruteForce(convolvedImage, inImage, kernel, convolutionControl.getDoNormalize());
     } else {
@@ -229,11 +229,11 @@ void basicConvolve(OutImageT& convolvedImage, InImageT const& inImage,
             refKernelPtr = kernel.clone();
         }
         if (convolutionControl.getMaxInterpolationDistance() > 1) {
-            LOGL_DEBUG("TRACE2.afw.math.convolve.basicConvolve",
+            LOGL_DEBUG("TRACE2.lsst.afw.math.convolve.basicConvolve",
                        "basicConvolve for LinearCombinationKernel: using interpolation");
             return convolveWithInterpolation(convolvedImage, inImage, *refKernelPtr, convolutionControl);
         } else {
-            LOGL_DEBUG("TRACE2.afw.math.convolve.basicConvolve",
+            LOGL_DEBUG("TRACE2.lsst.afw.math.convolve.basicConvolve",
                        "basicConvolve for LinearCombinationKernel: maxInterpolationError < 0; using brute "
                        "force");
             return convolveWithBruteForce(convolvedImage, inImage, *refKernelPtr,
@@ -263,7 +263,7 @@ void basicConvolve(OutImageT& convolvedImage, InImageT const& inImage, math::Sep
     KernelVector kernelYVec(kernel.getHeight());
 
     if (kernel.isSpatiallyVarying()) {
-        LOGL_DEBUG("TRACE2.afw.math.convolve.basicConvolve",
+        LOGL_DEBUG("TRACE2.lsst.afw.math.convolve.basicConvolve",
                    "SeparableKernel basicConvolve: kernel is spatially varying");
 
         for (int cnvY = goodBBox.getMinY(); cnvY <= goodBBox.getMaxY(); ++cnvY) {
@@ -295,7 +295,7 @@ void basicConvolve(OutImageT& convolvedImage, InImageT const& inImage, math::Sep
         // This is circular buffer along y (to avoid shifting pixels before setting each new row);
         // so for each new row the kernel y vector is rotated to match the order of the x-convolved data.
 
-        LOGL_DEBUG("TRACE2.afw.math.convolve.basicConvolve",
+        LOGL_DEBUG("TRACE2.lsst.afw.math.convolve.basicConvolve",
                    "SeparableKernel basicConvolve: kernel is spatially invariant");
 
         kernel.computeVectors(kernelXVec, kernelYVec, convolutionControl.getDoNormalize());
@@ -383,7 +383,7 @@ void convolveWithBruteForce(OutImageT& convolvedImage, InImageT const& inImage, 
     KernelXYLocator const kernelLoc = kernelImage.xy_at(0, 0);
 
     if (kernel.isSpatiallyVarying()) {
-        LOGL_DEBUG("TRACE4.afw.math.convolve.convolveWithBruteForce",
+        LOGL_DEBUG("TRACE4.lsst.afw.math.convolve.convolveWithBruteForce",
                    "convolveWithBruteForce: kernel is spatially varying");
 
         for (int cnvY = cnvStartY; cnvY != cnvEndY; ++cnvY) {
@@ -402,7 +402,7 @@ void convolveWithBruteForce(OutImageT& convolvedImage, InImageT const& inImage, 
             }
         }
     } else {
-        LOGL_DEBUG("TRACE4.afw.math.convolve.convolveWithBruteForce",
+        LOGL_DEBUG("TRACE4.lsst.afw.math.convolve.convolveWithBruteForce",
                    "convolveWithBruteForce: kernel is spatially invariant");
 
         (void)kernel.computeImage(kernelImage, doNormalize);

@@ -95,7 +95,7 @@ double Threshold::getValue(ImageT const& image) const {
         math::Statistics stats = math::makeStatistics(image, math::STDEVCLIP);
         double const sd = stats.getValue(math::STDEVCLIP);
 
-        LOGL_DEBUG("afw.detection.threshold", "St. Dev = %g", sd);
+        LOGL_DEBUG("lsst.afw.detection.threshold", "St. Dev = %g", sd);
 
         if (_type == VARIANCE) {
             param = sd * sd;
