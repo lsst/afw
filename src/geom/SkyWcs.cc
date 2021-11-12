@@ -367,6 +367,7 @@ std::string SkyWcs::toString() const {
     os << delimiter << "Sky Origin: " << getSkyOrigin();
     os << delimiter << "Pixel Origin: " << getPixelOrigin();
     os << delimiter << "Pixel Scale: " << getPixelScale().asArcseconds() << " arcsec/pixel";
+    os << delimiter << "EXTRA";
     return os.str();
 }
 
