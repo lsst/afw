@@ -490,9 +490,14 @@ public:
 
     /// @copydoc BaseColumnView::make
     template <typename InputIterator>
-    static SourceColumnViewT make(std::shared_ptr<Table> const &table, InputIterator first,
-                                  InputIterator last) {
-        return SourceColumnViewT(BaseColumnView::make(table, first, last));
+    static std::optional<SourceColumnViewT> make(std::shared_ptr<Table> const &table, InputIterator first,
+                                                 InputIterator last) {
+        auto base = BaseColumnView::make(table, first, last);
+        if (base) {
+            return SourceColumnViewT(base.value());
+        } else {
+            return std::nullopt;
+        }
     }
 
     SourceColumnViewT(SourceColumnViewT const &) = default;
