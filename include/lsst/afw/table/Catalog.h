@@ -150,9 +150,10 @@ public:
     }
 
     /// Shallow copy constructor.
-    CatalogT(CatalogT const& other) : _table(other._table), _internal(other._internal) {}
-    // Delegate to copy constructor for backward compatibility
-    CatalogT(CatalogT&& other) : CatalogT(other) {}
+    CatalogT(CatalogT const& other) = default;
+
+    /// Shallow move constructor.
+    CatalogT(CatalogT&& other) = default;
 
     ~CatalogT() = default;
 
@@ -167,15 +168,10 @@ public:
             : _table(other.getTable()), _internal(other.begin().base(), other.end().base()) {}
 
     /// Shallow assigment.
-    CatalogT& operator=(CatalogT const& other) {
-        if (&other != this) {
-            _table = other._table;
-            _internal = other._internal;
-        }
-        return *this;
-    }
-    // Delegate to copy assignment for backward compatibility
-    CatalogT& operator=(CatalogT&& other) { return *this = other; }
+    CatalogT& operator=(CatalogT const& other) = default;
+
+    /// Shallow move asignment.
+    CatalogT& operator=(CatalogT&& other) = default;
 
     /**
      *  Return the subset of a catalog corresponding to the True values of the given mask array.
