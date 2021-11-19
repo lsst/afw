@@ -662,19 +662,26 @@ public:
 
     //@{
     /**
-     *  Return a reference to the internal vector-of-shared_ptr
+     *  Access to the internal vector of shared_ptr.
      *
-     *  While in most cases it is more convenient to use the Catalog's iterators, which dereference
-     *  directly to Record objects (and hence allow iter->method() rather than (**iter).method()),
-     *  direct access to the underlying vector-of-shared_ptr is provided here to allow complete use
-     *  of the C++ STL.  In particular, in order to use a mutating STL algorithm on a Catalog in
-     *  such a way that Records are shallow-copied (i.e. shared_ptr::operator= is invoked instead
-     *  of Record::operator=), those algorithms should be called on the iterators of these internal
-     *  containers.  When an algorithm should be called in such a way that records are deep-copied,
-     *  the regular Catalog iterators should be used.
+     *  While in most cases it is more convenient to use the Catalog's
+     *  iterators, which dereference directly to Record objects (and hence
+     *  allow iter->method() rather than (**iter).method()), direct access to
+     *  the underlying vector-of-shared_ptr is provided here to allow complete
+     *  use of the C++ STL.  In particular, in order to use a mutating STL
+     *  algorithm on a Catalog in such a way that Records are shallow-copied
+     *  (i.e. shared_ptr::operator= is invoked instead of Record::operator=),
+     *  those algorithms should be called on the iterators of these internal
+     *  containers.  When an algorithm should be called in such a way that
+     *  records are deep-copied, the regular Catalog iterators should be used.
+     *
+     *  While a direct const view is available via `getInternal`, mutations
+     *  must go through `drainIntoInternal` and `assignInternal`, which empty
+     *  the Catalog of records and fully repopulate it (respectively).
      */
-    Internal& getInternal() { return _internal; }
-    Internal const& getInternal() const { return _internal; }
+    Internal const & getInternal() const { return _internal; }
+    Internal drainIntoInternal() { return std::move(_internal); }
+    void assignInternal(Internal && internal) { _internal = std::move(internal); }
     //@}
 
 private:
