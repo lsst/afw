@@ -2,6 +2,7 @@
 #ifndef AFW_TABLE_Catalog_h_INCLUDED
 #define AFW_TABLE_Catalog_h_INCLUDED
 
+#include <variant>
 #include <type_traits>
 #include <vector>
 
@@ -20,6 +21,12 @@
 namespace lsst {
 namespace afw {
 namespace table {
+
+// Tag classes for remembering whether a catalog is contiguous;
+// the "definitely contiguous" variant is a ColumnView.
+class _NotContiguous {};
+class _MaybeContiguous {};
+
 
 /**
  *  Iterator class for CatalogT.
@@ -367,20 +374,46 @@ public:
     /**
      *  Return a ColumnView of this catalog's records.
      *
-     *  Will throw RuntimeError if records are not contiguous.
+     *  This method is non-const because the ColumnView is cached between
+     *  calls.  Given expected usage, making the method non-const seems better
+     *  that making the cache a mutable member.
+     *
+     *  Will return an empty optional if records are not contiguous;
      */
-    ColumnView getColumnView() const {
-        if (std::is_const<RecordT>::value) {
+    std::optional<ColumnView> getColumnView() {
+        if constexpr (std::is_const<RecordT>::value) {
             throw LSST_EXCEPT(
                     pex::exceptions::LogicError,
                     "Cannot get a column view from a CatalogT<RecordT const> (as column views are always "
                     "non-const views).");
         }
-        return ColumnView::make(_table, begin(), end());
+        // We cache but return by value because ColumnView is actually a very
+        // lightweight data structure; it just takes a long time to construct
+        // because we have to check that the catalog is actually contiguous.
+        if (std::holds_alternative<_MaybeContiguous>(_columns)) {
+            auto columns = ColumnView::make(_table, begin(), end());
+            if (columns) {
+                _columns = columns.value();
+            } else {
+                _columns = _NotContiguous{};
+            }
+        }
+        auto result_ptr = std::get_if<ColumnView>(&_columns);
+        if (result_ptr) {
+            return std::make_optional<ColumnView>(*result_ptr);
+        } else {
+            return std::nullopt;
+        }
     }
 
-    /// Return true if all records are contiguous.
-    bool isContiguous() const { return ColumnView::isRangeContiguous(_table, begin(), end()); }
+    /**
+     *  Return true if all records are contiguous.
+     *
+     *  This method is non-const so we can cache the result.
+     */
+    bool isContiguous() {
+        return static_cast<bool>(getColumnView());
+    }
 
     //@{
     /**
@@ -429,6 +462,7 @@ public:
     /// Change the size of the catalog, removing or adding empty records as needed.
     void resize(size_type n) {
         size_type old = size();
+        _columns = _MaybeContiguous{};
         _internal.resize(n);
         if (old < n) {
             _table->preallocate(n - old);
@@ -454,7 +488,10 @@ public:
     std::shared_ptr<RecordT> const get(size_type i) const { return _internal[i]; }
 
     /// Set the record at index i to a pointer.
-    void set(size_type i, std::shared_ptr<RecordT> const& p) { _internal[i] = p; }
+    void set(size_type i, std::shared_ptr<RecordT> const& p) {
+        _columns = _MaybeContiguous{};
+        _internal[i] = p;
+    }
 
     /**
      *  Replace the contents of the table with an iterator range.
@@ -470,21 +507,29 @@ public:
     /// Add a copy of the given record to the end of the catalog.
     void push_back(Record const& r) {
         std::shared_ptr<RecordT> p = _table->copyRecord(r);
+        _columns = _MaybeContiguous{};
         _internal.push_back(p);
     }
 
     /// Add the given record to the end of the catalog without copying.
-    void push_back(std::shared_ptr<RecordT> const& p) { _internal.push_back(p); }
+    void push_back(std::shared_ptr<RecordT> const& p) {
+        _columns = _MaybeContiguous{};
+        _internal.push_back(p);
+    }
 
     /// Create a new record, add it to the end of the catalog, and return a pointer to it.
     std::shared_ptr<RecordT> addNew() {
         std::shared_ptr<RecordT> r = _table->makeRecord();
+        _columns = _MaybeContiguous{};
         _internal.push_back(r);
         return r;
     }
 
     /// Remove the last record in the catalog
-    void pop_back() { _internal.pop_back(); }
+    void pop_back() {
+        _columns = _MaybeContiguous{};
+        _internal.pop_back();
+    }
 
     /// Deep-copy the catalog using a cloned table.
     CatalogT copy() const { return CatalogT(getTable()->clone(), begin(), end(), true); }
@@ -543,19 +588,25 @@ public:
     /// Insert a copy of the given record at the given position.
     iterator insert(iterator pos, Record const& r) {
         std::shared_ptr<RecordT> p = _table->copyRecord(r);
+        _columns = _MaybeContiguous{};
         return iterator(_internal.insert(pos.base(), p));
     }
 
     /// Insert the given record at the given position without copying.
     iterator insert(iterator pos, std::shared_ptr<RecordT> const& p) {
+        _columns = _MaybeContiguous{};
         return iterator(_internal.insert(pos.base(), p));
     }
 
     /// Erase the record pointed to by pos, and return an iterator the next record.
-    iterator erase(iterator pos) { return iterator(_internal.erase(pos.base())); }
+    iterator erase(iterator pos) {
+        _columns = _MaybeContiguous{};
+        return iterator(_internal.erase(pos.base()));
+    }
 
     /// Erase the records in the range [first, last).
     iterator erase(iterator first, iterator last) {
+        _columns = _MaybeContiguous{};
         return iterator(_internal.erase(first.base(), last.base()));
     }
 
@@ -566,7 +617,10 @@ public:
     }
 
     /// Remove all records from the catalog.
-    void clear() { _internal.clear(); }
+    void clear() {
+        _columns = _MaybeContiguous{};
+        _internal.clear();
+    }
 
     /// Return true if the catalog is in ascending order according to the given key.
     template <typename T>
@@ -670,8 +724,14 @@ public:
      *  the Catalog of records and fully repopulate it (respectively).
      */
     Internal const & getInternal() const { return _internal; }
-    Internal drainIntoInternal() { return std::move(_internal); }
-    void assignInternal(Internal && internal) { _internal = std::move(internal); }
+    Internal drainIntoInternal() {
+        _columns = _MaybeContiguous{};
+        return std::move(_internal);
+    }
+    void assignInternal(Internal && internal) {
+        _columns = _MaybeContiguous{};
+        _internal = std::move(internal);
+    }
     //@}
 
 private:
@@ -687,6 +747,7 @@ private:
 
     std::shared_ptr<Table> _table;
     Internal _internal;
+    std::variant<_MaybeContiguous, _NotContiguous, ColumnView> _columns;
 };
 
 namespace detail {
@@ -738,6 +799,7 @@ template <typename RecordT>
 template <typename Compare>
 void CatalogT<RecordT>::sort(Compare cmp) {
     detail::ComparisonAdaptor<RecordT, Compare> f = {cmp};
+    _columns = _MaybeContiguous{};
     std::stable_sort(_internal.begin(), _internal.end(), f);
 }
 
@@ -752,6 +814,7 @@ template <typename RecordT>
 template <typename T>
 void CatalogT<RecordT>::sort(Key<T> const& key) {
     detail::KeyComparisonFunctor<RecordT, T> f = {key};
+    _columns = _MaybeContiguous{};
     return sort(f);
 }
 

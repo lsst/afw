@@ -24,6 +24,7 @@
 #define AFW_TABLE_PYTHON_CATALOG_H_INCLUDED
 
 #include "pybind11/pybind11.h"
+#include "pybind11/stl.h"
 
 #include "lsst/utils/python.h"
 #include "lsst/afw/table/BaseColumnView.h"
@@ -211,22 +212,36 @@ PyCatalog<Record> declareCatalog(utils::python::WrapperCollection &wrappers, std
                 cls.def("__len__", &Catalog::size);
                 cls.def("resize", &Catalog::resize);
 
-                // Use private names for the following so the public Python method
-                // can manage the _column cache
-                cls.def("_getColumnView", &Catalog::getColumnView);
-                cls.def("_addNew", &Catalog::addNew);
+                // Trying to get a column view of a noncontiguous catalog is
+                // an error in Python for backwards-compatibility reasons
+                // (it's safer to change the C++ because it's less likely to
+                // have been used outside these wrappers, and if it was, it'd
+                // be an obvious compile failure).
+                auto py_get_columns = [](Catalog & self) {
+                    auto columns = self.getColumnView();
+                    if (!columns) {
+                        throw LSST_EXCEPT(
+                            pex::exceptions::RuntimeError,
+                            "Record data is not contiguous in memory."
+                        );
+                    }
+                    return columns.value();
+                };
+                cls.def("getColumnView", py_get_columns);
+                cls.def_property_readonly("columns", py_get_columns);
+                cls.def("addNew", &Catalog::addNew);
                 cls.def("_extend", [](Catalog &self, Catalog const &other, bool deep) {
                     self.insert(self.end(), other.begin(), other.end(), deep);
                 });
                 cls.def("_extend", [](Catalog &self, Catalog const &other, SchemaMapper const &mapper) {
                     self.insert(mapper, self.end(), other.begin(), other.end());
                 });
-                cls.def("_append",
+                cls.def("append",
                         [](Catalog &self, std::shared_ptr<Record> const &rec) { self.push_back(rec); });
-                cls.def("_delitem_", [](Catalog &self, std::ptrdiff_t i) {
+                cls.def("__delitem__", [](Catalog &self, std::ptrdiff_t i) {
                     self.erase(self.begin() + utils::python::cppIndex(self.size(), i));
                 });
-                cls.def("_delslice_", [](Catalog &self, py::slice const &s) {
+                cls.def("__delitem__", [](Catalog &self, py::slice const &s) {
                     Py_ssize_t start = 0, stop = 0, step = 0, length = 0;
                     if (PySlice_GetIndicesEx(s.ptr(), self.size(), &start, &stop, &step, &length) != 0) {
                         throw py::error_already_set();
@@ -236,7 +251,7 @@ PyCatalog<Record> declareCatalog(utils::python::WrapperCollection &wrappers, std
                     }
                     self.erase(self.begin() + start, self.begin() + stop);
                 });
-                cls.def("_clear", &Catalog::clear);
+                cls.def("clear", &Catalog::clear);
 
                 cls.def("set", &Catalog::set);
                 cls.def("_getitem_", [](Catalog &self, int i) {
