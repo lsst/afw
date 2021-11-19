@@ -52,12 +52,6 @@ public:
         return *this->base();
     }
 
-    template <typename RecordT>
-    CatalogIterator& operator=(std::shared_ptr<RecordT> const& other) const {
-        *this->base() = other;
-        return *this;
-    }
-
 private:
     friend class boost::iterator_core_access;
     typename BaseT::value_type::element_type& dereference() const { return **this->base(); }
