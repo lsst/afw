@@ -25,6 +25,8 @@
 
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
+#include "pybind11/numpy.h"
+#include "ndarray/pybind11.h"
 
 #include "lsst/utils/python.h"
 #include "lsst/afw/table/BaseColumnView.h"
@@ -38,36 +40,109 @@ namespace python {
 template <typename Record>
 using PyCatalog = pybind11::class_<CatalogT<Record>, std::shared_ptr<CatalogT<Record>>>;
 
-/// Extract a column from a potentially non-contiguous Catalog
-template <typename T, typename Record>
-ndarray::Array<typename Field<T>::Value const, 1, 1> _getArrayFromCatalog(
-        CatalogT<Record> const &catalog,  ///< Catalog
-        Key<T> const &key                 ///< Key to column to extract
-) {
-    ndarray::Array<typename Field<T>::Value, 1, 1> out = ndarray::allocate(catalog.size());
-    auto outIter = out.begin();
-    auto inIter = catalog.begin();
-    for (; inIter != catalog.end(); ++inIter, ++outIter) {
-        *outIter = inIter->get(key);
-    }
-    return out;
-}
-
-// Specialization of the above for lsst::geom::Angle: have to return a double array (in
-// radians), since NumPy arrays can't hold lsst::geom::Angles.
+/*
+ * A local helper class for returning numpy arrays of Catalog columns.
+ *
+ * This class works out a few differences between Python and C++:
+ *
+ * - In C++, we treat view arrays (obtained from ColumnView) objects completely
+ *   differently from copy arrays (from Catalog::copyColumn).  In Python, users
+ *   strongly expect __getitem__ to take care of both, preferring views and
+ *   falling back to copies when needed.
+ *
+ * - In C++, it thus makes sense for both types to be non-const, because it's
+ *   clear from how they are obtained that modifying them will do different
+ *   things.  In Python, that clarity is lost, so we mark copied returns as
+ *   const to prevent users from thinking that by modifying the column they are
+ *   modifying the catalog; instead they just can't modify copies at all.
+ *
+ * - In C++, we can return arrays of Angle as views, but that's not possible in
+ *   Python, so we make copies of those as `double` (radians) to return.
+ *
+ * - In C++, we can't return an array for Flag columns, which are packed bits
+ *   rather than (full-byte) bools.  We copy those into regular bool arrays for
+ *   Python.
+ *
+ * This class can be invoked directly by passing its function-call operator a
+ * Key or string column name.  It can also be invoked by passing a
+ * SchemaItem; this lets it be used as the argument to Schema::findAndApply,
+ * which is actually how column-name lookups work.
+ */
 template <typename Record>
-ndarray::Array<double const, 1, 1> _getArrayFromCatalog(
-        CatalogT<Record> const &catalog,   ///< Catalog
-        Key<lsst::geom::Angle> const &key  ///< Key to column to extract
-) {
-    ndarray::Array<double, 1, 1> out = ndarray::allocate(catalog.size());
-    auto outIter = out.begin();
-    auto inIter = catalog.begin();
-    for (; inIter != catalog.end(); ++inIter, ++outIter) {
-        *outIter = inIter->get(key).asRadians();
+class _CatalogColumnGetter {
+public:
+
+    explicit _CatalogColumnGetter(CatalogT<Record> & catalog) : _catalog(catalog) {}
+
+    template <typename T>
+    pybind11::array operator()(Key<T> const & key) const {
+        auto columns = _catalog.getColumnView();
+        if (columns) {
+            // Return a view that updates the catalog when written to.
+            ndarray::Array<T, 1, 0> array = columns.value()[key];
+            return pybind11::cast(array);
+        } else {
+            // Return a copy via a const array so the user can't write to it and
+            // then get surprised that it's not a view.
+            ndarray::Array<typename Field<T>::Value const, 1, 1> array = _catalog.copyColumn(key);
+            return pybind11::cast(array);
+        }
     }
-    return out;
-}
+
+    template <typename T>
+    pybind11::array operator()(Key<Array<T>> const & key) const {
+        auto columns = _catalog.getColumnView();
+        if (columns) {
+            // Return a view that updates the catalog when written to.
+            ndarray::Array<T, 2, 1> array = columns.value()[key];
+            return pybind11::cast(array);
+        } else {
+            // Return a copy via a const array so the user can't write to it and
+            // then get surprised that it's not a view.
+            ndarray::Array<typename Field<T>::Value const, 2, 2> array = _catalog.copyColumn(key);
+            return pybind11::cast(array);
+        }
+    }
+
+    pybind11::array operator()(Key<std::string> const & key) const {
+        PyErr_SetString(PyExc_NotImplementedError, "Column access to string fields is not yet supported.");
+        throw pybind11::error_already_set();
+    }
+
+    pybind11::array operator()(Key<Angle> const & key) const {
+        ndarray::Array<Angle, 1, 1> angles = _catalog.copyColumn(key);
+        ndarray::Array<double, 1, 1> radians = ndarray::allocate(angles.getShape());
+        std::transform(
+            angles.begin(),
+            angles.end(),
+            radians.begin(),
+            [](Angle const & angle) { return angle.asRadians(); }
+        );
+        // Return a copy via a const array so the user can't write to it and
+        // then get surprised that it's not a view.
+        return pybind11::cast(ndarray::Array<double const, 1, 1>(radians));
+    }
+
+    pybind11::array operator()(Key<Flag> const & key) const {
+        // Return a copy via a const array so the user can't write to it and
+        // then get surprised that it's not a view.
+        ndarray::Array<bool const, 1, 1> array = _catalog.copyColumn(key);
+        return pybind11::cast(array);
+    }
+
+    template <typename T>
+    pybind11::array operator()(SchemaItem<T> const & item) const {
+        return this->operator()(item.key);
+    }
+
+    pybind11::array operator()(std::string const & name) const {
+        return _catalog.getSchema().findAndApply(name, *this);
+    }
+
+private:
+    CatalogT<Record> & _catalog;
+};
+
 
 template <typename Record>
 void _setFlagColumnToArray(
@@ -169,14 +244,10 @@ private:
 
     template <typename T>
     void _declare_getitem(T const *) {
-        _cls.def("_getitem_",
-                 [](CatalogT<Record> const &self, Key<T> const &key) { return _getArrayFromCatalog(self, key); });
-    }
-
-    template <typename T>
-    void _declare_getitem(Array<T> const *) {
-        // Array columns cannot be retrieved as (2-d) arrays, except via
-        // ColumnView (and that happens in Python).
+        _cls.def(
+            "_getitem_",
+            [](CatalogT<Record> &self, Key<T> const &key) { return _CatalogColumnGetter<Record>(self)(key); }
+        );
     }
 
     void _declare_getitem(std::string const *) {
@@ -276,16 +347,13 @@ PyCatalog<Record> declareCatalog(utils::python::WrapperCollection &wrappers, std
                         throw py::error_already_set();
                     }
                     if (step != 1) {
-                        throw py::index_error("Slice step must not exactly 1");
+                        throw py::index_error("Slice step must be exactly 1");
                     }
                     self.erase(self.begin() + start, self.begin() + stop);
                 });
                 cls.def("clear", &Catalog::clear);
 
                 cls.def("set", &Catalog::set);
-                cls.def("_getitem_", [](Catalog &self, int i) {
-                    return self.get(utils::python::cppIndex(self.size(), i));
-                });
                 cls.def("isContiguous", &Catalog::isContiguous);
                 cls.def("writeFits",
                         (void (Catalog::*)(std::string const &, std::string const &, int) const) &
@@ -302,6 +370,23 @@ PyCatalog<Record> declareCatalog(utils::python::WrapperCollection &wrappers, std
                         (Catalog(Catalog::*)(std::ptrdiff_t, std::ptrdiff_t, std::ptrdiff_t) const) &
                                 Catalog::subset);
 
+                // Overloads in pybind11 are tried in the order they are
+                // defined, so we define those that we think will see the
+                // most usage.  That starts with single-row indexing and
+                // column access by string field name, followed by column
+                // access by Key.
+                cls.def(
+                    "_getitem_",
+                    [](CatalogT<Record> &self, std::ptrdiff_t index) {
+                        return self.get(utils::python::cppIndex(self.size(), index));
+                    }
+                );
+                cls.def(
+                    "_getitem_",
+                    [](CatalogT<Record> &self, std::string const & name) {
+                        return _CatalogColumnGetter(self)(name);
+                    }
+                );
                 FieldTypes::for_each_nullptr(_CatalogOverloadHelper(cls));
 
                 cls.def(
