@@ -114,8 +114,8 @@ public:
      *  a functor provided to forEach).
      */
     template <typename F>
-    void findAndApply(std::string const& name, F&& func) const {
-        _impl->findAndApply(_aliases->apply(name), std::forward<F>(func));
+    decltype(auto) findAndApply(std::string const& name, F&& func) const {
+        return _impl->findAndApply(_aliases->apply(name), std::forward<F>(func));
     }
 
     /**
