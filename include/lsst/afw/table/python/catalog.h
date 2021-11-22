@@ -143,18 +143,6 @@ void declareCatalogOverloads(PyCatalog<Record> &cls) {
 
     cls.def("_getitem_",
             [](Catalog const &self, Key<T> const &key) { return _getArrayFromCatalog(self, key); });
-    cls.def(
-        "_set_flag",
-        [](Catalog &self, Key<Flag> const & key, ndarray::Array<bool const, 1> const & array) {
-            _setFlagColumnToArray(self, key, array);
-        }
-    );
-    cls.def(
-        "_set_flag",
-        [](Catalog &self, Key<Flag> const & key, bool value) {
-            _setFlagColumnToScalar(self, key, value);
-        }
-    );
 }
 
 /**
@@ -278,6 +266,19 @@ PyCatalog<Record> declareCatalog(utils::python::WrapperCollection &wrappers, std
                 declareCatalogOverloads<float>(cls);
                 declareCatalogOverloads<double>(cls);
                 declareCatalogOverloads<lsst::geom::Angle>(cls);
+
+                cls.def(
+                    "_set_flag",
+                    [](Catalog &self, Key<Flag> const & key, ndarray::Array<bool const, 1> const & array) {
+                        _setFlagColumnToArray(self, key, array);
+                    }
+                );
+                cls.def(
+                    "_set_flag",
+                    [](Catalog &self, Key<Flag> const & key, bool value) {
+                        _setFlagColumnToScalar(self, key, value);
+                    }
+                );
 
                 cls.def("_getitem_",
                         [](Catalog const &self, Key<Flag> const &key) -> ndarray::Array<bool const, 1, 0> {
