@@ -100,50 +100,91 @@ void _setFlagColumnToScalar(
     }
 }
 
-/**
- * Declare field-type-specific overloaded catalog member functions for one field type
+/*
+ * A local helper class for declaring Catalog's methods that are overloaded
+ * on column types.
  *
- * @tparam T  Field type.
- * @tparam Record  Record type, e.g. BaseRecord or SimpleRecord.
- *
- * @param[in] cls  Catalog pybind11 class.
+ * _CatalogOverloadHelper is designed to be invoked by
+ * TypeList::for_each_nullptr, which calls operator() with a null pointer cast
+ * to each of the types in the list.  This implementation of operator() then
+ * dispatches to _declare methods for different kinds of operations.  Various
+ * overloads of those _declare methods handle the fact that different column
+ * types support different kinds of operations; the compiler will always pick
+ * the most specific overload, and this lets us provide a generic templated
+ * implementation and then overload specific types to do nothing.
  */
-template <typename T, typename Record>
-void declareCatalogOverloads(PyCatalog<Record> &cls) {
-    namespace py = pybind11;
-    using namespace pybind11::literals;
+template <typename Record>
+class _CatalogOverloadHelper {
+public:
 
-    using Catalog = CatalogT<Record>;
-    using Value = typename Field<T>::Value;
+    _CatalogOverloadHelper(PyCatalog<Record> & cls) : _cls(cls) {}
 
-    cls.def("isSorted", (bool (Catalog::*)(Key<T> const &) const) & Catalog::isSorted);
-    cls.def("sort", (void (Catalog::*)(Key<T> const &)) & Catalog::sort);
-    cls.def("find", [](Catalog &self, Value const &value, Key<T> const &key) -> std::shared_ptr<Record> {
-        auto iter = self.find(value, key);
-        if (iter == self.end()) {
-            return nullptr;
-        };
-        return iter;
-    });
-    cls.def("upper_bound", [](Catalog &self, Value const &value, Key<T> const &key) -> std::ptrdiff_t {
-        return self.upper_bound(value, key) - self.begin();
-    });
-    cls.def("lower_bound", [](Catalog &self, Value const &value, Key<T> const &key) -> std::ptrdiff_t {
-        return self.lower_bound(value, key) - self.begin();
-    });
-    cls.def("equal_range", [](Catalog &self, Value const &value, Key<T> const &key) {
-        auto p = self.equal_range(value, key);
-        return py::slice(p.first - self.begin(), p.second - self.begin(), 1);
-    });
-    cls.def("between", [](Catalog &self, Value const &lower, Value const &upper, Key<T> const &key) {
-        std::ptrdiff_t a = self.lower_bound(lower, key) - self.begin();
-        std::ptrdiff_t b = self.upper_bound(upper, key) - self.begin();
-        return py::slice(a, b, 1);
-    });
+    template <typename T>
+    void operator()(T const * tag) {
+        _declare_comparison_overloads(tag);
+        _declare_getitem(tag);
+    }
 
-    cls.def("_getitem_",
-            [](Catalog const &self, Key<T> const &key) { return _getArrayFromCatalog(self, key); });
-}
+private:
+
+    template <typename T>
+    void _declare_comparison_overloads(T const *) {
+        namespace py = pybind11;
+        using namespace pybind11::literals;
+
+        using Catalog = CatalogT<Record>;
+        using Value = typename Field<T>::Value;
+
+        _cls.def("isSorted", (bool (Catalog::*)(Key<T> const &) const) & Catalog::isSorted);
+        _cls.def("sort", (void (Catalog::*)(Key<T> const &)) & Catalog::sort);
+        _cls.def("find", [](Catalog &self, Value const &value, Key<T> const &key) -> std::shared_ptr<Record> {
+            auto iter = self.find(value, key);
+            if (iter == self.end()) {
+                return nullptr;
+            };
+            return iter;
+        });
+        _cls.def("upper_bound", [](Catalog &self, Value const &value, Key<T> const &key) -> std::ptrdiff_t {
+            return self.upper_bound(value, key) - self.begin();
+        });
+        _cls.def("lower_bound", [](Catalog &self, Value const &value, Key<T> const &key) -> std::ptrdiff_t {
+            return self.lower_bound(value, key) - self.begin();
+        });
+        _cls.def("equal_range", [](Catalog &self, Value const &value, Key<T> const &key) {
+            auto p = self.equal_range(value, key);
+            return py::slice(p.first - self.begin(), p.second - self.begin(), 1);
+        });
+        _cls.def("between", [](Catalog &self, Value const &lower, Value const &upper, Key<T> const &key) {
+            std::ptrdiff_t a = self.lower_bound(lower, key) - self.begin();
+            std::ptrdiff_t b = self.upper_bound(upper, key) - self.begin();
+            return py::slice(a, b, 1);
+        });
+    }
+
+    template <typename T>
+    void _declare_comparison_overloads(Array<T> const *) {
+        // Array columns cannot be compared, so we do not define comparison
+        // overloads for these.
+    }
+
+    template <typename T>
+    void _declare_getitem(T const *) {
+        _cls.def("_getitem_",
+                 [](CatalogT<Record> const &self, Key<T> const &key) { return _getArrayFromCatalog(self, key); });
+    }
+
+    template <typename T>
+    void _declare_getitem(Array<T> const *) {
+        // Array columns cannot be retrieved as (2-d) arrays, except via
+        // ColumnView (and that happens in Python).
+    }
+
+    void _declare_getitem(std::string const *) {
+        // String columns cannot be retrieved as arrays.
+    }
+
+    PyCatalog<Record> & _cls;
+};
 
 /**
  * Wrap an instantiation of lsst::afw::table::CatalogT<Record>.
@@ -261,11 +302,7 @@ PyCatalog<Record> declareCatalog(utils::python::WrapperCollection &wrappers, std
                         (Catalog(Catalog::*)(std::ptrdiff_t, std::ptrdiff_t, std::ptrdiff_t) const) &
                                 Catalog::subset);
 
-                declareCatalogOverloads<std::int32_t>(cls);
-                declareCatalogOverloads<std::int64_t>(cls);
-                declareCatalogOverloads<float>(cls);
-                declareCatalogOverloads<double>(cls);
-                declareCatalogOverloads<lsst::geom::Angle>(cls);
+                FieldTypes::for_each_nullptr(_CatalogOverloadHelper(cls));
 
                 cls.def(
                     "_set_flag",
@@ -279,11 +316,6 @@ PyCatalog<Record> declareCatalog(utils::python::WrapperCollection &wrappers, std
                         _setFlagColumnToScalar(self, key, value);
                     }
                 );
-
-                cls.def("_getitem_",
-                        [](Catalog const &self, Key<Flag> const &key) -> ndarray::Array<bool const, 1, 0> {
-                            return _getArrayFromCatalog(self, key);
-                        });
 
             });
 }
