@@ -406,6 +406,41 @@ public:
         }
     }
 
+    //@{
+    /**
+     * Return all of the values in a column as a non-view array.
+     */
+    template <typename T>
+    ndarray::Array<typename Field<T>::Value, 1, 1> copyColumn(Key<T> const & key) const {
+        ndarray::Array<typename Field<T>::Value, 1, 1> result = ndarray::allocate(size());
+        std::transform(
+            begin(),
+            end(),
+            result.begin(),
+            [key](RecordT const & record) { return record.get(key); }
+        );
+        return result;
+    }
+    template <typename T>
+    ndarray::Array<typename Field<T>::Value, 2, 2> copyColumn(Key<Array<T>> const & key) const {
+        std::size_t column_size = key.getSize();
+        if (column_size == 0) {
+            throw LSST_EXCEPT(
+                pex::exceptions::RuntimeError,
+                "Cannot obtain column for variable-length array field."
+            );
+        }
+        ndarray::Array<typename Field<T>::Value, 2, 2> result = ndarray::allocate(size(), column_size);
+        std::transform(
+            begin(),
+            end(),
+            result.begin(),
+            [key](RecordT const & record) { return record.get(key); }
+        );
+        return result;
+    }
+    //@}
+
     /**
      *  Return true if all records are contiguous.
      *
