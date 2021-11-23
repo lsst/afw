@@ -74,6 +74,22 @@ class ExposureSummaryStats(Storable):
     astromOffsetMean: float = float('nan')
     # Astrometry match offset stddev
     astromOffsetStd: float = float('nan')
+    # Number of stars used for psf model
+    nPsfStar: int = 0
+    # Psf stars median E1 residual (starE1 - psfE1)
+    psfStarDeltaE1Median: float = float('nan')
+    # Psf stars median E2 residual (starE2 - psfE2)
+    psfStarDeltaE2Median: float = float('nan')
+    # Psf stars MAD E1 scatter (starE1 - psfE1)
+    psfStarDeltaE1Scatter: float = float('nan')
+    # Psf stars MAD E2 scatter (starE2 - psfE2)
+    psfStarDeltaE2Scatter: float = float('nan')
+    # Psf stars median size residual (starSize - psfSize)
+    psfStarDeltaSizeMedian: float = float('nan')
+    # Psf stars MAD size scatter (starSize - psfSize)
+    psfStarDeltaSizeScatter: float = float('nan')
+    # Psf stars MAD size scatter scaled by psfSize**2
+    psfStarScaledDeltaSizeScatter: float = float('nan')
 
     def __post_init__(self):
         Storable.__init__(self)
