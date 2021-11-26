@@ -3,7 +3,7 @@ name: lint
 on:
   push:
     branches:
-      - master
+      - main
   pull_request:
 
 jobs:
@@ -18,7 +18,7 @@ jobs:
           python-version: 3.8
 
       - name: Install
-        run: pip install -r <(curl https://raw.githubusercontent.com/lsst/linting/master/requirements.txt)
+        run: pip install -r <(curl https://raw.githubusercontent.com/lsst/linting/main/requirements.txt)
 
       - name: Run linter
         run: flake8
