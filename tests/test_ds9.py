@@ -36,9 +36,11 @@ try:
 except Exception:
     ds9 = None
 
+FRAME_NUM = 731  # largish, arbitrary number, unlikely to be in use by a user
+
 if ds9:
     try:
-        ds9.mtv(afwImage.ImageF(1, 1))
+        ds9.mtv(afwImage.ImageF(1, 1), frame=FRAME_NUM)
     except Exception as e:
         print(f"Unable to use ds9: {e}")
         ds9 = None
@@ -57,7 +59,7 @@ class DisplayTestCase(unittest.TestCase):
     def testMtv(self):
         """Test basic image display"""
         exp = afwImage.ImageF(10, 20)
-        ds9.mtv(exp, title="parent")
+        ds9.mtv(exp, title="parent", frame=FRAME_NUM)
 
     @unittest.skipUnless(ds9, "You must setup display.ds9 to run this test")
     def testMaskPlanes(self):
@@ -71,10 +73,10 @@ class DisplayTestCase(unittest.TestCase):
 
         exp = afwImage.ExposureF(300, 350)
 
-        for frame in (0, 1):
+        for frame in (FRAME_NUM, FRAME_NUM+1):
             ds9.setMaskTransparency(50, frame=frame)
 
-            if frame == 1:
+            if frame == FRAME_NUM+1:
                 ds9.setMaskPlaneColor("CROSSTALK", "ignore", frame=frame)
             ds9.mtv(exp, title="parent", frame=frame)
 
@@ -99,7 +101,7 @@ class DisplayTestCase(unittest.TestCase):
         ds9.erase()
 
         exp = afwImage.ExposureF(300, 350)
-        ds9.mtv(exp, title="parent")  # tells display0 about the image's xy0
+        ds9.mtv(exp, title="parent", frame=FRAME_NUM)  # tells display0 about the image's xy0
 
         with ds9.Buffering():
             ds9.dot('o', 200, 220)
@@ -114,7 +116,7 @@ class DisplayTestCase(unittest.TestCase):
         ds9.erase()
 
         exp = afwImage.ExposureF(300, 350)
-        ds9.mtv(exp, title="parent")  # tells display0 about the image's xy0
+        ds9.mtv(exp, title="parent", frame=FRAME_NUM)  # tells display0 about the image's xy0
 
         with ds9.Buffering():
             ds9.dot('hello', 200, 200)
