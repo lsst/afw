@@ -22,9 +22,9 @@ namespace lsst {
 namespace afw {
 namespace table {
 
-// Tag classes for remembering whether a catalog is contiguous;
-// the "definitely contiguous" variant is a ColumnView.
-class _NotContiguous {};
+// Tag class for remembering whether it is known whether a catalog is
+// contiguous; the other variant is a std::optional<ColumnView>, populated when
+// the catalog is contiguous.
 class _MaybeContiguous {};
 
 
@@ -391,19 +391,9 @@ public:
         // lightweight data structure; it just takes a long time to construct
         // because we have to check that the catalog is actually contiguous.
         if (std::holds_alternative<_MaybeContiguous>(_columns)) {
-            auto columns = ColumnView::make(_table, begin(), end());
-            if (columns) {
-                _columns = columns.value();
-            } else {
-                _columns = _NotContiguous{};
-            }
+            _columns = ColumnView::make(_table, begin(), end());
         }
-        auto result_ptr = std::get_if<ColumnView>(&_columns);
-        if (result_ptr) {
-            return std::make_optional<ColumnView>(*result_ptr);
-        } else {
-            return std::nullopt;
-        }
+        return std::get<std::optional<ColumnView>>(_columns);
     }
 
     //@{
@@ -782,7 +772,7 @@ private:
 
     std::shared_ptr<Table> _table;
     PtrVec _internal;
-    std::variant<_MaybeContiguous, _NotContiguous, ColumnView> _columns;
+    std::variant<_MaybeContiguous, std::optional<ColumnView>> _columns;
 };
 
 namespace detail {
