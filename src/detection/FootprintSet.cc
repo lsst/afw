@@ -400,10 +400,10 @@ FootprintSet mergeFootprintSets(FootprintSet const &lhs,      // the FootprintSe
             // that Catalog uses internally, which causes the STL algorithm to
             // copy pointers instead of PeakRecords (which is what it'd try to
             // do if we passed Catalog's own iterators).
-            auto internal_peaks = peaks.drainIntoInternal();
+            auto internal_peaks = peaks.drainIntoPtrVec();
             std::inplace_merge(internal_peaks.begin(), internal_peaks.begin() + nold,
                                internal_peaks.end(), SortPeaks());
-            peaks.assignInternal(std::move(internal_peaks));
+            peaks.assignPtrVec(std::move(internal_peaks));
         }
 
         for (unsigned long i : rhsFootprintIndxs) {
@@ -413,10 +413,10 @@ FootprintSet mergeFootprintSets(FootprintSet const &lhs,      // the FootprintSe
             int const nold = peaks.size();
             peaks.insert(peaks.end(), oldPeaks.begin(), oldPeaks.end());
             // See note above on why we're using the internal accessors here.
-            auto internal_peaks = peaks.drainIntoInternal();
+            auto internal_peaks = peaks.drainIntoPtrVec();
             std::inplace_merge(internal_peaks.begin(), internal_peaks.begin() + nold,
                                internal_peaks.end(), SortPeaks());
-            peaks.assignInternal(std::move(internal_peaks));
+            peaks.assignPtrVec(std::move(internal_peaks));
         }
         idFinder.reset();
     }
@@ -546,9 +546,9 @@ void findPeaks(std::shared_ptr<Footprint> foot, ImageT const &img, bool polarity
     // Catalog uses internally, which causes the STL algorithm to copy pointers
     // instead of PeakRecords (which is what it'd try to do if we passed
     // Catalog's own iterators).
-    auto internal_peaks = foot->getPeaks().drainIntoInternal();
+    auto internal_peaks = foot->getPeaks().drainIntoPtrVec();
     std::stable_sort(internal_peaks.begin(), internal_peaks.end(), SortPeaks());
-    foot->getPeaks().assignInternal(std::move(internal_peaks));
+    foot->getPeaks().assignPtrVec(std::move(internal_peaks));
 
     if (foot->getPeaks().empty()) {
         FindMaxInFootprint<typename ImageT::Pixel> maxFinder(polarity);

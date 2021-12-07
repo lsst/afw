@@ -97,7 +97,7 @@ private:
  */
 template <typename RecordT>
 class CatalogT {
-    using Internal = std::vector<std::shared_ptr<RecordT>>;
+    using PtrVec = std::vector<std::shared_ptr<RecordT>>;
 
 public:
     using Record = RecordT;
@@ -107,10 +107,10 @@ public:
     using value_type = RecordT;
     using reference = RecordT &;
     using pointer = std::shared_ptr<RecordT>;
-    using size_type = typename Internal::size_type;
-    using difference_type = typename Internal::difference_type;
-    using iterator = CatalogIterator<typename Internal::iterator>;
-    using const_iterator = CatalogIterator<typename Internal::const_iterator>;
+    using size_type = typename PtrVec::size_type;
+    using difference_type = typename PtrVec::difference_type;
+    using iterator = CatalogIterator<typename PtrVec::iterator>;
+    using const_iterator = CatalogIterator<typename PtrVec::const_iterator>;
 
     /// Return the table associated with the catalog.
     std::shared_ptr<Table> getTable() const { return _table; }
@@ -754,16 +754,16 @@ public:
      *  containers.  When an algorithm should be called in such a way that
      *  records are deep-copied, the regular Catalog iterators should be used.
      *
-     *  While a direct const view is available via `getInternal`, mutations
-     *  must go through `drainIntoInternal` and `assignInternal`, which empty
+     *  While a direct const view is available via `getPtrVec`, mutations
+     *  must go through `drainIntoPtrVec` and `assignPtrVec`, which empty
      *  the Catalog of records and fully repopulate it (respectively).
      */
-    Internal const & getInternal() const { return _internal; }
-    Internal drainIntoInternal() {
+    PtrVec const & getPtrVec() const { return _internal; }
+    PtrVec drainIntoPtrVec() {
         _columns = _MaybeContiguous{};
         return std::move(_internal);
     }
-    void assignInternal(Internal && internal) {
+    void assignPtrVec(PtrVec && internal) {
         _columns = _MaybeContiguous{};
         _internal = std::move(internal);
     }
@@ -781,7 +781,7 @@ private:
                        std::input_iterator_tag*) {}
 
     std::shared_ptr<Table> _table;
-    Internal _internal;
+    PtrVec _internal;
     std::variant<_MaybeContiguous, _NotContiguous, ColumnView> _columns;
 };
 
