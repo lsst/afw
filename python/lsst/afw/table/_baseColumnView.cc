@@ -97,7 +97,12 @@ static void declareBaseColumnView(WrapperCollection &wrappers) {
         // lsst::geom::Angle requires custom wrappers, because ndarray doesn't
         // recognize it natively; we just return a double view
         // (e.g. radians).
-        cls.def("_basicget", &BaseColumnView::radians);
+        cls.def(
+            "_basicget",
+            [](BaseColumnView const & self, Key<Angle> const & key) -> ndarray::Array<double, 1, 0> {
+                return self.radians(key);
+            }
+        );
     });
 }
 

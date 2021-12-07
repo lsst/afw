@@ -56,8 +56,9 @@ using PyCatalog = pybind11::class_<CatalogT<Record>, std::shared_ptr<CatalogT<Re
  *   const to prevent users from thinking that by modifying the column they are
  *   modifying the catalog; instead they just can't modify copies at all.
  *
- * - In C++, we can return arrays of Angle as views, but that's not possible in
- *   Python, so we make copies of those as `double` (radians) to return.
+ * - In C++, we can return arrays of Angle as views; that's not possible in
+ *   Python because Angle isn't a valid dtype, so we return the underlying
+ *   double array (still a view) instead.
  *
  * - In C++, we can't return an array for Flag columns, which are packed bits
  *   rather than (full-byte) bools.  We copy those into regular bool arrays for
@@ -110,17 +111,24 @@ public:
     }
 
     pybind11::array operator()(Key<Angle> const & key) const {
-        ndarray::Array<Angle, 1, 1> angles = _catalog.copyColumn(key);
-        ndarray::Array<double, 1, 1> radians = ndarray::allocate(angles.getShape());
-        std::transform(
-            angles.begin(),
-            angles.end(),
-            radians.begin(),
-            [](Angle const & angle) { return angle.asRadians(); }
-        );
-        // Return a copy via a const array so the user can't write to it and
-        // then get surprised that it's not a view.
-        return pybind11::cast(ndarray::Array<double const, 1, 1>(radians));
+        auto columns = _catalog.getColumnView();
+        if (columns) {
+            // Return a view that updates the catalog when written to.
+            ndarray::Array<double, 1, 0> radians = columns.value().radians(key);
+            return pybind11::cast(radians);
+        } else {
+            ndarray::Array<Angle, 1, 1> angles = _catalog.copyColumn(key);
+            ndarray::Array<double, 1, 1> radians = ndarray::allocate(angles.getShape());
+            std::transform(
+                angles.begin(),
+                angles.end(),
+                radians.begin(),
+                [](Angle const & angle) { return angle.asRadians(); }
+            );
+            // Return a copy via a const array so the user can't write to it and
+            // then get surprised that it's not a view.
+            return pybind11::cast(ndarray::Array<double const, 1, 1>(radians));
+        }
     }
 
     pybind11::array operator()(Key<Flag> const & key) const {
