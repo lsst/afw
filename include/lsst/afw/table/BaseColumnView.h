@@ -97,6 +97,9 @@ public:
     template <typename T>
     ndarray::ArrayRef<T, 2, 1> const operator[](Key<Array<T> > const& key) const;
 
+    /// Return a 1-d array of radians for an Angle field.
+    ndarray::ArrayRef<double, 1> const radians(Key<Angle> const & key) const;
+
     /**
      *  Return a 1-d array expression corresponding to a flag bit.
      *
