@@ -30,6 +30,7 @@
 
 #include "lsst/afw/table/Key.h"
 #include "lsst/afw/table/BaseColumnView.h"
+#include "lsst/afw/table/python/columnView.h"
 
 namespace py = pybind11;
 using namespace py::literals;
@@ -46,27 +47,33 @@ using PyBaseColumnView = py::class_<BaseColumnView, std::shared_ptr<BaseColumnVi
 
 using PyBitsColumn = py::class_<BitsColumn, std::shared_ptr<BitsColumn>>;
 
-template <typename T, typename PyClass>
-static void declareBaseColumnViewOverloads(PyClass &cls) {
-    cls.def("_basicget", [](BaseColumnView & self, Key<T> const &key) -> typename ndarray::Array<T, 1> const {
-        return self[key];
-    });
+/*
+ * A local helper class for declaring Catalog's methods that are overloaded
+ * on column types.
+ *
+ * _BaseColumnViewOverloadHelper is designed to be invoked by
+ * TypeList::for_each_nullptr, which calls operator() with a null pointer cast
+ * to each of the types in the list.
+ */
+class _BaseColumnViewOverloadHelper {
+public:
+
+    _BaseColumnViewOverloadHelper(PyBaseColumnView & cls) : _cls(cls) {}
+
+    template <typename T>
+    void operator()(T const * tag) {
+        _cls.def(
+            "__getitem__",
+            [](BaseColumnView const &self, Key<T> const &key) {
+                return python::ColumnViewGetter(self)(key);
+            }
+        );
+    }
+
+private:
+    PyBaseColumnView & _cls;
 };
 
-template <typename U, typename PyClass>
-static void declareBaseColumnViewArrayOverloads(PyClass &cls) {
-    cls.def("_basicget",
-            [](BaseColumnView & self, Key<lsst::afw::table::Array<U>> const &key) ->
-            typename ndarray::Array<U, 2, 1> const { return self[key]; });
-};
-
-template <typename PyClass>
-static void declareBaseColumnViewFlagOverloads(PyClass &cls) {
-    cls.def("_basicget",
-            [](BaseColumnView &self, Key<Flag> const &key) -> ndarray::Array<bool const, 1, 1> const {
-                return ndarray::copy(self[key]);
-            });
-};
 
 static void declareBaseColumnView(WrapperCollection &wrappers) {
     // We can't call this "BaseColumnView" because that's the typedef for "ColumnViewT<BaseRecord>".
@@ -80,29 +87,13 @@ static void declareBaseColumnView(WrapperCollection &wrappers) {
         // _getBits supports a Python version of getBits that accepts None and field names as keys
         cls.def("_getBits", &BaseColumnView::getBits);
         cls.def("getAllBits", &BaseColumnView::getAllBits);
-        declareBaseColumnViewOverloads<std::uint8_t>(cls);
-        declareBaseColumnViewOverloads<std::uint16_t>(cls);
-        declareBaseColumnViewOverloads<std::int32_t>(cls);
-        declareBaseColumnViewOverloads<std::int64_t>(cls);
-        declareBaseColumnViewOverloads<float>(cls);
-        declareBaseColumnViewOverloads<double>(cls);
-        declareBaseColumnViewFlagOverloads(cls);
-        // std::string columns are not supported, because numpy string arrays
-        // do not have the same memory model as ours.
-        declareBaseColumnViewArrayOverloads<std::uint8_t>(cls);
-        declareBaseColumnViewArrayOverloads<std::uint16_t>(cls);
-        declareBaseColumnViewArrayOverloads<int>(cls);
-        declareBaseColumnViewArrayOverloads<float>(cls);
-        declareBaseColumnViewArrayOverloads<double>(cls);
-        // lsst::geom::Angle requires custom wrappers, because ndarray doesn't
-        // recognize it natively; we just return a double view
-        // (e.g. radians).
         cls.def(
-            "_basicget",
-            [](BaseColumnView const & self, Key<Angle> const & key) -> ndarray::Array<double, 1, 0> {
-                return self.radians(key);
+            "__getitem__",
+            [](BaseColumnView const &self, std::string const & name) {
+                return python::ColumnViewGetter(self)(name);
             }
         );
+        FieldTypes::for_each_nullptr(_BaseColumnViewOverloadHelper(cls));
     });
 }
 

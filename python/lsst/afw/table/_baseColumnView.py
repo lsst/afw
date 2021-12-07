@@ -59,16 +59,11 @@ class _BaseColumnViewBase:  # noqa: F811
                 arg.append(k)
         return self._getBits(arg)
 
-    def __getitem__(self, key):
-        """Get a column view; key may be a key object or the name of a field.
-        """
-        if isinstance(key, str):
-            keyobj = self.schema.find(key).key
-        else:
-            keyobj = key
-        return self._basicget(keyobj)
-
-    get = __getitem__
+    def get(self, key, default=None):
+        try:
+            return self[key]
+        except LookupError:
+            return default
 
     def __setitem__(self, key, value):
         """Set a full column to an array or scalar; key may be a key object or
