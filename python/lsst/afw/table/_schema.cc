@@ -83,6 +83,7 @@ void declareFieldBaseSpecializations(PyFieldBase<Array<T>> &cls) {
 void declareFieldBaseSpecializations(PyFieldBase<std::string> &cls) {
     cls.def(py::init<int>(), "size"_a = -1);
     cls.def("getSize", &FieldBase<std::string>::getSize);
+    cls.def("isVariableLength", &FieldBase<std::string>::isVariableLength);
 }
 
 // Specializations for Field
