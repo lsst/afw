@@ -697,7 +697,7 @@ std::unique_ptr<FitsColumnReader> makeColumnReader(Schema &schema, FitsSchemaIte
             if (item.tccls == "Covariance") {
                 double v = 0.5 * (std::sqrt(1 + 8 * size) - 1);
                 std::size_t n = std::lround(v);
-                if (n * (n + 1) != size * 2) {
+                if (n * (n + 1) != static_cast<std::size_t>(size) * 2) {
                     throw LSST_EXCEPT(afw::fits::FitsError, "Covariance field has invalid size.");
                 }
                 std::vector<std::string> names(n);
