@@ -89,6 +89,14 @@ public:
     /// Return the schema that defines the fields.
     Schema getSchema() const { return getTable()->getSchema(); }
 
+    /**
+     * Return the number of records in the table.
+     *
+     * This is the number of elements in any 1-d column array, and the size of
+     * the first dimension of any higher-dimensional column array.
+     */
+    std::size_t size() const;
+
     /// Return a 1-d array corresponding to a scalar field (or subfield).
     template <typename T>
     ndarray::ArrayRef<T, 1> const operator[](Key<T> const& key) const;

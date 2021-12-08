@@ -67,6 +67,8 @@ struct BaseColumnView::Impl {
 
 std::shared_ptr<BaseTable> BaseColumnView::getTable() const { return _impl->table; }
 
+std::size_t BaseColumnView::size() const { return _impl->recordCount; }
+
 template <typename T>
 typename ndarray::ArrayRef<T, 1> const BaseColumnView::operator[](Key<T> const &key) const {
     if (!key.isValid()) {
