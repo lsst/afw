@@ -79,6 +79,9 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         record.set(self.xxErrKey, np.random.randn())
         record.set(self.yyErrKey, np.random.randn())
         record.set(self.xyErrKey, np.random.randn())
+        record.set(self.psfShapeKey.getIxx(), np.random.randn())
+        record.set(self.psfShapeKey.getIyy(), np.random.randn())
+        record.set(self.psfShapeKey.getIxy(), np.random.randn())
         record.set(self.fluxFlagKey, np.random.randn() > 0)
         record.set(self.centroidFlagKey, np.random.randn() > 0)
         record.set(self.shapeFlagKey, np.random.randn() > 0)
@@ -104,6 +107,10 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.xyErrKey = self.schema.addField("c_xyErr", type="F")
         self.yyErrKey = self.schema.addField("c_yyErr", type="F")
         self.shapeFlagKey = self.schema.addField("c_flag", type="Flag")
+
+        self.psfShapeKey = lsst.afw.table.QuadrupoleKey.addFields(
+            self.schema, "d", "", lsst.afw.table.CoordinateType.PIXEL)
+        self.psfShapeFlagKey = self.schema.addField("d_flag", type="Flag")
 
         self.table = lsst.afw.table.SourceTable.make(self.schema)
         self.catalog = lsst.afw.table.SourceCatalog(self.table)
@@ -145,11 +152,15 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.assertFloatsAlmostEqual(
             math.fabs(self.record.get(self.xyErrKey)),
             math.sqrt(self.record.getShapeErr()[2, 2]), rtol=1e-6)
+        self.assertEqual(self.table.getSchema().getAliasMap().get("slot_PsfShape"), "d")
+        self.assertEqual(self.psfShapeKey.get(self.record),
+                         self.record.getPsfShape())
 
     def testPersisted(self):
         self.table.definePsfFlux("a")
         self.table.defineCentroid("b")
         self.table.defineShape("c")
+        self.table.definePsfShape("d")
         with lsst.utils.tests.getTempFilePath(".fits") as filename:
             self.catalog.writeFits(filename)
             catalog = lsst.afw.table.SourceCatalog.readFits(filename)
@@ -180,11 +191,15 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
             self.assertFloatsAlmostEqual(
                 math.fabs(self.record.get(self.xyErrKey)),
                 math.sqrt(self.record.getShapeErr()[2, 2]), rtol=1e-6)
+            psfShape = self.psfShapeKey.get(self.record)
+            self.assertEqual(table.getSchema().getAliasMap().get("slot_PsfShape"), "d")
+            self.assertEqual(psfShape, record.getPsfShape())
 
     def testCanonical2(self):
         self.table.definePsfFlux("a")
         self.table.defineCentroid("b")
         self.table.defineShape("c")
+        self.table.definePsfShape("d")
         self.checkCanonical()
 
     def testPickle(self):
@@ -242,6 +257,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.table.definePsfFlux("a")
         self.table.defineCentroid("b")
         self.table.defineShape("c")
+        self.table.definePsfShape("d")
         self.assertFloatsEqual(cols2["a_instFlux"], cols2.getPsfInstFlux())
         self.assertFloatsEqual(cols2["a_instFluxErr"], cols2.getPsfInstFluxErr())
         self.assertFloatsEqual(cols2["b_x"], cols2.getX())
@@ -249,11 +265,15 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.assertFloatsEqual(cols2["c_xx"], cols2.getIxx())
         self.assertFloatsEqual(cols2["c_yy"], cols2.getIyy())
         self.assertFloatsEqual(cols2["c_xy"], cols2.getIxy())
+        self.assertFloatsEqual(cols2["d_xx"], cols2.getPsfIxx())
+        self.assertFloatsEqual(cols2["d_yy"], cols2.getPsfIyy())
+        self.assertFloatsEqual(cols2["d_xy"], cols2.getPsfIxy())
 
         # Trying to access slots which have been removed should raise.
         self.catalog.table.schema.getAliasMap().erase("slot_Centroid")
         self.catalog.table.schema.getAliasMap().erase("slot_Shape")
-        for quantity in ["X", "Y", "Ixx", "Iyy", "Ixy"]:
+        self.catalog.table.schema.getAliasMap().erase("slot_PsfShape")
+        for quantity in ["X", "Y", "Ixx", "Iyy", "Ixy", "PsfIxx", "PsfIyy", "PsfIxy"]:
             with self.assertRaises(lsst.pex.exceptions.LogicError):
                 getattr(self.catalog, f"get{quantity}")()
 

@@ -22,8 +22,9 @@
 __all__ = []
 
 from lsst.utils import continueClass
+from lsst.pex.exceptions import LogicError
 from ._base import Catalog
-from ._table import SourceCatalog, SourceTable
+from ._table import QuadrupoleKey, SourceCatalog, SourceColumnView, SourceRecord, SourceTable
 
 Catalog.register("Source", SourceCatalog)
 
@@ -106,3 +107,66 @@ class SourceCatalog:
             return (_getChildrenWithoutChecking(p) for p in parent)
         except TypeError:
             return _getChildrenWithoutChecking(parent)
+
+
+@continueClass
+class SourceRecord:  # noqa: F811
+
+    def getPsfShape(self):
+        # Catch the KeyError and raise LogicError from `pex.exception` for
+        # consistent behavior with similar C++ methods (getIxx, getIyy, etc.)
+        try:
+            return QuadrupoleKey(self.schema["slot_PsfShape"]).get(self)
+        except KeyError:
+            raise LogicError("Key is not valid (if this is a SourceRecord, make sure slot aliases have been "
+                             "set up)") from None
+
+    def _getPsfShapeComponent(self, suffix):
+        # Catch the KeyError and raise LogicError from `pex.exception` for
+        # consistent behavior with similar C++ methods (getIxx, getIyy, etc.)
+        try:
+            return self["slot_PsfShape_" + suffix]
+        except KeyError:
+            raise LogicError("Key is not valid (if this is a SourceRecord, make sure slot aliases have been "
+                             "set up)") from None
+
+    def getPsfIxx(self):
+        return self._getPsfShapeComponent("xx")
+
+    def getPsfIyy(self):
+        return self._getPsfShapeComponent("yy")
+
+    def getPsfIxy(self):
+        return self._getPsfShapeComponent("xy")
+
+    def getPsfShapeFlag(self):
+        return self._getPsfShapeComponent("flag")
+
+
+@continueClass
+class SourceColumnView:  # noqa: F811
+
+    def _getPsfShapeComponent(self, suffix):
+        # Catch the KeyError and raise LogicError from `pex.exception` for
+        # consistent behavior with similar C++ methods (getIxx, getIyy, etc.)
+        try:
+            return self["slot_PsfShape_" + suffix]
+        except KeyError:
+            raise LogicError("Key is not valid (if this is a SourceCatalog, make sure slot aliases have been "
+                             "set up)") from None
+
+    def getPsfIxx(self):
+        return self._getPsfShapeComponent("xx")
+
+    def getPsfIyy(self):
+        return self._getPsfShapeComponent("yy")
+
+    def getPsfIxy(self):
+        return self._getPsfShapeComponent("xy")
+
+
+@continueClass
+class SourceTable:  # noqa: F811
+
+    def definePsfShape(self, name):
+        self.schema.getAliasMap().set("slot_PsfShape", name)
