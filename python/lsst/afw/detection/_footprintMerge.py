@@ -25,7 +25,7 @@ from lsst.utils import continueClass
 from ._detection import FootprintMergeList
 
 
-@continueClass  # noqa: F811 (FIXME: remove for py 3.8+)
+@continueClass
 class FootprintMergeList:  # noqa: F811
     def getMergedSourceCatalog(self, catalogs, filters,
                                peakDist, schema, idFactory, samePeakDist):

@@ -26,7 +26,7 @@ from ._fits import (Fits, ImageWriteOptions, ImageCompressionOptions, ImageScali
                     compressionAlgorithmToString, scalingAlgorithmToString)
 
 
-@continueClass  # noqa: F811 (FIXME: remove for py 3.8+)
+@continueClass
 class Fits:  # noqa: F811
     def __enter__(self):
         return self
@@ -35,20 +35,20 @@ class Fits:  # noqa: F811
         self.closeFile()
 
 
-@continueClass  # noqa: F811 (FIXME: remove for py 3.8+)
+@continueClass
 class ImageWriteOptions:  # noqa: F811
     def __repr__(self):
         return f"{self.__class__.__name__}(compression={self.compression!r}, scaling={self.scaling!r})"
 
 
-@continueClass  # noqa: F811 (FIXME: remove for py 3.8+)
+@continueClass
 class ImageCompressionOptions:  # noqa: F811
     def __repr__(self):
         return (f"{self.__class__.__name__}(algorithm={compressionAlgorithmToString(self.algorithm)!r}, "
                 f"tiles={self.tiles.tolist()!r}, quantizeLevel={self.quantizeLevel:f})")
 
 
-@continueClass  # noqa: F811 (FIXME: remove for py 3.8+)
+@continueClass
 class ImageScalingOptions:  # noqa: F811
     def __repr__(self):
         return (f"{self.__class__.__name__}(algorithm={scalingAlgorithmToString(self.algorithm)!r}, "

@@ -24,7 +24,7 @@ from ._apCorrMap import ApCorrMap
 __all__ = ['ApCorrMap']
 
 
-@continueClass  # noqa: F811 (FIXME: remove for py 3.8+)
+@continueClass
 class ApCorrMap:  # noqa: F811
 
     def keys(self):

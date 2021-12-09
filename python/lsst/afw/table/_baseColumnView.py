@@ -31,7 +31,7 @@ from ._table import KeyFlag, _BaseColumnViewBase
 # base class, so we use the same naming convention we use for those.
 
 
-@continueClass  # noqa: F811 (FIXME: remove for py 3.8+)
+@continueClass
 class _BaseColumnViewBase:  # noqa: F811
 
     def getBits(self, keys=None):

@@ -4,7 +4,7 @@ from lsst.utils import continueClass
 from ._ellipses import Axes
 
 
-@continueClass  # noqa: F811 (FIXME: remove for py 3.8+)
+@continueClass
 class Axes:  # noqa: F811
     def __repr__(self):
         return f"Axes(a={self.getA()!r}, b={self.getB()!r}, theta={self.getTheta()!r})"

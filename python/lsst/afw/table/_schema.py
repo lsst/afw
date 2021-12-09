@@ -87,7 +87,7 @@ Field.alias(float, _Field["D"])
 SchemaItem.alias(float, _SchemaItem["D"])
 
 
-@continueClass  # noqa: F811 (FIXME: remove for py 3.8+)
+@continueClass
 class Schema:  # noqa: F811
 
     def getOrderedNames(self):

@@ -25,7 +25,7 @@ from ._math import Background
 __all__ = []  # import this module only for its side effects
 
 
-@continueClass  # noqa: F811 (FIXME: remove for py 3.8+)
+@continueClass
 class Background:  # noqa: F811
     def __reduce__(self):
         """Pickling"""
