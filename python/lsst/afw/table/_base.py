@@ -28,7 +28,7 @@ from ._schema import Key
 __all__ = ["Catalog"]
 
 
-@continueClass  # noqa: F811 (FIXME: remove for py 3.8+)
+@continueClass
 class BaseRecord:  # noqa: F811
 
     def extract(self, *patterns, **kwargs):

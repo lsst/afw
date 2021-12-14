@@ -26,7 +26,7 @@ from lsst.utils import continueClass, doImport
 from ._cameraGeom import Camera, FOCAL_PLANE
 
 
-@continueClass  # noqa: F811 (FIXME: remove for py 3.8+)
+@continueClass
 class Camera:  # noqa: F811
 
     def getPupilFactory(self, visitInfo, pupilSize, npix, **kwargs):

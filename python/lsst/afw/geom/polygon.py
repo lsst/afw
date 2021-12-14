@@ -25,7 +25,7 @@ from lsst.utils import continueClass
 from ._geom import Polygon
 
 
-@continueClass  # noqa: F811 (FIXME: remove for py 3.8+)
+@continueClass
 class Polygon:  # noqa: F811
     def __repr__(self):
         return f"{self.__class__.__name__}({[p for p in self.getVertices()]})"

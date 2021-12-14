@@ -4,7 +4,7 @@ from lsst.utils import continueClass
 from ._ellipses import Quadrupole
 
 
-@continueClass  # noqa: F811 (FIXME: remove for py 3.8+)
+@continueClass
 class Quadrupole:  # noqa: F811
     def __repr__(self):
         return f"Quadrupole(ixx={self.getIxx()!r}, iyy={self.getIyy()!r}, ixy={self.getIxy()!r})"

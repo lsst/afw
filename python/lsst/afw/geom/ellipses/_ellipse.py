@@ -4,7 +4,7 @@ from lsst.utils import continueClass
 from ._ellipses import Ellipse
 
 
-@continueClass  # noqa: F811 (FIXME: remove for py 3.8+)
+@continueClass
 class Ellipse:  # noqa: F811
     def __repr__(self):
         return f"Ellipse({self.getCore()!r}, {self.getCenter()!r})"
