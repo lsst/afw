@@ -24,6 +24,9 @@
 #define AFW_TABLE_PYTHON_CATALOG_H_INCLUDED
 
 #include "pybind11/pybind11.h"
+#include "pybind11/stl.h"
+#include "pybind11/numpy.h"
+#include "ndarray/pybind11.h"
 
 #include "lsst/utils/python.h"
 #include "lsst/afw/table/BaseColumnView.h"
@@ -37,36 +40,117 @@ namespace python {
 template <typename Record>
 using PyCatalog = pybind11::class_<CatalogT<Record>, std::shared_ptr<CatalogT<Record>>>;
 
-/// Extract a column from a potentially non-contiguous Catalog
-template <typename T, typename Record>
-ndarray::Array<typename Field<T>::Value const, 1, 1> _getArrayFromCatalog(
-        CatalogT<Record> const &catalog,  ///< Catalog
-        Key<T> const &key                 ///< Key to column to extract
-) {
-    ndarray::Array<typename Field<T>::Value, 1, 1> out = ndarray::allocate(catalog.size());
-    auto outIter = out.begin();
-    auto inIter = catalog.begin();
-    for (; inIter != catalog.end(); ++inIter, ++outIter) {
-        *outIter = inIter->get(key);
-    }
-    return out;
-}
-
-// Specialization of the above for lsst::geom::Angle: have to return a double array (in
-// radians), since NumPy arrays can't hold lsst::geom::Angles.
+/*
+ * A local helper class for returning numpy arrays of Catalog columns.
+ *
+ * This class works out a few differences between Python and C++:
+ *
+ * - In C++, we treat view arrays (obtained from ColumnView) objects completely
+ *   differently from copy arrays (from Catalog::copyColumn).  In Python, users
+ *   strongly expect __getitem__ to take care of both, preferring views and
+ *   falling back to copies when needed.
+ *
+ * - In C++, it thus makes sense for both types to be non-const, because it's
+ *   clear from how they are obtained that modifying them will do different
+ *   things.  In Python, that clarity is lost, so we mark copied returns as
+ *   const to prevent users from thinking that by modifying the column they are
+ *   modifying the catalog; instead they just can't modify copies at all.
+ *
+ * - In C++, we can return arrays of Angle as views; that's not possible in
+ *   Python because Angle isn't a valid dtype, so we return the underlying
+ *   double array (still a view) instead.
+ *
+ * - In C++, we can't return an array for Flag columns, which are packed bits
+ *   rather than (full-byte) bools.  We copy those into regular bool arrays for
+ *   Python.
+ *
+ * This class can be invoked directly by passing its function-call operator a
+ * Key or string column name.  It can also be invoked by passing a
+ * SchemaItem; this lets it be used as the argument to Schema::findAndApply,
+ * which is actually how column-name lookups work.
+ */
 template <typename Record>
-ndarray::Array<double const, 1, 1> _getArrayFromCatalog(
-        CatalogT<Record> const &catalog,   ///< Catalog
-        Key<lsst::geom::Angle> const &key  ///< Key to column to extract
-) {
-    ndarray::Array<double, 1, 1> out = ndarray::allocate(catalog.size());
-    auto outIter = out.begin();
-    auto inIter = catalog.begin();
-    for (; inIter != catalog.end(); ++inIter, ++outIter) {
-        *outIter = inIter->get(key).asRadians();
+class _CatalogColumnGetter {
+public:
+
+    explicit _CatalogColumnGetter(CatalogT<Record> & catalog) : _catalog(catalog) {}
+
+    template <typename T>
+    pybind11::array operator()(Key<T> const & key) const {
+        auto columns = _catalog.getColumnView();
+        if (columns) {
+            // Return a view that updates the catalog when written to.
+            ndarray::Array<T, 1, 0> array = columns.value()[key];
+            return pybind11::cast(array);
+        } else {
+            // Return a copy via a const array so the user can't write to it and
+            // then get surprised that it's not a view.
+            ndarray::Array<typename Field<T>::Value const, 1, 1> array = _catalog.copyColumn(key);
+            return pybind11::cast(array);
+        }
     }
-    return out;
-}
+
+    template <typename T>
+    pybind11::array operator()(Key<Array<T>> const & key) const {
+        auto columns = _catalog.getColumnView();
+        if (columns) {
+            // Return a view that updates the catalog when written to.
+            ndarray::Array<T, 2, 1> array = columns.value()[key];
+            return pybind11::cast(array);
+        } else {
+            // Return a copy via a const array so the user can't write to it and
+            // then get surprised that it's not a view.
+            ndarray::Array<typename Field<T>::Value const, 2, 2> array = _catalog.copyColumn(key);
+            return pybind11::cast(array);
+        }
+    }
+
+    pybind11::array operator()(Key<std::string> const & key) const {
+        PyErr_SetString(PyExc_NotImplementedError, "Column access to string fields is not yet supported.");
+        throw pybind11::error_already_set();
+    }
+
+    pybind11::array operator()(Key<Angle> const & key) const {
+        auto columns = _catalog.getColumnView();
+        if (columns) {
+            // Return a view that updates the catalog when written to.
+            ndarray::Array<double, 1, 0> radians = columns.value().radians(key);
+            return pybind11::cast(radians);
+        } else {
+            ndarray::Array<Angle, 1, 1> angles = _catalog.copyColumn(key);
+            ndarray::Array<double, 1, 1> radians = ndarray::allocate(angles.getShape());
+            std::transform(
+                angles.begin(),
+                angles.end(),
+                radians.begin(),
+                [](Angle const & angle) { return angle.asRadians(); }
+            );
+            // Return a copy via a const array so the user can't write to it and
+            // then get surprised that it's not a view.
+            return pybind11::cast(ndarray::Array<double const, 1, 1>(radians));
+        }
+    }
+
+    pybind11::array operator()(Key<Flag> const & key) const {
+        // Return a copy via a const array so the user can't write to it and
+        // then get surprised that it's not a view.
+        ndarray::Array<bool const, 1, 1> array = _catalog.copyColumn(key);
+        return pybind11::cast(array);
+    }
+
+    template <typename T>
+    pybind11::array operator()(SchemaItem<T> const & item) const {
+        return this->operator()(item.key);
+    }
+
+    pybind11::array operator()(std::string const & name) const {
+        return _catalog.getSchema().findAndApply(name, *this);
+    }
+
+private:
+    CatalogT<Record> & _catalog;
+};
+
 
 template <typename Record>
 void _setFlagColumnToArray(
@@ -99,62 +183,87 @@ void _setFlagColumnToScalar(
     }
 }
 
-/**
- * Declare field-type-specific overloaded catalog member functions for one field type
+/*
+ * A local helper class for declaring Catalog's methods that are overloaded
+ * on column types.
  *
- * @tparam T  Field type.
- * @tparam Record  Record type, e.g. BaseRecord or SimpleRecord.
- *
- * @param[in] cls  Catalog pybind11 class.
+ * _CatalogOverloadHelper is designed to be invoked by
+ * TypeList::for_each_nullptr, which calls operator() with a null pointer cast
+ * to each of the types in the list.  This implementation of operator() then
+ * dispatches to _declare methods for different kinds of operations.  Various
+ * overloads of those _declare methods handle the fact that different column
+ * types support different kinds of operations; the compiler will always pick
+ * the most specific overload, and this lets us provide a generic templated
+ * implementation and then overload specific types to do nothing.
  */
-template <typename T, typename Record>
-void declareCatalogOverloads(PyCatalog<Record> &cls) {
-    namespace py = pybind11;
-    using namespace pybind11::literals;
+template <typename Record>
+class _CatalogOverloadHelper {
+public:
 
-    using Catalog = CatalogT<Record>;
-    using Value = typename Field<T>::Value;
+    _CatalogOverloadHelper(PyCatalog<Record> & cls) : _cls(cls) {}
 
-    cls.def("isSorted", (bool (Catalog::*)(Key<T> const &) const) & Catalog::isSorted);
-    cls.def("sort", (void (Catalog::*)(Key<T> const &)) & Catalog::sort);
-    cls.def("find", [](Catalog &self, Value const &value, Key<T> const &key) -> std::shared_ptr<Record> {
-        auto iter = self.find(value, key);
-        if (iter == self.end()) {
-            return nullptr;
-        };
-        return iter;
-    });
-    cls.def("upper_bound", [](Catalog &self, Value const &value, Key<T> const &key) -> std::ptrdiff_t {
-        return self.upper_bound(value, key) - self.begin();
-    });
-    cls.def("lower_bound", [](Catalog &self, Value const &value, Key<T> const &key) -> std::ptrdiff_t {
-        return self.lower_bound(value, key) - self.begin();
-    });
-    cls.def("equal_range", [](Catalog &self, Value const &value, Key<T> const &key) {
-        auto p = self.equal_range(value, key);
-        return py::slice(p.first - self.begin(), p.second - self.begin(), 1);
-    });
-    cls.def("between", [](Catalog &self, Value const &lower, Value const &upper, Key<T> const &key) {
-        std::ptrdiff_t a = self.lower_bound(lower, key) - self.begin();
-        std::ptrdiff_t b = self.upper_bound(upper, key) - self.begin();
-        return py::slice(a, b, 1);
-    });
+    template <typename T>
+    void operator()(T const * tag) {
+        _declare_comparison_overloads(tag);
+        _declare_getitem(tag);
+    }
 
-    cls.def("_getitem_",
-            [](Catalog const &self, Key<T> const &key) { return _getArrayFromCatalog(self, key); });
-    cls.def(
-        "_set_flag",
-        [](Catalog &self, Key<Flag> const & key, ndarray::Array<bool const, 1> const & array) {
-            _setFlagColumnToArray(self, key, array);
-        }
-    );
-    cls.def(
-        "_set_flag",
-        [](Catalog &self, Key<Flag> const & key, bool value) {
-            _setFlagColumnToScalar(self, key, value);
-        }
-    );
-}
+private:
+
+    template <typename T>
+    void _declare_comparison_overloads(T const *) {
+        namespace py = pybind11;
+        using namespace pybind11::literals;
+
+        using Catalog = CatalogT<Record>;
+        using Value = typename Field<T>::Value;
+
+        _cls.def("isSorted", (bool (Catalog::*)(Key<T> const &) const) & Catalog::isSorted);
+        _cls.def("sort", (void (Catalog::*)(Key<T> const &)) & Catalog::sort);
+        _cls.def("find", [](Catalog &self, Value const &value, Key<T> const &key) -> std::shared_ptr<Record> {
+            auto iter = self.find(value, key);
+            if (iter == self.end()) {
+                return nullptr;
+            };
+            return iter;
+        });
+        _cls.def("upper_bound", [](Catalog &self, Value const &value, Key<T> const &key) -> std::ptrdiff_t {
+            return self.upper_bound(value, key) - self.begin();
+        });
+        _cls.def("lower_bound", [](Catalog &self, Value const &value, Key<T> const &key) -> std::ptrdiff_t {
+            return self.lower_bound(value, key) - self.begin();
+        });
+        _cls.def("equal_range", [](Catalog &self, Value const &value, Key<T> const &key) {
+            auto p = self.equal_range(value, key);
+            return py::slice(p.first - self.begin(), p.second - self.begin(), 1);
+        });
+        _cls.def("between", [](Catalog &self, Value const &lower, Value const &upper, Key<T> const &key) {
+            std::ptrdiff_t a = self.lower_bound(lower, key) - self.begin();
+            std::ptrdiff_t b = self.upper_bound(upper, key) - self.begin();
+            return py::slice(a, b, 1);
+        });
+    }
+
+    template <typename T>
+    void _declare_comparison_overloads(Array<T> const *) {
+        // Array columns cannot be compared, so we do not define comparison
+        // overloads for these.
+    }
+
+    template <typename T>
+    void _declare_getitem(T const *) {
+        _cls.def(
+            "_getitem_",
+            [](CatalogT<Record> &self, Key<T> const &key) { return _CatalogColumnGetter<Record>(self)(key); }
+        );
+    }
+
+    void _declare_getitem(std::string const *) {
+        // String columns cannot be retrieved as arrays.
+    }
+
+    PyCatalog<Record> & _cls;
+};
 
 /**
  * Wrap an instantiation of lsst::afw::table::CatalogT<Record>.
@@ -211,37 +320,48 @@ PyCatalog<Record> declareCatalog(utils::python::WrapperCollection &wrappers, std
                 cls.def("__len__", &Catalog::size);
                 cls.def("resize", &Catalog::resize);
 
-                // Use private names for the following so the public Python method
-                // can manage the _column cache
-                cls.def("_getColumnView", &Catalog::getColumnView);
-                cls.def("_addNew", &Catalog::addNew);
+                // Trying to get a column view of a noncontiguous catalog is
+                // an error in Python for backwards-compatibility reasons
+                // (it's safer to change the C++ because it's less likely to
+                // have been used outside these wrappers, and if it was, it'd
+                // be an obvious compile failure).
+                auto py_get_columns = [](Catalog & self) {
+                    auto columns = self.getColumnView();
+                    if (!columns) {
+                        throw LSST_EXCEPT(
+                            pex::exceptions::RuntimeError,
+                            "Record data is not contiguous in memory."
+                        );
+                    }
+                    return columns.value();
+                };
+                cls.def("getColumnView", py_get_columns);
+                cls.def_property_readonly("columns", py_get_columns);
+                cls.def("addNew", &Catalog::addNew);
                 cls.def("_extend", [](Catalog &self, Catalog const &other, bool deep) {
                     self.insert(self.end(), other.begin(), other.end(), deep);
                 });
                 cls.def("_extend", [](Catalog &self, Catalog const &other, SchemaMapper const &mapper) {
                     self.insert(mapper, self.end(), other.begin(), other.end());
                 });
-                cls.def("_append",
+                cls.def("append",
                         [](Catalog &self, std::shared_ptr<Record> const &rec) { self.push_back(rec); });
-                cls.def("_delitem_", [](Catalog &self, std::ptrdiff_t i) {
+                cls.def("__delitem__", [](Catalog &self, std::ptrdiff_t i) {
                     self.erase(self.begin() + utils::python::cppIndex(self.size(), i));
                 });
-                cls.def("_delslice_", [](Catalog &self, py::slice const &s) {
+                cls.def("__delitem__", [](Catalog &self, py::slice const &s) {
                     Py_ssize_t start = 0, stop = 0, step = 0, length = 0;
                     if (PySlice_GetIndicesEx(s.ptr(), self.size(), &start, &stop, &step, &length) != 0) {
                         throw py::error_already_set();
                     }
                     if (step != 1) {
-                        throw py::index_error("Slice step must not exactly 1");
+                        throw py::index_error("Slice step must be exactly 1");
                     }
                     self.erase(self.begin() + start, self.begin() + stop);
                 });
-                cls.def("_clear", &Catalog::clear);
+                cls.def("clear", &Catalog::clear);
 
                 cls.def("set", &Catalog::set);
-                cls.def("_getitem_", [](Catalog &self, int i) {
-                    return self.get(utils::python::cppIndex(self.size(), i));
-                });
                 cls.def("isContiguous", &Catalog::isContiguous);
                 cls.def("writeFits",
                         (void (Catalog::*)(std::string const &, std::string const &, int) const) &
@@ -258,16 +378,37 @@ PyCatalog<Record> declareCatalog(utils::python::WrapperCollection &wrappers, std
                         (Catalog(Catalog::*)(std::ptrdiff_t, std::ptrdiff_t, std::ptrdiff_t) const) &
                                 Catalog::subset);
 
-                declareCatalogOverloads<std::int32_t>(cls);
-                declareCatalogOverloads<std::int64_t>(cls);
-                declareCatalogOverloads<float>(cls);
-                declareCatalogOverloads<double>(cls);
-                declareCatalogOverloads<lsst::geom::Angle>(cls);
+                // Overloads in pybind11 are tried in the order they are
+                // defined, so we define those that we think will see the
+                // most usage.  That starts with single-row indexing and
+                // column access by string field name, followed by column
+                // access by Key.
+                cls.def(
+                    "_getitem_",
+                    [](CatalogT<Record> &self, std::ptrdiff_t index) {
+                        return self.get(utils::python::cppIndex(self.size(), index));
+                    }
+                );
+                cls.def(
+                    "_getitem_",
+                    [](CatalogT<Record> &self, std::string const & name) {
+                        return _CatalogColumnGetter(self)(name);
+                    }
+                );
+                FieldTypes::for_each_nullptr(_CatalogOverloadHelper(cls));
 
-                cls.def("_getitem_",
-                        [](Catalog const &self, Key<Flag> const &key) -> ndarray::Array<bool const, 1, 0> {
-                            return _getArrayFromCatalog(self, key);
-                        });
+                cls.def(
+                    "_set_flag",
+                    [](Catalog &self, Key<Flag> const & key, ndarray::Array<bool const, 1> const & array) {
+                        _setFlagColumnToArray(self, key, array);
+                    }
+                );
+                cls.def(
+                    "_set_flag",
+                    [](Catalog &self, Key<Flag> const & key, bool value) {
+                        _setFlagColumnToScalar(self, key, value);
+                    }
+                );
 
             });
 }

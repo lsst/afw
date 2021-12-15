@@ -252,7 +252,6 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
     def testColumnView(self):
         cols1 = self.catalog.getColumnView()
         cols2 = self.catalog.columns
-        self.assertIs(cols1, cols2)
         self.assertIsInstance(cols1, lsst.afw.table.SourceColumnView)
         self.table.definePsfFlux("a")
         self.table.defineCentroid("b")

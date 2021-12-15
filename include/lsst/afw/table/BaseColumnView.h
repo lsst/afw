@@ -3,6 +3,7 @@
 #define AFW_TABLE_BaseColumnView_h_INCLUDED
 
 #include <cstdint>
+#include <optional>
 
 #include "lsst/afw/table/BaseTable.h"
 
@@ -96,6 +97,9 @@ public:
     template <typename T>
     ndarray::ArrayRef<T, 2, 1> const operator[](Key<Array<T> > const& key) const;
 
+    /// Return a 1-d array of radians for an Angle field.
+    ndarray::ArrayRef<double, 1> const radians(Key<Angle> const & key) const;
+
     /**
      *  Return a 1-d array expression corresponding to a flag bit.
      *
@@ -129,12 +133,16 @@ public:
     /**
      *  Construct a BaseColumnView from an iterator range.
      *
-     *  The iterators must dereference to a reference or const reference to a record.
-     *  If the record data is not contiguous in memory, throws lsst::pex::exceptions::RuntimeError.
+     *  The iterators must dereference to a reference or const reference to a
+     *  record.  If the record data is not contiguous in memory, returns an
+     *  empty optional.
      */
     template <typename InputIterator>
-    static BaseColumnView make(std::shared_ptr<BaseTable> const& table, InputIterator first,
-                               InputIterator last);
+    static std::optional<BaseColumnView> make(
+        std::shared_ptr<BaseTable> const& table,
+        InputIterator first,
+        InputIterator last
+    );
 
     /**
      *  @brief Return true if the given record iterator range is continuous and the records all belong
@@ -179,8 +187,13 @@ public:
 
     /// @copydoc BaseColumnView::make
     template <typename InputIterator>
-    static ColumnViewT make(std::shared_ptr<Table> const& table, InputIterator first, InputIterator last) {
-        return ColumnViewT(BaseColumnView::make(table, first, last));
+    static std::optional<ColumnViewT> make(std::shared_ptr<Table> const& table, InputIterator first, InputIterator last) {
+        auto base = BaseColumnView::make(table, first, last);
+        if (base) {
+            return ColumnViewT(base.value());
+        } else {
+            return std::nullopt;
+        }
     }
 
     ColumnViewT(ColumnViewT const&) = default;
@@ -194,8 +207,11 @@ protected:
 };
 
 template <typename InputIterator>
-BaseColumnView BaseColumnView::make(std::shared_ptr<BaseTable> const& table, InputIterator first,
-                                    InputIterator last) {
+std::optional<BaseColumnView> BaseColumnView::make(
+    std::shared_ptr<BaseTable> const& table,
+    InputIterator first,
+    InputIterator last
+) {
     if (first == last) {
         return BaseColumnView(table, 0, nullptr, ndarray::Manager::Ptr());
     }
@@ -207,8 +223,7 @@ BaseColumnView BaseColumnView::make(std::shared_ptr<BaseTable> const& table, Inp
     char* expected = reinterpret_cast<char*>(buf) + recordSize;
     for (++first; first != last; ++first, ++recordCount, expected += recordSize) {
         if (first->_data != expected || first->_manager != manager) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
-                              "Record data is not contiguous in memory.");
+            return std::nullopt;
         }
     }
     return BaseColumnView(table, recordCount, buf, manager);

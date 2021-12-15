@@ -396,11 +396,14 @@ FootprintSet mergeFootprintSets(FootprintSet const &lhs,      // the FootprintSe
 
             int const nold = peaks.size();
             peaks.insert(peaks.end(), oldPeaks.begin(), oldPeaks.end());
-            // We use getInternal() here to get the vector of shared_ptr that Catalog uses internally,
-            // which causes the STL algorithm to copy pointers instead of PeakRecords (which is what
-            // it'd try to do if we passed Catalog's own iterators).
-            std::inplace_merge(peaks.getInternal().begin(), peaks.getInternal().begin() + nold,
-                               peaks.getInternal().end(), SortPeaks());
+            // We use internal accessors here to get the vector of shared_ptr
+            // that Catalog uses internally, which causes the STL algorithm to
+            // copy pointers instead of PeakRecords (which is what it'd try to
+            // do if we passed Catalog's own iterators).
+            auto internal_peaks = peaks.drainIntoPtrVec();
+            std::inplace_merge(internal_peaks.begin(), internal_peaks.begin() + nold,
+                               internal_peaks.end(), SortPeaks());
+            peaks.assignPtrVec(std::move(internal_peaks));
         }
 
         for (unsigned long i : rhsFootprintIndxs) {
@@ -409,9 +412,11 @@ FootprintSet mergeFootprintSets(FootprintSet const &lhs,      // the FootprintSe
 
             int const nold = peaks.size();
             peaks.insert(peaks.end(), oldPeaks.begin(), oldPeaks.end());
-            // See note above on why we're using getInternal() here.
-            std::inplace_merge(peaks.getInternal().begin(), peaks.getInternal().begin() + nold,
-                               peaks.getInternal().end(), SortPeaks());
+            // See note above on why we're using the internal accessors here.
+            auto internal_peaks = peaks.drainIntoPtrVec();
+            std::inplace_merge(internal_peaks.begin(), internal_peaks.begin() + nold,
+                               internal_peaks.end(), SortPeaks());
+            peaks.assignPtrVec(std::move(internal_peaks));
         }
         idFinder.reset();
     }
@@ -537,11 +542,13 @@ template <typename ImageT, typename ThresholdT>
 void findPeaks(std::shared_ptr<Footprint> foot, ImageT const &img, bool polarity, ThresholdT) {
     findPeaksInFootprint(img, polarity, foot->getPeaks(), *foot, 1);
 
-    // We use getInternal() here to get the vector of shared_ptr that Catalog uses internally,
-    // which causes the STL algorithm to copy pointers instead of PeakRecords (which is what
-    // it'd try to do if we passed Catalog's own iterators).
-    std::stable_sort(foot->getPeaks().getInternal().begin(), foot->getPeaks().getInternal().end(),
-                     SortPeaks());
+    // We use internal accessors here to get the vector of shared_ptr that
+    // Catalog uses internally, which causes the STL algorithm to copy pointers
+    // instead of PeakRecords (which is what it'd try to do if we passed
+    // Catalog's own iterators).
+    auto internal_peaks = foot->getPeaks().drainIntoPtrVec();
+    std::stable_sort(internal_peaks.begin(), internal_peaks.end(), SortPeaks());
+    foot->getPeaks().assignPtrVec(std::move(internal_peaks));
 
     if (foot->getPeaks().empty()) {
         FindMaxInFootprint<typename ImageT::Pixel> maxFinder(polarity);

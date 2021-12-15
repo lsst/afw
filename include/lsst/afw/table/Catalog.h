@@ -2,6 +2,7 @@
 #ifndef AFW_TABLE_Catalog_h_INCLUDED
 #define AFW_TABLE_Catalog_h_INCLUDED
 
+#include <variant>
 #include <type_traits>
 #include <vector>
 
@@ -20,6 +21,12 @@
 namespace lsst {
 namespace afw {
 namespace table {
+
+// Tag class for remembering whether it is known whether a catalog is
+// contiguous; the other variant is a std::optional<ColumnView>, populated when
+// the catalog is contiguous.
+class _MaybeContiguous {};
+
 
 /**
  *  Iterator class for CatalogT.
@@ -50,12 +57,6 @@ public:
     template <typename RecordT>
     operator std::shared_ptr<RecordT>() const {
         return *this->base();
-    }
-
-    template <typename RecordT>
-    CatalogIterator& operator=(std::shared_ptr<RecordT> const& other) const {
-        *this->base() = other;
-        return *this;
     }
 
 private:
@@ -96,7 +97,7 @@ private:
  */
 template <typename RecordT>
 class CatalogT {
-    using Internal = std::vector<std::shared_ptr<RecordT>>;
+    using PtrVec = std::vector<std::shared_ptr<RecordT>>;
 
 public:
     using Record = RecordT;
@@ -106,10 +107,10 @@ public:
     using value_type = RecordT;
     using reference = RecordT &;
     using pointer = std::shared_ptr<RecordT>;
-    using size_type = typename Internal::size_type;
-    using difference_type = typename Internal::difference_type;
-    using iterator = CatalogIterator<typename Internal::iterator>;
-    using const_iterator = CatalogIterator<typename Internal::const_iterator>;
+    using size_type = typename PtrVec::size_type;
+    using difference_type = typename PtrVec::difference_type;
+    using iterator = CatalogIterator<typename PtrVec::iterator>;
+    using const_iterator = CatalogIterator<typename PtrVec::const_iterator>;
 
     /// Return the table associated with the catalog.
     std::shared_ptr<Table> getTable() const { return _table; }
@@ -150,9 +151,10 @@ public:
     }
 
     /// Shallow copy constructor.
-    CatalogT(CatalogT const& other) : _table(other._table), _internal(other._internal) {}
-    // Delegate to copy constructor for backward compatibility
-    CatalogT(CatalogT&& other) : CatalogT(other) {}
+    CatalogT(CatalogT const& other) = default;
+
+    /// Shallow move constructor.
+    CatalogT(CatalogT&& other) = default;
 
     ~CatalogT() = default;
 
@@ -167,15 +169,10 @@ public:
             : _table(other.getTable()), _internal(other.begin().base(), other.end().base()) {}
 
     /// Shallow assigment.
-    CatalogT& operator=(CatalogT const& other) {
-        if (&other != this) {
-            _table = other._table;
-            _internal = other._internal;
-        }
-        return *this;
-    }
-    // Delegate to copy assignment for backward compatibility
-    CatalogT& operator=(CatalogT&& other) { return *this = other; }
+    CatalogT& operator=(CatalogT const& other) = default;
+
+    /// Shallow move asignment.
+    CatalogT& operator=(CatalogT&& other) = default;
 
     /**
      *  Return the subset of a catalog corresponding to the True values of the given mask array.
@@ -377,20 +374,71 @@ public:
     /**
      *  Return a ColumnView of this catalog's records.
      *
-     *  Will throw RuntimeError if records are not contiguous.
+     *  This method is non-const because the ColumnView is cached between
+     *  calls.  Given expected usage, making the method non-const seems better
+     *  that making the cache a mutable member.
+     *
+     *  Will return an empty optional if records are not contiguous;
      */
-    ColumnView getColumnView() const {
-        if (std::is_const<RecordT>::value) {
+    std::optional<ColumnView> getColumnView() {
+        if constexpr (std::is_const<RecordT>::value) {
             throw LSST_EXCEPT(
                     pex::exceptions::LogicError,
                     "Cannot get a column view from a CatalogT<RecordT const> (as column views are always "
                     "non-const views).");
         }
-        return ColumnView::make(_table, begin(), end());
+        // We cache but return by value because ColumnView is actually a very
+        // lightweight data structure; it just takes a long time to construct
+        // because we have to check that the catalog is actually contiguous.
+        if (std::holds_alternative<_MaybeContiguous>(_columns)) {
+            _columns = ColumnView::make(_table, begin(), end());
+        }
+        return std::get<std::optional<ColumnView>>(_columns);
     }
 
-    /// Return true if all records are contiguous.
-    bool isContiguous() const { return ColumnView::isRangeContiguous(_table, begin(), end()); }
+    //@{
+    /**
+     * Return all of the values in a column as a non-view array.
+     */
+    template <typename T>
+    ndarray::Array<typename Field<T>::Value, 1, 1> copyColumn(Key<T> const & key) const {
+        ndarray::Array<typename Field<T>::Value, 1, 1> result = ndarray::allocate(size());
+        std::transform(
+            begin(),
+            end(),
+            result.begin(),
+            [key](RecordT const & record) { return record.get(key); }
+        );
+        return result;
+    }
+    template <typename T>
+    ndarray::Array<typename Field<T>::Value, 2, 2> copyColumn(Key<Array<T>> const & key) const {
+        std::size_t column_size = key.getSize();
+        if (column_size == 0) {
+            throw LSST_EXCEPT(
+                pex::exceptions::RuntimeError,
+                "Cannot obtain column for variable-length array field."
+            );
+        }
+        ndarray::Array<typename Field<T>::Value, 2, 2> result = ndarray::allocate(size(), column_size);
+        std::transform(
+            begin(),
+            end(),
+            result.begin(),
+            [key](RecordT const & record) { return record.get(key); }
+        );
+        return result;
+    }
+    //@}
+
+    /**
+     *  Return true if all records are contiguous.
+     *
+     *  This method is non-const so we can cache the result.
+     */
+    bool isContiguous() {
+        return static_cast<bool>(getColumnView());
+    }
 
     //@{
     /**
@@ -439,6 +487,7 @@ public:
     /// Change the size of the catalog, removing or adding empty records as needed.
     void resize(size_type n) {
         size_type old = size();
+        _columns = _MaybeContiguous{};
         _internal.resize(n);
         if (old < n) {
             _table->preallocate(n - old);
@@ -464,7 +513,10 @@ public:
     std::shared_ptr<RecordT> const get(size_type i) const { return _internal[i]; }
 
     /// Set the record at index i to a pointer.
-    void set(size_type i, std::shared_ptr<RecordT> const& p) { _internal[i] = p; }
+    void set(size_type i, std::shared_ptr<RecordT> const& p) {
+        _columns = _MaybeContiguous{};
+        _internal[i] = p;
+    }
 
     /**
      *  Replace the contents of the table with an iterator range.
@@ -480,21 +532,29 @@ public:
     /// Add a copy of the given record to the end of the catalog.
     void push_back(Record const& r) {
         std::shared_ptr<RecordT> p = _table->copyRecord(r);
+        _columns = _MaybeContiguous{};
         _internal.push_back(p);
     }
 
     /// Add the given record to the end of the catalog without copying.
-    void push_back(std::shared_ptr<RecordT> const& p) { _internal.push_back(p); }
+    void push_back(std::shared_ptr<RecordT> const& p) {
+        _columns = _MaybeContiguous{};
+        _internal.push_back(p);
+    }
 
     /// Create a new record, add it to the end of the catalog, and return a pointer to it.
     std::shared_ptr<RecordT> addNew() {
         std::shared_ptr<RecordT> r = _table->makeRecord();
+        _columns = _MaybeContiguous{};
         _internal.push_back(r);
         return r;
     }
 
     /// Remove the last record in the catalog
-    void pop_back() { _internal.pop_back(); }
+    void pop_back() {
+        _columns = _MaybeContiguous{};
+        _internal.pop_back();
+    }
 
     /// Deep-copy the catalog using a cloned table.
     CatalogT copy() const { return CatalogT(getTable()->clone(), begin(), end(), true); }
@@ -553,19 +613,25 @@ public:
     /// Insert a copy of the given record at the given position.
     iterator insert(iterator pos, Record const& r) {
         std::shared_ptr<RecordT> p = _table->copyRecord(r);
+        _columns = _MaybeContiguous{};
         return iterator(_internal.insert(pos.base(), p));
     }
 
     /// Insert the given record at the given position without copying.
     iterator insert(iterator pos, std::shared_ptr<RecordT> const& p) {
+        _columns = _MaybeContiguous{};
         return iterator(_internal.insert(pos.base(), p));
     }
 
     /// Erase the record pointed to by pos, and return an iterator the next record.
-    iterator erase(iterator pos) { return iterator(_internal.erase(pos.base())); }
+    iterator erase(iterator pos) {
+        _columns = _MaybeContiguous{};
+        return iterator(_internal.erase(pos.base()));
+    }
 
     /// Erase the records in the range [first, last).
     iterator erase(iterator first, iterator last) {
+        _columns = _MaybeContiguous{};
         return iterator(_internal.erase(first.base(), last.base()));
     }
 
@@ -576,7 +642,10 @@ public:
     }
 
     /// Remove all records from the catalog.
-    void clear() { _internal.clear(); }
+    void clear() {
+        _columns = _MaybeContiguous{};
+        _internal.clear();
+    }
 
     /// Return true if the catalog is in ascending order according to the given key.
     template <typename T>
@@ -662,19 +731,32 @@ public:
 
     //@{
     /**
-     *  Return a reference to the internal vector-of-shared_ptr
+     *  Access to the internal vector of shared_ptr.
      *
-     *  While in most cases it is more convenient to use the Catalog's iterators, which dereference
-     *  directly to Record objects (and hence allow iter->method() rather than (**iter).method()),
-     *  direct access to the underlying vector-of-shared_ptr is provided here to allow complete use
-     *  of the C++ STL.  In particular, in order to use a mutating STL algorithm on a Catalog in
-     *  such a way that Records are shallow-copied (i.e. shared_ptr::operator= is invoked instead
-     *  of Record::operator=), those algorithms should be called on the iterators of these internal
-     *  containers.  When an algorithm should be called in such a way that records are deep-copied,
-     *  the regular Catalog iterators should be used.
+     *  While in most cases it is more convenient to use the Catalog's
+     *  iterators, which dereference directly to Record objects (and hence
+     *  allow iter->method() rather than (**iter).method()), direct access to
+     *  the underlying vector-of-shared_ptr is provided here to allow complete
+     *  use of the C++ STL.  In particular, in order to use a mutating STL
+     *  algorithm on a Catalog in such a way that Records are shallow-copied
+     *  (i.e. shared_ptr::operator= is invoked instead of Record::operator=),
+     *  those algorithms should be called on the iterators of these internal
+     *  containers.  When an algorithm should be called in such a way that
+     *  records are deep-copied, the regular Catalog iterators should be used.
+     *
+     *  While a direct const view is available via `getPtrVec`, mutations
+     *  must go through `drainIntoPtrVec` and `assignPtrVec`, which empty
+     *  the Catalog of records and fully repopulate it (respectively).
      */
-    Internal& getInternal() { return _internal; }
-    Internal const& getInternal() const { return _internal; }
+    PtrVec const & getPtrVec() const { return _internal; }
+    PtrVec drainIntoPtrVec() {
+        _columns = _MaybeContiguous{};
+        return std::move(_internal);
+    }
+    void assignPtrVec(PtrVec && internal) {
+        _columns = _MaybeContiguous{};
+        _internal = std::move(internal);
+    }
     //@}
 
 private:
@@ -689,7 +771,8 @@ private:
                        std::input_iterator_tag*) {}
 
     std::shared_ptr<Table> _table;
-    Internal _internal;
+    PtrVec _internal;
+    std::variant<_MaybeContiguous, std::optional<ColumnView>> _columns;
 };
 
 namespace detail {
@@ -741,6 +824,7 @@ template <typename RecordT>
 template <typename Compare>
 void CatalogT<RecordT>::sort(Compare cmp) {
     detail::ComparisonAdaptor<RecordT, Compare> f = {cmp};
+    _columns = _MaybeContiguous{};
     std::stable_sort(_internal.begin(), _internal.end(), f);
 }
 
@@ -755,6 +839,7 @@ template <typename RecordT>
 template <typename T>
 void CatalogT<RecordT>::sort(Key<T> const& key) {
     detail::KeyComparisonFunctor<RecordT, T> f = {key};
+    _columns = _MaybeContiguous{};
     return sort(f);
 }
 
