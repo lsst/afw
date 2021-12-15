@@ -99,6 +99,25 @@ typename ndarray::ArrayRef<T, 2, 1> const BaseColumnView::operator[](Key<Array<T
             _impl->manager);
 }
 
+ndarray::ArrayRef<char, 2, 1> const BaseColumnView::get_utf8_bytes(Key<std::string> const & key) const {
+    if (!key.isValid()) {
+        throw LSST_EXCEPT(
+            pex::exceptions::LogicError,
+            "Key is not valid (if this is a SourceCatalog, make sure slot aliases have been set up).");
+    }
+    if (key.isVariableLength()) {
+        throw LSST_EXCEPT(
+            pex::exceptions::LogicError,
+            "Cannot get columns for variable-length string fields"
+        );
+    }
+    return ndarray::external(
+            reinterpret_cast<char *>(_impl->buf) + key.getOffset(),
+            ndarray::makeVector(_impl->recordCount, key.getSize()),
+            ndarray::makeVector(_impl->table->getSchema().getRecordSize() / sizeof(char), std::size_t(1)),
+            _impl->manager);
+}
+
 ndarray::ArrayRef<double, 1> const BaseColumnView::radians(Key<Angle> const & key) const {
     ndarray::Array<lsst::geom::Angle, 1, 0> a = (*this)[key];
     return ndarray::detail::ArrayAccess<ndarray::ArrayRef<double, 1>>::construct(

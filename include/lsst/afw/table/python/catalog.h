@@ -51,37 +51,53 @@ template <typename Record>
 class ColumnGetter {
 public:
 
-    explicit ColumnGetter(CatalogT<Record> & catalog) :
-        _catalog(catalog), _columns(_catalog.getColumnView())
+    explicit ColumnGetter(CatalogT<Record> & catalog, bool force_copy=false, bool ensure_writeable=false) :
+        _catalog(catalog),
+        _columns(_catalog.getColumnView()),
+        _force_copy(force_copy),
+        _ensure_writeable(ensure_writeable)
     {}
 
     template <typename T>
     pybind11::array operator()(Key<T> const & key) const {
-        if (_columns) {
+        if (_columns && !_force_copy) {
             return ColumnViewGetter(_columns.value())(key);
         } else {
-            ndarray::Array<typename Field<T>::Value const, 1, 1> array = _catalog.copyColumn(key);
-            return pybind11::cast(array);
+            return _maybe_read_only(_catalog.copyColumn(key));
         }
     }
 
     template <typename T>
     pybind11::array operator()(Key<Array<T>> const & key) const {
-        if (_columns) {
+        if (key.isVariableLength()) {
+            return _make_object_array(key);
+        } else if (_columns && !_force_copy) {
             return ColumnViewGetter(_columns.value())(key);
         } else {
-            ndarray::Array<typename Field<T>::Value const, 2, 2> array = _catalog.copyColumn(key);
-            return pybind11::cast(array);
+            return _maybe_read_only(pybind11::cast(array));
         }
     }
 
     pybind11::array operator()(Key<std::string> const & key) const {
-        PyErr_SetString(PyExc_NotImplementedError, "Column access to string fields is not yet supported.");
-        throw pybind11::error_already_set();
+        if (key.isVariableLength()) {
+            return _make_object_array(key);
+        } else if (_columns && !_force_copy) {
+            return ColumnViewGetter(_columns.value())(key);
+        } else {
+            return _maybe_read_only(
+                ColumnViewGetter::make_str_array(
+                    [this, key](std::size_t n) -> pybind11::str {
+                        return pybind11::str(this->_catalog[n].getElement(key), key.getElementCount());
+                    },
+                    _catalog.size(),
+                    key.getElementCount()
+                )
+            );
+        }
     }
 
     pybind11::array operator()(Key<Angle> const & key) const {
-        if (_columns) {
+        if (_columns && !_force_copy) {
             return ColumnViewGetter(_columns.value())(key);
         } else {
             ndarray::Array<Angle, 1, 1> angles = _catalog.copyColumn(key);
@@ -92,16 +108,15 @@ public:
                 radians.begin(),
                 [](Angle const & angle) { return angle.asRadians(); }
             );
-            return pybind11::cast(ndarray::Array<double const, 1, 1>(radians));
+            return _maybe_read_only(radians);
         }
     }
 
     pybind11::array operator()(Key<Flag> const & key) const {
-        if (_columns) {
+        if (_columns && !_force_copy) {
             return ColumnViewGetter(_columns.value())(key);
         } else {
-            ndarray::Array<bool const, 1, 1> array = _catalog.copyColumn(key);
-            return pybind11::cast(array);
+            return _maybe_read_only(array);
         }
     }
 
@@ -115,8 +130,48 @@ public:
     }
 
 private:
+
+    pybind11::array _maybe_read_only(pybind11::array array) const {
+        if (!_ensure_writeable) {
+            array.attr("flags")["WRITEABLE"] = false;
+        }
+        return array;
+    }
+
+    template <typename T, int N, int C>
+    pybind11::array _maybe_read_only(ndarray::Array<T, N, C> const & array) const {
+        return _maybe_read_only(pybind11::cast(array));
+    }
+
+    template <typename T>
+    pybind11::object _make_object_element(BaseRecord & record, Key<Array<T>> const & key) const {
+        ndarray::Array<T, 1, 1> array = record[key];
+        if (_force_copy) {
+            array = ndarray::copy(array);
+        }
+        return pybind11::cast(array);
+    }
+
+    template <typename T>
+    pybind11::object _make_object_element(BaseRecord & record, Key<std::string> const & key) const {
+        return pybind11::str(record.getElement(key), key.getElementCount());
+    }
+
+    template <typename T>
+    pybind11::array _make_object_array(Key<T> const & key) const {
+        pybind11::list result_as_list;;
+        auto record_iter = _catalog.begin();
+        auto const record_end = _catalog.end();
+        for (pybind11::ssize_t n = 0; record_iter != record_end; ++n, ++record_iter) {
+            result_as_list[n] = _make_object_element(*record_iter, key);
+        }
+        return _maybe_read_only(pybind11::array(result_as_list));
+    }
+
     CatalogT<Record> & _catalog;
     std::optional<BaseColumnView> _columns;
+    bool _force_copy;
+    bool _ensure_writeable;
 };
 
 
@@ -173,7 +228,19 @@ public:
     template <typename T>
     void operator()(T const * tag) {
         _declare_comparison_overloads(tag);
-        _declare_getitem(tag);
+        _cls.def(
+            "_getitem_",
+            [](CatalogT<Record> &self, Key<T> const &key) { return ColumnGetter<Record>(self)(key); }
+        );
+        _cls.def(
+            "get_column",
+            [](CatalogT<Record> &self, Key<T> const &key, bool force_copy, bool ensure_writeable) {
+                return ColumnGetter<Record>(self, force_copy, ensure_writeable)(key);
+            },
+            pybind11::arg("key"),
+            pybind11::arg("force_copy") = false,
+            pybind11::arg("ensure_writeable") = false
+        );
     }
 
 private:
@@ -216,18 +283,6 @@ private:
     void _declare_comparison_overloads(Array<T> const *) {
         // Array columns cannot be compared, so we do not define comparison
         // overloads for these.
-    }
-
-    template <typename T>
-    void _declare_getitem(T const *) {
-        _cls.def(
-            "_getitem_",
-            [](CatalogT<Record> &self, Key<T> const &key) { return ColumnGetter<Record>(self)(key); }
-        );
-    }
-
-    void _declare_getitem(std::string const *) {
-        // String columns cannot be retrieved as arrays.
     }
 
     PyCatalog<Record> & _cls;
@@ -362,6 +417,20 @@ PyCatalog<Record> declareCatalog(utils::python::WrapperCollection &wrappers, std
                     [](CatalogT<Record> &self, std::string const & name) {
                         return ColumnGetter<Record>(self)(name);
                     }
+                );
+                cls.def(
+                    "get_column",
+                    [](
+                        CatalogT<Record> &self,
+                        std::string const & name,
+                        bool force_copy,
+                        bool ensure_writeable
+                    ) {
+                        return ColumnGetter<Record>(self, force_copy, ensure_writeable)(name);
+                    },
+                    pybind11::arg("name"),
+                    pybind11::arg("force_copy") = false,
+                    pybind11::arg("ensure_writeable") = false
                 );
                 FieldTypes::for_each_nullptr(_CatalogOverloadHelper(cls));
 

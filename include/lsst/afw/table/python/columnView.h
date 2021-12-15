@@ -40,10 +40,10 @@ namespace python {
  * This class works out a few differences between Python and C++:
  *
  * - In C++, we treat view arrays (most types from ColumnView) objects
- *   completely differently from copy arrays (from Catalog::copyColumn and
- *   Flags from ColumnView).  In Python, users strongly expect __getitem__ to
- *   take care of both, preferring views and falling back to copies when
- *   needed.
+ *   completely differently from copy arrays in terms of the classes used to
+ *   access columns.  In Python, users strongly expect __getitem__ on both
+ *   Catalog and ColumnView to take care of both, preferring views and falling
+ *   back to copies when needed.
  *
  * - In C++, it thus makes sense for both types to be non-const, because it's
  *   clear from how they are obtained that modifying them will do different
@@ -82,8 +82,14 @@ public:
     }
 
     pybind11::array operator()(Key<std::string> const & key) const {
-        PyErr_SetString(PyExc_NotImplementedError, "Column access to string fields is not yet supported.");
-        throw pybind11::error_already_set();
+        ndarray::Array<char, 2, 1> utf8_array = _columns.get_utf8_bytes(key);
+        return make_str_array(
+            [utf8_array](std::size_t n) -> pybind11::str {
+                return pybind11::str(utf8_array[n].getData(), utf8_array.getSize<1>());
+            },
+            utf8_array.getSize<0>(),
+            utf8_array.getSize<1>()
+        );
     }
 
     pybind11::array operator()(Key<Angle> const & key) const {
@@ -94,6 +100,57 @@ public:
     pybind11::array operator()(Key<Flag> const & key) const {
         ndarray::Array<bool const, 1, 1> array = ndarray::copy(_columns[key]);
         return pybind11::cast(array);
+    }
+
+    template <typename T>
+    pybind11::array operator()(SchemaItem<T> const & item) const {
+        return this->operator()(item.key);
+    }
+
+    pybind11::array operator()(std::string const & name) const {
+        return _columns.getSchema().findAndApply(name, *this);
+    }
+
+    template <typename F>
+    static pybind11::array make_str_array(
+        F get_pystr,
+        pybind11::ssize_t n_rows,
+        pybind11::ssize_t n_bytes_per_row
+    ) {
+        // Add 1 to bytes per row for null terminator.
+        ndarray::Vector<std::size_t, 2> shape = ndarray::makeVector(n_rows, n_bytes_per_row + 1);
+        ndarray::Array<Py_UCS4, 2, 2> utf32_array = ndarray::allocate(shape);
+        auto utf32_iter = utf32_array.begin();
+        auto const utf32_end = utf32_array.end();
+        for (pybind11::ssize_t n = 0; utf32_iter != utf32_end; ++utf32_iter, ++n) {
+            if (!PyUnicode_AsUCS4(get_pystr(n).ptr(), utf32_iter->getData(), utf32_iter->size(), true)) {
+                throw pybind11::error_already_set();
+            }
+        }
+        pybind11::array utf32_2d = pybind11::cast(ndarray::Array<Py_UCS4 const, 2, 2>(utf32_array));
+        pybind11::dtype dtype("U" + std::to_string(shape[1]));
+        return utf32_2d.attr("view")(dtype);
+    }
+
+private:
+    BaseColumnView const & _columns;
+};
+
+
+class StringBytesColumnViewGetter {
+public:
+
+    explicit StringBytesColumnViewGetter(BaseColumnView const & columns) : _columns(columns) {}
+
+    template <typename T>
+    pybind11::array operator()(Key<T> const & key) const {
+        PyErr_SetString(PyExc_TypeError, "Invalid key type for character bytes view.");
+        throw pybind11::error_already_set();
+    }
+
+    pybind11::array operator()(Key<std::string> const & key) const {
+        ndarray::Array<char, 2, 1> utf8_bytes = _columns.get_utf8_bytes(key);
+        return pybind11::cast(utf8_bytes);
     }
 
     template <typename T>

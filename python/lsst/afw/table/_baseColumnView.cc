@@ -94,6 +94,18 @@ static void declareBaseColumnView(WrapperCollection &wrappers) {
             }
         );
         FieldTypes::for_each_nullptr(_BaseColumnViewOverloadHelper(cls));
+        cls.def(
+            "utf8_bytes",
+            [](BaseColumnView const & self, std::string const & name) {
+                return python::StringBytesColumnViewGetter(self)(name);
+            }
+        );
+        cls.def(
+            "utf8_bytes",
+            [](BaseColumnView const & self, Key<std::string> const & name) {
+                return python::StringBytesColumnViewGetter(self)(name);
+            }
+        );
     });
 }
 

@@ -182,8 +182,9 @@ class Catalog(metaclass=TemplateMeta):
         import lsst.afw.fits
         return lsst.afw.fits.reduceToFits(self)
 
-    def asAstropy(self, cls=None, copy=False, unviewable="copy"):
-        """Return an astropy.table.Table (or subclass thereof) view into this catalog.
+    def asAstropy(self, cls=None, copy=False, unviewable="copy", ensure_writeable=None):
+        """Return an astropy.table.Table (or subclass thereof) view into this
+        catalog.
 
         Parameters
         ----------
@@ -198,11 +199,27 @@ class Catalog(metaclass=TemplateMeta):
         unviewable : `str`, optional
             One of the following options (which is ignored if
             copy=`True` ), indicating how to handle field types (`str`
-            and `Flag`) for which views cannot be constructed:
+            and `Flag`) for which complete views cannot be constructed:
 
             - 'copy' (default): copy only the unviewable fields.
             - 'raise': raise ValueError if unviewable fields are present.
             - 'skip': do not include unviewable fields in the Astropy Table.
+
+            Variable-length array and string fields are returned as arrays
+            with ``dtype=object``.  The outermost array can only be a copy, so
+            these are considered "unviewable", but for variable-length array
+            fields returned with ``unviewable="copy"``, the per-element arrays
+            are themselves views unless ``copy=True``.
+
+            All columns are considered unviewable if the catalog is
+            noncontiguous.
+        ensure_writeable : `bool`, optional
+            If `True`, instead of marking copies as read-only (to prevent
+            silent do-nothing assignment to temporaries), make sure all
+            returned arrays are writeable, regardless of whether they are
+            copies or views.  The default is `True` if ``copy=True`` (since
+            that copies all columns) and `False` if ``copy=False`` (since that
+            can return a mix of views and copies).
 
         Returns
         -------
@@ -214,7 +231,6 @@ class Catalog(metaclass=TemplateMeta):
         ValueError
             Raised if the `unviewable` option is not a known value, or
             if the option is 'raise' and an uncopyable field is found.
-
         """
         import astropy.table
         if cls is None:
@@ -222,47 +238,48 @@ class Catalog(metaclass=TemplateMeta):
         if unviewable not in ("copy", "raise", "skip"):
             raise ValueError(
                 f"'unviewable'={unviewable!r} must be one of 'copy', 'raise', or 'skip'")
+        if not (copy or unviewable == "copy" or self.isContiguous()):
+            raise ValueError(
+                "Catalog is noncontiguous, so views are impossible; use copy=True or unviewable='copy'."
+            )
+        if ensure_writeable is None:
+            ensure_writeable = copy
         ps = self.getMetadata()
         meta = ps.toOrderedDict() if ps is not None else None
         columns = []
         items = self.schema.extract("*", ordered=True)
         for name, item in items.items():
             key = item.key
-            unit = item.field.getUnits() or None  # use None instead of "" when empty
-            if key.getTypeString() == "String":
-                if not copy:
-                    if unviewable == "raise":
-                        raise ValueError("Cannot extract string "
-                                         "unless copy=True or unviewable='copy' or 'skip'.")
-                    elif unviewable == "skip":
-                        continue
-                data = np.zeros(
-                    len(self), dtype=np.dtype((str, key.getSize())))
-                for i, record in enumerate(self):
-                    data[i] = record.get(key)
-            elif key.getTypeString() == "Flag":
-                if not copy:
-                    if unviewable == "raise":
-                        raise ValueError("Cannot extract packed bit columns "
-                                         "unless copy=True or unviewable='copy' or 'skip'.")
-                    elif unviewable == "skip":
-                        continue
-                data = self.columns.get_bool_array(key)
-            elif key.getTypeString() == "Angle":
-                data = self.columns.get(key)
+            if key.getTypeString() == "Angle":
                 unit = "radian"
-                if copy:
-                    data = data.copy()
-            elif "Array" in key.getTypeString() and key.isVariableLength():
-                # Can't get columns for variable-length array fields.
-                if unviewable == "raise":
-                    raise ValueError("Cannot extract variable-length array fields unless unviewable='skip'.")
-                elif unviewable == "skip" or unviewable == "copy":
-                    continue
             else:
-                data = self.columns.get(key)
-                if copy:
-                    data = data.copy()
+                unit = item.field.getUnits() or None  # use None instead of "" when empty
+            if key.getTypeString() in ("String", "Flag"):
+                # String and Flag fields are always copies.
+                if not copy:
+                    if unviewable == "raise":
+                        raise ValueError(
+                            f"Cannot extract array for column {name}"
+                            "unless copy=True or unviewable='copy' (use unviewable='skip' to ignore)."
+                        )
+                    elif unviewable == "skip":
+                        continue
+                data = self.get_column(name, force_copy=True, ensure_writeable=ensure_writeable)
+            elif "Array" in key.getTypeString() and key.isVariableLength():
+                # Variable-length array fields always require the outer
+                # dtype=object array to be a copy, but the inner per-element
+                # arrays may or may not be.
+                if not copy:
+                    if unviewable == "raise":
+                        raise ValueError(
+                            f"Cannot extract array for variable-length array column {name}"
+                            "unless copy=True or unviewable='copy' (use unviewable='skip' to ignore)."
+                        )
+                    elif unviewable == "skip":
+                        continue
+                data = self.get_column(name, force_copy=copy, ensure_writeable=ensure_writeable)
+            else:
+                data = self.get_column(name, force_copy=copy, ensure_writeable=ensure_writeable)
             columns.append(
                 astropy.table.Column(
                     data,

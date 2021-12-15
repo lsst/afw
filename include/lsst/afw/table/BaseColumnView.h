@@ -108,6 +108,9 @@ public:
     /// Return a 1-d array of radians for an Angle field.
     ndarray::ArrayRef<double, 1> const radians(Key<Angle> const & key) const;
 
+    /// Return a 2-d array of UTF-8 bytes for a string field.
+    ndarray::ArrayRef<char, 2, 1> const get_utf8_bytes(Key<std::string> const & key) const;
+
     /**
      *  Return a 1-d array expression corresponding to a flag bit.
      *
