@@ -97,14 +97,6 @@ typename ndarray::ArrayRef<T, 2, 1> const BaseColumnView::operator[](Key<Array<T
             _impl->manager);
 }
 
-ndarray::ArrayRef<double, 1> const BaseColumnView::radians(Key<Angle> const & key) const {
-    ndarray::Array<lsst::geom::Angle, 1, 0> a = (*this)[key];
-    return ndarray::detail::ArrayAccess<ndarray::ArrayRef<double, 1>>::construct(
-        reinterpret_cast<double *>(a.getData()),
-        ndarray::detail::ArrayAccess<ndarray::Array<lsst::geom::Angle, 1, 0>>::getCore(a)
-    );
-}
-
 ndarray::result_of::vectorize<detail::FlagExtractor, ndarray::Array<Field<Flag>::Element const, 1> >::type
         BaseColumnView::operator[](Key<Flag> const &key) const {
     if (!key.isValid()) {

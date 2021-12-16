@@ -97,12 +97,14 @@ static void declareBaseColumnView(WrapperCollection &wrappers) {
         // lsst::geom::Angle requires custom wrappers, because ndarray doesn't
         // recognize it natively; we just return a double view
         // (e.g. radians).
-        cls.def(
-            "_basicget",
-            [](BaseColumnView const & self, Key<Angle> const & key) -> ndarray::Array<double, 1, 0> {
-                return self.radians(key);
-            }
-        );
+        using AngleArray = ndarray::Array<lsst::geom::Angle, 1>;
+        using DoubleArray = ndarray::Array<double, 1>;
+        cls.def("_basicget", [](BaseColumnView &self, Key<lsst::geom::Angle> const &key) -> DoubleArray {
+            ndarray::Array<lsst::geom::Angle, 1, 0> a = self[key];
+            return ndarray::detail::ArrayAccess<DoubleArray>::construct(
+                    reinterpret_cast<double *>(a.getData()),
+                    ndarray::detail::ArrayAccess<AngleArray>::getCore(a));
+        });
     });
 }
 

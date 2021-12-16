@@ -46,46 +46,11 @@ namespace lsst {
 namespace afw {
 namespace table {
 
-/// A compile-time list of types.
-template <typename ...E> struct TypeList;
-
-/// Partial specialization of TypeList used for recursive implementation of members.
-template <typename T, typename ...E> struct TypeList<T, E...> {
-
-    /// A constexpr variable that evaluates to true if U is in the list (no
-    /// checking for const, reference, mutable, etc.)
-    template <typename U>
-    static constexpr bool contains = std::is_same_v<T, U> || TypeList<E...>::template contains<U>;
-
-    /// Invoke func on a null pointer cast to `T const *` for each type `T` in
-    /// the list.
-    template <typename F>
-    static void for_each_nullptr(F func) {
-        func(static_cast<T const*>(nullptr));
-        TypeList<E...>::for_each_nullptr(func);
-    }
-};
-
-/// Sentinal specialization of TypeList with only one type, used to end recursion.
-template <typename T> struct TypeList<T> {
-    template <typename U>
-    static constexpr bool contains = std::is_same_v<T, U>;
-
-    template <typename F>
-    static void for_each_nullptr(F func) {
-        func(static_cast<T const*>(nullptr));
-    }
-};
+template <typename ...E> struct TypeList {};
 
 
 /// A compile-time list of all field types.
 using FieldTypes = TypeList<AFW_TABLE_FIELD_TYPES>;
-
-/// A compile-time list of all array field types.
-using ArrayFieldTypes = TypeList<AFW_TABLE_ARRAY_FIELD_TYPES>;
-
-/// A compile-time list of all scalar field types.
-using ScalarFieldTypes = TypeList<AFW_TABLE_SCALAR_FIELD_TYPES>;
 
 }  // namespace table
 }  // namespace afw

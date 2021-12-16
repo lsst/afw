@@ -72,20 +72,22 @@ class BaseRecord:  # noqa: F811
 
 class Catalog(metaclass=TemplateMeta):
 
+    def getColumnView(self):
+        self._columns = self._getColumnView()
+        return self._columns
+
+    def __getColumns(self):
+        if not hasattr(self, "_columns") or self._columns is None:
+            self._columns = self._getColumnView()
+        return self._columns
+    columns = property(__getColumns, doc="a column view of the catalog")
+
     def __getitem__(self, key):
         """Return the record at index key if key is an integer,
         return a column if `key` is a string field name or Key,
         or return a subset of the catalog if key is a slice
         or boolean NumPy array.
         """
-        # We try slice and bool-array indexing first because they are cheap to
-        # try, even though they are probably rarer; putting them afterwards via
-        # a try/except around self._getitem_(key) slows them down a _lot_
-        # without really improving the performance of the types supported by
-        # self._getitem_.  I have't profiled, but I suspect this is down to
-        # Python really optimizing the 'try' part at the expense of anything in
-        # the 'except' part, but it may also be that trying all of the Key
-        # overloads is just really slow.
         if type(key) is slice:
             (start, stop, step) = (key.start, key.stop, key.step)
             if step is None:
@@ -98,6 +100,20 @@ class Catalog(metaclass=TemplateMeta):
         elif isinstance(key, np.ndarray):
             if key.dtype == bool:
                 return self.subset(key)
+            raise RuntimeError(f"Unsupported array type for indexing non-contiguous Catalog: {key.dtype}")
+        elif isinstance(key, Key) or isinstance(key, str):
+            if not self.isContiguous():
+                if isinstance(key, str):
+                    key = self.schema[key].asKey()
+                array = self._getitem_(key)
+                # This array doesn't share memory with the Catalog, so don't let it be modified by
+                # the user who thinks that the Catalog itself is being modified.
+                # Just be aware that this array can only be passed down to C++ as an ndarray::Array<T const>
+                # instead of an ordinary ndarray::Array<T>. If pybind isn't letting it down into C++,
+                # you may have left off the 'const' in the definition.
+                array.flags.writeable = False
+                return array
+            return self.columns[key]
         else:
             return self._getitem_(key)
 
@@ -106,6 +122,7 @@ class Catalog(metaclass=TemplateMeta):
         ``value``. Otherwise select column ``key`` and set it to
         ``value``.
         """
+        self._columns = None
         if isinstance(key, str):
             key = self.schema[key].asKey()
         if isinstance(key, Key):
@@ -115,6 +132,29 @@ class Catalog(metaclass=TemplateMeta):
                 self.columns[key] = value
         else:
             return self.set(key, value)
+
+    def __delitem__(self, key):
+        self._columns = None
+        if isinstance(key, slice):
+            self._delslice_(key)
+        else:
+            self._delitem_(key)
+
+    def append(self, record):
+        self._columns = None
+        self._append(record)
+
+    def insert(self, key, value):
+        self._columns = None
+        self._insert(key, value)
+
+    def clear(self):
+        self._columns = None
+        self._clear()
+
+    def addNew(self):
+        self._columns = None
+        return self._addNew()
 
     def cast(self, type_, deep=False):
         """Return a copy of the catalog with the given type.
@@ -159,6 +199,7 @@ class Catalog(metaclass=TemplateMeta):
         mapper : `lsst.afw.table.schemaMapper.SchemaMapper`, optional
             Used to translate records.
         """
+        self._columns = None
         # We can't use isinstance here, because the SchemaMapper symbol isn't available
         # when this code is part of a subclass of Catalog in another package.
         if type(deep).__name__ == "SchemaMapper":
@@ -172,11 +213,11 @@ class Catalog(metaclass=TemplateMeta):
         else:
             for record in iterable:
                 if mapper is not None:
-                    self.append(self.table.copyRecord(record, mapper))
+                    self._append(self.table.copyRecord(record, mapper))
                 elif deep:
-                    self.append(self.table.copyRecord(record))
+                    self._append(self.table.copyRecord(record))
                 else:
-                    self.append(record)
+                    self._append(record)
 
     def __reduce__(self):
         import lsst.afw.fits
@@ -298,7 +339,7 @@ class Catalog(metaclass=TemplateMeta):
         # for convenience.  (Feature requested by RHL; complaints about magic
         # should be directed to him.)
         if name == "_columns":
-
+            self._columns = None
             return None
         try:
             return getattr(self.table, name)
