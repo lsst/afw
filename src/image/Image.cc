@@ -387,9 +387,24 @@ Image<PixelT>::Image(fits::Fits& fitsFile, std::shared_ptr<daf::base::PropertySe
 
 template <typename PixelT>
 void Image<PixelT>::writeFits(std::string const& fileName,
-                              std::shared_ptr<daf::base::PropertySet const> metadata_i,
+                              daf::base::PropertySet const * metadata_i,
                               std::string const& mode) const {
     fits::Fits fitsfile(fileName, mode, fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
+    writeFits(fitsfile, metadata_i);
+}
+
+template <typename PixelT>
+void Image<PixelT>::writeFits(std::string const& fileName,
+                              std::shared_ptr<daf::base::PropertySet const> metadata_i,
+                              std::string const& mode) const {
+    writeFits(fileName, metadata_i.get(), mode);
+}
+
+template <typename PixelT>
+void Image<PixelT>::writeFits(fits::MemFileManager& manager,
+                              daf::base::PropertySet const * metadata_i,
+                              std::string const& mode) const {
+    fits::Fits fitsfile(manager, mode, fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
     writeFits(fitsfile, metadata_i);
 }
 
@@ -397,21 +412,41 @@ template <typename PixelT>
 void Image<PixelT>::writeFits(fits::MemFileManager& manager,
                               std::shared_ptr<daf::base::PropertySet const> metadata_i,
                               std::string const& mode) const {
-    fits::Fits fitsfile(manager, mode, fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
-    writeFits(fitsfile, metadata_i);
+    writeFits(manager, metadata_i.get(), mode);
+}
+
+template <typename PixelT>
+void Image<PixelT>::writeFits(fits::Fits& fitsfile,
+                              daf::base::PropertySet const * metadata) const {
+    fitsfile.writeImage(*this, fits::ImageWriteOptions(*this), metadata);
 }
 
 template <typename PixelT>
 void Image<PixelT>::writeFits(fits::Fits& fitsfile,
                               std::shared_ptr<daf::base::PropertySet const> metadata) const {
-    fitsfile.writeImage(*this, fits::ImageWriteOptions(*this), metadata);
+    writeFits(fitsfile, metadata.get());
+}
+
+template <typename PixelT>
+void Image<PixelT>::writeFits(std::string const& filename, fits::ImageWriteOptions const& options,
+                              std::string const& mode, daf::base::PropertySet const * header,
+                              Mask<MaskPixel> const * mask) const {
+    fits::Fits fitsfile(filename, mode, fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
+    writeFits(fitsfile, options, header, mask);
 }
 
 template <typename PixelT>
 void Image<PixelT>::writeFits(std::string const& filename, fits::ImageWriteOptions const& options,
                               std::string const& mode, std::shared_ptr<daf::base::PropertySet const> header,
                               std::shared_ptr<Mask<MaskPixel> const> mask) const {
-    fits::Fits fitsfile(filename, mode, fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
+    writeFits(filename, options, mode, header.get(), mask.get());
+}
+
+template <typename PixelT>
+void Image<PixelT>::writeFits(fits::MemFileManager& manager, fits::ImageWriteOptions const& options,
+                              std::string const& mode, daf::base::PropertySet const * header,
+                              Mask<MaskPixel> const * mask) const {
+    fits::Fits fitsfile(manager, mode, fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
     writeFits(fitsfile, options, header, mask);
 }
 
@@ -419,15 +454,21 @@ template <typename PixelT>
 void Image<PixelT>::writeFits(fits::MemFileManager& manager, fits::ImageWriteOptions const& options,
                               std::string const& mode, std::shared_ptr<daf::base::PropertySet const> header,
                               std::shared_ptr<Mask<MaskPixel> const> mask) const {
-    fits::Fits fitsfile(manager, mode, fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
-    writeFits(fitsfile, options, header, mask);
+    writeFits(manager, options, mode, header.get(), mask.get());
+}
+
+template <typename PixelT>
+void Image<PixelT>::writeFits(fits::Fits& fitsfile, fits::ImageWriteOptions const& options,
+                              daf::base::PropertySet const * header,
+                              Mask<MaskPixel> const * mask) const {
+    fitsfile.writeImage(*this, options, header, mask);
 }
 
 template <typename PixelT>
 void Image<PixelT>::writeFits(fits::Fits& fitsfile, fits::ImageWriteOptions const& options,
                               std::shared_ptr<daf::base::PropertySet const> header,
                               std::shared_ptr<Mask<MaskPixel> const> mask) const {
-    fitsfile.writeImage(*this, options, header, mask);
+    writeFits(fitsfile, options, header.get(), mask.get());
 }
 
 #endif  // !DOXYGEN
