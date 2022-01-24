@@ -618,7 +618,8 @@ for all of the bands. For example:
 .. code-block:: python
 
     from lsst.afw.detection import Footprint, MultibandFootprint
-    from lsst.afw.geom import SpanSet, Stencil, Extent2I
+    from lsst.afw.geom import SpanSet, Stencil
+    from lsst.geom import Extent2I
     import numpy as np
     from lsst.afw.image import ImageF
 
