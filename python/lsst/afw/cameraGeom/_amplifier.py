@@ -181,6 +181,20 @@ def transform(self, *, outOffset=None, outFlipX=False, outFlipY=False):
         bbox.shift(self.getRawXYOffset() + shift - outOffset)
 
         getattr(self, f"setRaw{bboxName}BBox")(bbox)
+
+    # Update the Readout Corner if we've flipped anything.
+    outReadoutCorner = self.getReadoutCorner()
+    if self.getRawFlipX() != outFlipX:
+        xFlipMapping = {ReadoutCorner.LL: ReadoutCorner.LR, ReadoutCorner.LR: ReadoutCorner.LL,
+                        ReadoutCorner.UR: ReadoutCorner.UL, ReadoutCorner.UL: ReadoutCorner.UR}
+        outReadoutCorner = xFlipMapping[outReadoutCorner]
+    if self.getRawFlipY() != outFlipY:
+        yFlipMapping = {ReadoutCorner.LL: ReadoutCorner.UL, ReadoutCorner.LR: ReadoutCorner.UR,
+                        ReadoutCorner.UR: ReadoutCorner.LR, ReadoutCorner.UL: ReadoutCorner.LL}
+        outReadoutCorner = yFlipMapping[outReadoutCorner]
+    if outReadoutCorner != self.getReadoutCorner():
+        self.setReadoutCorner(outReadoutCorner)
+
     #
     # All of these have now been transferred to the amp geometry
     #
