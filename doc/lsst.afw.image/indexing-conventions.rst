@@ -10,7 +10,7 @@ Pixel Indexing Conventions
 
 LSST's image classes (`Image`, `Mask`, `MaskedImage`, and `Exposure`) use a pixel indexing convention that is different from both the convention used by `numpy.ndarray` objects and the convention used in FITS images.
 
-.. currentmodule:: lsst.afw.geom
+.. currentmodule:: lsst.geom
 
 Like FITS but unlike NumPy, points and pixel indices in LSST software are always ordered ``(x, y)`` (with x the column index and y the row index); this includes both geometry objects (`Point2D`, `Point2I`, `Extent2D`, `Extent2I`) and the images classes themselves.
 
@@ -36,7 +36,7 @@ To illustrate how this works, let's start with a 10×12 image with ``xy0=(0,0)``
 
 >>> import numpy as np
 >>> from lsst.afw.image import Image
->>> from lsst.afw.geom import Box2I, Point2I, Extent2I
+>>> from lsst.geom import Box2I, Point2I, Extent2I
 >>> img = Image(Extent2I(x=10, y=12), dtype=np.float32)
 >>> print(img.getBBox(LOCAL))
 (minimum=(0, 0), maximum=(9, 11))
@@ -115,7 +115,7 @@ We also adjust any FITS WCS in the image headers to account for this change in c
 Floating-Point and Integer Bounding Boxes
 =========================================
 
-.. currentmodule:: lsst.afw.geom
+.. currentmodule:: lsst.geom
 
 One consequence of using integer labels for pixel centers is that integer boxes (`Box2I`) behave fundamentally differently from floating-point bounding boxes (`Box2D`).
 
@@ -135,7 +135,7 @@ That's because those values correspond to the *centers* of the minimum and maxim
 
 This same discrepancy can also be seen when converting a `Box2I` to a `Box2D`:
 
->>> from lsst.afw.geom import Box2D, Point2D, Extent2D
+>>> from lsst.geom import Box2D, Point2D, Extent2D
 >>> boxD = Box2D(boxI)
 >>> print(boxD)
 (minimum=(-0.5, -0.5), maximum=(9.5, 11.5))
