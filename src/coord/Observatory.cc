@@ -58,6 +58,7 @@ void Observatory::setLongitude(lsst::geom::Angle const longitude) { _longitude =
 void Observatory::setElevation(double const elevation) { _elevation = elevation; }
 
 std::string Observatory::toString() const {
+    // Follow ISO 6709 ordering and sign convention.
     return (boost::format("%gN, %gE  %g") % getLatitude().asDegrees() % getLongitude().asDegrees() %
             getElevation())
             .str();
