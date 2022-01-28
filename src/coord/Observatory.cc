@@ -1,11 +1,13 @@
 // -*- lsst-c++ -*-
 
 /*
- * LSST Data Management System
- * Copyright 2008-2016 LSST Corporation.
+ * This file is part of afw.
  *
- * This product includes software developed by the
- * LSST Project (http://www.lsst.org/).
+ * Developed for the LSST Data Management System.
+ * This product includes software developed by the LSST Project
+ * (https://www.lsst.org).
+ * See the COPYRIGHT file at the top-level directory of this distribution
+ * for details of code ownership.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -56,7 +58,7 @@ void Observatory::setLongitude(lsst::geom::Angle const longitude) { _longitude =
 void Observatory::setElevation(double const elevation) { _elevation = elevation; }
 
 std::string Observatory::toString() const {
-    return (boost::format("%gW, %gN  %g") % getLongitude().asDegrees() % getLatitude().asDegrees() %
+    return (boost::format("%gN, %gE  %g") % getLatitude().asDegrees() % getLongitude().asDegrees() %
             getElevation())
             .str();
 }
