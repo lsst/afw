@@ -29,7 +29,6 @@ import astropy.io.fits
 
 import lsst.utils
 import lsst.daf.base
-import lsst.daf.persistence
 import lsst.geom
 import lsst.afw.geom
 import lsst.afw.image
