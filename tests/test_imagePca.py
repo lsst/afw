@@ -180,7 +180,7 @@ class ImagePcaTestCase(lsst.utils.tests.TestCase):
             norm1 = eImages[i1].getArray().sum()
             norm2 = eImages[i2].getArray().sum()
             inner /= norm1*norm2
-            self.assertAlmostEqual(inner, 0)
+            self.assertAlmostEqual(inner, 0, 6)
 
     def testPcaNaN(self):
         """Test calculating PCA when the images can contain NaNs"""
