@@ -777,6 +777,39 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
                     with self.assertRaises(pexExcept.InvalidParameterError, msg=msg):
                         self.smallExposure.getCutout(cutoutCenter, cutoutSize)
 
+    def testGetConvexPolygon(self):
+        """Test the convex polygon."""
+        # Check that we do not have a convex polygon for the plain exposure.
+        self.assertIsNone(self.exposureMiOnly.convex_polygon)
+
+        # Check that all the points in the bounding box are in the polygon
+        bbox = self.exposureMiWcs.getBBox()
+        x, y = np.meshgrid(np.arange(bbox.getBeginX(), bbox.getEndX()),
+                           np.arange(bbox.getBeginY(), bbox.getEndY()))
+        wcs = self.exposureMiWcs.wcs
+        ra, dec = wcs.pixelToSkyArray(x.ravel().astype(np.float64),
+                                      y.ravel().astype(np.float64))
+
+        poly = self.exposureMiWcs.convex_polygon
+        contains = poly.contains(ra, dec)
+
+        self.assertTrue(np.all(contains))
+
+        # Check that points outside of the bounding box are not in the polygon
+        x = np.array([bbox.getBeginX() - 1,
+                      bbox.getEndX() + 1,
+                      bbox.getEndX() + 1,
+                      bbox.getBeginX() - 1])
+        y = np.array([bbox.getBeginY() - 1,
+                      bbox.getBeginY() - 1,
+                      bbox.getEndY() + 1,
+                      bbox.getEndY() + 1])
+        ra, dec = wcs.pixelToSkyArray(x.ravel().astype(np.float64),
+                                      y.ravel().astype(np.float64))
+
+        contains = poly.contains(ra, dec)
+        self.assertTrue(np.all(~contains))
+
     def _checkCutoutProperties(self, cutout, size, center, precision, msg):
         """Test whether a cutout has the desired size and position.
 
