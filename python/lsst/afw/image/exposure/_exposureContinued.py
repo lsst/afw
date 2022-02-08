@@ -24,6 +24,8 @@ __all__ = ["Exposure"]
 from lsst.utils.deprecated import deprecate_pybind11
 import numpy as np
 
+import lsst.sphgeom
+import lsst.geom
 from lsst.utils import TemplateMeta
 
 from ..image._slicing import supportSlicing
@@ -93,6 +95,25 @@ class Exposure(metaclass=TemplateMeta):
         self.maskedImage.variance = variance
 
     variance = property(getVariance, setVariance)
+
+    def getConvexPolygon(self):
+        """Get the convex polygon associated with the bounding box corners.
+
+        Returns
+        -------
+        convexPolygon : `lsst.sphgeom.ConvexPolygon`
+            Returns `None` if exposure does not have a valid WCS.
+        """
+        wcs = self.wcs
+        if wcs is None:
+            return None
+
+        bbox = lsst.geom.Box2D(self.getBBox())
+        corners = [wcs.pixelToSky(corner).getVector()
+                   for corner in bbox.getCorners()]
+        return lsst.sphgeom.ConvexPolygon(corners)
+
+    convex_polygon = property(getConvexPolygon)
 
     readFitsWithOptions = classmethod(imageReadFitsWithOptions)
 
