@@ -784,6 +784,8 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
 
         # Check that all the points in the bounding box are in the polygon
         bbox = self.exposureMiWcs.getBBox()
+        # Grow by the default padding.
+        bbox.grow(10)
         x, y = np.meshgrid(np.arange(bbox.getBeginX(), bbox.getEndX()),
                            np.arange(bbox.getBeginY(), bbox.getEndY()))
         wcs = self.exposureMiWcs.wcs
@@ -792,23 +794,34 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
 
         poly = self.exposureMiWcs.convex_polygon
         contains = poly.contains(ra, dec)
-
-        self.assertTrue(np.all(contains))
+        np.testing.assert_array_equal(contains, np.ones(len(contains), dtype=bool))
 
         # Check that points outside of the bounding box are not in the polygon
-        x = np.array([bbox.getBeginX() - 1,
-                      bbox.getEndX() + 1,
-                      bbox.getEndX() + 1,
-                      bbox.getBeginX() - 1])
-        y = np.array([bbox.getBeginY() - 1,
-                      bbox.getBeginY() - 1,
-                      bbox.getEndY() + 1,
-                      bbox.getEndY() + 1])
-        ra, dec = wcs.pixelToSkyArray(x.ravel().astype(np.float64),
-                                      y.ravel().astype(np.float64))
+        bbox.grow(1)
 
+        ra, dec = wcs.pixelToSkyArray(
+            np.linspace(bbox.getBeginX(), bbox.getEndX(), 100),
+            np.full(100, bbox.getBeginY()))
         contains = poly.contains(ra, dec)
-        self.assertTrue(np.all(~contains))
+        np.testing.assert_array_equal(contains, np.zeros(len(contains), dtype=bool))
+
+        ra, dec = wcs.pixelToSkyArray(
+            np.linspace(bbox.getBeginX(), bbox.getEndX(), 100),
+            np.full(100, bbox.getEndY()))
+        contains = poly.contains(ra, dec)
+        np.testing.assert_array_equal(contains, np.zeros(len(contains), dtype=bool))
+
+        ra, dec = wcs.pixelToSkyArray(
+            np.full(100, bbox.getBeginX()),
+            np.linspace(bbox.getBeginY(), bbox.getEndY(), 100))
+        contains = poly.contains(ra, dec)
+        np.testing.assert_array_equal(contains, np.zeros(len(contains), dtype=bool))
+
+        ra, dec = wcs.pixelToSkyArray(
+            np.full(100, bbox.getEndX()),
+            np.linspace(bbox.getBeginY(), bbox.getEndY(), 100))
+        contains = poly.contains(ra, dec)
+        np.testing.assert_array_equal(contains, np.zeros(len(contains), dtype=bool))
 
     def _checkCutoutProperties(self, cutout, size, center, precision, msg):
         """Test whether a cutout has the desired size and position.

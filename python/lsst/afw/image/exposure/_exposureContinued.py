@@ -96,8 +96,20 @@ class Exposure(metaclass=TemplateMeta):
 
     variance = property(getVariance, setVariance)
 
-    def getConvexPolygon(self):
+    def getConvexPolygon(self, padding=10):
         """Get the convex polygon associated with the bounding box corners.
+
+        The returned polygon has additional padding to ensure that the
+        bounding box is entirely contained within it. To ensure a set of
+        ra/dec points are entirely contained within a detector, a second
+        check of points contained within the convex polygon must be
+        projected to x/y and checked against the exposure bounding box.
+
+        Parameters
+        ----------
+        padding : `int`
+            Pixel padding to ensure that bounding box is entirely contained
+            within the resulting polygon.
 
         Returns
         -------
@@ -109,6 +121,7 @@ class Exposure(metaclass=TemplateMeta):
             return None
 
         bbox = lsst.geom.Box2D(self.getBBox())
+        bbox.grow(padding)
         corners = [wcs.pixelToSky(corner).getVector()
                    for corner in bbox.getCorners()]
         return lsst.sphgeom.ConvexPolygon(corners)
