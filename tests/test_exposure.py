@@ -823,6 +823,42 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         contains = poly.contains(ra, dec)
         np.testing.assert_array_equal(contains, np.zeros(len(contains), dtype=bool))
 
+    def testContainsSkyCoords(self):
+        """Test the sky coord containment code."""
+        self.assertRaises(ValueError,
+                          self.exposureMiOnly.containsSkyCoords,
+                          0.0,
+                          0.0)
+
+        # Check that all the points within the bounding box are contained
+        bbox = self.exposureMiWcs.getBBox()
+        x, y = np.meshgrid(np.arange(bbox.getBeginX() + 1, bbox.getEndX() - 1),
+                           np.arange(bbox.getBeginY() + 1, bbox.getEndY() - 1))
+        wcs = self.exposureMiWcs.wcs
+        ra, dec = wcs.pixelToSkyArray(x.ravel().astype(np.float64),
+                                      y.ravel().astype(np.float64))
+
+        contains = self.exposureMiWcs.containsSkyCoords(ra, dec, degrees=False)
+        np.testing.assert_array_equal(contains, np.ones(len(contains), dtype=bool))
+
+        # Same test, everything in degrees.
+        ra, dec = wcs.pixelToSkyArray(x.ravel().astype(np.float64),
+                                      y.ravel().astype(np.float64),
+                                      degrees=True)
+
+        contains = self.exposureMiWcs.containsSkyCoords(ra, dec, degrees=True)
+        np.testing.assert_array_equal(contains, np.ones(len(contains), dtype=bool))
+
+        # Prepend and append some positions out of the box.
+        ra = np.concatenate(([300.0], ra, [180.]))
+        dec = np.concatenate(([50.0], dec, [50.0]))
+
+        contains = self.exposureMiWcs.containsSkyCoords(ra, dec, degrees=True)
+        compare = np.ones(len(contains), dtype=bool)
+        compare[0] = False
+        compare[-1] = False
+        np.testing.assert_array_equal(contains, compare)
+
     def _checkCutoutProperties(self, cutout, size, center, precision, msg):
         """Test whether a cutout has the desired size and position.
 

@@ -24,14 +24,13 @@ __all__ = ["Exposure"]
 from lsst.utils.deprecated import deprecate_pybind11
 import numpy as np
 
-import lsst.sphgeom
-import lsst.geom
 from lsst.utils import TemplateMeta
 
 from ..image._slicing import supportSlicing
 from ..image._disableArithmetic import disableImageArithmetic
 from ..image._fitsIoWithOptions import imageReadFitsWithOptions, exposureWriteFitsWithOptions
 from ._exposure import ExposureI, ExposureF, ExposureD, ExposureU, ExposureL
+from .exposureUtils import bbox_to_convex_polygon, bbox_contains_sky_coords
 
 
 class Exposure(metaclass=TemplateMeta):
@@ -100,10 +99,9 @@ class Exposure(metaclass=TemplateMeta):
         """Get the convex polygon associated with the bounding box corners.
 
         The returned polygon has additional padding to ensure that the
-        bounding box is entirely contained within it. To ensure a set of
-        ra/dec points are entirely contained within a detector, a second
-        check of points contained within the convex polygon must be
-        projected to x/y and checked against the exposure bounding box.
+        bounding box is entirely contained within it.  To ensure a set
+        of coordinates are entirely contained within an exposure, run
+        ``exposure.containsSkyCoords()``.
 
         Parameters
         ----------
@@ -116,17 +114,41 @@ class Exposure(metaclass=TemplateMeta):
         convexPolygon : `lsst.sphgeom.ConvexPolygon`
             Returns `None` if exposure does not have a valid WCS.
         """
-        wcs = self.wcs
-        if wcs is None:
-            return None
-
-        bbox = lsst.geom.Box2D(self.getBBox())
-        bbox.grow(padding)
-        corners = [wcs.pixelToSky(corner).getVector()
-                   for corner in bbox.getCorners()]
-        return lsst.sphgeom.ConvexPolygon(corners)
+        return bbox_to_convex_polygon(self.getBBox(), self.wcs, padding=padding)
 
     convex_polygon = property(getConvexPolygon)
+
+    def containsSkyCoords(self, ra, dec, degrees=False, padding=10):
+        """Check if a set of sky positions is in the pixel bounding box.
+
+        Parameters
+        ----------
+        ra : `np.ndarray`
+            Array of Right Ascension.  Units are radians unless degrees=True.
+        dec : `np.ndarray`
+            Array of Declination.  Units are radians unless degrees=True.
+        degrees : `bool`, optional
+            Input ra, dec arrays are degrees if True.
+        padding : `int`, optional
+            Pixel padding to ensure that bounding box is entirely contained
+            within the sky polygon (see ``getConvexPolygon()``).
+
+        Returns
+        -------
+        contained : `np.ndarray`
+            Boolean indicating which points are contained in the bounding box.
+
+        Raises
+        ------
+        ValueError if exposure does not have a valid wcs.
+        """
+        return bbox_contains_sky_coords(
+            self.getBBox(),
+            self.wcs,
+            ra,
+            dec,
+            degrees=degrees,
+            padding=padding)
 
     readFitsWithOptions = classmethod(imageReadFitsWithOptions)
 
