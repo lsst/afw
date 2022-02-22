@@ -101,7 +101,9 @@ class Exposure(metaclass=TemplateMeta):
         The returned polygon has additional padding to ensure that the
         bounding box is entirely contained within it.  To ensure a set
         of coordinates are entirely contained within an exposure, run
-        ``exposure.containsSkyCoords()``.
+        ``exposure.containsSkyCoords()``.  The default padding
+        size was chosen to be sufficient for the most warped detectors at
+        the edges of the HyperSuprimeCam focal plane.
 
         Parameters
         ----------
@@ -114,40 +116,47 @@ class Exposure(metaclass=TemplateMeta):
         convexPolygon : `lsst.sphgeom.ConvexPolygon`
             Returns `None` if exposure does not have a valid WCS.
         """
+        if self.wcs is None:
+            return None
+
         return bbox_to_convex_polygon(self.getBBox(), self.wcs, padding=padding)
 
     convex_polygon = property(getConvexPolygon)
 
-    def containsSkyCoords(self, ra, dec, degrees=False, padding=10):
+    def containsSkyCoords(self, ra, dec, padding=10):
         """Check if a set of sky positions is in the pixel bounding box.
+
+        The default padding size was chosen to be sufficient for the
+        most warped detectors at the edges of the HyperSuprimeCam focal plane.
 
         Parameters
         ----------
-        ra : `np.ndarray`
-            Array of Right Ascension.  Units are radians unless degrees=True.
-        dec : `np.ndarray`
-            Array of Declination.  Units are radians unless degrees=True.
-        degrees : `bool`, optional
-            Input ra, dec arrays are degrees if True.
+        ra : `astropy.Quantity`, (N,)
+            Array of Right Ascension, angular units.
+        dec : `astropy.Quantity`, (N,)
+            Array of Declination, angular units.
         padding : `int`, optional
             Pixel padding to ensure that bounding box is entirely contained
             within the sky polygon (see ``getConvexPolygon()``).
 
         Returns
         -------
-        contained : `np.ndarray`
-            Boolean indicating which points are contained in the bounding box.
+        contained : `np.ndarray`, (N,)
+            Boolean array indicating which points are contained in the
+            bounding box.
 
         Raises
         ------
         ValueError if exposure does not have a valid wcs.
         """
+        if self.wcs is None:
+            raise ValueError("Exposure does not have a valid WCS.")
+
         return bbox_contains_sky_coords(
             self.getBBox(),
             self.wcs,
             ra,
             dec,
-            degrees=degrees,
             padding=padding)
 
     readFitsWithOptions = classmethod(imageReadFitsWithOptions)

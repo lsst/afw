@@ -29,6 +29,7 @@ import unittest
 import numpy as np
 from numpy.testing import assert_allclose
 import yaml
+import astropy.units as units
 
 import lsst.utils
 import lsst.utils.tests
@@ -782,21 +783,21 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         # Check that we do not have a convex polygon for the plain exposure.
         self.assertIsNone(self.exposureMiOnly.convex_polygon)
 
-        # Check that all the points in the bounding box are in the polygon
+        # Check that all the points in the padded bounding box are in the polygon
         bbox = self.exposureMiWcs.getBBox()
         # Grow by the default padding.
         bbox.grow(10)
-        x, y = np.meshgrid(np.arange(bbox.getBeginX(), bbox.getEndX()),
-                           np.arange(bbox.getBeginY(), bbox.getEndY()))
+        x, y = np.meshgrid(np.arange(bbox.getBeginX(), bbox.getEndX(), dtype=np.float64),
+                           np.arange(bbox.getBeginY(), bbox.getEndY(), dtype=np.float64))
         wcs = self.exposureMiWcs.wcs
-        ra, dec = wcs.pixelToSkyArray(x.ravel().astype(np.float64),
-                                      y.ravel().astype(np.float64))
+        ra, dec = wcs.pixelToSkyArray(x.ravel(),
+                                      y.ravel())
 
         poly = self.exposureMiWcs.convex_polygon
         contains = poly.contains(ra, dec)
         np.testing.assert_array_equal(contains, np.ones(len(contains), dtype=bool))
 
-        # Check that points outside of the bounding box are not in the polygon
+        # Check that points one pixel outside of the bounding box are not in the polygon
         bbox.grow(1)
 
         ra, dec = wcs.pixelToSkyArray(
@@ -825,10 +826,11 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
 
     def testContainsSkyCoords(self):
         """Test the sky coord containment code."""
-        self.assertRaises(ValueError,
-                          self.exposureMiOnly.containsSkyCoords,
-                          0.0,
-                          0.0)
+        self.assertRaisesRegex(ValueError,
+                               "Exposure does not have a valid WCS",
+                               self.exposureMiOnly.containsSkyCoords,
+                               0.0,
+                               0.0)
 
         # Check that all the points within the bounding box are contained
         bbox = self.exposureMiWcs.getBBox()
@@ -838,7 +840,8 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         ra, dec = wcs.pixelToSkyArray(x.ravel().astype(np.float64),
                                       y.ravel().astype(np.float64))
 
-        contains = self.exposureMiWcs.containsSkyCoords(ra, dec, degrees=False)
+        contains = self.exposureMiWcs.containsSkyCoords(ra*units.radian,
+                                                        dec*units.radian)
         np.testing.assert_array_equal(contains, np.ones(len(contains), dtype=bool))
 
         # Same test, everything in degrees.
@@ -846,14 +849,16 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
                                       y.ravel().astype(np.float64),
                                       degrees=True)
 
-        contains = self.exposureMiWcs.containsSkyCoords(ra, dec, degrees=True)
+        contains = self.exposureMiWcs.containsSkyCoords(ra*units.degree,
+                                                        dec*units.degree)
         np.testing.assert_array_equal(contains, np.ones(len(contains), dtype=bool))
 
         # Prepend and append some positions out of the box.
         ra = np.concatenate(([300.0], ra, [180.]))
         dec = np.concatenate(([50.0], dec, [50.0]))
 
-        contains = self.exposureMiWcs.containsSkyCoords(ra, dec, degrees=True)
+        contains = self.exposureMiWcs.containsSkyCoords(ra*units.degree,
+                                                        dec*units.degree)
         compare = np.ones(len(contains), dtype=bool)
         compare[0] = False
         compare[-1] = False
