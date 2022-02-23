@@ -29,6 +29,7 @@ import unittest
 import numpy as np
 from numpy.testing import assert_allclose
 import yaml
+import astropy.units as units
 
 import lsst.utils
 import lsst.utils.tests
@@ -776,6 +777,92 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
                 else:
                     with self.assertRaises(pexExcept.InvalidParameterError, msg=msg):
                         self.smallExposure.getCutout(cutoutCenter, cutoutSize)
+
+    def testGetConvexPolygon(self):
+        """Test the convex polygon."""
+        # Check that we do not have a convex polygon for the plain exposure.
+        self.assertIsNone(self.exposureMiOnly.convex_polygon)
+
+        # Check that all the points in the padded bounding box are in the polygon
+        bbox = self.exposureMiWcs.getBBox()
+        # Grow by the default padding.
+        bbox.grow(10)
+        x, y = np.meshgrid(np.arange(bbox.getBeginX(), bbox.getEndX(), dtype=np.float64),
+                           np.arange(bbox.getBeginY(), bbox.getEndY(), dtype=np.float64))
+        wcs = self.exposureMiWcs.wcs
+        ra, dec = wcs.pixelToSkyArray(x.ravel(),
+                                      y.ravel())
+
+        poly = self.exposureMiWcs.convex_polygon
+        contains = poly.contains(ra, dec)
+        np.testing.assert_array_equal(contains, np.ones(len(contains), dtype=bool))
+
+        # Check that points one pixel outside of the bounding box are not in the polygon
+        bbox.grow(1)
+
+        ra, dec = wcs.pixelToSkyArray(
+            np.linspace(bbox.getBeginX(), bbox.getEndX(), 100),
+            np.full(100, bbox.getBeginY()))
+        contains = poly.contains(ra, dec)
+        np.testing.assert_array_equal(contains, np.zeros(len(contains), dtype=bool))
+
+        ra, dec = wcs.pixelToSkyArray(
+            np.linspace(bbox.getBeginX(), bbox.getEndX(), 100),
+            np.full(100, bbox.getEndY()))
+        contains = poly.contains(ra, dec)
+        np.testing.assert_array_equal(contains, np.zeros(len(contains), dtype=bool))
+
+        ra, dec = wcs.pixelToSkyArray(
+            np.full(100, bbox.getBeginX()),
+            np.linspace(bbox.getBeginY(), bbox.getEndY(), 100))
+        contains = poly.contains(ra, dec)
+        np.testing.assert_array_equal(contains, np.zeros(len(contains), dtype=bool))
+
+        ra, dec = wcs.pixelToSkyArray(
+            np.full(100, bbox.getEndX()),
+            np.linspace(bbox.getBeginY(), bbox.getEndY(), 100))
+        contains = poly.contains(ra, dec)
+        np.testing.assert_array_equal(contains, np.zeros(len(contains), dtype=bool))
+
+    def testContainsSkyCoords(self):
+        """Test the sky coord containment code."""
+        self.assertRaisesRegex(ValueError,
+                               "Exposure does not have a valid WCS",
+                               self.exposureMiOnly.containsSkyCoords,
+                               0.0,
+                               0.0)
+
+        # Check that all the points within the bounding box are contained
+        bbox = self.exposureMiWcs.getBBox()
+        x, y = np.meshgrid(np.arange(bbox.getBeginX() + 1, bbox.getEndX() - 1),
+                           np.arange(bbox.getBeginY() + 1, bbox.getEndY() - 1))
+        wcs = self.exposureMiWcs.wcs
+        ra, dec = wcs.pixelToSkyArray(x.ravel().astype(np.float64),
+                                      y.ravel().astype(np.float64))
+
+        contains = self.exposureMiWcs.containsSkyCoords(ra*units.radian,
+                                                        dec*units.radian)
+        np.testing.assert_array_equal(contains, np.ones(len(contains), dtype=bool))
+
+        # Same test, everything in degrees.
+        ra, dec = wcs.pixelToSkyArray(x.ravel().astype(np.float64),
+                                      y.ravel().astype(np.float64),
+                                      degrees=True)
+
+        contains = self.exposureMiWcs.containsSkyCoords(ra*units.degree,
+                                                        dec*units.degree)
+        np.testing.assert_array_equal(contains, np.ones(len(contains), dtype=bool))
+
+        # Prepend and append some positions out of the box.
+        ra = np.concatenate(([300.0], ra, [180.]))
+        dec = np.concatenate(([50.0], dec, [50.0]))
+
+        contains = self.exposureMiWcs.containsSkyCoords(ra*units.degree,
+                                                        dec*units.degree)
+        compare = np.ones(len(contains), dtype=bool)
+        compare[0] = False
+        compare[-1] = False
+        np.testing.assert_array_equal(contains, compare)
 
     def _checkCutoutProperties(self, cutout, size, center, precision, msg):
         """Test whether a cutout has the desired size and position.
