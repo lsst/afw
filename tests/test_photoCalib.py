@@ -325,6 +325,9 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
         photoCalib = lsst.afw.image.PhotoCalib(self.calibration)
         self._testPhotoCalibCenter(photoCalib, 0)
 
+        # Test _isConstant
+        self.assertTrue(photoCalib._isConstant)
+
         # test on positions off the center (position should not matter)
         self.assertEqual(self.flux1, photoCalib.instFluxToNanojansky(self.instFlux1, self.pointXShift))
         self.assertEqual(self.mag1, photoCalib.instFluxToMagnitude(self.instFlux1, self.pointXShift))
@@ -354,6 +357,9 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
         # test converting to a photoCalib
         photoCalib = lsst.afw.image.PhotoCalib(self.constantCalibration, self.calibrationErr)
         self._testPhotoCalibCenter(photoCalib, self.calibrationErr)
+
+        # test _isConstant (bounded field is not constant)
+        self.assertFalse(photoCalib._isConstant)
 
     def testLinearXBoundedField(self):
         photoCalib = lsst.afw.image.PhotoCalib(self.linearXCalibration)
