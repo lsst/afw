@@ -253,16 +253,54 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
         self.assertFloatsAlmostEqual(self.instFlux1,
                                      photoCalib.magnitudeToInstFlux(mag, self.pointXShift),
                                      rtol=1e-15)
-        mag = photoCalib.instFluxToMagnitude(self.instFlux2, self.pointXShift)
+        mag2 = photoCalib.instFluxToMagnitude(self.instFlux2, self.pointXShift)
         self.assertFloatsAlmostEqual(self.instFlux2,
-                                     photoCalib.magnitudeToInstFlux(mag, self.pointXShift),
+                                     photoCalib.magnitudeToInstFlux(mag2, self.pointXShift),
                                      rtol=1e-15)
+
+        # test round-tripping arrays (position specified)
+        instFlux1Array = np.full(10, self.instFlux1)
+        instFlux2Array = np.full(10, self.instFlux2)
+        pointXShiftXArray = np.full(10, self.pointXShift.getX())
+        pointXShiftYArray = np.full(10, self.pointXShift.getY())
+
+        magArray = photoCalib.instFluxToMagnitudeArray(
+            instFlux1Array,
+            pointXShiftXArray,
+            pointXShiftYArray
+        )
+        self.assertFloatsAlmostEqual(magArray.value, mag)
+        self.assertFloatsAlmostEqual(photoCalib.magnitudeToInstFluxArray(magArray,
+                                                                         pointXShiftXArray,
+                                                                         pointXShiftYArray
+                                                                         ),
+                                     instFlux1Array,
+                                     rtol=5e-15)
+        mag2Array = photoCalib.instFluxToMagnitudeArray(
+            np.full(10, self.instFlux2),
+            np.full(10, self.pointXShift.getX()),
+            np.full(10, self.pointXShift.getY())
+        )
+        self.assertFloatsAlmostEqual(mag2Array.value, mag2)
+        self.assertFloatsAlmostEqual(photoCalib.magnitudeToInstFluxArray(mag2Array,
+                                                                         pointXShiftXArray,
+                                                                         pointXShiftYArray
+                                                                         ),
+                                     instFlux2Array,
+                                     rtol=5e-15)
 
         # test getLocalCalibration.
         meas = photoCalib.instFluxToNanojansky(self.instFlux1, self.instFluxErr1, self.pointXShift)
         localCalib = photoCalib.getLocalCalibration(self.pointXShift)
         flux = localCalib * self.instFlux1
         self.assertAlmostEqual(meas.value, flux)
+
+        # test getLocalCalibrationArray
+        localCalib2 = photoCalib.getLocalCalibrationArray(
+            pointXShiftXArray,
+            pointXShiftYArray
+        )
+        self.assertFloatsAlmostEqual(localCalib2, localCalib)
 
     def _testSourceCatalog(self, photoCalib, catalog, expectNanojansky, expectMag):
         """Test instFluxTo*(sourceCatalog, ...), and calibrateCatalog()."""
