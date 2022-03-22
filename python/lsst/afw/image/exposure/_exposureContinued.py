@@ -31,6 +31,10 @@ from ..image._disableArithmetic import disableImageArithmetic
 from ..image._fitsIoWithOptions import imageReadFitsWithOptions, exposureWriteFitsWithOptions
 from ._exposure import ExposureI, ExposureF, ExposureD, ExposureU, ExposureL
 from .exposureUtils import bbox_to_convex_polygon, bbox_contains_sky_coords
+from lsst.pex.exceptions import InvalidParameterError
+import lsst.geom as geom
+
+SIGMA_2_FWHM = 2.*np.sqrt(2.*np.log(2.))
 
 
 class Exposure(metaclass=TemplateMeta):
@@ -162,6 +166,47 @@ class Exposure(metaclass=TemplateMeta):
     readFitsWithOptions = classmethod(imageReadFitsWithOptions)
 
     writeFitsWithOptions = exposureWriteFitsWithOptions
+
+    def getFwhmPix(self, fwhmExposureBuffer=0.05, fwhmExposureGrid=10):
+        """Get the average PSF FWHM by evaluating it on a grid of points on an exposure
+
+        Parameters
+        ----------
+        fwhmExposureBuffer : `float`, optional
+            Fractional buffer margin to be left out of all sides of the image during construction
+            of grid to compute average PSF FWHM in an exposure
+        fwhmExposureGrid : `int`, optional
+            Grid size to compute the average FWHM in an exposure
+
+        Returns
+        -------
+        FwhmPix : `float`
+            The average PSF FWHM on the exposure
+
+        """
+
+        psf = self.getPsf()
+        bbox = self.getBBox()
+
+        xmax, ymax = bbox.getMax()
+        xmin, ymin = bbox.getMin()
+
+        xbuffer = fwhmExposureBuffer*(xmax-xmin)
+        ybuffer = fwhmExposureBuffer*(ymax-ymin)
+
+        xx, yy = np.meshgrid(np.linspace(xmin+xbuffer, xmax-xbuffer, fwhmExposureGrid),
+                             np.linspace(ymin+ybuffer, ymax-ybuffer, fwhmExposureGrid))
+
+        sigPixArray = np.zeros(xx.size)
+        for ii, (x, y) in enumerate(zip(xx.flat, yy.flat)):
+            try:
+                sigPixArray[ii] = psf.computeShape(geom.Point2D(x, y)).getDeterminantRadius()
+            except InvalidParameterError:
+                sigPixArray[ii] = np.nan
+
+        sigPix = np.nanmedian(sigPixArray)
+
+        return sigPix*SIGMA_2_FWHM
 
 
 Exposure.register(np.int32, ExposureI)
