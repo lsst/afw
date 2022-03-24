@@ -401,15 +401,15 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         self.assertTrue(self.exposureCrWcs.hasWcs())
         self.assertFalse(self.exposureCrOnly.hasWcs())
 
-    def testGetFwhmPix(self):
+    def testEvaluateMedianFwhm(self):
         """
-        Test getFwhmPix method.
+        Test evaluateMedianFwhm method.
         """
         psfSize = 2.0
         exposure = afwImage.ExposureF()
         psf = DummyPsf(psfSize)
         exposure.setPsf(self.psf)
-        self.assertEqual(exposure.getFwhmPix(), 
+        self.assertEqual(exposure.evaluateMedianFwhm(),
                          2.*np.sqrt(2.*np.log(2.))*psf.computeShape().getDeterminantRadius())
 
     def testGetSubExposure(self):

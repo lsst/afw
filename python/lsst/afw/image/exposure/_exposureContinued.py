@@ -167,21 +167,21 @@ class Exposure(metaclass=TemplateMeta):
 
     writeFitsWithOptions = exposureWriteFitsWithOptions
 
-    def getFwhmPix(self, fwhmExposureBuffer=0.05, fwhmExposureGrid=10):
-        """Get the average PSF FWHM by evaluating it on a grid of points on an exposure
+    def evaluateMedianFwhm(self, fwhmExposureBuffer=0.05, fwhmExposureGrid=10):
+        """Get the median PSF FWHM by evaluating it on a grid of points on an exposure
 
         Parameters
         ----------
         fwhmExposureBuffer : `float`, optional
             Fractional buffer margin to be left out of all sides of the image during construction
-            of grid to compute average PSF FWHM in an exposure
+            of grid to compute median PSF FWHM in an exposure
         fwhmExposureGrid : `int`, optional
-            Grid size to compute the average FWHM in an exposure
+            Grid size to compute the median FWHM in an exposure
 
         Returns
         -------
-        FwhmPix : `float`
-            The average PSF FWHM on the exposure
+        medianFwhm : `float`
+            The median PSF FWHM on the exposure
 
         """
 
