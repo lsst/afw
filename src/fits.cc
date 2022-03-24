@@ -1318,7 +1318,7 @@ void Fits::writeImage(image::ImageBase<T> const &image, ImageWriteOptions const 
             geom::createTrivialWcsMetadata(image::detail::wcsNameForXY0, image.getXY0());
     if (header) {
         std::shared_ptr<daf::base::PropertySet> copy = header->deepCopy();
-        copy->combine(wcsMetadata);
+        copy->combine(*wcsMetadata);
         header = copy;
     } else {
         header = wcsMetadata;
@@ -1637,7 +1637,7 @@ std::shared_ptr<daf::base::PropertyList> combineMetadata(
                 combined->add<std::string>(name, first->getArray<std::string>(name));
             }
         } else {
-            combined->copy(name, first, name, asScalar);
+            combined->copy(name, *first, name, asScalar);
         }
     }
     for (auto const &name : second->getOrderedNames()) {
@@ -1648,7 +1648,7 @@ std::shared_ptr<daf::base::PropertyList> combineMetadata(
             }
         } else {
             // `copy` will replace an item, even if has a different type, so no need to call `remove`
-            combined->copy(name, second, name, asScalar);
+            combined->copy(name, *second, name, asScalar);
         }
     }
     return combined;

@@ -360,7 +360,7 @@ Image<PixelT>::Image(std::string const& fileName, int hdu, std::shared_ptr<daf::
     ImageFitsReader reader(fileName, hdu);
     *this = reader.read<PixelT>(bbox, origin, allowUnsafe);
     if (metadata) {
-        metadata->combine(reader.readMetadata());
+        metadata->combine(*reader.readMetadata());
     }
 }
 
@@ -371,7 +371,7 @@ Image<PixelT>::Image(fits::MemFileManager& manager, int const hdu,
     ImageFitsReader reader(manager, hdu);
     *this = reader.read<PixelT>(bbox, origin, allowUnsafe);
     if (metadata) {
-        metadata->combine(reader.readMetadata());
+        metadata->combine(*reader.readMetadata());
     }
 }
 
@@ -381,7 +381,7 @@ Image<PixelT>::Image(fits::Fits& fitsFile, std::shared_ptr<daf::base::PropertySe
     ImageFitsReader reader(&fitsFile);
     *this = reader.read<PixelT>(bbox, origin, allowUnsafe);
     if (metadata) {
-        metadata->combine(reader.readMetadata());
+        metadata->combine(*reader.readMetadata());
     }
 }
 

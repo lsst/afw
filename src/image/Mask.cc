@@ -164,7 +164,7 @@ Mask<MaskPixelT>::Mask(std::string const& fileName, int hdu, std::shared_ptr<daf
     MaskFitsReader reader(fileName, hdu);
     *this = reader.read<MaskPixelT>(bbox, origin, conformMasks, allowUnsafe);
     if (metadata) {
-        metadata->combine(reader.readMetadata());
+        metadata->combine(*reader.readMetadata());
     }
 }
 
@@ -176,7 +176,7 @@ Mask<MaskPixelT>::Mask(fits::MemFileManager& manager, int hdu,
     MaskFitsReader reader(manager, hdu);
     *this = reader.read<MaskPixelT>(bbox, origin, conformMasks, allowUnsafe);
     if (metadata) {
-        metadata->combine(reader.readMetadata());
+        metadata->combine(*reader.readMetadata());
     }
 }
 
@@ -188,7 +188,7 @@ Mask<MaskPixelT>::Mask(fits::Fits& fitsFile, std::shared_ptr<daf::base::Property
     MaskFitsReader reader(&fitsFile);
     *this = reader.read<MaskPixelT>(bbox, origin, conformMasks, allowUnsafe);
     if (metadata) {
-        metadata->combine(reader.readMetadata());
+        metadata->combine(*reader.readMetadata());
     }
 }
 

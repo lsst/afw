@@ -82,16 +82,16 @@ MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
     *this = reader.read<ImagePixelT, MaskPixelT, VariancePixelT>(bbox, origin, conformMasks, needAllHdus,
                                                                  allowUnsafe);
     if (metadata) {
-        metadata->combine(reader.readPrimaryMetadata());
+        metadata->combine(*reader.readPrimaryMetadata());
     }
     if (imageMetadata) {
-        imageMetadata->combine(reader.readImageMetadata());
+        imageMetadata->combine(*reader.readImageMetadata());
     }
     if (maskMetadata) {
-        maskMetadata->combine(reader.readMaskMetadata());
+        maskMetadata->combine(*reader.readMaskMetadata());
     }
     if (varianceMetadata) {
-        varianceMetadata->combine(reader.readVarianceMetadata());
+        varianceMetadata->combine(*reader.readVarianceMetadata());
     }
 }
 
@@ -107,16 +107,16 @@ MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
     *this = reader.read<ImagePixelT, MaskPixelT, VariancePixelT>(bbox, origin, conformMasks, needAllHdus,
                                                                  allowUnsafe);
     if (metadata) {
-        metadata->combine(reader.readPrimaryMetadata());
+        metadata->combine(*reader.readPrimaryMetadata());
     }
     if (imageMetadata) {
-        imageMetadata->combine(reader.readImageMetadata());
+        imageMetadata->combine(*reader.readImageMetadata());
     }
     if (maskMetadata) {
-        maskMetadata->combine(reader.readMaskMetadata());
+        maskMetadata->combine(*reader.readMaskMetadata());
     }
     if (varianceMetadata) {
-        varianceMetadata->combine(reader.readVarianceMetadata());
+        varianceMetadata->combine(*reader.readVarianceMetadata());
     }
 }
 
@@ -132,16 +132,16 @@ MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
     *this = reader.read<ImagePixelT, MaskPixelT, VariancePixelT>(bbox, origin, conformMasks, needAllHdus,
                                                                  allowUnsafe);
     if (metadata) {
-        metadata->combine(reader.readPrimaryMetadata());
+        metadata->combine(*reader.readPrimaryMetadata());
     }
     if (imageMetadata) {
-        imageMetadata->combine(reader.readImageMetadata());
+        imageMetadata->combine(*reader.readImageMetadata());
     }
     if (maskMetadata) {
-        maskMetadata->combine(reader.readMaskMetadata());
+        maskMetadata->combine(*reader.readMaskMetadata());
     }
     if (varianceMetadata) {
-        varianceMetadata->combine(reader.readVarianceMetadata());
+        varianceMetadata->combine(*reader.readVarianceMetadata());
     }
 }
 
