@@ -30,5 +30,6 @@ from ._exposureInfoContinued import *
 from ._exposureSummaryStats import *
 from .basicUtils import *
 from .testUtils import *
+from ._photoCalibContinued import *
 
 from ._exposureFitsReaderContinued import *  # just here to support deprecation

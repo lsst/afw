@@ -418,6 +418,13 @@ public:
     double getCalibrationErr() const { return _calibrationErr; }
 
     /**
+     * Is this photoCalib spatially constant?
+     *
+     * @returns    Is the calibration spatially constant?
+     */
+    bool isConstant() const { return _isConstant; }
+
+    /**
      * Get the magnitude zero point (the instrumental flux corresponding to 0 magnitude).
      *
      * This value is defined such that:

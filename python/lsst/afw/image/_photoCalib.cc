@@ -162,6 +162,7 @@ void declarePhotoCalib(lsst::utils::python::WrapperCollection &wrappers) {
                 /* utilities */
                 cls.def("getCalibrationMean", &PhotoCalib::getCalibrationMean);
                 cls.def("getCalibrationErr", &PhotoCalib::getCalibrationErr);
+                cls.def_property_readonly("_isConstant", &PhotoCalib::isConstant);
                 cls.def("getInstFluxAtZeroMagnitude", &PhotoCalib::getInstFluxAtZeroMagnitude);
                 cls.def("getLocalCalibration", &PhotoCalib::getLocalCalibration, "point"_a);
 
