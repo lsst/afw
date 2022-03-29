@@ -85,7 +85,20 @@ void declareImageCompression(lsst::utils::python::WrapperCollection &wrappers) {
 
 template <typename T>
 void declareImageScalingOptionsTemplates(py::class_<ImageScalingOptions> &cls) {
-    cls.def("determine", &ImageScalingOptions::determine<T>);
+    cls.def(
+        "determine",
+        // It seems like py::overload cast should work here, and I don't
+        // understand why it doesn't.
+        [](
+            ImageScalingOptions const & self,
+            image::ImageBase<T> const& image,
+            image::Mask<image::MaskPixel> const * mask
+        ) {
+            return self.determine(image, mask);
+        },
+        "image"_a,
+        "mask"_a=nullptr
+    );
 }
 
 void declareImageScalingOptions(lsst::utils::python::WrapperCollection &wrappers) {
@@ -233,7 +246,13 @@ void declareFitsModule(lsst::utils::python::WrapperCollection &wrappers) {
                 },
                 "hdu"_a = DEFAULT_HDU, "strip"_a = false);
         mod.attr("DEFAULT_HDU") = DEFAULT_HDU;
-        mod.def("combineMetadata", combineMetadata, "first"_a, "second"_a);
+        mod.def(
+            "combineMetadata",
+            py::overload_cast<daf::base::PropertyList const&, daf::base::PropertyList const &>(
+                combineMetadata
+            ),
+            "first"_a, "second"_a
+        );
         mod.def("makeLimitedFitsHeader", &makeLimitedFitsHeader, "metadata"_a,
                 "excludeNames"_a = std::set<std::string>());
         mod.def(

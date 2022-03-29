@@ -82,16 +82,16 @@ MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
     *this = reader.read<ImagePixelT, MaskPixelT, VariancePixelT>(bbox, origin, conformMasks, needAllHdus,
                                                                  allowUnsafe);
     if (metadata) {
-        metadata->combine(reader.readPrimaryMetadata());
+        metadata->combine(*reader.readPrimaryMetadata());
     }
     if (imageMetadata) {
-        imageMetadata->combine(reader.readImageMetadata());
+        imageMetadata->combine(*reader.readImageMetadata());
     }
     if (maskMetadata) {
-        maskMetadata->combine(reader.readMaskMetadata());
+        maskMetadata->combine(*reader.readMaskMetadata());
     }
     if (varianceMetadata) {
-        varianceMetadata->combine(reader.readVarianceMetadata());
+        varianceMetadata->combine(*reader.readVarianceMetadata());
     }
 }
 
@@ -107,16 +107,16 @@ MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
     *this = reader.read<ImagePixelT, MaskPixelT, VariancePixelT>(bbox, origin, conformMasks, needAllHdus,
                                                                  allowUnsafe);
     if (metadata) {
-        metadata->combine(reader.readPrimaryMetadata());
+        metadata->combine(*reader.readPrimaryMetadata());
     }
     if (imageMetadata) {
-        imageMetadata->combine(reader.readImageMetadata());
+        imageMetadata->combine(*reader.readImageMetadata());
     }
     if (maskMetadata) {
-        maskMetadata->combine(reader.readMaskMetadata());
+        maskMetadata->combine(*reader.readMaskMetadata());
     }
     if (varianceMetadata) {
-        varianceMetadata->combine(reader.readVarianceMetadata());
+        varianceMetadata->combine(*reader.readVarianceMetadata());
     }
 }
 
@@ -132,16 +132,16 @@ MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
     *this = reader.read<ImagePixelT, MaskPixelT, VariancePixelT>(bbox, origin, conformMasks, needAllHdus,
                                                                  allowUnsafe);
     if (metadata) {
-        metadata->combine(reader.readPrimaryMetadata());
+        metadata->combine(*reader.readPrimaryMetadata());
     }
     if (imageMetadata) {
-        imageMetadata->combine(reader.readImageMetadata());
+        imageMetadata->combine(*reader.readImageMetadata());
     }
     if (maskMetadata) {
-        maskMetadata->combine(reader.readMaskMetadata());
+        maskMetadata->combine(*reader.readMaskMetadata());
     }
     if (varianceMetadata) {
-        varianceMetadata->combine(reader.readVarianceMetadata());
+        varianceMetadata->combine(*reader.readVarianceMetadata());
     }
 }
 
@@ -439,7 +439,7 @@ void MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
 
 namespace {
 
-void processPlaneMetadata(std::shared_ptr<daf::base::PropertySet const> metadata,
+void processPlaneMetadata(daf::base::PropertySet const * metadata,
                           std::shared_ptr<daf::base::PropertySet>& hdr, char const* exttype) {
     if (metadata) {
         hdr = metadata->deepCopy();
@@ -516,14 +516,14 @@ void MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
     }
     fitsfile.writeMetadata(*header);
 
-    processPlaneMetadata(imageMetadata, header, "IMAGE");
-    _image->writeFits(fitsfile, imageOptions, header, _mask);
+    processPlaneMetadata(imageMetadata.get(), header, "IMAGE");
+    _image->writeFits(fitsfile, imageOptions, header.get(), _mask.get());
 
-    processPlaneMetadata(maskMetadata, header, "MASK");
-    _mask->writeFits(fitsfile, maskOptions, header);
+    processPlaneMetadata(maskMetadata.get(), header, "MASK");
+    _mask->writeFits(fitsfile, maskOptions, header.get());
 
-    processPlaneMetadata(varianceMetadata, header, "VARIANCE");
-    _variance->writeFits(fitsfile, varianceOptions, header, _mask);
+    processPlaneMetadata(varianceMetadata.get(), header, "VARIANCE");
+    _variance->writeFits(fitsfile, varianceOptions, header.get(), _mask.get());
 }
 
 // private function conformSizes() ensures that the Mask and Variance have the same dimensions

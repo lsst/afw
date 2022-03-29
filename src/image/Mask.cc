@@ -164,7 +164,7 @@ Mask<MaskPixelT>::Mask(std::string const& fileName, int hdu, std::shared_ptr<daf
     MaskFitsReader reader(fileName, hdu);
     *this = reader.read<MaskPixelT>(bbox, origin, conformMasks, allowUnsafe);
     if (metadata) {
-        metadata->combine(reader.readMetadata());
+        metadata->combine(*reader.readMetadata());
     }
 }
 
@@ -176,7 +176,7 @@ Mask<MaskPixelT>::Mask(fits::MemFileManager& manager, int hdu,
     MaskFitsReader reader(manager, hdu);
     *this = reader.read<MaskPixelT>(bbox, origin, conformMasks, allowUnsafe);
     if (metadata) {
-        metadata->combine(reader.readMetadata());
+        metadata->combine(*reader.readMetadata());
     }
 }
 
@@ -188,37 +188,72 @@ Mask<MaskPixelT>::Mask(fits::Fits& fitsFile, std::shared_ptr<daf::base::Property
     MaskFitsReader reader(&fitsFile);
     *this = reader.read<MaskPixelT>(bbox, origin, conformMasks, allowUnsafe);
     if (metadata) {
-        metadata->combine(reader.readMetadata());
+        metadata->combine(*reader.readMetadata());
     }
 }
 
 template <typename MaskPixelT>
 void Mask<MaskPixelT>::writeFits(std::string const& fileName,
-                                 std::shared_ptr<lsst::daf::base::PropertySet const> metadata_i,
+                                 daf::base::PropertySet const * metadata_i,
                                  std::string const& mode) const {
     fits::Fits fitsfile(fileName, mode, fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
     writeFits(fitsfile, metadata_i);
 }
 
 template <typename MaskPixelT>
+void Mask<MaskPixelT>::writeFits(std::string const& fileName,
+                                 std::shared_ptr<daf::base::PropertySet const> metadata_i,
+                                 std::string const& mode) const {
+    writeFits(fileName, metadata_i.get(), mode);
+}
+
+template <typename MaskPixelT>
 void Mask<MaskPixelT>::writeFits(fits::MemFileManager& manager,
-                                 std::shared_ptr<lsst::daf::base::PropertySet const> metadata_i,
+                                 daf::base::PropertySet const * metadata_i,
                                  std::string const& mode) const {
     fits::Fits fitsfile(manager, mode, fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
     writeFits(fitsfile, metadata_i);
 }
 
 template <typename MaskPixelT>
+void Mask<MaskPixelT>::writeFits(fits::MemFileManager& manager,
+                                 std::shared_ptr<daf::base::PropertySet const> metadata_i,
+                                 std::string const& mode) const {
+    writeFits(manager, metadata_i.get(), mode);
+}
+
+template <typename MaskPixelT>
 void Mask<MaskPixelT>::writeFits(fits::Fits& fitsfile,
-                                 std::shared_ptr<lsst::daf::base::PropertySet const> metadata) const {
+                                 daf::base::PropertySet const * metadata) const {
     writeFits(fitsfile, fits::ImageWriteOptions(*this), metadata);
+}
+
+template <typename MaskPixelT>
+void Mask<MaskPixelT>::writeFits(fits::Fits& fitsfile,
+                                 std::shared_ptr<daf::base::PropertySet const> metadata) const {
+    writeFits(fitsfile, metadata.get());
+}
+
+template <typename MaskPixelT>
+void Mask<MaskPixelT>::writeFits(std::string const& filename, fits::ImageWriteOptions const& options,
+                                 std::string const& mode,
+                                 daf::base::PropertySet const * header) const {
+    fits::Fits fitsfile(filename, mode, fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
+    writeFits(fitsfile, options, header);
 }
 
 template <typename MaskPixelT>
 void Mask<MaskPixelT>::writeFits(std::string const& filename, fits::ImageWriteOptions const& options,
                                  std::string const& mode,
                                  std::shared_ptr<daf::base::PropertySet const> header) const {
-    fits::Fits fitsfile(filename, mode, fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
+    writeFits(filename, options, mode, header.get());
+}
+
+template <typename MaskPixelT>
+void Mask<MaskPixelT>::writeFits(fits::MemFileManager& manager, fits::ImageWriteOptions const& options,
+                                 std::string const& mode,
+                                 daf::base::PropertySet const * header) const {
+    fits::Fits fitsfile(manager, mode, fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
     writeFits(fitsfile, options, header);
 }
 
@@ -226,17 +261,22 @@ template <typename MaskPixelT>
 void Mask<MaskPixelT>::writeFits(fits::MemFileManager& manager, fits::ImageWriteOptions const& options,
                                  std::string const& mode,
                                  std::shared_ptr<daf::base::PropertySet const> header) const {
-    fits::Fits fitsfile(manager, mode, fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
-    writeFits(fitsfile, options, header);
+    writeFits(manager, options, mode, header.get());
+}
+
+template <typename MaskPixelT>
+void Mask<MaskPixelT>::writeFits(fits::Fits& fitsfile, fits::ImageWriteOptions const& options,
+                                 daf::base::PropertySet const * header) const {
+    std::shared_ptr<daf::base::PropertySet> useHeader =
+            header ? header->deepCopy() : std::make_shared<dafBase::PropertySet>();
+    addMaskPlanesToMetadata(useHeader);
+    fitsfile.writeImage(*this, options, useHeader.get());
 }
 
 template <typename MaskPixelT>
 void Mask<MaskPixelT>::writeFits(fits::Fits& fitsfile, fits::ImageWriteOptions const& options,
                                  std::shared_ptr<daf::base::PropertySet const> header) const {
-    std::shared_ptr<daf::base::PropertySet> useHeader =
-            header ? header->deepCopy() : std::make_shared<dafBase::PropertySet>();
-    addMaskPlanesToMetadata(useHeader);
-    fitsfile.writeImage(*this, options, useHeader);
+    writeFits(fitsfile, options, header.get());
 }
 
 #endif  // !DOXYGEN

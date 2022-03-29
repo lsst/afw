@@ -1294,8 +1294,8 @@ private:
 
 template <typename T>
 void Fits::writeImage(image::ImageBase<T> const &image, ImageWriteOptions const &options,
-                      std::shared_ptr<daf::base::PropertySet const> header,
-                      std::shared_ptr<image::Mask<image::MaskPixel> const> mask) {
+                      daf::base::PropertySet const * header,
+                      image::Mask<image::MaskPixel> const * mask) {
     auto fits = reinterpret_cast<fitsfile *>(fptr);
     ImageCompressionOptions const &compression =
             image.getBBox().getArea() > 0
@@ -1316,14 +1316,14 @@ void Fits::writeImage(image::ImageBase<T> const &image, ImageWriteOptions const 
     // Write the header
     std::shared_ptr<daf::base::PropertyList> wcsMetadata =
             geom::createTrivialWcsMetadata(image::detail::wcsNameForXY0, image.getXY0());
+    std::shared_ptr<daf::base::PropertySet> fullMetadata;
     if (header) {
-        std::shared_ptr<daf::base::PropertySet> copy = header->deepCopy();
-        copy->combine(wcsMetadata);
-        header = copy;
+        fullMetadata = header->deepCopy();
+        fullMetadata->combine(*wcsMetadata);
     } else {
-        header = wcsMetadata;
+        fullMetadata = wcsMetadata;
     }
-    writeMetadata(*header);
+    writeMetadata(*fullMetadata);
 
     // Scale the image how we want it on disk
     ndarray::Array<T const, 2, 2> array = makeContiguousArray(image.getArray());
@@ -1392,6 +1392,13 @@ void Fits::writeImage(image::ImageBase<T> const &image, ImageWriteOptions const 
     if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, "Finalizing header");
     }
+}
+
+template <typename T>
+void Fits::writeImage(image::ImageBase<T> const &image, ImageWriteOptions const &options,
+                      std::shared_ptr<daf::base::PropertySet const> header,
+                      std::shared_ptr<image::Mask<image::MaskPixel> const> mask) {
+    writeImage(image, options, header.get(), mask.get());
 }
 
 namespace {
@@ -1626,25 +1633,25 @@ void Fits::closeFile() {
 }
 
 std::shared_ptr<daf::base::PropertyList> combineMetadata(
-        std::shared_ptr<const daf::base::PropertyList> first,
-        std::shared_ptr<const daf::base::PropertyList> second) {
+        daf::base::PropertyList const & first,
+        daf::base::PropertyList const & second) {
     auto combined = std::make_shared<daf::base::PropertyList>();
     bool const asScalar = true;
-    for (auto const &name : first->getOrderedNames()) {
-        auto const iscv = isCommentIsValid(*first, name);
+    for (auto const &name : first.getOrderedNames()) {
+        auto const iscv = isCommentIsValid(first, name);
         if (iscv.isComment) {
             if (iscv.isValid) {
-                combined->add<std::string>(name, first->getArray<std::string>(name));
+                combined->add<std::string>(name, first.getArray<std::string>(name));
             }
         } else {
             combined->copy(name, first, name, asScalar);
         }
     }
-    for (auto const &name : second->getOrderedNames()) {
-        auto const iscv = isCommentIsValid(*second, name);
+    for (auto const &name : second.getOrderedNames()) {
+        auto const iscv = isCommentIsValid(second, name);
         if (iscv.isComment) {
             if (iscv.isValid) {
-                combined->add<std::string>(name, second->getArray<std::string>(name));
+                combined->add<std::string>(name, second.getArray<std::string>(name));
             }
         } else {
             // `copy` will replace an item, even if has a different type, so no need to call `remove`
@@ -1652,6 +1659,18 @@ std::shared_ptr<daf::base::PropertyList> combineMetadata(
         }
     }
     return combined;
+}
+
+std::shared_ptr<daf::base::PropertyList> combineMetadata(
+        std::shared_ptr<daf::base::PropertyList const> first,
+        std::shared_ptr<daf::base::PropertyList const> second) {
+    if (!first) {
+        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, "First argument may not be null/None.");
+    }
+    if (!second) {
+        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, "Second argument may not be null/None.");
+    }
+    return combineMetadata(*first, *second);
 }
 
 std::shared_ptr<daf::base::PropertyList> readMetadata(std::string const &fileName, int hdu, bool strip) {
@@ -1686,11 +1705,11 @@ std::shared_ptr<daf::base::PropertyList> readMetadata(fits::Fits &fitsfile, bool
             // and comments from the specified HDU appended to comments from the primary HDU
             auto primaryHduMetadata = std::make_shared<daf::base::PropertyList>();
             fitsfile.readMetadata(*primaryHduMetadata, strip);
-            metadata = combineMetadata(primaryHduMetadata, metadata);
+            metadata = combineMetadata(*primaryHduMetadata, *metadata);
         } else {
             // Purge invalid values
             auto const emptyMetadata = std::make_shared<lsst::daf::base::PropertyList>();
-            metadata = combineMetadata(metadata, emptyMetadata);
+            metadata = combineMetadata(*metadata, *emptyMetadata);
         }
     }
     return metadata;
@@ -1821,6 +1840,9 @@ std::shared_ptr<daf::base::PropertySet> ImageWriteOptions::validate(daf::base::P
 
 #define INSTANTIATE_IMAGE_OPS(r, data, T)                                                  \
     template void Fits::writeImageImpl(T const *, int);                                    \
+    template void Fits::writeImage(image::ImageBase<T> const &, ImageWriteOptions const &, \
+                                   daf::base::PropertySet const *,          \
+                                   image::Mask<image::MaskPixel> const *);  \
     template void Fits::writeImage(image::ImageBase<T> const &, ImageWriteOptions const &, \
                                    std::shared_ptr<daf::base::PropertySet const>,          \
                                    std::shared_ptr<image::Mask<image::MaskPixel> const>);  \
