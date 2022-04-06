@@ -21,11 +21,6 @@
 
 """
 Tests for Footprints, and FootprintSets
-
-Run with:
-   python test_footprint1.py
-or
-   pytest test_footprint1.py
 """
 
 import math
@@ -44,6 +39,7 @@ import lsst.afw.math as afwMath
 import lsst.afw.detection as afwDetect
 import lsst.afw.detection.utils as afwDetectUtils
 import lsst.afw.display as afwDisplay
+import lsst.pex.exceptions as pexExcept
 
 try:
     type(display)
@@ -115,10 +111,10 @@ class SpanTestCase(unittest.TestCase):
 
 
 class ThresholdTestCase(unittest.TestCase):
-
+    """Tests of the Threshold class."""
     def testThresholdFactory(self):
         """
-        Test the creation of a Threshold object
+        Test the creation of a Threshold object with ``createThreshold``.
 
         This is a white-box test.
         -tests missing parameters
@@ -129,12 +125,8 @@ class ThresholdTestCase(unittest.TestCase):
         except Exception:
             self.fail("Failed to build Threshold with proper parameters")
 
-        try:
+        with self.assertRaises(pexExcept.InvalidParameterError):
             afwDetect.createThreshold(3.4, "foo bar")
-        except Exception:
-            pass
-        else:
-            self.fail("Threhold parameters not properly validated")
 
         try:
             afwDetect.createThreshold(3.4, "variance")
