@@ -43,6 +43,8 @@
 #include <memory>
 #include <algorithm>
 #include <cassert>
+#include <iostream>
+#include <iterator>  // for ostream_iterator
 #include <set>
 #include <string>
 #include <map>
@@ -946,9 +948,19 @@ void FootprintSet::makeSources(afw::table::SourceCatalog &cat) const {
     }
 }
 
-    //
-    // Explicit instantiations
-    //
+std::ostream &operator<<(std::ostream &os, FootprintSet const &rhs) {
+    os << rhs.getFootprints()->size() << " footprints:\n";
+    auto delimiter = "";
+    for (const auto &i : *(rhs.getFootprints())) {
+        os << delimiter << *i;
+        delimiter = "\n";
+    }
+    return os;
+}
+
+//
+// Explicit instantiations
+//
 
 #ifndef DOXYGEN
 

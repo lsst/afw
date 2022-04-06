@@ -67,6 +67,9 @@ class FootprintTestCase(unittest.TestCase):
         self.assertEqual(len(self.emptyFootprint.spans), 0)
         self.assertEqual(len(self.emptyFootprint.peaks), 0)
 
+    def test_str(self):
+        self.assertEqual(str(self.footprint), "0 peaks, area=81, centroid=(0, 0)")
+
     def testIsHeavy(self):
         self.assertFalse(self.footprint.isHeavy())
 

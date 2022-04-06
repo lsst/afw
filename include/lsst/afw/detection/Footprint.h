@@ -387,6 +387,14 @@ private:
 };
 
 /**
+ * Print a Footprint to the stream.
+ *
+ * @param os Stream to print to.
+ * @param rhs Footprint to print.
+ */
+std::ostream &operator<<(std::ostream &os, Footprint const &rhs);
+
+/**
  * @brief Merges two Footprints -- appends their peaks, and unions their
  * spans, returning a new Footprint. Region is not preserved, and is set to an empty
  * lsst::geom::Box2I object.

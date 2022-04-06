@@ -124,6 +124,7 @@ void wrapFootprintSet(utils::python::WrapperCollection &wrappers) {
                                 FootprintSet::setMask<lsst::afw::image::MaskPixel>);
                 cls.def("merge", &FootprintSet::merge, "rhs"_a, "tGrow"_a = 0, "rGrow"_a = 0,
                         "isotropic"_a = true);
+                utils::python::addOutputOp(cls, "__repr__");
             });
 }
 

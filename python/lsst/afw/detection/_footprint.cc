@@ -160,6 +160,7 @@ void wrapFootprint(WrapperCollection &wrappers) {
                 cls.def("__eq__",
                         [](Footprint const &self, Footprint const &other) -> bool { return self == other; },
                         py::is_operator());
+                utils::python::addOutputOp(cls, "__repr__");
             });
 
     declareMaskFromFootprintList<lsst::afw::image::MaskPixel>(wrappers);

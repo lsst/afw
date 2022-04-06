@@ -236,6 +236,15 @@ private:
     std::shared_ptr<FootprintList> _footprints;  ///< the Footprints of detected objects
     lsst::geom::Box2I _region;  ///< The corners of the MaskedImage that the detections live in
 };
+
+/**
+ * Print a FootprintSet to the stream.
+ *
+ * @param os Stream to print to.
+ * @param rhs FootprintSet to print.
+ */
+std::ostream& operator<<(std::ostream& os, FootprintSet const& rhs);
+
 }  // namespace detection
 }  // namespace afw
 }  // namespace lsst

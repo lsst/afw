@@ -166,6 +166,24 @@ class ThresholdTestCase(unittest.TestCase):
         except Exception:
             self.fail("Failed to build Threshold with PIXEL_STDEV parameters")
 
+    def test_str(self):
+        """Test that str/repr provide useful information.
+        """
+        threshold = afwDetect.createThreshold(10, "pixel_stdev")
+        self.assertEqual(str(threshold), "PIXEL_STDEV value=10 (positive)")
+        self.assertEqual(repr(threshold),
+                         "Threshold(value=10, type=PIXEL_STDEV, polarity=1, includeMultiplier=1)")
+
+        threshold = afwDetect.createThreshold(3.123456789, "value", polarity=False)
+        self.assertEqual(str(threshold), "VALUE value=3.1234568 (negative)")
+        self.assertEqual(repr(threshold),
+                         "Threshold(value=3.123456789, type=VALUE, polarity=0, includeMultiplier=1)")
+
+        threshold = afwDetect.Threshold(2, afwDetect.Threshold.VALUE, includeMultiplier=4)
+        self.assertEqual(str(threshold), "VALUE value=2 (positive) multiplier=4")
+        self.assertEqual(repr(threshold),
+                         "Threshold(value=2, type=VALUE, polarity=1, includeMultiplier=4)")
+
 
 class FootprintTestCase(lsst.utils.tests.TestCase):
     """A test case for Footprint"""
@@ -1032,6 +1050,14 @@ class FootprintSetTestCase(unittest.TestCase):
         self.assertEqual(len(objects), len(self.objects))
         for i in range(len(objects)):
             self.assertEqual(objects[i], self.objects[i])
+
+    def test_str(self):
+        footprints = afwDetect.FootprintSet(self.ms, afwDetect.Threshold(10))
+        expect = ("3 footprints:"
+                  "\n5 peaks, area=5, centroid=(4, 2)"
+                  "\n5 peaks, area=5, centroid=(8.4, 5.4)"
+                  "\n1 peaks, area=1, centroid=(3, 6)")
+        self.assertEqual(str(footprints), expect)
 
     def testFootprints2(self):
         """Check that we found the correct number of objects using FootprintSet"""

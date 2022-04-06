@@ -425,6 +425,12 @@ void Footprint::setPeakCatalog(PeakCatalog const& otherPeaks) {
     // this syntax doesn't work in Python, which is why this method has to exist
     getPeaks() = otherPeaks;
 }
+
+std::ostream& operator<<(std::ostream& os, Footprint const& rhs) {
+    os << rhs.getPeaks().size() << " peaks, area=" << rhs.getArea() << ", centroid=" << rhs.getCentroid();
+    return os;
+}
+
 }  // namespace detection
 }  // namespace afw
 }  // namespace lsst

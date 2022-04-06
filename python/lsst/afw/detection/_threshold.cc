@@ -21,6 +21,9 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <iostream>
+#include <iomanip>
+
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
@@ -57,6 +60,25 @@ void wrapThreshold(utils::python::WrapperCollection& wrappers) {
                 cls.def("setPolarity", &Threshold::setPolarity);
                 cls.def("getIncludeMultiplier", &Threshold::getIncludeMultiplier);
                 cls.def("setIncludeMultiplier", &Threshold::setIncludeMultiplier);
+                // Different str/repr so that the latter can be used to create a Threshold.
+                cls.def("__str__", [](Threshold const& self) {
+                    std::ostringstream os;
+                    std::string polarity = (self.getPolarity() == true) ? "positive" : "negative";
+                    os << py::cast(self.getType()).attr("name").cast<std::string>() << std::setprecision(8)
+                       << " value=" << self.getValue() << " (" << polarity << ")";
+                    if (self.getIncludeMultiplier() != 1.0) {
+                        os << " multiplier=" << self.getIncludeMultiplier();
+                    }
+                    return os.str();
+                });
+                cls.def("__repr__", [](Threshold const& self) {
+                    std::ostringstream os;
+                    os << std::setprecision(16) << "Threshold(value=" << self.getValue()
+                       << ", type=" << py::cast(self.getType()).attr("name").cast<std::string>()
+                       << ", polarity=" << self.getPolarity()
+                       << ", includeMultiplier=" << self.getIncludeMultiplier() << ")";
+                    return os.str();
+                });
             });
 
     wrappers.wrapType(py::enum_<Threshold::ThresholdType>(clsThreshold, "ThresholdType"),
