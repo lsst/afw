@@ -585,16 +585,16 @@ class FunctionTestCase(lsst.utils.tests.TestCase):
                                     f(x), predVal, x, params,
                                     "params constructor")
                 self.assertFloatsAlmostEqual(
-                    f(x), predVal, msg=msg, atol=self.atol, rtol=None)
+                    f(x), predVal, msg=msg, atol=self.atol, rtol=1E-13)
                 msg = errMsg.format(type(g).__name__,
                                     g(x), predVal, x, params,
                                     "order constructor")
                 self.assertFloatsAlmostEqual(
-                    g(x), predVal, msg=msg, atol=self.atol, rtol=None)
+                    g(x), predVal, msg=msg, atol=self.atol, rtol=1E-13)
                 msg = errMsg.format(type(h).__name__,
                                     h(x), predVal, x, params, "clone")
                 self.assertFloatsAlmostEqual(
-                    h(x), predVal, msg=msg, atol=self.atol, rtol=None)
+                    h(x), predVal, msg=msg, atol=self.atol, rtol=1E-13)
 
     def testPolynomialFunction2D(self):
         def basic2DPoly(x, y, params):
