@@ -463,8 +463,7 @@ int resolve_alias(std::vector<int> const &aliases, /* list of aliases */
 
 namespace {
 template <typename ImageT>
-void findPeaksInFootprint(ImageT const &image, bool polarity, PeakCatalog &peaks, Footprint &foot,
-                          std::size_t const margin = 0) {
+void findPeaksInFootprint(ImageT const &image, bool polarity, Footprint &foot, std::size_t const margin = 0) {
     auto spanSet = foot.getSpans();
     if (spanSet->size() == 0) {
         return;
@@ -537,7 +536,7 @@ private:
 
 template <typename ImageT, typename ThresholdT>
 void findPeaks(std::shared_ptr<Footprint> foot, ImageT const &img, bool polarity, ThresholdT) {
-    findPeaksInFootprint(img, polarity, foot->getPeaks(), *foot, 1);
+    findPeaksInFootprint(img, polarity, *foot, 1);
 
     // We use getInternal() here to get the vector of shared_ptr that Catalog uses internally,
     // which causes the STL algorithm to copy pointers instead of PeakRecords (which is what
