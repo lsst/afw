@@ -142,6 +142,20 @@ void Footprint::removeOrphanPeaks() {
     }
 }
 
+void Footprint::updatePeakSignificance(double sigma) {
+    auto key = _peaks.getSchema().find<double>("significance").key;
+    for (auto& peak : _peaks) {
+        peak.set(key, peak.getPeakValue() / sigma);
+    }
+}
+
+void Footprint::updatePeakSignificance(image::Image<float> const& variance, int polarity) {
+    auto key = _peaks.getSchema().find<double>("significance").key;
+    for (auto& peak : _peaks) {
+        peak.set(key, polarity * peak.getPeakValue() / std::sqrt(variance[peak.getI()]));
+    }
+}
+
 std::vector<std::shared_ptr<Footprint>> Footprint::split() const {
     auto splitSpanSets = getSpans()->split();
     std::vector<std::shared_ptr<Footprint>> footprintList;

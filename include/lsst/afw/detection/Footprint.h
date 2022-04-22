@@ -330,6 +330,29 @@ public:
     void removeOrphanPeaks();
 
     /**
+     * Compute and update the significance of each peak, given a single value for sigma.
+     *
+     * The Footprint peak schema must already have a `significance` field in it.
+     *
+     * @param sigma The standard deviation for peak detection, positive or negative as appropriate.
+     *
+     * @throws pex::exceptions::NotFoundError Thrown if the the peaks do not have a `significance` field.
+     */
+    void updatePeakSignificance(double sigma);
+
+    /**
+     * Compute and update the significance of each peak, using the variance image.
+     *
+     * The Footprint peak schema must already have a `significance` field in it.
+     *
+     * @param variance The variance plane of the image that this footprint is in.
+     * @param polarity +1 if this is detected as a positive footprint, -1 if negative.
+     *
+     * @throws pex::exceptions::NotFoundError Thrown if the the peaks do not have a significance field.
+     */
+    void updatePeakSignificance(image::Image<float> const &variance, int polarity);
+
+    /**
      * Reports if the Footprint is simply connected or has multiple components
      */
     bool isContiguous() const { return getSpans()->isContiguous(); };
