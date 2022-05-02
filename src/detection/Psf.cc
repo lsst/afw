@@ -139,7 +139,12 @@ lsst::geom::Box2I Psf::computeBBox() const {
 lsst::geom::Box2I Psf::computeBBox(lsst::geom::Point2D position, image::Color color) const {
     if (isPointNull(position)) position = getAveragePosition();
     if (color.isIndeterminate()) color = getAverageColor();
-    return doComputeBBox(position, color);
+    auto cached_image = _kernelImageCache->get(detail::PsfCacheKey(position, color));
+    if (cached_image.has_value()) {
+        return cached_image.value()->getBBox();
+    } else {
+        return doComputeBBox(position, color);
+    }
 }
 
 lsst::geom::Box2I Psf::computeImageBBox() const {
@@ -149,7 +154,12 @@ lsst::geom::Box2I Psf::computeImageBBox() const {
 lsst::geom::Box2I Psf::computeImageBBox(lsst::geom::Point2D position, image::Color color) const {
     if (isPointNull(position)) position = getAveragePosition();
     if (color.isIndeterminate()) color = getAverageColor();
-    return doComputeImageBBox(position, color);
+    auto cached_image = _imageCache->get(detail::PsfCacheKey(position, color));
+    if (cached_image.has_value()) {
+        return cached_image.value()->getBBox();
+    } else {
+        return doComputeImageBBox(position, color);
+    }
 }
 
 std::shared_ptr<math::Kernel const> Psf::getLocalKernel() const {
