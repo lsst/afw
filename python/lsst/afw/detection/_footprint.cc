@@ -30,6 +30,7 @@
 
 #include "lsst/utils/python.h"
 
+#include "lsst/afw/image/Image.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/table/io/python.h"  // for addPersistableMethods
 #include "lsst/afw/detection/Footprint.h"
@@ -135,6 +136,10 @@ void wrapFootprint(WrapperCollection &wrappers) {
                         "stencil"_a = geom::Stencil::CIRCLE);
                 cls.def("erode", (void (Footprint::*)(geom::SpanSet const &)) & Footprint::erode);
                 cls.def("removeOrphanPeaks", &Footprint::removeOrphanPeaks);
+                cls.def("updatePeakSignificance",
+                        py::overload_cast<double>(&Footprint::updatePeakSignificance));
+                cls.def("updatePeakSignificance", py::overload_cast<image::Image<float> const &, int>(
+                                                          &Footprint::updatePeakSignificance));
                 cls.def("isContiguous", &Footprint::isContiguous);
                 cls.def("isHeavy", &Footprint::isHeavy);
                 cls.def("assign", (Footprint & (Footprint::*)(Footprint const &)) & Footprint::operator=);
@@ -157,9 +162,11 @@ void wrapFootprint(WrapperCollection &wrappers) {
                 cls.def("__contains__", [](Footprint const &self, lsst::geom::Point2I const &point) -> bool {
                     return self.contains(point);
                 });
-                cls.def("__eq__",
+                cls.def(
+                        "__eq__",
                         [](Footprint const &self, Footprint const &other) -> bool { return self == other; },
                         py::is_operator());
+                utils::python::addOutputOp(cls, "__repr__");
             });
 
     declareMaskFromFootprintList<lsst::afw::image::MaskPixel>(wrappers);

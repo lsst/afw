@@ -65,8 +65,10 @@ void declareSetMask(PyClass &cls) {
 template <typename PixelT, typename PyClass>
 void declareTemplatedMembers(PyClass &cls) {
     /* Constructors */
-    cls.def(py::init<image::Image<PixelT> const &, Threshold const &, int const, bool const>(), "img"_a,
-            "threshold"_a, "npixMin"_a = 1, "setPeaks"_a = true);
+    cls.def(py::init<image::Image<PixelT> const &, Threshold const &, int const, bool const,
+                     table::Schema const &>(),
+            "img"_a, "threshold"_a, "npixMin"_a = 1, "setPeaks"_a = true,
+            "peakSchema"_a = PeakTable::makeMinimalSchema());
     cls.def(py::init<image::MaskedImage<PixelT, image::MaskPixel> const &, Threshold const &,
                      std::string const &, int const, bool const>(),
             "img"_a, "threshold"_a, "planeName"_a = "", "npixMin"_a = 1, "setPeaks"_a = true);
@@ -124,6 +126,7 @@ void wrapFootprintSet(utils::python::WrapperCollection &wrappers) {
                                 FootprintSet::setMask<lsst::afw::image::MaskPixel>);
                 cls.def("merge", &FootprintSet::merge, "rhs"_a, "tGrow"_a = 0, "rGrow"_a = 0,
                         "isotropic"_a = true);
+                utils::python::addOutputOp(cls, "__repr__");
             });
 }
 

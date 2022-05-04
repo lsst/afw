@@ -32,6 +32,7 @@ import unittest
 
 import lsst.utils.tests
 import lsst.geom
+import lsst.afw.table as afwTable
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
 import lsst.afw.detection as afwDetect
@@ -646,6 +647,68 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
                 msk, self.fs.getFootprints(), msk.getPlaneBitMask("EDGE"))
 
             self.checkPeaks(frame=3)
+
+    def testMergeFootprintPeakSchemas(self):
+        """Test that merging footprints preserves fields in the peak schemas.
+        """
+        self.doSetUp()
+        self.im.getImage()[3, 4, afwImage.LOCAL] = 100
+        self.im.getImage()[3, 5, afwImage.LOCAL] = 200
+        self.im.getImage()[6, 7, afwImage.LOCAL] = 400
+
+        threshold = afwDetect.Threshold(10, afwDetect.Threshold.VALUE, True)
+        fs1 = afwDetect.FootprintSet(self.im, threshold)
+        threshold = afwDetect.Threshold(150, afwDetect.Threshold.VALUE, True)
+        fs2 = afwDetect.FootprintSet(self.im, threshold)
+
+        def addSignificance(footprints):
+            """Return a new FootprintSet with a significance field added."""
+            mapper = afwTable.SchemaMapper(footprints.getFootprints()[0].peaks.schema)
+            mapper.addMinimalSchema(footprints.getFootprints()[0].peaks.schema)
+            mapper.addOutputField("significance", type=float,
+                                  doc="Ratio of peak value to configured standard deviation.")
+
+            newFootprints = afwDetect.FootprintSet(footprints)
+            for old, new in zip(footprints.getFootprints(), newFootprints.getFootprints()):
+                newPeaks = afwDetect.PeakCatalog(mapper.getOutputSchema())
+                newPeaks.extend(old.peaks, mapper=mapper)
+                new.getPeaks().clear()
+                new.setPeakCatalog(newPeaks)
+
+            for footprint in newFootprints.getFootprints():
+                for peak in footprint.peaks:
+                    peak['significance'] = 10
+
+            return newFootprints
+
+        def checkPeakSignificance(footprints):
+            """Check that all peaks have significance=10."""
+            for footprint in footprints.getFootprints():
+                self.assertIn("significance", footprint.peaks.schema)
+                for peak in footprint.peaks:
+                    self.assertEqual(peak["significance"], 10)
+
+        newFs1 = addSignificance(fs1)
+
+        # Check that mismatched peak schemas raise an exception in merge().
+        with self.assertRaisesRegex(RuntimeError,
+                                    "FootprintSets to be merged must have identical peak schemas"):
+            fs1.merge(newFs1)
+
+        with self.assertRaisesRegex(RuntimeError,
+                                    "FootprintSets to be merged must have identical peak schemas"):
+            newFs1.merge(fs2)
+
+        newFs2 = addSignificance(fs2)
+
+        # Check that the field was added correctly.
+        checkPeakSignificance(newFs1)
+        checkPeakSignificance(newFs2)
+
+        # Does merging footprints preserve the added field?
+        newFs1.merge(newFs2)
+        checkPeakSignificance(newFs1)
+        checkPeakSignificance(newFs2)
 
     def testMergeFootprintsEngulf(self):
         """Merge two Footprints when growing one Footprint totally replaces the other"""

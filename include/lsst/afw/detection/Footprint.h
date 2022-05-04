@@ -330,6 +330,29 @@ public:
     void removeOrphanPeaks();
 
     /**
+     * Compute and update the significance of each peak, given a single value for sigma.
+     *
+     * The Footprint peak schema must already have a `significance` field in it.
+     *
+     * @param sigma The standard deviation for peak detection, positive or negative as appropriate.
+     *
+     * @throws pex::exceptions::NotFoundError Thrown if the the peaks do not have a `significance` field.
+     */
+    void updatePeakSignificance(double sigma);
+
+    /**
+     * Compute and update the significance of each peak, using the variance image.
+     *
+     * The Footprint peak schema must already have a `significance` field in it.
+     *
+     * @param variance The variance plane of the image that this footprint is in.
+     * @param polarity +1 if this is detected as a positive footprint, -1 if negative.
+     *
+     * @throws pex::exceptions::NotFoundError Thrown if the the peaks do not have a significance field.
+     */
+    void updatePeakSignificance(image::Image<float> const &variance, int polarity);
+
+    /**
      * Reports if the Footprint is simply connected or has multiple components
      */
     bool isContiguous() const { return getSpans()->isContiguous(); };
@@ -385,6 +408,14 @@ private:
     PeakCatalog _peaks;                     ///< @internal The peaks lying in this footprint
     lsst::geom::Box2I _region;  ///< @internal The corners of the MaskedImage the footprints live in
 };
+
+/**
+ * Print a Footprint to the stream.
+ *
+ * @param os Stream to print to.
+ * @param rhs Footprint to print.
+ */
+std::ostream &operator<<(std::ostream &os, Footprint const &rhs);
 
 /**
  * @brief Merges two Footprints -- appends their peaks, and unions their

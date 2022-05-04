@@ -32,8 +32,10 @@
 #include "lsst/afw/detection/Threshold.h"
 #include "lsst/afw/detection/Footprint.h"
 #include "lsst/afw/detection/FootprintCtrl.h"
+#include "lsst/afw/detection/Peak.h"
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/table/Source.h"
+#include "lsst/afw/table/Schema.h"
 
 namespace lsst {
 namespace afw {
@@ -56,16 +58,20 @@ public:
     using FootprintList = std::vector<std::shared_ptr<Footprint>>;
 
     /**
-     * Find a FootprintSet given an Image and a threshold
+     * Find a FootprintSet given an Image and a threshold.
+     *
+     * `peakSchema` is used to preserving the input peak schema when merging FootprintSets.
      *
      * @param img Image to search for objects
      * @param threshold threshold to find objects
      * @param npixMin minimum number of pixels in an object
      * @param setPeaks should I set the Peaks list?
+     * @param peakSchema Schema for peak records, even if we don't measure them here.
      */
     template <typename ImagePixelT>
     FootprintSet(image::Image<ImagePixelT> const& img, Threshold const& threshold, int const npixMin = 1,
-                 bool const setPeaks = true);
+                 bool const setPeaks = true,
+                 table::Schema const& peakSchema = PeakTable::makeMinimalSchema());
 
     /**
      * Find a FootprintSet given a Mask and a threshold
@@ -236,6 +242,15 @@ private:
     std::shared_ptr<FootprintList> _footprints;  ///< the Footprints of detected objects
     lsst::geom::Box2I _region;  ///< The corners of the MaskedImage that the detections live in
 };
+
+/**
+ * Print a FootprintSet to the stream.
+ *
+ * @param os Stream to print to.
+ * @param rhs FootprintSet to print.
+ */
+std::ostream& operator<<(std::ostream& os, FootprintSet const& rhs);
+
 }  // namespace detection
 }  // namespace afw
 }  // namespace lsst
