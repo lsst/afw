@@ -242,6 +242,13 @@ FootprintSet mergeFootprintSets(FootprintSet const &lhs,      // the FootprintSe
     FootprintList const &rhsFootprints = *rhs.getFootprints();
     int const nLhs = lhsFootprints.size();
     int const nRhs = rhsFootprints.size();
+    // Require equal peak schemas.
+    if (nLhs > 0 && nRhs > 0 &&
+        lhsFootprints[0]->getPeaks().getSchema() != rhsFootprints[0]->getPeaks().getSchema()) {
+        throw LSST_EXCEPT(pex::exceptions::RuntimeError,
+                          "FootprintSets to be merged must have identical peak schemas.");
+    }
+
     /*
      * In general the lists of Footprints overlap, so we need to make sure that the IDs can be
      * uniquely recovered from the idImage.  We do this by allocating a range of bits to the lhs IDs
@@ -333,18 +340,28 @@ FootprintSet mergeFootprintSets(FootprintSet const &lhs,      // the FootprintSe
         }
     }
 
-    FootprintSet fs(*idImage, Threshold(1), 1, false);  // detect all pixels in rhs + lhs
-                                                        /*
-                                                         * Now go through the new Footprints looking up and remembering their progenitor's IDs; we'll use
-                                                         * these IDs to merge the peaks in a moment
-                                                         *
-                                                         * We can't do this as we go through the idFinder as the IDs it returns are
-                                                         *   (lhsId + 1) | ((rhsId + 1) << nbit)
-                                                         * and, depending on the geometry, values of lhsId and/or rhsId can appear multiple times
-                                                         * (e.g. if nbit is 2, idFinder IDs 0x5 and 0x6 both contain lhsId = 0) so we get duplicates
-                                                         * of peaks.  This is not too bad, but it's a bit of a pain to make the lists unique again,
-                                                         * and we avoid this by this two-step process.
-                                                         */
+    // Ensure fields added to the input peak schemas are preserved in the output.
+    table::Schema schema;
+    if (nLhs > 0) {
+        schema = lhsFootprints[0]->getPeaks().getSchema();
+    } else if (nRhs > 0) {
+        schema = rhsFootprints[0]->getPeaks().getSchema();
+    } else {
+        schema = PeakTable::makeMinimalSchema();
+    }
+    FootprintSet fs(*idImage, Threshold(1), 1, false, schema);  // detect all pixels in rhs + lhs
+
+    /*
+     * Now go through the new Footprints looking up and remembering their progenitor's IDs; we'll use
+     * these IDs to merge the peaks in a moment
+     *
+     * We can't do this as we go through the idFinder as the IDs it returns are
+     *   (lhsId + 1) | ((rhsId + 1) << nbit)
+     * and, depending on the geometry, values of lhsId and/or rhsId can appear multiple times
+     * (e.g. if nbit is 2, idFinder IDs 0x5 and 0x6 both contain lhsId = 0) so we get duplicates
+     * of peaks.  This is not too bad, but it's a bit of a pain to make the lists unique again,
+     * and we avoid this by this two-step process.
+     */
     FindIdsInFootprint<IdPixelT> idFinder;
     for (const auto& foot : *fs.getFootprints()) {
         // find the (mangled) [lr]hsFootprint IDs that contribute to foot
@@ -606,7 +623,9 @@ static void findFootprints(
         double const includeThresholdMultiplier,  // threshold (relative to footprintThreshold) for inclusion
         bool const polarity,                      // if false, search _below_ thresholdVal
         int const npixMin,                        // minimum number of pixels in an object
-        bool const setPeaks                       // should I set the Peaks list?
+        bool const setPeaks,                      // should I set the Peaks list?
+        table::Schema const &peakSchema =
+                PeakTable::makeMinimalSchema()  // Schema to use when defining peak catalog.
 ) {
     int id;       /* object ID */
     int in_span;  /* object ID of current IdSpan */
@@ -736,7 +755,7 @@ static void findFootprints(
                     tempSpanList.emplace_back(spans[i0].y + row0, spans[i0].x0 + col0, spans[i0].x1 + col0);
                 }
                 auto tempSpanSet = std::make_shared<geom::SpanSet>(std::move(tempSpanList));
-                auto fp = std::make_shared<Footprint>(tempSpanSet, _region);
+                auto fp = std::make_shared<Footprint>(tempSpanSet, peakSchema, _region);
 
                 if (good && fp->getArea() >= static_cast<std::size_t>(npixMin)) {
                     _footprints->push_back(fp);
@@ -761,13 +780,13 @@ static void findFootprints(
 
 template <typename ImagePixelT>
 FootprintSet::FootprintSet(image::Image<ImagePixelT> const &img, Threshold const &threshold,
-                           int const npixMin, bool const setPeaks)
+                           int const npixMin, bool const setPeaks, table::Schema const &peakSchema)
         : _footprints(new FootprintList()), _region(img.getBBox()) {
     using VariancePixelT = float;
 
     findFootprints<ImagePixelT, image::MaskPixel, VariancePixelT, ThresholdLevel_traits>(
-            _footprints.get(), _region, img, nullptr, threshold.getValue(img), threshold.getIncludeMultiplier(),
-            threshold.getPolarity(), npixMin, setPeaks);
+            _footprints.get(), _region, img, nullptr, threshold.getValue(img),
+            threshold.getIncludeMultiplier(), threshold.getPolarity(), npixMin, setPeaks, peakSchema);
 }
 
 // NOTE: not a template to appease swig (see note by instantiations at bottom)
@@ -965,7 +984,7 @@ std::ostream &operator<<(std::ostream &os, FootprintSet const &rhs) {
 
 #define INSTANTIATE(PIXEL)                                                                              \
     template FootprintSet::FootprintSet(image::Image<PIXEL> const &, Threshold const &, int const,      \
-                                        bool const);                                                    \
+                                        bool const, table::Schema const &);                             \
     template FootprintSet::FootprintSet(image::MaskedImage<PIXEL, image::MaskPixel> const &,            \
                                         Threshold const &, std::string const &, int const, bool const); \
     template void FootprintSet::makeHeavy(image::MaskedImage<PIXEL, image::MaskPixel> const &,          \
