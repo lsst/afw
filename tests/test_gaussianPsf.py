@@ -64,7 +64,7 @@ class GaussianPsfTestCase(lsst.utils.tests.TestCase):
         del self.psf
 
     def testKernelImage(self):
-        image = self.psf.computeKernelImage()
+        image = self.psf.computeKernelImage(self.psf.getAveragePosition())
         check = makeGaussianImage(image.getBBox(), self.psf.getSigma())
         self.assertFloatsAlmostEqual(image.getArray(), check.getArray())
         self.assertFloatsAlmostEqual(image.getArray().sum(), 1.0, atol=1E-14)
@@ -86,7 +86,7 @@ class GaussianPsfTestCase(lsst.utils.tests.TestCase):
 
     def testShape(self):
         self.assertFloatsAlmostEqual(
-            self.psf.computeShape().getDeterminantRadius(), 4.0)
+            self.psf.computeShape(self.psf.getAveragePosition()).getDeterminantRadius(), 4.0)
 
     def testPersistence(self):
         with lsst.utils.tests.getTempFilePath(".fits") as filename:
@@ -97,8 +97,8 @@ class GaussianPsfTestCase(lsst.utils.tests.TestCase):
 
     def testBBox(self):
 
-        self.assertEqual(self.psf.computeKernelImage().getBBox(),
-                         self.psf.computeBBox())
+        self.assertEqual(self.psf.computeKernelImage(self.psf.getAveragePosition()).getBBox(),
+                         self.psf.computeBBox(self.psf.getAveragePosition()))
 
         self.assertEqual(self.psf.computeBBox().getWidth(), self.kernelSize)
 
@@ -106,19 +106,19 @@ class GaussianPsfTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(self.psf.computeKernelImage(lsst.geom.Point2D(0.0, 0.0)).getBBox(),
                          self.psf.computeBBox(lsst.geom.Point2D(0.0, 0.0)))
 
-        self.assertEqual(self.psf.computeImage().getBBox(),
-                         self.psf.computeImageBBox())
+        self.assertEqual(self.psf.computeImage(self.psf.getAveragePosition()).getBBox(),
+                         self.psf.computeImageBBox(self.psf.getAveragePosition()))
 
     def testResized(self):
         for pad in [0, -10, 10]:
             newLen = self.kernelSize - pad
             resizedPsf = self.psf.resized(newLen, newLen)
-            newBBox = resizedPsf.computeBBox()
+            newBBox = resizedPsf.computeBBox(resizedPsf.getAveragePosition())
             self.assertEqual(newBBox.getWidth(), newLen)
             self.assertEqual(newBBox.getHeight(), newLen)
             self.assertEqual(resizedPsf.getSigma(), self.psf.getSigma())
 
-            image = resizedPsf.computeKernelImage()
+            image = resizedPsf.computeKernelImage(resizedPsf.getAveragePosition())
             check = makeGaussianImage(newBBox, self.psf.getSigma())
             self.assertFloatsAlmostEqual(image.getArray(), check.getArray())
             # tolerance same as in self.testKernelImage
