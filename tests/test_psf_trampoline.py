@@ -173,8 +173,8 @@ class PsfTrampolineTestSuite(lsst.utils.tests.TestCase):
     def testShape(self):
         for pgp, gp in zip(self.pgps, self.gps):
             self.assertAlmostEqual(
-                pgp.computeShape(),
-                gp.computeShape()
+                pgp.computeShape(pgp.getAveragePosition()),
+                gp.computeShape(gp.getAveragePosition())
             )
 
     def testResized(self):
