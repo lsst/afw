@@ -7,18 +7,5 @@ on:
   pull_request:
 
 jobs:
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.8
-
-      - name: Install
-        run: pip install -r <(curl https://raw.githubusercontent.com/lsst/linting/main/requirements.txt)
-
-      - name: Run linter
-        run: flake8
+  call-workflow:
+    uses: lsst/rubin_workflows/.github/workflows/lint.yaml@main
