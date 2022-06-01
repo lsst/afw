@@ -16,23 +16,12 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
-from lsst.utils.deprecated import deprecate_pybind11
+
 from lsst.utils import continueClass
 
 from ._imageLib import ExposureInfo
 
 __all__ = []  # import this module only for its side effects
-
-
-ExposureInfo.getFilter = deprecate_pybind11(
-    ExposureInfo.getFilter,
-    reason="Replaced by getFilterLabel. Will be removed after v22.",
-    version="v22.0")
-
-ExposureInfo.setFilter = deprecate_pybind11(
-    ExposureInfo.setFilter,
-    reason="Replaced by setFilterLabel. Will be removed after v22.",
-    version="v22.0")
 
 
 @continueClass

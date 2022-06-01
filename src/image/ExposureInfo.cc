@@ -157,21 +157,6 @@ void ExposureInfo::setId(table::RecordId id) {
 
 void ExposureInfo::clearId() noexcept { _exposureId.reset(); }
 
-// Compatibility code defined inside ExposureFitsReader.cc, to be removed in DM-27177
-std::shared_ptr<FilterLabel> makeFilterLabel(Filter const& filter);
-Filter makeFilter(FilterLabel const& label);
-
-Filter ExposureInfo::getFilter() const {
-    std::shared_ptr<FilterLabel const> label = getFilterLabel();
-    if (label) {
-        return makeFilter(*label);
-    } else {
-        // Old exposures always had a Filter, even if only the default
-        return Filter();
-    }
-}
-
-void ExposureInfo::setFilter(Filter const& filter) { setFilterLabel(makeFilterLabel(filter)); }
 
 typehandling::Key<std::string, std::shared_ptr<FilterLabel const>> const ExposureInfo::KEY_FILTER =
         typehandling::makeKey<std::shared_ptr<FilterLabel const>>("FILTER"s);
@@ -208,7 +193,7 @@ ExposureInfo::ExposureInfo(std::shared_ptr<geom::SkyWcs const> const& wcs,
                            std::shared_ptr<detection::Psf const> const& psf,
                            std::shared_ptr<PhotoCalib const> const& photoCalib,
                            std::shared_ptr<cameraGeom::Detector const> const& detector,
-                           std::shared_ptr<geom::polygon::Polygon const> const& polygon, Filter const& filter,
+                           std::shared_ptr<geom::polygon::Polygon const> const& polygon,
                            std::shared_ptr<daf::base::PropertySet> const& metadata,
                            std::shared_ptr<CoaddInputs> const& coaddInputs,
                            std::shared_ptr<ApCorrMap> const& apCorrMap,
@@ -219,8 +204,6 @@ ExposureInfo::ExposureInfo(std::shared_ptr<geom::SkyWcs const> const& wcs,
                              : std::shared_ptr<daf::base::PropertySet>(new daf::base::PropertyList())),
           _visitInfo(visitInfo),
           _components(std::make_unique<MapClass>()) {
-    // setFilter guards against default filters
-    setFilter(filter);
     setWcs(wcs);
     setPsf(psf);
     setPhotoCalib(photoCalib);

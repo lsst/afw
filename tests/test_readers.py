@@ -32,7 +32,7 @@ from lsst.afw.geom import makeSkyWcs, Polygon
 from lsst.afw.table import ExposureTable
 from lsst.afw.image import (Image, Mask, Exposure, LOCAL, PARENT, MaskPixel, VariancePixel,
                             ImageFitsReader, MaskFitsReader, MaskedImageFitsReader, ExposureFitsReader,
-                            Filter, FilterLabel, PhotoCalib, ApCorrMap, VisitInfo, TransmissionCurve,
+                            FilterLabel, PhotoCalib, ApCorrMap, VisitInfo, TransmissionCurve,
                             CoaddInputs, ExposureInfo, ExposureF)
 from lsst.afw.image.utils import defineFilter
 from lsst.afw.detection import GaussianPsf
@@ -200,7 +200,6 @@ class FitsReaderTestCase(lsst.utils.tests.TestCase):
                                           reader.readComponent(ExposureInfo.KEY_WCS),
                                           self.bbox,
                                           maxDiffPix=0, maxDiffSky=0*degrees)
-        self.assertEqual(exposureIn.getFilter(), reader.readFilter())
         self.assertEqual(exposureIn.getFilterLabel(), reader.readFilterLabel())
         self.assertEqual(exposureIn.getFilterLabel(),
                          reader.readComponent(ExposureInfo.KEY_FILTER))
@@ -287,7 +286,6 @@ class FitsReaderTestCase(lsst.utils.tests.TestCase):
                 exposureIn.variance.array[:, :] = np.random.randint(low=1, high=5, size=shape)
                 exposureIn.setMetadata(metadata)
                 exposureIn.setWcs(wcs)
-                exposureIn.setFilter(Filter("test_readers_filter"))
                 exposureIn.setFilterLabel(FilterLabel(physical="test_readers_filter"))
                 exposureIn.setPhotoCalib(calib)
                 exposureIn.setPsf(psf)

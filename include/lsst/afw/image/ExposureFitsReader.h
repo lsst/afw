@@ -123,10 +123,6 @@ public:
     /// Read the Exposure's world coordinate system.
     std::shared_ptr<afw::geom::SkyWcs> readWcs();
 
-    /// Read the Exposure's filter.
-    // TODO: remove in DM-27177
-    [[deprecated("Replaced with readFilterLabel. Will be removed after v22.")]] Filter readFilter();
-
     /**
      * Read the Exposure's filter information.
      */
