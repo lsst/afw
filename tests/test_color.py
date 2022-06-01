@@ -46,20 +46,9 @@ def defineSdssFilters(testCase):
 
 
 class ColorTestCase(lsst.utils.tests.TestCase):
-    def setUp(self):
-        defineSdssFilters(self)
-
     def testCtor(self):
         afwImage.Color()
         afwImage.Color(1.2)
-
-    def testLambdaEff(self):
-        f = afwImage.Filter("g")
-        g_r = 1.2
-        c = afwImage.Color(g_r)
-
-        # XXX Not a real implementation!
-        self.assertEqual(c.getLambdaEff(f), 1000*g_r)
 
     def testIsIndeterminate(self):
         """Test that a default-constructed Color tests True, but ones with a g-r value test False"""
