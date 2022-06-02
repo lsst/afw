@@ -230,6 +230,8 @@ class PsfTrampolineTestSuite(lsst.utils.tests.TestCase):
 # When isFixed=True, first image returned is cached for all subsequent image
 # queries
 class TestPsf(Psf):
+    __test__ = False  # Stop Pytest from trying to parse as a TestCase
+
     def __init__(self, isFixed):
         Psf.__init__(self, isFixed=isFixed)
 
