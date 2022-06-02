@@ -46,26 +46,6 @@ BOOST_AUTO_TEST_CASE(ColorHash) {
     utils::assertHashesEqual(Color(2.7), Color(2.7));
 }
 
-BOOST_AUTO_TEST_CASE(FilterPropertyHash) {
-    utils::assertValidHash<FilterProperty>();
-
-    utils::assertHashesEqual(FilterProperty("Filter1", 540.0), FilterProperty("Filter2", 540.0));
-    utils::assertHashesEqual(FilterProperty("Filter3", 470.0, 460.0, 490.0),
-                             FilterProperty("Filter4", 470.0, 400.0, 550.0));
-}
-
-BOOST_AUTO_TEST_CASE(FilterHash) {
-    utils::assertValidHash<Filter>();
-
-    Filter::define(FilterProperty("Filter5", 470.0, 460.0, 490.0));
-    Filter::defineAlias("Filter5", "Filter5b");
-    int id6 = Filter::define(FilterProperty("Filter6", 470.0, 400.0, 550.0));
-
-    utils::assertHashesEqual(Filter("Filter5"), Filter("Filter5"));
-    utils::assertHashesEqual(Filter("Filter5"), Filter("Filter5b"));
-    utils::assertHashesEqual(Filter("Filter6"), Filter(id6));
-}
-
 BOOST_AUTO_TEST_CASE(PixelHash) {
     using IntPixel = pixel::Pixel<int, int, double>;
     using FloatPixel = pixel::Pixel<double, int, double>;

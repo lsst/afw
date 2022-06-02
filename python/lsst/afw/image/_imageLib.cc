@@ -33,7 +33,6 @@ void wrapCoaddInputs(lsst::utils::python::WrapperCollection &);
 void wrapDefect(lsst::utils::python::WrapperCollection &);
 void wrapExposure(lsst::utils::python::WrapperCollection &);
 void wrapExposureInfo(lsst::utils::python::WrapperCollection &);
-void wrapFilter(lsst::utils::python::WrapperCollection &);
 void wrapFilterLabel(lsst::utils::python::WrapperCollection &);
 void wrapImagePca(lsst::utils::python::WrapperCollection &);
 void wrapImageUtils(lsst::utils::python::WrapperCollection &);
@@ -49,7 +48,6 @@ PYBIND11_MODULE(_imageLib, mod) {
     wrapCoaddInputs(wrappers);
     wrapDefect(wrappers);
     wrapExposureInfo(wrappers);
-    wrapFilter(wrappers);
     wrapFilterLabel(wrappers);
     wrapImagePca(wrappers);
     wrapImageUtils(wrappers);

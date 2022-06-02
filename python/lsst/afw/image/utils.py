@@ -19,17 +19,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-__all__ = ["clipImage", "resetFilters", "defineFilter",
-           "projectImage", "getProjectionIndices"]
-
-from deprecated.sphinx import deprecated
-
-import numpy as np
+__all__ = ["clipImage", "projectImage", "getProjectionIndices"]
 
 import lsst.afw.detection as afwDetect
 from .maskedImage import MaskedImage, makeMaskedImage
 from .image import Mask
-from ._filter import Filter, FilterProperty
 
 
 def clipImage(im, minClip, maxClip):
@@ -49,28 +43,6 @@ def clipImage(im, minClip, maxClip):
         ds = afwDetect.FootprintSet(mi, afwDetect.Threshold(maxClip))
         afwDetect.setImageFromFootprintList(
             mi.getImage(), ds.getFootprints(), maxClip)
-
-
-@deprecated(reason=("Removed with no replacement (FilterLabels do not need to be reset)."
-                    " Will be removed after v22."), category=FutureWarning, version="v22")
-def resetFilters():
-    """Reset registry of filters and filter properties"""
-    Filter.reset()
-    FilterProperty.reset()
-
-
-@deprecated(reason=("Removed with no replacement (but see lsst::afw::image::TransmissionCurve for how to set"
-                    "and retrieve filter wavelength information). Will be removed after v22."),
-            category=FutureWarning, version="v22")
-def defineFilter(name, lambdaEff, lambdaMin=np.nan, lambdaMax=np.nan, alias=[], force=False):
-    """Define a filter and its properties in the filter registry"""
-    prop = FilterProperty(name, lambdaEff, lambdaMin, lambdaMax, force)
-    Filter.define(prop)
-    if isinstance(alias, str):
-        Filter.defineAlias(name, alias)
-    else:
-        for a in alias:
-            Filter.defineAlias(name, a)
 
 
 def getProjectionIndices(imageBBox, targetBBox):

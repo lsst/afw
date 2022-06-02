@@ -23,7 +23,6 @@ from . import pixel
 from .image import *
 from .apCorrMap import *
 from .maskedImage import *
-from ._filter import *  # just here to support deprecation
 from ._visitInfo import *  # just here to support deprecation
 from .exposure import *
 from ._exposureInfoContinued import *
