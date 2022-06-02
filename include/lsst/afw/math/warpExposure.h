@@ -432,7 +432,8 @@ private:
 template <typename DestExposureT, typename SrcExposureT>
 int warpExposure(
         DestExposureT &destExposure,  ///< Remapped exposure. Wcs and xy0 are read, MaskedImage is set,
-                                      ///< and PhotoCalib, Filter and VisitInfo are copied from srcExposure.
+                                      ///< and PhotoCalib, FilterLabel and VisitInfo are copied from
+                                      ///< srcExposure.
                                       ///< All other attributes are left alone (including Detector and Psf)
         SrcExposureT const &srcExposure,  ///< Source exposure
         WarpingControl const &control,    ///< control parameters
