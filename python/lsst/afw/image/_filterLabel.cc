@@ -61,7 +61,7 @@ void declareFilterLabel(lsst::utils::python::WrapperCollection &wrappers) {
         physical : str, optional
             The physical filter associated with this label.
     )delim";
-    wrappers.wrapType(PyFilterLabel(wrappers.module, "FilterLabel"), [](auto &mod, auto &cls) {
+    wrappers.wrapType(PyFilterLabel(wrappers.module, "FilterLabel", initDoc), [](auto &mod, auto &cls) {
         table::io::python::addPersistableMethods(cls);
 
         cls.def_static("fromBandPhysical", &FilterLabel::fromBandPhysical, "band"_a, "physical"_a);
