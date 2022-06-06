@@ -138,6 +138,9 @@ void declareExposureInfo(lsst::utils::python::WrapperCollection &wrappers) {
         cls.def("hasFilterLabel", &ExposureInfo::hasFilterLabel);
         cls.def("getFilterLabel", &ExposureInfo::getFilterLabel);
         cls.def("setFilterLabel", &ExposureInfo::setFilterLabel, "filterLabel"_a);
+        cls.def("hasFilter", &ExposureInfo::hasFilter);
+        cls.def("getFilter", &ExposureInfo::getFilter);
+        cls.def("setFilter", &ExposureInfo::setFilter, "filterLabel"_a);
 
         declareGenericMethods<std::shared_ptr<typehandling::Storable const>>(cls);
         declareGenericMethodsMerged(cls);

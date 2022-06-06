@@ -431,6 +431,10 @@ std::shared_ptr<afw::geom::SkyWcs> ExposureFitsReader::readWcs() {
 }
 
 std::shared_ptr<FilterLabel> ExposureFitsReader::readFilterLabel() {
+    return readFilter();
+}
+
+std::shared_ptr<FilterLabel> ExposureFitsReader::readFilter() {
     _ensureReaders();
     if (_metadataReader->version < 2) {
         return _metadataReader->filterLabel;

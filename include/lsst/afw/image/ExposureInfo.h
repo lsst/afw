@@ -173,6 +173,15 @@ public:
     // TODO: deprecate in DM-27177, remove in DM-27811.
     void setFilterLabel(std::shared_ptr<FilterLabel const> filterLabel);
 
+    /// Does this exposure have filter information?
+    bool hasFilter() const;
+
+    /// Return the exposure's filter information.
+    std::shared_ptr<FilterLabel const> getFilter() const;
+
+    /// Set the exposure's filter information.
+    void setFilter(std::shared_ptr<FilterLabel const> filter);
+
     /// Does this exposure have a photometric calibration?
     bool hasPhotoCalib() const;
 

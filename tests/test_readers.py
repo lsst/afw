@@ -199,6 +199,9 @@ class FitsReaderTestCase(lsst.utils.tests.TestCase):
                                           reader.readComponent(ExposureInfo.KEY_WCS),
                                           self.bbox,
                                           maxDiffPix=0, maxDiffSky=0*degrees)
+        self.assertEqual(exposureIn.getFilter(), reader.readFilter())
+        self.assertEqual(exposureIn.getFilter(),
+                         reader.readComponent(ExposureInfo.KEY_FILTER))
         self.assertEqual(exposureIn.getFilterLabel(), reader.readFilterLabel())
         self.assertEqual(exposureIn.getFilterLabel(),
                          reader.readComponent(ExposureInfo.KEY_FILTER))

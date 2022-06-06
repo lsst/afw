@@ -214,6 +214,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
                          self.detector.getName())
         self.assertEqual(exposure.getDetector().getSerial(),
                          self.detector.getSerial())
+        self.assertEqual(exposure.getFilter(), gFilterLabel)
         self.assertEqual(exposure.getFilterLabel(), gFilterLabel)
 
         self.assertTrue(exposure.getInfo().hasWcs())
@@ -225,6 +226,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
                          self.detector.getName())
         self.assertEqual(exposure.getInfo().getDetector().getSerial(),
                          self.detector.getSerial())
+        self.assertEqual(exposure.getInfo().getFilter(), gFilterLabel)
         self.assertEqual(exposure.getInfo().getFilterLabel(), gFilterLabel)
 
     def testNullWcs(self):
@@ -271,10 +273,12 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
                          self.detector.getName())
         self.assertEqual(exposure.getDetector().getSerial(),
                          self.detector.getSerial())
+        self.assertEqual(exposure.getFilter(), gFilterLabel)
         self.assertEqual(exposure.getFilterLabel(), gFilterLabel)
 
         # test properties
         self.assertEqual(exposure.detector.getName(), self.detector.getName())
+        self.assertEqual(exposure.filter, gFilterLabel)
         self.assertEqual(exposure.filterLabel, gFilterLabel)
         self.assertEqual(exposure.wcs, self.wcs)
 
@@ -305,10 +309,12 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         rtVisitInfo = rtExposure.getInfo().getVisitInfo()
         self.assertEqual(rtVisitInfo.getWeather(), weather)
         self.assertEqual(rtExposure.getPhotoCalib(), photoCalib)
+        self.assertEqual(rtExposure.getFilter(), gFilterLabel)
         self.assertEqual(rtExposure.getFilterLabel(), gFilterLabel)
 
         # Test property getters.
         self.assertEqual(rtExposure.photoCalib, photoCalib)
+        self.assertEqual(rtExposure.filter, gFilterLabel)
         self.assertEqual(rtExposure.filterLabel, gFilterLabel)
         # NOTE: we can't test visitInfo equality, because most fields are NaN.
         self.assertIsNotNone(rtExposure.visitInfo)
@@ -329,6 +335,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
                          self.detector.getName())
         self.assertEqual(exposure.getDetector().getSerial(),
                          self.detector.getSerial())
+        self.assertEqual(exposure.getFilter().bandLabel, "g")
         self.assertEqual(exposure.getFilterLabel().bandLabel, "g")
         self.assertEqual(exposure.getWcs(), self.wcs)
 
@@ -477,6 +484,9 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
             #
             # Check the round-tripping
             #
+            self.assertIsNotNone(mainExposure.getFilter())
+            self.assertEqual(mainExposure.getFilter(),
+                             readExposure.getFilter())
             self.assertIsNotNone(mainExposure.getFilterLabel())
             self.assertEqual(mainExposure.getFilterLabel(),
                              readExposure.getFilterLabel())
@@ -525,6 +535,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
                          e2.getDetector().getName())
         self.assertEqual(e1.getDetector().getSerial(),
                          e2.getDetector().getSerial())
+        self.assertEqual(e1.getFilter(), e2.getFilter())
         self.assertEqual(e1.getFilterLabel(), e2.getFilterLabel())
         xy = lsst.geom.Point2D(0, 0)
         self.assertEqual(e1.getWcs().pixelToSky(xy)[0],
@@ -973,6 +984,8 @@ class ExposureInfoTestCase(lsst.utils.tests.TestCase):
         self._checkAlias(self.exposureInfo, cls.KEY_SUMMARY_STATS, self.summaryStats,
                          self.exposureInfo.hasSummaryStats, self.exposureInfo.getSummaryStats)
         self._checkAlias(self.exposureInfo, cls.KEY_FILTER, self.gFilterLabel,
+                         self.exposureInfo.hasFilter, self.exposureInfo.getFilter)
+        self._checkAlias(self.exposureInfo, cls.KEY_FILTER, self.gFilterLabel,
                          self.exposureInfo.hasFilterLabel, self.exposureInfo.getFilterLabel)
 
     def testId(self):
@@ -1059,6 +1072,7 @@ class ExposureNoAfwdataTestCase(lsst.utils.tests.TestCase):
         with self.assertWarns(FutureWarning):
             self.assertEqual(exposure.info.getVisitInfo().getExposureId(), self.exposureId)
         self.assertEqual(exposure.getPhotoCalib(), self.v0PhotoCalib)
+        self.assertEqual(exposure.getFilter(), self.v1FilterLabel)
         self.assertEqual(exposure.getFilterLabel(), self.v1FilterLabel)
 
     def testReadVersion0(self):
@@ -1075,6 +1089,7 @@ class ExposureNoAfwdataTestCase(lsst.utils.tests.TestCase):
         with self.assertWarns(FutureWarning):
             self.assertEqual(exposure.info.getVisitInfo().getExposureId(), self.exposureId)
         self.assertEqual(exposure.getPhotoCalib(), self.v0PhotoCalib)
+        self.assertEqual(exposure.getFilter(), self.v1FilterLabel)
         self.assertEqual(exposure.getFilterLabel(), self.v1FilterLabel)
 
         # Check that the metadata reader parses the file correctly
@@ -1095,6 +1110,7 @@ class ExposureNoAfwdataTestCase(lsst.utils.tests.TestCase):
         with self.assertWarns(FutureWarning):
             self.assertEqual(exposure.info.getVisitInfo().getExposureId(), self.exposureId)
         self.assertEqual(exposure.getPhotoCalib(), self.v1PhotoCalib)
+        self.assertEqual(exposure.getFilter(), self.v1FilterLabel)
         self.assertEqual(exposure.getFilterLabel(), self.v1FilterLabel)
 
         # Check that the metadata reader parses the file correctly
@@ -1115,6 +1131,7 @@ class ExposureNoAfwdataTestCase(lsst.utils.tests.TestCase):
         with self.assertWarns(FutureWarning):
             self.assertEqual(exposure.info.getVisitInfo().getExposureId(), self.exposureId)
         self.assertEqual(exposure.getPhotoCalib(), self.v1PhotoCalib)
+        self.assertEqual(exposure.getFilter(), self.v2FilterLabel)
         self.assertEqual(exposure.getFilterLabel(), self.v2FilterLabel)
 
         # Check that the metadata reader parses the file correctly
