@@ -80,7 +80,7 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
 
         originalFilterLabel = afwImage.FilterLabel(band="i")
         originalPhotoCalib = afwImage.PhotoCalib(1.0e5, 1.0e3)
-        originalExposure.setFilterLabel(originalFilterLabel)
+        originalExposure.setFilter(originalFilterLabel)
         originalExposure.setPhotoCalib(originalPhotoCalib)
 
         warpedExposure1 = warper.warpExposure(
@@ -105,7 +105,7 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(nGood1, nGood2)
         self.assertLess(nGood3, nGood1)
 
-        self.assertEqual(warpedExposure1.getFilterLabel().bandLabel,
+        self.assertEqual(warpedExposure1.getFilter().bandLabel,
                          originalFilterLabel.bandLabel)
         self.assertEqual(warpedExposure1.getPhotoCalib(), originalPhotoCalib)
 

@@ -304,7 +304,7 @@ public:
     }
     /// Set the Exposure's filter information
     void setFilter(std::shared_ptr<FilterLabel const> filterLabel) {
-        _info->setFilterLabel(filterLabel);
+        _info->setFilter(filterLabel);
     }
 
     /// Set the Exposure's PhotoCalib object

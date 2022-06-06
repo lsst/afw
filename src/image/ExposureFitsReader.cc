@@ -574,8 +574,8 @@ std::shared_ptr<ExposureInfo> ExposureFitsReader::readExposureInfo() {
     }
     // Convert old-style Filter to new-style FilterLabel
     // In newer versions this is handled by readExtraComponents()
-    if (_metadataReader->version < 2 && !result->hasFilterLabel()) {
-        result->setFilterLabel(readFilterLabel());
+    if (_metadataReader->version < 2 && !result->hasFilter()) {
+        result->setFilter(readFilter());
     }
     return result;
 }  // namespace image

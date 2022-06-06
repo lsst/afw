@@ -288,7 +288,7 @@ class FitsReaderTestCase(lsst.utils.tests.TestCase):
                 exposureIn.variance.array[:, :] = np.random.randint(low=1, high=5, size=shape)
                 exposureIn.setMetadata(metadata)
                 exposureIn.setWcs(wcs)
-                exposureIn.setFilterLabel(FilterLabel(physical="test_readers_filter"))
+                exposureIn.setFilter(FilterLabel(physical="test_readers_filter"))
                 exposureIn.setPhotoCalib(calib)
                 exposureIn.setPsf(psf)
                 exposureIn.getInfo().setValidPolygon(polygon)

@@ -203,7 +203,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         exposureInfo.setWcs(self.wcs)
         exposureInfo.setDetector(self.detector)
         gFilterLabel = afwImage.FilterLabel(band="g")
-        exposureInfo.setFilterLabel(gFilterLabel)
+        exposureInfo.setFilter(gFilterLabel)
         maskedImage = afwImage.MaskedImageF(inFilePathSmall)
         exposure = afwImage.ExposureF(maskedImage, exposureInfo)
 
@@ -260,7 +260,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         exposureInfo.setWcs(self.wcs)
         exposureInfo.setDetector(self.detector)
         gFilterLabel = afwImage.FilterLabel(band="g")
-        exposureInfo.setFilterLabel(gFilterLabel)
+        exposureInfo.setFilter(gFilterLabel)
         exposureInfo.setId(self.id)
         maskedImage = afwImage.MaskedImageF(inFilePathSmall)
         exposure = afwImage.ExposureF(maskedImage)
@@ -282,7 +282,6 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         # test properties
         self.assertEqual(exposure.detector.getName(), self.detector.getName())
         self.assertEqual(exposure.filter, gFilterLabel)
-        self.assertEqual(exposure.filterLabel, gFilterLabel)
         self.assertEqual(exposure.wcs, self.wcs)
 
     def testVisitInfoFitsPersistence(self):
@@ -303,7 +302,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         exposureInfo.setPhotoCalib(photoCalib)
         exposureInfo.setDetector(self.detector)
         gFilterLabel = afwImage.FilterLabel(band="g")
-        exposureInfo.setFilterLabel(gFilterLabel)
+        exposureInfo.setFilter(gFilterLabel)
         maskedImage = afwImage.MaskedImageF(inFilePathSmall)
         exposure = afwImage.ExposureF(maskedImage, exposureInfo)
         with lsst.utils.tests.getTempFilePath(".fits") as tmpFile:
@@ -319,7 +318,6 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         # Test property getters.
         self.assertEqual(rtExposure.photoCalib, photoCalib)
         self.assertEqual(rtExposure.filter, gFilterLabel)
-        self.assertEqual(rtExposure.filterLabel, gFilterLabel)
         # NOTE: we can't test visitInfo equality, because most fields are NaN.
         self.assertIsNotNone(rtExposure.visitInfo)
 
@@ -333,7 +331,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         exposure.setMaskedImage(maskedImage)
         exposure.setWcs(self.wcs)
         exposure.setDetector(self.detector)
-        exposure.setFilterLabel(afwImage.FilterLabel(band="g"))
+        exposure.setFilter(afwImage.FilterLabel(band="g"))
 
         self.assertEqual(exposure.getDetector().getName(),
                          self.detector.getName())
@@ -567,7 +565,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         exposureU = afwImage.ExposureU(inFilePathSmall, allowUnsafe=True)
         exposureU.setWcs(self.wcs)
         exposureU.setDetector(self.detector)
-        exposureU.setFilterLabel(afwImage.FilterLabel(band="g"))
+        exposureU.setFilter(afwImage.FilterLabel(band="g"))
         exposureU.setPsf(DummyPsf(4.0))
         infoU = exposureU.getInfo()
         for key, value in self.extras.items():

@@ -28,7 +28,7 @@ exp.setDetector(detectorWrapper.detector)
 
 # Fill the filter
 filt = lsst.afw.image.FilterLabel(band='N656', physical='ha')
-exp.setFilterLabel(filt)
+exp.setFilter(filt)
 
 # Fill the PhotoCalib
 photoCalib = lsst.afw.image.PhotoCalib(1e6, 2e4)
