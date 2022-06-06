@@ -126,7 +126,8 @@ public:
     /**
      * Read the Exposure's filter information.
      */
-    // TODO: deprecate in DM-27177, remove in DM-27811
+    // TODO: remove in DM-27811
+    [[deprecated("Replaced by readFilter. Will be removed after v24.")]]
     std::shared_ptr<FilterLabel> readFilterLabel();
 
     /**

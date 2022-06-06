@@ -202,9 +202,10 @@ class FitsReaderTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(exposureIn.getFilter(), reader.readFilter())
         self.assertEqual(exposureIn.getFilter(),
                          reader.readComponent(ExposureInfo.KEY_FILTER))
-        self.assertEqual(exposureIn.getFilterLabel(), reader.readFilterLabel())
-        self.assertEqual(exposureIn.getFilterLabel(),
-                         reader.readComponent(ExposureInfo.KEY_FILTER))
+        with self.assertWarns(FutureWarning):
+            self.assertEqual(exposureIn.getFilterLabel(), reader.readFilterLabel())
+            self.assertEqual(exposureIn.getFilterLabel(),
+                             reader.readComponent(ExposureInfo.KEY_FILTER))
         self.assertEqual(exposureIn.getPhotoCalib(), reader.readPhotoCalib())
         self.assertEqual(exposureIn.getPhotoCalib(),
                          reader.readComponent(ExposureInfo.KEY_PHOTO_CALIB))

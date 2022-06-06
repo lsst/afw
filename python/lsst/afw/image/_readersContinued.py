@@ -18,16 +18,13 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-from ._imageLib import *
-from . import pixel
-from .image import *
-from .apCorrMap import *
-from .maskedImage import *
-from ._visitInfo import *  # just here to support deprecation
-from .exposure import *
-from ._exposureInfoContinued import *
-from ._exposureSummaryStats import *
-from .basicUtils import *
-from .testUtils import *
-from ._photoCalibContinued import *
-from ._readersContinued import *  # just here to support deprecation
+
+# This file exists only to support deprecation, and can be removed on DM-27811.
+
+from lsst.utils.deprecated import deprecate_pybind11
+from ._imageLib import ExposureFitsReader
+
+ExposureFitsReader.readFilterLabel = deprecate_pybind11(
+    ExposureFitsReader.readFilterLabel,
+    reason="Replaced by readFilter. Will be removed after v24.",
+    version="v24.0")

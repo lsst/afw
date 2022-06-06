@@ -24,6 +24,7 @@ __all__ = ["Exposure"]
 import numpy as np
 
 from lsst.utils import TemplateMeta
+from lsst.utils.deprecated import deprecate_pybind11
 
 from ..image._slicing import supportSlicing
 from ..image._disableArithmetic import disableImageArithmetic
@@ -177,3 +178,12 @@ Exposure.alias("L", ExposureL)
 for cls in set(Exposure.values()):
     supportSlicing(cls)
     disableImageArithmetic(cls)
+    cls.getFilterLabel = deprecate_pybind11(
+        cls.getFilterLabel,
+        reason="Replaced by getFilter. Will be removed after v24.",
+        version="v24.0")
+    cls.setFilterLabel = deprecate_pybind11(
+        cls.setFilterLabel,
+        reason="Replaced by setFilter. Will be removed after v24.",
+        version="v24.0")
+    # Can't attach deprecation warning to filterLabel property.
