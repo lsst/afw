@@ -119,8 +119,18 @@ public:
 
     virtual void updateDiagnostic() = 0;
 
-    Impl(int dimension_, double threshold_ = std::numeric_limits<double>::epsilon())
-            : state(0), dimension(dimension_), rank(dimension_), threshold(threshold_) {}
+    explicit Impl(
+        int dimension_,
+        Factorization factorization_,
+        double threshold_ = std::numeric_limits<double>::epsilon()
+    ) :
+    state(0),
+    dimension(dimension_),
+    rank(dimension_),
+    factorization(factorization_),
+    whichDiagnostic(factorization_),
+    threshold(threshold_)
+    {}
 
     virtual ~Impl() = default;
 };
@@ -129,7 +139,8 @@ namespace {
 
 class EigensystemSolver : public LeastSquares::Impl {
 public:
-    explicit EigensystemSolver(int dimension) : Impl(dimension), _eig(dimension), _svd(), _tmp(dimension) {}
+    explicit EigensystemSolver(int dimension)
+        : Impl(dimension, LeastSquares::NORMAL_EIGENSYSTEM), _eig(dimension), _svd(), _tmp(dimension) {}
 
     void factor() override {
         ensure(LOWER_FISHER_MATRIX | RHS_VECTOR);
@@ -216,7 +227,8 @@ private:
 
 class CholeskySolver : public LeastSquares::Impl {
 public:
-    explicit CholeskySolver(int dimension) : Impl(dimension, 0.0), _ldlt(dimension) {}
+    explicit CholeskySolver(int dimension)
+        : Impl(dimension, LeastSquares::NORMAL_CHOLESKY, 0.0), _ldlt(dimension) {}
 
     void factor() override {
         ensure(LOWER_FISHER_MATRIX | RHS_VECTOR);
@@ -248,7 +260,8 @@ private:
 
 class SvdSolver : public LeastSquares::Impl {
 public:
-    explicit SvdSolver(int dimension) : Impl(dimension), _svd(), _tmp(dimension) {}
+    explicit SvdSolver(int dimension)
+        : Impl(dimension, LeastSquares::DIRECT_SVD), _svd(), _tmp(dimension) {}
 
     void factor() override {
         if (!(state & DESIGN_AND_DATA)) {
@@ -359,7 +372,6 @@ LeastSquares::LeastSquares(Factorization factorization, int dimension) {
             _impl = std::make_shared<SvdSolver>(dimension);
             break;
     }
-    _impl->factorization = factorization;
 }
 
 LeastSquares::LeastSquares(LeastSquares const&) = default;
