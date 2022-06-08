@@ -32,7 +32,6 @@
 #include "lsst/afw/image/ApCorrMap.h"
 #include "lsst/afw/image/PhotoCalib.h"
 #include "lsst/afw/image/CoaddInputs.h"
-#include "lsst/afw/image/Filter.h"
 #include "lsst/afw/image/FilterLabel.h"
 #include "lsst/afw/image/VisitInfo.h"
 #include "lsst/afw/image/TransmissionCurve.h"
@@ -97,7 +96,7 @@ void declareExposureInfo(lsst::utils::python::WrapperCollection &wrappers) {
                          std::shared_ptr<detection::Psf const> const &,
                          std::shared_ptr<PhotoCalib const> const &,
                          std::shared_ptr<cameraGeom::Detector const> const &,
-                         std::shared_ptr<geom::polygon::Polygon const> const &, Filter const &,
+                         std::shared_ptr<geom::polygon::Polygon const> const &,
                          std::shared_ptr<daf::base::PropertySet> const &,
                          std::shared_ptr<CoaddInputs> const &, std::shared_ptr<ApCorrMap> const &,
                          std::shared_ptr<VisitInfo const> const &,
@@ -106,7 +105,7 @@ void declareExposureInfo(lsst::utils::python::WrapperCollection &wrappers) {
                 "psf"_a = std::shared_ptr<detection::Psf const>(),
                 "photoCalib"_a = std::shared_ptr<PhotoCalib const>(),
                 "detector"_a = std::shared_ptr<cameraGeom::Detector const>(),
-                "polygon"_a = std::shared_ptr<geom::polygon::Polygon const>(), "filter"_a = Filter(),
+                "polygon"_a = std::shared_ptr<geom::polygon::Polygon const>(),
                 "metadata"_a = std::shared_ptr<daf::base::PropertySet>(),
                 "coaddInputs"_a = std::shared_ptr<CoaddInputs>(),
                 "apCorrMap"_a = std::shared_ptr<ApCorrMap>(),
@@ -135,13 +134,13 @@ void declareExposureInfo(lsst::utils::python::WrapperCollection &wrappers) {
                 },
                 "detector"_a);
 
-        cls.def("getFilter", &ExposureInfo::getFilter);
-        cls.def("setFilter", &ExposureInfo::setFilter, "filter"_a);
-
         cls.attr("KEY_FILTER") = ExposureInfo::KEY_FILTER.getId();
         cls.def("hasFilterLabel", &ExposureInfo::hasFilterLabel);
         cls.def("getFilterLabel", &ExposureInfo::getFilterLabel);
         cls.def("setFilterLabel", &ExposureInfo::setFilterLabel, "filterLabel"_a);
+        cls.def("hasFilter", &ExposureInfo::hasFilter);
+        cls.def("getFilter", &ExposureInfo::getFilter);
+        cls.def("setFilter", &ExposureInfo::setFilter, "filterLabel"_a);
 
         declareGenericMethods<std::shared_ptr<typehandling::Storable const>>(cls);
         declareGenericMethodsMerged(cls);

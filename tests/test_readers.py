@@ -32,9 +32,8 @@ from lsst.afw.geom import makeSkyWcs, Polygon
 from lsst.afw.table import ExposureTable
 from lsst.afw.image import (Image, Mask, Exposure, LOCAL, PARENT, MaskPixel, VariancePixel,
                             ImageFitsReader, MaskFitsReader, MaskedImageFitsReader, ExposureFitsReader,
-                            Filter, FilterLabel, PhotoCalib, ApCorrMap, VisitInfo, TransmissionCurve,
+                            FilterLabel, PhotoCalib, ApCorrMap, VisitInfo, TransmissionCurve,
                             CoaddInputs, ExposureInfo, ExposureF)
-from lsst.afw.image.utils import defineFilter
 from lsst.afw.detection import GaussianPsf
 from lsst.afw.cameraGeom.testUtils import DetectorWrapper
 
@@ -201,9 +200,12 @@ class FitsReaderTestCase(lsst.utils.tests.TestCase):
                                           self.bbox,
                                           maxDiffPix=0, maxDiffSky=0*degrees)
         self.assertEqual(exposureIn.getFilter(), reader.readFilter())
-        self.assertEqual(exposureIn.getFilterLabel(), reader.readFilterLabel())
-        self.assertEqual(exposureIn.getFilterLabel(),
+        self.assertEqual(exposureIn.getFilter(),
                          reader.readComponent(ExposureInfo.KEY_FILTER))
+        with self.assertWarns(FutureWarning):
+            self.assertEqual(exposureIn.getFilterLabel(), reader.readFilterLabel())
+            self.assertEqual(exposureIn.getFilterLabel(),
+                             reader.readComponent(ExposureInfo.KEY_FILTER))
         self.assertEqual(exposureIn.getPhotoCalib(), reader.readPhotoCalib())
         self.assertEqual(exposureIn.getPhotoCalib(),
                          reader.readComponent(ExposureInfo.KEY_PHOTO_CALIB))
@@ -260,7 +262,6 @@ class FitsReaderTestCase(lsst.utils.tests.TestCase):
         metadata.add("SIX", 6.0)
         wcs = makeSkyWcs(Point2D(2.5, 3.75), SpherePoint(40.0*degrees, 50.0*degrees),
                          np.array([[1E-5, 0.0], [0.0, -1E-5]]))
-        defineFilter("test_readers_filter", lambdaEff=470.0)
         calib = PhotoCalib(2.5E4)
         psf = GaussianPsf(21, 21, 8.0)
         polygon = Polygon(Box2D(self.bbox))
@@ -287,8 +288,7 @@ class FitsReaderTestCase(lsst.utils.tests.TestCase):
                 exposureIn.variance.array[:, :] = np.random.randint(low=1, high=5, size=shape)
                 exposureIn.setMetadata(metadata)
                 exposureIn.setWcs(wcs)
-                exposureIn.setFilter(Filter("test_readers_filter"))
-                exposureIn.setFilterLabel(FilterLabel(physical="test_readers_filter"))
+                exposureIn.setFilter(FilterLabel(physical="test_readers_filter"))
                 exposureIn.setPhotoCalib(calib)
                 exposureIn.setPsf(psf)
                 exposureIn.getInfo().setValidPolygon(polygon)

@@ -27,7 +27,6 @@
 #include "lsst/afw/cameraGeom/Detector.h"
 #include "lsst/afw/geom/SkyWcs.h"
 #include "lsst/afw/image/PhotoCalib.h"
-#include "lsst/afw/image/Filter.h"
 #include "lsst/afw/image/FilterLabel.h"
 #include "lsst/afw/image/Exposure.h"
 #include "lsst/afw/detection/Psf.h"
@@ -116,11 +115,12 @@ PyExposure<PixelT> declareExposure(lsst::utils::python::WrapperCollection &wrapp
                 cls.def("getDetector", &ExposureT::getDetector);
                 cls.def_property_readonly("detector", &ExposureT::getDetector);
                 cls.def("setDetector", &ExposureT::setDetector, "detector"_a);
-                cls.def("getFilter", &ExposureT::getFilter);
-                cls.def("setFilter", &ExposureT::setFilter, "filter"_a);
                 cls.def("getFilterLabel", &ExposureT::getFilterLabel);
                 cls.def_property_readonly("filterLabel", &ExposureT::getFilterLabel);
                 cls.def("setFilterLabel", &ExposureT::setFilterLabel, "filterLabel"_a);
+                cls.def("getFilter", &ExposureT::getFilter);
+                cls.def_property_readonly("filter", &ExposureT::getFilter);
+                cls.def("setFilter", &ExposureT::setFilter, "filterLabel"_a);
 
                 cls.def("getPhotoCalib", &ExposureT::getPhotoCalib);
                 cls.def_property_readonly("photoCalib", &ExposureT::getPhotoCalib);

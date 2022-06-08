@@ -29,7 +29,6 @@
 #include "lsst/geom.h"
 #include "lsst/afw/image/LsstImageTypes.h"
 #include "lsst/afw/image/ApCorrMap.h"
-#include "lsst/afw/image/Filter.h"
 #include "lsst/afw/cameraGeom/Detector.h"
 #include "lsst/afw/image/Exposure.h"  // Exposure.h brings in almost everything
 #include "lsst/afw/image/ImageAlgorithm.h"

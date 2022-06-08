@@ -403,7 +403,7 @@ int warpExposure(DestExposureT &destExposure, SrcExposureT const &srcExposure, W
         destExposure.getInfo()->setId(srcExposure.getInfo()->getId());
     }
     destExposure.setPhotoCalib(srcExposure.getPhotoCalib());
-    destExposure.setFilterLabel(srcExposure.getFilterLabel());
+    destExposure.setFilter(srcExposure.getFilter());
     destExposure.getInfo()->setVisitInfo(srcExposure.getInfo()->getVisitInfo());
     return warpImage(mi, *destExposure.getWcs(), srcExposure.getMaskedImage(), *srcExposure.getWcs(), control,
                      padValue);

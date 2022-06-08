@@ -235,14 +235,12 @@ public:
     std::shared_ptr<lsst::afw::cameraGeom::Detector const> getDetector() const {
         return _info->getDetector();
     }
-    /// Return the Exposure's filter
-    // TODO: remove in DM-27177
-    [[deprecated("Replaced with getFilterLabel. Will be removed after v22.")]] Filter getFilter() const {
-        return _info->getFilter();
-    }
     /// Return the Exposure's filter information
-    // TODO: deprecate in DM-27177, remove in DM-27811
-    std::shared_ptr<FilterLabel const> getFilterLabel() const { return _info->getFilterLabel(); }
+    // TODO: remove in DM-27811
+    [[deprecated("Replaced by getFilter. Will be removed after v24.")]]
+    std::shared_ptr<FilterLabel const> getFilterLabel() const { return getFilter(); }
+    /// Return the Exposure's filter information.
+    std::shared_ptr<FilterLabel const> getFilter() const { return _info->getFilter(); }
     /// Return flexible metadata
     std::shared_ptr<lsst::daf::base::PropertySet> getMetadata() const { return _info->getMetadata(); }
     void setMetadata(std::shared_ptr<lsst::daf::base::PropertySet> metadata) { _info->setMetadata(metadata); }
@@ -298,21 +296,15 @@ public:
     void setDetector(std::shared_ptr<lsst::afw::cameraGeom::Detector const> detector) {
         _info->setDetector(detector);
     }
-    /**
-     * Set the Exposure's filter
-     *
-     * @param filter The filter to set. If this is the default filter
-     *               ("_unknown_"), it is interpreted as "no filter".
-     */
-    // TODO: remove in DM-27177
-    [[deprecated("Replaced with setFilterLabel. Will be removed after v22.")]] void setFilter(
-            Filter const& filter) {
-        _info->setFilter(filter);
+    /// Set the Exposure's filter information
+    // TODO: remove in DM-27811
+    [[deprecated("Replaced by setFilter. Will be removed after v24.")]]
+    void setFilterLabel(std::shared_ptr<FilterLabel const> filterLabel) {
+        setFilter(filterLabel);
     }
     /// Set the Exposure's filter information
-    // TODO: deprecate in DM-27177, remove in DM-27811
-    void setFilterLabel(std::shared_ptr<FilterLabel const> filterLabel) {
-        _info->setFilterLabel(filterLabel);
+    void setFilter(std::shared_ptr<FilterLabel const> filterLabel) {
+        _info->setFilter(filterLabel);
     }
 
     /// Set the Exposure's PhotoCalib object

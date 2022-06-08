@@ -119,7 +119,7 @@ class PupilFactory:
         pupil : `Pupil`
             The illuminated pupil.
         """
-        illuminated = np.ones(self.u.shape, dtype=np.bool)
+        illuminated = np.ones(self.u.shape, dtype=bool)
         return Pupil(illuminated, self.pupilSize, self.pupilScale)
 
     def _cutCircleInterior(self, pupil, p0, r):

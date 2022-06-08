@@ -30,7 +30,6 @@
 #include "lsst/base.h"
 #include "lsst/daf/base.h"
 #include "lsst/geom/Point.h"
-#include "lsst/afw/image/Filter.h"
 #include "lsst/afw/image/FilterLabel.h"
 #include "lsst/afw/table/io/OutputArchive.h"
 #include "lsst/afw/image/CoaddInputs.h"
@@ -162,31 +161,29 @@ public:
     /// Set the exposure's Detector information
     void setDetector(std::shared_ptr<cameraGeom::Detector const> detector);
 
-    /// Return the exposure's filter
-    // TODO: remove in DM-27177
-    [[deprecated("Replaced with getFilterLabel. Will be removed after v22.")]] Filter getFilter() const;
-
-    /**
-     * Set the exposure's filter
-     *
-     * @param filter The filter to set. If this is the default filter
-     *               ("_unknown_"), it is interpreted as "no filter".
-     */
-    // TODO: remove in DM-27177
-    [[deprecated("Replaced with setFilterLabel. Will be removed after v22.")]] void setFilter(
-            Filter const& filter);
-
     /// Does this exposure have filter information?
-    // TODO: deprecate in DM-27177, remove in DM-27811.
+    // TODO: remove in DM-27811.
+    [[deprecated("Replaced by hasFilter. Will be removed after v24.")]]
     bool hasFilterLabel() const;
 
     /// Return the exposure's filter information
-    // TODO: deprecate in DM-27177, remove in DM-27811.
+    // TODO: remove in DM-27811.
+    [[deprecated("Replaced by getFilter. Will be removed after v24.")]]
     std::shared_ptr<FilterLabel const> getFilterLabel() const;
 
     /// Set the exposure's filter information
-    // TODO: deprecate in DM-27177, remove in DM-27811.
+    // TODO: remove in DM-27811.
+    [[deprecated("Replaced by setFilter. Will be removed after v24.")]]
     void setFilterLabel(std::shared_ptr<FilterLabel const> filterLabel);
+
+    /// Does this exposure have filter information?
+    bool hasFilter() const;
+
+    /// Return the exposure's filter information.
+    std::shared_ptr<FilterLabel const> getFilter() const;
+
+    /// Set the exposure's filter information.
+    void setFilter(std::shared_ptr<FilterLabel const> filter);
 
     /// Does this exposure have a photometric calibration?
     bool hasPhotoCalib() const;
@@ -376,7 +373,6 @@ public:
                     std::shared_ptr<cameraGeom::Detector const>(),
             std::shared_ptr<geom::polygon::Polygon const> const& polygon =
                     std::shared_ptr<geom::polygon::Polygon const>(),
-            Filter const& filter = Filter(),
             std::shared_ptr<daf::base::PropertySet> const& metadata =
                     std::shared_ptr<daf::base::PropertySet>(),
             std::shared_ptr<CoaddInputs> const& coaddInputs = std::shared_ptr<CoaddInputs>(),

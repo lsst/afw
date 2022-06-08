@@ -23,7 +23,6 @@ from . import pixel
 from .image import *
 from .apCorrMap import *
 from .maskedImage import *
-from ._filter import *  # just here to support deprecation
 from ._visitInfo import *  # just here to support deprecation
 from .exposure import *
 from ._exposureInfoContinued import *
@@ -31,5 +30,4 @@ from ._exposureSummaryStats import *
 from .basicUtils import *
 from .testUtils import *
 from ._photoCalibContinued import *
-
-from ._exposureFitsReaderContinued import *  # just here to support deprecation
+from ._readersContinued import *  # just here to support deprecation

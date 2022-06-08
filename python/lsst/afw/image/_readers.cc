@@ -37,7 +37,6 @@
 #include "lsst/afw/geom/polygon/Polygon.h"
 #include "lsst/afw/detection/Psf.h"
 #include "lsst/afw/image/PhotoCalib.h"
-#include "lsst/afw/image/Filter.h"
 #include "lsst/afw/image/CoaddInputs.h"
 #include "lsst/afw/image/VisitInfo.h"
 #include "lsst/afw/image/ApCorrMap.h"
@@ -287,8 +286,8 @@ void declareExposureFitsReader(lsst::utils::python::WrapperCollection &wrappers)
         cls.def("readExposureId", &ExposureFitsReader::readExposureId);
         cls.def("readMetadata", &ExposureFitsReader::readMetadata);
         cls.def("readWcs", &ExposureFitsReader::readWcs);
-        cls.def("readFilter", &ExposureFitsReader::readFilter);
         cls.def("readFilterLabel", &ExposureFitsReader::readFilterLabel);
+        cls.def("readFilter", &ExposureFitsReader::readFilter);
         cls.def("readPhotoCalib", &ExposureFitsReader::readPhotoCalib);
         cls.def("readPsf", &ExposureFitsReader::readPsf);
         cls.def("readValidPolygon", &ExposureFitsReader::readValidPolygon);

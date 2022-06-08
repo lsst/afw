@@ -178,13 +178,6 @@ HDU 0
 
        Relative humidity.
 
-   * - ``FILTER``
-     - str
-     -
-     - `Filter.getName`
-
-       Name of filter.
-
    * - ``AR_HDU``
      - int
      -
@@ -280,4 +273,4 @@ HDUs 1 to 3
 
 .. [1] Unless otherwise noted, each object is contained in the ExposureInfo and has a getter.
    Thus to get ``VisitInfo`` use ``exposure.getExposureInfo().getVisitInfo()``.
-   In some cases a direct shortcut is also available, e.g. ``exposure.getFilter()`` is a shortcut for ``exposure.getExposureInfo().getFilter()``.
+   In some cases a direct shortcut is also available, e.g. ``exposure.getFilter()`` is a shortcut for ``exposure.info.getFilter()``.

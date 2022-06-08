@@ -8,7 +8,6 @@
 
 #include <cmath>
 #include <limits>
-#include "lsst/afw/image/Filter.h"
 
 namespace lsst {
 namespace afw {
@@ -55,16 +54,6 @@ public:
 
     /// Return a hash of this object.
     std::size_t hash_value() const noexcept { return isIndeterminate() ? 42 : std::hash<double>()(_g_r); }
-
-    /** Return the effective wavelength for this object in the given filter
-     */
-    [
-            [deprecated("Removed with no replacement (but see lsst::afw::image::TransmissionCurve). Will be "
-                        "removed after v22.")]] double
-    getLambdaEff(Filter const &  ///< The filter in question
-                 ) const {
-        return 1000 * _g_r;
-    }
 
 private:
     double _g_r;

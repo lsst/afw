@@ -53,7 +53,6 @@ void wrapColor(lsst::utils::python::WrapperCollection &wrappers) {
 
         /* Members */
         cls.def("isIndeterminate", &Color::isIndeterminate);
-        cls.def("getLambdaEff", &Color::getLambdaEff, "filter"_a);
     });
 }
 
