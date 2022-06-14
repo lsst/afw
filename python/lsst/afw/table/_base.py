@@ -346,6 +346,10 @@ class Catalog(metaclass=TemplateMeta):
         except AttributeError:
             return getattr(self.columns, name)
 
+    def __iter__(self):
+        for i in range(len(self)):
+            yield self._getitem_(i)
+
     def __str__(self):
         if self.isContiguous():
             return str(self.asAstropy())
