@@ -242,6 +242,9 @@ PyCatalog<Record> declareCatalog(utils::python::WrapperCollection &wrappers, std
                 cls.def("_getitem_", [](Catalog &self, int i) {
                     return self.get(utils::python::cppIndex(self.size(), i));
                 });
+                cls.def("__iter__", [](Catalog &self) {
+                    return py::make_iterator(self.begin(), self.end());
+                }, py::keep_alive<0, 1>()); /* Keep vector alive while iterator is used */
                 cls.def("isContiguous", &Catalog::isContiguous);
                 cls.def("writeFits",
                         (void (Catalog::*)(std::string const &, std::string const &, int) const) &
