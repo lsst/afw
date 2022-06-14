@@ -242,6 +242,29 @@ PyCatalog<Record> declareCatalog(utils::python::WrapperCollection &wrappers, std
                 cls.def("_getitem_", [](Catalog &self, int i) {
                     return self.get(utils::python::cppIndex(self.size(), i));
                 });
+                cls.def("__iter__", [](Catalog & self) {
+                    // We use `self.getInternal()` to access C++ iterators
+                    // that yields `shared_ptr<Record>`; Catalog's own iterator
+                    // class is a wrapper that dereferences, but that just
+                    // gets in the way of pybind11's reference management.
+                    // That should make the return value policy passed to
+                    // `py::make_iterator` irrelevant; we don't need to keep
+                    // the catalog alive in order to keep a record alive,
+                    // because the `shared_ptr` manages the record's lifetime.
+                    // But we still need keep_alive on the `__iter__` method
+                    // itself to keep the catalog alive as long as the iterator
+                    // is alive.
+                    //
+                    // There is still one way this can fail, however: modifying
+                    // the catalog (adding rows or removing them) *may*
+                    // invalidate the C++ iterators, making any use of them
+                    // undefined behavior, and there's nothing pybind11 can do
+                    // to stop that.  Modifying a sequence during iteration is
+                    // prohibited more generally in Python, so this is probably
+                    // ok, but it is worth noting that the penalty for doing so
+                    // here is much worse than a friendly Python exception.
+                    return py::make_iterator(self.getInternal().begin(), self.getInternal().end());
+                }, py::keep_alive<0, 1>());
                 cls.def("isContiguous", &Catalog::isContiguous);
                 cls.def("writeFits",
                         (void (Catalog::*)(std::string const &, std::string const &, int) const) &
