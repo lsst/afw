@@ -102,35 +102,46 @@ class FootprintMergeCatalogTestCase(lsst.utils.tests.TestCase):
         insertPsf(pos3, im3, psf3, kernelSize, flux)
 
         schema = afwTable.SourceTable.makeMinimalSchema()
-        self.idFactory = afwTable.IdFactory.makeSimple()
-        self.table = afwTable.SourceTable.make(schema, self.idFactory)
 
         # Create SourceCatalogs from these objects
         fp1 = afwDetect.FootprintSet(
             im1, afwDetect.Threshold(0.001), "DETECTED")
-        self.catalog1 = afwTable.SourceCatalog(self.table)
+        # Use a different ID factory for each footprint so that the peak ID's
+        # overlap. This allows us to test ID collisions.
+        table = afwTable.SourceTable.make(schema, afwTable.IdFactory.makeSimple())
+        self.catalog1 = afwTable.SourceCatalog(table)
         fp1.makeSources(self.catalog1)
 
+        table = afwTable.SourceTable.make(schema, afwTable.IdFactory.makeSimple())
         fp2 = afwDetect.FootprintSet(
             im2, afwDetect.Threshold(0.001), "DETECTED")
-        self.catalog2 = afwTable.SourceCatalog(self.table)
+        self.catalog2 = afwTable.SourceCatalog(table)
         fp2.makeSources(self.catalog2)
 
+        table = afwTable.SourceTable.make(schema, afwTable.IdFactory.makeSimple())
         fp3 = afwDetect.FootprintSet(
             im3, afwDetect.Threshold(0.001), "DETECTED")
-        self.catalog3 = afwTable.SourceCatalog(self.table)
+        self.catalog3 = afwTable.SourceCatalog(table)
         fp3.makeSources(self.catalog3)
 
     def tearDown(self):
         del self.catalog1
         del self.catalog2
         del self.catalog3
-        del self.table
+
+    def assertUniqueIds(self, catalog):
+        """Ensure that all of the peak IDs in a single parent are unique.
+        """
+        for src in catalog:
+            # The peak catalog may be non-contiguous,
+            # so add each peak individually
+            peaks = [peak.getId() for peak in src.getFootprint().peaks]
+            self.assertEqual(sorted(peaks), sorted(set(peaks)))
 
     def testMerge1(self):
+        idFactory = afwTable.IdFactory.makeSimple()
         # Add the first catalog only
-        merge, nob, npeak = mergeCatalogs([self.catalog1], ["1"], [-1],
-                                          self.idFactory)
+        merge, nob, npeak = mergeCatalogs([self.catalog1], ["1"], [-1], idFactory)
         self.assertEqual(nob, 14)
         self.assertEqual(npeak, 15)
 
@@ -149,28 +160,24 @@ class FootprintMergeCatalogTestCase(lsst.utils.tests.TestCase):
         # Add the first catalog and second catalog with the wrong name, which should result
         # an exception being raised
         with self.assertRaises(lsst.pex.exceptions.LogicError):
-            mergeCatalogs([self.catalog1, self.catalog2], ["1", "2"], [
-                          0, 0], self.idFactory, ["1", "3"])
+            mergeCatalogs([self.catalog1, self.catalog2], ["1", "2"], [0, 0], idFactory, ["1", "3"])
 
         # Add the first catalog and second catalog with the wrong number of peakDist elements,
         # which should raise an exception
         with self.assertRaises(ValueError):
-            mergeCatalogs([self.catalog1, self.catalog2], [
-                          "1", "2"], [0], self.idFactory, ["1", "3"])
+            mergeCatalogs([self.catalog1, self.catalog2], ["1", "2"], [0], idFactory, ["1", "3"])
 
         # Add the first catalog and second catalog with the wrong number of filters,
         # which should raise an exception
         with self.assertRaises(ValueError):
-            mergeCatalogs([self.catalog1, self.catalog2], [
-                          "1"], [0], self.idFactory, ["1", "3"])
+            mergeCatalogs([self.catalog1, self.catalog2], ["1"], [0], idFactory, ["1", "3"])
 
         # Add the first catalog and second catalog with minPeak < 1 so it will
         # not add new peaks
-        merge, nob, npeak = mergeCatalogs([self.catalog1, self.catalog2],
-                                          ["1", "2"], [0, -1],
-                                          self.idFactory)
+        merge, nob, npeak = mergeCatalogs([self.catalog1, self.catalog2], ["1", "2"], [0, -1], idFactory)
         self.assertEqual(nob, 22)
         self.assertEqual(npeak, 23)
+        self.assertUniqueIds(merge)
         # area for each object
         pixArea = np.ones(22)
         pixArea[0] = 275
@@ -198,9 +205,10 @@ class FootprintMergeCatalogTestCase(lsst.utils.tests.TestCase):
         # Same as previous with another catalog
         merge, nob, npeak = mergeCatalogs([self.catalog1, self.catalog2, self.catalog3],
                                           ["1", "2", "3"], [0, -1, -1],
-                                          self.idFactory)
+                                          idFactory)
         self.assertEqual(nob, 19)
         self.assertEqual(npeak, 20)
+        self.assertUniqueIds(merge)
         pixArea = np.ones(19)
         pixArea[0] = 416
         pixArea[1] = 270
@@ -229,18 +237,20 @@ class FootprintMergeCatalogTestCase(lsst.utils.tests.TestCase):
         # Add all the catalogs with minPeak = 0 so all peaks will be added
         merge, nob, npeak = mergeCatalogs([self.catalog1, self.catalog2, self.catalog3],
                                           ["1", "2", "3"], [0, 0, 0],
-                                          self.idFactory)
+                                          idFactory)
         self.assertEqual(nob, 19)
         self.assertEqual(npeak, 30)
+        self.assertUniqueIds(merge)
         measArea = [i.getFootprint().getArea() for i in merge]
         np.testing.assert_array_equal(pixArea, measArea)
 
         # Add all the catalogs with minPeak = 10 so some peaks will be added to
         # the footprint
         merge, nob, npeak = mergeCatalogs([self.catalog1, self.catalog2, self.catalog3],
-                                          ["1", "2", "3"], 10, self.idFactory)
+                                          ["1", "2", "3"], 10, idFactory)
         self.assertEqual(nob, 19)
         self.assertEqual(npeak, 25)
+        self.assertUniqueIds(merge)
         measArea = [i.getFootprint().getArea() for i in merge]
         np.testing.assert_array_equal(pixArea, measArea)
 
@@ -260,9 +270,10 @@ class FootprintMergeCatalogTestCase(lsst.utils.tests.TestCase):
 
         # Add all the catalogs with minPeak = 100 so no new peaks will be added
         merge, nob, npeak = mergeCatalogs([self.catalog1, self.catalog2, self.catalog3],
-                                          ["1", "2", "3"], 100, self.idFactory)
+                                          ["1", "2", "3"], 100, idFactory)
         self.assertEqual(nob, 19)
         self.assertEqual(npeak, 20)
+        self.assertUniqueIds(merge)
         measArea = [i.getFootprint().getArea() for i in merge]
         np.testing.assert_array_equal(pixArea, measArea)
 
@@ -283,9 +294,10 @@ class FootprintMergeCatalogTestCase(lsst.utils.tests.TestCase):
         # Add footprints with large samePeakDist so that any footprint that merges will also
         # have the peak flagged
         merge, nob, npeak = mergeCatalogs([self.catalog1, self.catalog2, self.catalog3],
-                                          ["1", "2", "3"], 100, self.idFactory, samePeakDist=40)
+                                          ["1", "2", "3"], 100, idFactory, samePeakDist=40)
 
         # peaks detected in more than one catalog
+        self.assertUniqueIds(merge)
         multiPeakIndex = [0, 2, 5, 7, 9]
         peakIndex = 0
         for record in merge:
