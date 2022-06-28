@@ -47,6 +47,7 @@ public:
              ++iter) {
             std::shared_ptr<PeakRecord> newPeak = peakTable->copyRecord(*iter, peakSchemaMapper);
             newPeak->set(keys.peak, true);
+            newPeak->setId((*newFootprint->getPeaks().getTable()->getIdFactory())());
             newFootprint->getPeaks().push_back(newPeak);
         }
         _source->setFootprint(newFootprint);
@@ -184,6 +185,7 @@ private:
                     std::shared_ptr<PeakRecord> newPeak = newPeaks.addNew();
                     newPeak->assign(*otherIter, *peakSchemaMapper);
                     newPeak->set(keys->peak, true);
+                    newPeak->setId((*currentPeaks.getTable()->getIdFactory())());
                 } else {
                     newPeaks.push_back(otherIter);
                 }
