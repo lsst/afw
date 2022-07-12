@@ -25,7 +25,7 @@ __all__ = []
 
 
 @continueClass
-class SpanSet:
+class SpanSet:  # noqa: F811
     def asArray(self, shape=None, xy0=None):
         """Convert a SpanSet into a numpy boolean array
 
