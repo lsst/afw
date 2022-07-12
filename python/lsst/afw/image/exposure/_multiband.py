@@ -19,15 +19,72 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-__all__ = ["MultibandExposure"]
+__all__ = ["MultibandExposure", "computePsfImage"]
 
 import numpy as np
 
-from lsst.geom import Point2D
+from lsst.geom import Point2D, Point2I, Box2I
+from lsst.pex.exceptions import InvalidParameterError
 from . import Exposure, ExposureF
-from ..image._multiband import MultibandImage, MultibandTripleBase
+from ..utils import projectImage
+from ..image._multiband import MultibandTripleBase, MultibandPixel
 from ..image._multiband import tripleFromSingles, tripleFromArrays, makeTripleFromKwargs
 from ..maskedImage import MaskedImage
+
+
+class IncompleteDataError(Exception):
+    """The PSF could not be computed due to incomplete data
+    """
+    pass
+
+
+def computePsfImage(psfModels, position, bands, useKernelImage=True):
+    """Get a multiband PSF image
+
+    The PSF Kernel Image is computed for each band
+    and combined into a (filter, y, x) array.
+
+    Parameters
+    ----------
+    psfList : `list` of `lsst.afw.detection.Psf`
+        The list of PSFs in each band.
+    position : `Point2D` or `tuple`
+        Coordinates to evaluate the PSF.
+    bands: `list` or `str`
+            List of names for each band
+    Returns
+    -------
+    psfs: `np.ndarray`
+        The multiband PSF image.
+    """
+    psfs = []
+    # Make the coordinates into a Point2D (if necessary)
+    if not isinstance(position, Point2D):
+        position = Point2D(position[0], position[1])
+
+    for bidx, psfModel in enumerate(psfModels):
+        try:
+            if useKernelImage:
+                psf = psfModel.computeKernelImage(position)
+            else:
+                psf = psfModel.computeImage(position)
+            psfs.append(psf)
+        except InvalidParameterError:
+            # This band failed to compute the PSF due to incomplete data
+            # at that location. This is unlikely to be a problem for Rubin,
+            # however the edges of some HSC COSMOS fields contain incomplete
+            # data in some bands, so we track this error to distinguish it
+            # from unknown errors.
+            msg = "Failed to compute PSF at {} in band {}"
+            raise IncompleteDataError(msg.format(position, bands[bidx])) from None
+
+    left = np.min([psf.getBBox().getMinX() for psf in psfs])
+    bottom = np.min([psf.getBBox().getMinY() for psf in psfs])
+    right = np.max([psf.getBBox().getMaxX() for psf in psfs])
+    top = np.max([psf.getBBox().getMaxY() for psf in psfs])
+    bbox = Box2I(Point2I(left, bottom), Point2I(right, top))
+    psfs = np.array([projectImage(psf, bbox).array for psf in psfs])
+    return psfs
 
 
 class MultibandExposure(MultibandTripleBase):
@@ -105,7 +162,7 @@ class MultibandExposure(MultibandTripleBase):
         return tuple(singles)
 
     @staticmethod
-    def fromButler(butler, filters, filterKwargs, *args, **kwargs):
+    def fromButler(butler, bands, *args, **kwargs):
         """Load a multiband exposure from a butler
 
         Because each band is stored in a separate exposure file,
@@ -117,14 +174,8 @@ class MultibandExposure(MultibandTripleBase):
         butler: `Butler`
             Butler connection to use to load the single band
             calibrated images
-        filters: `list` or `str`
-            List of filter names for each band
-        filterKwargs: `dict`
-            Keyword arguments to pass to the Butler
-            that are different for each filter.
-            The keys are the names of the arguments and the values
-            should also be dictionaries, with filter names as keys
-            and the value of the argument for the given filter as values.
+        bands: `list` or `str`
+            List of names for each band
         args: `list`
             Arguments to the Butler.
         kwargs: `dict`
@@ -139,14 +190,11 @@ class MultibandExposure(MultibandTripleBase):
         """
         # Load the Exposure in each band
         exposures = []
-        for f in filters:
-            if filterKwargs is not None:
-                for key, value in filterKwargs:
-                    kwargs[key] = value[f]
-            exposures.append(butler.get(*args, filter=f, **kwargs))
-        return MultibandExposure.fromExposures(filters, exposures)
+        for band in bands:
+            exposures.append(butler.get(*args, band=band, **kwargs))
+        return MultibandExposure.fromExposures(bands, exposures)
 
-    def computePsfKernelImage(self, position=None):
+    def computePsfKernelImage(self, position):
         """Get a multiband PSF image
 
         The PSF Kernel Image is computed for each band
@@ -159,26 +207,19 @@ class MultibandExposure(MultibandTripleBase):
         Parameters
         ----------
         position: `Point2D` or `tuple`
-            Coordinates to evaluate the PSF. If `position` is `None`
-            then `Psf.getAveragePosition()` is used.
+            Coordinates to evaluate the PSF.
 
         Returns
         -------
         self._psfImage: array
             The multiband PSF image.
         """
-        psfs = []
-        # Make the coordinates into a Point2D (if necessary)
-        if not isinstance(position, Point2D) and position is not None:
-            position = Point2D(position[0], position[1])
-        for single in self.singles:
-            if position is None:
-                psfs.append(single.getPsf().computeKernelImage().array)
-            else:
-                psfs.append(single.getPsf().computeKernelImage(position).array)
-        psfs = np.array(psfs)
-        psfImage = MultibandImage(self.filters, array=psfs)
-        return psfImage
+        return computePsfImage(
+            psfModels=self.getPsfs(),
+            position=position,
+            filters=self.filters,
+            useKernelImage=True,
+        )
 
     def computePsfImage(self, position=None):
         """Get a multiband PSF image
@@ -201,15 +242,55 @@ class MultibandExposure(MultibandTripleBase):
         self._psfImage: array
             The multiband PSF image.
         """
-        psfs = []
-        # Make the coordinates into a Point2D (if necessary)
-        if not isinstance(position, Point2D) and position is not None:
-            position = Point2D(position[0], position[1])
-        for single in self.singles:
-            if position is None:
-                psfs.append(single.getPsf().computeImage().array)
-            else:
-                psfs.append(single.getPsf().computeImage(position).array)
-        psfs = np.array(psfs)
-        psfImage = MultibandImage(self.filters, array=psfs)
-        return psfImage
+        return computePsfImage(
+            psfModels=self.getPsfs(),
+            position=position,
+            filters=self.filters,
+            useKernelImage=True,
+        )
+
+    def getPsfs(self):
+        """Extract the PSF model in each band
+
+        Returns
+        -------
+        psfs : `list` of `lsst.afw.detection.Psf`
+            The PSF in each band
+        """
+        return [s.getPsf() for s in self]
+
+    def _slice(self, filters, filterIndex, indices):
+        """Slice the current object and return the result
+
+        See `Multiband._slice` for a list of the parameters.
+        This overwrites the base method to attach the PSF to
+        each individual exposure.
+        """
+        image = self.image._slice(filters, filterIndex, indices)
+        if self.mask is not None:
+            mask = self._mask._slice(filters, filterIndex, indices)
+        else:
+            mask = None
+        if self.variance is not None:
+            variance = self._variance._slice(filters, filterIndex, indices)
+        else:
+            variance = None
+
+        # If only a single pixel is selected, return the tuple of MultibandPixels
+        if isinstance(image, MultibandPixel):
+            if mask is not None:
+                assert isinstance(mask, MultibandPixel)
+            if variance is not None:
+                assert isinstance(variance, MultibandPixel)
+            return (image, mask, variance)
+
+        result = MultibandExposure(
+            filters=filters,
+            image=image,
+            mask=mask,
+            variance=variance,
+            psfs=self.getPsfs(),
+        )
+
+        assert all([r.getBBox() == result._bbox for r in [result._mask, result._variance]])
+        return result

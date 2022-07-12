@@ -48,6 +48,38 @@ class HeavyFootprint(metaclass=TemplateMeta):  # noqa: F811
         image.array[indices[0, :] - image.getY0(),
                     indices[1, :] - image.getX0()] -= self.getImageArray()
 
+    def extractImage(self, fill=np.nan, bbox=None, imageType=None):
+        """Create a 2D image of a HeavyFootprint
+
+        Parameters
+        ----------
+        fill: number
+            Number to fill the pixels in the image that are not
+            contained in `heavy`.
+        bbox : `Box2I`
+            Bounding box of the output image.
+        imageType : `type`
+            This should be either a `MaskedImage` or `Image` and describes
+            the type of the output image.
+            If `imageType` is `None` then `Image` will be used.
+
+        Returns
+        -------
+        image : `lsst.afw.image.MaskedImage` or `lsst.afw.image.Image`
+            An image defined by `bbox` and padded with `fill` that
+            contains the projected flux in `heavy`.
+        """
+        # Prevent circular import
+        from lsst.afw.image import Image
+        if imageType is None:
+            imageType = Image
+        if bbox is None:
+            bbox = self.getBBox()
+        image = imageType(bbox, dtype=self.getImageArray().dtype)
+        image.set(fill)
+        self.insert(image)
+        return image
+
 
 HeavyFootprint.register(np.int32, HeavyFootprintI)
 HeavyFootprint.register(np.float32, HeavyFootprintF)
