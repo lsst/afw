@@ -629,17 +629,17 @@ class MultibandExposureTestCase(lsst.utils.tests.TestCase):
         _testMaskedImageCopy(self, self.exposure)
 
     def testPsf(self):
-        psfImage = self.exposure.computePsfKernelImage().array
+        psfImage = self.exposure.computePsfKernelImage(self.exposure.getBBox().getCenter())
         self.assertFloatsAlmostEqual(psfImage, self.psfImage)
 
         newPsfs = [GaussianPsf(self.kernelSize, self.kernelSize, 1.0) for f in self.filters]
         newPsfImage = [p.computeImage().array for p in newPsfs]
         for psf, exposure in zip(newPsfs, self.exposure.singles):
             exposure.setPsf(psf)
-        psfImage = self.exposure.computePsfKernelImage()
-        self.assertFloatsAlmostEqual(psfImage.array, newPsfImage)
+        psfImage = self.exposure.computePsfKernelImage(self.exposure.getBBox().getCenter())
+        self.assertFloatsAlmostEqual(psfImage, newPsfImage)
 
-        psfImage = self.exposure.computePsfImage().array[0]
+        psfImage = self.exposure.computePsfImage(self.exposure.getBBox().getCenter())[0]
         self.assertFloatsAlmostEqual(psfImage, self.exposure["G"].getPsf().computeImage().array)
 
 
