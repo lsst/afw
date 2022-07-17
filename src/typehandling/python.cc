@@ -23,8 +23,6 @@
 
 #include <string>
 
-#include "lsst/afw/typehandling/python.h"
-
 namespace lsst {
 namespace afw {
 namespace typehandling {
