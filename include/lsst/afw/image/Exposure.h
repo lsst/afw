@@ -221,7 +221,7 @@ public:
 
     /** Destructor
      */
-    virtual ~Exposure();
+    ~Exposure();
 
     // Get Members
     /// Return the MaskedImage

@@ -185,7 +185,7 @@ public:
                    lsst::geom::Point2I const& xy0 = lsst::geom::Point2I())
             : image::ImageBase<PixelT>(array, deep, xy0) {}
 
-    ~Image() override = default;
+    ~Image() = default;
     //
     // Assignment operators are not inherited
     //
@@ -362,7 +362,7 @@ public:
     /// Add scalar rhs to lhs
     Image& operator+=(PixelT const rhs);
     /// Add Image rhs to lhs
-    virtual Image& operator+=(Image<PixelT> const& rhs);
+    Image& operator+=(Image<PixelT> const& rhs);
     /**
      * Add a Function2(x, y) to an Image
      *
