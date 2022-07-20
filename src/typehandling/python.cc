@@ -23,7 +23,12 @@
 
 #include <string>
 
-#include "lsst/afw/typehandling/python.h"
+// Despite this file being called "python.cc", it must not actually #include
+// Python's main header (Python.h), which means it can't #include any pybind11
+// headers either.  The symbols referenced by that header are provided by the
+// python executable itself, so including them in a non-Python library like
+// libafw.so will make it impossible to link it to direct C++ binaries (like
+// many of our tests).
 
 namespace lsst {
 namespace afw {
