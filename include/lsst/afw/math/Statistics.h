@@ -24,15 +24,6 @@
 
 #if !defined(LSST_AFW_MATH_STATISTICS_H)
 #define LSST_AFW_MATH_STATISTICS_H
-/**
- * Compute Image Statistics
- *
- * @note The Statistics class itself can only handle lsst::afw::image::MaskedImage() types.
- *       The philosophy has been to handle other types by making them look like
- *       lsst::afw::image::MaskedImage() and reusing that code.
- *       Users should have no need to instantiate a Statistics object directly,
- *       but should use the overloaded makeStatistics() factory functions.
- */
 
 #include <algorithm>
 #include <cassert>
@@ -203,6 +194,11 @@ private:
  *      double const meanError = statobj.getError(lsst::afw::math::MEAN);                // just the error
  *
  *
+ * @note The Statistics class itself can only handle lsst::afw::image::MaskedImage() types.
+ *       The philosophy has been to handle other types by making them look like
+ *       lsst::afw::image::MaskedImage() and reusing that code.
+ *       Users should have no need to instantiate a Statistics object directly,
+ *       but should use the overloaded makeStatistics() factory functions.
  * @note Factory function: We used a helper function, `makeStatistics`, rather that the constructor
  *       directly so that the compiler could deduce the types -- cf. `std::make_pair()`
  *

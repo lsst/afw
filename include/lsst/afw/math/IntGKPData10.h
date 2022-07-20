@@ -25,7 +25,7 @@
 #if !defined(LSST_AFW_MATH_INTGKPDATA10_H)
 #define LSST_AFW_MATH_INTGKPDATA10_H 1
 
-/**
+/*
  *  Numeric constants used by the Integrate.h integrator routines.
  *
  * @note Gauss-Kronrod-Patterson quadrature coefficients for use in
