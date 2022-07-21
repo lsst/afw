@@ -20,7 +20,7 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 import unittest
-import healpy as hp
+import hpgeom as hpg
 import numpy as np
 from astropy.wcs import WCS
 
@@ -57,7 +57,7 @@ class HpxUtilsTestCase(lsst.utils.tests.TestCase):
             nsubpix = 2**shift_order
 
             for pos in pos_tests:
-                pixel = hp.ang2pix(nside, pos[0], pos[1], lonlat=True, nest=True)
+                pixel = hpg.angle_to_pixel(nside, pos[0], pos[1])
 
                 wcs = afwGeom.makeHpxWcs(hips_order, pixel, shift_order=shift_order)
 
@@ -68,7 +68,7 @@ class HpxUtilsTestCase(lsst.utils.tests.TestCase):
                 ra[ra == 360.0] = 0.0
 
                 # Check that all these positions are truly inside the pixel
-                radec_pixels = hp.ang2pix(nside, ra, dec, lonlat=True, nest=True)
+                radec_pixels = hpg.angle_to_pixel(nside, ra, dec)
                 np.testing.assert_array_equal(radec_pixels, pixel)
 
                 # Check that the orientation is correct.
@@ -83,7 +83,7 @@ class HpxUtilsTestCase(lsst.utils.tests.TestCase):
                 # Generate all the sub-pixels
                 bit_shift = 2*int(np.round(np.log2(nsubpix)))
                 sub_pixels = np.left_shift(pixel, bit_shift) + np.arange(nsubpix*nsubpix)
-                ra_sub, dec_sub = hp.pix2ang(nside*nsubpix, sub_pixels, lonlat=True, nest=True)
+                ra_sub, dec_sub = hpg.pixel_to_angle(nside*nsubpix, sub_pixels)
                 # Deal with RA = 0 for testing...
                 if ra_sub.max() > 350.0 and ra_sub.min() < 10.0:
                     hi, = np.where(ra_sub > 180.0)

@@ -128,7 +128,7 @@ def makeHpxWcs(hips_order, pixel, shift_order=9):
     # The projected center of the pixel used for the HPX header is
     # a non-trivial computation, and typically is outside of the
     # tile pixel itself.  Therefore, these values are not the same
-    # as the values computed from healpy.pix2ang().
+    # as the values computed from HEALPix `pix2ang()`.
     cent_ra_proj, cent_dec_proj = _hpx_projected_center(hips_order, pixel)
 
     md = PropertySet()
@@ -154,7 +154,7 @@ def _hpx_projected_center(hips_order, pixel):
 
     The values of cent_ra_proj, cent_dec_proj computed by this function are
     typically outside of the cell pixel itself, and are not the same as
-    the values computed from 'healpy.pix2ang()'.
+    the values computed from HEALPix `pix2ang()'.
 
     Code is adapted from AladinSrc.jar version 11.024, Tile2HPX.java.
     AladinSrc.jar is licensed with GPLv3, see
