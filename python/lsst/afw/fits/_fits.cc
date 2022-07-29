@@ -276,8 +276,9 @@ PYBIND11_MODULE(_fits, mod) {
     wrappers.addSignatureDependency("lsst.pex.exceptions");
     wrappers.addSignatureDependency("lsst.daf.base");
     // FIXME: after afw.image pybind wrappers are converted
-    //wrappers.addSignatureDependency("lsst.afw.image"); 
-    wrappers.wrapException<FitsError, lsst::pex::exceptions::IoError>("FitsError", "IoError");
+    //wrappers.addSignatureDependency("lsst.afw.image");
+    auto cls = wrappers.wrapException<FitsError, lsst::pex::exceptions::IoError>("FitsError", "IoError");
+    cls.def(py::init<std::string const &>());
     declareImageCompression(wrappers);
     declareImageScalingOptions(wrappers);
     declareImageScale(wrappers);

@@ -9,6 +9,7 @@
 #include <unordered_map>
 #include <filesystem>
 #include <regex>
+#include <cctype>
 
 #include "fitsio.h"
 extern "C" {
@@ -439,7 +440,13 @@ std::string makeErrorMessage(std::string const &fileName, int status, std::strin
     }
     os << "\ncfitsio error stack:\n";
     char cfitsioMsg[FLEN_ERRMSG];
+    // fits_read_errmsg can return a junk string with non printable characters
+    // creating problem with python exception bindings
     while (fits_read_errmsg(cfitsioMsg) != 0) {
+        cfitsioMsg[FLEN_ERRMSG-1] = char(0); // ensure termination
+        std::size_t len=strlen(cfitsioMsg);
+        for(std::size_t i = 0; i < len; i++)
+            if( !isprint(cfitsioMsg[i]) ) cfitsioMsg[i] = '.';
         os << "  " << cfitsioMsg << "\n";
     }
     return os.str();
