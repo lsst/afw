@@ -149,7 +149,7 @@ void ExposureInfo::setId(table::RecordId id) {
                 oldVisitInfo->getBoresightRaDec(), oldVisitInfo->getBoresightAzAlt(),
                 oldVisitInfo->getBoresightAirmass(), oldVisitInfo->getBoresightRotAngle(),
                 oldVisitInfo->getRotType(), oldVisitInfo->getObservatory(), oldVisitInfo->getWeather(),
-                oldVisitInfo->getInstrumentLabel(), oldVisitInfo->getId());
+                oldVisitInfo->getInstrumentLabel(), oldVisitInfo->getId(), oldVisitInfo->getFocusZ());
         // Do not call setVisitInfo, to avoid recursion
         _visitInfo = newVisitInfo;
     }

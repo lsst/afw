@@ -64,7 +64,7 @@ void declareVisitInfo(lsst::utils::python::WrapperCollection &wrappers) {
                                  lsst::geom::Angle const &, lsst::geom::SpherePoint const &,
                                  lsst::geom::SpherePoint const &, double, lsst::geom::Angle const &,
                                  RotType const &, coord::Observatory const &, coord::Weather const &,
-                                 std::string const &, table::RecordId const &>(),
+                                 std::string const &, table::RecordId const &, double>(),
                         "exposureId"_a = 0, "exposureTime"_a = nan, "darkTime"_a = nan,
                         "date"_a = daf::base::DateTime(), "ut1"_a = nan, "era"_a = nanAngle,
                         "boresightRaDec"_a = lsst::geom::SpherePoint(nanAngle, nanAngle),
@@ -72,7 +72,8 @@ void declareVisitInfo(lsst::utils::python::WrapperCollection &wrappers) {
                         "boresightAirmass"_a = nan, "boresightRotAngle"_a = nanAngle,
                         "rotType"_a = RotType::UNKNOWN,
                         "observatory"_a = coord::Observatory(nanAngle, nanAngle, nan),
-                        "weather"_a = coord::Weather(nan, nan, nan), "instrumentLabel"_a = "", "id"_a = 0);
+                        "weather"_a = coord::Weather(nan, nan, nan), "instrumentLabel"_a = "", "id"_a = 0,
+                        "focusZ"_a = nan);
                 cls.def(py::init<daf::base::PropertySet const &>(), "metadata"_a);
                 cls.def(py::init<VisitInfo const &>(), "visitInfo"_a);
 
@@ -106,6 +107,7 @@ void declareVisitInfo(lsst::utils::python::WrapperCollection &wrappers) {
                 cls.def("getBoresightHourAngle", &VisitInfo::getBoresightHourAngle);
                 cls.def("getInstrumentLabel", &VisitInfo::getInstrumentLabel);
                 cls.def("getId", &VisitInfo::getId);
+                cls.def("getFocusZ", &VisitInfo::getFocusZ);
 
                 /* readonly property accessors */
                 cls.def_property_readonly("exposureTime", &VisitInfo::getExposureTime);
@@ -126,6 +128,7 @@ void declareVisitInfo(lsst::utils::python::WrapperCollection &wrappers) {
                 cls.def_property_readonly("boresightHourAngle", &VisitInfo::getBoresightHourAngle);
                 cls.def_property_readonly("instrumentLabel", &VisitInfo::getInstrumentLabel);
                 cls.def_property_readonly("id", &VisitInfo::getId);
+                cls.def_property_readonly("focusZ", &VisitInfo::getFocusZ);
 
                 utils::python::addOutputOp(cls, "__repr__");
             });

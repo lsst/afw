@@ -87,6 +87,7 @@ public:
      * @param[in] weather  basic weather information for computing air mass
      * @param[in] instrumentLabel  The short name of the instrument that took this data (e.g. "HSC")
      * @param[in] id  The identifier of this full focal plane data.
+     * @param[in] focusZ defocal distance (mm)
      */
     // TODO: remove exposureId on DM-32138
     explicit VisitInfo(table::RecordId exposureId, double exposureTime, double darkTime,
@@ -95,7 +96,8 @@ public:
                        lsst::geom::SpherePoint const &boresightAzAlt, double boresightAirmass,
                        lsst::geom::Angle const &boresightRotAngle, RotType const &rotType,
                        coord::Observatory const &observatory, coord::Weather const &weather,
-                       std::string const &instrumentLabel, table::RecordId const &id)
+                       std::string const &instrumentLabel, table::RecordId const &id,
+                       double focusZ)
             : _exposureId(exposureId),
               _exposureTime(exposureTime),
               _darkTime(darkTime),
@@ -110,7 +112,8 @@ public:
               _observatory(observatory),
               _weather(weather),
               _instrumentLabel(instrumentLabel),
-              _id(id){};
+              _id(id),
+              _focusZ(focusZ){};
 
     explicit VisitInfo(daf::base::PropertySet const &metadata);
 
@@ -193,6 +196,9 @@ public:
 
     table::RecordId getId() const { return _id; }
 
+    // get defocal distance (mm)
+    double getFocusZ() const { return _focusZ; }
+
     /**
      * Get parallactic angle at the boresight
      *
@@ -238,6 +244,7 @@ private:
     coord::Weather _weather;
     std::string _instrumentLabel;
     table::RecordId _id;
+    double _focusZ;
 };
 
 std::ostream &operator<<(std::ostream &os, VisitInfo const &visitInfo);

@@ -65,6 +65,7 @@ def makeVisitInfo(data):
                               data.weather,
                               data.instrumentLabel,
                               data.id,
+                              data.focusZ,
                               )
 
 
@@ -95,6 +96,7 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
                   'weather',
                   'instrumentLabel',
                   'id',
+                  'focusZ',
                   ]
         VisitInfoData = collections.namedtuple("VisitInfoData", fields)
         data1 = VisitInfoData(exposureId=10313423,
@@ -116,6 +118,7 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
                               weather=Weather(1.1, 2.2, 34.5),
                               instrumentLabel="TestCameraOne",
                               id=987654,
+                              focusZ=1.5,
                               )
         self.data1 = data1
         self.localEra1, self.hourAngle1 = computeLstHA(data1)
@@ -136,7 +139,8 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
                                   22.2*degrees, 33.3*degrees, 0.444),
                               weather=Weather(2.2, 3.3, 44.4),
                               instrumentLabel="TestCameraTwo",
-                              id=123456
+                              id=123456,
+                              focusZ=-1.5,
                               )
         self.data2 = data2
         self.localEra2, self.hourAngle2 = computeLstHA(data2)
@@ -163,6 +167,7 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(visitInfo.getLocalEra(), localEra)
         self.assertEqual(visitInfo.getBoresightHourAngle(), hourAngle)
         self.assertEqual(visitInfo.getId(), data.id)
+        self.assertEqual(visitInfo.getFocusZ(), data.focusZ)
 
     def _testProperties(self, data, localEra, hourAngle):
         """Test property attribute accessors."""
@@ -183,6 +188,7 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(visitInfo.localEra, localEra)
         self.assertEqual(visitInfo.boresightHourAngle, hourAngle)
         self.assertEqual(visitInfo.id, data.id)
+        self.assertEqual(visitInfo.focusZ, data.focusZ)
 
     def testValueConstructor_data1(self):
         self._testValueConstructor(self.data1, self.localEra1, self.hourAngle1)
@@ -244,6 +250,10 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
             self.assertEqual(visitInfo.getId(), data.id)
         else:
             self.assertEqual(visitInfo.getId(), 0)
+        if version >= 3:
+            self.assertEqual(visitInfo.getFocusZ(), data.focusZ)
+        else:
+            self.assertTrue(math.isnan(visitInfo.getFocusZ()))
 
     def testPersistenceVersions(self):
         """Test that older versions are handled appropriately.
@@ -254,13 +264,14 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
         self._testFitsRead(self.data1, os.path.join(dataDir, "visitInfo-noversion.fits"), 0)
         self._testFitsRead(self.data1, os.path.join(dataDir, "visitInfo-version-1.fits"), 1)
         self._testFitsRead(self.data1, os.path.join(dataDir, "visitInfo-version-2.fits"), 2)
+        self._testFitsRead(self.data1, os.path.join(dataDir, "visitInfo-version-3.fits"), 3)
 
     def testSetVisitInfoMetadata(self):
         for item in (self.data1, self.data2):
             visitInfo = makeVisitInfo(item)
             metadata = PropertyList()
             afwImage.setVisitInfoMetadata(metadata, visitInfo)
-            self.assertEqual(metadata.nameCount(), 22)
+            self.assertEqual(metadata.nameCount(), 23)
             self.assertEqual(metadata.getScalar("EXPID"), item.exposureId)
             self.assertEqual(metadata.getScalar("EXPTIME"), item.exposureTime)
             self.assertEqual(metadata.getScalar("DARKTIME"), item.darkTime)
@@ -299,6 +310,8 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
                              item.instrumentLabel)
             self.assertEqual(metadata.getScalar("IDNUM"),
                              item.id)
+            self.assertEqual(metadata.getScalar("FOCUSZ"),
+                             item.focusZ)
 
     def testSetVisitInfoMetadataMissingValues(self):
         """If a value is unknown then it should not be written to the metadata"""
@@ -316,7 +329,7 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
             afwImage.setVisitInfoMetadata(metadata, visitInfo)
             # add an extra keyword that will not be stripped
             metadata.set("EXTRA", 5)
-            self.assertEqual(metadata.nameCount(), 23)
+            self.assertEqual(metadata.nameCount(), 24)
             afwImage.stripVisitInfoKeywords(metadata)
             self.assertEqual(metadata.nameCount(), 1)
 
@@ -350,6 +363,7 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
         self.assertTrue(math.isnan(visitInfo.getBoresightHourAngle()))
         self.assertEqual(visitInfo.getInstrumentLabel(), "")
         self.assertEqual(visitInfo.getId(), 0)
+        self.assertTrue(math.isnan(visitInfo.getFocusZ()))
 
     def testEquals(self):
         """Test that identical VisitInfo objects compare equal, even if some fields are NaN.
@@ -507,6 +521,10 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
         visitInfo = afwImage.VisitInfo(metadata)
         self.assertEqual(visitInfo.getId(), data.id)
 
+        metadata = propertySetFromDict({"FOCUSZ": data.focusZ})
+        visitInfo = afwImage.VisitInfo(metadata)
+        self.assertEqual(visitInfo.getFocusZ(), data.focusZ)
+
     def testConstructorKeywordArguments(self):
         """Test VisitInfo with named arguments"""
         data = self.data1
@@ -563,6 +581,9 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
 
         visitInfo = afwImage.VisitInfo(id=data.id)
         self.assertEqual(visitInfo.getId(), data.id)
+
+        visitInfo = afwImage.VisitInfo(focusZ=data.focusZ)
+        self.assertEqual(visitInfo.getFocusZ(), data.focusZ)
 
     def testGoodRotTypes(self):
         """Test round trip of all valid rot types"""
