@@ -309,7 +309,7 @@ public:
         // Version-dependent fields
         std::string instrumentLabel = version >= 1 ? record.get(keys.instrumentLabel) : "";
         table::RecordId id = version >= 2 ? record.get(keys.idnum) : 0;
-        float focusZ = version >= 3 ? record.get(keys.focusZ) : nan;
+        double focusZ = version >= 3 ? record.get(keys.focusZ) : nan;
 
         std::shared_ptr<VisitInfo> result(
                 new VisitInfo(record.get(keys.exposureId), record.get(keys.exposureTime),
@@ -597,8 +597,8 @@ std::string VisitInfo::toString() const {
     buffer << "observatory=" << getObservatory() << ", ";
     buffer << "weather=" << getWeather() << ", ";
     buffer << "instrumentLabel='" << getInstrumentLabel() << "', ";
-    buffer << "id=" << getId();
-    buffer << "focusZ=" << getFocusZ() << ", ";
+    buffer << "id=" << getId() << ", ";
+    buffer << "focusZ=" << getFocusZ();
     buffer << ")";
     return buffer.str();
 }

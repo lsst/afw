@@ -140,7 +140,7 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
                               weather=Weather(2.2, 3.3, 44.4),
                               instrumentLabel="TestCameraTwo",
                               id=123456,
-                              focusZ=-1.5,
+                              focusZ=-0.7,
                               )
         self.data2 = data2
         self.localEra2, self.hourAngle2 = computeLstHA(data2)

@@ -87,7 +87,8 @@ public:
      * @param[in] weather  basic weather information for computing air mass
      * @param[in] instrumentLabel  The short name of the instrument that took this data (e.g. "HSC")
      * @param[in] id  The identifier of this full focal plane data.
-     * @param[in] focusZ defocal distance (mm)
+     * @param[in] focusZ The defocal distance of main-cam hexapod in mm. 0 is in focus.;
+                        Extra-focal is negative while intra-focal is positive.
      */
     // TODO: remove exposureId on DM-32138
     explicit VisitInfo(table::RecordId exposureId, double exposureTime, double darkTime,
