@@ -435,7 +435,7 @@ PhotoCalibFactory registration(getPhotoCalibPersistenceName());
 
 }  // namespace
 
-/**
+/*
  * Backwards-compatibility support for depersisting the old Calib (FluxMag0/FluxMag0Err) objects.
  */
 

@@ -24,9 +24,7 @@
 
 #if !defined(LSST_AFW_IMAGE_DEFECT_H)
 #define LSST_AFW_IMAGE_DEFECT_H
-/**
- * A base class for image defects
- */
+
 #include <limits>
 #include <vector>
 #include "lsst/geom.h"
