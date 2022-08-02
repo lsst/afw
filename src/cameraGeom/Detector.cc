@@ -149,14 +149,14 @@ Detector::Detector(Fields fields, std::shared_ptr<TransformMap const> transformM
 
 namespace {
 
-class PersistenceHelper {
+// Version history:
+// unversioned: original Detector schema
+// 1: physicalType added  (version is implicit)
+// 2: fpPosition Point2D -> Point3D  (version explicitly added to schema)
+int constexpr SERIALIZATION_VERSION = 2;
+
+class DetectorSchema {
 public:
-
-    static PersistenceHelper const & get() {
-        static PersistenceHelper const instance;
-        return instance;
-    }
-
     table::Schema schema;
     table::Key<std::string> name;
     table::Key<int> id;
@@ -164,7 +164,8 @@ public:
     table::Key<std::string> serial;
     table::Box2IKey bbox;
     table::Point2DKey pixelSize;
-    table::Point2DKey fpPosition;
+    table::Point2DKey fpPosition2;  // needed for version < 2
+    table::Point3DKey fpPosition;
     table::Point2DKey refPoint;
     table::Key<lsst::geom::Angle> yaw;
     table::Key<lsst::geom::Angle> pitch;
@@ -172,60 +173,50 @@ public:
     table::Key<int> transformMap;
     table::Key<table::Array<float>> crosstalk;
     table::Key<std::string> physicalType;
+    table::Key<int> version;
 
-    PersistenceHelper(table::Schema const & existing) :
-        schema(existing),
-        name(schema["name"]),
-        id(schema["id"]),
-        type(schema["type"]),
-        serial(schema["serial"]),
-        bbox(schema["bbox"]),
-        pixelSize(schema["pixelSize"]),
-        fpPosition(schema["fpPosition"]),
-        refPoint(schema["refPoint"]),
-        yaw(schema["yaw"]),
-        pitch(schema["pitch"]),
-        roll(schema["roll"]),
-        transformMap(schema["transformMap"]),
-        crosstalk(schema["crosstalk"])
-    {
-        auto setKeyIfPresent = [this](auto & key, std::string const & name) {
-            try {
-                key = schema[name];
-            } catch (pex::exceptions::NotFoundError &) {}
-        };
-        // This field was not part of the original Detector minimal
-        // schema, but needed to be added
-        setKeyIfPresent(physicalType, "physicalType");
-    }
+    // No copying
+    DetectorSchema(const DetectorSchema&) = delete;
+    DetectorSchema& operator=(const DetectorSchema&) = delete;
 
-private:
+    // No moving
+    DetectorSchema(DetectorSchema&&) = delete;
+    DetectorSchema& operator=(DetectorSchema&&) = delete;
 
-    PersistenceHelper() :
-        schema(),
+    DetectorSchema(int detectorVersion = SERIALIZATION_VERSION)
+    :   schema(),
         name(schema.addField<std::string>("name", "Name of the detector", "", 0)),
         id(schema.addField<int>("id", "Integer ID for the detector", "")),
         type(schema.addField<int>("type", "Raw DetectorType enum value", "")),
         serial(schema.addField<std::string>("serial", "Serial name of the detector", "", 0)),
         bbox(table::Box2IKey::addFields(schema, "bbox", "Detector bounding box", "pixel")),
-        pixelSize(table::Point2DKey::addFields(schema, "pixelSize", "Physical pixel size", "mm")),
-        fpPosition(table::Point2DKey::addFields(schema, "fpPosition",
-                                                "Focal plane position of reference point", "mm")),
-        refPoint(table::Point2DKey::addFields(schema, "refPoint",
-                                              "Pixel position of reference point", "pixel")),
-        yaw(schema.addField<lsst::geom::Angle>("yaw", "Rotation about Z (X to Y), 1st rotation")),
-        pitch(schema.addField<lsst::geom::Angle>("pitch", "Rotation about Y' (Z'=Z to X'), 2nd rotation")),
-        roll(schema.addField<lsst::geom::Angle>("roll", "Rotation about X'' (Y''=Y' to Z''), 3rd rotation")),
-        transformMap(schema.addField<int>("transformMap", "Archive ID of TransformMap", "")),
-        crosstalk(schema.addField<table::Array<float>>("crosstalk", "Crosstalk matrix, flattened", "", 0)),
-        physicalType(schema.addField<std::string>("physicalType", "Physical type of the detector", "", 0))
-    {}
+        pixelSize(table::Point2DKey::addFields(schema, "pixelSize", "Physical pixel size", "mm"))
+    {
+        if (detectorVersion >= 2) {
+            fpPosition = table::Point3DKey::addFields(
+                schema, "fpPosition", "Focal plane position of reference point", "mm"
+            );
+        } else {
+            fpPosition2 = table::Point2DKey::addFields(
+                schema, "fpPosition", "Focal plane position of reference point", "mm"
+            );
+        }
+        refPoint = table::Point2DKey::addFields(
+            schema, "refPoint", "Pixel position of reference point", "pixel"
+        );
+        yaw = schema.addField<lsst::geom::Angle>("yaw", "Rotation about Z (X to Y), 1st rotation");
+        pitch = schema.addField<lsst::geom::Angle>("pitch", "Rotation about Y' (Z'=Z to X'), 2nd rotation");
+        roll = schema.addField<lsst::geom::Angle>("roll", "Rotation about X'' (Y''=Y' to Z''), 3rd rotation");
+        transformMap = schema.addField<int>("transformMap", "Archive ID of TransformMap", "");
+        crosstalk = schema.addField<table::Array<float>>("crosstalk", "Crosstalk matrix, flattened", "", 0);
 
-    PersistenceHelper(PersistenceHelper const &) = delete;
-    PersistenceHelper(PersistenceHelper &&) = delete;
-
-    PersistenceHelper & operator=(PersistenceHelper const &) = delete;
-    PersistenceHelper & operator=(PersistenceHelper &&) = delete;
+        if (detectorVersion >= 1) {
+            physicalType = schema.addField<std::string>("physicalType", "Physical type of the detector", "", 0);
+        }
+        if (detectorVersion >= 2) {
+            version = schema.addField<int>("version", "version of this Detector");
+        }
+    }
 
 };
 
@@ -234,17 +225,24 @@ private:
 class Detector::Factory : public table::io::PersistableFactory {
 public:
 
-    Factory() : PersistableFactory("Detector") {}
+    explicit Factory(std::string const& name) : PersistableFactory(name) {}
 
-    std::shared_ptr<table::io::Persistable> read(InputArchive const& archive,
-                                                 CatalogVector const& catalogs) const override {
-        // N.b. can't use "auto const keys" as cctor is deleted
-        auto const & keys = PersistenceHelper(catalogs.front().getSchema());
-
+    std::shared_ptr<table::io::Persistable> read(
+        InputArchive const& archive,
+        CatalogVector const& catalogs
+    ) const override {
         LSST_ARCHIVE_ASSERT(catalogs.size() == 2u);
-        LSST_ARCHIVE_ASSERT(catalogs.front().getSchema() == keys.schema);
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
         auto const & record = catalogs.front().front();
+        int version = getVersion(catalogs);
+        if (version > SERIALIZATION_VERSION) {
+            throw LSST_EXCEPT(
+                pex::exceptions::TypeError,
+                "Cannot read Detector FITS version > " +
+                std::to_string(SERIALIZATION_VERSION)
+            );
+        }
+        auto const & keys = DetectorSchema(version);
 
         AmpVector amps;
         amps.reserve(catalogs.back().size());
@@ -260,7 +258,16 @@ public:
         }
 
         // get values for not-always-present fields if present
-        const auto physicalType = keys.physicalType.isValid() ? record.get(keys.physicalType) : "";
+        const auto physicalType = (version >= 1) ? record.get(keys.physicalType) : "";
+
+        lsst::geom::Point3D fpPosition;
+        if (version >= 2) {
+            fpPosition = record.get(keys.fpPosition);
+        } else {
+            lsst::geom::Point2D fpPosition2(record.get(keys.fpPosition2));
+            fpPosition = lsst::geom::Point3D(fpPosition2[0], fpPosition2[1], 0.0);
+        }
+
         Fields fields = {
             record.get(keys.name),
             record.get(keys.id),
@@ -268,7 +275,7 @@ public:
             record.get(keys.serial),
             record.get(keys.bbox),
             Orientation(
-                record.get(keys.fpPosition),
+                fpPosition,
                 record.get(keys.refPoint),
                 record.get(keys.yaw),
                 record.get(keys.pitch),
@@ -290,20 +297,37 @@ public:
 
     static Factory const registration;
 
+private:
+    int getVersion(CatalogVector const& catalogs) const {
+        try {
+            auto const & record = catalogs.front().front();
+            // Don't assume version is at same index as in DetectorSchema
+            auto versionKey = record.getSchema().find<int>("version");
+            return record.get(versionKey.key);
+        } catch (pex::exceptions::NotFoundError const&) {
+            // version = find_physicalType ? 1 : 0
+            try {
+                catalogs.front().getSchema().find<std::string>("physicalType");
+                return 1;
+            } catch (pex::exceptions::NotFoundError const&) {
+                return 0;
+            }
+        }
+    }
 };
-
-Detector::Factory const Detector::Factory::registration;
 
 std::string Detector::getPersistenceName() const {
     return "Detector";
 }
+
+Detector::Factory const Detector::Factory::registration("Detector");
 
 std::string Detector::getPythonModule() const {
     return "lsst.afw.cameraGeom";
 }
 
 void Detector::write(OutputArchiveHandle& handle) const {
-    auto const & keys = PersistenceHelper::get();
+    auto const & keys = DetectorSchema();
 
     auto cat = handle.makeCatalog(keys.schema);
     auto record = cat.addNew();
@@ -314,7 +338,7 @@ void Detector::write(OutputArchiveHandle& handle) const {
     record->set(keys.bbox, getBBox());
     record->set(keys.pixelSize, lsst::geom::Point2D(getPixelSize()));
     auto orientation = getOrientation();
-    record->set(keys.fpPosition, orientation.getFpPosition());
+    record->set(keys.fpPosition, orientation.getFpPosition3());
     record->set(keys.refPoint, orientation.getReferencePoint());
     record->set(keys.yaw, orientation.getYaw());
     record->set(keys.pitch, orientation.getPitch());
@@ -332,6 +356,7 @@ void Detector::write(OutputArchiveHandle& handle) const {
 
     record->set(keys.crosstalk, flattenMatrix(getCrosstalk()));
     record->set(keys.physicalType, getPhysicalType());
+    record->set(keys.version, SERIALIZATION_VERSION);
     handle.saveCatalog(cat);
 
     auto ampCat = handle.makeCatalog(Amplifier::getRecordSchema());

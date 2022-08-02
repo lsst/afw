@@ -47,7 +47,7 @@ class MakePixelToTanPixelTestCaseCase(lsst.utils.tests.TestCase):
         plateScale = 25.0   # arcsec/mm
         yaw = 0 * lsst.geom.degrees
         # focal-plane position of ref position on detector (mm)
-        fpPosition = lsst.geom.Point2D(0, 0)
+        fpPosition = lsst.geom.Point3D(0, 0, 0)
         # ref position on detector (pos of lower left corner)
         refPoint = lsst.geom.Point2D(0, 0)
         orientation = cameraGeom.Orientation(
@@ -108,7 +108,7 @@ class MakePixelToTanPixelTestCaseCase(lsst.utils.tests.TestCase):
         plateScale = 25.0   # arcsec/mm
         yaw = lsst.geom.Angle(20, lsst.geom.degrees)
         # focal-plane position of ref position on detector (mm)
-        fpPosition = lsst.geom.Point2D(50, 25)
+        fpPosition = lsst.geom.Point3D(50, 25, 0)
         # ref position on detector (pos of lower left corner)
         refPoint = lsst.geom.Point2D(-0.5, -0.5)
         orientation = cameraGeom.Orientation(
@@ -163,7 +163,7 @@ class MakePixelToTanPixelTestCaseCase(lsst.utils.tests.TestCase):
         plateScale = 25.0   # arcsec/mm
         yaw = lsst.geom.Angle(20, lsst.geom.degrees)
         # focal-plane position of ref position on detector (mm)
-        fpPosition = lsst.geom.Point2D(50, 25)
+        fpPosition = lsst.geom.Point3D(50, 25, 0)
         # ref position on detector (pos of lower left corner)
         refPoint = lsst.geom.Point2D(-0.5, -0.5)
         orientation = cameraGeom.Orientation(

@@ -27,7 +27,7 @@ namespace lsst {
 namespace afw {
 namespace cameraGeom {
 
-Orientation::Orientation(lsst::geom::Point2D const fpPosition, lsst::geom::Point2D const refPoint,
+Orientation::Orientation(lsst::geom::Point3D const fpPosition, lsst::geom::Point2D const refPoint,
                          lsst::geom::Angle const yaw, lsst::geom::Angle const pitch,
                          lsst::geom::Angle const roll)
         : _fpPosition(fpPosition), _refPoint(refPoint), _yaw(yaw), _pitch(pitch), _roll(roll), _rotMat() {
@@ -98,7 +98,7 @@ std::shared_ptr<afw::geom::TransformPoint2ToPoint2> Orientation::makePixelFpTran
             _rotMat.array() * (Eigen::Vector2d::Ones() * pixelSizeMm.asEigen().transpose()).array();
 
     Eigen::Vector2d refMm = pixelSizeMm.asEigen().array() * _refPoint.asEigen().array();
-    Eigen::Vector2d translation = _fpPosition.asEigen() - (_rotMat * refMm);
+    Eigen::Vector2d translation = _fpPosition.asEigen().head<2>() - (_rotMat * refMm);
 
     lsst::geom::AffineTransform affineTransform = lsst::geom::AffineTransform(jacobian, translation);
     return afw::geom::makeTransform(affineTransform);

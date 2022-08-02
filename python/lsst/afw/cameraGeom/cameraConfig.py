@@ -50,6 +50,8 @@ class DetectorConfig(pexConfig.Config):
         "x offset from the origin of the camera in mm in the transposed system.", float)
     offset_y = pexConfig.Field(
         "y offset from the origin of the camera in mm in the transposed system.", float)
+    offset_z = pexConfig.Field(
+        "z offset from the origin of the camera in mm in the transposed system.", float, default=0.0)
     refpos_x = pexConfig.Field("x position of the reference point in the detector in pixels "
                                "in transposed coordinates.", float)
     refpos_y = pexConfig.Field("y position of the reference point in the detector in pixels "
@@ -100,10 +102,10 @@ class DetectorConfig(pexConfig.Config):
 
     @property
     def offset(self):
-        """Return the detector offset as a Point2D from the separate config
+        """Return the detector offset as a Point3D from the separate config
         values.
         """
-        return geom.Point2D(self.offset_x, self.offset_y)
+        return geom.Point3D(self.offset_x, self.offset_y, self.offset_z)
 
     @property
     def refPos(self):

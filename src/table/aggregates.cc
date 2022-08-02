@@ -54,6 +54,32 @@ void PointKey<T>::set(BaseRecord &record, lsst::geom::Point<T, 2> const &value) 
 template class PointKey<int>;
 template class PointKey<double>;
 
+//============ Point3Key ====================================================================================
+
+template <typename T>
+Point3Key<T> Point3Key<T>::addFields(Schema &schema, std::string const &name, std::string const &doc,
+                                     std::string const &unit) {
+    Key<T> xKey = schema.addField<T>(schema.join(name, "x"), doc, unit);
+    Key<T> yKey = schema.addField<T>(schema.join(name, "y"), doc, unit);
+    Key<T> zKey = schema.addField<T>(schema.join(name, "z"), doc, unit);
+    return Point3Key<T>(xKey, yKey, zKey);
+}
+
+template <typename T>
+lsst::geom::Point<T, 3> Point3Key<T>::get(BaseRecord const &record) const {
+    return lsst::geom::Point<T, 3>(record.get(_x), record.get(_y), record.get(_z));
+}
+
+template <typename T>
+void Point3Key<T>::set(BaseRecord &record, lsst::geom::Point<T, 3> const &value) const {
+    record.set(_x, value.getX());
+    record.set(_y, value.getY());
+    record.set(_z, value.getZ());
+}
+
+template class Point3Key<int>;
+template class Point3Key<double>;
+
 //============ BoxKey =====================================================================================
 
 template <typename Box>
