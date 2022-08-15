@@ -114,11 +114,11 @@ class MultibandExposure(MultibandTripleBase):
 
         Parameters
         ----------
-        butler: `Butler`
+        butler: `lsst.daf.butler.Butler`
             Butler connection to use to load the single band
             calibrated images
         filters: `list` or `str`
-            List of filter names for each band
+            List of bands.
         filterKwargs: `dict`
             Keyword arguments to pass to the Butler
             that are different for each filter.
@@ -143,7 +143,7 @@ class MultibandExposure(MultibandTripleBase):
             if filterKwargs is not None:
                 for key, value in filterKwargs:
                     kwargs[key] = value[f]
-            exposures.append(butler.get(*args, filter=f, **kwargs))
+            exposures.append(butler.get(*args, band=f, **kwargs))
         return MultibandExposure.fromExposures(filters, exposures)
 
     def computePsfKernelImage(self, position=None):
