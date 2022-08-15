@@ -401,8 +401,10 @@ class ButlerImage(FakeImageDataSource):
 
     Parameters
     ----------
-    butler : `lsst.daf.persistence.Butler` or `None`
-        The butler to use. If `None`, an empty image is returned.
+    butler : `lsst.daf.butler.Butler` or `None`
+        The butler to use. If `None`, an empty image is returned. Assumes that
+        the instrument was specified during butler construction or is included
+        in the ``kwargs`` parameter.
     type : `str`
         The type of image to read (e.g. raw, bias, flat, calexp).
     isTrimmed : `bool`
@@ -412,11 +414,11 @@ class ButlerImage(FakeImageDataSource):
     background : `float`
         The value of any pixels that lie outside the CCDs.
     callback : callable
-        A function called with (image, ccd, butler) for every image, which
+        A function called with (image, detector, butler) for every image, which
         returns the image to be displayed (e.g. rawCallback). The image must
         be of the correct size, allowing for the value of isTrimmed.
     *args : `list`
-        Passed to the butler.
+        Passed to the base class constructor.
     **kwargs : `dict`
         Passed to the butler.
 
@@ -430,7 +432,7 @@ class ButlerImage(FakeImageDataSource):
     def __init__(self, butler=None, type="raw",
                  isTrimmed=True, verbose=False, background=numpy.nan,
                  callback=None, *args, **kwargs):
-        super(ButlerImage, self).__init__(*args)
+        super().__init__(*args)
         self.isTrimmed = isTrimmed
         self.type = type
         self.butler = butler
@@ -463,19 +465,14 @@ class ButlerImage(FakeImageDataSource):
         im = None
         if self.butler is not None:
             err = None
-            for dataId in [dict(detector=ccd.getId()), dict(ccd=ccd.getId()), dict(ccd=ccd.getName())]:
-                try:
-                    im = self.butler.get(self.type, dataId, **self.kwargs)
-                except FitsError as e:  # no point trying another dataId
-                    err = IOError(e.args[0].split('\n')[0])  # It's a very chatty error
-                    break
-                except Exception as e:  # try a different dataId
-                    if err is None:
-                        err = e
-                    continue
-                else:
-                    ccd = im.getDetector()  # possibly modified by assembleCcdTask
-                    break
+            try:
+                im = self.butler.get(self.type, detector=ccd.getId(), **self.kwargs)
+            except FitsError as e:
+                err = IOError(e.args[0].split('\n')[0])  # It's a very chatty error
+            except Exception as e:  # try a different dataId
+                err = e
+            else:
+                ccd = im.getDetector()  # possibly modified by assembleCcdTask
 
             if im:
                 if asMaskedImage:
