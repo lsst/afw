@@ -480,17 +480,14 @@ to load an exposure from a file:
 .. code-block:: python
 
     from lsst.afw.image import MultibandExposure
-    from lsst.daf.persistence import Butler
+    from lsst.daf.butler import Butler
 
-    # This is an example dataset on lsstdev which may be out of date,
-    # replace with a local dataset
-    DATA_DIR = "/datasets/hsc/repo/rerun/RC/w_2018_22/DM-14547"
-    butler = Butler(inputs=DATA_DIR)
+    DATA_DIR = "/repo/main"
+    butler = Butler(DATA_DIR)
 
-    filters = ["G", "R","I"]
-    hscFilters = ["HSC-"+f for f in filters]
-    mExposure = MultibandExposure.fromButler(butler, hscFilters, None, "deepCoadd_calexp",
-                                             patch="1,1", tract=9813)
+    bands = ["g", "r", "i"]
+    mExposure = MultibandExposure.fromButler(butler, bands, None, "deepCoadd_calexp",
+                                             patch=42, tract=9813)
 
 MultibandFootprint
 ==================
@@ -739,7 +736,7 @@ band `HeavyFootprint` objects:
 
     # Output
     # id f_x f_y i_x i_y peakValue
-    #    pix pix pix pix     ct   
+    #    pix pix pix pix     ct
     #--- --- --- --- --- ---------
     # 16 1.0 1.0   1   1       1.0
     # 17 3.0 3.0   3   3       2.0
