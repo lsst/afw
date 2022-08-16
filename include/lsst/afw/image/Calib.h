@@ -43,6 +43,14 @@ namespace lsst {
 namespace afw {
 namespace image {
 
+// NOTE: This value has been kept for backwards compatibility with old Calib conversions.
+// It is not precise and should not be hard coded in new code. Instead, use astropy in python:
+//
+//    import astropy.units as u
+//    magnitude = <array or single magnitude value>
+//    (magnitude*u.ABmag).to_value(u.nJy)
+//
+// or see `cpputils/include/lsst/cpputils/Magnitude.h` for C++ flux/magnitude conversion tools.
 static double const JanskysPerABFlux = 3631.0;
 
 /// Compute AB magnitude from flux in Janskys
