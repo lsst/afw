@@ -401,8 +401,8 @@ void setVisitInfoMetadata(daf::base::PropertyList& metadata, VisitInfo const& vi
               "Short name of the instrument that took this data");
     if (visitInfo.getId() != 0) {
         metadata.set("IDNUM", visitInfo.getId(), "identifier of this full focal plane exposure");
-    setDouble(metadata, "FOCUSZ", visitInfo.getFocusZ(), "Defocal Distance (mm)");
     }
+    setDouble(metadata, "FOCUSZ", visitInfo.getFocusZ(), "Defocal distance (mm)");
 }
 
 }  // namespace detail
