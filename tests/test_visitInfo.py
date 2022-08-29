@@ -66,6 +66,7 @@ def makeVisitInfo(data):
                               data.instrumentLabel,
                               data.id,
                               data.focusZ,
+                              data.observationType
                               )
 
 
@@ -97,6 +98,7 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
                   'instrumentLabel',
                   'id',
                   'focusZ',
+                  'observationType',
                   ]
         VisitInfoData = collections.namedtuple("VisitInfoData", fields)
         data1 = VisitInfoData(exposureId=10313423,
@@ -119,6 +121,7 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
                               instrumentLabel="TestCameraOne",
                               id=987654,
                               focusZ=1.5,
+                              observationType="flat",
                               )
         self.data1 = data1
         self.localEra1, self.hourAngle1 = computeLstHA(data1)
@@ -141,6 +144,7 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
                               instrumentLabel="TestCameraTwo",
                               id=123456,
                               focusZ=-0.7,
+                              observationType="science",
                               )
         self.data2 = data2
         self.localEra2, self.hourAngle2 = computeLstHA(data2)
@@ -168,6 +172,7 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(visitInfo.getBoresightHourAngle(), hourAngle)
         self.assertEqual(visitInfo.getId(), data.id)
         self.assertEqual(visitInfo.getFocusZ(), data.focusZ)
+        self.assertEqual(visitInfo.getObservationType(), data.observationType)
 
     def _testProperties(self, data, localEra, hourAngle):
         """Test property attribute accessors."""
@@ -189,6 +194,7 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(visitInfo.boresightHourAngle, hourAngle)
         self.assertEqual(visitInfo.id, data.id)
         self.assertEqual(visitInfo.focusZ, data.focusZ)
+        self.assertEqual(visitInfo.observationType, data.observationType)
 
     def testValueConstructor_data1(self):
         self._testValueConstructor(self.data1, self.localEra1, self.hourAngle1)
@@ -254,6 +260,10 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
             self.assertEqual(visitInfo.getFocusZ(), data.focusZ)
         else:
             self.assertTrue(math.isnan(visitInfo.getFocusZ()))
+        if version >= 4:
+            self.assertEqual(visitInfo.getObservationType(), data.observationType)
+        else:
+            self.assertEqual(visitInfo.getObservationType(), "")
 
     def testPersistenceVersions(self):
         """Test that older versions are handled appropriately.
@@ -265,13 +275,14 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
         self._testFitsRead(self.data1, os.path.join(dataDir, "visitInfo-version-1.fits"), 1)
         self._testFitsRead(self.data1, os.path.join(dataDir, "visitInfo-version-2.fits"), 2)
         self._testFitsRead(self.data1, os.path.join(dataDir, "visitInfo-version-3.fits"), 3)
+        self._testFitsRead(self.data1, os.path.join(dataDir, "visitInfo-version-4.fits"), 4)
 
     def testSetVisitInfoMetadata(self):
         for item in (self.data1, self.data2):
             visitInfo = makeVisitInfo(item)
             metadata = PropertyList()
             afwImage.setVisitInfoMetadata(metadata, visitInfo)
-            self.assertEqual(metadata.nameCount(), 23)
+            self.assertEqual(metadata.nameCount(), 24)
             self.assertEqual(metadata.getScalar("EXPID"), item.exposureId)
             self.assertEqual(metadata.getScalar("EXPTIME"), item.exposureTime)
             self.assertEqual(metadata.getScalar("DARKTIME"), item.darkTime)
@@ -312,6 +323,8 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
                              item.id)
             self.assertEqual(metadata.getScalar("FOCUSZ"),
                              item.focusZ)
+            self.assertEqual(metadata.getScalar("OBSTYPE"),
+                             item.observationType)
 
     def testSetVisitInfoMetadataMissingValues(self):
         """If a value is unknown then it should not be written to the metadata"""
@@ -329,7 +342,7 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
             afwImage.setVisitInfoMetadata(metadata, visitInfo)
             # add an extra keyword that will not be stripped
             metadata.set("EXTRA", 5)
-            self.assertEqual(metadata.nameCount(), 24)
+            self.assertEqual(metadata.nameCount(), 25)
             afwImage.stripVisitInfoKeywords(metadata)
             self.assertEqual(metadata.nameCount(), 1)
 
@@ -364,6 +377,7 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(visitInfo.getInstrumentLabel(), "")
         self.assertEqual(visitInfo.getId(), 0)
         self.assertTrue(math.isnan(visitInfo.getFocusZ()))
+        self.assertEqual(visitInfo.getObservationType(), "")
 
     def testEquals(self):
         """Test that identical VisitInfo objects compare equal, even if some fields are NaN.
@@ -525,6 +539,10 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
         visitInfo = afwImage.VisitInfo(metadata)
         self.assertEqual(visitInfo.getFocusZ(), data.focusZ)
 
+        metadata = propertySetFromDict({"OBSTYPE": data.observationType})
+        visitInfo = afwImage.VisitInfo(metadata)
+        self.assertEqual(visitInfo.getObservationType(), data.observationType)
+
     def testConstructorKeywordArguments(self):
         """Test VisitInfo with named arguments"""
         data = self.data1
@@ -584,6 +602,9 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
 
         visitInfo = afwImage.VisitInfo(focusZ=data.focusZ)
         self.assertEqual(visitInfo.getFocusZ(), data.focusZ)
+
+        visitInfo = afwImage.VisitInfo(observationType=data.observationType)
+        self.assertEqual(visitInfo.getObservationType(), data.observationType)
 
     def testGoodRotTypes(self):
         """Test round trip of all valid rot types"""

@@ -59,7 +59,8 @@ namespace {
 // 1: file versioning, instrument label
 // 2: id field
 // 3: focusZ field
-int constexpr SERIALIZATION_VERSION = 3;
+// 4: observationType field
+int constexpr SERIALIZATION_VERSION = 4;
 
 auto const nan = std::numeric_limits<double>::quiet_NaN();
 
@@ -225,6 +226,8 @@ public:
 
     table::Key<double> focusZ;
 
+    table::Key<std::string> observationType;
+
     static std::string const VERSION_KEY;
 
     static VisitInfoSchema const& get() {
@@ -288,7 +291,10 @@ private:
               idnum(schema.addField<table::RecordId>("idnum", "identifier of this full focal plane exposure",
                                                      "")),
 
-              focusZ(schema.addField<double>("focusz", "defocal distance", "mm")) {}
+              focusZ(schema.addField<double>("focusz", "defocal distance", "mm")),
+
+              observationType(schema.addField<std::string>(
+                      "observationType", "type of this observation (e.g. science, flat, bias)", "", 0)) {}
 };
 std::string const VisitInfoSchema::VERSION_KEY = "version";
 
@@ -310,6 +316,7 @@ public:
         std::string instrumentLabel = version >= 1 ? record.get(keys.instrumentLabel) : "";
         table::RecordId id = version >= 2 ? record.get(keys.idnum) : 0;
         double focusZ = version >= 3 ? record.get(keys.focusZ) : nan;
+        std::string observationType = version >= 4 ? record.get(keys.observationType) : "";
 
         std::shared_ptr<VisitInfo> result(
                 new VisitInfo(record.get(keys.exposureId), record.get(keys.exposureTime),
@@ -323,7 +330,7 @@ public:
                                                  record.get(keys.elevation)),
                               coord::Weather(record.get(keys.airTemperature), record.get(keys.airPressure),
                                              record.get(keys.humidity)),
-                              instrumentLabel, id, focusZ));
+                              instrumentLabel, id, focusZ, observationType));
         return result;
     }
 
@@ -357,7 +364,7 @@ int stripVisitInfoKeywords(daf::base::PropertySet& metadata) {
                                         "TIME-MID", "MJD-AVG-UT1", "AVG-ERA",      "BORE-RA",     "BORE-DEC",
                                         "BORE-AZ",  "BORE-ALT",    "BORE-AIRMASS", "BORE-ROTANG", "ROTTYPE",
                                         "OBS-LONG", "OBS-LAT",     "OBS-ELEV",     "AIRTEMP",     "AIRPRESS",
-                                        "HUMIDITY", "INSTRUMENT",  "IDNUM",        "FOCUSZ"};
+                                        "HUMIDITY", "INSTRUMENT",  "IDNUM",        "FOCUSZ",      "OBSTYPE"};
     for (auto&& key : keyList) {
         if (metadata.exists(key)) {
             metadata.remove(key);
@@ -403,6 +410,7 @@ void setVisitInfoMetadata(daf::base::PropertyList& metadata, VisitInfo const& vi
         metadata.set("IDNUM", visitInfo.getId(), "identifier of this full focal plane exposure");
     }
     setDouble(metadata, "FOCUSZ", visitInfo.getFocusZ(), "Defocal distance (mm)");
+    setString(metadata, "OBSTYPE", visitInfo.getObservationType(), "Type of this observation");
 }
 
 }  // namespace detail
@@ -427,7 +435,8 @@ VisitInfo::VisitInfo(daf::base::PropertySet const& metadata)
                    getDouble(metadata, "HUMIDITY")),
           _instrumentLabel(getString(metadata, "INSTRUMENT")),
           _id(0),
-          _focusZ(getDouble(metadata, "FOCUSZ")) {
+          _focusZ(getDouble(metadata, "FOCUSZ")),
+          _observationType(getString(metadata, "OBSTYPE")) {
     auto key = "EXPID";
     if (metadata.exists(key)) {
         _exposureId = metadata.getAsInt64(key);
@@ -509,14 +518,14 @@ bool VisitInfo::operator==(VisitInfo const& other) const {
            _eqOrNan(_boresightRotAngle, other.getBoresightRotAngle()) && _rotType == other.getRotType() &&
            _observatory == other.getObservatory() && _weather == other.getWeather() &&
            _instrumentLabel == other.getInstrumentLabel() && _id == other.getId() &&
-           _eqOrNan(_focusZ, other.getFocusZ());
+           _eqOrNan(_focusZ, other.getFocusZ()) && _observationType == other.getObservationType();
 }
 
 std::size_t VisitInfo::hash_value() const noexcept {
     // Completely arbitrary seed
     return utils::hashCombine(17, _exposureId, _exposureTime, _darkTime, _date, _ut1, _era, _boresightRaDec,
                               _boresightAzAlt, _boresightAirmass, _boresightRotAngle, _rotType, _observatory,
-                              _weather, _instrumentLabel, _id, _focusZ);
+                              _weather, _instrumentLabel, _id, _focusZ, _observationType);
 }
 
 std::string VisitInfo::getPersistenceName() const { return getVisitInfoPersistenceName(); }
@@ -550,6 +559,7 @@ void VisitInfo::write(OutputArchiveHandle& handle) const {
     record->set(keys.version, SERIALIZATION_VERSION);
     record->set(keys.idnum, getId());
     record->set(keys.focusZ, getFocusZ());
+    record->set(keys.observationType, getObservationType());
     handle.saveCatalog(cat);
 }
 
@@ -598,7 +608,8 @@ std::string VisitInfo::toString() const {
     buffer << "weather=" << getWeather() << ", ";
     buffer << "instrumentLabel='" << getInstrumentLabel() << "', ";
     buffer << "id=" << getId() << ", ";
-    buffer << "focusZ=" << getFocusZ();
+    buffer << "focusZ=" << getFocusZ() << ", ";
+    buffer << "observationType='" << getObservationType() << "'";
     buffer << ")";
     return buffer.str();
 }

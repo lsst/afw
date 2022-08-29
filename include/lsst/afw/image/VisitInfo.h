@@ -89,6 +89,7 @@ public:
      * @param[in] id  Identifier of this full focal plane data.
      * @param[in] focusZ Defocal distance of main-cam hexapod in mm. 0 is in focus.;
      *                   Extra-focal is negative while intra-focal is positive.
+     * @param[in] observationType Type of this observation (e.g. science, dark, flat, bias, focus).
      */
     // TODO: remove exposureId on DM-32138
     explicit VisitInfo(table::RecordId exposureId, double exposureTime, double darkTime,
@@ -97,8 +98,8 @@ public:
                        lsst::geom::SpherePoint const &boresightAzAlt, double boresightAirmass,
                        lsst::geom::Angle const &boresightRotAngle, RotType const &rotType,
                        coord::Observatory const &observatory, coord::Weather const &weather,
-                       std::string const &instrumentLabel, table::RecordId const &id,
-                       double focusZ)
+                       std::string const &instrumentLabel, table::RecordId const &id, double focusZ,
+                       std::string const &observationType)
             : _exposureId(exposureId),
               _exposureTime(exposureTime),
               _darkTime(darkTime),
@@ -114,7 +115,8 @@ public:
               _weather(weather),
               _instrumentLabel(instrumentLabel),
               _id(id),
-              _focusZ(focusZ){};
+              _focusZ(focusZ),
+              _observationType(observationType){};
 
     explicit VisitInfo(daf::base::PropertySet const &metadata);
 
@@ -200,6 +202,8 @@ public:
     // get defocal distance (mm)
     double getFocusZ() const { return _focusZ; }
 
+    std::string getObservationType() const { return _observationType; }
+
     /**
      * Get parallactic angle at the boresight
      *
@@ -246,6 +250,7 @@ private:
     std::string _instrumentLabel;
     table::RecordId _id;
     double _focusZ;
+    std::string _observationType;
 };
 
 std::ostream &operator<<(std::ostream &os, VisitInfo const &visitInfo);
