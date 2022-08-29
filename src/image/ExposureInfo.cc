@@ -157,19 +157,14 @@ void ExposureInfo::setId(table::RecordId id) {
 
 void ExposureInfo::clearId() noexcept { _exposureId.reset(); }
 
-
 typehandling::Key<std::string, std::shared_ptr<FilterLabel const>> const ExposureInfo::KEY_FILTER =
         typehandling::makeKey<std::shared_ptr<FilterLabel const>>("FILTER"s);
 bool ExposureInfo::hasFilterLabel() const { return hasFilter(); }
 std::shared_ptr<FilterLabel const> ExposureInfo::getFilterLabel() const { return getFilter(); }
-void ExposureInfo::setFilterLabel(std::shared_ptr<FilterLabel const> label) {
-    setFilter(label);
-}
+void ExposureInfo::setFilterLabel(std::shared_ptr<FilterLabel const> label) { setFilter(label); }
 bool ExposureInfo::hasFilter() const { return hasComponent(KEY_FILTER); }
 std::shared_ptr<FilterLabel const> ExposureInfo::getFilter() const { return getComponent(KEY_FILTER); }
-void ExposureInfo::setFilter(std::shared_ptr<FilterLabel const> label) {
-    setComponent(KEY_FILTER, label);
-}
+void ExposureInfo::setFilter(std::shared_ptr<FilterLabel const> label) { setComponent(KEY_FILTER, label); }
 
 int ExposureInfo::getFitsSerializationVersion() {
     // Version history:
