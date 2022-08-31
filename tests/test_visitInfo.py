@@ -66,7 +66,11 @@ def makeVisitInfo(data):
                               data.instrumentLabel,
                               data.id,
                               data.focusZ,
-                              data.observationType
+                              data.observationType,
+                              data.scienceProgram,
+                              data.observationReason,
+                              data.object,
+                              data.hasSimulatedContent,
                               )
 
 
@@ -99,6 +103,10 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
                   'id',
                   'focusZ',
                   'observationType',
+                  "scienceProgram",
+                  "observationReason",
+                  "object",
+                  "hasSimulatedContent",
                   ]
         VisitInfoData = collections.namedtuple("VisitInfoData", fields)
         data1 = VisitInfoData(exposureId=10313423,
@@ -122,6 +130,10 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
                               id=987654,
                               focusZ=1.5,
                               observationType="flat",
+                              scienceProgram="test program",
+                              observationReason="test reason",
+                              object="test object",
+                              hasSimulatedContent=False,
                               )
         self.data1 = data1
         self.localEra1, self.hourAngle1 = computeLstHA(data1)
@@ -145,6 +157,10 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
                               id=123456,
                               focusZ=-0.7,
                               observationType="science",
+                              scienceProgram="test program 2",
+                              observationReason="test reason 2",
+                              object="test object 2",
+                              hasSimulatedContent=True,
                               )
         self.data2 = data2
         self.localEra2, self.hourAngle2 = computeLstHA(data2)
@@ -173,6 +189,10 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(visitInfo.getId(), data.id)
         self.assertEqual(visitInfo.getFocusZ(), data.focusZ)
         self.assertEqual(visitInfo.getObservationType(), data.observationType)
+        self.assertEqual(visitInfo.getScienceProgram(), data.scienceProgram)
+        self.assertEqual(visitInfo.getObservationReason(), data.observationReason)
+        self.assertEqual(visitInfo.getObject(), data.object)
+        self.assertEqual(visitInfo.getHasSimulatedContent(), data.hasSimulatedContent)
 
     def _testProperties(self, data, localEra, hourAngle):
         """Test property attribute accessors."""
@@ -195,6 +215,10 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(visitInfo.id, data.id)
         self.assertEqual(visitInfo.focusZ, data.focusZ)
         self.assertEqual(visitInfo.observationType, data.observationType)
+        self.assertEqual(visitInfo.scienceProgram, data.scienceProgram)
+        self.assertEqual(visitInfo.observationReason, data.observationReason)
+        self.assertEqual(visitInfo.object, data.object)
+        self.assertEqual(visitInfo.hasSimulatedContent, data.hasSimulatedContent)
 
     def testValueConstructor_data1(self):
         self._testValueConstructor(self.data1, self.localEra1, self.hourAngle1)
@@ -262,8 +286,16 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
             self.assertTrue(math.isnan(visitInfo.getFocusZ()))
         if version >= 4:
             self.assertEqual(visitInfo.getObservationType(), data.observationType)
+            self.assertEqual(visitInfo.getScienceProgram(), data.scienceProgram)
+            self.assertEqual(visitInfo.getObservationReason(), data.observationReason)
+            self.assertEqual(visitInfo.getObject(), data.object)
+            self.assertEqual(visitInfo.getHasSimulatedContent(), data.hasSimulatedContent)
         else:
             self.assertEqual(visitInfo.getObservationType(), "")
+            self.assertEqual(visitInfo.getScienceProgram(), "")
+            self.assertEqual(visitInfo.getObservationReason(), "")
+            self.assertEqual(visitInfo.getObject(), "")
+            self.assertEqual(visitInfo.getHasSimulatedContent(), False)
 
     def testPersistenceVersions(self):
         """Test that older versions are handled appropriately.
@@ -282,7 +314,7 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
             visitInfo = makeVisitInfo(item)
             metadata = PropertyList()
             afwImage.setVisitInfoMetadata(metadata, visitInfo)
-            self.assertEqual(metadata.nameCount(), 24)
+            self.assertEqual(metadata.nameCount(), 28)
             self.assertEqual(metadata.getScalar("EXPID"), item.exposureId)
             self.assertEqual(metadata.getScalar("EXPTIME"), item.exposureTime)
             self.assertEqual(metadata.getScalar("DARKTIME"), item.darkTime)
@@ -325,15 +357,26 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
                              item.focusZ)
             self.assertEqual(metadata.getScalar("OBSTYPE"),
                              item.observationType)
+            self.assertEqual(metadata.getScalar("PROGRAM"),
+                             item.scienceProgram)
+            self.assertEqual(metadata.getScalar("REASON"),
+                             item.observationReason)
+            self.assertEqual(metadata.getScalar("OBJECT"),
+                             item.object)
+            self.assertEqual(metadata.getScalar("HAS-SIMULATED-CONTENT"),
+                             item.hasSimulatedContent)
 
     def testSetVisitInfoMetadataMissingValues(self):
         """If a value is unknown then it should not be written to the metadata"""
-        visitInfo = afwImage.VisitInfo()  # only rot type is known
+        # Only rot type and hasSimulatedContent are "known" when default-
+        # constructed, by virtue of having no "null" state.
+        visitInfo = afwImage.VisitInfo()
         metadata = PropertyList()
         afwImage.setVisitInfoMetadata(metadata, visitInfo)
         self.assertEqual(metadata.getScalar("ROTTYPE"),
                          RotTypeEnumNameDict[afwImage.RotType.UNKNOWN])
-        self.assertEqual(metadata.nameCount(), 1)
+        self.assertEqual(metadata.getScalar("HAS-SIMULATED-CONTENT"), False)
+        self.assertEqual(metadata.nameCount(), 2)
 
     def testStripVisitInfoKeywords(self):
         for argList in (self.data1, self.data2):
@@ -342,7 +385,7 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
             afwImage.setVisitInfoMetadata(metadata, visitInfo)
             # add an extra keyword that will not be stripped
             metadata.set("EXTRA", 5)
-            self.assertEqual(metadata.nameCount(), 25)
+            self.assertEqual(metadata.nameCount(), 29)
             afwImage.stripVisitInfoKeywords(metadata)
             self.assertEqual(metadata.nameCount(), 1)
 
@@ -378,6 +421,10 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(visitInfo.getId(), 0)
         self.assertTrue(math.isnan(visitInfo.getFocusZ()))
         self.assertEqual(visitInfo.getObservationType(), "")
+        self.assertEqual(visitInfo.getScienceProgram(), "")
+        self.assertEqual(visitInfo.getObservationReason(), "")
+        self.assertEqual(visitInfo.getObject(), "")
+        self.assertEqual(visitInfo.getHasSimulatedContent(), False)
 
     def testEquals(self):
         """Test that identical VisitInfo objects compare equal, even if some fields are NaN.
@@ -543,6 +590,22 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
         visitInfo = afwImage.VisitInfo(metadata)
         self.assertEqual(visitInfo.getObservationType(), data.observationType)
 
+        metadata = propertySetFromDict({"PROGRAM": data.scienceProgram})
+        visitInfo = afwImage.VisitInfo(metadata)
+        self.assertEqual(visitInfo.getScienceProgram(), data.scienceProgram)
+
+        metadata = propertySetFromDict({"REASON": data.observationReason})
+        visitInfo = afwImage.VisitInfo(metadata)
+        self.assertEqual(visitInfo.getObservationReason(), data.observationReason)
+
+        metadata = propertySetFromDict({"OBJECT": data.object})
+        visitInfo = afwImage.VisitInfo(metadata)
+        self.assertEqual(visitInfo.getObject(), data.object)
+
+        metadata = propertySetFromDict({"HAS-SIMULATED-CONTENT": data.hasSimulatedContent})
+        visitInfo = afwImage.VisitInfo(metadata)
+        self.assertEqual(visitInfo.getHasSimulatedContent(), data.hasSimulatedContent)
+
     def testConstructorKeywordArguments(self):
         """Test VisitInfo with named arguments"""
         data = self.data1
@@ -605,6 +668,18 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
 
         visitInfo = afwImage.VisitInfo(observationType=data.observationType)
         self.assertEqual(visitInfo.getObservationType(), data.observationType)
+
+        visitInfo = afwImage.VisitInfo(scienceProgram=data.scienceProgram)
+        self.assertEqual(visitInfo.getScienceProgram(), data.scienceProgram)
+
+        visitInfo = afwImage.VisitInfo(observationReason=data.observationReason)
+        self.assertEqual(visitInfo.getObservationReason(), data.observationReason)
+
+        visitInfo = afwImage.VisitInfo(object=data.object)
+        self.assertEqual(visitInfo.getObject(), data.object)
+
+        visitInfo = afwImage.VisitInfo(hasSimulatedContent=data.hasSimulatedContent)
+        self.assertEqual(visitInfo.getHasSimulatedContent(), data.hasSimulatedContent)
 
     def testGoodRotTypes(self):
         """Test round trip of all valid rot types"""
