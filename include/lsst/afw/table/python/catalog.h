@@ -99,6 +99,46 @@ void _setFlagColumnToScalar(
     }
 }
 
+// Custom safe Python iterator for Catalog.  See Catalog.__iter__ wrapper
+// for details.
+template <typename Record>
+class PyCatalogIndexIterator {
+public:
+
+    using value_type = std::shared_ptr<Record>;
+    using reference = std::shared_ptr<Record>;
+    using difference_type = std::ptrdiff_t;
+    using iterator_category = std::input_iterator_tag;
+
+    PyCatalogIndexIterator(CatalogT<Record> const * catalog, std::size_t index) : _catalog(catalog), _index(index) {}
+
+    std::shared_ptr<Record> operator*() const {
+        if (_index < _catalog->size()) {
+            return _catalog->get(_index);
+        }
+        throw std::out_of_range(
+            "Catalog shrunk during iteration, invalidating this iterator."
+        );
+    }
+
+    PyCatalogIndexIterator & operator++() {
+        ++_index;
+        return *this;
+    }
+
+    bool operator==(PyCatalogIndexIterator const & other) const {
+        return _catalog == other._catalog && _index == other._index;
+    }
+
+    bool operator!=(PyCatalogIndexIterator const & other) const {
+        return !(*this == other);
+    }
+
+private:
+    CatalogT<Record> const * _catalog;
+    std::size_t _index;
+};
+
 /**
  * Declare field-type-specific overloaded catalog member functions for one field type
  *
@@ -243,27 +283,36 @@ PyCatalog<Record> declareCatalog(utils::python::WrapperCollection &wrappers, std
                     return self.get(utils::python::cppIndex(self.size(), i));
                 });
                 cls.def("__iter__", [](Catalog & self) {
-                    // We use `self.getInternal()` to access C++ iterators
-                    // that yields `shared_ptr<Record>`; Catalog's own iterator
-                    // class is a wrapper that dereferences, but that just
-                    // gets in the way of pybind11's reference management.
+                    // We wrap a custom iterator class here for two reasons:
+                    //
+                    // - letting Python define an automatic iterator that
+                    //   delegates to __getitem__(int) is super slow, because
+                    //   __getitem__ is overloaded;
+                    //
+                    // - using pybind11::make_iterator on either Catalog's own
+                    //   iterator type or Catalog.getInternal()'s iterator (a
+                    //   std::vector iterator) opens us up to undefined
+                    //   behavior if a modification to the container those
+                    //   iterators during iteration.
+                    //
+                    // Our custom iterator holds a Catalog and an integer
+                    // index, allowing it to do a bounds check at ever access,
+                    // but unlike its Python equivalent there's no overloading
+                    // in play (and even if it was, C++ overloading is resolved
+                    // at compile-time).
+                    //
+                    // This custom iterator also yields `shared_ptr<Record>`.
                     // That should make the return value policy passed to
                     // `py::make_iterator` irrelevant; we don't need to keep
                     // the catalog alive in order to keep a record alive,
                     // because the `shared_ptr` manages the record's lifetime.
                     // But we still need keep_alive on the `__iter__` method
-                    // itself to keep the catalog alive as long as the iterator
-                    // is alive.
-                    //
-                    // There is still one way this can fail, however: modifying
-                    // the catalog (adding rows or removing them) *may*
-                    // invalidate the C++ iterators, making any use of them
-                    // undefined behavior, and there's nothing pybind11 can do
-                    // to stop that.  Modifying a sequence during iteration is
-                    // prohibited more generally in Python, so this is probably
-                    // ok, but it is worth noting that the penalty for doing so
-                    // here is much worse than a friendly Python exception.
-                    return py::make_iterator(self.getInternal().begin(), self.getInternal().end());
+                    // itself to keep the raw catalog pointer alive as long as
+                    // the iterator is alive.
+                    return py::make_iterator(
+                        PyCatalogIndexIterator<Record>(&self, 0),
+                        PyCatalogIndexIterator<Record>(&self, self.size())
+                    );
                 }, py::keep_alive<0, 1>());
                 cls.def("isContiguous", &Catalog::isContiguous);
                 cls.def("writeFits",
