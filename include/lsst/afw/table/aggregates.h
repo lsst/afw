@@ -118,7 +118,87 @@ using Point2IKey = PointKey<int>;
 using Point2DKey = PointKey<double>;
 
 /**
- *  A FunctorKey used to get or set a lsst::geom::Box2I or Box2D from a (min, max) pair of PointKeys.
+ *  A FunctorKey used to get or set a lsst::geom::Point3 from an (x,y,z) tuple of int or double Keys.
+ */
+template <typename T>
+class Point3Key : public FunctorKey<lsst::geom::Point<T, 3> > {
+public:
+    /**
+     *  Add a pair of _x, _y, _z fields to a Schema, and return a Point3Key that points to them.
+     *
+     *  @param[in,out] schema  Schema to add fields to.
+     *  @param[in]     name    Name prefix for all fields; "_x", "_y", "_z" will be appended to this
+     *                         to form the full field names.
+     *  @param[in]     doc     String used as the documentation for the fields.
+     *  @param[in]     unit    String used as the unit for all fields.
+     */
+    static Point3Key addFields(Schema& schema, std::string const& name, std::string const& doc,
+                               std::string const& unit);
+
+    /// Default constructor; instance will not be usable unless subsequently assigned to.
+    Point3Key() noexcept : _x(), _y(), _z() {}
+
+    /// Construct from a pair of Keys
+    Point3Key(Key<T> const& x, Key<T> const& y, Key<T> const& z) noexcept : _x(x), _y(y), _z(z) {}
+
+    Point3Key(Point3Key const&) noexcept = default;
+    Point3Key(Point3Key&&) noexcept = default;
+    Point3Key& operator=(Point3Key const&) noexcept = default;
+    Point3Key& operator=(Point3Key&&) noexcept = default;
+    ~Point3Key() noexcept override = default;
+
+    /**
+     *  Construct from a subschema, assuming x and y subfields
+     *
+     *  If a schema has "a_x", "a_y", and "a_z" fields, this constructor allows you to construct
+     *  a Point3Key via:
+     *
+     *      Point3Key<T> k(schema["a"]);
+     */
+    Point3Key(SubSchema const& s) : _x(s["x"]), _y(s["y"]), _z(s["z"]) {}
+
+    /// Get a Point from the given record
+    lsst::geom::Point<T, 3> get(BaseRecord const& record) const override;
+
+    /// Set a Point in the given record
+    void set(BaseRecord& record, lsst::geom::Point<T, 3> const& value) const override;
+
+    //@{
+    /// Compare the FunctorKey for equality with another, using the underlying x, y, and z Keys
+    bool operator==(Point3Key<T> const& other) const noexcept {
+        return _x == other._x && _y == other._y && _z == other._z; }
+    bool operator!=(Point3Key<T> const& other) const noexcept { return !(*this == other); }
+    //@}
+
+    /// Return a hash of this object.
+    std::size_t hash_value() const noexcept {
+        // Completely arbitrary seed
+        return utils::hashCombine(137, _x, _y, _z);
+    }
+
+    /// Return True if all of the x, y, and z Keys are valid.
+    bool isValid() const noexcept { return _x.isValid() && _y.isValid() && _z.isValid(); }
+
+    /// Return the underlying x Key
+    Key<T> getX() const noexcept { return _x; }
+
+    /// Return the underlying y Key
+    Key<T> getY() const noexcept { return _y; }
+
+    /// Return the underlying y Key
+    Key<T> getZ() const noexcept { return _z; }
+
+private:
+    Key<T> _x;
+    Key<T> _y;
+    Key<T> _z;
+};
+
+using Point3IKey = Point3Key<int>;
+using Point3DKey = Point3Key<double>;
+
+/**
+ *  A FunctorKey used to get or set a lsst::geom::Box2I or Box2D from a (min, max) pair of Point3Keys.
  *
  *  The Box2IKey and Box2DKey typedefs should be preferred to using the template name directly.
  */

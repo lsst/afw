@@ -34,7 +34,7 @@ from lsst.afw.cameraGeom import Orientation
 class OrientationWrapper:
 
     def __init__(self,
-                 fpPosition=lsst.geom.Point2D(0, 0),
+                 fpPosition=lsst.geom.Point3D(0, 0, 0),
                  refPoint=lsst.geom.Point2D(-0.5, -0.5),
                  yaw=lsst.geom.Angle(0),
                  pitch=lsst.geom.Angle(0),
@@ -57,6 +57,8 @@ class OrientationTestCase(lsst.utils.tests.TestCase):
         for i in range(2):
             self.assertAlmostEqual(0, orient.getFpPosition()[i])
             self.assertAlmostEqual(-0.5, orient.getReferencePoint()[i])
+        for i in range(3):
+            self.assertAlmostEqual(0, orient.getFpPosition3()[i])
         zeroAngle = lsst.geom.Angle(0)
         self.assertAlmostEqual(zeroAngle, orient.getYaw())
         self.assertAlmostEqual(zeroAngle, orient.getRoll())
@@ -75,7 +77,7 @@ class OrientationTestCase(lsst.utils.tests.TestCase):
         """Test the getNQuarter method
         """
         refPos = lsst.geom.Point2D(0., 0.)
-        fpPos = lsst.geom.Point2D(0., 0.)
+        fpPos = lsst.geom.Point3D(0., 0., 0.)
         angles = ((0., 0), (90., 1), (180., 2), (270., 3), (360., 4),
                   (0.1, 0), (44.9, 0), (45.1, 1), (89.9, 1), (90.1, 1),
                   (134.9, 1), (135.1, 2), (179.9, 2), (180.1, 2), (224.9, 2),
@@ -115,21 +117,38 @@ class OrientationTestCase(lsst.utils.tests.TestCase):
     def testGetters(self):
         """Test getters
         """
-        ow = OrientationWrapper(
+        ow1 = OrientationWrapper(
+            fpPosition=lsst.geom.Point3D(0.1, -0.2, 0.3),
+            refPoint=lsst.geom.Point2D(-5.7, 42.3),
+            yaw=lsst.geom.Angle(-0.53),
+            pitch=lsst.geom.Angle(0.234),
+            roll=lsst.geom.Angle(1.2),
+        )
+        # Verify Point2D fpPosition ctor works too
+        ow2 = OrientationWrapper(
             fpPosition=lsst.geom.Point2D(0.1, -0.2),
             refPoint=lsst.geom.Point2D(-5.7, 42.3),
             yaw=lsst.geom.Angle(-0.53),
             pitch=lsst.geom.Angle(0.234),
             roll=lsst.geom.Angle(1.2),
         )
-        for i in range(2):
-            self.assertAlmostEqual(
-                ow.fpPosition[i], ow.orient.getFpPosition()[i])
-            self.assertAlmostEqual(
-                ow.refPoint[i], ow.orient.getReferencePoint()[i])
-        self.assertAlmostEqual(ow.yaw, ow.orient.getYaw())
-        self.assertAlmostEqual(ow.roll, ow.orient.getRoll())
-        self.assertAlmostEqual(ow.pitch, ow.orient.getPitch())
+        for ow in [ow1, ow2]:
+            for i in range(2):
+                self.assertAlmostEqual(
+                    ow.fpPosition[i], ow.orient.getFpPosition()[i])
+                self.assertAlmostEqual(
+                    ow.refPoint[i], ow.orient.getReferencePoint()[i])
+            for i in range(3):
+                if isinstance(ow.fpPosition, lsst.geom.Point3D) or i < 2:
+                    self.assertAlmostEqual(
+                        ow.fpPosition[i], ow.orient.getFpPosition3()[i])
+                else:
+                    self.assertEqual(0.0, ow.orient.getFpPosition3()[2])
+                    self.assertEqual(0.0, ow.orient.getHeight())
+
+            self.assertAlmostEqual(ow.yaw, ow.orient.getYaw())
+            self.assertAlmostEqual(ow.roll, ow.orient.getRoll())
+            self.assertAlmostEqual(ow.pitch, ow.orient.getPitch())
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):

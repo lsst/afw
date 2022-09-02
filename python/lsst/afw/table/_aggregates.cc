@@ -56,6 +56,9 @@ namespace {
 template <typename T>
 using PyPointKey = py::class_<PointKey<T>, std::shared_ptr<PointKey<T>>>;
 
+template <typename T>
+using PyPoint3Key = py::class_<Point3Key<T>, std::shared_ptr<Point3Key<T>>>;
+
 template <typename Box>
 using PyBoxKey = py::class_<BoxKey<Box>, std::shared_ptr<BoxKey<Box>>>;
 
@@ -85,6 +88,25 @@ static void declarePointKey(WrapperCollection &wrappers, std::string const &suff
                 cls.def("set", [](PointKey<T> &self, BaseRecord &record,
                                   lsst::geom::Point<T, 2> const &value) { return self.set(record, value); });
                 cls.def("get", &PointKey<T>::get);
+            });
+};
+
+template <typename T>
+static void declarePoint3Key(WrapperCollection &wrappers, std::string const &suffix) {
+    wrappers.wrapType(
+            PyPoint3Key<T>(wrappers.module, ("Point3" + suffix + "Key").c_str()), [](auto &mod, auto &cls) {
+                cls.def(py::init<>());
+                cls.def(py::init<Key<T> const &, Key<T> const &, Key<T> const &>(), "x"_a, "y"_a, "z"_a);
+                cls.def(py::init<SubSchema const &>());
+                cls.def("__eq__", &Point3Key<T>::operator==, py::is_operator());
+                cls.def("__ne__", &Point3Key<T>::operator!=, py::is_operator());
+                cls.def("getX", &Point3Key<T>::getX);
+                cls.def("getY", &Point3Key<T>::getY);
+                cls.def("isValid", &Point3Key<T>::isValid);
+                cls.def_static("addFields", &Point3Key<T>::addFields, "schema"_a, "name"_a, "doc"_a, "unit"_a);
+                cls.def("set", [](Point3Key<T> &self, BaseRecord &record,
+                                  lsst::geom::Point<T, 3> const &value) { return self.set(record, value); });
+                cls.def("get", &Point3Key<T>::get);
             });
 };
 
@@ -210,6 +232,8 @@ void wrapAggregates(WrapperCollection &wrappers) {
 
     declarePointKey<double>(wrappers, "2D");
     declarePointKey<int>(wrappers, "2I");
+    declarePoint3Key<double>(wrappers, "D");
+    declarePoint3Key<int>(wrappers, "I");
 
     declareBoxKey<lsst::geom::Box2D>(wrappers, "2D");
     declareBoxKey<lsst::geom::Box2I>(wrappers, "2I");

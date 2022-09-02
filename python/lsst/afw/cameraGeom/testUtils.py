@@ -237,6 +237,7 @@ class CameraWrapper:
             detConfig.detectorType = int(detector['detectorType'])
             detConfig.offset_x = float(detector['x'])
             detConfig.offset_y = float(detector['y'])
+            detConfig.offset_z = float(detector['z'])
             detConfig.refpos_x = float(detector['refPixPos_x'])
             detConfig.refpos_y = float(detector['refPixPos_y'])
             detConfig.yawDeg = float(detector['yaw'])

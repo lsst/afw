@@ -492,7 +492,7 @@ class SimpleSkyWcsTestCase(SkyWcsBaseTestCase):
         # use fewer CRVAL and orientations to speed up the test
         for fpPosition, yaw, addOpticalDistortion, crval, pixelOrientation, \
             flipX, projection in itertools.product(
-                (lsst.geom.Point2D(0, 0), lsst.geom.Point2D(-100, 500)),
+                (lsst.geom.Point3D(0, 0, 0), lsst.geom.Point3D(-100, 500, 1.5)),
                 (0*lsst.geom.degrees, 71*lsst.geom.degrees), (False, True),
                 self.crvalList[0:2], self.orientationList[0:2], (False, True), ("TAN", "STG")):
             with self.subTest(fpPosition=fpPosition, yaw=yaw, addOpticalDistortion=addOpticalDistortion,

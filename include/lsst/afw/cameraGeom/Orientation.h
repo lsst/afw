@@ -50,7 +50,7 @@ namespace cameraGeom {
  */
 class Orientation final {
 public:
-    explicit Orientation(lsst::geom::Point2D const fpPosition = lsst::geom::Point2D(0, 0),
+    explicit Orientation(lsst::geom::Point3D const fpPosition = lsst::geom::Point3D(0, 0, 0),
                          ///< Focal plane position of detector reference point (mm)
                          lsst::geom::Point2D const refPoint = lsst::geom::Point2D(-0.5, -0.5),
                          ///< Reference point on detector (pixels).
@@ -64,6 +64,16 @@ public:
                                  0)  ///< roll: rotation about X'' (Y''=Y' to Z''), 3rd rotation
     );
 
+
+    // Initialize with Point2D and default fpPosition_z=0.0
+    explicit Orientation(lsst::geom::Point2D const fpPosition2,
+                         lsst::geom::Point2D const refPoint = lsst::geom::Point2D(-0.5, -0.5),
+                         lsst::geom::Angle const yaw = lsst::geom::Angle(0),
+                         lsst::geom::Angle const pitch = lsst::geom::Angle(0),
+                         lsst::geom::Angle const roll = lsst::geom::Angle(0)
+    ) : Orientation(lsst::geom::Point3D(fpPosition2[0], fpPosition2[1], 0.0), refPoint, yaw, pitch, roll)
+    {}
+
     ~Orientation() noexcept;
     Orientation(Orientation const &) noexcept;
     Orientation(Orientation &&) noexcept;
@@ -71,10 +81,16 @@ public:
     Orientation &operator=(Orientation &&) noexcept;
 
     /// Return focal plane position of detector reference point (mm)
-    lsst::geom::Point2D getFpPosition() const noexcept { return _fpPosition; }
+    lsst::geom::Point2D getFpPosition() const {
+        return lsst::geom::Point2D(_fpPosition[0], _fpPosition[1]);
+    }
+
+    lsst::geom::Point3D getFpPosition3() const noexcept { return _fpPosition; }
 
     /// Return detector reference point (pixels)
     lsst::geom::Point2D getReferencePoint() const noexcept { return _refPoint; }
+
+    double getHeight() const noexcept { return _fpPosition[2]; }
 
     /// Return the yaw angle
     lsst::geom::Angle getYaw() const noexcept { return _yaw; }
@@ -107,7 +123,7 @@ public:
             ) const;
 
 private:
-    lsst::geom::Point2D _fpPosition;  ///< focal plane position of reference point on detector
+    lsst::geom::Point3D _fpPosition;  ///< focal plane position of reference point on detector
     lsst::geom::Point2D _refPoint;    ///< reference point on detector
 
     lsst::geom::Angle _yaw;    ///< yaw
