@@ -706,13 +706,24 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
         """Check that we get something reasonable for str()"""
         visitInfo = makeVisitInfo(self.data1)
         string = str(visitInfo)
-        self.assertIn("exposureId=10313423", string)
-        self.assertIn("exposureTime=10.01", string)
-        self.assertIn("darkTime=11.02", string)
-        self.assertIn("rotType=1", string)
+        self.assertEqual(string,
+                         "VisitInfo(exposureId=10313423, exposureTime=10.01, darkTime=11.02, "
+                         "date=2037-09-20T02:24:00.000000000, UT1=12345.1, ERA=0.787143 rad, "
+                         "boresightRaDec=(23.1000000000, +73.2000000000), "
+                         "boresightAzAlt=(134.5000000000, +33.3000000000), boresightAirmass=1.73, "
+                         "boresightRotAngle=1.27758 rad, rotType=1, observatory=22.2N, 11.1E  0.333, "
+                         "weather=Weather(1.1, 2.2, 34.5), instrumentLabel='TestCameraOne', "
+                         "id=987654, focusZ=1.5, observationType='flat', scienceProgram='test program', "
+                         "observationReason='test reason', object='test object', hasSimulatedContent=false)")
 
-        # Check that it at least doesn't throw
-        str(afwImage.VisitInfo())
+        # check a default-constructed VisitInfo
+        self.assertEqual(str(afwImage.VisitInfo()),
+                         "VisitInfo(exposureId=0, exposureTime=nan, darkTime=nan, "
+                         "date=<invalid>, UT1=nan, ERA=nan rad, boresightRaDec=(nan, +nan), "
+                         "boresightAzAlt=(nan, +nan), boresightAirmass=nan, boresightRotAngle=nan rad, "
+                         "rotType=0, observatory=nanN, nanE  nan, weather=Weather(nan, nan, nan), "
+                         "instrumentLabel='', id=0, focusZ=nan, observationType='', scienceProgram='', "
+                         "observationReason='', object='', hasSimulatedContent=false)")
 
     def testParallacticAngle(self):
         """Check that we get the same precomputed values for parallactic angle."""
