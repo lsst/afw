@@ -16,6 +16,7 @@
 #include <climits>
 #include <string>
 #include <set>
+#include <optional>
 
 #include <boost/format.hpp>
 
@@ -278,6 +279,21 @@ struct ImageWriteOptions {
     static std::shared_ptr<daf::base::PropertySet> validate(daf::base::PropertySet const& config);
 };
 
+
+/**
+ * @brief an enum representing the various types of FITS HDU that are available in cfitsio library
+ *
+ * This is an int because the value it maps to in cfitsio is also an int.
+ */
+
+enum class HduType : int
+{
+    IMAGE_HDU = 0,
+    ASCII_TBL = 1,
+    BINARY_TBL = 2,
+    ANY_HDU = -1
+};
+
 /**
  *  @brief A simple struct that combines the two arguments that must be passed to most cfitsio routines
  *         and contains thin and/or templated wrappers around common cfitsio routines.
@@ -324,6 +340,17 @@ public:
      *  @param[in] relative            If true, move relative to the current HDU.
      */
     void setHdu(int hdu, bool relative = false);
+
+    /**
+     *  Set the current HDU using its name, version and type
+     *
+     * @param[in] name                 The name of the HDU to move to
+     * @param[in] hdutype              The type of HDU to match. If not supplied, defaults to ANY_HDU
+     * @param[in] hduver               The value of EXTVER to match. If not supplied, defaults to 0
+     */
+    void setHdu(std::string const& name, HduType hdutype = HduType::ANY_HDU,
+                int hduver = 0);
+
 
     /// Return the number of HDUs in the file.
     int countHdus();

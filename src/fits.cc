@@ -538,6 +538,15 @@ void Fits::setHdu(int hdu, bool relative) {
     }
 }
 
+void Fits::setHdu(std::string const& name, HduType hdutype, int hduver)
+{
+    fits_movnam_hdu(reinterpret_cast<fitsfile*>(fptr), hdutype, name.c_str(), hduver, &status);
+    if(behavior & AUTO_CHECK)
+        LSST_FITS_CHECK_STATUS(*this, boost::format("Moving to named HDU %s, type %d, hduver %d") % {name, hdutype, hduver});
+
+}
+
+
 int Fits::countHdus() {
     int n = 0;
     fits_get_num_hdus(reinterpret_cast<fitsfile *>(fptr), &n, &status);
