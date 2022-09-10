@@ -538,14 +538,13 @@ void Fits::setHdu(int hdu, bool relative) {
     }
 }
 
-void Fits::setHdu(std::string const& name, HduType hdutype, int hduver)
-{
-    fits_movnam_hdu(reinterpret_cast<fitsfile*>(fptr), static_cast<int>(hdutype), const_cast<char*>(name.c_str()), hduver, &status);
-    if(behavior & AUTO_CHECK)
-        LSST_FITS_CHECK_STATUS(*this, boost::format("Moving to named HDU %s, type %d, hduver %d") % name % static_cast<int>(hdutype) % hduver);
-
+void Fits::setHdu(std::string const &name, HduType hdutype, int hduver) {
+    fits_movnam_hdu(reinterpret_cast<fitsfile *>(fptr), static_cast<int>(hdutype),
+                    const_cast<char *>(name.c_str()), hduver, &status);
+    if (behavior & AUTO_CHECK)
+        LSST_FITS_CHECK_STATUS(*this, boost::format("Moving to named HDU %s, type %d, hduver %d") % name %
+                                              static_cast<int>(hdutype) % hduver);
 }
-
 
 int Fits::countHdus() {
     int n = 0;
@@ -1691,24 +1690,22 @@ std::shared_ptr<daf::base::PropertyList> combineMetadata(
 
 using dafPlistPtr = std::shared_ptr<daf::base::PropertyList>;
 
-namespace detail
-{
-    template<typename T, typename... Args>
-    dafPlistPtr _readMetadata(T&& fitsparm, bool strip,  Args... args)
-    {
-        fits::Fits fp(fitsparm, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
-        fp.setHdu(args...);
-        return readMetadata(fp, strip);
-    }
-
+namespace detail {
+template <typename T, typename... Args>
+dafPlistPtr _readMetadata(T &&fitsparm, bool strip, Args... args) {
+    fits::Fits fp(fitsparm, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
+    fp.setHdu(args...);
+    return readMetadata(fp, strip);
 }
+
+}  // namespace detail
 
 dafPlistPtr readMetadata(std::string const &fileName, int hdu, bool strip) {
     return detail::_readMetadata(fileName, strip, hdu);
 }
 
-dafPlistPtr readMetadata(std::string const& fileName, std::string const& hduname, HduType type, int hduver, bool strip)
-{
+dafPlistPtr readMetadata(std::string const &fileName, std::string const &hduname, HduType type, int hduver,
+                         bool strip) {
     return detail::_readMetadata(fileName, strip, hduname, type, hduver);
 }
 
@@ -1716,12 +1713,10 @@ dafPlistPtr readMetadata(fits::MemFileManager &manager, int hdu, bool strip) {
     return detail::_readMetadata(manager, strip, hdu);
 }
 
-dafPlistPtr readMetadata(MemFileManager& manager, std::string const& hduname,
-                         HduType type, int hduver, bool strip)
-{
+dafPlistPtr readMetadata(MemFileManager &manager, std::string const &hduname, HduType type, int hduver,
+                         bool strip) {
     return detail::_readMetadata(manager, strip, hduname, type, hduver);
 }
-
 
 std::shared_ptr<daf::base::PropertyList> readMetadata(fits::Fits &fitsfile, bool strip) {
     auto metadata = std::make_shared<lsst::daf::base::PropertyList>();

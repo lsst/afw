@@ -283,19 +283,12 @@ struct ImageWriteOptions {
     static std::shared_ptr<daf::base::PropertySet> validate(daf::base::PropertySet const& config);
 };
 
-
 /**
  * @brief an enum representing the various types of FITS HDU that are available in cfitsio library
  *
  * This is an int because the value it maps to in cfitsio is also an int.
  */
-enum class HduType : int {
-    Image = 0,
-    AsciiTable = 1,
-    BinaryTable = 2,
-    AnyHdu = -1
-};
-
+enum class HduType : int { IMAGE = 0, ASCII_TABLE = 1, BIN_TABLE = 2, ANY = -1 };
 
 /**
  *  @brief A simple struct that combines the two arguments that must be passed to most cfitsio routines
@@ -352,8 +345,7 @@ public:
      * @param[in] hduver               The value of EXTVER to match. If not supplied, defaults to 0
      *
      */
-    void setHdu(std::string const& name, HduType hdutype = HduType::AnyHdu, int hduver = 0);
-
+    void setHdu(std::string const& name, HduType hdutype = HduType::ANY, int hduver = 0);
 
     /// Return the number of HDUs in the file.
     int countHdus();
@@ -725,7 +717,8 @@ std::shared_ptr<daf::base::PropertyList> combineMetadata(
  * @param strip if `true`, common FITS keys that usually have non-metadata intepretations
  *              (e.g. NAXIS, BITPIX) will be ignored.
  */
-std::shared_ptr<daf::base::PropertyList> readMetadata(std::string const& fileName, int hdu = DEFAULT_HDU, bool strip = false);
+std::shared_ptr<daf::base::PropertyList> readMetadata(std::string const& fileName, int hdu = DEFAULT_HDU,
+                                                      bool strip = false);
 
 /** Read FITS header
  *
@@ -739,9 +732,9 @@ std::shared_ptr<daf::base::PropertyList> readMetadata(std::string const& fileNam
  * @param strip if `true`, common FITS keys that usually have non-metadata intepretations
  *              (e.g. NAXIS, BITPIX) will be ignored.
  */
-std::shared_ptr<daf::base::PropertyList> readMetadata(std::string const& fileName, std::string const& hduname, HduType type=HduType::AnyHdu, int hduver=0, bool strip=false);
-
-
+std::shared_ptr<daf::base::PropertyList> readMetadata(std::string const& fileName, std::string const& hduname,
+                                                      HduType type = HduType::ANY, int hduver = 0,
+                                                      bool strip = false);
 
 /** Read FITS header
  *
@@ -753,7 +746,8 @@ std::shared_ptr<daf::base::PropertyList> readMetadata(std::string const& fileNam
  * @param strip if `true`, common FITS keys that usually have non-metadata intepretations
  *              (e.g. NAXIS, BITPIX) will be ignored.
  */
-std::shared_ptr<daf::base::PropertyList> readMetadata(fits::MemFileManager& manager, int hdu = DEFAULT_HDU, bool strip = false);
+std::shared_ptr<daf::base::PropertyList> readMetadata(fits::MemFileManager& manager, int hdu = DEFAULT_HDU,
+                                                      bool strip = false);
 
 /** Read FITS header
  *
@@ -767,10 +761,9 @@ std::shared_ptr<daf::base::PropertyList> readMetadata(fits::MemFileManager& mana
  * @param strip if `true`, common FITS keys that usually have non-metadata intepretations
  *              (e.g. NAXIS, BITPIX) will be ignored.
  */
-std::shared_ptr<daf::base::PropertyList> readMetadata(fits::MemFileManager& manager, std::string const& hduname, HduType type=HduType::AnyHdu, int hduver=0, bool strip=false);
-
-
-
+std::shared_ptr<daf::base::PropertyList> readMetadata(fits::MemFileManager& manager,
+                                                      std::string const& hduname, HduType type = HduType::ANY,
+                                                      int hduver = 0, bool strip = false);
 
 /** Read FITS header
  *
