@@ -22,6 +22,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <iomanip>
 
 #include "lsst/geom/Point.h"
 #include "lsst/afw/image/PhotoCalib.h"
