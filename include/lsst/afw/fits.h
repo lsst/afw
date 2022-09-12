@@ -16,7 +16,6 @@
 #include <climits>
 #include <string>
 #include <set>
-#include <optional>
 
 #include <boost/format.hpp>
 
