@@ -128,6 +128,22 @@ class FitsTestCase(lsst.utils.tests.TestCase):
         metadata = self.writeAndRead(header)
         self.assertEqual(metadata.getArray("FOO"), [None, None])
 
+    def testNamedHeaderNavigate(self):
+        testfile = os.path.join("data", "multi_extension_metadata.fits")
+
+        #load metadata from the extra table header
+        md_extra_tab = lsst.afw.fits.readMetadata(testfile, hduname="EXTRA_TAB")
+        #assert the value we put in is in the read metadata
+        self.assertTrue("FVALUE" in md_extra_im)
+
+        #load metadata from the extra image header, do same test
+        md_extra_im = lsst.afw.fits.readMetadata(testfile, hduname="EXTRA_IM")
+        self.assertTrue("BLORP" in md_extra_im)
+
+        #now try to load a non-existent named HDU and check that we throw
+        with self.assertRaises(lsst.afw.fits.FitsError) as err:
+            md_extra_fails = lsst.afw.fits.readMetadata(testfile, hduname="CORDON_BLEAU")
+
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
