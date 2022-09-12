@@ -85,10 +85,16 @@ public:
      * @param[in] rotType  rotation type
      * @param[in] observatory  observatory longitude, latitude and altitude
      * @param[in] weather  basic weather information for computing air mass
-     * @param[in] instrumentLabel  The short name of the instrument that took this data (e.g. "HSC")
-     * @param[in] id  The identifier of this full focal plane data.
-     * @param[in] focusZ The defocal distance of main-cam hexapod in mm. 0 is in focus.;
-                        Extra-focal is negative while intra-focal is positive.
+     * @param[in] instrumentLabel  Short name of the instrument that took this data (e.g. "HSC")
+     * @param[in] id  Identifier of this full focal plane data.
+     * @param[in] focusZ Defocal distance of main-cam hexapod in mm. 0 is in focus.;
+     *                   Extra-focal is negative while intra-focal is positive.
+     * @param[in] observationType Type of this observation (e.g. science, dark, flat, bias, focus).
+     * @param[in] scienceProgram Observing program (survey or proposal) identifier.
+     * @param[in] observationReason Reason this observation was taken, or its purpose ('science' and
+     *                              'calibration' are common values).
+     * @param[in] object Object of interest or field name.
+     * @param[in] hasSimulatedContent Was any part of this observation simulated?
      */
     // TODO: remove exposureId on DM-32138
     explicit VisitInfo(table::RecordId exposureId, double exposureTime, double darkTime,
@@ -97,8 +103,10 @@ public:
                        lsst::geom::SpherePoint const &boresightAzAlt, double boresightAirmass,
                        lsst::geom::Angle const &boresightRotAngle, RotType const &rotType,
                        coord::Observatory const &observatory, coord::Weather const &weather,
-                       std::string const &instrumentLabel, table::RecordId const &id,
-                       double focusZ)
+                       std::string const &instrumentLabel, table::RecordId const &id, double focusZ,
+                       std::string const &observationType, std::string const &scienceProgram,
+                       std::string const &observationReason, std::string const &object,
+                       bool hasSimulatedContent)
             : _exposureId(exposureId),
               _exposureTime(exposureTime),
               _darkTime(darkTime),
@@ -114,7 +122,12 @@ public:
               _weather(weather),
               _instrumentLabel(instrumentLabel),
               _id(id),
-              _focusZ(focusZ){};
+              _focusZ(focusZ),
+              _observationType(observationType),
+              _scienceProgram(scienceProgram),
+              _observationReason(observationReason),
+              _object(object),
+              _hasSimulatedContent(hasSimulatedContent) {}
 
     explicit VisitInfo(daf::base::PropertySet const &metadata);
 
@@ -200,6 +213,12 @@ public:
     // get defocal distance (mm)
     double getFocusZ() const { return _focusZ; }
 
+    std::string getObservationType() const { return _observationType; }
+    std::string getScienceProgram() const { return _scienceProgram; }
+    std::string getObservationReason() const { return _observationReason; }
+    std::string getObject() const { return _object; }
+    bool getHasSimulatedContent() const { return _hasSimulatedContent; }
+
     /**
      * Get parallactic angle at the boresight
      *
@@ -246,6 +265,11 @@ private:
     std::string _instrumentLabel;
     table::RecordId _id;
     double _focusZ;
+    std::string _observationType;
+    std::string _scienceProgram;
+    std::string _observationReason;
+    std::string _object;
+    bool _hasSimulatedContent;
 };
 
 std::ostream &operator<<(std::ostream &os, VisitInfo const &visitInfo);

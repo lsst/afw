@@ -59,7 +59,8 @@ namespace {
 // 1: file versioning, instrument label
 // 2: id field
 // 3: focusZ field
-int constexpr SERIALIZATION_VERSION = 3;
+// 4: observationType, scienceProgram, observationReason, object, hasSimulatedContent fields
+int constexpr SERIALIZATION_VERSION = 4;
 
 auto const nan = std::numeric_limits<double>::quiet_NaN();
 
@@ -225,6 +226,12 @@ public:
 
     table::Key<double> focusZ;
 
+    table::Key<std::string> observationType;
+    table::Key<std::string> scienceProgram;
+    table::Key<std::string> observationReason;
+    table::Key<std::string> object;
+    table::Key<afw::table::Flag> hasSimulatedContent;
+
     static std::string const VERSION_KEY;
 
     static VisitInfoSchema const& get() {
@@ -288,7 +295,17 @@ private:
               idnum(schema.addField<table::RecordId>("idnum", "identifier of this full focal plane exposure",
                                                      "")),
 
-              focusZ(schema.addField<double>("focusz", "defocal distance", "mm")) {}
+              focusZ(schema.addField<double>("focusz", "defocal distance", "mm")),
+
+              observationType(schema.addField<std::string>(
+                      "observationType", "type of this observation (e.g. science, flat, bias)", "", 0)),
+              scienceProgram(schema.addField<std::string>(
+                      "scienceProgram", "observing program (survey or proposal) identifier", "", 0)),
+              observationReason(schema.addField<std::string>(
+                      "observationReason", "reason this observation was taken, or its purpose", "", 0)),
+              object(schema.addField<std::string>("object", "object of interest or field name", "", 0)),
+              hasSimulatedContent(schema.addField<afw::table::Flag>(
+                      "hasSimulatedContent", "Was any part of this observation simulated?")) {}
 };
 std::string const VisitInfoSchema::VERSION_KEY = "version";
 
@@ -311,6 +328,13 @@ public:
         table::RecordId id = version >= 2 ? record.get(keys.idnum) : 0;
         double focusZ = version >= 3 ? record.get(keys.focusZ) : nan;
 
+        std::string observationType = version >= 4 ? record.get(keys.observationType) : "";
+        std::string scienceProgram = version >= 4 ? record.get(keys.scienceProgram) : "";
+        std::string observationReason = version >= 4 ? record.get(keys.observationReason) : "";
+        std::string object = version >= 4 ? record.get(keys.object) : "";
+        // default false for backwards compatibility
+        bool hasSimulatedContent = version >= 4 ? record.get(keys.hasSimulatedContent) : false;
+
         std::shared_ptr<VisitInfo> result(
                 new VisitInfo(record.get(keys.exposureId), record.get(keys.exposureTime),
                               record.get(keys.darkTime), ::DateTime(record.get(keys.tai), ::DateTime::TAI),
@@ -323,7 +347,8 @@ public:
                                                  record.get(keys.elevation)),
                               coord::Weather(record.get(keys.airTemperature), record.get(keys.airPressure),
                                              record.get(keys.humidity)),
-                              instrumentLabel, id, focusZ));
+                              instrumentLabel, id, focusZ, observationType, scienceProgram, observationReason,
+                              object, hasSimulatedContent));
         return result;
     }
 
@@ -353,11 +378,35 @@ namespace detail {
 int stripVisitInfoKeywords(daf::base::PropertySet& metadata) {
     int nstripped = 0;
 
-    std::vector<std::string> keyList = {"EXPID",    "EXPTIME",     "DARKTIME",     "DATE-AVG",    "TIMESYS",
-                                        "TIME-MID", "MJD-AVG-UT1", "AVG-ERA",      "BORE-RA",     "BORE-DEC",
-                                        "BORE-AZ",  "BORE-ALT",    "BORE-AIRMASS", "BORE-ROTANG", "ROTTYPE",
-                                        "OBS-LONG", "OBS-LAT",     "OBS-ELEV",     "AIRTEMP",     "AIRPRESS",
-                                        "HUMIDITY", "INSTRUMENT",  "IDNUM",        "FOCUSZ"};
+    std::vector<std::string> keyList = {"EXPID",
+                                        "EXPTIME",
+                                        "DARKTIME",
+                                        "DATE-AVG",
+                                        "TIMESYS",
+                                        "TIME-MID",
+                                        "MJD-AVG-UT1",
+                                        "AVG-ERA",
+                                        "BORE-RA",
+                                        "BORE-DEC",
+                                        "BORE-AZ",
+                                        "BORE-ALT",
+                                        "BORE-AIRMASS",
+                                        "BORE-ROTANG",
+                                        "ROTTYPE",
+                                        "OBS-LONG",
+                                        "OBS-LAT",
+                                        "OBS-ELEV",
+                                        "AIRTEMP",
+                                        "AIRPRESS",
+                                        "HUMIDITY",
+                                        "INSTRUMENT",
+                                        "IDNUM",
+                                        "FOCUSZ",
+                                        "OBSTYPE",
+                                        "PROGRAM",
+                                        "REASON",
+                                        "OBJECT",
+                                        "HAS-SIMULATED-CONTENT"};
     for (auto&& key : keyList) {
         if (metadata.exists(key)) {
             metadata.remove(key);
@@ -401,8 +450,16 @@ void setVisitInfoMetadata(daf::base::PropertyList& metadata, VisitInfo const& vi
               "Short name of the instrument that took this data");
     if (visitInfo.getId() != 0) {
         metadata.set("IDNUM", visitInfo.getId(), "identifier of this full focal plane exposure");
-    setDouble(metadata, "FOCUSZ", visitInfo.getFocusZ(), "Defocal Distance (mm)");
     }
+    setDouble(metadata, "FOCUSZ", visitInfo.getFocusZ(), "Defocal distance (mm)");
+    setString(metadata, "OBSTYPE", visitInfo.getObservationType(), "Type of this observation");
+    setString(metadata, "PROGRAM", visitInfo.getScienceProgram(),
+              "observing program (survey or proposal) identifier");
+    setString(metadata, "REASON", visitInfo.getObservationReason(),
+              "reason this observation was taken, or its purpose");
+    setString(metadata, "OBJECT", visitInfo.getObject(), "object of interest or field name");
+    metadata.set("HAS-SIMULATED-CONTENT", visitInfo.getHasSimulatedContent(),
+                 "Was any part of this observation simulated?");
 }
 
 }  // namespace detail
@@ -427,7 +484,13 @@ VisitInfo::VisitInfo(daf::base::PropertySet const& metadata)
                    getDouble(metadata, "HUMIDITY")),
           _instrumentLabel(getString(metadata, "INSTRUMENT")),
           _id(0),
-          _focusZ(getDouble(metadata, "FOCUSZ")) {
+          _focusZ(getDouble(metadata, "FOCUSZ")),
+          _observationType(getString(metadata, "OBSTYPE")),
+          _scienceProgram(getString(metadata, "PROGRAM")),
+          _observationReason(getString(metadata, "REASON")),
+          _object(getString(metadata, "OBJECT")),
+          // default false for backwards compatibility
+          _hasSimulatedContent(false) {
     auto key = "EXPID";
     if (metadata.exists(key)) {
         _exposureId = metadata.getAsInt64(key);
@@ -479,6 +542,11 @@ VisitInfo::VisitInfo(daf::base::PropertySet const& metadata)
     if (metadata.exists(key)) {
         _rotType = rotTypeEnumFromStr(metadata.getAsString(key));
     }
+
+    key = "HAS-SIMULATED-CONTENT";
+    if (metadata.exists(key)) {
+        _hasSimulatedContent = metadata.getAsBool(key);
+    }
 }
 
 /**
@@ -509,14 +577,18 @@ bool VisitInfo::operator==(VisitInfo const& other) const {
            _eqOrNan(_boresightRotAngle, other.getBoresightRotAngle()) && _rotType == other.getRotType() &&
            _observatory == other.getObservatory() && _weather == other.getWeather() &&
            _instrumentLabel == other.getInstrumentLabel() && _id == other.getId() &&
-           _eqOrNan(_focusZ, other.getFocusZ());
+           _eqOrNan(_focusZ, other.getFocusZ()) && _observationType == other.getObservationType() &&
+           _scienceProgram == other.getScienceProgram() &&
+           _observationReason == other.getObservationReason() && _object == other.getObject() &&
+           _hasSimulatedContent == other.getHasSimulatedContent();
 }
 
 std::size_t VisitInfo::hash_value() const noexcept {
     // Completely arbitrary seed
     return utils::hashCombine(17, _exposureId, _exposureTime, _darkTime, _date, _ut1, _era, _boresightRaDec,
                               _boresightAzAlt, _boresightAirmass, _boresightRotAngle, _rotType, _observatory,
-                              _weather, _instrumentLabel, _id, _focusZ);
+                              _weather, _instrumentLabel, _id, _focusZ, _observationType, _scienceProgram,
+                              _observationReason, _object, _hasSimulatedContent);
 }
 
 std::string VisitInfo::getPersistenceName() const { return getVisitInfoPersistenceName(); }
@@ -550,6 +622,11 @@ void VisitInfo::write(OutputArchiveHandle& handle) const {
     record->set(keys.version, SERIALIZATION_VERSION);
     record->set(keys.idnum, getId());
     record->set(keys.focusZ, getFocusZ());
+    record->set(keys.observationType, getObservationType());
+    record->set(keys.scienceProgram, getScienceProgram());
+    record->set(keys.observationReason, getObservationReason());
+    record->set(keys.object, getObject());
+    record->set(keys.hasSimulatedContent, getHasSimulatedContent());
     handle.saveCatalog(cat);
 }
 
@@ -598,7 +675,12 @@ std::string VisitInfo::toString() const {
     buffer << "weather=" << getWeather() << ", ";
     buffer << "instrumentLabel='" << getInstrumentLabel() << "', ";
     buffer << "id=" << getId() << ", ";
-    buffer << "focusZ=" << getFocusZ();
+    buffer << "focusZ=" << getFocusZ() << ", ";
+    buffer << "observationType='" << getObservationType() << "', ";
+    buffer << "scienceProgram='" << getScienceProgram() << "', ";
+    buffer << "observationReason='" << getObservationReason() << "', ";
+    buffer << "object='" << getObject() << "', ";
+    buffer << "hasSimulatedContent=" << std::boolalpha << getHasSimulatedContent();
     buffer << ")";
     return buffer.str();
 }
