@@ -716,15 +716,6 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
                          "id=987654, focusZ=1.5, observationType='flat', scienceProgram='test program', "
                          "observationReason='test reason', object='test object', hasSimulatedContent=false)")
 
-        # check a default-constructed VisitInfo
-        self.assertEqual(str(afwImage.VisitInfo()),
-                         "VisitInfo(exposureId=0, exposureTime=nan, darkTime=nan, "
-                         "date=<invalid>, UT1=nan, ERA=nan rad, boresightRaDec=(nan, +nan), "
-                         "boresightAzAlt=(nan, +nan), boresightAirmass=nan, boresightRotAngle=nan rad, "
-                         "rotType=0, observatory=nanN, nanE  nan, weather=Weather(nan, nan, nan), "
-                         "instrumentLabel='', id=0, focusZ=nan, observationType='', scienceProgram='', "
-                         "observationReason='', object='', hasSimulatedContent=false)")
-
     def testParallacticAngle(self):
         """Check that we get the same precomputed values for parallactic angle."""
         parallacticAngle = [141.39684140703142*degrees, 76.99982166973487*degrees]
