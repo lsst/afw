@@ -128,6 +128,20 @@ class FitsTestCase(lsst.utils.tests.TestCase):
         metadata = self.writeAndRead(header)
         self.assertEqual(metadata.getArray("FOO"), [None, None])
 
+    def test_ticket_dm_36207(self):
+        # test whether moving to invalid HDU and then moving back throws or not
+        testfile = os.path.join(testPath, "data", "parent.fits")
+        fts = lsst.afw.fits.Fits(testfile, "r")
+
+        # parent.fits has 2 HDUs.
+        with self.assertRaises(lsst.afw.fits.FitsError):
+            fts.setHdu(5)
+
+        # check that we can move back to primary HDU and pull out a header
+        fts.setHdu(0)
+        mdattest = fts.readMetadata()["COMMENT"]
+        self.assertIn("and Astrophysics', volume 376, page 359;", mdattest)
+
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass

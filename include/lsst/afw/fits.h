@@ -108,8 +108,12 @@ std::string makeLimitedFitsHeader(lsst::daf::base::PropertySet const& metadata,
 /**
  *  Throw a FitsError exception if the status of the given Fits object is nonzero.
  */
-#define LSST_FITS_CHECK_STATUS(fitsObj, ...) \
-    if ((fitsObj).status != 0) throw LSST_FITS_EXCEPT(lsst::afw::fits::FitsError, fitsObj, __VA_ARGS__)
+#define LSST_FITS_CHECK_STATUS(fitsObj, ...)                                              \
+    if ((fitsObj).status != 0) {                                                          \
+        auto except = LSST_FITS_EXCEPT(lsst::afw::fits::FitsError, fitsObj, __VA_ARGS__); \
+        (fitsObj).status = 0;                                                             \
+        throw except;                                                                     \
+    }
 
 /// Return the cfitsio integer BITPIX code for the given data type.
 template <typename T>
