@@ -195,7 +195,9 @@ void declareFits(lsst::utils::python::WrapperCollection &wrappers) {
         cls.def("closeFile", &Fits::closeFile);
         cls.def("getFileName", &Fits::getFileName);
         cls.def("getHdu", &Fits::getHdu);
-        cls.def("setHdu", &Fits::setHdu, "hdu"_a, "relative"_a = false);
+        cls.def("setHdu", py::overload_cast<int, bool>(&Fits::setHdu), "hdu"_a, "relative"_a = false);
+        cls.def(
+                "setHdu", [](Fits &self, std::string const &name) { self.setHdu(name); }, "name"_a);
         cls.def("countHdus", &Fits::countHdus);
 
         cls.def("writeMetadata", &Fits::writeMetadata);
@@ -261,6 +263,14 @@ void declareFitsModule(lsst::utils::python::WrapperCollection &wrappers) {
                     return readMetadata(filename, hdu, strip);
                 },
                 "fileName"_a, "hdu"_a = DEFAULT_HDU, "strip"_a = false);
+
+        mod.def(
+                "readMetadata",
+                [](std::string const &filename, std::string const &hduname, bool strip = false) {
+                    return readMetadata(filename, hduname, HduType::ANY, 0, strip);
+                },
+                "fileName"_a, "hduName"_a, "strip"_a = false);
+
         mod.def("setAllowImageCompression", &setAllowImageCompression, "allow"_a);
         mod.def("getAllowImageCompression", &getAllowImageCompression);
 
