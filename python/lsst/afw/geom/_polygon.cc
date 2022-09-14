@@ -24,6 +24,7 @@
 #include <memory>
 
 #include <pybind11/pybind11.h>
+#include <pybind11/numpy.h>
 #include <lsst/utils/python.h>
 
 #include <pybind11/stl.h>
@@ -74,7 +75,14 @@ void declarePolygon(lsst::utils::python::WrapperCollection &wrappers) {
                 cls.def("calculatePerimeter", &Polygon::calculatePerimeter);
                 cls.def("getVertices", &Polygon::getVertices);
                 cls.def("getEdges", &Polygon::getEdges);
-                cls.def("contains", &Polygon::contains);
+
+                cls.def("contains", (bool (Polygon::*)(Polygon::Point const&) const) &Polygon::contains);
+                cls.def("contains", (std::vector<bool> (Polygon::*)(std::vector<Polygon::Point> const&) const) &Polygon::contains);
+                cls.def("contains", (std::vector<bool> (Polygon::*)(std::vector<lsst::geom::Point2I> const&) const) &Polygon::contains);
+                cls.def("contains", py::vectorize((bool (Polygon::*)(double x, double y) const) &Polygon::contains<double, double>));
+                cls.def("contains", py::vectorize((bool (Polygon::*)(float x, float y) const) &Polygon::contains<float, float>));
+                cls.def("contains", py::vectorize((bool (Polygon::*)(int x, int y) const) &Polygon::contains<int, int>));
+
                 cls.def("overlaps", (bool (Polygon::*)(Polygon const &) const) & Polygon::overlaps);
                 cls.def("overlaps", (bool (Polygon::*)(Polygon::Box const &) const) & Polygon::overlaps);
                 cls.def("intersectionSingle", (std::shared_ptr<Polygon>(Polygon::*)(Polygon const &) const) &

@@ -146,6 +146,27 @@ class PolygonTest(lsst.utils.tests.TestCase):
             self.assertTrue(poly.contains(lsst.geom.Point2D(self.x0, self.y0)))
             self.assertFalse(poly.contains(
                 lsst.geom.Point2D(self.x0 + radius, self.y0 + radius)))
+        # validate checking an array
+        poly = self.polygon(50, radius=10)
+        # check for inclusion
+        yind, xind = np.mgrid[-4:5, -4:5]
+        self.assertTrue(np.all(poly.contains(xind, yind)))
+        # check for exclusion
+        yind, xind = np.mgrid[30:35, 30:35]
+        self.assertTrue(np.all(~poly.contains(xind, yind)))
+
+        # check various box types
+        box = lsst.geom.Box2I(lsst.geom.Point2I(-1, -1), lsst.geom.Point2I(1, 1))
+        self.assertTrue(all(poly.contains(box.getCorners())))
+
+        box = lsst.geom.Box2I(lsst.geom.Point2I(-100, -100), lsst.geom.Point2I(100, 100))
+        self.assertFalse(all(poly.contains(box.getCorners())))
+
+        box = lsst.geom.Box2D(lsst.geom.Point2D(-1, -1), lsst.geom.Point2D(1, 1))
+        self.assertTrue(all(poly.contains(box.getCorners())))
+
+        box = lsst.geom.Box2D(lsst.geom.Point2D(-100, -100), lsst.geom.Point2D(100, 100))
+        self.assertFalse(all(poly.contains(box.getCorners())))
 
     def testOverlaps(self):
         """Test Polygon.overlaps"""
