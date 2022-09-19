@@ -70,11 +70,11 @@ auto const nan = std::numeric_limits<double>::quiet_NaN();
  * @param[in] metadata  metadata to get
  * @param[in] key  key name; the associated value must be of type double if the key exists
  * @returns value of metadata for the specified key, as a double,
- *   with a value of nan if the key is not present
+ *   with a value of nan if the key is not present or not defined.
  */
 double getDouble(daf::base::PropertySet const& metadata, std::string const& key) {
     try {
-        return metadata.exists(key) ? metadata.getAsDouble(key) : nan;
+        return metadata.exists(key) && !metadata.isUndefined(key) ? metadata.getAsDouble(key) : nan;
     } catch (pex::exceptions::TypeError& err) {
         // If an exposure has an invalid float here (often NaN)
         // it should put NaN in the visitInfo because it's the same
@@ -101,10 +101,10 @@ lsst::geom::Angle getAngle(daf::base::PropertySet const& metadata, std::string c
  * @param[in] metadata  metadata to get
  * @param[in] key  key name; the associated value must be of type string if the key exists.
  * @returns value of metadata for the specified key, as a string,
- *   with a value of "" if the key is not present.
+ *   with a value of "" if the key is not present or not defined.
  */
 std::string getString(daf::base::PropertySet const& metadata, std::string const& key) {
-    return metadata.exists(key) ? metadata.getAsString(key) : "";
+    return metadata.exists(key) && !metadata.isUndefined(key) ? metadata.getAsString(key) : "";
 }
 
 /**
@@ -492,16 +492,16 @@ VisitInfo::VisitInfo(daf::base::PropertySet const& metadata)
           // default false for backwards compatibility
           _hasSimulatedContent(false) {
     auto key = "EXPID";
-    if (metadata.exists(key)) {
+    if (metadata.exists(key) && !metadata.isUndefined(key)) {
         _exposureId = metadata.getAsInt64(key);
     }
     key = "IDNUM";
-    if (metadata.exists(key)) {
+    if (metadata.exists(key) && !metadata.isUndefined(key)) {
         _id = metadata.getAsInt64(key);
     }
 
     key = "EXPTIME";
-    if (metadata.exists(key)) {
+    if (metadata.exists(key) && !metadata.isUndefined(key)) {
         try {
             _exposureTime = metadata.getAsDouble(key);
         } catch (lsst::pex::exceptions::TypeError& err) {
@@ -512,7 +512,7 @@ VisitInfo::VisitInfo(daf::base::PropertySet const& metadata)
     }
 
     key = "DATE-AVG";
-    if (metadata.exists(key)) {
+    if (metadata.exists(key) && !metadata.isUndefined(key)) {
         if (metadata.exists("TIMESYS")) {
             auto timesysName = boost::algorithm::trim_right_copy(metadata.getAsString("TIMESYS"));
             if (timesysName != "TAI") {
@@ -533,18 +533,18 @@ VisitInfo::VisitInfo(daf::base::PropertySet const& metadata)
         // DATE-AVG not found. For backwards compatibility look for TIME-MID, an outdated LSST keyword
         // whose time system was UTC, despite a FITS comment claiming it was TAI. Ignore TIMESYS.
         key = "TIME-MID";
-        if (metadata.exists(key)) {
+        if (metadata.exists(key) && !metadata.isUndefined(key)) {
             _date = ::DateTime(boost::algorithm::trim_right_copy(metadata.getAsString(key)), ::DateTime::UTC);
         }
     }
 
     key = "ROTTYPE";
-    if (metadata.exists(key)) {
+    if (metadata.exists(key) && !metadata.isUndefined(key)) {
         _rotType = rotTypeEnumFromStr(metadata.getAsString(key));
     }
 
     key = "HAS-SIMULATED-CONTENT";
-    if (metadata.exists(key)) {
+    if (metadata.exists(key) && !metadata.isUndefined(key)) {
         _hasSimulatedContent = metadata.getAsBool(key);
     }
 }

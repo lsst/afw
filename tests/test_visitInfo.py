@@ -606,6 +606,27 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
         visitInfo = afwImage.VisitInfo(metadata)
         self.assertEqual(visitInfo.getHasSimulatedContent(), data.hasSimulatedContent)
 
+    def testMetadataConstructorUndefined(self):
+        """Test that we can create VisitInfo using None in metadata."""
+
+        metadata = propertySetFromDict({
+            # These are examples of generic reader code.
+            "PROGRAM": None,  # A string should convert to "".
+            "DARKTIME": None,  # A missing float should convert to NaN.
+            # These headers have special logic in the reader.
+            "EXPTIME": None,
+            "IDNUM": None,
+            "DATE-AVG": None,
+            "ROTTYPE": None,
+            "HAS-SIMULATED-CONTENT": None,
+        })
+        visitInfo = afwImage.VisitInfo(metadata)
+        self.assertEqual(visitInfo.getScienceProgram(), "")
+        self.assertTrue(math.isnan(visitInfo.getDarkTime()))
+        self.assertTrue(math.isnan(visitInfo.getExposureTime()))
+        self.assertEqual(visitInfo.getId(), 0)
+        self.assertFalse(visitInfo.getDate().isValid())
+
     def testConstructorKeywordArguments(self):
         """Test VisitInfo with named arguments"""
         data = self.data1
