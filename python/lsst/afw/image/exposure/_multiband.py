@@ -217,7 +217,7 @@ class MultibandExposure(MultibandTripleBase):
         return computePsfImage(
             psfModels=self.getPsfs(),
             position=position,
-            filters=self.filters,
+            bands=self.filters,
             useKernelImage=True,
         )
 
@@ -245,7 +245,7 @@ class MultibandExposure(MultibandTripleBase):
         return computePsfImage(
             psfModels=self.getPsfs(),
             position=position,
-            filters=self.filters,
+            bands=self.filters,
             useKernelImage=True,
         )
 
