@@ -77,36 +77,6 @@ def getSpanSetFromImages(images, thresh=0, xy0=None):
     return spans, imageBBox
 
 
-def heavyFootprintToImage(heavy, fill=np.nan, bbox=None, imageType=MaskedImage):
-    """Create an image of a HeavyFootprint
-
-    Parameters
-    ----------
-    heavy : `HeavyFootprint`
-        The HeavyFootprint to insert into the image
-    fill: number
-        Number to fill the pixels in the image that are not
-        contained in `heavy`.
-    bbox : `Box2I`
-        Bounding box of the output image.
-    imageType : `type`
-        This should be either a `MaskedImage` or `Image` and describes
-        the type of the output image.
-
-    Returns
-    -------
-    image : `lsst.afw.image.MaskedImage` or `lsst.afw.image.Image`
-        An image defined by `bbox` and padded with `fill` that
-        contains the projected flux in `heavy`.
-    """
-    if bbox is None:
-        bbox = heavy.getBBox()
-    image = imageType(bbox, dtype=heavy.getImageArray().dtype)
-    image.set(fill)
-    heavy.insert(image)
-    return image
-
-
 class MultibandFootprint(MultibandBase):
     """Multiband Footprint class
 
@@ -332,7 +302,7 @@ class MultibandFootprint(MultibandBase):
             singleType = Image
         else:
             raise TypeError("Expected imageType to be either MultibandImage or MultibandMaskedImage")
-        maskedImages = [heavyFootprintToImage(heavy, fill, bbox, singleType) for heavy in self.singles]
+        maskedImages = [heavy.extractImage(fill, bbox, singleType) for heavy in self.singles]
         mMaskedImage = imageType.fromImages(self.filters, maskedImages)
         return mMaskedImage
 
