@@ -355,6 +355,22 @@ std::size_t Polygon::hash_value() const noexcept {
 
 bool Polygon::contains(LsstPoint const& point) const { return boost::geometry::within(point, _impl->poly); }
 
+std::vector<bool> Polygon::contains(std::vector<Point> const &points) const {
+    std::vector<bool> results;
+    for (Point const & p : points) {
+        results.push_back(contains(p));
+    }
+    return results;
+}
+
+std::vector<bool> Polygon::contains(std::vector<lsst::geom::Point2I> const &points) const {
+    std::vector<bool> results;
+    for (lsst::geom::PointI const & p : points) {
+        results.push_back(contains(Point(p)));
+    }
+    return results;
+}
+
 bool Polygon::overlaps(Polygon const& other) const { return _impl->overlaps(other._impl->poly); }
 
 bool Polygon::overlaps(Box const& box) const { return _impl->overlaps(box); }

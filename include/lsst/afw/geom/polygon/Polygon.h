@@ -144,6 +144,19 @@ public:
     bool contains(Point const& point) const;
 
     //@{
+    /// Returns whether the polygon contains the vector of points
+    std::vector<bool> contains(std::vector<Point> const &points) const;
+    std::vector<bool> contains(std::vector<lsst::geom::Point2I> const &points) const;
+    //@}
+
+    /// Returns whether the polygon contains the x, y pair
+    template <typename Xtype, typename Ytype>
+    bool contains(Xtype x, Ytype y) const {
+        Point point(x, y);
+        return contains(point);
+    }
+
+    //@{
     /// Returns whether the polygons overlap each other
     ///
     /// Note that there may be no intersection if the polygons
@@ -279,6 +292,11 @@ private:
     Polygon(std::shared_ptr<Impl> impl) : _impl(impl) {}
     //@}
 };
+/// \cond DOXYGEN_IGNORE
+template bool Polygon::contains<double, double>(double, double) const;
+template bool Polygon::contains<float, float>(float, float) const;
+template bool Polygon::contains<int, int>(int, int) const;
+/// \endcond DOXYGEN_IGNORE
 
 /// Stream polygon
 std::ostream& operator<<(std::ostream& os, Polygon const& poly);
