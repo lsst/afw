@@ -162,21 +162,6 @@ public:
     void setDetector(std::shared_ptr<cameraGeom::Detector const> detector);
 
     /// Does this exposure have filter information?
-    // TODO: remove in DM-27811.
-    [[deprecated("Replaced by hasFilter. Will be removed after v24.")]]
-    bool hasFilterLabel() const;
-
-    /// Return the exposure's filter information
-    // TODO: remove in DM-27811.
-    [[deprecated("Replaced by getFilter. Will be removed after v24.")]]
-    std::shared_ptr<FilterLabel const> getFilterLabel() const;
-
-    /// Set the exposure's filter information
-    // TODO: remove in DM-27811.
-    [[deprecated("Replaced by setFilter. Will be removed after v24.")]]
-    void setFilterLabel(std::shared_ptr<FilterLabel const> filterLabel);
-
-    /// Does this exposure have filter information?
     bool hasFilter() const;
 
     /// Return the exposure's filter information.

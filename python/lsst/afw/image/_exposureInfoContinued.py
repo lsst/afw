@@ -18,7 +18,6 @@
 #
 
 from lsst.utils import continueClass
-from lsst.utils.deprecated import deprecate_pybind11
 
 from ._imageLib import ExposureInfo
 
@@ -56,17 +55,3 @@ class ExposureInfo:  # noqa: F811
             True if exposureInfo has a summary statistics component.
         """
         return self.hasComponent(self.KEY_SUMMARY_STATS)
-
-
-ExposureInfo.hasFilterLabel = deprecate_pybind11(
-    ExposureInfo.hasFilterLabel,
-    reason="Replaced by hasFilter. Will be removed after v24.",
-    version="v24.0")
-ExposureInfo.getFilterLabel = deprecate_pybind11(
-    ExposureInfo.getFilterLabel,
-    reason="Replaced by getFilter. Will be removed after v24.",
-    version="v24.0")
-ExposureInfo.setFilterLabel = deprecate_pybind11(
-    ExposureInfo.setFilterLabel,
-    reason="Replaced by setFilter. Will be removed after v24.",
-    version="v24.0")

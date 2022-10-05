@@ -115,9 +115,6 @@ PyExposure<PixelT> declareExposure(lsst::utils::python::WrapperCollection &wrapp
                 cls.def("getDetector", &ExposureT::getDetector);
                 cls.def_property_readonly("detector", &ExposureT::getDetector);
                 cls.def("setDetector", &ExposureT::setDetector, "detector"_a);
-                cls.def("getFilterLabel", &ExposureT::getFilterLabel);
-                cls.def_property_readonly("filterLabel", &ExposureT::getFilterLabel);
-                cls.def("setFilterLabel", &ExposureT::setFilterLabel, "filterLabel"_a);
                 cls.def("getFilter", &ExposureT::getFilter);
                 cls.def_property_readonly("filter", &ExposureT::getFilter);
                 cls.def("setFilter", &ExposureT::setFilter, "filterLabel"_a);

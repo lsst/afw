@@ -286,7 +286,6 @@ void declareExposureFitsReader(lsst::utils::python::WrapperCollection &wrappers)
         cls.def("readExposureId", &ExposureFitsReader::readExposureId);
         cls.def("readMetadata", &ExposureFitsReader::readMetadata);
         cls.def("readWcs", &ExposureFitsReader::readWcs);
-        cls.def("readFilterLabel", &ExposureFitsReader::readFilterLabel);
         cls.def("readFilter", &ExposureFitsReader::readFilter);
         cls.def("readPhotoCalib", &ExposureFitsReader::readPhotoCalib);
         cls.def("readPsf", &ExposureFitsReader::readPsf);

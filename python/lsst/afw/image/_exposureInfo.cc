@@ -135,9 +135,6 @@ void declareExposureInfo(lsst::utils::python::WrapperCollection &wrappers) {
                 "detector"_a);
 
         cls.attr("KEY_FILTER") = ExposureInfo::KEY_FILTER.getId();
-        cls.def("hasFilterLabel", &ExposureInfo::hasFilterLabel);
-        cls.def("getFilterLabel", &ExposureInfo::getFilterLabel);
-        cls.def("setFilterLabel", &ExposureInfo::setFilterLabel, "filterLabel"_a);
         cls.def("hasFilter", &ExposureInfo::hasFilter);
         cls.def("getFilter", &ExposureInfo::getFilter);
         cls.def("setFilter", &ExposureInfo::setFilter, "filterLabel"_a);
