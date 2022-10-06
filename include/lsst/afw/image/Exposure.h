@@ -236,10 +236,6 @@ public:
         return _info->getDetector();
     }
     /// Return the Exposure's filter information
-    // TODO: remove in DM-27811
-    [[deprecated("Replaced by getFilter. Will be removed after v24.")]]
-    std::shared_ptr<FilterLabel const> getFilterLabel() const { return getFilter(); }
-    /// Return the Exposure's filter information.
     std::shared_ptr<FilterLabel const> getFilter() const { return _info->getFilter(); }
     /// Return flexible metadata
     std::shared_ptr<lsst::daf::base::PropertySet> getMetadata() const { return _info->getMetadata(); }
@@ -296,12 +292,7 @@ public:
     void setDetector(std::shared_ptr<lsst::afw::cameraGeom::Detector const> detector) {
         _info->setDetector(detector);
     }
-    /// Set the Exposure's filter information
-    // TODO: remove in DM-27811
-    [[deprecated("Replaced by setFilter. Will be removed after v24.")]]
-    void setFilterLabel(std::shared_ptr<FilterLabel const> filterLabel) {
-        setFilter(filterLabel);
-    }
+
     /// Set the Exposure's filter information
     void setFilter(std::shared_ptr<FilterLabel const> filterLabel) {
         _info->setFilter(filterLabel);
