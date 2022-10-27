@@ -22,6 +22,7 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
+#include <cmath>
 #include <vector>
 
 #define BOOST_TEST_DYN_LINK
@@ -55,6 +56,13 @@ BOOST_AUTO_TEST_CASE(LinearInterpolateRamp) { /* parasoft-suppress  LsstDm-3-2a 
         double youtL = yinterpL->interpolate(xtest);
 
         BOOST_CHECK_EQUAL(youtL, xtest);
+    }
+    {
+        std::shared_ptr<math::Interpolate> yinterpL = math::makeInterpolate(x, y, math::Interpolate::AKIMA_SPLINE);
+        double const NaN = std::numeric_limits<double>::quiet_NaN();
+        double youtL = yinterpL->interpolate(NaN);
+
+	BOOST_CHECK(std::isnan(youtL));
     }
 }
 
