@@ -64,6 +64,6 @@ class SpanSet:  # noqa: F811
             offset = (-xy0[0], -xy0[1])
 
             result = np.zeros(shape, dtype=bool)
-            yidx, xidx = self.spans.shiftedBy(*offset).indices()
+            yidx, xidx = self.shiftedBy(*offset).indices()
             result[yidx, xidx] = 1
         return result
