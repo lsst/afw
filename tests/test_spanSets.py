@@ -440,6 +440,23 @@ class SpanSetTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(len(span), len(points))
         self.assertEqual(points, [lsst.geom.Point2I(x, 4) for x in range(3, 9)])
 
+    def testAsArray(self):
+        spans = afwGeom.SpanSet(lsst.geom.Box2I(lsst.geom.Point2I(2, 3), lsst.geom.Point2I(6, 7)))
+        truth = np.ones((5, 5), dtype=bool)
+        arr = spans.asArray()
+        np.testing.assert_array_equal(arr, truth)
+
+        shape = (10, 10)
+        truth = np.zeros(shape, dtype=bool)
+        truth[:5, :5] = 1
+        arr = spans.asArray(shape)
+        np.testing.assert_array_equal(arr, truth)
+
+        truth = np.zeros(shape, dtype=bool)
+        truth[3:8, 2:7] = 1
+        arr = spans.asArray(shape, (0, 0))
+        np.testing.assert_array_equal(arr, truth)
+
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
