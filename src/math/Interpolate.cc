@@ -27,6 +27,7 @@
  */
 #include <limits>
 #include <algorithm>
+#include <cmath>
 #include <map>
 #include "boost/format.hpp"
 #include <memory>
@@ -221,6 +222,10 @@ InterpolateGsl::~InterpolateGsl() {
 }
 
 double InterpolateGsl::interpolate(double const xInterp) const {
+    // NaNs interpolate as NaN.
+    if (std::isnan(xInterp)) {
+        return xInterp;
+    }
     // New GSL versions refuse to extrapolate.
     // gsl_interp_init() requires x to be ordered, so can just check
     // the array endpoints for out-of-bounds.
