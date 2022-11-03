@@ -117,6 +117,7 @@ void declareStatistics(lsst::utils::python::WrapperCollection &wrappers) {
         cls.def("getWeighted", &StatisticsControl::getWeighted);
         cls.def("getWeightedIsSet", &StatisticsControl::getWeightedIsSet);
         cls.def("getCalcErrorFromInputVariance", &StatisticsControl::getCalcErrorFromInputVariance);
+        cls.def("getCalcErrorMosaicMode", &StatisticsControl::getCalcErrorMosaicMode);
         cls.def("setNumSigmaClip", &StatisticsControl::setNumSigmaClip);
         cls.def("setNumIter", &StatisticsControl::setNumIter);
         cls.def("setAndMask", &StatisticsControl::setAndMask);
@@ -124,6 +125,7 @@ void declareStatistics(lsst::utils::python::WrapperCollection &wrappers) {
         cls.def("setNanSafe", &StatisticsControl::setNanSafe);
         cls.def("setWeighted", &StatisticsControl::setWeighted);
         cls.def("setCalcErrorFromInputVariance", &StatisticsControl::setCalcErrorFromInputVariance);
+        cls.def("setCalcErrorMosaicMode", &StatisticsControl::setCalcErrorMosaicMode);
     });
 
     wrappers.wrapType(py::enum_<StatisticsControl::WeightsBoolean>(control, "WeightsBoolean"),

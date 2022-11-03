@@ -293,6 +293,35 @@ class StackTestCase(lsst.utils.tests.TestCase):
             print("variance=", stack.getVariance().getArray())
         self.assertNotEqual(np.sum(stack.getVariance().getArray()), 0.0)
 
+    def testMosaicMode(self):
+        """Test that mosaic mode constructs a variance plane of mean of inputs
+        """
+        SIZE = 5
+        MEAN = 10
+        VAR = 0.1
+
+        maskedImageList = []
+        weightList = []
+        for i in range(3):
+            mi = afwImage.MaskedImageF(SIZE, SIZE)
+            mi.image.array[:] = np.random.normal(MEAN*i, VAR, (SIZE, SIZE))
+            mi.variance.array[:] = np.random.normal(MEAN*i, VAR, (SIZE, SIZE))
+            maskedImageList.append(mi)
+            # weight each image differently
+            weightList.append(float(i))
+
+        statsCtrl = afwMath.StatisticsControl()
+        statsCtrl.setCalcErrorMosaicMode(True)
+
+        # test unweighted mean
+        stack = afwMath.statisticsStack(maskedImageList, afwMath.MEAN, statsCtrl, weightList)
+        self.assertAlmostEqual(np.mean(stack.variance.array), np.mean(stack.image.array), delta=0.1)
+
+        # test weighted mean
+        statsCtrl.setWeighted(True)
+        stack = afwMath.statisticsStack(maskedImageList, afwMath.MEAN, statsCtrl, weightList)
+        self.assertAlmostEqual(np.mean(stack.variance.array), np.mean(stack.image.array), delta=0.1)
+
     def testRejectedMaskPropagation(self):
         """Test that we can propagate mask bits from rejected pixels, when the amount
         of rejection crosses a threshold."""

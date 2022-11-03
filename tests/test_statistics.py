@@ -485,7 +485,6 @@ class StatisticsTestCase(lsst.utils.tests.TestCase):
         """Test that we can estimate the errors from the incoming variances"""
         weight, mean, variance = 0.1, 1.0, 10.0
 
-        ctrl = afwMath.StatisticsControl()
         mi = afwImage.MaskedImageF(lsst.geom.Extent2I(10, 10))
         npix = 10*10
         mi.getImage().set(mean)
@@ -494,6 +493,7 @@ class StatisticsTestCase(lsst.utils.tests.TestCase):
         weights = afwImage.ImageF(mi.getDimensions())
         weights.set(weight)
 
+        ctrl = afwMath.StatisticsControl()
         ctrl.setCalcErrorFromInputVariance(True)
         weighted = afwMath.makeStatistics(mi, weights,
                                           afwMath.MEAN | afwMath.MEANCLIP | afwMath.SUM | afwMath.ERRORS,
@@ -503,6 +503,22 @@ class StatisticsTestCase(lsst.utils.tests.TestCase):
         self.assertAlmostEqual(weighted.getValue(afwMath.MEAN), mean)
         self.assertAlmostEqual(weighted.getError(afwMath.MEAN)**2, variance/npix)
         self.assertAlmostEqual(weighted.getError(afwMath.MEANCLIP)**2, variance/npix)
+
+        # calcErrorMosaicMode and calcErrorFromInputVariance cannot both be selected
+        ctrl.setCalcErrorMosaicMode(True)
+        with self.assertRaises(lsst.pex.exceptions.InvalidParameterError):
+            afwMath.makeStatistics(mi, weights, afwMath.MEAN, ctrl)
+
+        # Test only mosaic mode wherein output variance is the mean of the input variance
+        ctrl.setCalcErrorFromInputVariance(False)
+        statsMosaic = afwMath.makeStatistics(mi, weights,
+                                             afwMath.MEAN | afwMath.MEANCLIP | afwMath.SUM | afwMath.ERRORS,
+                                             ctrl)
+
+        self.assertAlmostEqual(statsMosaic.getValue(afwMath.SUM)/(npix*mean*weight), 1)
+        self.assertAlmostEqual(statsMosaic.getValue(afwMath.MEAN), mean)
+        self.assertAlmostEqual(statsMosaic.getError(afwMath.MEAN)**2, variance)
+        self.assertAlmostEqual(statsMosaic.getError(afwMath.MEANCLIP)**2, variance)
 
     def testMeanClipSingleValue(self):
         """Verify that the clipped mean doesn't not return NaN for a single value."""
