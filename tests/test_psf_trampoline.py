@@ -65,7 +65,7 @@ class PyGaussianPsf(Psf):
 
     # "private" virtual overrides are underscored by convention
     def _doComputeKernelImage(self, position=None, color=None):
-        bbox = self.computeBBox()
+        bbox = self.computeBBox(self.getAveragePosition())
         img = Image(bbox, dtype=np.float64)
         x, y = np.ogrid[bbox.minY:bbox.maxY+1, bbox.minX:bbox.maxX+1]
         rsqr = x**2 + y**2
@@ -124,50 +124,50 @@ class PsfTrampolineTestSuite(lsst.utils.tests.TestCase):
     def testImages(self):
         for pgp, gp in zip(self.pgps, self.gps):
             self.assertImagesAlmostEqual(
-                pgp.computeImage(),
-                gp.computeImage()
+                pgp.computeImage(pgp.getAveragePosition()),
+                gp.computeImage(gp.getAveragePosition())
             )
             self.assertImagesAlmostEqual(
-                pgp.computeKernelImage(),
-                gp.computeKernelImage()
+                pgp.computeKernelImage(pgp.getAveragePosition()),
+                gp.computeKernelImage(gp.getAveragePosition())
             )
 
     def testApertureFlux(self):
         for pgp, gp in zip(self.pgps, self.gps):
             for r in [0.1, 0.2, 0.3]:
                 self.assertAlmostEqual(
-                    pgp.computeApertureFlux(r),
-                    gp.computeApertureFlux(r)
+                    pgp.computeApertureFlux(r, pgp.getAveragePosition()),
+                    gp.computeApertureFlux(r, gp.getAveragePosition())
                 )
 
     def testPeak(self):
         for pgp, gp in zip(self.pgps, self.gps):
             self.assertAlmostEqual(
-                pgp.computePeak(),
-                gp.computePeak()
+                pgp.computePeak(pgp.getAveragePosition()),
+                gp.computePeak(gp.getAveragePosition())
             )
 
     def testBBox(self):
         for pgp, gp in zip(self.pgps, self.gps):
             self.assertEqual(
-                pgp.computeBBox(),
-                gp.computeBBox()
+                pgp.computeBBox(pgp.getAveragePosition()),
+                gp.computeBBox(gp.getAveragePosition())
             )
             self.assertEqual(
-                pgp.computeKernelBBox(),
-                gp.computeKernelBBox(),
+                pgp.computeKernelBBox(pgp.getAveragePosition()),
+                gp.computeKernelBBox(gp.getAveragePosition()),
             )
             self.assertEqual(
-                pgp.computeImageBBox(),
-                gp.computeImageBBox(),
+                pgp.computeImageBBox(pgp.getAveragePosition()),
+                gp.computeImageBBox(gp.getAveragePosition()),
             )
             self.assertEqual(
-                pgp.computeImage().getBBox(),
-                pgp.computeImageBBox()
+                pgp.computeImage(pgp.getAveragePosition()).getBBox(),
+                pgp.computeImageBBox(pgp.getAveragePosition())
             )
             self.assertEqual(
-                pgp.computeKernelImage().getBBox(),
-                pgp.computeKernelBBox()
+                pgp.computeKernelImage(pgp.getAveragePosition()).getBBox(),
+                pgp.computeKernelBBox(pgp.getAveragePosition())
             )
 
     def testShape(self):
@@ -186,12 +186,12 @@ class PsfTrampolineTestSuite(lsst.utils.tests.TestCase):
             rpgp2 = cppLib.resizedPsf(pgp, width+2, height+4)
             rgp = gp.resized(width+2, height+4)
             self.assertImagesAlmostEqual(
-                rpgp.computeImage(),
-                rgp.computeImage()
+                rpgp.computeImage(rpgp.getAveragePosition()),
+                rgp.computeImage(rgp.getAveragePosition())
             )
             self.assertImagesAlmostEqual(
-                rpgp2.computeImage(),
-                rgp.computeImage()
+                rpgp2.computeImage(rpgp2.getAveragePosition()),
+                rgp.computeImage(rgp.getAveragePosition())
             )
 
     def testClone(self):
@@ -210,8 +210,8 @@ class PsfTrampolineTestSuite(lsst.utils.tests.TestCase):
             for p in [p1, p2, p3, p4]:
                 self.assertIsNot(pgp, p)
                 self.assertImagesEqual(
-                    pgp.computeImage(),
-                    p.computeImage()
+                    pgp.computeImage(pgp.getAveragePosition()),
+                    p.computeImage(p.getAveragePosition())
                 )
 
     def testPersistence(self):
