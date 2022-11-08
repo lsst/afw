@@ -79,10 +79,16 @@ class GaussianPsfTestCase(lsst.utils.tests.TestCase):
     def testApertureFlux(self):
         image = self.psf.computeKernelImage(lsst.geom.Point2D(0.0, 0.0))
         # test aperture implementation is very crude; can only test to about 10%
-        self.assertFloatsAlmostEqual(self.psf.computeApertureFlux(5.0), computeNaiveApertureFlux(image, 5.0),
-                                     rtol=0.1)
-        self.assertFloatsAlmostEqual(self.psf.computeApertureFlux(7.0), computeNaiveApertureFlux(image, 7.0),
-                                     rtol=0.1)
+        self.assertFloatsAlmostEqual(
+            self.psf.computeApertureFlux(5.0, self.psf.getAveragePosition()),
+            computeNaiveApertureFlux(image, 5.0),
+            rtol=0.1
+        )
+        self.assertFloatsAlmostEqual(
+            self.psf.computeApertureFlux(7.0, self.psf.getAveragePosition()),
+            computeNaiveApertureFlux(image, 7.0),
+            rtol=0.1
+        )
 
     def testShape(self):
         self.assertFloatsAlmostEqual(
@@ -100,7 +106,10 @@ class GaussianPsfTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(self.psf.computeKernelImage(self.psf.getAveragePosition()).getBBox(),
                          self.psf.computeBBox(self.psf.getAveragePosition()))
 
-        self.assertEqual(self.psf.computeBBox().getWidth(), self.kernelSize)
+        self.assertEqual(
+            self.psf.computeBBox(self.psf.getAveragePosition()).getWidth(),
+            self.kernelSize
+        )
 
         # Test interface. GaussianPsf does not vary spatially
         self.assertEqual(self.psf.computeKernelImage(lsst.geom.Point2D(0.0, 0.0)).getBBox(),
