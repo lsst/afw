@@ -99,6 +99,7 @@ public:
               _isNanSafe(isNanSafe),
               _useWeights(useWeights),
               _calcErrorFromInputVariance(false),
+              _calcErrorMosaicMode(false),
               _maskPropagationThresholds() {
         try {
             _noGoodPixelsMask = lsst::afw::image::Mask<>::getPlaneBitMask("NO_DATA");
@@ -128,6 +129,7 @@ public:
     bool getWeighted() const noexcept { return _useWeights == WEIGHTS_TRUE ? true : false; }
     bool getWeightedIsSet() const noexcept { return _useWeights != WEIGHTS_NONE ? true : false; }
     bool getCalcErrorFromInputVariance() const noexcept { return _calcErrorFromInputVariance; }
+    bool getCalcErrorMosaicMode() const noexcept { return _calcErrorMosaicMode; }
 
     void setNumSigmaClip(double numSigmaClip) {
         if (!(numSigmaClip > 0)) {
@@ -150,6 +152,9 @@ public:
     void setCalcErrorFromInputVariance(bool calcErrorFromInputVariance) noexcept {
         _calcErrorFromInputVariance = calcErrorFromInputVariance;
     }
+    void setCalcErrorMosaicMode(bool calcErrorMosaicMode) noexcept {
+        _calcErrorMosaicMode = calcErrorMosaicMode;
+    }
 
 private:
     friend class Statistics;
@@ -161,6 +166,7 @@ private:
     bool _isNanSafe;                   // Check for NaNs & Infs before running (slower)
     WeightsBoolean _useWeights;        // Calculate weighted statistics (enum because of 3-valued logic)
     bool _calcErrorFromInputVariance;  // Calculate errors from the input variances, if available
+    bool _calcErrorMosaicMode;         // Calculate errors by taking mean of input variances
     std::vector<double> _maskPropagationThresholds;  // Thresholds for when to propagate mask bits,
                                                      // treated like a dict (unset bits are set to 1.0)
 };
@@ -376,7 +382,7 @@ Statistics makeStatistics(ImageT const &img, MaskT const &msk, VarianceT const &
 template <typename Pixel>
 Statistics makeStatistics(lsst::afw::image::MaskedImage<Pixel> const &mimg, int const flags,
                           StatisticsControl const &sctrl = StatisticsControl()) {
-    if (sctrl.getWeighted() || sctrl.getCalcErrorFromInputVariance()) {
+    if (sctrl.getWeighted() || sctrl.getCalcErrorFromInputVariance() || sctrl.getCalcErrorMosaicMode()) {
         return Statistics(*mimg.getImage(), *mimg.getMask(), *mimg.getVariance(), flags, sctrl);
     } else {
         MaskImposter<WeightPixel> var;
@@ -392,7 +398,7 @@ template <typename Pixel>
 Statistics makeStatistics(lsst::afw::image::MaskedImage<Pixel> const &mimg,
                           lsst::afw::image::Image<WeightPixel> const &weights, int const flags,
                           StatisticsControl const &sctrl = StatisticsControl()) {
-    if (sctrl.getWeighted() || sctrl.getCalcErrorFromInputVariance() ||
+    if (sctrl.getWeighted() || sctrl.getCalcErrorFromInputVariance() || sctrl.getCalcErrorMosaicMode() ||
         (!sctrl.getWeightedIsSet() && (weights.getWidth() != 0 && weights.getHeight() != 0))) {
         return Statistics(*mimg.getImage(), *mimg.getMask(), *mimg.getVariance(), weights, flags, sctrl);
     } else {
@@ -505,7 +511,7 @@ Statistics makeStatistics(lsst::afw::math::MaskedVector<EntryT> const &mv,  ///<
                           int const flags,  ///< Describe what we want to calculate
                           StatisticsControl const &sctrl = StatisticsControl()  ///< Control calculation
 ) {
-    if (sctrl.getWeighted() || sctrl.getCalcErrorFromInputVariance()) {
+    if (sctrl.getWeighted() || sctrl.getCalcErrorFromInputVariance() || sctrl.getCalcErrorMosaicMode()) {
         return Statistics(*mv.getImage(), *mv.getMask(), *mv.getVariance(), flags, sctrl);
     } else {
         MaskImposter<WeightPixel> var;
@@ -525,7 +531,7 @@ Statistics makeStatistics(lsst::afw::math::MaskedVector<EntryT> const &mv,  ///<
 ) {
     ImageImposter<WeightPixel> weights(vweights);
 
-    if (sctrl.getWeighted() || sctrl.getCalcErrorFromInputVariance()) {
+    if (sctrl.getWeighted() || sctrl.getCalcErrorFromInputVariance() || sctrl.getCalcErrorMosaicMode()) {
         return Statistics(*mv.getImage(), *mv.getMask(), *mv.getVariance(), weights, flags, sctrl);
     } else {
         MaskImposter<WeightPixel> var;

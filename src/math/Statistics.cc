@@ -159,6 +159,7 @@ StandardReturn processPixels(ImageT const &img, MaskT const &msk, VarianceT cons
                              double const meanCrude, double const cliplimit,
                              bool const weightsAreMultiplicative, int const andMask,
                              bool const calcErrorFromInputVariance,
+                             bool const calcErrorMosaicMode,
                              std::vector<double> const &maskPropagationThresholds) {
     int n = 0;
     double sumw = 0.0;   // sum(weight)  (N.b. weight will be 1.0 if !useWeights)
@@ -167,6 +168,7 @@ StandardReturn processPixels(ImageT const &img, MaskT const &msk, VarianceT cons
     double sumx2 = 0;    // sum(data*weight^2)
 #if 1
     double sumvw2 = 0.0;  // sum(variance*weight^2)
+    double sumvw = 0.0;  // sum(variance*weight)
 #endif
     double min = (nCrude) ? meanCrude : MAX_DOUBLE;
     double max = (nCrude) ? meanCrude : -MAX_DOUBLE;
@@ -207,6 +209,10 @@ StandardReturn processPixels(ImageT const &img, MaskT const &msk, VarianceT cons
                         double const var = *vptr;
                         sumvw2 += var * weight * weight;
                     }
+                    if (calcErrorMosaicMode) {
+                        double const var = *vptr;
+                        sumvw += var * weight;
+                    }
                 } else {
                     sumx += delta;
                     sumx2 += delta * delta;
@@ -214,6 +220,10 @@ StandardReturn processPixels(ImageT const &img, MaskT const &msk, VarianceT cons
                     if (calcErrorFromInputVariance) {
                         double const var = *vptr;
                         sumvw2 += var;
+                    }
+                    if (calcErrorMosaicMode) {
+                        double const var = *vptr;
+                        sumvw += var;
                     }
                 }
 
@@ -275,6 +285,8 @@ StandardReturn processPixels(ImageT const &img, MaskT const &msk, VarianceT cons
     double meanVar;  // (standard error of mean)^2
     if (calcErrorFromInputVariance) {
         meanVar = sumvw2 / (sumw * sumw);
+    } else if (calcErrorMosaicMode){
+        meanVar = sumvw / sumw;
     } else {
         meanVar = variance * sumw2 / (sumw * sumw);
     }
@@ -294,16 +306,16 @@ StandardReturn processPixels(ImageT const &img, MaskT const &msk, VarianceT cons
                              WeightT const &weights, int const flags, int const nCrude, int const stride,
                              double const meanCrude, double const cliplimit,
                              bool const weightsAreMultiplicative, int const andMask,
-                             bool const calcErrorFromInputVariance, bool doGetWeighted,
-                             std::vector<double> const &maskPropagationThresholds) {
+                             bool const calcErrorFromInputVariance, bool const calcErrorMosaicMode,
+                             bool doGetWeighted, std::vector<double> const &maskPropagationThresholds) {
     if (doGetWeighted) {
         return processPixels<IsFinite, HasValueLtMin, HasValueGtMax, InClipRange, true>(
                 img, msk, var, weights, flags, nCrude, 1, meanCrude, cliplimit, weightsAreMultiplicative,
-                andMask, calcErrorFromInputVariance, maskPropagationThresholds);
+                andMask, calcErrorFromInputVariance, calcErrorMosaicMode, maskPropagationThresholds);
     } else {
         return processPixels<IsFinite, HasValueLtMin, HasValueGtMax, InClipRange, false>(
                 img, msk, var, weights, flags, nCrude, 1, meanCrude, cliplimit, weightsAreMultiplicative,
-                andMask, calcErrorFromInputVariance, maskPropagationThresholds);
+                andMask, calcErrorFromInputVariance, calcErrorMosaicMode, maskPropagationThresholds);
     }
 }
 
@@ -313,16 +325,17 @@ StandardReturn processPixels(ImageT const &img, MaskT const &msk, VarianceT cons
                              WeightT const &weights, int const flags, int const nCrude, int const stride,
                              double const meanCrude, double const cliplimit,
                              bool const weightsAreMultiplicative, int const andMask,
-                             bool const calcErrorFromInputVariance, bool doCheckFinite, bool doGetWeighted,
+                             bool const calcErrorFromInputVariance,
+                             bool const calcErrorMosaicMode, bool doCheckFinite, bool doGetWeighted,
                              std::vector<double> const &maskPropagationThresholds) {
     if (doCheckFinite) {
         return processPixels<CheckFinite, HasValueLtMin, HasValueGtMax, InClipRange, useWeights>(
                 img, msk, var, weights, flags, nCrude, 1, meanCrude, cliplimit, weightsAreMultiplicative,
-                andMask, calcErrorFromInputVariance, doGetWeighted, maskPropagationThresholds);
+                andMask, calcErrorFromInputVariance, calcErrorMosaicMode, doGetWeighted, maskPropagationThresholds);
     } else {
         return processPixels<AlwaysTrue, HasValueLtMin, HasValueGtMax, InClipRange, useWeights>(
                 img, msk, var, weights, flags, nCrude, 1, meanCrude, cliplimit, weightsAreMultiplicative,
-                andMask, calcErrorFromInputVariance, doGetWeighted, maskPropagationThresholds);
+                andMask, calcErrorFromInputVariance, calcErrorMosaicMode, doGetWeighted, maskPropagationThresholds);
     }
 }
 
@@ -337,6 +350,9 @@ StandardReturn processPixels(ImageT const &img, MaskT const &msk, VarianceT cons
  * @param weightsAreMultiplicative weights are multiplicative (not inverse)
  * @param andMask mask of bad pixels
  * @param calcErrorFromInputVariance estimate errors from variance
+ * @param calcErrorMosaicMode estimate errors by taking the mean of input variances,
+                              as is appropriate when those variances are totally correlated. This is the
+                              case when mosaicking coadds built from more or less the same input images.
  * @param doCheckFinite check for NaN/Inf
  * @param doGetWeighted use the weights
  * @param maskPropagationThresholds
@@ -346,7 +362,8 @@ StandardReturn processPixels(ImageT const &img, MaskT const &msk, VarianceT cons
 template <typename ImageT, typename MaskT, typename VarianceT, typename WeightT>
 StandardReturn getStandard(ImageT const &img, MaskT const &msk, VarianceT const &var, WeightT const &weights,
                            int const flags, bool const weightsAreMultiplicative, int const andMask,
-                           bool const calcErrorFromInputVariance, bool doCheckFinite, bool doGetWeighted,
+                           bool const calcErrorFromInputVariance, bool const calcErrorMosaicMode,
+                           bool doCheckFinite, bool doGetWeighted,
                            std::vector<double> const &maskPropagationThresholds) {
     // =====================================================
     // a crude estimate of the mean, used for numerical stability of variance
@@ -365,8 +382,8 @@ StandardReturn getStandard(ImageT const &img, MaskT const &msk, VarianceT const 
     double cliplimit = -1;  // unused
     StandardReturn values = processPixels<ChkFin, AlwaysF, AlwaysF, AlwaysT, true>(
             img, msk, var, weights, flags, nCrude, strideCrude, meanCrude, cliplimit,
-            weightsAreMultiplicative, andMask, calcErrorFromInputVariance, doCheckFinite, doGetWeighted,
-            maskPropagationThresholds);
+            weightsAreMultiplicative, andMask, calcErrorFromInputVariance, calcErrorMosaicMode,
+            doCheckFinite, doGetWeighted, maskPropagationThresholds);
     nCrude = std::get<0>(values);
     double sumCrude = std::get<1>(values);
 
@@ -382,11 +399,13 @@ StandardReturn getStandard(ImageT const &img, MaskT const &msk, VarianceT const 
     if (flags & (MIN | MAX)) {
         return processPixels<ChkFin, ChkMin, ChkMax, AlwaysT, true>(
                 img, msk, var, weights, flags, nCrude, 1, meanCrude, cliplimit, weightsAreMultiplicative,
-                andMask, calcErrorFromInputVariance, true, doGetWeighted, maskPropagationThresholds);
+                andMask, calcErrorFromInputVariance, calcErrorMosaicMode, true, doGetWeighted,
+                maskPropagationThresholds);
     } else {
         return processPixels<ChkFin, AlwaysF, AlwaysF, AlwaysT, true>(
                 img, msk, var, weights, flags, nCrude, 1, meanCrude, cliplimit, weightsAreMultiplicative,
-                andMask, calcErrorFromInputVariance, doCheckFinite, doGetWeighted, maskPropagationThresholds);
+                andMask, calcErrorFromInputVariance, calcErrorMosaicMode, doCheckFinite, doGetWeighted,
+                maskPropagationThresholds);
     }
 }
 
@@ -404,6 +423,9 @@ StandardReturn getStandard(ImageT const &img, MaskT const &msk, VarianceT const 
  *   @param weightsAreMultiplicative weights are multiplicative (not inverse)
  *   @param andMask mask of bad pixels
  *   @param calcErrorFromInputVariance estimate errors from variance
+ *   @param calcErrorMosaicMode estimate errors by taking the mean of input variances,
+                                as is appropriate when those variances are totally correlated. This is the
+                                case when mosaicking coadds built from more or less the same input images.
  *   @param doCheckFinite check for NaN/Inf
  *   @param doGetWeighted use the weights,
  *   @param maskPropagationThresholds
@@ -411,9 +433,9 @@ StandardReturn getStandard(ImageT const &img, MaskT const &msk, VarianceT const 
 template <typename ImageT, typename MaskT, typename VarianceT, typename WeightT>
 StandardReturn getStandard(ImageT const &img, MaskT const &msk, VarianceT const &var, WeightT const &weights,
                            int const flags, std::pair<double, double> const clipinfo,
-
                            bool const weightsAreMultiplicative, int const andMask,
-                           bool const calcErrorFromInputVariance, bool doCheckFinite, bool doGetWeighted,
+                           bool const calcErrorFromInputVariance, bool const calcErrorMosaicMode,
+                           bool doCheckFinite, bool doGetWeighted,
                            std::vector<double> const &maskPropagationThresholds) {
     double const center = clipinfo.first;
     double const cliplimit = clipinfo.second;
@@ -431,11 +453,13 @@ StandardReturn getStandard(ImageT const &img, MaskT const &msk, VarianceT const 
     if (flags & (MIN | MAX)) {
         return processPixels<ChkFin, ChkMin, ChkMax, ChkClip, true>(
                 img, msk, var, weights, flags, nCrude, stride, center, cliplimit, weightsAreMultiplicative,
-                andMask, calcErrorFromInputVariance, true, doGetWeighted, maskPropagationThresholds);
+                andMask, calcErrorFromInputVariance, calcErrorMosaicMode, true, doGetWeighted,
+                maskPropagationThresholds);
     } else {  // fast loop ... just the mean & variance
         return processPixels<ChkFin, AlwaysF, AlwaysF, ChkClip, true>(
                 img, msk, var, weights, flags, nCrude, stride, center, cliplimit, weightsAreMultiplicative,
-                andMask, calcErrorFromInputVariance, doCheckFinite, doGetWeighted, maskPropagationThresholds);
+                andMask, calcErrorFromInputVariance, calcErrorMosaicMode, doCheckFinite, doGetWeighted,
+                maskPropagationThresholds);
     }
 }
 
@@ -840,6 +864,12 @@ Statistics::Statistics(ImageT const &img, MaskT const &msk, VarianceT const &var
 template <typename ImageT, typename MaskT, typename VarianceT, typename WeightT>
 void Statistics::doStatistics(ImageT const &img, MaskT const &msk, VarianceT const &var,
                               WeightT const &weights, int const flags, StatisticsControl const &sctrl) {
+
+    if (_sctrl.getCalcErrorFromInputVariance() && _sctrl.getCalcErrorMosaicMode()) {
+        throw LSST_EXCEPT(pexExceptions::InvalidParameterError,
+                          "Both calcErrorFromInputVariance and calcErrorMosaicMode are True");
+    }
+
     int const num = img.getWidth() * img.getHeight();
     _n = num;
     if (_n == 0) {
@@ -857,7 +887,8 @@ void Statistics::doStatistics(ImageT const &img, MaskT const &msk, VarianceT con
     // get the standard statistics
     StandardReturn standard =
             getStandard(img, msk, var, weights, flags, _weightsAreMultiplicative, _sctrl.getAndMask(),
-                        _sctrl.getCalcErrorFromInputVariance(), _sctrl.getNanSafe(), _sctrl.getWeighted(),
+                        _sctrl.getCalcErrorFromInputVariance(), _sctrl.getCalcErrorMosaicMode(),
+                        _sctrl.getNanSafe(), _sctrl.getWeighted(),
                         _sctrl._maskPropagationThresholds);
 
     _n = std::get<0>(standard);
@@ -904,7 +935,8 @@ void Statistics::doStatistics(ImageT const &img, MaskT const &msk, VarianceT con
 
                 StandardReturn clipped = getStandard(
                         img, msk, var, weights, flags, clipinfo, _weightsAreMultiplicative,
-                        _sctrl.getAndMask(), _sctrl.getCalcErrorFromInputVariance(), _sctrl.getNanSafe(),
+                        _sctrl.getAndMask(), _sctrl.getCalcErrorFromInputVariance(),
+                        _sctrl.getCalcErrorMosaicMode(), _sctrl.getNanSafe(),
                         _sctrl.getWeighted(), _sctrl._maskPropagationThresholds);
 
                 int const nClip = std::get<0>(clipped);             // number after clipping
