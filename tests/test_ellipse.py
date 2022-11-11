@@ -74,7 +74,7 @@ class EllipseTestCase(lsst.utils.tests.TestCase):
                         conv.getDeterminantRadius(), detRadius * 3)
                     self.assertFloatsAlmostEqual(
                         conv.getTraceRadius(), traceRadius * 3)
-                    self.assertFloatsAlmostEqual(conv.getArea(), area * 9)
+                    self.assertFloatsAlmostEqual(conv.getArea(), area * 9, atol=1e-15, rtol=1e-15)
 
     def testAccessors(self):
         for core in self.cores:
