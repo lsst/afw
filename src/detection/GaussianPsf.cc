@@ -133,7 +133,7 @@ void GaussianPsf::write(OutputArchiveHandle& handle) const {
 
 std::shared_ptr<GaussianPsf::Image> GaussianPsf::doComputeKernelImage(lsst::geom::Point2D const&,
                                                                       image::Color const&) const {
-    std::shared_ptr<Image> r(new Image(computeBBox()));
+    std::shared_ptr<Image> r(new Image(computeBBox(getAveragePosition())));
     Image::Array array = r->getArray();
     double sum = 0.0;
     for (int yIndex = 0, y = r->getY0(); yIndex < _dimensions.getY(); ++yIndex, ++y) {
