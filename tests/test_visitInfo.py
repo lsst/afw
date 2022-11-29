@@ -228,6 +228,57 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
         self._testValueConstructor(self.data2, self.localEra2, self.hourAngle2)
         self._testProperties(self.data2, self.localEra2, self.hourAngle2)
 
+    def testCopyWith(self):
+        visitInfo1 = makeVisitInfo(self.data1)
+        visitInfo2 = makeVisitInfo(self.data2)
+
+        updateFields1 = [
+            "exposureTime",
+            "darkTime",
+            "date",
+            "ut1",
+            "era",
+            "boresightRaDec",
+            "boresightAzAlt",
+            "boresightAirmass",
+            "boresightRotAngle",
+        ]
+
+        updateFields2 = [
+            "rotType",
+            "observatory",
+            "weather",
+            "instrumentLabel",
+            "id",
+            "focusZ",
+            "observationType",
+            "scienceProgram",
+            "observationReason",
+            "object",
+            "hasSimulatedContent",
+        ]
+
+        kwargs1 = {k: getattr(visitInfo2, k) for k in updateFields1}
+        kwargs2 = {k: getattr(visitInfo2, k) for k in updateFields2}
+
+        newVisit1 = visitInfo1.copyWith(**kwargs1)
+        newVisit2 = visitInfo1.copyWith(**kwargs2)
+
+        for field in updateFields1:
+            self.assertEqual(getattr(newVisit1, field), getattr(visitInfo2, field))
+            self.assertEqual(getattr(newVisit2, field), getattr(visitInfo1, field))
+
+        for field in updateFields2:
+            self.assertEqual(getattr(newVisit1, field), getattr(visitInfo1, field))
+            self.assertEqual(getattr(newVisit2, field), getattr(visitInfo2, field))
+
+        # Test the deprecated exposureId.
+        # This code can be removed with DM-32138.
+        deprecatedVisit = visitInfo1.copyWith(exposureId=3)
+        self.assertEqual(deprecatedVisit.getExposureId(), 3)
+        deprecatedCopy = deprecatedVisit.copyWith(**kwargs1)
+        self.assertEqual(deprecatedCopy.getExposureId(), 3)
+
     def testTablePersistence(self):
         """Test that VisitInfo can be round-tripped with current code.
         """
