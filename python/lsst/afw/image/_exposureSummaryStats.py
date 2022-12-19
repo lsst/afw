@@ -42,54 +42,78 @@ class ExposureSummaryStats(Storable):
     _factory = StorableHelperFactory(__name__, _persistence_name)
 
     version: int = 0
-    # PSF determinant radius (pixels)
+
     psfSigma: float = float('nan')
-    # PSF effective area (pixels**2)
+    """PSF determinant radius (pixels)."""
+
     psfArea: float = float('nan')
-    # PSF shape Ixx (pixels**2)
+    """PSF effective area (pixels**2)."""
+
     psfIxx: float = float('nan')
-    # PSF shape Iyy (pixels**2)
+    """PSF shape Ixx (pixels**2)."""
+
     psfIyy: float = float('nan')
-    # PSF shape Ixy (pixels**2)
+    """PSF shape Iyy (pixels**2)."""
+
     psfIxy: float = float('nan')
-    # Bounding box center Right Ascension (degrees)
+    """PSF shape Ixy (pixels**2)."""
+
     ra: float = float('nan')
-    # Bounding box center Declination (degrees)
+    """Bounding box center Right Ascension (degrees)."""
+
     decl: float = float('nan')
-    # Bounding box center zenith distance (degrees)
+    """Bounding box center Declination (degrees)."""
+
     zenithDistance: float = float('nan')
-    # Mean zeropoint in detector (mag)
+    """Bounding box center zenith distance (degrees)."""
+
     zeroPoint: float = float('nan')
-    # Average sky background (ADU)
+    """Mean zeropoint in detector (mag)."""
+
     skyBg: float = float('nan')
-    # Average sky noise (ADU)
+    """Average sky background (ADU)."""
+
     skyNoise: float = float('nan')
-    # Mean variance of the weight plane (ADU**2)
+    """Average sky noise (ADU)."""
+
     meanVar: float = float('nan')
-    # Right Ascension of bounding box corners (degrees)
+    """Mean variance of the weight plane (ADU**2)."""
+
     raCorners: List[float] = field(default_factory=_default_corners)
-    # Declination of bounding box corners (degrees)
+    """Right Ascension of bounding box corners (degrees)."""
+
     decCorners: List[float] = field(default_factory=_default_corners)
-    # Astrometry match offset mean
+    """Declination of bounding box corners (degrees)."""
+
     astromOffsetMean: float = float('nan')
-    # Astrometry match offset stddev
+    """Astrometry match offset mean."""
+
     astromOffsetStd: float = float('nan')
-    # Number of stars used for psf model
+    """Astrometry match offset stddev."""
+
     nPsfStar: int = 0
-    # Psf stars median E1 residual (starE1 - psfE1)
+    """Number of stars used for psf model."""
+
     psfStarDeltaE1Median: float = float('nan')
-    # Psf stars median E2 residual (starE2 - psfE2)
+    """Psf stars median E1 residual (starE1 - psfE1)."""
+
     psfStarDeltaE2Median: float = float('nan')
-    # Psf stars MAD E1 scatter (starE1 - psfE1)
+    """Psf stars median E2 residual (starE2 - psfE2)."""
+
     psfStarDeltaE1Scatter: float = float('nan')
-    # Psf stars MAD E2 scatter (starE2 - psfE2)
+    """Psf stars MAD E1 scatter (starE1 - psfE1)."""
+
     psfStarDeltaE2Scatter: float = float('nan')
-    # Psf stars median size residual (starSize - psfSize)
+    """Psf stars MAD E2 scatter (starE2 - psfE2)."""
+
     psfStarDeltaSizeMedian: float = float('nan')
-    # Psf stars MAD size scatter (starSize - psfSize)
+    """Psf stars median size residual (starSize - psfSize)."""
+
     psfStarDeltaSizeScatter: float = float('nan')
-    # Psf stars MAD size scatter scaled by psfSize**2
+    """Psf stars MAD size scatter (starSize - psfSize)."""
+
     psfStarScaledDeltaSizeScatter: float = float('nan')
+    """Psf stars MAD size scatter scaled by psfSize**2."""
 
     def __post_init__(self):
         Storable.__init__(self)
