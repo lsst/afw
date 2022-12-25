@@ -175,8 +175,6 @@ inline typename OutImageT::SinglePixel convolveAtAPoint(
  *    of the output. Optimization of convolution for different types of Kernel are handled by different
  *    specializations of basicConvolve().
  *
- * afw/examples offers programs that time convolution including timeConvolve and timeSpatiallyVaryingConvolve.
- *
  * @param[out] convolvedImage convolved %image; must be the same size as inImage
  * @param[in] inImage %image to convolve
  * @param[in] kernel convolution kernel
@@ -261,8 +259,8 @@ inline typename OutImageT::SinglePixel convolveAtAPoint(
         image::Image<Kernel::Pixel>::const_xy_locator kernelLocator, int kWidth, int kHeight) {
     typename OutImageT::SinglePixel outValue = 0;
     for (int kRow = 0; kRow != kHeight; ++kRow) {
-        for (image::Image<Kernel::Pixel>::const_xy_locator
-                     kEnd = kernelLocator + image::detail::difference_type(kWidth, 0);
+        for (image::Image<Kernel::Pixel>::const_xy_locator kEnd =
+                     kernelLocator + image::detail::difference_type(kWidth, 0);
              kernelLocator != kEnd; ++inImageLocator.x(), ++kernelLocator.x()) {
             typename Kernel::Pixel const kVal = kernelLocator[0];
             if (kVal != 0) {

@@ -43,8 +43,7 @@ namespace math {
  *
  * f(x) = 1 if x == xo, 0 otherwise.
  *
- * For use as a kernel function be sure to handle the offset for row and column center;
- * see examples/deltaFunctionKernel for an example.
+ * For use as a kernel function be sure to handle the offset for row and column center.
  *
  * @ingroup afw
  */
@@ -90,8 +89,7 @@ protected:
  *
  * f(x) = 1 if x == xo and y == yo, 0 otherwise.
  *
- * For use as a kernel function be sure to handle the offset for row and column center;
- * see examples/deltaFunctionKernel for an example.
+ * For use as a kernel function be sure to handle the offset for row and column center.
  *
  * @ingroup afw
  */
