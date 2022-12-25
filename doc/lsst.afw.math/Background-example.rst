@@ -6,8 +6,6 @@
 Example of lsst.afw.math.Background
 ###################################
 
-Using the `Background` class; the code's in `afw/examples/estimateBackground.py <https://github.com/lsst/afw/blob/master/examples/estimateBackground.py>`_.
-
 The basic strategy is
  - Measure the properties of the image (e.g. the mean level) -- the `Background` object
  - `Interpolate` the `Background` to provide an estimate of the background
