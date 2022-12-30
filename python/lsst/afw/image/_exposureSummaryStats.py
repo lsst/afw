@@ -117,6 +117,16 @@ class ExposureSummaryStats(Storable):
     psfStarScaledDeltaSizeScatter: float = float('nan')
     """Psf stars MAD size scatter scaled by psfSize**2."""
 
+    psfTraceRadiusDelta: float = float('nan')
+    """Delta (max - min) of the model psf trace radius values evaluated on a
+    grid of unmasked pixels (pixels).
+    """
+
+    maxDistToNearestPsf: float = float('nan')
+    """Maximum distance of an unmasked pixel to its nearest model psf star
+    (pixels).
+    """
+
     def __post_init__(self):
         Storable.__init__(self)
 
@@ -255,6 +265,17 @@ class ExposureSummaryStats(Storable):
             "psfStarScaledDeltaSizeScatter",
             type="F",
             doc="Scatter (via MAD) of size residual scaled by median size squared",
+        )
+        schema.addField(
+            "psfTraceRadiusDelta",
+            type="F",
+            doc="Delta (max - min) of the model psf trace radius values evaluated on a grid of "
+            "unmasked pixels (pixel).",
+        )
+        schema.addField(
+            "maxDistToNearestPsf",
+            type="F",
+            doc="Maximum distance of an unmasked pixel to its nearest model psf star (pixel).",
         )
 
     def update_record(self, record: BaseRecord) -> None:
