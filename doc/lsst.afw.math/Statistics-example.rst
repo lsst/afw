@@ -6,8 +6,6 @@
 Example of lsst.afw.math.Statistics
 ###################################
 
-Demonstrate the use of `Statistics`; the code's in `afw/examples/statistics.cc <https://github.com/lsst/afw/blob/master/examples/statistics.cc>`_.
-
 Start by including needed headers and declaring namespace aliases
 
 .. code-block:: cpp

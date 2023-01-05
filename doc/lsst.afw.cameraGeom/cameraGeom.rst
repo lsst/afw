@@ -71,13 +71,6 @@ The cameraGeom package supports the following camera-based 2-dimensional coordin
   Is a variant of ``PIXELS`` with estimated optical distortion removed.
   ``TAN_PIXELS`` is an affine transformation from ``FIELD_ANGLE`` coordinates, where ``PIXELS`` and ``TAN_PIXELS`` match at the center of the pupil frame.
 
-.. _section_CameraGeom_Basic_Usage:
-
-Basic Usage
-===========
-
-The file `examples/cameraGeomExample.py <https://github.com/lsst/afw/blob/master/examples/cameraGeomExample.py>`_ shows some basic usage of the cameraGeom package.
-
 .. _section_CameraGeom_Objects:
 
 Objects

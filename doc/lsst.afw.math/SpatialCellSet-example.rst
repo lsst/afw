@@ -6,13 +6,6 @@
 Example of lsst.afw.math.SpatialCellSet
 #######################################
 
-Demonstrate the use of `SpatialCellSet`\ s; the code's in `spatialCellExample.cc`_.
-
-.. _spatialCellExample.cc: https://github.com/lsst/afw/blob/master/examples/spatialCellExample.cc
-.. _spatialCellExample.py: https://github.com/lsst/afw/blob/master/examples/spatialCellExample.py
-.. _testSpatialCell.h: https://github.com/lsst/afw/blob/master/examples/testSpatialCell.h
-.. _testSpatialCell.cc: https://github.com/lsst/afw/blob/master/examples/testSpatialCell.cc
-
 Start by including needed headers, and declaring namespace aliases and a routine ``readImage``
 
 .. code-block:: cpp
