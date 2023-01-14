@@ -23,6 +23,7 @@
 Test lsst.afw.image.Exposure
 """
 
+import dataclasses
 import os.path
 import unittest
 
@@ -1161,6 +1162,34 @@ class ExposureNoAfwdataTestCase(lsst.utils.tests.TestCase):
 
         self.assertEqual(summaryStats.ra, testDict['ra'])
         self.assertEqual(summaryStats.decl, testDict['decl'])
+
+    def testExposureSummarySchema(self):
+        """Test that we can make a schema for an exposure summary and populate
+        records with that schema.
+        """
+        schema = afwTable.Schema()
+        afwImage.ExposureSummaryStats.update_schema(schema)
+        self.maxDiff = None
+        self.assertEqual(
+            {field.name for field in dataclasses.fields(afwImage.ExposureSummaryStats)},
+            set(schema.getNames()) | {"version"},
+        )
+        catalog = afwTable.BaseCatalog(schema)
+        summary1 = afwImage.ExposureSummaryStats()
+        for n, field in enumerate(dataclasses.fields(afwImage.ExposureSummaryStats)):
+            # Set fields to deterministic, distinct, but arbitrary values.
+            if field.type == "float":
+                setattr(summary1, field.name, float(0.5**n))
+            elif field.type == "int":
+                setattr(summary1, field.name, 10*n)
+            elif field.type == "list[float]":
+                setattr(summary1, field.name, [n + 0.1, n + 0.2, n + 0.3, n + 0.4])
+            else:
+                raise TypeError(f"Unexpected type: {field.type!r}.")
+        record = catalog.addNew()
+        summary1.update_record(record)
+        summary2 = afwImage.ExposureSummaryStats.from_record(record)
+        self.assertEqual(summary1, summary2)
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
