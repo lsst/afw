@@ -19,14 +19,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-"""
-Tests for SpatialCell
-
-Run with:
-   python test_spatialCell.py
-or
-   pytest test_spatialCell.py
-"""
 import unittest
 
 import lsst.utils.tests
@@ -41,7 +33,6 @@ def getFlux(x):
 
 
 class SpatialCellTestCase(unittest.TestCase):
-    """A test case for SpatialCell"""
 
     def setUp(self):
         candidateList = []
@@ -52,9 +43,6 @@ class SpatialCellTestCase(unittest.TestCase):
 
         self.cell = afwMath.SpatialCell("Test", lsst.geom.Box2I(), candidateList)
         self.assertEqual(self.cell.getLabel(), "Test")
-
-    def tearDown(self):
-        del self.cell
 
     def testCandidateList(self):
         """Check that we can retrieve candidates, and that they are sorted by ranking"""
@@ -74,10 +62,7 @@ class SpatialCellTestCase(unittest.TestCase):
 
     def testIterators(self):
         """Test the SpatialCell iterators"""
-
-        #
         # Count the candidates
-        #
         self.assertEqual(self.cell.size(), self.nCandidate)
         self.assertEqual(self.cell.end() - self.cell.begin(), self.nCandidate)
 
@@ -86,9 +71,8 @@ class SpatialCellTestCase(unittest.TestCase):
         self.assertEqual(self.cell.end() - ptr, self.nCandidate - 1)
 
         self.assertEqual(ptr - self.cell.begin(), 1)
-        #
+
         # Now label one candidate as bad
-        #
         self.cell[2].setStatus(afwMath.SpatialCellCandidate.BAD)
 
         self.assertEqual(self.cell.size(), self.nCandidate - 1)
@@ -121,9 +105,8 @@ class SpatialCellTestCase(unittest.TestCase):
     def testSortCandidates(self):
         """Check that we can update ratings and maintain order"""
         ratings0 = [cand.getCandidateRating() for cand in self.cell]
-        #
+
         # Change a rating
-        #
         i, flux = 1, 9999
         self.cell[i].setCandidateRating(flux)
         ratings0[i] = flux
@@ -142,7 +125,6 @@ class SpatialCellTestCase(unittest.TestCase):
 
 
 class SpatialCellSetTestCase(unittest.TestCase):
-    """A test case for SpatialCellSet"""
 
     def setUp(self):
         self.cellSet = afwMath.SpatialCellSet(lsst.geom.Box2I(
@@ -150,14 +132,7 @@ class SpatialCellSetTestCase(unittest.TestCase):
 
     def makeTestCandidateCellSet(self):
         """Populate a SpatialCellSet"""
-
-        if False:                       # Print the bboxes for the cells
-            print()
-            for i in range(len(self.cellSet.getCellList())):
-                cell = self.cellSet.getCellList()[i]
-                print(i, f"{cell.getBBox().getMinX():3d},{cell.getBBox().getMinY():3d} -- "
-                      f"{cell.getBBox().getMaxX():3d},{cell.getBBox().getMaxY():3d}",
-                      cell.getLabel())
+        # ensure we're starting with a list of empty cells
         self.assertEqual(len(self.cellSet.getCellList()), 6)
 
         # number of candidates
@@ -173,9 +148,6 @@ class SpatialCellSetTestCase(unittest.TestCase):
         self.cellSet.insertCandidate(afwMath.TestCandidate(500, 500, 100))
         self.NTestCandidates += 1
 
-    def tearDown(self):
-        del self.cellSet
-
     def testNoCells(self):
         """Test that we check for a request to make a SpatialCellSet with no cells"""
         def tst():
@@ -185,17 +157,13 @@ class SpatialCellSetTestCase(unittest.TestCase):
         self.assertRaises(pexExcept.LengthError, tst)
 
     def testInsertCandidate(self):
-        """Insert candidates into the SpatialCellSet"""
-
+        """Test inserting candidates into the SpatialCellSet"""
         self.makeTestCandidateCellSet()
 
-        def tst():
-            # Doesn't fit
+        # we can't insert outside the box
+        with self.assertRaises(pexExcept.OutOfRangeError):
             self.cellSet.insertCandidate(afwMath.TestCandidate(501, 501, 100))
-        self.assertRaises(pexExcept.OutOfRangeError, tst)
-        #
-        # OK, the SpatialCellList is populated
-        #
+
         cell0 = self.cellSet.getCellList()[0]
         self.assertFalse(cell0.empty())
         self.assertEqual(cell0[0].getXCenter(), 0.0)
@@ -216,7 +184,6 @@ class SpatialCellSetTestCase(unittest.TestCase):
 
     def testVisitor(self):
         """Test the candidate visitors"""
-
         self.makeTestCandidateCellSet()
 
         visitor = afwMath.TestCandidateVisitor()
@@ -229,11 +196,8 @@ class SpatialCellSetTestCase(unittest.TestCase):
 
     def testGetCandidateById(self):
         """Check that we can lookup candidates by ID"""
-
         self.makeTestCandidateCellSet()
-        #
-        # OK, the SpatialCellList is populated
-        #
+
         id = self.cellSet.getCellList()[0][1].getId()
         self.assertEqual(self.cellSet.getCandidateById(id).getId(), id)
 
@@ -266,16 +230,14 @@ class SpatialCellSetTestCase(unittest.TestCase):
 
     def testSortCandidates(self):
         """Check that we can update ratings and maintain order"""
-
         self.makeTestCandidateCellSet()
 
         cell1 = self.cellSet.getCellList()[0]
         self.assertFalse(cell1.empty())
 
         ratings0 = [cand.getCandidateRating() for cand in cell1]
-        #
+
         # Change a rating
-        #
         i, flux = 1, 9999
         cell1[i].setCandidateRating(flux)
         ratings0[i] = flux
@@ -293,19 +255,14 @@ class SpatialCellSetTestCase(unittest.TestCase):
                          [cand.getCandidateRating() for cand in cell1])
 
 
-class TestImageCandidateCase(unittest.TestCase):
-    """A test case for TestImageCandidate"""
+class SpatialCellImageCandidateTestCase(unittest.TestCase):
 
     def setUp(self):
         self.cellSet = afwMath.SpatialCellSet(lsst.geom.Box2I(
             lsst.geom.Point2I(0, 0), lsst.geom.Extent2I(501, 501)), 2, 3)
 
-    def tearDown(self):
-        del self.cellSet
-
     def testInsertCandidate(self):
         """Test that we can use SpatialCellMaskedImageCandidate"""
-
         flux = 10
         self.cellSet.insertCandidate(afwMath.TestImageCandidate(0, 0, flux))
 
