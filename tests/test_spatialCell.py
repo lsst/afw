@@ -123,6 +123,20 @@ class SpatialCellTestCase(unittest.TestCase):
         self.assertEqual(sorted(ratings0, key=sortKey),
                          [cand.getCandidateRating() for cand in self.cell])
 
+    def testStr(self):
+        expect = ("Test: bbox=(minimum=(0, 0), maximum=(-1, -1)), ignoreBad=True, candidates=[\n"
+                  "(center=(0.0,0.0), status=UNKNOWN, rating=1000.0)\n"
+                  "(center=(1.0,5.0), status=UNKNOWN, rating=990.0)\n"
+                  "(center=(2.0,10.0), status=UNKNOWN, rating=980.0)\n"
+                  "(center=(3.0,15.0), status=UNKNOWN, rating=970.0)\n"
+                  "(center=(4.0,20.0), status=UNKNOWN, rating=960.0)]")
+        self.assertEqual(str(self.cell), expect)
+
+        # Check that a SpatialCell containing no candidates fits on one line.
+        emptyCell = afwMath.SpatialCell("Test2", lsst.geom.Box2I(), [])
+        expect = "Test2: bbox=(minimum=(0, 0), maximum=(-1, -1)), ignoreBad=True, candidates=[]"
+        self.assertEqual(str(emptyCell), expect)
+
 
 class SpatialCellSetTestCase(unittest.TestCase):
 
@@ -254,10 +268,24 @@ class SpatialCellSetTestCase(unittest.TestCase):
         self.assertEqual(sorted(ratings0, key=sortKey),
                          [cand.getCandidateRating() for cand in cell1])
 
+    def testStr(self):
+        expect = ("bbox=(minimum=(0, 0), maximum=(500, 500)), 6 cells\n"
+                  "Cell 0x0: bbox=(minimum=(0, 0), maximum=(259, 199)), ignoreBad=True, candidates=[]\n"
+                  "Cell 1x0: bbox=(minimum=(260, 0), maximum=(500, 199)), ignoreBad=True, candidates=[]\n"
+                  "Cell 0x1: bbox=(minimum=(0, 200), maximum=(259, 399)), ignoreBad=True, candidates=[]\n"
+                  "Cell 1x1: bbox=(minimum=(260, 200), maximum=(500, 399)), ignoreBad=True, candidates=[]\n"
+                  "Cell 0x2: bbox=(minimum=(0, 400), maximum=(259, 500)), ignoreBad=True, candidates=[]\n"
+                  "Cell 1x2: bbox=(minimum=(260, 400), maximum=(500, 500)), ignoreBad=True, candidates=[]")
+        self.assertEqual(str(self.cellSet), expect)
+
 
 class SpatialCellImageCandidateTestCase(unittest.TestCase):
 
     def setUp(self):
+        # To ensure consistency across tests: width/height are static members
+        # of SpatialCellImageCandidate, and tests can run in any order.
+        self.width = 15
+        self.height = 21
         self.cellSet = afwMath.SpatialCellSet(lsst.geom.Box2I(
             lsst.geom.Point2I(0, 0), lsst.geom.Extent2I(501, 501)), 2, 3)
 
@@ -268,15 +296,22 @@ class SpatialCellImageCandidateTestCase(unittest.TestCase):
 
         cand = self.cellSet.getCellList()[0][0]
 
-        width, height = 15, 21
-        cand.setWidth(width)
-        cand.setHeight(height)
+        cand.setWidth(self.width)
+        cand.setHeight(self.height)
 
         im = cand.getMaskedImage().getImage()
         # This is how TestMaskedImageCandidate sets its pixels
         self.assertEqual(im[0, 0, LOCAL], flux)
-        self.assertEqual(im.getWidth(), width)
-        self.assertEqual(im.getHeight(), height)
+        self.assertEqual(im.getWidth(), self.width)
+        self.assertEqual(im.getHeight(), self.height)
+
+    def testStr(self):
+        candidate = afwMath.TestImageCandidate(1, 2, 3)
+        candidate.setChi2(4)
+        candidate.setWidth(self.width)
+        candidate.setHeight(self.height)
+        expect = "center=(1.0,2.0), status=UNKNOWN, rating=3.0, size=(15, 21), chi2=4.0"
+        self.assertEqual(str(candidate), expect)
 
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):

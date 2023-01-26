@@ -20,7 +20,8 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from lsst.pex.exceptions import NotFoundError
-from ._math import SpatialCellCandidateIterator, SpatialCell
+from ._math import (SpatialCellCandidate, SpatialCellCandidateIterator, SpatialCell, SpatialCellSet,
+                    SpatialCellImageCandidate)
 
 __all__ = []  # import this module only for its side effects
 
@@ -35,6 +36,25 @@ def spatialCellCandidateIter(self):
 
 
 SpatialCellCandidateIterator.__iter__ = spatialCellCandidateIter
+
+
+def spatialCellCandidateRepr(self):
+    return (f"center=({self.getXCenter()},{self.getYCenter()}), "
+            f"status={self.getStatus().name}, rating={self.getCandidateRating()}")
+
+
+SpatialCellCandidate.__repr__ = spatialCellCandidateRepr
+
+
+def spatialCellImageCandidateRepr(self):
+    # NOTE: super doesn't work outside of class members, but this is only
+    # single inheritance.
+    string = (f"{SpatialCellCandidate.__repr__(self)}, size=({self.getWidth()}, {self.getHeight()}), "
+              f"chi2={self.getChi2()}")
+    return string
+
+
+SpatialCellImageCandidate.__repr__ = spatialCellImageCandidateRepr
 
 
 def spatialCellIter(self):
@@ -58,3 +78,22 @@ def spatialCellGetitem(self, idx):
 
 
 SpatialCell.__getitem__ = spatialCellGetitem
+
+
+def spatialCellRepr(self):
+    candidates = "\n".join(f"({str(x)})" for x in self)
+    # If there are no candidates, don't make a multi-line list.
+    candidatesStr = f"\n{candidates}" if self.size() != 0 else ""
+    return (f"{self.getLabel()}: bbox={self.getBBox()}, ignoreBad={self.getIgnoreBad()}, "
+            f"candidates=[{candidatesStr}]")
+
+
+SpatialCell.__repr__ = spatialCellRepr
+
+
+def spatialCellSetRepr(self):
+    cellsStr = "\n".join(str(cell) for cell in self.getCellList())
+    return (f"bbox={self.getBBox()}, {len(self.getCellList())} cells\n{cellsStr}")
+
+
+SpatialCellSet.__repr__ = spatialCellSetRepr
