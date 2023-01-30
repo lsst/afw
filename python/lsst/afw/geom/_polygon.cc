@@ -135,7 +135,7 @@ void declarePolygon(lsst::utils::python::WrapperCollection &wrappers) {
 }
 }  // namespace
 void wrapPolygon(lsst::utils::python::WrapperCollection &wrappers) {
-    wrappers.addSignatureDependency("lsst.pex.exceptions");
+    wrappers.addInheritanceDependency("lsst.pex.exceptions");
     wrappers.addInheritanceDependency("lsst.afw.typehandling");
     wrappers.addSignatureDependency("lsst.afw.table.io");
     wrappers.wrapException<SinglePolygonException, pex::exceptions::RuntimeError>("SinglePolygonException",

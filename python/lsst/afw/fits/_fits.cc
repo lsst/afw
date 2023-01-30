@@ -283,7 +283,7 @@ void declareFitsModule(lsst::utils::python::WrapperCollection &wrappers) {
 }  // namespace
 PYBIND11_MODULE(_fits, mod) {
     lsst::utils::python::WrapperCollection wrappers(mod, "lsst.afw.fits");
-    wrappers.addSignatureDependency("lsst.pex.exceptions");
+    wrappers.addInheritanceDependency("lsst.pex.exceptions");
     wrappers.addSignatureDependency("lsst.daf.base");
     // FIXME: after afw.image pybind wrappers are converted
     //wrappers.addSignatureDependency("lsst.afw.image");
