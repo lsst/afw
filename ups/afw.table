@@ -5,6 +5,8 @@ setupRequired(log)
 setupRequired(sphgeom)
 setupRequired(utils)
 setupRequired(astshim)
+setupRequired(base)
+setupRequired(cpputils)
 
 setupOptional(afwdata)
 
