@@ -239,7 +239,7 @@ public:
     explicit ImageBase(Array const& array, bool deep = false,
                        lsst::geom::Point2I const& xy0 = lsst::geom::Point2I());
 
-    ~ImageBase() = default;
+    virtual ~ImageBase() = default;
     /** Shallow assignment operator.
      *
      * @note that this has the effect of making the lhs share pixels with the rhs which may
