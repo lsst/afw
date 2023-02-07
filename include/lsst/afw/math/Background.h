@@ -170,7 +170,7 @@ public:
     BackgroundControl& operator=(BackgroundControl const&) = default;
     BackgroundControl& operator=(BackgroundControl&&) = default;
 
-    virtual ~BackgroundControl() = default;
+    ~BackgroundControl() = default;
     void setNxSample(int nxSample) {
         if (nxSample <= 0) {
             throw LSST_EXCEPT(lsst::pex::exceptions::LengthError,
