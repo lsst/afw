@@ -21,6 +21,8 @@
 
 __all__ = ["Mask", "MaskPixel"]
 
+import warnings
+
 import numpy as np
 
 from lsst.utils import TemplateMeta
@@ -69,6 +71,14 @@ class Mask(metaclass=TemplateMeta):
             # code that assumed "image" to still function.
             item = "mask" if "mask" in options else "image"
         return imageWriteFitsWithOptions(self, dest, options, item=item)
+
+    @staticmethod
+    def addMaskPlane(name, doc=None):
+        # Temporary overload helper for deprecation message.
+        if doc is None:
+            warnings.warn("Doc field will become non-optional. Will be removed after v26.", FutureWarning)
+            doc = ""
+        return Mask.addMaskPlaneWithDoc(name, doc)
 
 
 Mask.register(MaskPixel, MaskX)
