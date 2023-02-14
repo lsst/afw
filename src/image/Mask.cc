@@ -53,7 +53,7 @@ namespace {}  // namespace
 
 template <typename MaskPixelT>
 void Mask<MaskPixelT>::_initializePlanes(MaskPlaneDict const& planeDefs) {
-    LOGL_DEBUG("lsst.afw.image.Mask", "Number of mask planes: %d", getNumPlanesMax());
+    LOGL_DEBUG("lsst.afw.image.Mask", "Number of possible mask planes: %d", getNumPlanesMax());
 
     _maskDict = detail::MaskDict::copyOrGetDefault(planeDefs);
 }
