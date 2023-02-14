@@ -26,7 +26,10 @@
 #include <map>
 #include "lsst/afw/image/Mask.h"
 
-namespace lsst { namespace afw { namespace image { namespace detail {
+namespace lsst {
+namespace afw {
+namespace image {
+namespace detail {
 
 /*
  * MaskDict is the internal object that relates Mask's string plane names
@@ -60,13 +63,12 @@ namespace lsst { namespace afw { namespace image { namespace detail {
  */
 class MaskDict final {
 public:
-
     using value_type = MaskPlaneDict::value_type;
     using const_iterator = MaskPlaneDict::const_iterator;
 
     // Return a new MaskDict with the same plane definitions as the given
     // MaskPlaneDict, or return the default mask dict if it is empty.
-    static std::shared_ptr<MaskDict> copyOrGetDefault(MaskPlaneDict const& dict);
+    static std::shared_ptr<MaskDict> copyOrGetDefault(MaskPlaneDict const &dict);
 
     // Return the default MaskDict to be used for new Mask instances.
     static std::shared_ptr<MaskDict> getDefault();
@@ -92,11 +94,11 @@ public:
      * the mask plane to later ones (though the only exception that could
      * be thrown in practice is std::bad_alloc).
      */
-    static void addAllMasksPlane(std::string const & name, int bitId);
+    static void addAllMasksPlane(std::string const &name, int bitId);
 
     // Assignment is disabled; we don't need it.
-    MaskDict & operator=(MaskDict const &) = delete;
-    MaskDict & operator=(MaskDict &&) = delete;
+    MaskDict &operator=(MaskDict const &) = delete;
+    MaskDict &operator=(MaskDict &&) = delete;
 
     ~MaskDict() noexcept;
 
@@ -117,22 +119,22 @@ public:
      *
      * Returns -1 if no such plane is found.
      */
-    int getMaskPlane(std::string const & name) const;
+    int getMaskPlane(std::string const &name) const;
 
     // Write a description of the MaskDict to stdout.
     void print() const;
 
     // Fast comparison of MaskDicts, using the hash (and assuming there are
     // no unlucky collisions).
-    bool operator==(MaskDict const& rhs) const;
-    bool operator!=(MaskDict const& rhs) const { return !(*this == rhs); }
+    bool operator==(MaskDict const &rhs) const;
+    bool operator!=(MaskDict const &rhs) const { return !(*this == rhs); }
 
     // Iterators over MaskDict items (yields std::pair<std::string, int>).
     const_iterator begin() const noexcept { return _dict.begin(); }
     const_iterator end() const noexcept { return _dict.end(); }
 
     // Return an iterator to the item with the given name, or end().
-    const_iterator find(std::string const & name) const { return _dict.find(name); }
+    const_iterator find(std::string const &name) const { return _dict.find(name); }
 
     // Return the number of planes in this MaskDict.
     std::size_t size() const noexcept { return _dict.size(); }
@@ -141,23 +143,22 @@ public:
     bool empty() const noexcept { return _dict.empty(); }
 
     // Return the internal MaskPlaneDict.
-    MaskPlaneDict const & getMaskPlaneDict() const noexcept { return _dict; }
+    MaskPlaneDict const &getMaskPlaneDict() const noexcept { return _dict; }
 
     // Add a mask plane to just this MaskDict.
     // If a plane with the given name already exists, it is overridden.
     // Caller is responsible for ensuring that the bit is not in use; if it is,
     // the MaskDict will be in a corrupted state.
-    void add(std::string const & name, int bitId);
+    void add(std::string const &name, int bitId);
 
     // Remove the plane with the given name from just this MaskDict.
     // Does nothing if no such plane exists.
-    void erase(std::string const & name);
+    void erase(std::string const &name);
 
     // Remove all planes from this MaskDict.
     void clear();
 
 private:
-
     class GlobalState;
 
     // Add mask planes that should be present on all Masks that don't
@@ -171,7 +172,7 @@ private:
 
     MaskDict();
 
-    explicit MaskDict(MaskPlaneDict const & dict);
+    explicit MaskDict(MaskPlaneDict const &dict);
 
     MaskDict(MaskDict const &) = default;
     MaskDict(MaskDict &&) = default;
@@ -180,6 +181,9 @@ private:
     std::size_t _hash;
 };
 
-}}}} // namespace lsst::afw::image::detail
+}  // namespace detail
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst
 
-#endif // !LSST_AFW_IMAGE_DETAIL_MASKDICT_H
+#endif  // !LSST_AFW_IMAGE_DETAIL_MASKDICT_H

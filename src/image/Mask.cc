@@ -193,8 +193,7 @@ Mask<MaskPixelT>::Mask(fits::Fits& fitsFile, std::shared_ptr<daf::base::Property
 }
 
 template <typename MaskPixelT>
-void Mask<MaskPixelT>::writeFits(std::string const& fileName,
-                                 daf::base::PropertySet const * metadata_i,
+void Mask<MaskPixelT>::writeFits(std::string const& fileName, daf::base::PropertySet const* metadata_i,
                                  std::string const& mode) const {
     fits::Fits fitsfile(fileName, mode, fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
     writeFits(fitsfile, metadata_i);
@@ -202,8 +201,7 @@ void Mask<MaskPixelT>::writeFits(std::string const& fileName,
 
 
 template <typename MaskPixelT>
-void Mask<MaskPixelT>::writeFits(fits::MemFileManager& manager,
-                                 daf::base::PropertySet const * metadata_i,
+void Mask<MaskPixelT>::writeFits(fits::MemFileManager& manager, daf::base::PropertySet const* metadata_i,
                                  std::string const& mode) const {
     fits::Fits fitsfile(manager, mode, fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
     writeFits(fitsfile, metadata_i);
@@ -211,15 +209,13 @@ void Mask<MaskPixelT>::writeFits(fits::MemFileManager& manager,
 
 
 template <typename MaskPixelT>
-void Mask<MaskPixelT>::writeFits(fits::Fits& fitsfile,
-                                 daf::base::PropertySet const * metadata) const {
+void Mask<MaskPixelT>::writeFits(fits::Fits& fitsfile, daf::base::PropertySet const* metadata) const {
     writeFits(fitsfile, fits::ImageWriteOptions(*this), metadata);
 }
 
 template <typename MaskPixelT>
 void Mask<MaskPixelT>::writeFits(std::string const& filename, fits::ImageWriteOptions const& options,
-                                 std::string const& mode,
-                                 daf::base::PropertySet const * header) const {
+                                 std::string const& mode, daf::base::PropertySet const* header) const {
     fits::Fits fitsfile(filename, mode, fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
     writeFits(fitsfile, options, header);
 }
@@ -227,8 +223,7 @@ void Mask<MaskPixelT>::writeFits(std::string const& filename, fits::ImageWriteOp
 
 template <typename MaskPixelT>
 void Mask<MaskPixelT>::writeFits(fits::MemFileManager& manager, fits::ImageWriteOptions const& options,
-                                 std::string const& mode,
-                                 daf::base::PropertySet const * header) const {
+                                 std::string const& mode, daf::base::PropertySet const* header) const {
     fits::Fits fitsfile(manager, mode, fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
     writeFits(fitsfile, options, header);
 }
@@ -236,7 +231,7 @@ void Mask<MaskPixelT>::writeFits(fits::MemFileManager& manager, fits::ImageWrite
 
 template <typename MaskPixelT>
 void Mask<MaskPixelT>::writeFits(fits::Fits& fitsfile, fits::ImageWriteOptions const& options,
-                                 daf::base::PropertySet const * header) const {
+                                 daf::base::PropertySet const* header) const {
     std::shared_ptr<daf::base::PropertySet> useHeader =
             header ? header->deepCopy() : std::make_shared<dafBase::PropertySet>();
     addMaskPlanesToMetadata(useHeader);
@@ -249,7 +244,7 @@ template <typename MaskPixelT>
 std::string Mask<MaskPixelT>::interpret(MaskPixelT value) {
     std::string result = "";
     MaskPlaneDict const& mpd = _maskPlaneDict()->getMaskPlaneDict();
-    for (auto const &iter : mpd) {
+    for (auto const& iter : mpd) {
         if (value & getBitMask(iter.second)) {
             if (result.size() > 0) {
                 result += ",";
@@ -269,7 +264,6 @@ int Mask<MaskPixelT>::addMaskPlane(const std::string& name) {
     }
 
     // build new entry, adding the plane to all Masks where this is no contradiction
-
     if (id >= getNumPlanesMax()) {  // Max number of planes is already allocated
         throw LSST_EXCEPT(pexExcept::RuntimeError,
                           str(boost::format("Max number of planes (%1%) already used") % getNumPlanesMax()));
@@ -337,7 +331,7 @@ template <typename MaskPixelT>
 MaskPixelT Mask<MaskPixelT>::getBitMask(int planeId) {
     MaskPlaneDict const& mpd = _maskPlaneDict()->getMaskPlaneDict();
 
-    for (auto const &i : mpd) {
+    for (auto const& i : mpd) {
         if (planeId == i.second) {
             MaskPixelT const bitmask = getBitMaskNoThrow(planeId);
             if (bitmask == 0) {  // failed
@@ -375,7 +369,7 @@ MaskPixelT Mask<MaskPixelT>::getPlaneBitMask(const std::string& name) {
 template <typename MaskPixelT>
 MaskPixelT Mask<MaskPixelT>::getPlaneBitMask(const std::vector<std::string>& name) {
     MaskPixelT mpix = 0x0;
-    for (auto const &it : name) {
+    for (auto const& it : name) {
         mpix |= getBitMask(getMaskPlane(it));
     }
     return mpix;
@@ -418,9 +412,9 @@ void Mask<MaskPixelT>::conformMaskPlanes(MaskPlaneDict const& currentPlaneDict) 
         MaskPixelT currentMask[sizeof(MaskPixelT) * 8];    //           mapped to these bits
         int numReMap = 0;
 
-        for (auto const &i : currentPlaneDict) {
-            std::string const name = i.first;                     // name of mask plane
-            int const currentPlaneNumber = i.second;              // plane number currently in use
+        for (auto const& i : currentPlaneDict) {
+            std::string const name = i.first;                      // name of mask plane
+            int const currentPlaneNumber = i.second;               // plane number currently in use
             int canonicalPlaneNumber = getMaskPlaneNoThrow(name);  // plane number in lsst::afw::image::Mask
 
             if (canonicalPlaneNumber < 0) {  // no such plane; add it
@@ -578,7 +572,7 @@ void Mask<MaskPixelT>::addMaskPlanesToMetadata(std::shared_ptr<dafBase::Property
     // First, clear existing MaskPlane metadata
     using NameList = std::vector<std::string>;
     NameList paramNames = metadata->paramNames(false);
-    for (auto const &paramName : paramNames) {
+    for (auto const& paramName : paramNames) {
         if (paramName.compare(0, maskPlanePrefix.size(), maskPlanePrefix) == 0) {
             metadata->remove(paramName);
         }
@@ -587,7 +581,7 @@ void Mask<MaskPixelT>::addMaskPlanesToMetadata(std::shared_ptr<dafBase::Property
     MaskPlaneDict const& mpd = _maskPlaneDict()->getMaskPlaneDict();
 
     // Add new MaskPlane metadata
-    for (auto const &i : mpd) {
+    for (auto const& i : mpd) {
         std::string const& planeName = i.first;
         int const planeNumber = i.second;
 
@@ -608,7 +602,7 @@ typename Mask<MaskPixelT>::MaskPlaneDict Mask<MaskPixelT>::parseMaskPlaneMetadat
     int numPlanesUsed = 0;  // number of planes used
 
     // Iterate over childless properties with names starting with maskPlanePrefix
-    for (auto const &paramName : paramNames) {
+    for (auto const& paramName : paramNames) {
         if (paramName.compare(0, maskPlanePrefix.size(), maskPlanePrefix) == 0) {
             // split off maskPlanePrefix to obtain plane name
             std::string planeName = paramName.substr(maskPlanePrefix.size());

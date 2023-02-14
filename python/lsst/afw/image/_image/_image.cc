@@ -99,10 +99,9 @@ static void declareImageBase(lsst::utils::python::WrapperCollection &wrappers, s
                                  self.getArray().deep() = array;
                              }
                          });
-        cls.def("setXY0",
-                (void (ImageBase<PixelT>::*)(lsst::geom::Point2I const)) & ImageBase<PixelT>::setXY0,
+        cls.def("setXY0", (void(ImageBase<PixelT>::*)(lsst::geom::Point2I const)) & ImageBase<PixelT>::setXY0,
                 "xy0"_a);
-        cls.def("setXY0", (void (ImageBase<PixelT>::*)(int const, int const)) & ImageBase<PixelT>::setXY0,
+        cls.def("setXY0", (void(ImageBase<PixelT>::*)(int const, int const)) & ImageBase<PixelT>::setXY0,
                 "x0"_a, "y0"_a);
         cls.def("getBBox", &ImageBase<PixelT>::getBBox, "origin"_a = PARENT);
 
@@ -180,41 +179,34 @@ static void declareMask(lsst::utils::python::WrapperCollection &wrappers, std::s
         cls.def("__ixor__", [](Mask<MaskPixelT> &self, int other) { return self ^= other; });
 
         /* Members */
-        cls.def("swap", (void (Mask<MaskPixelT>::*)(Mask<MaskPixelT> &)) & Mask<MaskPixelT>::swap);
+        cls.def("swap", (void(Mask<MaskPixelT>::*)(Mask<MaskPixelT> &)) & Mask<MaskPixelT>::swap);
         cls.def("writeFits",
-                (void (Mask<MaskPixelT>::*)(std::string const &,
-                                            daf::base::PropertySet const *,
-                                            std::string const &) const) &
+                (void(Mask<MaskPixelT>::*)(std::string const &, daf::base::PropertySet const *,
+                                           std::string const &) const) &
                         Mask<MaskPixelT>::writeFits,
                 "fileName"_a, "metadata"_a = nullptr, "mode"_a = "w");
         cls.def("writeFits",
-                (void (Mask<MaskPixelT>::*)(fits::MemFileManager &,
-                                            daf::base::PropertySet const *,
-                                            std::string const &) const) &
+                (void(Mask<MaskPixelT>::*)(fits::MemFileManager &, daf::base::PropertySet const *,
+                                           std::string const &) const) &
                         Mask<MaskPixelT>::writeFits,
                 "manager"_a, "metadata"_a = nullptr, "mode"_a = "w");
         cls.def("writeFits",
-                (void (Mask<MaskPixelT>::*)(fits::Fits &, daf::base::PropertySet const *)
-                         const) &
+                (void(Mask<MaskPixelT>::*)(fits::Fits &, daf::base::PropertySet const *) const) &
                         Mask<MaskPixelT>::writeFits,
                 "fitsfile"_a, "metadata"_a = nullptr);
         cls.def("writeFits",
-                (void (Mask<MaskPixelT>::*)(std::string const &, fits::ImageWriteOptions const &,
-                                            std::string const &,
-                                            daf::base::PropertySet const *) const) &
+                (void(Mask<MaskPixelT>::*)(std::string const &, fits::ImageWriteOptions const &,
+                                           std::string const &, daf::base::PropertySet const *) const) &
                         Mask<MaskPixelT>::writeFits,
-                "filename"_a, "options"_a, "mode"_a = "w",
-                "header"_a = nullptr);
+                "filename"_a, "options"_a, "mode"_a = "w", "header"_a = nullptr);
         cls.def("writeFits",
-                (void (Mask<MaskPixelT>::*)(fits::MemFileManager &, fits::ImageWriteOptions const &,
-                                            std::string const &,
-                                            daf::base::PropertySet const *) const) &
+                (void(Mask<MaskPixelT>::*)(fits::MemFileManager &, fits::ImageWriteOptions const &,
+                                           std::string const &, daf::base::PropertySet const *) const) &
                         Mask<MaskPixelT>::writeFits,
-                "manager"_a, "options"_a, "mode"_a = "w",
-                "header"_a = nullptr);
+                "manager"_a, "options"_a, "mode"_a = "w", "header"_a = nullptr);
         cls.def("writeFits",
-                (void (Mask<MaskPixelT>::*)(fits::Fits &, fits::ImageWriteOptions const &,
-                                            daf::base::PropertySet const *) const) &
+                (void(Mask<MaskPixelT>::*)(fits::Fits &, fits::ImageWriteOptions const &,
+                                           daf::base::PropertySet const *) const) &
                         Mask<MaskPixelT>::writeFits,
                 "fits"_a, "options"_a, "header"_a = nullptr);
         cls.def_static("readFits", (Mask<MaskPixelT>(*)(std::string const &, int))Mask<MaskPixelT>::readFits,
@@ -301,43 +293,37 @@ static PyImage<PixelT> declareImage(lsst::utils::python::WrapperCollection &wrap
         cls.def("subset", &Image<PixelT>::subset, "bbox"_a, "origin"_a = PARENT);
 
         cls.def("writeFits",
-                (void (Image<PixelT>::*)(std::string const &, daf::base::PropertySet const *,
-                                         std::string const &) const) &
+                (void(Image<PixelT>::*)(std::string const &, daf::base::PropertySet const *,
+                                        std::string const &) const) &
                         Image<PixelT>::writeFits,
                 "fileName"_a, "metadata"_a = nullptr, "mode"_a = "w");
         cls.def("writeFits",
-                (void (Image<PixelT>::*)(fits::MemFileManager &,
-                                         daf::base::PropertySet const *, std::string const &)
-                         const) &
+                (void(Image<PixelT>::*)(fits::MemFileManager &, daf::base::PropertySet const *,
+                                        std::string const &) const) &
                         Image<PixelT>::writeFits,
                 "manager"_a, "metadata"_a = nullptr, "mode"_a = "w");
         cls.def("writeFits",
-                (void (Image<PixelT>::*)(fits::Fits &, daf::base::PropertySet const *) const) &
+                (void(Image<PixelT>::*)(fits::Fits &, daf::base::PropertySet const *) const) &
                         Image<PixelT>::writeFits,
                 "fitsfile"_a, "metadata"_a = nullptr);
         cls.def("writeFits",
-                (void (Image<PixelT>::*)(std::string const &, fits::ImageWriteOptions const &,
-                                         std::string const &, daf::base::PropertySet const *,
-                                         image::Mask<image::MaskPixel> const *) const) &
+                (void(Image<PixelT>::*)(std::string const &, fits::ImageWriteOptions const &,
+                                        std::string const &, daf::base::PropertySet const *,
+                                        image::Mask<image::MaskPixel> const *) const) &
                         Image<PixelT>::writeFits,
-                "filename"_a, "options"_a, "mode"_a = "w",
-                "header"_a = nullptr,
-                "mask"_a = nullptr);
+                "filename"_a, "options"_a, "mode"_a = "w", "header"_a = nullptr, "mask"_a = nullptr);
         cls.def("writeFits",
-                (void (Image<PixelT>::*)(fits::MemFileManager &, fits::ImageWriteOptions const &,
-                                         std::string const &, daf::base::PropertySet const *,
-                                         image::Mask<image::MaskPixel> const *) const) &
+                (void(Image<PixelT>::*)(fits::MemFileManager &, fits::ImageWriteOptions const &,
+                                        std::string const &, daf::base::PropertySet const *,
+                                        image::Mask<image::MaskPixel> const *) const) &
                         Image<PixelT>::writeFits,
-                "manager"_a, "options"_a, "mode"_a = "w",
-                "header"_a = nullptr,
-                "mask"_a = nullptr);
+                "manager"_a, "options"_a, "mode"_a = "w", "header"_a = nullptr, "mask"_a = nullptr);
         cls.def("writeFits",
-                (void (Image<PixelT>::*)(fits::Fits &, fits::ImageWriteOptions const &,
-                                         daf::base::PropertySet const *,
-                                         image::Mask<image::MaskPixel> const *) const) &
+                (void(Image<PixelT>::*)(fits::Fits &, fits::ImageWriteOptions const &,
+                                        daf::base::PropertySet const *, image::Mask<image::MaskPixel> const *)
+                         const) &
                         Image<PixelT>::writeFits,
-                "fits"_a, "options"_a, "header"_a = nullptr,
-                "mask"_a = nullptr);
+                "fits"_a, "options"_a, "header"_a = nullptr, "mask"_a = nullptr);
 
         cls.def_static("readFits", (Image<PixelT>(*)(std::string const &, int))Image<PixelT>::readFits,
                        "filename"_a, "hdu"_a = fits::DEFAULT_HDU);
@@ -374,14 +360,12 @@ static void declareDecoratedImage(lsst::utils::python::WrapperCollection &wrappe
                         py::overload_cast<std::string const &, daf::base::PropertySet const *,
                                           std::string const &>(&DecoratedImage<PixelT>::writeFits,
                                                                py::const_),
-                        "filename"_a, "metadata"_a = nullptr,
-                        "mode"_a = "w");
+                        "filename"_a, "metadata"_a = nullptr, "mode"_a = "w");
                 cls.def("writeFits",
                         py::overload_cast<std::string const &, fits::ImageWriteOptions const &,
                                           daf::base::PropertySet const *, std::string const &>(
                                 &DecoratedImage<PixelT>::writeFits, py::const_),
-                        "filename"_a, "options"_a, "metadata"_a = nullptr,
-                        "mode"_a = "w");
+                        "filename"_a, "options"_a, "metadata"_a = nullptr, "mode"_a = "w");
                 cls.def("getImage", py::overload_cast<>(&DecoratedImage<PixelT>::getImage));
                 cls.def_property_readonly("image", py::overload_cast<>(&DecoratedImage<PixelT>::getImage));
                 cls.def("getGain", &DecoratedImage<PixelT>::getGain);

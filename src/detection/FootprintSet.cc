@@ -362,7 +362,7 @@ FootprintSet mergeFootprintSets(FootprintSet const &lhs,      // the FootprintSe
      * and we avoid this by this two-step process.
      */
     FindIdsInFootprint<IdPixelT> idFinder;
-    for (const auto& foot : *fs.getFootprints()) {
+    for (const auto &foot : *fs.getFootprints()) {
         // find the (mangled) [lr]hsFootprint IDs that contribute to foot
         foot->getSpans()->applyFunctor(idFinder, *idImage);
 
@@ -729,7 +729,7 @@ static void findFootprints(
     /*
      * Resolve aliases; first alias chains, then the IDs in the spans
      */
-    for (auto & span : spans) {
+    for (auto &span : spans) {
         span.id = resolve_alias(aliases, span.id);
     }
     /*
