@@ -1046,9 +1046,7 @@ class FootprintSetTestCase(unittest.TestCase):
     def setUp(self):
         self.ms = afwImage.MaskedImageF(lsst.geom.Extent2I(12, 8))
         im = self.ms.getImage()
-        #
         # Objects that we should detect
-        #
         self.objects = []
         self.objects += [Object(10, [(1, 4, 4), (2, 3, 5), (3, 4, 4)])]
         self.objects += [Object(20, [(5, 7, 8), (5, 10, 10), (6, 8, 9)])]

@@ -19,14 +19,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-"""
-Tests for Masks
-
-Run with:
-   python test_mask.py
-or
-   pytest test_mask.py
-"""
 import os.path
 import unittest
 
@@ -105,14 +97,6 @@ class MaskTestCase(utilsTests.TestCase):
             # For some tests, it is left-shifted by some number of mask planes.
             self.expect = np.zeros((256, 256), dtype='i8')
             self.expect[:, 0] = 1
-
-    def tearDown(self):
-        del self.mask1
-        del self.mask2
-        # Reset the mask plane to the default
-        self.Mask.clearMaskPlaneDict()
-        for p in self.defaultMaskPlanes:
-            self.Mask.addMaskPlane(p)
 
     def testArrays(self):
         # could use Mask(5, 6) but check extent(5, 6) form too
@@ -373,21 +357,6 @@ class OldMaskTestCase(unittest.TestCase):
         self.subTestMask = self.Mask(
             self.testMask, self.region, afwImage.LOCAL)
 
-        if False:
-            self.pixelList = afwImage.listPixelCoord()
-            for x in range(0, 300):
-                for y in range(300, 400, 20):
-                    self.pixelList.push_back(afwImage.PixelCoord(x, y))
-
-    def tearDown(self):
-        del self.testMask
-        del self.subTestMask
-        del self.region
-        # Reset the mask plane to the default
-        self.Mask.clearMaskPlaneDict()
-        for p in self.defaultMaskPlanes:
-            self.Mask.addMaskPlane(p)
-
     def testPlaneAddition(self):
         """Test mask plane addition"""
 
@@ -418,9 +387,7 @@ class OldMaskTestCase(unittest.TestCase):
 
     def testMetadata(self):
         """Test mask plane metadata interchange with MaskPlaneDict"""
-        #
         # Demonstrate that we can extract a MaskPlaneDict into metadata
-        #
         metadata = lsst.daf.base.PropertySet()
 
         self.Mask.addMaskPlanesToMetadata(metadata)
@@ -442,11 +409,6 @@ class OldMaskTestCase(unittest.TestCase):
 
         planes = self.Mask().getMaskPlaneDict()
         self.testMask.clearMaskPlane(planes['CR'])
-
-        if False:
-            for p in planes.keys():
-                self.testMask.setMaskPlaneValues(planes[p], self.pixelList)
-
         # print "\nClearing mask"
         self.testMask.clearMaskPlane(planes['CR'])
 
@@ -517,7 +479,7 @@ class OldMaskTestCase(unittest.TestCase):
 
         # The dictionary should be back to the same state, so ...
         self.Mask.addMaskPlane(name)
-        tst                             # ... assertion should not fail
+        tst()                             # should not raise
 
         self.testMask.removeAndClearMaskPlane(name, True)
         self.Mask.addMaskPlane("Mario")  # takes name's slot
@@ -547,16 +509,13 @@ class OldMaskTestCase(unittest.TestCase):
         self.assertNotEqual(self.testMask.getMaskPlaneDict()[
                             name], oldDict[name])
 
-        def tst():
-            self.testMask |= testMask3
-
         self.testMask.removeAndClearMaskPlane("BP")
 
-        self.assertRaises(pexExcept.RuntimeError, tst)
-        #
+        with self.assertRaises(pexExcept.RuntimeError):
+            self.testMask |= testMask3
+
         # OK, that failed as it should.  Fixup the dictionaries and try again
-        #
-        self.Mask.addMaskPlane("BP")
+        self.Mask.addMaskPlane("BP", "some doc")
         # convert testMask3 from oldDict to current default
         testMask3.conformMaskPlanes(oldDict)
 
@@ -621,21 +580,6 @@ class OldMaskTestCase(unittest.TestCase):
             afwDisplay.Display(frame=3).mtv(testMask3, title="testConformMaskPlanes2 (conform with oldDict)")
 
         self.testMask |= testMask3
-
-
-def printMaskPlane(mask, plane,
-                   xrange=list(range(250, 300, 10)), yrange=list(range(300, 400, 20))):
-    """Print parts of the specified plane of the mask"""
-
-    xrange = list(range(min(xrange), max(xrange), 25))
-    yrange = list(range(min(yrange), max(yrange), 25))
-
-    for x in xrange:
-        for y in yrange:
-            if False:                   # mask(x,y) confuses swig
-                print(x, y, mask(x, y), mask(x, y, plane))
-            else:
-                print(x, y, mask(x, y, plane))
 
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
