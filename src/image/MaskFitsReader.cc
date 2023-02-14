@@ -22,10 +22,12 @@
 #include "lsst/afw/image/MaskFitsReader.h"
 #include "lsst/afw/image/detail/MaskDict.h"
 
-namespace lsst { namespace afw { namespace image {
+namespace lsst {
+namespace afw {
+namespace image {
 
 template <typename PixelT>
-Mask<PixelT> MaskFitsReader::read(lsst::geom::Box2I const & bbox, ImageOrigin origin, bool conformMasks,
+Mask<PixelT> MaskFitsReader::read(lsst::geom::Box2I const &bbox, ImageOrigin origin, bool conformMasks,
                                   bool allowUnsafe) {
     Mask<PixelT> result(readArray<PixelT>(bbox, origin, allowUnsafe), false, readXY0(bbox, origin));
     auto metadata = readMetadata();
@@ -49,4 +51,6 @@ Mask<PixelT> MaskFitsReader::read(lsst::geom::Box2I const & bbox, ImageOrigin or
 
 INSTANTIATE(MaskPixel);
 
-}}} // lsst::afw::image
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst
