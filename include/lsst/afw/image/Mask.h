@@ -56,6 +56,7 @@ namespace detail {
 struct Mask_tag : public detail::basic_tag {};
 
 using MaskPlaneDict = std::map<std::string, int>;
+using MaskPlaneDocDict = std::map<std::string, std::string>;
 }  // namespace detail
 
 /**
@@ -483,7 +484,9 @@ public:
     //
     /// Reset the maskPlane dictionary
     static void clearMaskPlaneDict();
-    static int addMaskPlane(const std::string& name);
+    [[deprecated("Doc field will become non-optional. Will be removed after v26.")]] static int addMaskPlane(
+            const std::string& name);
+    static int addMaskPlane(const std::string& name, const std::string& doc);
     static void removeMaskPlane(const std::string& name);
     /**
      * @brief Clear all pixels of the specified mask and remove the plane from the mask plane dictionary;
@@ -557,8 +560,9 @@ private:
      *
      * @param name new name of mask plane
      * @param plane ID of mask plane to be (re)named
+     * @param description of the mask plane
      */
-    static int addMaskPlane(std::string name, int plane);
+    static int addMaskPlane(std::string name, int plane, std::string doc);
 
     /// Return the mask plane number corresponding to a plane name, or -1 if not found
     static int getMaskPlaneNoThrow(const std::string& name);

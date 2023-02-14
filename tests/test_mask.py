@@ -21,6 +21,7 @@
 
 import os.path
 import unittest
+import warnings
 
 import numpy as np
 
@@ -77,7 +78,7 @@ class MaskTestCase(utilsTests.TestCase):
         # reset so tests will be deterministic
         self.Mask.clearMaskPlaneDict()
         for p in ("BAD", "SAT", "INTRP", "CR", "EDGE"):
-            self.Mask.addMaskPlane(p)
+            self.Mask.addMaskPlane(p, "some docs")
 
         self.BAD = self.Mask.getPlaneBitMask("BAD")
         self.CR = self.Mask.getPlaneBitMask("CR")
@@ -97,6 +98,15 @@ class MaskTestCase(utilsTests.TestCase):
             # For some tests, it is left-shifted by some number of mask planes.
             self.expect = np.zeros((256, 256), dtype='i8')
             self.expect[:, 0] = 1
+
+    def testAddMaskPlaneDeprecation(self):
+        with self.assertWarnsRegex(FutureWarning, "Doc field will become non-optional"):
+            self.mask1.addMaskPlane("NODOCSTRING")
+
+        # This should not raise
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", category=FutureWarning)
+            self.mask1.addMaskPlane("YESDOCSTRING", "some docs")
 
     def testArrays(self):
         # could use Mask(5, 6) but check extent(5, 6) form too
@@ -177,6 +187,9 @@ class MaskTestCase(utilsTests.TestCase):
 
         for k in sorted(planes.keys()):
             self.assertEqual(planes[k], self.Mask.getMaskPlane(k))
+
+        self.Mask().printMaskPlanes()
+        # import ipdb; ipdb.set_trace();
 
     def testCopyConstructors(self):
         dmask = afwImage.Mask(self.mask1, True)  # deep copy
@@ -350,7 +363,7 @@ class OldMaskTestCase(unittest.TestCase):
         # reset so tests will be deterministic
         self.Mask.clearMaskPlaneDict()
         for p in ("CR", "BP"):
-            self.Mask.addMaskPlane(p)
+            self.Mask.addMaskPlane(p, "some docs")
 
         self.region = lsst.geom.Box2I(lsst.geom.Point2I(100, 300),
                                       lsst.geom.Extent2I(10, 40))
@@ -362,7 +375,7 @@ class OldMaskTestCase(unittest.TestCase):
 
         nplane = self.testMask.getNumPlanesUsed()
         for p in ("XCR", "XBP"):
-            self.assertEqual(self.Mask.addMaskPlane(p),
+            self.assertEqual(self.Mask.addMaskPlane(p, "some doc"),
                              nplane, f"Assigning plane {p}")
             nplane += 1
 
@@ -371,7 +384,7 @@ class OldMaskTestCase(unittest.TestCase):
 
         nextra = 8
         for p in range(0, nextra):
-            self.Mask.addMaskPlane(pname(p))
+            self.Mask.addMaskPlane(pname(p), "some doc")
 
         for p in range(0, nextra):
             self.testMask.removeAndClearMaskPlane(pname(p))
@@ -439,10 +452,10 @@ class OldMaskTestCase(unittest.TestCase):
                           lambda: self.testMask.removeMaskPlane("RHL gets names right"))
         #
         self.Mask.clearMaskPlaneDict()
-        self.Mask.addMaskPlane("P0")
-        self.Mask.addMaskPlane("P1")
-        # a no-op -- readding a plane has no effect
-        self.Mask.addMaskPlane("P1")
+        self.Mask.addMaskPlane("P0", "some doc")
+        self.Mask.addMaskPlane("P1", "some doc")
+        # a no-op -- re-adding a plane has no effect
+        self.Mask.addMaskPlane("P1", "some doc")
         #
         # Check that removing default mask planes doesn't affect pre-existing planes
         #
@@ -455,7 +468,7 @@ class OldMaskTestCase(unittest.TestCase):
         #
         # Check that removeAndClearMaskPlane can clear the default too
         #
-        self.Mask.addMaskPlane("BP")
+        self.Mask.addMaskPlane("BP", "some doc")
         self.testMask.removeAndClearMaskPlane("BP", True)
 
         self.assertRaises(pexExcept.InvalidParameterError, checkPlaneBP)
@@ -466,7 +479,7 @@ class OldMaskTestCase(unittest.TestCase):
         testMask3 = self.Mask(self.testMask.getDimensions())
 
         name = "Great Timothy"
-        self.Mask.addMaskPlane(name)
+        self.Mask.addMaskPlane(name, "some doc")
         testMask3.removeAndClearMaskPlane(name)
 
         self.Mask.getMaskPlane(name)    # should be fine
@@ -478,12 +491,12 @@ class OldMaskTestCase(unittest.TestCase):
         self.assertRaises(pexExcept.RuntimeError, tst)
 
         # The dictionary should be back to the same state, so ...
-        self.Mask.addMaskPlane(name)
+        self.Mask.addMaskPlane(name, "some doc")
         tst()                             # should not raise
 
         self.testMask.removeAndClearMaskPlane(name, True)
-        self.Mask.addMaskPlane("Mario")  # takes name's slot
-        self.Mask.addMaskPlane(name)
+        self.Mask.addMaskPlane("Mario", "some doc")  # takes name's slot
+        self.Mask.addMaskPlane(name, "some doc")
 
         self.assertRaises(pexExcept.RuntimeError, tst)
 
@@ -494,8 +507,8 @@ class OldMaskTestCase(unittest.TestCase):
 
         name = "Great Timothy"
         name2 = "Our Boss"
-        self.Mask.addMaskPlane(name)
-        self.Mask.addMaskPlane(name2)
+        self.Mask.addMaskPlane(name, "some doc")
+        self.Mask.addMaskPlane(name2, "some doc")
         # a description of the Mask's current dictionary
         oldDict = testMask3.getMaskPlaneDict()
 
@@ -503,8 +516,8 @@ class OldMaskTestCase(unittest.TestCase):
             self.testMask.removeAndClearMaskPlane(n, True)
 
         # added in opposite order to the planes in testMask3
-        self.Mask.addMaskPlane(name2)
-        self.Mask.addMaskPlane(name)
+        self.Mask.addMaskPlane(name2, "some doc")
+        self.Mask.addMaskPlane(name, "some doc")
 
         self.assertNotEqual(self.testMask.getMaskPlaneDict()[
                             name], oldDict[name])
@@ -527,7 +540,7 @@ class OldMaskTestCase(unittest.TestCase):
         testMask3 = self.Mask(self.testMask.getDimensions())
 
         name = "XXX"
-        self.Mask.addMaskPlane(name)
+        self.Mask.addMaskPlane(name, "some doc")
         oldDict = testMask3.getMaskPlaneDict()
         # invalidates dictionary version
         testMask3.removeAndClearMaskPlane(name)
@@ -543,8 +556,8 @@ class OldMaskTestCase(unittest.TestCase):
 
         name1 = "Great Timothy"
         name2 = "Our Boss"
-        p1 = self.Mask.addMaskPlane(name1)
-        p2 = self.Mask.addMaskPlane(name2)
+        p1 = self.Mask.addMaskPlane(name1, "some doc")
+        p2 = self.Mask.addMaskPlane(name2, "some doc")
         oldDict = self.testMask.getMaskPlaneDict()
 
         testMask3.setMaskPlaneValues(p1, 0, 5, 0)
@@ -558,8 +571,8 @@ class OldMaskTestCase(unittest.TestCase):
 
         self.testMask.removeAndClearMaskPlane(name1, True)
         self.testMask.removeAndClearMaskPlane(name2, True)
-        self.Mask.addMaskPlane(name2)  # added in opposite order to testMask3
-        self.Mask.addMaskPlane(name1)
+        self.Mask.addMaskPlane(name2, "some doc")  # added in opposite order to testMask3
+        self.Mask.addMaskPlane(name1, "some doc")
 
         self.assertEqual(self.testMask[0, 0], 0)
 

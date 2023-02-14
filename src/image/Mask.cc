@@ -55,7 +55,7 @@ template <typename MaskPixelT>
 void Mask<MaskPixelT>::_initializePlanes(MaskPlaneDict const& planeDefs) {
     LOGL_DEBUG("lsst.afw.image.Mask", "Number of possible mask planes: %d", getNumPlanesMax());
 
-    _maskDict = detail::MaskDict::copyOrGetDefault(planeDefs);
+    _maskDict = detail::MaskDict::copyOrGetDefault(planeDefs, detail::MaskPlaneDocDict());
 }
 
 template <typename MaskPixelT>
@@ -257,9 +257,13 @@ std::string Mask<MaskPixelT>::interpret(MaskPixelT value) {
 
 template <typename MaskPixelT>
 int Mask<MaskPixelT>::addMaskPlane(const std::string& name) {
-    int id = getMaskPlaneNoThrow(name);  // see if the plane is already available
+    return addMaskPlane(name, "");
+}
 
-    if (id < 0) {  // doesn't exist
+template <typename MaskPixelT>
+int Mask<MaskPixelT>::addMaskPlane(const std::string& name, const std::string& doc) {
+    int id = getMaskPlaneNoThrow(name);  // see if the plane is already available
+    if (id < 0) {                        // doesn't exist
         id = _maskPlaneDict()->getUnusedPlane();
     }
 
@@ -269,20 +273,20 @@ int Mask<MaskPixelT>::addMaskPlane(const std::string& name) {
                           str(boost::format("Max number of planes (%1%) already used") % getNumPlanesMax()));
     }
 
-    detail::MaskDict::addAllMasksPlane(name, id);
+    detail::MaskDict::addAllMasksPlane(name, id, doc);
 
     return id;
 }
 
 template <typename MaskPixelT>
-int Mask<MaskPixelT>::addMaskPlane(std::string name, int planeId) {
+int Mask<MaskPixelT>::addMaskPlane(std::string name, int planeId, std::string doc) {
     if (planeId < 0 || planeId >= getNumPlanesMax()) {
         throw LSST_EXCEPT(
                 pexExcept::RangeError,
                 str(boost::format("mask plane ID must be between 0 and %1%") % (getNumPlanesMax() - 1)));
     }
 
-    _maskPlaneDict()->add(name, planeId);
+    _maskPlaneDict()->add(name, planeId, doc);
 
     return planeId;
 }
@@ -397,7 +401,8 @@ void Mask<MaskPixelT>::clearMaskPlane(int planeId) {
 
 template <typename MaskPixelT>
 void Mask<MaskPixelT>::conformMaskPlanes(MaskPlaneDict const& currentPlaneDict) {
-    std::shared_ptr<detail::MaskDict> currentMD = detail::MaskDict::copyOrGetDefault(currentPlaneDict);
+    std::shared_ptr<detail::MaskDict> currentMD =
+            detail::MaskDict::copyOrGetDefault(currentPlaneDict, detail::MaskPlaneDocDict());
 
     if (*_maskDict == *currentMD) {
         if (*detail::MaskDict::getDefault() == *_maskDict) {

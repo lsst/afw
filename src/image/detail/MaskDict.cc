@@ -38,10 +38,10 @@ public:
         return instance;
     }
 
-    std::shared_ptr<MaskDict> copyOrGetDefault(MaskPlaneDict const &mpd) {
+    std::shared_ptr<MaskDict> copyOrGetDefault(MaskPlaneDict const &mpd, MaskPlaneDocDict const &docs) {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         if (!mpd.empty()) {
-            std::shared_ptr<MaskDict> dict(new MaskDict(mpd));
+            std::shared_ptr<MaskDict> dict(new MaskDict(mpd, docs));
             _allMaskDicts.insert(dict);
             return dict;
         }
@@ -105,8 +105,8 @@ private:
     std::shared_ptr<MaskDict> _defaultMaskDict;
 };
 
-std::shared_ptr<MaskDict> MaskDict::copyOrGetDefault(MaskPlaneDict const &mpd) {
-    return GlobalState::get().copyOrGetDefault(mpd);
+std::shared_ptr<MaskDict> MaskDict::copyOrGetDefault(MaskPlaneDict const &mpd, MaskPlaneDocDict const &docs) {
+    return GlobalState::get().copyOrGetDefault(mpd, docs);
 }
 
 std::shared_ptr<MaskDict> MaskDict::getDefault() { return GlobalState::get().getDefault(); }
@@ -115,14 +115,14 @@ void MaskDict::setDefault(std::shared_ptr<MaskDict> dict) { GlobalState::get().s
 
 std::shared_ptr<MaskDict> MaskDict::detachDefault() { return GlobalState::get().detachDefault(); }
 
-void MaskDict::addAllMasksPlane(std::string const &name, int bitId) {
-    GlobalState::get().forEachMaskDict([&name, bitId](MaskDict &dict) {
+void MaskDict::addAllMasksPlane(std::string const &name, int bitId, std::string const &doc) {
+    GlobalState::get().forEachMaskDict([&name, bitId, doc](MaskDict &dict) {
         auto const found = std::find_if(dict.begin(), dict.end(),
                                         [bitId](auto const &item) { return item.second == bitId; });
         if (found == dict.end()) {
             // is name already in use?
             if (dict.find(name) == dict.end()) {
-                dict.add(name, bitId);
+                dict.add(name, bitId, doc);
             }
         }
     });
@@ -160,8 +160,13 @@ int MaskDict::getMaskPlane(std::string const &name) const {
 }
 
 void MaskDict::print() const {
-    for (auto const &item : *this) {
-        std::cout << "Plane " << item.second << " -> " << item.first << std::endl;
+    auto it_dict = this->begin();
+    auto it_doc = _docs.begin();
+    while (it_dict != this->end()) {
+        std::cout << "Plane " << it_dict->second << " -> " << it_dict->first << " : " << it_doc->second
+                  << std::endl;
+        ++it_dict;
+        ++it_doc;
     }
 }
 
@@ -169,38 +174,57 @@ bool MaskDict::operator==(MaskDict const &rhs) const {
     return this == &rhs || (_hash == rhs._hash && _dict == rhs._dict);
 }
 
-void MaskDict::add(std::string const &name, int bitId) {
+void MaskDict::add(std::string const &name, int bitId, std::string const &doc) {
     _dict[name] = bitId;
+    _docs[name] = doc;
     _hash = boost::hash<MaskPlaneDict>()(_dict);
 }
 
 void MaskDict::erase(std::string const &name) {
     _dict.erase(name);
+    _docs.erase(name);
     _hash = boost::hash<MaskPlaneDict>()(_dict);
 }
 
 void MaskDict::clear() {
     _dict.clear();
+    _docs.clear();
     _hash = 0x0;
 }
 
 void MaskDict::_addInitialMaskPlanes() {
     int i = -1;
     _dict["BAD"] = ++i;
+    _docs["BAD"] = "This pixel is known to be bad (e.g. the amplifier is not working).";
     _dict["SAT"] = ++i;
+    _docs["SAT"] = "This pixel is saturated and has bloomed.";
     _dict["INTRP"] = ++i;
+    _docs["INTRP"] = "This pixel has been interpolated over. Check other mask planes for the reason.";
     _dict["CR"] = ++i;
+    _docs["CR"] = "This pixel is contaminated by a cosmic ray.";
     _dict["EDGE"] = ++i;
+    _docs["EDGE"] = "This pixel is too close to the edge to be processed properly.";
     _dict["DETECTED"] = ++i;
+    _docs["DETECTED"] = "This pixel lies within an object's Footprint.";
     _dict["DETECTED_NEGATIVE"] = ++i;
+    _docs["DETECTED_NEGATIVE"] =
+            "This pixel lies within an object's Footprint, and the detection was looking for pixels *below* "
+            "a specified level.";
     _dict["SUSPECT"] = ++i;
+    _docs["SUSPECT"] =
+            "This pixel is untrustworthy (e.g. contains an instrumental flux in ADU above the correctable "
+            "non-linear regime).";
     _dict["NO_DATA"] = ++i;
+    _docs["NO_DATA"] =
+            "There was no data at this pixel location (e.g. no input images at this location in a coadd, or "
+            "extremely high vignetting, such that there is no incoming signal).";
     _hash = boost::hash<MaskPlaneDict>()(_dict);
 }
 
-MaskDict::MaskDict() : _dict(), _hash(0x0) {}
+MaskDict::MaskDict() : _dict(), _docs(), _hash(0x0) {}
 
-MaskDict::MaskDict(MaskPlaneDict const &dict) : _dict(dict), _hash(boost::hash<MaskPlaneDict>()(_dict)) {}
+MaskDict::MaskDict(MaskPlaneDict const &dict, MaskPlaneDocDict const &docs)
+        : _dict(dict), _docs(docs), _hash(boost::hash<MaskPlaneDict>()(_dict)) {}
 
 }  // namespace detail
 }  // namespace image

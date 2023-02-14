@@ -68,7 +68,8 @@ public:
 
     // Return a new MaskDict with the same plane definitions as the given
     // MaskPlaneDict, or return the default mask dict if it is empty.
-    static std::shared_ptr<MaskDict> copyOrGetDefault(MaskPlaneDict const &dict);
+    static std::shared_ptr<MaskDict> copyOrGetDefault(MaskPlaneDict const &dict,
+                                                      MaskPlaneDocDict const &docs);
 
     // Return the default MaskDict to be used for new Mask instances.
     static std::shared_ptr<MaskDict> getDefault();
@@ -94,7 +95,7 @@ public:
      * the mask plane to later ones (though the only exception that could
      * be thrown in practice is std::bad_alloc).
      */
-    static void addAllMasksPlane(std::string const &name, int bitId);
+    static void addAllMasksPlane(std::string const &name, int bitId, std::string const &doc);
 
     // Assignment is disabled; we don't need it.
     MaskDict &operator=(MaskDict const &) = delete;
@@ -149,7 +150,7 @@ public:
     // If a plane with the given name already exists, it is overridden.
     // Caller is responsible for ensuring that the bit is not in use; if it is,
     // the MaskDict will be in a corrupted state.
-    void add(std::string const &name, int bitId);
+    void add(std::string const &name, int bitId, std::string const &doc);
 
     // Remove the plane with the given name from just this MaskDict.
     // Does nothing if no such plane exists.
@@ -172,12 +173,13 @@ private:
 
     MaskDict();
 
-    explicit MaskDict(MaskPlaneDict const &dict);
+    explicit MaskDict(MaskPlaneDict const &dict, MaskPlaneDocDict const &docs);
 
     MaskDict(MaskDict const &) = default;
     MaskDict(MaskDict &&) = default;
 
     MaskPlaneDict _dict;
+    MaskPlaneDocDict _docs;
     std::size_t _hash;
 };
 
