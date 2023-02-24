@@ -188,8 +188,13 @@ class MaskTestCase(utilsTests.TestCase):
         for k in sorted(planes.keys()):
             self.assertEqual(planes[k], self.Mask.getMaskPlane(k))
 
-        self.Mask().printMaskPlanes()
-        # import ipdb; ipdb.set_trace();
+        expect = ("Plane 0 -> BAD : some docs\n"
+                  "Plane 1 -> SAT : some docs\n"
+                  "Plane 2 -> INTRP : some docs\n"
+                  "Plane 3 -> CR : some docs\n"
+                  "Plane 4 -> EDGE : some docs")
+        result = str(self.Mask().printMaskPlanes())
+        self.assertEqual(expect, result)
 
     def testCopyConstructors(self):
         dmask = afwImage.Mask(self.mask1, True)  # deep copy

@@ -162,14 +162,20 @@ int MaskDict::getMaskPlane(std::string const &name) const {
 void MaskDict::print(std::ostream &out) const {
     auto it_dict = this->begin();
     auto it_doc = _docs.begin();
+    std::map<int, std::string> lines;
     while (it_dict != this->end()) {
+        std::stringstream line;
         // newline on every line but the last
         if (it_dict != this->begin()) {
-            out << std::endl;
+            line << std::endl;
         }
-        out << "Plane " << it_dict->second << " -> " << it_dict->first << " : " << it_doc->second;
+        line << "Plane " << it_dict->second << " -> " << it_dict->first << " : " << it_doc->second;
+        lines[it_dict->second] = line.str();
         ++it_dict;
         ++it_doc;
+    }
+    for (auto const &line : lines) {
+        out << line.second;
     }
 }
 
