@@ -122,8 +122,8 @@ public:
      */
     int getMaskPlane(std::string const &name) const;
 
-    // Write a description of the MaskDict to stdout.
-    void print() const;
+    // Print a formatted string showing the mask plane bits, names, and docs.
+    void print(std::ostream &out = std::cout) const;
 
     // Fast comparison of MaskDicts, using the hash (and assuming there are
     // no unlucky collisions).

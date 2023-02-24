@@ -674,8 +674,10 @@ typename Mask<MaskPixelT>::MaskPlaneDict Mask<MaskPixelT>::parseMaskPlaneMetadat
 }
 
 template <typename MaskPixelT>
-void Mask<MaskPixelT>::printMaskPlanes() const {
-    _maskDict->print();
+std::string Mask<MaskPixelT>::printMaskPlanes() const {
+    std::stringstream out;
+    _maskDict->print(out);
+    return out.str();
 }
 
 /*

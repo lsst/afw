@@ -159,12 +159,15 @@ int MaskDict::getMaskPlane(std::string const &name) const {
     return (iter == end()) ? -1 : iter->second;
 }
 
-void MaskDict::print() const {
+void MaskDict::print(std::ostream &out) const {
     auto it_dict = this->begin();
     auto it_doc = _docs.begin();
     while (it_dict != this->end()) {
-        std::cout << "Plane " << it_dict->second << " -> " << it_dict->first << " : " << it_doc->second
-                  << std::endl;
+        // newline on every line but the last
+        if (it_dict != this->begin()) {
+            out << std::endl;
+        }
+        out << "Plane " << it_dict->second << " -> " << it_dict->first << " : " << it_doc->second;
         ++it_dict;
         ++it_doc;
     }

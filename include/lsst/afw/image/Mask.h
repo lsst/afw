@@ -519,8 +519,9 @@ public:
      * Return the Mask's maskPlaneDict
      */
     MaskPlaneDict const& getMaskPlaneDict() const;
-    /// print the mask plane dictionary to std::cout
-    void printMaskPlanes() const;
+
+    /// Print a formatted string showing the mask plane bits, names, and docs.
+    std::string printMaskPlanes() const;
 
     /**
      * Given a PropertySet, replace any existing MaskPlane assignments with the current ones.
