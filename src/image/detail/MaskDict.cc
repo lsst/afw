@@ -38,10 +38,10 @@ public:
         return instance;
     }
 
-    std::shared_ptr<MaskDict> copyOrGetDefault(MaskPlaneDict const &mpd, MaskPlaneDocDict const &docs) {
+    std::shared_ptr<MaskDict> copyOrGetDefault(MaskPlaneDict const &mpd) {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         if (!mpd.empty()) {
-            std::shared_ptr<MaskDict> dict(new MaskDict(mpd, docs));
+            std::shared_ptr<MaskDict> dict(new MaskDict(mpd));
             _allMaskDicts.insert(dict);
             return dict;
         }
@@ -105,8 +105,8 @@ private:
     std::shared_ptr<MaskDict> _defaultMaskDict;
 };
 
-std::shared_ptr<MaskDict> MaskDict::copyOrGetDefault(MaskPlaneDict const &mpd, MaskPlaneDocDict const &docs) {
-    return GlobalState::get().copyOrGetDefault(mpd, docs);
+std::shared_ptr<MaskDict> MaskDict::copyOrGetDefault(MaskPlaneDict const &mpd) {
+    return GlobalState::get().copyOrGetDefault(mpd);
 }
 
 std::shared_ptr<MaskDict> MaskDict::getDefault() { return GlobalState::get().getDefault(); }
@@ -118,7 +118,7 @@ std::shared_ptr<MaskDict> MaskDict::detachDefault() { return GlobalState::get().
 void MaskDict::addAllMasksPlane(std::string const &name, int bitId, std::string const &doc) {
     GlobalState::get().forEachMaskDict([&name, bitId, doc](MaskDict &dict) {
         auto const found = std::find_if(dict.begin(), dict.end(),
-                                        [bitId](auto const &item) { return item.second == bitId; });
+                                        [bitId](auto const &item) { return item.second.first == bitId; });
         if (found == dict.end()) {
             // is name already in use?
             if (dict.find(name) == dict.end()) {
@@ -137,15 +137,15 @@ int MaskDict::getUnusedPlane() const {
         return 0;
     }
 
-    auto const maxIter = std::max_element(begin(), end(),
-                                          [](auto const &a, auto const &b) { return a.second < b.second; });
+    auto const maxIter = std::max_element(
+            begin(), end(), [](auto const &a, auto const &b) { return a.second.first < b.second.first; });
     assert(maxIter != end());
-    int id = maxIter->second + 1;  // The maskPlane to use if there are no gaps
+    int id = maxIter->second.first + 1;  // The maskPlane to use if there are no gaps
 
     for (int i = 0; i < id; ++i) {
         // is i already used in this Mask?
         auto const sameIter =
-                std::find_if(begin(), end(), [i](auto const &item) { return item.second == i; });
+                std::find_if(begin(), end(), [i](auto const &item) { return item.second.first == i; });
         if (sameIter == end()) {  // Not used; so we'll use it
             return i;
         }
@@ -156,26 +156,27 @@ int MaskDict::getUnusedPlane() const {
 
 int MaskDict::getMaskPlane(std::string const &name) const {
     auto iter = find(name);
-    return (iter == end()) ? -1 : iter->second;
+    return (iter == end()) ? -1 : iter->second.first;
 }
 
 void MaskDict::print(std::ostream &out) const {
     auto it_dict = this->begin();
-    auto it_doc = _docs.begin();
     std::map<int, std::string> lines;
     while (it_dict != this->end()) {
         std::stringstream line;
-        // newline on every line but the last
-        if (it_dict != this->begin()) {
-            line << std::endl;
-        }
-        line << "Plane " << it_dict->second << " -> " << it_dict->first << " : " << it_doc->second;
-        lines[it_dict->second] = line.str();
+        line << "Plane " << it_dict->second.first << " -> " << it_dict->first << " : "
+             << it_dict->second.second;
+        lines[it_dict->second.first] = line.str();
         ++it_dict;
-        ++it_doc;
     }
-    for (auto const &line : lines) {
-        out << line.second;
+    auto i_line = lines.begin();
+    while (i_line != lines.end()) {
+        // newline on every line but the last
+        if (i_line != lines.begin()) {
+            out << std::endl;
+        }
+        out << i_line->second;
+        i_line++;
     }
 }
 
@@ -184,56 +185,47 @@ bool MaskDict::operator==(MaskDict const &rhs) const {
 }
 
 void MaskDict::add(std::string const &name, int bitId, std::string const &doc) {
-    _dict[name] = bitId;
-    _docs[name] = doc;
+    _dict[name] = std::make_pair(bitId, doc);
     _hash = boost::hash<MaskPlaneDict>()(_dict);
 }
 
 void MaskDict::erase(std::string const &name) {
     _dict.erase(name);
-    _docs.erase(name);
     _hash = boost::hash<MaskPlaneDict>()(_dict);
 }
 
 void MaskDict::clear() {
     _dict.clear();
-    _docs.clear();
     _hash = 0x0;
 }
 
 void MaskDict::_addInitialMaskPlanes() {
     int i = -1;
-    _dict["BAD"] = ++i;
-    _docs["BAD"] = "This pixel is known to be bad (e.g. the amplifier is not working).";
-    _dict["SAT"] = ++i;
-    _docs["SAT"] = "This pixel is saturated and has bloomed.";
-    _dict["INTRP"] = ++i;
-    _docs["INTRP"] = "This pixel has been interpolated over. Check other mask planes for the reason.";
-    _dict["CR"] = ++i;
-    _docs["CR"] = "This pixel is contaminated by a cosmic ray.";
-    _dict["EDGE"] = ++i;
-    _docs["EDGE"] = "This pixel is too close to the edge to be processed properly.";
-    _dict["DETECTED"] = ++i;
-    _docs["DETECTED"] = "This pixel lies within an object's Footprint.";
-    _dict["DETECTED_NEGATIVE"] = ++i;
-    _docs["DETECTED_NEGATIVE"] =
+    _dict["BAD"] = std::make_pair(++i, "This pixel is known to be bad (e.g. the amplifier is not working).");
+    _dict["SAT"] = std::make_pair(++i, "This pixel is saturated and has bloomed.");
+    _dict["INTRP"] = std::make_pair(
+            ++i, "This pixel has been interpolated over. Check other mask planes for the reason.");
+    _dict["CR"] = std::make_pair(++i, "This pixel is contaminated by a cosmic ray.");
+    _dict["EDGE"] = std::make_pair(++i, "This pixel is too close to the edge to be processed properly.");
+    _dict["DETECTED"] = std::make_pair(++i, "This pixel lies within an object's Footprint.");
+    _dict["DETECTED_NEGATIVE"] = std::make_pair(
+            ++i,
             "This pixel lies within an object's Footprint, and the detection was looking for pixels *below* "
-            "a specified level.";
-    _dict["SUSPECT"] = ++i;
-    _docs["SUSPECT"] =
+            "a specified level.");
+    _dict["SUSPECT"] = std::make_pair(
+            ++i,
             "This pixel is untrustworthy (e.g. contains an instrumental flux in ADU above the correctable "
-            "non-linear regime).";
-    _dict["NO_DATA"] = ++i;
-    _docs["NO_DATA"] =
+            "non-linear regime).");
+    _dict["NO_DATA"] = std::make_pair(
+            ++i,
             "There was no data at this pixel location (e.g. no input images at this location in a coadd, or "
-            "extremely high vignetting, such that there is no incoming signal).";
+            "extremely high vignetting, such that there is no incoming signal).");
     _hash = boost::hash<MaskPlaneDict>()(_dict);
 }
 
-MaskDict::MaskDict() : _dict(), _docs(), _hash(0x0) {}
+MaskDict::MaskDict() : _dict(), _hash(0x0) {}
 
-MaskDict::MaskDict(MaskPlaneDict const &dict, MaskPlaneDocDict const &docs)
-        : _dict(dict), _docs(docs), _hash(boost::hash<MaskPlaneDict>()(_dict)) {}
+MaskDict::MaskDict(MaskPlaneDict const &dict) : _dict(dict), _hash(boost::hash<MaskPlaneDict>()(_dict)) {}
 
 }  // namespace detail
 }  // namespace image

@@ -382,6 +382,7 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
     def doSetUp(self, dwidth=0, dheight=0, x0=0, y0=0):
         width, height = 14 + x0 + dwidth, 10 + y0 + dheight
         self.im = afwImage.MaskedImageF(lsst.geom.Extent2I(width, height))
+        self.im.mask.addMaskPlane("BINNED1", "binned test detections")
         #
         # Objects that we should detect
         #

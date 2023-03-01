@@ -522,7 +522,7 @@ class Display:
 
         planes = {}                      # build inverse dictionary from mask plane index to name
         for key in maskPlanes:
-            planes[maskPlanes[key]] = key
+            planes[maskPlanes[key][0]] = key
 
         colorGenerator = self.display.maskColorGenerator(omitBW=True)
         for p in range(nMaskPlanes):

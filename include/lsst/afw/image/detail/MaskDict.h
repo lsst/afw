@@ -54,6 +54,11 @@ namespace detail {
  * and hence MaskDict's constructors are private, and static or instance
  * methods that return shared_ptr are provided to replace them.
  *
+ * Mask equality (via the hash) is determined by the bit fields, field names,
+ * and field docs; mask docstrings define the meaning of the mask, so two
+ * masks with the same named fields but different docs should not be assumed
+ * to be the same!
+ *
  * MaskDict is an implementation detail (albeit and important one) and hence
  * its "documentation" is intentionally in the form of regular comments
  * rather than Doxygen-parsed blocks.  It is also not available from Python.
@@ -68,8 +73,7 @@ public:
 
     // Return a new MaskDict with the same plane definitions as the given
     // MaskPlaneDict, or return the default mask dict if it is empty.
-    static std::shared_ptr<MaskDict> copyOrGetDefault(MaskPlaneDict const &dict,
-                                                      MaskPlaneDocDict const &docs);
+    static std::shared_ptr<MaskDict> copyOrGetDefault(MaskPlaneDict const &dict);
 
     // Return the default MaskDict to be used for new Mask instances.
     static std::shared_ptr<MaskDict> getDefault();
@@ -173,13 +177,12 @@ private:
 
     MaskDict();
 
-    explicit MaskDict(MaskPlaneDict const &dict, MaskPlaneDocDict const &docs);
+    explicit MaskDict(MaskPlaneDict const &dict);
 
     MaskDict(MaskDict const &) = default;
     MaskDict(MaskDict &&) = default;
 
     MaskPlaneDict _dict;
-    MaskPlaneDocDict _docs;
     std::size_t _hash;
 };
 

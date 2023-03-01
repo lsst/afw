@@ -186,7 +186,7 @@ class MaskTestCase(utilsTests.TestCase):
         self.assertEqual(len(planes), self.Mask.getNumPlanesUsed())
 
         for k in sorted(planes.keys()):
-            self.assertEqual(planes[k], self.Mask.getMaskPlane(k))
+            self.assertEqual(planes[k][0], self.Mask.getMaskPlane(k))
 
         expect = ("Plane 0 -> BAD : some docs\n"
                   "Plane 1 -> SAT : some docs\n"
@@ -195,6 +195,11 @@ class MaskTestCase(utilsTests.TestCase):
                   "Plane 4 -> EDGE : some docs")
         result = str(self.Mask().printMaskPlanes())
         self.assertEqual(expect, result)
+
+        # Remove and add the first numbered mask; printout should not change.
+        # This tests that the output order is sorted on bit number.
+        self.Mask().removeAndClearMaskPlane("BAD")
+        self.Mask.addMaskPlane("BAD", "some docs")
 
     def testCopyConstructors(self):
         dmask = afwImage.Mask(self.mask1, True)  # deep copy
@@ -295,11 +300,12 @@ class MaskTestCase(utilsTests.TestCase):
 
     def testCtorWithPlaneDefs(self):
         """Test that we can create a Mask with a given MaskPlaneDict"""
-        FOO, val = "FOO", 2
-        mask = afwImage.Mask(100, 200, {FOO: val})
+        FOO, val, doc = "FOO", 2, "docstring"
+        mask = afwImage.Mask(100, 200, {FOO: (val, doc)})
         mpd = mask.getMaskPlaneDict()
         self.assertIn(FOO, mpd.keys())
-        self.assertEqual(mpd[FOO], val)
+        self.assertEqual(mpd[FOO][0], val)
+        self.assertEqual(mpd[FOO][1], doc)
 
     def testImageSlices(self):
         """Test image slicing, which generate sub-images using Box2I under the covers"""
@@ -409,26 +415,27 @@ class OldMaskTestCase(unittest.TestCase):
         metadata = lsst.daf.base.PropertySet()
 
         self.Mask.addMaskPlanesToMetadata(metadata)
-        for (k, v) in self.Mask().getMaskPlaneDict().items():
-            self.assertEqual(metadata.getInt(f"MP_{k}"), v)
-        #
+        for k, v in self.Mask().getMaskPlaneDict().items():
+            self.assertEqual(metadata.getInt(f"MP_{k}"), v[0])
+            self.assertEqual(metadata.getString(f"MPD_{k}"), v[1])
+
         # Now add another plane to metadata and make it appear in the mask Dict, albeit
         # in general at another location (hence the getNumPlanesUsed call)
-        #
         metadata.addInt("MP_" + "Whatever", self.Mask.getNumPlanesUsed())
+        metadata.addString("MPD_" + "Whatever", "a new plane")
 
-        self.testMask.conformMaskPlanes(
-            self.Mask.parseMaskPlaneMetadata(metadata))
+        self.testMask.conformMaskPlanes(self.Mask.parseMaskPlaneMetadata(metadata))
         for (k, v) in self.Mask().getMaskPlaneDict().items():
-            self.assertEqual(metadata.getInt(f"MP_{k}"), v)
+            self.assertEqual(metadata.getInt(f"MP_{k}"), v[0])
+            self.assertEqual(metadata.getString(f"MPD_{k}"), v[1])
 
     def testPlaneOperations(self):
         """Test mask plane operations"""
 
         planes = self.Mask().getMaskPlaneDict()
-        self.testMask.clearMaskPlane(planes['CR'])
+        self.testMask.clearMaskPlane(planes['CR'][0])
         # print "\nClearing mask"
-        self.testMask.clearMaskPlane(planes['CR'])
+        self.testMask.clearMaskPlane(planes['CR'][0])
 
     def testPlaneRemoval(self):
         """Test mask plane removal"""
@@ -533,7 +540,7 @@ class OldMaskTestCase(unittest.TestCase):
             self.testMask |= testMask3
 
         # OK, that failed as it should.  Fixup the dictionaries and try again
-        self.Mask.addMaskPlane("BP", "some doc")
+        self.Mask.addMaskPlane("BP", "some docs")
         # convert testMask3 from oldDict to current default
         testMask3.conformMaskPlanes(oldDict)
 
