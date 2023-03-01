@@ -843,7 +843,6 @@ FootprintSet::FootprintSet(const image::MaskedImage<ImagePixelT, MaskPixelT> &ma
     // Define the maskPlane
     //
     const std::shared_ptr<image::Mask<MaskPixelT>> mask = maskedImg.getMask();
-    mask->addMaskPlane(planeName);
 
     MaskPixelT const bitPlane = mask->getPlaneBitMask(planeName);
     //

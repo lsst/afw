@@ -97,7 +97,7 @@ public:
      *
      * @param img MaskedImage to search for objects
      * @param threshold threshold for footprints (controls size)
-     * @param planeName mask plane to set (if != "")
+     * @param planeName mask plane to set (if != ""); must be previously defined.
      * @param npixMin minimum number of pixels in an object
      * @param setPeaks should I set the Peaks list?
      */
