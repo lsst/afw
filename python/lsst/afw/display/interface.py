@@ -518,15 +518,14 @@ class Display:
         """Assign colours to any missing mask planes found in mask"""
 
         maskPlanes = mask.getMaskPlaneDict()
-        nMaskPlanes = max(maskPlanes.values()) + 1
 
         planes = {}                      # build inverse dictionary from mask plane index to name
         for key in maskPlanes:
             planes[maskPlanes[key][0]] = key
 
         colorGenerator = self.display.maskColorGenerator(omitBW=True)
-        for p in range(nMaskPlanes):
-            name = planes[p]            # ordered by plane index
+        for p in sorted(maskPlanes.values()):
+            name = planes[p[0]]            # ordered by plane index
             if name not in self._defaultMaskPlaneColor:
                 self.setDefaultMaskPlaneColor(name, next(colorGenerator))
 
