@@ -65,7 +65,7 @@ void wrapThreshold(utils::python::WrapperCollection& wrappers) {
                     std::ostringstream os;
                     std::string polarity = (self.getPolarity() == true) ? "positive" : "negative";
                     os << py::cast(self.getType()).attr("name").cast<std::string>() << std::setprecision(8)
-                       << " value=" << self.getValue() << " (" << polarity << ")";
+                       << " value=" << self.getValue(1.0) << " (" << polarity << ")";
                     if (self.getIncludeMultiplier() != 1.0) {
                         os << " multiplier=" << self.getIncludeMultiplier();
                     }
@@ -73,7 +73,7 @@ void wrapThreshold(utils::python::WrapperCollection& wrappers) {
                 });
                 cls.def("__repr__", [](Threshold const& self) {
                     std::ostringstream os;
-                    os << std::setprecision(16) << "Threshold(value=" << self.getValue()
+                    os << std::setprecision(16) << "Threshold(value=" << self.getValue(1.0)
                        << ", type=" << py::cast(self.getType()).attr("name").cast<std::string>()
                        << ", polarity=" << self.getPolarity()
                        << ", includeMultiplier=" << self.getIncludeMultiplier() << ")";
