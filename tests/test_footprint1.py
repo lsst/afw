@@ -176,6 +176,16 @@ class ThresholdTestCase(unittest.TestCase):
         self.assertEqual(repr(threshold),
                          "Threshold(value=2, type=VALUE, polarity=1, includeMultiplier=4)")
 
+        threshold = afwDetect.createThreshold(5, "stdev")
+        self.assertEqual(str(threshold), "STDEV value=5 (positive)")
+        self.assertEqual(repr(threshold),
+                         "Threshold(value=5, type=STDEV, polarity=1, includeMultiplier=1)")
+
+        threshold = afwDetect.createThreshold(4, "variance")
+        self.assertEqual(str(threshold), "VARIANCE value=4 (positive)")
+        self.assertEqual(repr(threshold),
+                         "Threshold(value=4, type=VARIANCE, polarity=1, includeMultiplier=1)")
+
 
 class FootprintTestCase(lsst.utils.tests.TestCase):
     """A test case for Footprint"""
