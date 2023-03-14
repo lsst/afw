@@ -30,6 +30,7 @@ from ._fitsIoWithOptions import imageReadFitsWithOptions, imageWriteFitsWithOpti
 from ._imageLib import MaskX
 from ._slicing import supportSlicing
 from ._disableArithmetic import disableMaskArithmetic
+from ..maskPlaneDict import MaskPlaneDict
 
 MaskPixel = np.int32
 
@@ -79,6 +80,13 @@ class Mask(metaclass=TemplateMeta):
             warnings.warn("Doc field will become non-optional. Will be removed after v26.", FutureWarning)
             doc = ""
         return Mask.addMaskPlaneWithDoc(name, doc)
+
+    def getMaskPlaneDict(self):
+        planesDict = self._getMaskPlaneDict()
+        return MaskPlaneDict(planesDict)
+
+    def conformMaskPlanes(self, maskPlaneDict):
+        return self._conformMaskPlanes(maskPlaneDict._maskDict)
 
 
 Mask.register(MaskPixel, MaskX)

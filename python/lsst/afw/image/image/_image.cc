@@ -232,10 +232,10 @@ static void declareMask(lsst::utils::python::WrapperCollection &wrappers, std::s
                        (MaskPixelT(*)(const std::vector<std::string> &))Mask<MaskPixelT>::getPlaneBitMask);
         cls.def_static("getNumPlanesMax", Mask<MaskPixelT>::getNumPlanesMax);
         cls.def_static("getNumPlanesUsed", Mask<MaskPixelT>::getNumPlanesUsed);
-        cls.def("getMaskPlaneDict", &Mask<MaskPixelT>::getMaskPlaneDict);
+        cls.def("_getMaskPlaneDict", &Mask<MaskPixelT>::getMaskPlaneDict);
         cls.def("printMaskPlanes", &Mask<MaskPixelT>::printMaskPlanes);
         cls.def_static("addMaskPlanesToMetadata", Mask<MaskPixelT>::addMaskPlanesToMetadata);
-        cls.def("conformMaskPlanes", &Mask<MaskPixelT>::conformMaskPlanes);
+        cls.def("_conformMaskPlanes", &Mask<MaskPixelT>::conformMaskPlanes);
         // Temporary name for deprecation. Restore `addMaskPlane` name once the non-doc overload is removed.
         cls.def_static("addMaskPlaneWithDoc",
                        (int (*)(const std::string &, const std::string &))Mask<MaskPixelT>::addMaskPlane);

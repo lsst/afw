@@ -31,6 +31,7 @@ import lsst.pex.exceptions as pexExcept
 import lsst.daf.base
 import lsst.geom
 import lsst.afw.image as afwImage
+from lsst.afw.image.maskPlaneDict import MaskPlaneDict
 import lsst.afw.display as afwDisplay
 import lsst.afw.display.ds9 as ds9  # noqa: F401 for some reason images don't display without both imports
 
@@ -72,8 +73,7 @@ class MaskTestCase(utilsTests.TestCase):
 
         # Store the default mask planes for later use
         maskPlaneDict = self.Mask().getMaskPlaneDict()
-        self.defaultMaskPlanes = sorted(
-            maskPlaneDict, key=maskPlaneDict.__getitem__)
+        self.defaultMaskPlanes = sorted(maskPlaneDict)
 
         # reset so tests will be deterministic
         self.Mask.clearMaskPlaneDict()
@@ -186,7 +186,7 @@ class MaskTestCase(utilsTests.TestCase):
         self.assertEqual(len(planes), self.Mask.getNumPlanesUsed())
 
         for k in sorted(planes.keys()):
-            self.assertEqual(planes[k][0], self.Mask.getMaskPlane(k))
+            self.assertEqual(planes[k], self.Mask.getMaskPlane(k))
 
         expect = ("Plane 0 -> BAD : some docs\n"
                   "Plane 1 -> SAT : some docs\n"
@@ -267,8 +267,9 @@ class MaskTestCase(utilsTests.TestCase):
 
             # Check that we wrote (and read) the metadata successfully
             mp_ = "MP_" if True else self.Mask.maskPlanePrefix()  # currently private
-            for (k, v) in self.Mask().getMaskPlaneDict().items():
-                self.assertEqual(md.getArray(mp_ + k), v)
+            planes = self.Mask().getMaskPlaneDict()
+            for name in planes:
+                self.assertEqual(md.getArray(mp_ + name), planes[name])
 
     def testReadWriteXY0(self):
         """Test that we read and write (X0, Y0) correctly"""
@@ -299,13 +300,13 @@ class MaskTestCase(utilsTests.TestCase):
         self.assertEqual(self.mask1[10, 10], 0)
 
     def testCtorWithPlaneDefs(self):
-        """Test that we can create a Mask with a given MaskPlaneDict"""
+        """Test that we can create a Mask with a given MaskDict"""
         FOO, val, doc = "FOO", 2, "docstring"
         mask = afwImage.Mask(100, 200, {FOO: (val, doc)})
         mpd = mask.getMaskPlaneDict()
         self.assertIn(FOO, mpd.keys())
-        self.assertEqual(mpd[FOO][0], val)
-        self.assertEqual(mpd[FOO][1], doc)
+        self.assertEqual(mpd[FOO], val)
+        self.assertEqual(mpd.docs[FOO], doc)
 
     def testImageSlices(self):
         """Test image slicing, which generate sub-images using Box2I under the covers"""
@@ -368,8 +369,7 @@ class OldMaskTestCase(unittest.TestCase):
 
         # Store the default mask planes for later use
         maskPlaneDict = self.Mask().getMaskPlaneDict()
-        self.defaultMaskPlanes = sorted(
-            maskPlaneDict, key=maskPlaneDict.__getitem__)
+        self.defaultMaskPlanes = sorted(maskPlaneDict)
 
         # reset so tests will be deterministic
         self.Mask.clearMaskPlaneDict()
@@ -410,14 +410,15 @@ class OldMaskTestCase(unittest.TestCase):
                          "Adding and removing planes")
 
     def testMetadata(self):
-        """Test mask plane metadata interchange with MaskPlaneDict"""
-        # Demonstrate that we can extract a MaskPlaneDict into metadata
+        """Test mask plane metadata interchange with MaskDict"""
+        # Demonstrate that we can extract a MaskDict into metadata
         metadata = lsst.daf.base.PropertySet()
 
         self.Mask.addMaskPlanesToMetadata(metadata)
-        for k, v in self.Mask().getMaskPlaneDict().items():
-            self.assertEqual(metadata.getInt(f"MP_{k}"), v[0])
-            self.assertEqual(metadata.getString(f"MPD_{k}"), v[1])
+        planes = self.Mask().getMaskPlaneDict()
+        for name in planes:
+            self.assertEqual(metadata.getInt(f"MP_{name}"), planes[name])
+            self.assertEqual(metadata.getString(f"MPD_{name}"), planes.docs[name])
 
         # Now add another plane to metadata and make it appear in the mask Dict, albeit
         # in general at another location (hence the getNumPlanesUsed call)
@@ -425,17 +426,18 @@ class OldMaskTestCase(unittest.TestCase):
         metadata.addString("MPD_" + "Whatever", "a new plane")
 
         self.testMask.conformMaskPlanes(self.Mask.parseMaskPlaneMetadata(metadata))
-        for (k, v) in self.Mask().getMaskPlaneDict().items():
-            self.assertEqual(metadata.getInt(f"MP_{k}"), v[0])
-            self.assertEqual(metadata.getString(f"MPD_{k}"), v[1])
+        planes = self.Mask().getMaskPlaneDict()
+        for name in planes:
+            self.assertEqual(metadata.getInt(f"MP_{name}"), planes[name])
+            self.assertEqual(metadata.getString(f"MPD_{name}"), planes.docs[name])
 
     def testPlaneOperations(self):
         """Test mask plane operations"""
 
         planes = self.Mask().getMaskPlaneDict()
-        self.testMask.clearMaskPlane(planes['CR'][0])
+        self.testMask.clearMaskPlane(planes['CR'])
         # print "\nClearing mask"
-        self.testMask.clearMaskPlane(planes['CR'][0])
+        self.testMask.clearMaskPlane(planes['CR'])
 
     def testPlaneRemoval(self):
         """Test mask plane removal"""
@@ -605,6 +607,33 @@ class OldMaskTestCase(unittest.TestCase):
             afwDisplay.Display(frame=3).mtv(testMask3, title="testConformMaskPlanes2 (conform with oldDict)")
 
         self.testMask |= testMask3
+
+
+class TestMaskPlaneDict(unittest.TestCase):
+    def setUp(self):
+        maskDict = {"BAD": [0, "bad data"], "GOOD": [1, "good data"]}
+        self.maskPlaneDict = MaskPlaneDict(planes)
+        self.planes = {"BAD": 0, "GOOD": 1}
+        self.bits = {0: "BAD", 1: "GOOD"}
+        self.docs = {"BAD": "bad data", "GOOD": "good data"}
+
+    def testMaskPlaneDict(self):
+        """Check that the constructor sets the correct attributes.
+        """
+        self.assertEqual(self.maskPlaneDict.planes, self.planes)
+        self.assertEqual(self.maskPlaneDict.docs, self.docs)
+        self.assertEqual(self.maskPlaneDict.bits, self.bits)
+
+    def testMaskPlaneDictGetItem(self):
+        self.assertEqual(self.maskPlaneDict["BAD"], 0)
+        self.assertEqual(self.maskPlaneDict["GOOD"], 1)
+
+    def testStr(self):
+        expect = ('bit 0: BAD, "bad data"\n'
+                  'bit 1: GOOD, "good data"')
+        self.assertEqual(str(self.maskPlaneDict), expect)
+
+    # TODO: write tests for the rest of the dict-like interface
 
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
