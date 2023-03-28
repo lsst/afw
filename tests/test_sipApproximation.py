@@ -21,12 +21,11 @@
 
 import os
 import unittest
-import itertools
 import numpy as np
 from numpy.testing import assert_allclose
 import lsst.utils.tests
 from lsst.daf.base import PropertyList
-from lsst.geom import Point2D, Point2I, Extent2I, Box2D, Box2I
+from lsst.geom import Point2D, Point2I, Extent2I, Box2D, Box2I, SpherePoint, radians
 from lsst.afw.geom import (SipApproximation, makeSkyWcs, getPixelToIntermediateWorldCoords, SkyWcs,
                            calculateSipWcsHeader)
 
@@ -559,10 +558,16 @@ class SipApproximationTestCases(lsst.utils.tests.TestCase):
             wcs = makeSkyWcs(header)
 
             # Evaluate performance
-            points = [Point2D(xx, yy) for xx, yy in itertools.product(range(0, width, spacing),
-                                                                      range(0, height, spacing))]
-            coord1 = [original.pixelToSky(pp) for pp in points]
-            coord2 = [wcs.pixelToSky(pp) for pp in points]
+            x_points, y_points = np.meshgrid(np.arange(0., width, spacing), np.arange(0., height, spacing))
+            x_points = x_points.ravel()
+            y_points = y_points.ravel()
+
+            original_sky = original.pixelToSkyArray(x_points, y_points)
+            wcs_sky = wcs.pixelToSkyArray(x_points, y_points)
+
+            # Convert to SpherePoint for tangent plane comparison.
+            coord1 = [SpherePoint(x, y, units=radians) for x, y in zip(*original_sky)]
+            coord2 = [SpherePoint(x, y, units=radians) for x, y in zip(*wcs_sky)]
             offsets = (c1.getTangentPlaneOffset(c2) for c1, c2 in zip(coord1, coord2))
             offsets = np.array([(off[0].asArcseconds(), off[1].asArcseconds()) for off in offsets])
 
@@ -577,8 +582,8 @@ class SipApproximationTestCases(lsst.utils.tests.TestCase):
             # Not comparing to absolute round-trip, but relative to the
             # original WCS round-trip. This is an important distinction: we're
             # recreating the original WCS, along with all its flaws.
-            roundTrip = np.array([wcs.skyToPixel(wcs.pixelToSky(pp)) for pp in points])
-            roundTrip -= np.array([original.skyToPixel(original.pixelToSky(pp)) for pp in points])
+            roundTrip = np.vstack(wcs.skyToPixelArray(*wcs_sky))
+            roundTrip -= np.vstack(original.skyToPixelArray(*original_sky))
 
             self.assertFloatsAlmostEqual(roundTrip[0].mean(), 0.0, atol=pixTol)
             self.assertFloatsAlmostEqual(roundTrip[1].mean(), 0.0, atol=pixTol)
