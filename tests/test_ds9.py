@@ -33,6 +33,7 @@ import lsst.utils.tests
 import lsst.afw.image as afwImage
 try:
     import lsst.afw.display.ds9 as ds9
+    import lsst.display.ds9
 except Exception:
     ds9 = None
 
@@ -93,7 +94,12 @@ class DisplayTestCase(unittest.TestCase):
     @unittest.skipUnless(ds9, "You must setup display.ds9 to run this test")
     def testStackingOrder(self):
         """ Un-iconise and raise the display to the top of the stacking order if appropriate"""
-        ds9.show()
+        try:
+            ds9.show()
+        except lsst.display.ds9.Ds9Error as e:
+            if "XPASet returned 0" in str(e):
+                raise unittest.SkipTest("DS9 does not appear to be installed.")
+            raise
 
     @unittest.skipUnless(ds9, "You must setup display.ds9 to run this test")
     def testDrawing(self):
@@ -127,7 +133,12 @@ class DisplayTestCase(unittest.TestCase):
     @unittest.skipUnless(ds9, "You must setup display.ds9 to run this test")
     def testStretch(self):
         """Test playing with the lookup table"""
-        ds9.show()
+        try:
+            ds9.show()
+        except lsst.display.ds9.Ds9Error as e:
+            if "XPASet returned 0" in str(e):
+                raise unittest.SkipTest("DS9 does not appear to be installed.")
+            raise
 
         ds9.scale("linear", "zscale")
 
