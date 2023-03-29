@@ -1020,7 +1020,7 @@ std::pair<double, double> Statistics::getResult(Property const iProp) const {
         case VARIANCECLIP:
             ret.first = _varianceclip.first;
             if (_flags & ERRORS) {
-                ret.second = ret.second;
+                ret.second = ::sqrt(_varianceclip.second);
             }
             break;
         case STDEVCLIP:
