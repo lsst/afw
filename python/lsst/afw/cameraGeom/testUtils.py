@@ -419,20 +419,29 @@ class CameraWrapper:
 
 @inTestCase
 def compare2DFunctions(self, func1, func2, minVal=-10, maxVal=None, nVal=5):
-    """Compare two Point2D(Point2D) functions by evaluating them over a
+    """Compare two Point2D(list(Point2D)) functions by evaluating them over a
     range of values.
+
+    Notes
+    -----
+    Assumes the functions can be called with ``list[Point2D]`` and return
+    ``list[Point2D]``.
     """
     if maxVal is None:
         maxVal = -minVal
     dVal = (maxVal - minVal) / (nVal - 1)
+    points = []
     for xInd in range(nVal):
         x = minVal + (xInd * dVal)
         for yInd in range(nVal):
             y = minVal + (yInd * dVal)
             fromPoint = lsst.geom.Point2D(x, y)
-            res1 = func1(fromPoint)
-            res2 = func2(fromPoint)
-            self.assertPairsAlmostEqual(res1, res2)
+            points.append(fromPoint)
+
+    vres1 = func1(points)
+    vres2 = func2(points)
+    for res1, res2 in zip(vres1, vres2):
+        self.assertPairsAlmostEqual(res1, res2)
 
 
 @inTestCase
