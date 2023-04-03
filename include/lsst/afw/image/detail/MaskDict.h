@@ -54,6 +54,11 @@ namespace detail {
  * and hence MaskDict's constructors are private, and static or instance
  * methods that return shared_ptr are provided to replace them.
  *
+ * Mask equality (via the hash) is determined by the bit fields, field names,
+ * and field docs; mask docstrings define the meaning of the mask, so two
+ * masks with the same named fields but different docs should not be assumed
+ * to be the same!
+ *
  * MaskDict is an implementation detail (albeit and important one) and hence
  * its "documentation" is intentionally in the form of regular comments
  * rather than Doxygen-parsed blocks.  It is also not available from Python.
@@ -146,6 +151,8 @@ public:
 
     // Return the internal MaskPlaneDict.
     MaskPlaneDict const &getMaskPlaneDict() const noexcept { return _dict; }
+    // Return the internal MaskPlaneDocDict.
+    MaskPlaneDocDict const &getMaskPlaneDocDict() const noexcept { return _docs; }
 
     // Add a mask plane to just this MaskDict.
     // If a plane with the given name already exists, it is overridden.

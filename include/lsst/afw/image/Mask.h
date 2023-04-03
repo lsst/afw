@@ -62,22 +62,14 @@ using MaskPlaneDocDict = std::map<std::string, std::string>;
 /**
  * Represent a 2-dimensional array of bitmask pixels
  *
- * Some mask planes are always defined (although you can add more with Mask::addMaskPlane):
- *
- * - `BAD` This pixel is known to be bad (e.g. the amplifier is not working)
- * - `CR` This pixel is contaminated by a cosmic ray
- * - `DETECTED` This pixel lies within an object's Footprint
- * - `DETECTED_NEGATIVE` This pixel lies within an object's Footprint, and the detection was looking for
- *   pixels *below* a specified level
- * - `EDGE` This pixel is too close to the edge to be processed properly
- * - `INTRP` This pixel has been interpolated over @note should be called `INTERPOLATED`
- * - `SAT` This pixel is saturated and has bloomed @note should be called `SATURATED`
- * - `SUSPECT` This pixel is untrustworthy, and you may wish to discard any Source containing it
+ * Some mask planes are always defined (although you can add more with Mask::addMaskPlane). See
+ * `MaskDict._addInitialMaskPlanes` for their defintions.
  */
 template <typename MaskPixelT = lsst::afw::image::MaskPixel>
 class Mask : public ImageBase<MaskPixelT> {
 public:
     using MaskPlaneDict = detail::MaskPlaneDict;
+    using MaskPlaneDocDict = detail::MaskPlaneDocDict;
 
     using image_category = detail::Mask_tag;
 
@@ -518,6 +510,8 @@ public:
 
     /// Return the Mask's bit plane map.
     MaskPlaneDict const& getMaskPlaneDict() const;
+    /// Return the Mask's bit plane map docstrings.
+    MaskPlaneDocDict const& getMaskPlaneDocDict() const;
 
     /// Print a formatted string showing the mask plane bits, names, and docs.
     std::string printMaskPlanes() const;
@@ -552,6 +546,7 @@ private:
     static std::shared_ptr<detail::MaskDict> _maskPlaneDict();
     static int _setMaskPlaneDict(MaskPlaneDict const& mpd);
     static const std::string maskPlanePrefix;
+    static const std::string maskPlaneDocPrefix;
 
     /**
      * set the name of a mask plane, with minimal checking.

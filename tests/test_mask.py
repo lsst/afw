@@ -411,14 +411,30 @@ class OldMaskTestCase(unittest.TestCase):
         self.Mask.addMaskPlanesToMetadata(metadata)
         for (k, v) in self.Mask().getMaskPlaneDict().items():
             self.assertEqual(metadata.getInt(f"MP_{k}"), v)
+        for (k, v) in self.Mask().getMaskPlaneDocDict().items():
+            self.assertEqual(metadata.getString(f"MPD_{k}"), v)
+
         # Now add another plane to metadata and make it appear in the mask Dict, albeit
         # in general at another location (hence the getNumPlanesUsed call)
         metadata.addInt("MP_" + "Whatever", self.Mask.getNumPlanesUsed())
-
-        self.testMask.conformMaskPlanes(
-            self.Mask.parseMaskPlaneMetadata(metadata))
+        self.testMask.conformMaskPlanes(self.Mask.parseMaskPlaneMetadata(metadata))
         for (k, v) in self.Mask().getMaskPlaneDict().items():
             self.assertEqual(metadata.getInt(f"MP_{k}"), v)
+        # We didn't add a corresponding docstring: it defaults to empty.
+        self.assertEqual(self.Mask().getMaskPlaneDocDict()["Whatever"], "")
+
+        # Add the corresponding docstring.
+        metadata.addString("MPD_" + "Whatever", "docs for whatever")
+        self.testMask.conformMaskPlanes(self.Mask.parseMaskPlaneMetadata(metadata))
+        self.assertEqual(self.Mask().getMaskPlaneDocDict()["Whatever"], "docs for whatever")
+
+        # Loading the planes via the above metadata could scramble their
+        # printing layout: confirm that it comes out right.
+        expect = ("Plane 0 -> CR : some docs\n"
+                  "Plane 1 -> BP : some docs\n"
+                  "Plane 2 -> Whatever : docs for whatever")
+        result = str(self.Mask().printMaskPlanes())
+        self.assertEqual(expect, result)
 
     def testPlaneOperations(self):
         """Test mask plane operations"""

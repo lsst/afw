@@ -296,6 +296,11 @@ detail::MaskPlaneDict const& Mask<MaskPixelT>::getMaskPlaneDict() const {
 }
 
 template <typename MaskPixelT>
+detail::MaskPlaneDocDict const& Mask<MaskPixelT>::getMaskPlaneDocDict() const {
+    return _maskDict->getMaskPlaneDocDict();
+}
+
+template <typename MaskPixelT>
 void Mask<MaskPixelT>::removeMaskPlane(const std::string& name) {
     if (detail::MaskDict::getDefault()->getMaskPlane(name) < 0) {
         throw LSST_EXCEPT(pexExcept::InvalidParameterError,
@@ -580,23 +585,31 @@ void Mask<MaskPixelT>::addMaskPlanesToMetadata(std::shared_ptr<dafBase::Property
         }
     }
 
-    MaskPlaneDict const& mpd = _maskPlaneDict()->getMaskPlaneDict();
+    MaskPlaneDict const& mpdict = _maskPlaneDict()->getMaskPlaneDict();
+    MaskPlaneDocDict const& mpdocs = _maskPlaneDict()->getMaskPlaneDocDict();
 
     // Add new MaskPlane metadata
-    for (auto const& i : mpd) {
+    for (auto const& i : mpdict) {
         std::string const& planeName = i.first;
         int const planeNumber = i.second;
 
         if (planeName != "") {
             metadata->add(maskPlanePrefix + planeName, planeNumber);
+            try {
+                metadata->add(maskPlaneDocPrefix + planeName, mpdocs.at(planeName));
+            } catch (const std::out_of_range&) {
+                // Write an empty docstring, for forwards compatibility.
+                metadata->add(maskPlaneDocPrefix + planeName, "");
+            }
         }
     }
 }
 
 template <typename MaskPixelT>
-typename Mask<MaskPixelT>::MaskPlaneDict Mask<MaskPixelT>::parseMaskPlaneMetadata(
+std::shared_ptr<detail::MaskDict> Mask<MaskPixelT>::parseMaskPlaneMetadata(
         std::shared_ptr<dafBase::PropertySet const> metadata) {
-    MaskPlaneDict newDict;
+    MaskPlaneDict bitDict;
+    MaskPlaneDocDict docDict;
 
     // First, clear existing MaskPlane metadata
     using NameList = std::vector<std::string>;
@@ -610,15 +623,15 @@ typename Mask<MaskPixelT>::MaskPlaneDict Mask<MaskPixelT>::parseMaskPlaneMetadat
             std::string planeName = paramName.substr(maskPlanePrefix.size());
             int const planeId = metadata->getAsInt(paramName);
 
-            MaskPlaneDict::const_iterator plane = newDict.find(planeName);
-            if (plane != newDict.end() && planeId != plane->second) {
+            MaskPlaneDict::const_iterator plane = bitDict.find(planeName);
+            if (plane != bitDict.end() && planeId != plane->second) {
                 throw LSST_EXCEPT(pexExcept::RuntimeError, "File specifies plane " + planeName + " twice");
             }
-            for (MaskPlaneDict::const_iterator j = newDict.begin(); j != newDict.end(); ++j) {
-                if (planeId == j->second) {
+            for (auto const& j : bitDict) {
+                if (planeId == j.second) {
                     throw LSST_EXCEPT(pexExcept::RuntimeError,
                                       str(boost::format("File specifies plane %s has same value (%d) as %s") %
-                                          planeName % planeId % j->first));
+                                          planeName % planeId % j.first));
                 }
             }
             // build new entry
@@ -628,10 +641,19 @@ typename Mask<MaskPixelT>::MaskPlaneDict Mask<MaskPixelT>::parseMaskPlaneMetadat
                         pexExcept::RuntimeError,
                         str(boost::format("Max number of planes (%1%) already used") % getNumPlanesMax()));
             }
-            newDict[planeName] = planeId;
+            bitDict[planeName] = planeId;
+            // Backwards compatibility: mask planes are undocumented, unless a matching `MPD_` field is found.
+            if (docDict.find(planeName) == docDict.end()) {
+                docDict[planeName] = "";
+            }
+        } else if (paramName.compare(0, maskPlaneDocPrefix.size(), maskPlaneDocPrefix) == 0) {
+            std::string planeName = paramName.substr(maskPlaneDocPrefix.size());
+            std::string planeDoc = metadata->getAsString(paramName);
+            // Overwrite the previous empty definition.
+            docDict[planeName] = planeDoc;
         }
     }
-    return newDict;
+    return detail::MaskDict::copyOrGetDefault(bitDict, docDict);
 }
 
 template <typename MaskPixelT>
@@ -646,6 +668,8 @@ std::string Mask<MaskPixelT>::printMaskPlanes() const {
  */
 template <typename MaskPixelT>
 std::string const Mask<MaskPixelT>::maskPlanePrefix("MP_");
+template <typename MaskPixelT>
+std::string const Mask<MaskPixelT>::maskPlaneDocPrefix("MPD_");
 
 template <typename MaskPixelT>
 std::shared_ptr<detail::MaskDict> Mask<MaskPixelT>::_maskPlaneDict() {
