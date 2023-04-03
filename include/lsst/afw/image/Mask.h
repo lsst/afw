@@ -23,7 +23,7 @@
  */
 
 /*
- * LSST bitmasks
+ * Image pixel bitmasks
  */
 
 #ifndef LSST_AFW_IMAGE_MASK_H
@@ -472,6 +472,7 @@ public:
      * Set the bit specified by "planeId" for pixels (x0, y) ... (x1, y)
      */
     void setMaskPlaneValues(const int plane, const int x0, const int x1, const int y);
+
     /**
      * Given a PropertySet that contains the MaskPlane assignments, setup the MaskPlanes.
      *
@@ -479,9 +480,9 @@ public:
      * @returns a dictionary of mask plane name: plane ID
      */
     static MaskPlaneDict parseMaskPlaneMetadata(std::shared_ptr<lsst::daf::base::PropertySet const> metadata);
-    //
+
     // Operations on the mask plane dictionary
-    //
+
     /// Reset the maskPlane dictionary
     static void clearMaskPlaneDict();
     [[deprecated("Doc field will become non-optional. Will be removed after v26.")]] static int addMaskPlane(
@@ -515,9 +516,7 @@ public:
     static int getNumPlanesMax() { return 8 * sizeof(MaskPixelT); }
     static int getNumPlanesUsed();
 
-    /**
-     * Return the Mask's maskPlaneDict
-     */
+    /// Return the Mask's bit plane map.
     MaskPlaneDict const& getMaskPlaneDict() const;
 
     /// Print a formatted string showing the mask plane bits, names, and docs.
@@ -527,8 +526,8 @@ public:
      * Given a PropertySet, replace any existing MaskPlane assignments with the current ones.
      */
     static void addMaskPlanesToMetadata(std::shared_ptr<lsst::daf::base::PropertySet>);
-    //
-    // This one isn't static, it fixes up a given Mask's planes
+
+    // This one isn't static, it fixes up a given Mask's planes.
     /**
      * Adjust this mask to conform to the standard Mask class's mask plane dictionary,
      * adding any new mask planes to the standard.
@@ -581,9 +580,7 @@ private:
      */
     void _initializePlanes(MaskPlaneDict const& planeDefs);  // called by ctors
 
-    //
     // Make names in templatized base class visible (Meyers, Effective C++, Item 43)
-    //
     using ImageBase<MaskPixelT>::_getRawView;
     using ImageBase<MaskPixelT>::swap;
 

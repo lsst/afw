@@ -49,7 +49,6 @@ namespace lsst {
 namespace afw {
 namespace image {
 
-namespace {}  // namespace
 
 template <typename MaskPixelT>
 void Mask<MaskPixelT>::_initializePlanes(MaskPlaneDict const& planeDefs) {
@@ -409,9 +408,7 @@ void Mask<MaskPixelT>::conformMaskPlanes(MaskPlaneDict const& currentPlaneDict) 
             return;  // nothing to do
         }
     } else {
-        //
         // Find out which planes need to be permuted
-        //
         MaskPixelT keepBitmask = 0;                        // mask of bits to keep
         MaskPixelT canonicalMask[sizeof(MaskPixelT) * 8];  // bits in lsst::afw::image::Mask that should be
         MaskPixelT currentMask[sizeof(MaskPixelT) * 8];    //           mapped to these bits

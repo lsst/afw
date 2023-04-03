@@ -68,6 +68,7 @@ public:
 
     // Return a new MaskDict with the same plane definitions as the given
     // MaskPlaneDict, or return the default mask dict if it is empty.
+
     static std::shared_ptr<MaskDict> copyOrGetDefault(MaskPlaneDict const &dict,
                                                       MaskPlaneDocDict const &docs);
 
@@ -170,9 +171,7 @@ private:
     // ALL MaskDict constructors should only be from GlobalState,
     // in order to ensure the global set of active dictionaries
     // is kept up-to-date.
-
     MaskDict();
-
     explicit MaskDict(MaskPlaneDict const &dict, MaskPlaneDocDict const &docs);
 
     MaskDict(MaskDict const &) = default;

@@ -411,10 +411,8 @@ class OldMaskTestCase(unittest.TestCase):
         self.Mask.addMaskPlanesToMetadata(metadata)
         for (k, v) in self.Mask().getMaskPlaneDict().items():
             self.assertEqual(metadata.getInt(f"MP_{k}"), v)
-        #
         # Now add another plane to metadata and make it appear in the mask Dict, albeit
         # in general at another location (hence the getNumPlanesUsed call)
-        #
         metadata.addInt("MP_" + "Whatever", self.Mask.getNumPlanesUsed())
 
         self.testMask.conformMaskPlanes(
@@ -455,24 +453,20 @@ class OldMaskTestCase(unittest.TestCase):
                           lambda: self.Mask.removeMaskPlane("BP"))  # Plane is already removed
         self.assertRaises(pexExcept.InvalidParameterError,
                           lambda: self.testMask.removeMaskPlane("RHL gets names right"))
-        #
+
         self.Mask.clearMaskPlaneDict()
         self.Mask.addMaskPlane("P0", "some doc")
         self.Mask.addMaskPlane("P1", "some doc")
         # a no-op -- re-adding a plane has no effect
         self.Mask.addMaskPlane("P1", "some doc")
-        #
         # Check that removing default mask planes doesn't affect pre-existing planes
-        #
         msk = self.Mask()
         nmask = len(msk.getMaskPlaneDict())
         self.Mask.removeMaskPlane("P0")
         self.Mask.removeMaskPlane("P1")
         self.assertEqual(len(msk.getMaskPlaneDict()), nmask)
         del msk
-        #
         # Check that removeAndClearMaskPlane can clear the default too
-        #
         self.Mask.addMaskPlane("BP", "some doc")
         self.testMask.removeAndClearMaskPlane("BP", True)
 
