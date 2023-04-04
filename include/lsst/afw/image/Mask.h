@@ -531,6 +531,9 @@ public:
     /// Return the Mask's bit plane map docstrings.
     MaskPlaneDocDict const& getMaskPlaneDocDict() const;
 
+    // TODO: not sure we want to keep this?
+    std::shared_ptr<detail::MaskDict const> const getMaskDict() const { return _maskDict; }
+
     /// Print a formatted string showing the mask plane bits, names, and docs.
     std::string printMaskPlanes() const;
 

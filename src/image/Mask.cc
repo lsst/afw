@@ -471,6 +471,13 @@ void Mask<MaskPixelT>::clearMaskPlane(int planeId) {
 template <typename MaskPixelT>
 void Mask<MaskPixelT>::conformMaskPlanes(std::shared_ptr<detail::MaskDict> const& currentMaskDict) {
     std::shared_ptr<detail::MaskDict> currentMD = detail::MaskDict::copyOrGetDefault(currentMaskDict);
+
+    std::cout << "_maskDict\n";
+    _maskDict->print();
+    std::cout << "currentMD\n";
+    currentMD->print();
+    std::cout << "default\n";
+    detail::MaskDict::getDefault()->print();
     if (_maskDict != nullptr && *_maskDict == *currentMD) {
         if (*detail::MaskDict::getDefault() == *_maskDict) {
             return;  // nothing to do
@@ -490,6 +497,7 @@ void Mask<MaskPixelT>::conformMaskPlanes(std::shared_ptr<detail::MaskDict> const
             if (currentMaskDict->getMaskPlaneDocDict().find(name) !=
                 currentMaskDict->getMaskPlaneDocDict().end())
                 currentPlaneDoc = currentMaskDict->getMaskPlaneDocDict().at(name);
+            std::cout << "> " << name << " " << currentPlaneNumber << " " << currentPlaneDoc << std::endl;
             int canonicalPlaneNumber = getMaskPlaneNoThrow(name);  // plane number in lsst::afw::image::Mask
 
             if (canonicalPlaneNumber < 0) {  // no such plane; add it

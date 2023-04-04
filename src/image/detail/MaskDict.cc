@@ -137,6 +137,7 @@ void MaskDict::addAllMasksPlane(std::string const &name, int bitId, std::string 
             if (dict.find(name) == dict.end()) {
                 dict.add(name, bitId, doc);
             }
+            // TODO: need to do something here when the docstrings don't match?
         }
     });
 }
