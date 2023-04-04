@@ -76,6 +76,7 @@ public:
 
     static std::shared_ptr<MaskDict> copyOrGetDefault(MaskPlaneDict const &dict,
                                                       MaskPlaneDocDict const &docs);
+    static std::shared_ptr<MaskDict> copyOrGetDefault(std::shared_ptr<MaskDict> const &dict);
 
     // Return the default MaskDict to be used for new Mask instances.
     static std::shared_ptr<MaskDict> getDefault();

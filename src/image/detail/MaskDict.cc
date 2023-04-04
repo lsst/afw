@@ -48,6 +48,15 @@ public:
         return _defaultMaskDict;
     }
 
+    std::shared_ptr<MaskDict> copyOrGetDefault(std::shared_ptr<MaskDict> const &dict) {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        if (dict != nullptr && !dict->empty()) {
+            _allMaskDicts.insert(dict);
+            return dict;
+        }
+        return _defaultMaskDict;
+    }
+
     std::shared_ptr<MaskDict> copy(MaskDict const &dict) {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         std::shared_ptr<MaskDict> result(new MaskDict(dict));
@@ -107,6 +116,10 @@ private:
 
 std::shared_ptr<MaskDict> MaskDict::copyOrGetDefault(MaskPlaneDict const &mpd, MaskPlaneDocDict const &docs) {
     return GlobalState::get().copyOrGetDefault(mpd, docs);
+}
+
+std::shared_ptr<MaskDict> MaskDict::copyOrGetDefault(std::shared_ptr<MaskDict> const &dict) {
+    return GlobalState::get().copyOrGetDefault(dict);
 }
 
 std::shared_ptr<MaskDict> MaskDict::getDefault() { return GlobalState::get().getDefault(); }

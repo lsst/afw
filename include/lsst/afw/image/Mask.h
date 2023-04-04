@@ -88,7 +88,10 @@ public:
      * @param height number of rows
      * @param planeDefs desired mask planes
      */
-    explicit Mask(unsigned int width, unsigned int height, MaskPlaneDict const& planeDefs = MaskPlaneDict());
+    // [[deprecated("Replaced by a shared_ptr interface to MaskDict. Will be removed after v26.")]
+    explicit Mask(unsigned int width, unsigned int height, MaskPlaneDict const& planeDefs);
+    explicit Mask(unsigned int width, unsigned int height,
+                  std::shared_ptr<detail::MaskDict> maskDict = nullptr);
     /**
      * Construct a Mask initialized to a specified value
      *
@@ -97,16 +100,21 @@ public:
      * @param initialValue Initial value
      * @param planeDefs desired mask planes
      */
+    // [[deprecated("Replaced by a shared_ptr interface to MaskDict. Will be removed after v26.")]
     explicit Mask(unsigned int width, unsigned int height, MaskPixelT initialValue,
-                  MaskPlaneDict const& planeDefs = MaskPlaneDict());
+                  MaskPlaneDict const& planeDefs);
+    explicit Mask(unsigned int width, unsigned int height, MaskPixelT initialValue,
+                  std::shared_ptr<detail::MaskDict> maskDict = nullptr);
     /**
      * Construct a Mask initialized to 0x0
      *
      * @param dimensions Number of columns, rows
      * @param planeDefs desired mask planes
      */
+    // [[deprecated("Replaced by a shared_ptr interface to MaskDict. Will be removed after v26.")]
+    explicit Mask(lsst::geom::Extent2I const& dimensions, MaskPlaneDict const& planeDefs);
     explicit Mask(lsst::geom::Extent2I const& dimensions = lsst::geom::Extent2I(),
-                  MaskPlaneDict const& planeDefs = MaskPlaneDict());
+                  std::shared_ptr<detail::MaskDict> maskDict = nullptr);
     /**
      * Construct a Mask initialized to a specified value
      *
@@ -114,15 +122,23 @@ public:
      * @param initialValue Initial value
      * @param planeDefs desired mask planes
      */
+    // [[deprecated("Replaced by a shared_ptr interface to MaskDict. Will be removed after v26.")]
     explicit Mask(lsst::geom::Extent2I const& dimensions, MaskPixelT initialValue,
-                  MaskPlaneDict const& planeDefs = MaskPlaneDict());
+                  MaskPlaneDict const& planeDefs);
+    explicit Mask(lsst::geom::Extent2I const& dimensions, MaskPixelT initialValue,
+                  std::shared_ptr<detail::MaskDict> maskDict = nullptr);
     /**
      * Construct a Mask initialized to 0x0
      *
      * @param bbox Desired number of columns/rows and origin
      * @param planeDefs desired mask planes
      */
-    explicit Mask(lsst::geom::Box2I const& bbox, MaskPlaneDict const& planeDefs = MaskPlaneDict());
+    // [[deprecated("Replaced by a shared_ptr interface to MaskDict. Will be removed after v26.")]]
+    explicit Mask(lsst::geom::Box2I const& bbox, MaskPlaneDict const& planeDefs);
+
+    // Nullptr constructor makes a default MaskDict
+    explicit Mask(lsst::geom::Box2I const& bbox, std::shared_ptr<detail::MaskDict> maskDict = nullptr);
+
     /**
      * Construct a Mask initialized to a specified value
      *
@@ -130,9 +146,10 @@ public:
      * @param initialValue Initial value
      * @param planeDefs desired mask planes
      */
+    // [[deprecated("Replaced by a shared_ptr interface to MaskDict. Will be removed after v26.")]
+    explicit Mask(lsst::geom::Box2I const& bbox, MaskPixelT initialValue, MaskPlaneDict const& planeDefs);
     explicit Mask(lsst::geom::Box2I const& bbox, MaskPixelT initialValue,
-                  MaskPlaneDict const& planeDefs = MaskPlaneDict());
-
+                  std::shared_ptr<detail::MaskDict> maskDict = nullptr);
     /**
      *  Construct a Mask by reading a regular FITS file.
      *
@@ -471,7 +488,8 @@ public:
      * @param metadata metadata from a Mask
      * @returns a dictionary of mask plane name: plane ID
      */
-    static MaskPlaneDict parseMaskPlaneMetadata(std::shared_ptr<lsst::daf::base::PropertySet const> metadata);
+    static std::shared_ptr<detail::MaskDict> parseMaskPlaneMetadata(
+            std::shared_ptr<lsst::daf::base::PropertySet const> metadata);
 
     // Operations on the mask plane dictionary
 
@@ -534,9 +552,9 @@ public:
      * Any new mask planes found in this mask are added to unused slots in the Mask class's mask plane
      * dictionary.
      *
-     * @param masterPlaneDict mask plane dictionary currently in use for this mask
+     * @param currentMaskDict mask plane dictionary currently in use for this mask.
      */
-    void conformMaskPlanes(const MaskPlaneDict& masterPlaneDict);
+    void conformMaskPlanes(std::shared_ptr<detail::MaskDict> const& currentMaskDict);
 
 private:
     friend class MaskFitsReader;
@@ -573,7 +591,11 @@ private:
     /**
      * Initialise mask planes; called by constructors
      */
+    // deprecated on DM-32438
     void _initializePlanes(MaskPlaneDict const& planeDefs);  // called by ctors
+
+    /// Initialise mask planes; called by constructors.
+    void _initializeMaskDict(std::shared_ptr<detail::MaskDict> maskDict);
 
     // Make names in templatized base class visible (Meyers, Effective C++, Item 43)
     using ImageBase<MaskPixelT>::_getRawView;

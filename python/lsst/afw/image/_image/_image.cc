@@ -29,6 +29,7 @@
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/ImageSlice.h"
 #include "lsst/afw/image/Mask.h"
+#include "lsst/afw/image/detail/MaskDict.h"
 #include "lsst/afw/fits.h"
 #include "lsst/afw/image/python/indexing.h"
 
@@ -121,6 +122,17 @@ static void declareImageBase(lsst::utils::python::WrapperCollection &wrappers, s
                 },
                 "index"_a, "origin"_a);
     });
+}
+
+static void declareMaskDict(lsst::utils::python::WrapperCollection &wrappers) {
+    wrappers.wrapType(
+            py::class_<detail::MaskDict, std::shared_ptr<detail::MaskDict>>(wrappers.module, "MaskDict"),
+            [](auto &mod, auto &cls) {
+                cls.def_static("getDefault", &detail::MaskDict::getDefault);
+                cls.def("print", &detail::MaskDict::print);
+                cls.def("getMaskPlaneDict", &detail::MaskDict::getMaskPlaneDict);
+                cls.def("getMaskPlaneDocDict", &detail::MaskDict::getMaskPlaneDocDict);
+            });
 }
 
 template <typename MaskPixelT>
@@ -447,6 +459,7 @@ void wrapImage(lsst::utils::python::WrapperCollection &wrappers) {
     declareImageBase<std::uint16_t>(wrappers, "U");
     declareImageBase<std::uint64_t>(wrappers, "L");
 
+    declareMaskDict(wrappers);
     // Mask must be declared before Image because a mask is used as a default value in at least one method
     declareMask<MaskPixel>(wrappers, "X");
 

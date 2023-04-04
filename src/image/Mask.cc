@@ -49,14 +49,29 @@ namespace lsst {
 namespace afw {
 namespace image {
 
-
+// deprecated on DM-32438
 template <typename MaskPixelT>
 void Mask<MaskPixelT>::_initializePlanes(MaskPlaneDict const& planeDefs) {
     LOGL_DEBUG("lsst.afw.image.Mask", "Number of possible mask planes: %d", getNumPlanesMax());
 
+    LOGL_WARN("lsst.afw.image.Mask",
+              "Replaced by a shared_ptr interface to MaskDict; does not handle docstrings. Will be removed "
+              "after v26.");
     _maskDict = detail::MaskDict::copyOrGetDefault(planeDefs, detail::MaskPlaneDocDict());
 }
 
+template <typename MaskPixelT>
+void Mask<MaskPixelT>::_initializeMaskDict(std::shared_ptr<detail::MaskDict> maskDict) {
+    LOGL_DEBUG("lsst.afw.image.Mask", "Number of possible mask planes: %d", getNumPlanesMax());
+
+    if (!maskDict) {
+        _maskDict = detail::MaskDict::getDefault();
+    } else {
+        _maskDict = maskDict;
+    }
+}
+
+// deprecated on DM-32438
 template <typename MaskPixelT>
 Mask<MaskPixelT>::Mask(unsigned int width, unsigned int height, MaskPlaneDict const& planeDefs)
         : ImageBase<MaskPixelT>(lsst::geom::ExtentI(width, height)) {
@@ -64,6 +79,14 @@ Mask<MaskPixelT>::Mask(unsigned int width, unsigned int height, MaskPlaneDict co
     *this = 0x0;
 }
 
+template <typename MaskPixelT>
+Mask<MaskPixelT>::Mask(unsigned int width, unsigned int height, std::shared_ptr<detail::MaskDict> maskDict)
+        : ImageBase<MaskPixelT>(lsst::geom::ExtentI(width, height)) {
+    _initializeMaskDict(maskDict);
+    *this = 0x0;
+}
+
+// deprecated on DM-32438
 template <typename MaskPixelT>
 Mask<MaskPixelT>::Mask(unsigned int width, unsigned int height, MaskPixelT initialValue,
                        MaskPlaneDict const& planeDefs)
@@ -73,12 +96,29 @@ Mask<MaskPixelT>::Mask(unsigned int width, unsigned int height, MaskPixelT initi
 }
 
 template <typename MaskPixelT>
+Mask<MaskPixelT>::Mask(unsigned int width, unsigned int height, MaskPixelT initialValue,
+                       std::shared_ptr<detail::MaskDict> maskDict)
+        : ImageBase<MaskPixelT>(lsst::geom::ExtentI(width, height)) {
+    _initializeMaskDict(maskDict);
+    *this = initialValue;
+}
+
+// deprecated on DM-32438
+template <typename MaskPixelT>
 Mask<MaskPixelT>::Mask(lsst::geom::Extent2I const& dimensions, MaskPlaneDict const& planeDefs)
         : ImageBase<MaskPixelT>(dimensions) {
     _initializePlanes(planeDefs);
     *this = 0x0;
 }
 
+template <typename MaskPixelT>
+Mask<MaskPixelT>::Mask(lsst::geom::Extent2I const& dimensions, std::shared_ptr<detail::MaskDict> maskDict)
+        : ImageBase<MaskPixelT>(dimensions) {
+    _initializeMaskDict(maskDict);
+    *this = 0x0;
+}
+
+// deprecated on DM-32438
 template <typename MaskPixelT>
 Mask<MaskPixelT>::Mask(lsst::geom::Extent2I const& dimensions, MaskPixelT initialValue,
                        MaskPlaneDict const& planeDefs)
@@ -88,6 +128,15 @@ Mask<MaskPixelT>::Mask(lsst::geom::Extent2I const& dimensions, MaskPixelT initia
 }
 
 template <typename MaskPixelT>
+Mask<MaskPixelT>::Mask(lsst::geom::Extent2I const& dimensions, MaskPixelT initialValue,
+                       std::shared_ptr<detail::MaskDict> maskDict)
+        : ImageBase<MaskPixelT>(dimensions) {
+    _initializeMaskDict(maskDict);
+    *this = initialValue;
+}
+
+// deprecated on DM-32438
+template <typename MaskPixelT>
 Mask<MaskPixelT>::Mask(lsst::geom::Box2I const& bbox, MaskPlaneDict const& planeDefs)
         : ImageBase<MaskPixelT>(bbox) {
     _initializePlanes(planeDefs);
@@ -95,9 +144,25 @@ Mask<MaskPixelT>::Mask(lsst::geom::Box2I const& bbox, MaskPlaneDict const& plane
 }
 
 template <typename MaskPixelT>
+Mask<MaskPixelT>::Mask(lsst::geom::Box2I const& bbox, std::shared_ptr<detail::MaskDict> maskDict)
+        : ImageBase<MaskPixelT>(bbox) {
+    _initializeMaskDict(maskDict);
+    *this = 0x0;
+}
+
+// deprecated on DM-32438
+template <typename MaskPixelT>
 Mask<MaskPixelT>::Mask(lsst::geom::Box2I const& bbox, MaskPixelT initialValue, MaskPlaneDict const& planeDefs)
         : ImageBase<MaskPixelT>(bbox) {
     _initializePlanes(planeDefs);
+    *this = initialValue;
+}
+
+template <typename MaskPixelT>
+Mask<MaskPixelT>::Mask(lsst::geom::Box2I const& bbox, MaskPixelT initialValue,
+                       std::shared_ptr<detail::MaskDict> maskDict)
+        : ImageBase<MaskPixelT>(bbox) {
+    _initializeMaskDict(maskDict);
     *this = initialValue;
 }
 
@@ -404,11 +469,9 @@ void Mask<MaskPixelT>::clearMaskPlane(int planeId) {
 }
 
 template <typename MaskPixelT>
-void Mask<MaskPixelT>::conformMaskPlanes(MaskPlaneDict const& currentPlaneDict) {
-    std::shared_ptr<detail::MaskDict> currentMD =
-            detail::MaskDict::copyOrGetDefault(currentPlaneDict, detail::MaskPlaneDocDict());
-
-    if (*_maskDict == *currentMD) {
+void Mask<MaskPixelT>::conformMaskPlanes(std::shared_ptr<detail::MaskDict> const& currentMaskDict) {
+    std::shared_ptr<detail::MaskDict> currentMD = detail::MaskDict::copyOrGetDefault(currentMaskDict);
+    if (_maskDict != nullptr && *_maskDict == *currentMD) {
         if (*detail::MaskDict::getDefault() == *_maskDict) {
             return;  // nothing to do
         }
@@ -419,13 +482,18 @@ void Mask<MaskPixelT>::conformMaskPlanes(MaskPlaneDict const& currentPlaneDict) 
         MaskPixelT currentMask[sizeof(MaskPixelT) * 8];    //           mapped to these bits
         int numReMap = 0;
 
-        for (auto const& i : currentPlaneDict) {
-            std::string const name = i.first;                      // name of mask plane
-            int const currentPlaneNumber = i.second;               // plane number currently in use
+        for (auto const& i : currentMaskDict->getMaskPlaneDict()) {
+            std::string const name = i.first;         // name of mask plane
+            int const currentPlaneNumber = i.second;  // plane number currently in use
+            // Default to an empty docstring, for forwards compatibility.
+            std::string currentPlaneDoc = "";
+            if (currentMaskDict->getMaskPlaneDocDict().find(name) !=
+                currentMaskDict->getMaskPlaneDocDict().end())
+                currentPlaneDoc = currentMaskDict->getMaskPlaneDocDict().at(name);
             int canonicalPlaneNumber = getMaskPlaneNoThrow(name);  // plane number in lsst::afw::image::Mask
 
             if (canonicalPlaneNumber < 0) {  // no such plane; add it
-                canonicalPlaneNumber = addMaskPlane(name);
+                canonicalPlaneNumber = addMaskPlane(name, currentPlaneDoc);
             }
 
             if (canonicalPlaneNumber == currentPlaneNumber) {
@@ -494,7 +562,7 @@ bool Mask<MaskPixelT>::operator()(int x, int y, int planeId, CheckIndices const&
 
 template <typename MaskPixelT>
 void Mask<MaskPixelT>::checkMaskDictionaries(Mask<MaskPixelT> const& other) {
-    if (*_maskDict != *other._maskDict) {
+    if (_maskDict != other._maskDict || *_maskDict != *other._maskDict) {
         throw LSST_EXCEPT(pexExcept::RuntimeError, "Mask dictionaries do not match");
     }
 }
