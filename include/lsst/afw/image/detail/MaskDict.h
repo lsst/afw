@@ -176,6 +176,9 @@ private:
     // GlobalState.
     void _addInitialMaskPlanes();
 
+    /// Return the hash of the dict and docs.
+    std::size_t _computeHash() const;
+
     // ALL MaskDict constructors should only be from GlobalState,
     // in order to ensure the global set of active dictionaries
     // is kept up-to-date.

@@ -205,13 +205,13 @@ bool MaskDict::operator==(MaskDict const &rhs) const {
 void MaskDict::add(std::string const &name, int bitId, std::string const &doc) {
     _dict[name] = bitId;
     _docs[name] = doc;
-    _hash = boost::hash<MaskPlaneDict>()(_dict);
+    _hash = _computeHash();
 }
 
 void MaskDict::erase(std::string const &name) {
     _dict.erase(name);
     _docs.erase(name);
-    _hash = boost::hash<MaskPlaneDict>()(_dict);
+    _hash = _computeHash();
 }
 
 void MaskDict::clear() {
@@ -246,13 +246,22 @@ void MaskDict::_addInitialMaskPlanes() {
     _docs["NO_DATA"] =
             "There was no data at this pixel location (e.g. no input images at this location in a coadd, or "
             "extremely high vignetting, such that there is no incoming signal).";
-    _hash = boost::hash<MaskPlaneDict>()(_dict);
+    _hash = _computeHash();
+}
+
+std::size_t MaskDict::_computeHash() const {
+    std::size_t seed = 0;
+    // TODO: is this really the best way to compute this hash?
+    // cpputils has hashCombine and hashIterable...
+    boost::hash_combine(seed, _dict);
+    boost::hash_combine(seed, _docs);
+    return seed;
 }
 
 MaskDict::MaskDict() : _dict(), _docs(), _hash(0x0) {}
 
 MaskDict::MaskDict(MaskPlaneDict const &dict, MaskPlaneDocDict const &docs)
-        : _dict(dict), _docs(docs), _hash(boost::hash<MaskPlaneDict>()(_dict)) {}
+        : _dict(dict), _docs(docs), _hash(_computeHash()) {}
 
 }  // namespace detail
 }  // namespace image
