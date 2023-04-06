@@ -19,7 +19,6 @@
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
-import copy
 import math
 import os
 import unittest
@@ -265,8 +264,6 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
         newVisit1 = visitInfo1.copyWith(**kwargs1)
         newVisit2 = visitInfo1.copyWith(**kwargs2)
 
-        self.assertIs(copy.deepcopy(visitInfo1), visitInfo1)
-
         for field in updateFields1:
             self.assertEqual(getattr(newVisit1, field), getattr(visitInfo2, field))
             self.assertEqual(getattr(newVisit2, field), getattr(visitInfo1, field))
@@ -362,6 +359,11 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
         self._testFitsRead(self.data1, os.path.join(dataDir, "visitInfo-version-2.fits"), 2)
         self._testFitsRead(self.data1, os.path.join(dataDir, "visitInfo-version-3.fits"), 3)
         self._testFitsRead(self.data1, os.path.join(dataDir, "visitInfo-version-4.fits"), 4)
+
+        # Check that reading a newer file raises a useful exception.
+        with self.assertRaisesRegex(TypeError,
+                                    r"Cannot read VisitInfo FITS version > [0-9]+, found version 999999"):
+            afwImage.VisitInfo.readFits(os.path.join(dataDir, "visitInfo-version-999999.fits"))
 
     def testSetVisitInfoMetadata(self):
         for item in (self.data1, self.data2):
