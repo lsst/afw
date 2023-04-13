@@ -27,9 +27,9 @@ from lsst.geom import Point2D, Point2I, Box2I
 from lsst.pex.exceptions import InvalidParameterError
 from . import Exposure, ExposureF
 from ..utils import projectImage
-from ..image._multiband import MultibandTripleBase, MultibandPixel
-from ..image._multiband import tripleFromSingles, tripleFromArrays, makeTripleFromKwargs
-from ..maskedImage import MaskedImage
+from .._image._multiband import MultibandTripleBase, MultibandPixel
+from .._image._multiband import tripleFromSingles, tripleFromArrays, makeTripleFromKwargs
+from .._maskedImage import MaskedImage
 
 
 class IncompleteDataError(Exception):

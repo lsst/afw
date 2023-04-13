@@ -22,8 +22,8 @@
 __all__ = ["clipImage", "projectImage", "getProjectionIndices"]
 
 import lsst.afw.detection as afwDetect
-from .maskedImage import MaskedImage, makeMaskedImage
-from .image import Mask
+from ._maskedImage import MaskedImage, makeMaskedImage
+from ._image import Mask
 
 
 def clipImage(im, minClip, maxClip):

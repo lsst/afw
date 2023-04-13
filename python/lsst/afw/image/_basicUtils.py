@@ -21,8 +21,8 @@
 
 __all__ = ["makeImageFromArray", "makeMaskFromArray", "makeMaskedImageFromArrays"]
 
-from .image import Image, Mask
-from .maskedImage import MaskedImage
+from ._image import Image, Mask
+from ._maskedImage import MaskedImage
 
 
 def makeImageFromArray(array):

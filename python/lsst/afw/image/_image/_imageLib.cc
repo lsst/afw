@@ -32,7 +32,7 @@ void wrapImage(lsst::utils::python::WrapperCollection &);
 void wrapImageSlice(lsst::utils::python::WrapperCollection &);
 
 PYBIND11_MODULE(_imageLib, mod) {
-    lsst::utils::python::WrapperCollection wrappers(mod, "lsst.afw.image.image");
+    lsst::utils::python::WrapperCollection wrappers(mod, "lsst.afw.image._image");
     wrapImage(wrappers);
     wrapImageSlice(wrappers);
     wrappers.finish();

@@ -177,11 +177,11 @@ PyExposure<PixelT> declareExposure(lsst::utils::python::WrapperCollection &wrapp
 }
 }  // namespace
 PYBIND11_MODULE(_exposure, mod) {
-    lsst::utils::python::WrapperCollection wrappers(mod, "lsst.afw.image.exposure");
-    wrappers.addSignatureDependency("lsst.afw.image.apCorrMap");
+    lsst::utils::python::WrapperCollection wrappers(mod, "lsst.afw.image._exposure");
+    wrappers.addSignatureDependency("lsst.afw.image._apCorrMap");
     wrappers.addSignatureDependency("lsst.afw.geom");
     wrappers.addSignatureDependency("lsst.afw.detection");
-    wrappers.addSignatureDependency("lsst.afw.image.maskedImage");
+    wrappers.addSignatureDependency("lsst.afw.image._maskedImage");
 
     auto clsExposureF = declareExposure<float>(wrappers, "F");
     auto clsExposureD = declareExposure<double>(wrappers, "D");
