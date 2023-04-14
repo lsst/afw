@@ -338,9 +338,9 @@ void declareExposureFitsReader(lsst::utils::python::WrapperCollection &wrappers)
 void wrapReaders(lsst::utils::python::WrapperCollection &wrappers) {
     // wrappers.addInheritanceDependency("lsst.daf.base");
     wrappers.addSignatureDependency("lsst.geom");
-    wrappers.addSignatureDependency("lsst.afw.image.image");
-    wrappers.addSignatureDependency("lsst.afw.image.maskedImage");
-    wrappers.addSignatureDependency("lsst.afw.image.exposure");
+    wrappers.addSignatureDependency("lsst.afw.image._image");
+    wrappers.addSignatureDependency("lsst.afw.image._maskedImage");
+    wrappers.addSignatureDependency("lsst.afw.image._exposure");
     declareImageFitsReader(wrappers);
     declareMaskFitsReader(wrappers);
     declareMaskedImageFitsReader(wrappers);

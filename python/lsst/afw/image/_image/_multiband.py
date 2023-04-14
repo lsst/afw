@@ -25,7 +25,7 @@ import numpy as np
 
 from lsst.geom import Point2I, Box2I, Extent2I
 from . import Image, ImageF, Mask, MaskPixel, PARENT, LOCAL
-from ..maskedImage import MaskedImage, MaskedImageF
+from .._maskedImage import MaskedImage, MaskedImageF
 from ._slicing import imageIndicesToNumpy
 from ...multiband import MultibandBase
 

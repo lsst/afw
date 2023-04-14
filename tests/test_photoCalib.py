@@ -580,7 +580,7 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
         image = np.random.normal(loc=1000.0, scale=sigma, size=npDim).astype(np.float32)
         mask = np.zeros(npDim, dtype=np.int32)
         variance = (np.random.normal(loc=0.0, scale=sigma, size=npDim).astype(np.float32))**2
-        maskedImage = lsst.afw.image.basicUtils.makeMaskedImageFromArrays(image, mask, variance)
+        maskedImage = lsst.afw.image.makeMaskedImageFromArrays(image, mask, variance)
         maskedImage.mask[0, 0] = True  # set one mask bit to check propagation of mask bits.
 
         return npDim, maskedImage, image, mask, variance

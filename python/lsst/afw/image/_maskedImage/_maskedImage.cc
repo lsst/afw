@@ -242,8 +242,8 @@ void declareImagesOverlap(lsst::utils::python::WrapperCollection &wrappers) {
 }  // namespace
 
 PYBIND11_MODULE(_maskedImage, mod) {
-    lsst::utils::python::WrapperCollection wrappers(mod, "lsst.afw.image.maskedImage");
-    wrappers.addSignatureDependency("lsst.afw.image.image");
+    lsst::utils::python::WrapperCollection wrappers(mod, "lsst.afw.image._maskedImage");
+    wrappers.addSignatureDependency("lsst.afw.image._image");
     wrappers.addInheritanceDependency("lsst.daf.base");
 
     auto clsMaskedImageF = declareMaskedImage<float>(wrappers, "F");

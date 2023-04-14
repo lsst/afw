@@ -161,7 +161,7 @@ void declareBackground(lsst::utils::python::WrapperCollection &wrappers) {
 }
 void wrapBackground(lsst::utils::python::WrapperCollection &wrappers) {
     // FIXME: review when lsst.afw.image is converted to python wrappers
-    wrappers.addInheritanceDependency("lsst.afw.image.image");
+    wrappers.addInheritanceDependency("lsst.afw.image");
     declareBackground(wrappers);
     declareMakeBackground<image::Image<float>>(wrappers);
     declareMakeBackground<image::MaskedImage<float>>(wrappers);

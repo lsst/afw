@@ -18,15 +18,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-from ._imageLib import *
-from . import pixel
-from ._image import *
-from ._apCorrMap import *
-from ._maskedImage import *
-from ._visitInfo import *  # just here to support deprecation
+
 from ._exposure import *
-from ._exposureInfoContinued import *
-from ._exposureSummaryStats import *
-from ._basicUtils import *
-from .testUtils import *
-from ._photoCalibContinued import *
+from ._exposureContinued import *
+from ._multiband import *

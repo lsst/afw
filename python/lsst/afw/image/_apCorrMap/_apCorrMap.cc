@@ -69,7 +69,7 @@ void wrapApCorrMap(lsst::utils::python::WrapperCollection &wrappers) {
 }
 
 PYBIND11_MODULE(_apCorrMap, mod) {
-    lsst::utils::python::WrapperCollection wrappers(mod, "lsst.afw.image.apCorrMap");
+    lsst::utils::python::WrapperCollection wrappers(mod, "lsst.afw.image._apCorrMap");
     wrappers.addInheritanceDependency("lsst.afw.table.io");
     wrappers.addInheritanceDependency("lsst.afw.typehandling");
     wrapApCorrMap(wrappers);

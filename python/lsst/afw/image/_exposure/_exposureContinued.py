@@ -25,11 +25,11 @@ import numpy as np
 
 from lsst.utils import TemplateMeta
 
-from ..image._slicing import supportSlicing
-from ..image._disableArithmetic import disableImageArithmetic
-from ..image._fitsIoWithOptions import imageReadFitsWithOptions, exposureWriteFitsWithOptions
+from .._image._slicing import supportSlicing
+from .._image._disableArithmetic import disableImageArithmetic
+from .._image._fitsIoWithOptions import imageReadFitsWithOptions, exposureWriteFitsWithOptions
 from ._exposure import ExposureI, ExposureF, ExposureD, ExposureU, ExposureL
-from .exposureUtils import bbox_to_convex_polygon, bbox_contains_sky_coords
+from ..exposure.exposureUtils import bbox_to_convex_polygon, bbox_contains_sky_coords
 
 
 class Exposure(metaclass=TemplateMeta):

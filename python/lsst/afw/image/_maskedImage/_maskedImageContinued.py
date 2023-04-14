@@ -23,9 +23,9 @@ import numpy as np
 from lsst.utils import TemplateMeta
 from ._maskedImage import MaskedImageI, MaskedImageF, MaskedImageD, MaskedImageU, MaskedImageL
 
-from ..image._fitsIoWithOptions import imageReadFitsWithOptions, exposureWriteFitsWithOptions
-from ..image._slicing import supportSlicing
-from ..image._disableArithmetic import disableImageArithmetic
+from .._image._fitsIoWithOptions import imageReadFitsWithOptions, exposureWriteFitsWithOptions
+from .._image._slicing import supportSlicing
+from .._image._disableArithmetic import disableImageArithmetic
 
 __all__ = ["MaskedImage", "VariancePixel"]
 

@@ -27,8 +27,8 @@ __all__ = ["assertImagesAlmostEqual", "assertImagesEqual", "assertMasksEqual",
 import numpy as np
 
 import lsst.utils.tests
-from .image import ImageF
-from .basicUtils import makeMaskedImageFromArrays
+from ._image import ImageF
+from ._basicUtils import makeMaskedImageFromArrays
 
 
 def makeGaussianNoiseMaskedImage(dimensions, sigma, variance=1.0):
