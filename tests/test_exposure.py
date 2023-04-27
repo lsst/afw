@@ -1127,14 +1127,14 @@ class ExposureNoAfwdataTestCase(lsst.utils.tests.TestCase):
         """Test that we can read an exposure summary with extra components.
         """
         testDict = {'ra': 0.0,
-                    'decl': 0.0,
+                    'dec': 0.0,
                     'nonsense': 1.0}
         bytes = yaml.dump(testDict, encoding='utf-8')
         with self.assertWarns(FutureWarning):
             summaryStats = lsst.afw.image.ExposureSummaryStats._read(bytes)
 
         self.assertEqual(summaryStats.ra, testDict['ra'])
-        self.assertEqual(summaryStats.decl, testDict['decl'])
+        self.assertEqual(summaryStats.dec, testDict['dec'])
 
     def testExposureSummarySchema(self):
         """Test that we can make a schema for an exposure summary and populate
