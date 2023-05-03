@@ -64,6 +64,9 @@ class Exposure(metaclass=TemplateMeta):
         from lsst.afw.fits import reduceToFits
         return reduceToFits(self)
 
+    def __deepcopy__(self, memo=None):
+        return self.clone()
+
     def convertF(self):
         return ExposureF(self, deep=True)
 
