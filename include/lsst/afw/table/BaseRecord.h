@@ -80,7 +80,7 @@ public:
     Schema getSchema() const { return _table->getSchema(); }
 
     /// Return the table this record is associated with.
-    std::shared_ptr<BaseTable const> getTable() const { return _table; }
+    std::shared_ptr<BaseTable> getTable() const { return _table; }
 
     /**
      *  Return a pointer to the underlying elements of a field (non-const).
