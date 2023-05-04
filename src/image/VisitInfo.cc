@@ -320,7 +320,9 @@ public:
         int version = getVersion(record);
         if (version > SERIALIZATION_VERSION) {
             throw LSST_EXCEPT(pex::exceptions::TypeError, "Cannot read VisitInfo FITS version > " +
-                                                                  std::to_string(SERIALIZATION_VERSION));
+                                                                  std::to_string(SERIALIZATION_VERSION) +
+                                                                  ", found version " +
+                                                                  std::to_string(version));
         }
 
         // Version-dependent fields
