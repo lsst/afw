@@ -31,6 +31,10 @@ __all__ = []
 
 @continueClass
 class VisitInfo:  # noqa: F811
+
+    def __deepcopy__(self, memo=None):
+        return self
+
     def copyWith(
         self,
         exposureId=None,
