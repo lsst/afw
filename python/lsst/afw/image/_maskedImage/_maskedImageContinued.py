@@ -97,6 +97,9 @@ class MaskedImage(metaclass=TemplateMeta):
         from lsst.afw.fits import reduceToFits
         return reduceToFits(self)
 
+    def __deepcopy__(self, memo=None):
+        return self.clone()
+
     def __str__(self):
         string = "image={},\nmask={}, maskPlaneDict={}\nvariance={}, bbox={}"
         return string.format(self.image.array,

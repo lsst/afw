@@ -37,6 +37,9 @@ class Image(metaclass=TemplateMeta):
         from lsst.afw.fits import reduceToFits
         return reduceToFits(self)
 
+    def __deepcopy__(self, memo=None):
+        return self.clone()
+
     def __str__(self):
         return "{}, bbox={}".format(self.array, self.getBBox())
 

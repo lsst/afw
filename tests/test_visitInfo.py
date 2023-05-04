@@ -19,6 +19,7 @@
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
+import copy
 import math
 import os
 import unittest
@@ -263,6 +264,8 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
 
         newVisit1 = visitInfo1.copyWith(**kwargs1)
         newVisit2 = visitInfo1.copyWith(**kwargs2)
+
+        self.assertIs(copy.deepcopy(visitInfo1), visitInfo1)
 
         for field in updateFields1:
             self.assertEqual(getattr(newVisit1, field), getattr(visitInfo2, field))
