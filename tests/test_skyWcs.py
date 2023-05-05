@@ -18,7 +18,8 @@ from lsst.afw.geom import wcsAlmostEqualOverBBox, \
     TransformPoint2ToPoint2, TransformPoint2ToSpherePoint, makeRadialTransform, \
     SkyWcs, makeSkyWcs, makeCdMatrix, makeWcsPairTransform, \
     makeFlippedWcs, makeModifiedWcs, makeTanSipWcs, \
-    getIntermediateWorldCoordsToSky, getPixelToIntermediateWorldCoords
+    getIntermediateWorldCoordsToSky, getPixelToIntermediateWorldCoords, \
+    stripWcsMetadata
 from lsst.afw.geom import getCdMatrixFromMetadata, getSipMatrixFromMetadata, makeSimpleWcsMetadata
 from lsst.afw.geom.testUtils import makeSipIwcToPixel, makeSipPixelToIwc
 from lsst.afw.fits import makeLimitedFitsHeader
@@ -692,6 +693,10 @@ class MetadataWcsTestCase(SkyWcsBaseTestCase):
         self.assertEqual(len(self.metadata.names(False)), 14)
         self.checkWcs(skyWcs)
         makeSkyWcs(self.metadata, strip=True)
+        self.assertEqual(len(self.metadata.names(False)), 0)
+
+    def testBasicsStrip(self):
+        stripWcsMetadata(self.metadata)
         self.assertEqual(len(self.metadata.names(False)), 0)
 
     def testNormalizationFk5(self):

@@ -98,6 +98,13 @@ All frames are instances of ast::Frame except the SKY frame. All have 2 axes.
 std::shared_ptr<ast::FrameDict> readLsstSkyWcs(daf::base::PropertySet& metadata, bool strip = true);
 
 /**
+Strip all WCS metadata from a header.
+
+@param[in,out] metadata  FITS header cards
+*/
+void stripWcsMetadata(daf::base::PropertySet &metadata);
+
+/**
 Copy values from an AST FitsChan into a PropertyList
 
 @warning COMMENT and HISTORY cards are treated as string values

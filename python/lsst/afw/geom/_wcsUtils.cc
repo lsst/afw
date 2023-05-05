@@ -67,6 +67,7 @@ void wrapWcsUtils(lsst::utils::python::WrapperCollection &wrappers) {
                         Eigen::MatrixXd const &, Eigen::MatrixXd const &, Eigen::MatrixXd const &,
                         Eigen::MatrixXd const &))makeTanSipMetadata,
                 "crpix"_a, "crval"_a, "cdMatrix"_a, "sipA"_a, "sipB"_a, "sipAp"_a, "sipBp"_a);
+        mod.def("stripWcsMetadata", stripWcsMetadata, "metadata"_a);
     });
 }
 

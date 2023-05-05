@@ -184,6 +184,8 @@ std::shared_ptr<daf::base::PropertyList> makeTanSipMetadata(
         Eigen::Matrix2d const& cdMatrix, Eigen::MatrixXd const& sipA, Eigen::MatrixXd const& sipB,
         Eigen::MatrixXd const& sipAp, Eigen::MatrixXd const& sipBp);
 
+void stripWcsMetadata(daf::base::PropertySet &metadata);
+
 }  // namespace geom
 }  // namespace afw
 }  // namespace lsst
