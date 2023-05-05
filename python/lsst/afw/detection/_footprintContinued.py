@@ -17,45 +17,52 @@
 # GNU General Public License for more details.
 #
 
+__all__ = []  # import this module only for its side effects
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from lsst.afw.image import Image
+
+import numpy as np
+
 from lsst.utils import continueClass
 
 from lsst.geom import Point2I
 from ._detection import Footprint
-from ..image import Image
-
-__all__ = []  # import this module only for its side effects
 
 
 @continueClass
 class Footprint:  # noqa: F811
-    def extractFluxFromArray(self, image: np.ndarray, xy0: Point2I = Point2I()) -> float:
-        """
+    def computeFluxFromArray(self, image: np.ndarray, xy0: Point2I) -> float:
+        """Calculate the total flux in the region of an image array
+        contained in this Footprint.
 
         Parameters
         ----------
         image:
-            The array containing the image pixels to extract
+            Array containing the pixels to extract.
         xy0:
             The origin of the image array.
 
         Returns
         flux:
-            The flux from the image in pixels contained in the footprint
+            Flux from the image in pixels contained in the footprint.
         """
         return self.spans.flatten(image, xy0).sum()
 
-    def extractFluxFromImage(self, image: Image) -> float:
+    def computeFluxFromImage(self, image: "Image") -> float:
         """Calculate the total flux in the region of an Image contained in
         this Footprint.
 
         Parameters
         ----------
         image:
-            The image to extract.
+            Image to extract.
 
         Returns
         -------
         flux:
-            The flux from the image in the pixels contained in the footprint.
+            Flux from the image pixels contained in the footprint.
         """
-        return self.extractFluxFromArray(image.array, image.getBBox().getMin())
+        return self.computeFluxFromArray(image.array, image.getXY0())

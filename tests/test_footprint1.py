@@ -1018,15 +1018,26 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
 
     def testExtractImage(self):
         """Test image extraction from a Footprint"""
-        image = afwIage.Image(np.ones((10, 10), dtype=np.int32), xy0=lsst.geom.Point2I(23, 25), dtype="I")
+        image = afwImage.Image(
+            np.arange(100, dtype=np.int32).reshape(10, 10),
+            xy0=lsst.geom.Point2I(23, 25),
+            dtype="I"
+        )
         radius = 3
-        spans = SpanSet.fromShape(radius, Stencil.CIRCLE, offset=(24, 27))
+        spans = afwGeom.SpanSet.fromShape(radius, afwGeom.Stencil.CIRCLE, offset=(27, 30))
         footprint = afwDetect.Footprint(spans)
 
         # The extracted footprint should be the same as the product of the
-        # spans and the overlapped bow with the image
+        # spans and the overlapped box with the image
         truth = spans.asArray() * image.array[2:9, 1:8]
-        self.assertArrayEqual(footprint.extractFluxFromImage(image))
+        # Test hard coded value
+        self.assertEqual(np.sum(truth), 1566)
+        self.assertEqual(footprint.computeFluxFromImage(image), 1566)
+
+        # Test the array method with an offset
+        # Since 3 is subtracted from all of the pixels, and there are 29 pixls in the image,
+        # we subtract 29*3 from the total.
+        self.assertEqual(footprint.computeFluxFromArray(image.array-3, image.getBBox().getMin()), 1566-29*3)
 
 
 class FootprintSetTestCase(unittest.TestCase):
