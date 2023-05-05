@@ -231,6 +231,8 @@ public:
 
     std::shared_ptr<geom::SkyWcs const> getWcs() const { return _info->getWcs(); }
 
+    std::shared_ptr<ApCorrMap const> getApCorrMap() const { return _info->getApCorrMap(); }
+
     /// Return the Exposure's Detector information
     std::shared_ptr<lsst::afw::cameraGeom::Detector const> getDetector() const {
         return _info->getDetector();
@@ -312,6 +314,9 @@ public:
 
     /// Does this Exposure have a Wcs?
     bool hasWcs() const { return _info->hasWcs(); }
+
+    /// Set the Exposure's aperture correction map.
+    void setApCorrMap(std::shared_ptr<ApCorrMap const> apCorrMap) { _info->setApCorrMap(apCorrMap); }
 
     /// Get the ExposureInfo that aggregates all the non-image components.  Never null.
     std::shared_ptr<ExposureInfo> getInfo() { return _info; }
