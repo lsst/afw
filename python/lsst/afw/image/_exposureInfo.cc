@@ -204,7 +204,6 @@ void declareExposureInfo(lsst::utils::python::WrapperCollection &wrappers) {
         cls.def("hasApCorrMap", &ExposureInfo::hasApCorrMap);
         cls.def("getApCorrMap", (std::shared_ptr<ApCorrMap>(ExposureInfo::*)()) & ExposureInfo::getApCorrMap);
         cls.def("setApCorrMap", &ExposureInfo::setApCorrMap, "apCorrMap"_a);
-        cls.def("initApCorrMap", &ExposureInfo::initApCorrMap);
 
         cls.attr("KEY_COADD_INPUTS") = ExposureInfo::KEY_COADD_INPUTS.getId();
         cls.def("hasCoaddInputs", &ExposureInfo::hasCoaddInputs);

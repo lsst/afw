@@ -223,8 +223,6 @@ ExposureInfo& ExposureInfo::operator=(ExposureInfo const& other) {
 // Delegate to copy-assignment for backwards compatibility
 ExposureInfo& ExposureInfo::operator=(ExposureInfo&& other) { return *this = other; }
 
-void ExposureInfo::initApCorrMap() { setApCorrMap(std::make_shared<ApCorrMap>()); }
-
 ExposureInfo::~ExposureInfo() = default;
 
 int ExposureInfo::_addToArchive(FitsWriteData& data, table::io::Persistable const& object, std::string key,
