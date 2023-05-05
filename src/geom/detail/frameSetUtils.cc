@@ -155,7 +155,7 @@ void stripWcsMetadata(daf::base::PropertySet &metadata) {
     try {
         obj = channel.read();
     } catch (std::runtime_error const&) {
-        throw LSST_EXCEPT(pex::exceptions::TypeError, "The metadata does not describe an AST object");
+        return;
     }
 
     auto const finalNames = setFromVector(channel.getAllCardNames());
