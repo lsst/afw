@@ -698,6 +698,11 @@ class MetadataWcsTestCase(SkyWcsBaseTestCase):
     def testBasicsStrip(self):
         stripWcsMetadata(self.metadata)
         self.assertEqual(len(self.metadata.names(False)), 0)
+        # The metadata should be unchanged if we attempt to strip it again
+        metadataCopy = self.metadata.deepCopy()
+        stripWcsMetadata(self.metadata)
+        for key in self.metadata.keys():
+            self.assertEqual(self.metadata[key], metadataCopy[key])
 
     def testNormalizationFk5(self):
         """Test that readLsstSkyWcs correctly normalizes FK5 1975 to ICRS
