@@ -20,6 +20,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from ._detection import *
+from ._footprintContinued import *
 from ._footprintMerge import *
 from ._peak import *
 from .multiband import *

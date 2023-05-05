@@ -1016,6 +1016,18 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         self.checkEdge(afwDetect.Footprint.readFits(
             os.path.join(testPath, "testFootprintEdge.fits")))
 
+    def testExtractImage(self):
+        """Test image extraction from a Footprint"""
+        image = afwIage.Image(np.ones((10, 10), dtype=np.int32), xy0=lsst.geom.Point2I(23, 25), dtype="I")
+        radius = 3
+        spans = SpanSet.fromShape(radius, Stencil.CIRCLE, offset=(24, 27))
+        footprint = afwDetect.Footprint(spans)
+
+        # The extracted footprint should be the same as the product of the
+        # spans and the overlapped bow with the image
+        truth = spans.asArray() * image.array[2:9, 1:8]
+        self.assertArrayEqual(footprint.extractFluxFromImage(image))
+
 
 class FootprintSetTestCase(unittest.TestCase):
     """A test case for FootprintSet"""
