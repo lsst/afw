@@ -18,7 +18,8 @@ from lsst.afw.geom import wcsAlmostEqualOverBBox, \
     TransformPoint2ToPoint2, TransformPoint2ToSpherePoint, makeRadialTransform, \
     SkyWcs, makeSkyWcs, makeCdMatrix, makeWcsPairTransform, \
     makeFlippedWcs, makeModifiedWcs, makeTanSipWcs, \
-    getIntermediateWorldCoordsToSky, getPixelToIntermediateWorldCoords
+    getIntermediateWorldCoordsToSky, getPixelToIntermediateWorldCoords, \
+    stripWcsMetadata
 from lsst.afw.geom import getCdMatrixFromMetadata, getSipMatrixFromMetadata, makeSimpleWcsMetadata
 from lsst.afw.geom.testUtils import makeSipIwcToPixel, makeSipPixelToIwc
 from lsst.afw.fits import makeLimitedFitsHeader
@@ -693,6 +694,15 @@ class MetadataWcsTestCase(SkyWcsBaseTestCase):
         self.checkWcs(skyWcs)
         makeSkyWcs(self.metadata, strip=True)
         self.assertEqual(len(self.metadata.names(False)), 0)
+
+    def testBasicsStrip(self):
+        stripWcsMetadata(self.metadata)
+        self.assertEqual(len(self.metadata.names(False)), 0)
+        # The metadata should be unchanged if we attempt to strip it again
+        metadataCopy = self.metadata.deepCopy()
+        stripWcsMetadata(self.metadata)
+        for key in self.metadata.keys():
+            self.assertEqual(self.metadata[key], metadataCopy[key])
 
     def testNormalizationFk5(self):
         """Test that readLsstSkyWcs correctly normalizes FK5 1975 to ICRS

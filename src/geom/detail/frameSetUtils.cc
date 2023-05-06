@@ -131,6 +131,51 @@ std::shared_ptr<ast::FrameSet> readFitsWcs(daf::base::PropertySet& metadata, boo
     return frameSet;
 }
 
+void stripWcsMetadata(daf::base::PropertySet &metadata) {
+    // Exclude WCS A keywords because LSST uses them to store XY0
+    auto wcsANames = createTrivialWcsMetadata("A", lsst::geom::Point2I(0, 0))->names();
+    std::set<std::string> excludeNames(wcsANames.begin(), wcsANames.end());
+    // Ignore NAXIS1, NAXIS2 because if they are zero then AST will fail to read a WCS
+    // Ignore LTV1/2 because LSST adds it and this code should ignore it and not strip it
+    // Exclude comments and history to reduce clutter
+    std::set<std::string> moreNames{"NAXIS1", "NAXIS2", "LTV1", "LTV2", "COMMENT", "HISTORY"};
+    excludeNames.insert(moreNames.begin(), moreNames.end());
+
+    // Replace RADECSYS with RADESYS if only the former is present
+    if (metadata.exists("RADECSYS") && !metadata.exists("RADESYS")) {
+        metadata.set("RADESYS", metadata.getAsString("RADECSYS"));
+        metadata.remove("RADECSYS");
+    }
+
+    auto channel = getFitsChanFromPropertyList(metadata, excludeNames,
+                                               "Encoding=FITS-WCS, IWC=1, SipReplace=0, ReportLevel=3");
+    auto const initialNames = setFromVector(channel.getAllCardNames());
+
+    std::shared_ptr<ast::Object> obj;
+    try {
+        obj = channel.read();
+    } catch (std::runtime_error const&) {
+        return;
+    }
+
+    auto const finalNames = setFromVector(channel.getAllCardNames());
+
+    // FITS keywords that FitsChan stripped
+    std::set<std::string> namesChannelStripped;
+    std::set_difference(initialNames.begin(), initialNames.end(), finalNames.begin(), finalNames.end(),
+                        std::inserter(namesChannelStripped, namesChannelStripped.begin()));
+
+    // FITS keywords that FitsChan may strip that we want to keep in `metadata`
+    std::set<std::string> const namesToKeep = {"DATE-OBS", "MJD-OBS"};
+
+    std::set<std::string> namesToStrip;  // names to strip from metadata
+    std::set_difference(namesChannelStripped.begin(), namesChannelStripped.end(), namesToKeep.begin(),
+                        namesToKeep.end(), std::inserter(namesToStrip, namesToStrip.begin()));
+    for (auto const& name : namesToStrip) {
+        metadata.remove(name);
+    }
+}
+
 std::shared_ptr<ast::FrameDict> readLsstSkyWcs(daf::base::PropertySet& metadata, bool strip) {
     // Record CRPIX in GRID coordinates
     // so we can compute CRVAL after standardizing the SkyFrame to ICRS

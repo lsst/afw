@@ -212,6 +212,10 @@ std::shared_ptr<daf::base::PropertyList> makeTanSipMetadata(
     return metadata;
 }
 
+void stripWcsMetadata(daf::base::PropertySet &metadata) {
+    detail::stripWcsMetadata(metadata);
+}
+
 }  // namespace geom
 }  // namespace afw
 }  // namespace lsst
