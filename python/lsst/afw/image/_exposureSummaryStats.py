@@ -63,7 +63,7 @@ class ExposureSummaryStats(Storable):
     ra: float = float('nan')
     """Bounding box center Right Ascension (degrees)."""
 
-    decl: float = float('nan')
+    dec: float = float('nan')
     """Bounding box center Declination (degrees)."""
 
     zenithDistance: float = float('nan')
@@ -207,7 +207,7 @@ class ExposureSummaryStats(Storable):
             "ra", type="D", doc="Right Ascension of bounding box center (degrees)"
         )
         schema.addField(
-            "decl", type="D", doc="Declination of bounding box center (degrees)"
+            "dec", type="D", doc="Declination of bounding box center (degrees)"
         )
         schema.addField(
             "zenithDistance",
