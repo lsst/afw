@@ -69,7 +69,7 @@ struct variance_plus;
  */
 
 /// A single %pixel of the same type as a MaskedImage
-template <typename _ImagePixelT, typename _MaskPixelT, typename _VariancePixelT = double>
+template <typename ImagePixelT_, typename MaskPixelT_, typename VariancePixelT_ = double>
 class SinglePixel : public detail::MaskedImagePixel_tag {
 public:
     template <typename, typename, typename>
@@ -77,9 +77,9 @@ public:
     template <typename T>
     friend class PixelTypeTraits;
 
-    using ImagePixelT = _ImagePixelT;
-    using MaskPixelT = _MaskPixelT;
-    using VariancePixelT = _VariancePixelT;
+    using ImagePixelT = ImagePixelT_;
+    using MaskPixelT = MaskPixelT_;
+    using VariancePixelT = VariancePixelT_;
 
     SinglePixel(ImagePixelT image, MaskPixelT mask = 0, VariancePixelT variance = 0)
             : _image(image), _mask(mask), _variance(variance) {}
@@ -88,7 +88,7 @@ public:
     SinglePixel(rhsExpr const& rhs,
                 // ensure this ctor isn't invoked for simple numeric types, which should use
                 // the overload above.
-                typename std::enable_if<!std::is_fundamental<rhsExpr>::value, void*>::type dummy = nullptr)
+                typename std::enable_if_t<!std::is_fundamental_v<rhsExpr>, void*> = nullptr)
             : _image(rhs.image()), _mask(rhs.mask()), _variance(rhs.variance()) {}
 
     ImagePixelT image() const { return _image; }
@@ -101,12 +101,12 @@ private:
      * Can be called by PixelTypeTraits<SinglePixel>::padValue()
      */
     SinglePixel()
-            : _image(std::numeric_limits<_ImagePixelT>::has_quiet_NaN
-                             ? std::numeric_limits<_ImagePixelT>::quiet_NaN()
+            : _image(std::numeric_limits<ImagePixelT_>::has_quiet_NaN
+                             ? std::numeric_limits<ImagePixelT_>::quiet_NaN()
                              : 0),
               _mask(0),
-              _variance(std::numeric_limits<_VariancePixelT>::has_quiet_NaN
-                                ? std::numeric_limits<_VariancePixelT>::quiet_NaN()
+              _variance(std::numeric_limits<VariancePixelT_>::has_quiet_NaN
+                                ? std::numeric_limits<VariancePixelT_>::quiet_NaN()
                                 : 0) {}
 
     ImagePixelT _image;
@@ -118,19 +118,12 @@ private:
 template <typename PixelT>
 struct PixelTypeTraits {
     /// The quantity to use when a pixel value is undefined
-    static inline const PixelT padValue() {
+    static inline PixelT padValue() {
         return std::numeric_limits<PixelT>::has_quiet_NaN ? std::numeric_limits<PixelT>::quiet_NaN() : 0;
     }
 };
 
-/// Specialization for a %pixel of a MaskedImage
-template <typename _ImagePixelT, typename _MaskPixelT, typename _VariancePixelT>
-struct PixelTypeTraits<SinglePixel<_ImagePixelT, _MaskPixelT, _VariancePixelT> > {
-    using PixelT = SinglePixel<_ImagePixelT, _MaskPixelT, _VariancePixelT>;
 
-    /// The quantity to use when a pixel value is undefined
-    static inline const PixelT padValue() { return PixelT(); }
-};
 
 /** Return a SinglePixel
  *
@@ -144,18 +137,14 @@ SinglePixel<ImagePixelT, MaskPixelT, VariancePixelT> makeSinglePixel(ImagePixelT
 }
 
 /// A %pixel of a MaskedImage
-template <typename _ImagePixelT, typename _MaskPixelT, typename _VariancePixelT = double>
+template <typename ImagePixelT_, typename MaskPixelT_, typename VariancePixelT_ = double>
 class Pixel : public detail::MaskedImagePixel_tag {
 public:
-    using ImagePixelT = _ImagePixelT;
-    using MaskPixelT = _MaskPixelT;
-    using VariancePixelT = _VariancePixelT;
+    using ImagePixelT = ImagePixelT_;
+    using MaskPixelT = MaskPixelT_;
+    using VariancePixelT = VariancePixelT_;
 
 /// Construct a Pixel from references to its image/mask/variance components
-#if 0
-    Pixel(ImagePixelT& image, MaskPixelT& mask, VariancePixelT& variance) :
-        _image(image), _mask(mask), _variance(variance) {}
-#else
     //
     // This constructor casts away const.  This should be fixed by making const Pixels.
     //
@@ -163,7 +152,6 @@ public:
             : _image(const_cast<ImagePixelT&>(image)),
               _mask(const_cast<MaskPixelT&>(mask)),
               _variance(const_cast<VariancePixelT&>(variance)) {}
-#endif
 
     Pixel(SinglePixel<ImagePixelT, MaskPixelT, VariancePixelT>& rhs)
             : _image(rhs._image), _mask(rhs._mask), _variance(rhs._variance) {}
@@ -395,26 +383,6 @@ struct variance_plus {
     T1 operator()(T1 const&, T1 const&, T1 const& vx) const { return vx; }
 };
 
-/** The variance of the sum of a pair of correlated pixels
- *
- * The covariance is modelled as alpha*sqrt(var_x*var_y)
- *
- * @note We provide a single-operand version for when the right-hand-side of an expression is a scalar, not a
- * masked pixel,
- */
-template <typename T1>
-struct variance_plus_covar {
-    variance_plus_covar(double alpha = 0) : _alpha(alpha) {}
-
-    T1 operator()(T1 const&, T1 const&, T1 const& vx, T1 const& vy) const {
-        return vx + vy + 2 * _alpha * sqrt(vx * vy);
-    }
-    T1 operator()(T1 const&, T1 const&, T1 const& vx) const { return vx; }
-
-private:
-    double _alpha;
-};
-
 /// Class for representing Unary operations
 template <typename ExprT1, typename ImageBinOp, typename MaskBinOp, typename VarianceBinOp>
 class UnaryExpr {
@@ -518,9 +486,7 @@ private:
 
 /// Template for -e1
 template <typename ExprT1>
-UnaryExpr<ExprT1, std::negate<typename exprTraits<ExprT1>::ImagePixelT>,
-          noop<typename exprTraits<ExprT1>::MaskPixelT>, noop<typename exprTraits<ExprT1>::VariancePixelT> >
-operator-(ExprT1 e1) {
+auto operator-(ExprT1 e1) {
     return UnaryExpr<ExprT1, std::negate<typename exprTraits<ExprT1>::ImagePixelT>,
                      noop<typename exprTraits<ExprT1>::MaskPixelT>,
                      noop<typename exprTraits<ExprT1>::VariancePixelT> >(e1);
@@ -534,31 +500,27 @@ struct is_specialization : std::false_type {};
 template <template <class...> class Template, class... Args>
 struct is_specialization<Template<Args...>, Template> : std::true_type {};
 // avoid invocation with pybind11::detail::descr::operator+ for pybind11 >= 2.3.0
-template <typename ExprT1, typename ExprT2,
-   typename = std::enable_if_t <
-          ( std::is_integral<ExprT1>::value  ||
-            is_specialization<ExprT1,BinaryExpr>{} ||
-            is_specialization<ExprT1,SinglePixel>{} ||
-            is_specialization<ExprT1,Pixel>{})
-            &&
-          ( std::is_integral<ExprT2>::value  ||
-            is_specialization<ExprT2,BinaryExpr>{} ||
-            is_specialization<ExprT2,SinglePixel>{} ||
-            is_specialization<ExprT2,Pixel>{} )
-         >
->
-BinaryExpr<ExprT1, ExprT2, std::plus<typename exprTraits<ExprT1>::ImagePixelT>,
-           bitwise_or<typename exprTraits<ExprT1>::MaskPixelT>,
-           variance_plus<typename exprTraits<ExprT1>::VariancePixelT> >
-operator+(ExprT1 e1, ExprT2 e2) {
+template <typename T>
+inline constexpr bool is_valid_operand = std::is_integral<T>::value  ||
+            is_specialization<T, BinaryExpr>{} ||
+            is_specialization<T ,SinglePixel>{} ||
+            is_specialization<T ,Pixel>{};
+template <typename T1, typename T2>
+constexpr bool valid_binary_operands = is_valid_operand<T1> || is_valid_operand<T1>;
+
+template <typename T1, typename T2>
+using valid_operands = std::enable_if_t<valid_binary_operands<T1, T2>>;
+
+template <typename ExprT1, typename ExprT2, typename = valid_operands<ExprT1, ExprT2>>
+auto operator+(ExprT1 e1, ExprT2 e2) {
     return BinaryExpr<ExprT1, ExprT2, std::plus<typename exprTraits<ExprT1>::ImagePixelT>,
                       bitwise_or<typename exprTraits<ExprT1>::MaskPixelT>,
                       variance_plus<typename exprTraits<ExprT1>::VariancePixelT> >(e1, e2);
 }
 
 /// template for e1 += e2
-template <typename ExprT1, typename ExprT2>
-ExprT1 operator+=(ExprT1& e1, ExprT2 e2) {
+template <typename ExprT1, typename ExprT2, typename = valid_operands<ExprT1, ExprT2>>
+ExprT1 &operator+=(ExprT1& e1, ExprT2 const &e2) {
     e1 = BinaryExpr<ExprT1, ExprT2, std::plus<typename exprTraits<ExprT1>::ImagePixelT>,
                     bitwise_or<typename exprTraits<ExprT1>::MaskPixelT>,
                     variance_plus<typename exprTraits<ExprT1>::VariancePixelT> >(e1, e2);
@@ -570,24 +532,15 @@ ExprT1 operator+=(ExprT1& e1, ExprT2 e2) {
 //
 // The choice is made on the basis of std::is_arithmetic
 namespace {
-template <typename ExprT1, typename ExprT2>
+template <typename ExprT1, typename ExprT2, typename = valid_operands<ExprT1, ExprT2>>
 ExprT1 doPlus(ExprT1 e1, ExprT2 e2, double const, boost::mpl::true_) {
     return e1 + e2;
 }
 
-template <typename ExprT1, typename ExprT2>
-BinaryExpr<ExprT1, ExprT2, std::plus<typename exprTraits<ExprT1>::ImagePixelT>,
-           bitwise_or<typename exprTraits<ExprT1>::MaskPixelT>,
-           variance_plus_covar<typename exprTraits<ExprT1>::VariancePixelT> >
-doPlus(ExprT1 e1, ExprT2 e2, double const alpha, boost::mpl::false_) {
-    return BinaryExpr<ExprT1, ExprT2, std::plus<typename exprTraits<ExprT1>::ImagePixelT>,
-                      bitwise_or<typename exprTraits<ExprT1>::MaskPixelT>,
-                      variance_plus_covar<typename exprTraits<ExprT1>::VariancePixelT> >(e1, e2, alpha);
-}
 }  // namespace
 
 /// Like operator+(), but assume that covariance's 2*alpha*sqrt(vx*vy)
-template <typename ExprT1, typename ExprT2>
+template <typename ExprT1, typename ExprT2, typename = valid_operands<ExprT1, ExprT2>>
 inline ExprT1 plus(
         ExprT1& lhs,        ///< Left hand value
         ExprT2 const& rhs,  ///< Right hand value
@@ -598,7 +551,7 @@ inline ExprT1 plus(
 
 //------------------------------------------
 /// Template to evaluate (e1 - e2)
-template <typename ExprT1, typename ExprT2>
+template <typename ExprT1, typename ExprT2, typename = valid_operands<ExprT1, ExprT2>>
 BinaryExpr<ExprT1, ExprT2, std::minus<typename exprTraits<ExprT1>::ImagePixelT>,
            bitwise_or<typename exprTraits<ExprT1>::MaskPixelT>,
            variance_plus<typename exprTraits<ExprT1>::VariancePixelT> >
@@ -609,7 +562,7 @@ operator-(ExprT1 e1, ExprT2 e2) {
 }
 
 /// Template to evaluate e1 -= e2
-template <typename ExprT1, typename ExprT2>
+template <typename ExprT1, typename ExprT2, typename = valid_operands<ExprT1, ExprT2>>
 ExprT1 operator-=(ExprT1& e1, ExprT2 e2) {
     e1 = BinaryExpr<ExprT1, ExprT2, std::minus<typename exprTraits<ExprT1>::ImagePixelT>,
                     bitwise_or<typename exprTraits<ExprT1>::MaskPixelT>,
@@ -619,7 +572,7 @@ ExprT1 operator-=(ExprT1& e1, ExprT2 e2) {
 
 //------------------------------------------
 /// Template to evaluate (e1 * e2)
-template <typename ExprT1, typename ExprT2>
+template <typename ExprT1, typename ExprT2, typename = valid_operands<ExprT1, ExprT2>>
 BinaryExpr<ExprT1, ExprT2, std::multiplies<typename exprTraits<ExprT1>::ImagePixelT>,
            bitwise_or<typename exprTraits<ExprT1>::MaskPixelT>,
            variance_multiplies<typename exprTraits<ExprT1>::VariancePixelT> >
@@ -630,7 +583,7 @@ operator*(ExprT1 e1, ExprT2 e2) {
 }
 
 /// Template to evaluate e1 *= e2
-template <typename ExprT1, typename ExprT2>
+template <typename ExprT1, typename ExprT2, typename = valid_operands<ExprT1, ExprT2>>
 ExprT1 operator*=(ExprT1& e1, ExprT2 e2) {
     e1 = BinaryExpr<ExprT1, ExprT2, std::multiplies<typename exprTraits<ExprT1>::ImagePixelT>,
                     bitwise_or<typename exprTraits<ExprT1>::MaskPixelT>,
@@ -640,7 +593,7 @@ ExprT1 operator*=(ExprT1& e1, ExprT2 e2) {
 
 //------------------------------------------
 /// Template to evaluate (e1 / e2)
-template <typename ExprT1, typename ExprT2>
+template <typename ExprT1, typename ExprT2, typename = valid_operands<ExprT1, ExprT2>>
 BinaryExpr<ExprT1, ExprT2, std::divides<typename exprTraits<ExprT1>::ImagePixelT>,
            bitwise_or<typename exprTraits<ExprT1>::MaskPixelT>,
            variance_divides<typename exprTraits<ExprT1>::VariancePixelT> >
@@ -651,7 +604,7 @@ operator/(ExprT1 e1, ExprT2 e2) {
 }
 
 /// Template to evaluate e1 /= e2
-template <typename ExprT1, typename ExprT2>
+template <typename ExprT1, typename ExprT2, typename = valid_operands<ExprT1, ExprT2>>
 ExprT1 operator/=(ExprT1& e1, ExprT2 e2) {
     e1 = BinaryExpr<ExprT1, ExprT2, std::divides<typename exprTraits<ExprT1>::ImagePixelT>,
                     bitwise_or<typename exprTraits<ExprT1>::MaskPixelT>,
