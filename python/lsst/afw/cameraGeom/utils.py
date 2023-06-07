@@ -447,6 +447,7 @@ class ButlerImage(FakeImageDataSource):
             im = afwMath.binImage(im, binSize)
 
         if allowRotate:
+            # if hasattr(ccd, "getOrientation"):
             im = afwMath.rotateImageBy90(
                 im, ccd.getOrientation().getNQuarter())
 
@@ -472,7 +473,8 @@ class ButlerImage(FakeImageDataSource):
             except Exception as e:  # try a different dataId
                 err = e
             else:
-                ccd = im.getDetector()  # possibly modified by assembleCcdTask
+                if self.type == "raw":
+                    ccd = im.getDetector()  # possibly modified by assembleCcdTask
 
             if im:
                 if asMaskedImage:
@@ -768,7 +770,7 @@ def showCcd(ccd, imageSource=FakeImageDataSource(), display=None, overlay=True,
     if inCameraCoords:
         nQuarter = ccd.getOrientation().getNQuarter()
         ccdImage = afwMath.rotateImageBy90(ccdImage, nQuarter)
-    title = ccd.getName()
+    title = "{} [{}]".format(ccd.getName(), ccd.getId())
     if isTrimmed:
         title += "(trimmed)"
 
@@ -918,7 +920,8 @@ def makeImageFromCamera(camera, detectorNameList=None, background=numpy.nan, buf
         try:
             imView[:] = im
         except pexExceptions.LengthError:
-            log.exception("Unable to fit image for detector \"%s\" into image of camera.", det.getName())
+            log.exception("Unable to fit image for detector \"%s\" [\"%d\"] into image of camera.",
+                          det.getName(), det.getId())
 
     return camIm
 
@@ -1022,7 +1025,8 @@ def showCamera(camera, imageSource=FakeImageDataSource(), imageFactory=afwImage.
                     displayUtils.drawBBox(
                         bbox, borderWidth=0.5, ctype=ctype, display=display)
                     dims = bbox.getDimensions()
-                    display.dot(ccd.getName(), bbox.getMinX() + dims.getX()/2, bbox.getMinY() + dims.getY()/2,
+                    ccdLabel = "{}\n[{}]".format(ccd.getName(), ccd.getId())
+                    display.dot(ccdLabel, bbox.getMinX() + dims.getX()/2, bbox.getMinY() + dims.getY()/2,
                                 ctype=ctype, size=textSize, textAngle=nQuarter*90)
 
     return cameraImage
