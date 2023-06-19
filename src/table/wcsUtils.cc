@@ -91,24 +91,70 @@ void updateRefCentroids(geom::SkyWcs const &wcs, ReferenceCollection &refList) {
     }
 }
 
+Eigen::Matrix2f calculateCoordCovariance(geom::SkyWcs const& wcs, lsst::geom::Point2D center, Eigen::Matrix2f err) {
+    // Get the derivative of the pixel-to-sky transformation, then use it to
+    // propagate the centroid uncertainty to coordinate uncertainty. Note that
+    // the calculation is done in arcseconds, then converted to radians in
+    // order to achieve higher precision.
+    double scale = 1.0 / 3600.0;
+    Eigen::Matrix2d cdMatrix { {scale, 0}, {0, scale}};
+
+    lsst::geom::SpherePoint skyCenter = wcs.pixelToSky(center);
+    
+    auto localGnomonicWcs = geom::makeSkyWcs(center, skyCenter, cdMatrix);
+    auto measurementToLocalGnomonic = wcs.getTransform()->then(
+        *localGnomonicWcs->getTransform()->inverted()
+    );
+    
+    Eigen::Matrix2d localMatrix = measurementToLocalGnomonic->getJacobian(center);
+    Eigen::Matrix2f d = localMatrix.cast < float > () * scale * (lsst::geom::PI / 180.0);
+
+    Eigen::Matrix2f skyCov = d * err * d.transpose();
+
+    // Multiply by declination correction matrix in order to get sigma(RA) * cos(Dec) for the uncertainty
+    // in RA, and cov(RA, Dec) * cos(Dec) for the RA/Dec covariance:
+    float cosDec = std::cos(skyCenter.getDec().asRadians());
+    Eigen::Matrix2f decCorr{ {cosDec, 0}, {0, 1.0}};
+    Eigen::Matrix2f skyCovCorr = decCorr * skyCov * decCorr;
+    return skyCovCorr;
+}
+
+
 template <typename SourceCollection>
-void updateSourceCoords(geom::SkyWcs const &wcs, SourceCollection &sourceList) {
+void updateSourceCoords(geom::SkyWcs const &wcs, SourceCollection &sourceList, bool include_covariance) {
     if (sourceList.empty()) {
         return;
     }
     auto const schema = getSchema(sourceList[0]);
     Point2DKey const centroidKey(schema["slot_Centroid"]);
+    CovarianceMatrixKey<float, 2> const centroidErrKey(schema["slot_Centroid"], {"x", "y"});
     CoordKey const coordKey(schema["coord"]);
     std::vector<lsst::geom::Point2D> pixelList;
     pixelList.reserve(sourceList.size());
+    std::vector<Eigen::Matrix2f> skyErrList;
+    skyErrList.reserve(sourceList.size());
+
     for (auto const &source : sourceList) {
-        pixelList.emplace_back(getValue(source, centroidKey));
+        lsst::geom::Point2D center = getValue(source, centroidKey);
+        pixelList.emplace_back(center);
+        if (include_covariance) {
+            auto err = getValue(source, centroidErrKey);
+            Eigen::Matrix2f skyCov = calculateCoordCovariance(wcs, center, err);
+            skyErrList.emplace_back(skyCov);
+        }
     }
+
     std::vector<lsst::geom::SpherePoint> const skyList = wcs.pixelToSky(pixelList);
     auto skyCoord = skyList.cbegin();
+    auto skyErr = skyErrList.cbegin();
     for (auto &source : sourceList) {
         setValue(source, coordKey, *skyCoord);
+        if (include_covariance) {
+            CoordKey::ErrorKey const coordErrKey = CoordKey::getErrorKey(schema);
+            setValue(source, coordErrKey, *skyErr);
+        }
         ++skyCoord;
+        ++skyErr;
     }
 }
 
@@ -116,8 +162,10 @@ void updateSourceCoords(geom::SkyWcs const &wcs, SourceCollection &sourceList) {
 template void updateRefCentroids(geom::SkyWcs const &, std::vector<std::shared_ptr<SimpleRecord>> &);
 template void updateRefCentroids(geom::SkyWcs const &, SimpleCatalog &);
 
-template void updateSourceCoords(geom::SkyWcs const &, std::vector<std::shared_ptr<SourceRecord>> &);
-template void updateSourceCoords(geom::SkyWcs const &, SourceCatalog &);
+template void updateSourceCoords(geom::SkyWcs const &, std::vector<std::shared_ptr<SourceRecord>> &,
+                                 bool include_covariance);
+template void updateSourceCoords(geom::SkyWcs const &, SourceCatalog &, 
+                                 bool include_covariance);
 /// @endcond
 
 }  // namespace table

@@ -55,7 +55,8 @@ void declareUpdateRefCentroids(WrapperCollection &wrappers) {
 template <typename SourceCollection>
 void declareUpdateSourceCoords(WrapperCollection &wrappers) {
     wrappers.wrap([](auto &mod) {
-        mod.def("updateSourceCoords", updateSourceCoords<SourceCollection>, "wcs"_a, "sourceList"_a);
+        mod.def("updateSourceCoords", updateSourceCoords<SourceCollection>, "wcs"_a, "sourceList"_a,
+                "include_covariance"_a=true);
     });
 }
 

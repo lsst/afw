@@ -365,10 +365,28 @@ static SourceFitsReader const sourceFitsReader;
 
 SourceRecord::~SourceRecord() = default;
 
-void SourceRecord::updateCoord(geom::SkyWcs const &wcs) { setCoord(wcs.pixelToSky(getCentroid())); }
+void SourceRecord::updateCoord(geom::SkyWcs const &wcs, bool include_covariance) {
+    lsst::geom::Point2D center = getCentroid();
+    setCoord(wcs.pixelToSky(center));
+    if (include_covariance) {
+        // Get coordinate covariance:
+        auto err = getCentroidErr();
+        CoordKey::ErrorKey const coordErrKey = CoordKey::getErrorKey(getSchema());
+        Eigen::Matrix2f skyCov = calculateCoordCovariance(wcs, center, err);
+        set(coordErrKey, skyCov);
+    }
+}
 
-void SourceRecord::updateCoord(geom::SkyWcs const &wcs, PointKey<double> const &key) {
-    setCoord(wcs.pixelToSky(get(key)));
+void SourceRecord::updateCoord(geom::SkyWcs const &wcs, PointKey<double> const &key, bool include_covariance) {
+    lsst::geom::Point2D center = get(key);
+    setCoord(wcs.pixelToSky(center));
+    if (include_covariance) {
+        // Get coordinate covariance:
+        auto err = getCentroidErr();
+        CoordKey::ErrorKey const coordErrKey = CoordKey::getErrorKey(getSchema());
+        Eigen::Matrix2f skyCov = calculateCoordCovariance(wcs, center, err);
+        set(coordErrKey, skyCov);
+    }
 }
 
 void SourceRecord::_assign(BaseRecord const &other) {

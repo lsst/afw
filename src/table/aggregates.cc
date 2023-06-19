@@ -121,6 +121,14 @@ void CoordKey::set(BaseRecord &record, lsst::geom::SpherePoint const &value) con
     record.set(_dec, value.getLatitude());
 }
 
+CoordKey::ErrorKey CoordKey::getErrorKey(Schema const & schema) {
+    return ErrorKey(schema["coord"], {"ra", "dec"});
+}
+
+CoordKey::ErrorKey CoordKey::addErrorFields(Schema & schema) {
+    return ErrorKey::addFields(schema, "coord", {"ra", "dec"}, "rad");
+}
+
 //============ QuadrupoleKey ================================================================================
 
 QuadrupoleKey QuadrupoleKey::addFields(Schema &schema, std::string const &name, std::string const &doc,

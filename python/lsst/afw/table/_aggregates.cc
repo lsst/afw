@@ -138,6 +138,8 @@ static void declareCoordKey(WrapperCollection &wrappers) {
         cls.def("__eq__", &CoordKey::operator==, py::is_operator());
         cls.def("__ne__", &CoordKey::operator!=, py::is_operator());
         cls.def_static("addFields", &CoordKey::addFields, "schema"_a, "name"_a, "doc"_a);
+        cls.def_static("addErrorFields", &CoordKey::addErrorFields, "schema"_a);
+        cls.def_static("getErrorKey", &CoordKey::getErrorKey, "schema"_a);
         cls.def("getRa", &CoordKey::getRa);
         cls.def("getDec", &CoordKey::getDec);
         cls.def("isValid", &CoordKey::isValid);

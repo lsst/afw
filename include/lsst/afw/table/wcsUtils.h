@@ -56,14 +56,27 @@ void updateRefCentroids(geom::SkyWcs const& wcs, ReferenceCollection& refList);
  * @param[in,out] sourceList  Collection of sources. The schema must have two fields:
  *                  - "slot_Centroid": a field containing lsst::geom::Point2D; this field is read
  *                  - "coord": a field containing an ICRS lsst::afw::SpherePoint; this field is written
- *
+ * @param[in] include_covariance  Update coordinate uncertainty using the centroid uncertainty.
+ * 
  * @throws lsst::pex::exceptions::NotFoundError if refList's schema does not have the required fields.
  */
 template <typename SourceCollection>
-void updateSourceCoords(geom::SkyWcs const& wcs, SourceCollection& sourceList);
+void updateSourceCoords(geom::SkyWcs const& wcs, SourceCollection& sourceList, bool include_covariance=true);
+
+/**
+ * Calculate covariance for sky coordinates
+ *
+ * 
+ * @param[in] wcs  WCS to map from pixels to sky.
+ * @param[in] center  The object centroid.
+ * @param[in] err  Covariance matrix of the centroid.
+ * 
+ */
+Eigen::Matrix2f calculateCoordCovariance(geom::SkyWcs const& wcs, lsst::geom::Point2D center, Eigen::Matrix2f err);
 
 }  // namespace table
 }  // namespace afw
 }  // namespace lsst
+
 
 #endif  // #ifndef LSST_AFW_TABLE_WCSUTILS_H
