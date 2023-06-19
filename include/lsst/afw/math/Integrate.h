@@ -612,7 +612,7 @@ AuxFunc2<UF> inline Aux2(UF uf) {
 
 // pulled from MoreFunctional.h.  Needed in class Int2DAuxType and Int3DAuxType
 template <class BF>
-class binder2_1 : public std::unary_function<typename BF::second_argument_type, typename BF::result_type> {
+class binder2_1 {
 public:
     binder2_1(const BF &oper, typename BF::first_argument_type val) : _oper(oper), _value(val) {}
     typename BF::result_type operator()(const typename BF::second_argument_type &x) const {
@@ -631,7 +631,7 @@ inline binder2_1<BF> bind21(const BF &oper, const Tp &x) {
 }
 
 template <class BF, class YREG>
-class Int2DAuxType : public std::unary_function<typename BF::first_argument_type, typename BF::result_type> {
+class Int2DAuxType {
 public:
     Int2DAuxType(BF const &func, YREG const &yreg, typename BF::result_type const &abserr,
                  typename BF::result_type const &relerr)
@@ -653,8 +653,7 @@ private:
 
 // pulled from MoreFunctional.h.  Needed in class Int3DAuxtype
 template <class TF>
-class binder3_1 : public std::binary_function<typename TF::secondof3_argument_type,
-                                              typename TF::thirdof3_argument_type, typename TF::result_type> {
+class binder3_1 {
 public:
     binder3_1(const TF &oper, typename TF::firstof3_argument_type val) : _oper(oper), _value(val) {}
     typename TF::result_type operator()(typename TF::secondof3_argument_type const &x1,
@@ -674,8 +673,7 @@ inline binder3_1<TF> bind31(const TF &oper, const Tp &x) {
 }
 
 template <class TF, class YREG, class ZREG>
-class Int3DAuxType
-        : public std::unary_function<typename TF::firstof3_argument_type, typename TF::result_type> {
+class Int3DAuxType {
 public:
     Int3DAuxType(const TF &func, const YREG &yreg, const ZREG &zreg, const typename TF::result_type &abserr,
                  const typename TF::result_type &relerr)

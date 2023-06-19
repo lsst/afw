@@ -40,8 +40,7 @@ namespace afw {
 namespace math {
 
 namespace {
-struct CandidatePtrMore : public std::binary_function<std::shared_ptr<SpatialCellCandidate>,
-                                                      std::shared_ptr<SpatialCellCandidate>, bool> {
+struct CandidatePtrMore {
     bool operator()(std::shared_ptr<SpatialCellCandidate> a, std::shared_ptr<SpatialCellCandidate> b) {
         return a->getCandidateRating() > b->getCandidateRating();
     }
@@ -343,7 +342,7 @@ SpatialCellSet::SpatialCellSet(lsst::geom::Box2I const &region, int xSize, int y
 }
 
 namespace {
-struct CellContains : public std::unary_function<std::shared_ptr<SpatialCell>, bool> {
+struct CellContains  {
     CellContains(std::shared_ptr<SpatialCellCandidate> candidate) : _candidate(candidate) {}
 
     bool operator()(std::shared_ptr<SpatialCell> cell) {
