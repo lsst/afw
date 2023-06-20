@@ -111,8 +111,7 @@ namespace {
  * The notation is that in chapter 7 of Gyula Szokoly's thesis at JHU
  */
 template <typename T>
-struct SortEvalueDecreasing
-        : public std::binary_function<std::pair<T, int> const&, std::pair<T, int> const&, bool> {
+struct SortEvalueDecreasing {
     bool operator()(std::pair<T, int> const& a, std::pair<T, int> const& b) {
         return a.first > b.first;  // N.b. sort on greater
     }

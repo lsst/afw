@@ -335,7 +335,7 @@ struct exprTraits<unsigned short> {
 
 /// A noop functor (useful for e.g. masks and variances when changing the sign of the image)
 template <typename T1>
-struct noop : public std::unary_function<T1, T1> {
+struct noop {
     T1 operator()(const T1& x) const { return x; }
 };
 
@@ -345,7 +345,7 @@ struct noop : public std::unary_function<T1, T1> {
  * masked pixel,
  */
 template <typename T1>
-struct bitwise_or : public std::binary_function<T1, T1, T1> {
+struct bitwise_or {
     T1 operator()(const T1& x, const T1& y) const { return (x | y); }
     T1 operator()(const T1& x) const { return x; }
 };

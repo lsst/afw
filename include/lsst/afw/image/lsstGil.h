@@ -127,8 +127,7 @@ BOOST_GIL_DEFINE_BASE_TYPEDEFS(32f_noscale, bits32f_noscale, gray)
 BOOST_GIL_DEFINE_ALL_TYPEDEFS_INTERNAL(32f_noscale, bits32f_noscale, dev2n, devicen_t<2>, devicen_layout_t<2>)
 
 template <>
-struct channel_multiplier<bits32f_noscale>
-        : public std::binary_function<bits32f_noscale, bits32f_noscale, bits32f_noscale> {
+struct channel_multiplier<bits32f_noscale> {
     bits32f_noscale operator()(bits32f_noscale a, bits32f_noscale b) const { return a * b; }
 };
 
@@ -144,26 +143,22 @@ BOOST_GIL_DEFINE_ALL_TYPEDEFS_INTERNAL(64f_noscale, bits64f_noscale, dev2n, devi
 // Conversions that don't scale
 //
 template <typename DstChannelV>
-struct channel_converter<bits32f_noscale, DstChannelV>
-        : public std::unary_function<bits32f_noscale, DstChannelV> {
+struct channel_converter<bits32f_noscale, DstChannelV> {
     DstChannelV operator()(bits32f_noscale x) const { return DstChannelV(x + 0.5f); }
 };
 
 template <typename SrcChannelV>
-struct channel_converter<SrcChannelV, bits32f_noscale>
-        : public std::unary_function<SrcChannelV, bits32f_noscale> {
+struct channel_converter<SrcChannelV, bits32f_noscale> {
     bits32f_noscale operator()(SrcChannelV x) const { return bits32f_noscale(x); }
 };
 
 template <typename DstChannelV>
-struct channel_converter<bits64f_noscale, DstChannelV>
-        : public std::unary_function<bits64f_noscale, DstChannelV> {
+struct channel_converter<bits64f_noscale, DstChannelV> {
     DstChannelV operator()(bits64f_noscale x) const { return DstChannelV(x + 0.5f); }
 };
 
 template <typename SrcChannelV>
-struct channel_converter<SrcChannelV, bits64f_noscale>
-        : public std::unary_function<SrcChannelV, bits64f_noscale> {
+struct channel_converter<SrcChannelV, bits64f_noscale> {
     bits64f_noscale operator()(SrcChannelV x) const { return bits64f_noscale(x); }
 };
 
@@ -172,12 +167,12 @@ struct channel_converter<SrcChannelV, bits64f_noscale>
 //
 #define LSST_CONVERT_NOOP(T1, T2)                                           \
     template <>                                                             \
-    struct channel_converter<T1, T2> : public std::unary_function<T1, T2> { \
+    struct channel_converter<T1, T2> {                                      \
         T2 operator()(T1 x) const { return static_cast<T2>(x); }            \
     };                                                                      \
                                                                             \
     template <>                                                             \
-    struct channel_converter<T2, T1> : public std::unary_function<T2, T1> { \
+    struct channel_converter<T2, T1> {                                      \
         T1 operator()(T2 x) const { return static_cast<T1>(x); }            \
     }
 
