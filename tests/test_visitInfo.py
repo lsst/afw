@@ -261,8 +261,10 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
         kwargs1 = {k: getattr(visitInfo2, k) for k in updateFields1}
         kwargs2 = {k: getattr(visitInfo2, k) for k in updateFields2}
 
-        newVisit1 = visitInfo1.copyWith(**kwargs1)
-        newVisit2 = visitInfo1.copyWith(**kwargs2)
+        # These both warn because exposureId is not passed in.
+        with self.assertWarns(FutureWarning):
+            newVisit1 = visitInfo1.copyWith(**kwargs1)
+            newVisit2 = visitInfo1.copyWith(**kwargs2)
 
         for field in updateFields1:
             self.assertEqual(getattr(newVisit1, field), getattr(visitInfo2, field))
@@ -275,9 +277,11 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
         # Test the deprecated exposureId.
         # This code can be removed with DM-32138.
         deprecatedVisit = visitInfo1.copyWith(exposureId=3)
-        self.assertEqual(deprecatedVisit.getExposureId(), 3)
-        deprecatedCopy = deprecatedVisit.copyWith(**kwargs1)
-        self.assertEqual(deprecatedCopy.getExposureId(), 3)
+        with self.assertWarns(FutureWarning):
+            self.assertEqual(deprecatedVisit.getExposureId(), 3)
+        with self.assertWarns(FutureWarning):
+            deprecatedCopy = deprecatedVisit.copyWith(**kwargs1)
+            self.assertEqual(deprecatedCopy.getExposureId(), 3)
 
     def testTablePersistence(self):
         """Test that VisitInfo can be round-tripped with current code.
