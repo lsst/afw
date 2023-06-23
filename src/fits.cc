@@ -1725,7 +1725,10 @@ std::shared_ptr<daf::base::PropertyList> readMetadata(fits::Fits &fitsfile, bool
     int oldHdu = fitsfile.getHdu();
     if (oldHdu != 0 && metadata->exists("INHERIT")) {
         bool inherit = false;
-        if (metadata->typeOf("INHERIT") == typeid(std::string)) {
+        if (metadata->typeOf("INHERIT") == typeid(std::nullptr_t)) {
+            // Assume false if INHERIT exists but is undefined.
+            inherit = false;
+        } else if (metadata->typeOf("INHERIT") == typeid(std::string)) {
             inherit = (metadata->get<std::string>("INHERIT") == "T");
         } else {
             inherit = metadata->get<bool>("INHERIT");
