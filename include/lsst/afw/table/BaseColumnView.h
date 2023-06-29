@@ -106,6 +106,9 @@ public:
     ndarray::result_of::vectorize<detail::FlagExtractor, ndarray::Array<Field<Flag>::Element const, 1> >::type
     operator[](Key<Flag> const& key) const;
 
+    /// @brief Return an array column as a double array in radians.
+    ndarray::Array<double, 1> const get_radians_array(Key<Angle> const & key) const;
+
     /**
      *  Return an integer array with the given Flag fields repacked into individual bits.
      *

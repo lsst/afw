@@ -114,6 +114,16 @@ ndarray::result_of::vectorize<detail::FlagExtractor, ndarray::Array<Field<Flag>:
                                       _impl->manager)));
 }
 
+ndarray::Array<double, 1> const BaseColumnView::get_radians_array(Key<Angle> const & key) const {
+    using DoubleArray = ndarray::Array<double, 1>;
+    using AngleArray = ndarray::Array<lsst::geom::Angle, 1>;
+    AngleArray angle_array = (*this)[key];
+    return ndarray::detail::ArrayAccess<DoubleArray>::construct(
+        reinterpret_cast<double *>(angle_array.getData()),
+        ndarray::detail::ArrayAccess<AngleArray>::getCore(angle_array)
+    );
+}
+
 BitsColumn BaseColumnView::getBits(std::vector<Key<Flag> > const &keys) const {
     BitsColumn result(_impl->recordCount);
     ndarray::ArrayRef<BitsColumn::SizeT, 1, 1> array = result._array.deep();
