@@ -50,8 +50,7 @@ def propertySetFromDict(keyValDict):
 
 def makeVisitInfo(data):
     """Return a VisitInfo constructed from a VisitInfoData namedtuple."""
-    return afwImage.VisitInfo(data.exposureId,
-                              data.exposureTime,
+    return afwImage.VisitInfo(data.exposureTime,
                               data.darkTime,
                               data.date,
                               data.ut1,
@@ -86,8 +85,7 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
             hourAngle = localEra - data.boresightRaDec[0]
             return localEra, hourAngle
 
-        fields = ['exposureId',
-                  'exposureTime',
+        fields = ['exposureTime',
                   'darkTime',
                   'date',
                   'ut1',
@@ -109,8 +107,7 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
                   "hasSimulatedContent",
                   ]
         VisitInfoData = collections.namedtuple("VisitInfoData", fields)
-        data1 = VisitInfoData(exposureId=10313423,
-                              exposureTime=10.01,
+        data1 = VisitInfoData(exposureTime=10.01,
                               darkTime=11.02,
                               date=DateTime(
                                   65321.1, DateTime.MJD, DateTime.TAI),
@@ -137,8 +134,7 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
                               )
         self.data1 = data1
         self.localEra1, self.hourAngle1 = computeLstHA(data1)
-        data2 = VisitInfoData(exposureId=1,
-                              exposureTime=15.5,
+        data2 = VisitInfoData(exposureTime=15.5,
                               darkTime=17.8,
                               date=DateTime(
                                   55321.2, DateTime.MJD, DateTime.TAI),
@@ -167,8 +163,6 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
 
     def _testValueConstructor(self, data, localEra, hourAngle):
         visitInfo = makeVisitInfo(data)
-        with self.assertWarns(FutureWarning):
-            self.assertEqual(visitInfo.getExposureId(), data.exposureId)
         self.assertEqual(visitInfo.getExposureTime(), data.exposureTime)
         self.assertEqual(visitInfo.getDarkTime(), data.darkTime)
         self.assertEqual(visitInfo.getDate(), data.date)
@@ -261,10 +255,8 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
         kwargs1 = {k: getattr(visitInfo2, k) for k in updateFields1}
         kwargs2 = {k: getattr(visitInfo2, k) for k in updateFields2}
 
-        # These both warn because exposureId is not passed in.
-        with self.assertWarns(FutureWarning):
-            newVisit1 = visitInfo1.copyWith(**kwargs1)
-            newVisit2 = visitInfo1.copyWith(**kwargs2)
+        newVisit1 = visitInfo1.copyWith(**kwargs1)
+        newVisit2 = visitInfo1.copyWith(**kwargs2)
 
         for field in updateFields1:
             self.assertEqual(getattr(newVisit1, field), getattr(visitInfo2, field))
@@ -273,15 +265,6 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
         for field in updateFields2:
             self.assertEqual(getattr(newVisit1, field), getattr(visitInfo1, field))
             self.assertEqual(getattr(newVisit2, field), getattr(visitInfo2, field))
-
-        # Test the deprecated exposureId.
-        # This code can be removed with DM-32138.
-        deprecatedVisit = visitInfo1.copyWith(exposureId=3)
-        with self.assertWarns(FutureWarning):
-            self.assertEqual(deprecatedVisit.getExposureId(), 3)
-        with self.assertWarns(FutureWarning):
-            deprecatedCopy = deprecatedVisit.copyWith(**kwargs1)
-            self.assertEqual(deprecatedCopy.getExposureId(), 3)
 
     def testTablePersistence(self):
         """Test that VisitInfo can be round-tripped with current code.
@@ -311,8 +294,6 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
         visitInfo = afwImage.VisitInfo.readFits(filePath)
 
         if version >= 0:
-            with self.assertWarns(FutureWarning):
-                self.assertEqual(visitInfo.getExposureId(), data.exposureId)
             self.assertEqual(visitInfo.getExposureTime(), data.exposureTime)
             self.assertEqual(visitInfo.getDarkTime(), data.darkTime)
             self.assertEqual(visitInfo.getDate(), data.date)
@@ -376,8 +357,7 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
             visitInfo = makeVisitInfo(item)
             metadata = PropertyList()
             afwImage.setVisitInfoMetadata(metadata, visitInfo)
-            self.assertEqual(metadata.nameCount(), 28)
-            self.assertEqual(metadata.getScalar("EXPID"), item.exposureId)
+            self.assertEqual(metadata.nameCount(), 27)
             self.assertEqual(metadata.getScalar("EXPTIME"), item.exposureTime)
             self.assertEqual(metadata.getScalar("DARKTIME"), item.darkTime)
             self.assertEqual(metadata.getScalar("DATE-AVG"),
@@ -447,15 +427,13 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
             afwImage.setVisitInfoMetadata(metadata, visitInfo)
             # add an extra keyword that will not be stripped
             metadata.set("EXTRA", 5)
-            self.assertEqual(metadata.nameCount(), 29)
+            self.assertEqual(metadata.nameCount(), 28)
             afwImage.stripVisitInfoKeywords(metadata)
             self.assertEqual(metadata.nameCount(), 1)
 
     def _testIsEmpty(self, visitInfo):
         """Test that visitInfo is all NaN, 0, or empty string, as appropriate.
         """
-        with self.assertWarns(FutureWarning):
-            self.assertEqual(visitInfo.getExposureId(), 0)
         self.assertTrue(math.isnan(visitInfo.getExposureTime()))
         self.assertTrue(math.isnan(visitInfo.getDarkTime()))
         self.assertEqual(visitInfo.getDate(), DateTime())
@@ -517,12 +495,6 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
         metadata = propertySetFromDict({})
         visitInfo = afwImage.VisitInfo(metadata)
         self._testIsEmpty(visitInfo)
-
-        metadata = propertySetFromDict({"EXPID": data.exposureId})
-        visitInfo = afwImage.VisitInfo(metadata)
-        with self.assertWarns(FutureWarning):
-            self.assertEqual(visitInfo.getExposureId(), data.exposureId)
-        self.assertTrue(math.isnan(visitInfo.getExposureTime()))
 
         metadata = propertySetFromDict({"EXPTIME": data.exposureTime})
         visitInfo = afwImage.VisitInfo(metadata)
@@ -696,9 +668,6 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
         visitInfo = afwImage.VisitInfo()
         self._testIsEmpty(visitInfo)
 
-        visitInfo = afwImage.VisitInfo(exposureId=data.exposureId)
-        with self.assertWarns(FutureWarning):
-            self.assertEqual(visitInfo.getExposureId(), data.exposureId)
         self.assertTrue(math.isnan(visitInfo.getExposureTime()))
 
         visitInfo = afwImage.VisitInfo(exposureTime=data.exposureTime)
@@ -790,7 +759,7 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
         visitInfo = makeVisitInfo(self.data1)
         string = str(visitInfo)
         self.assertEqual(string,
-                         "VisitInfo(exposureId=10313423, exposureTime=10.01, darkTime=11.02, "
+                         "VisitInfo(exposureTime=10.01, darkTime=11.02, "
                          "date=2037-09-20T02:24:00.000000000, UT1=12345.1, ERA=0.787143 rad, "
                          "boresightRaDec=(23.1000000000, +73.2000000000), "
                          "boresightAzAlt=(134.5000000000, +33.3000000000), boresightAirmass=1.73, "

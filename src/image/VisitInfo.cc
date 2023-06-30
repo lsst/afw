@@ -199,7 +199,6 @@ RotType rotTypeEnumFromStr(std::string const& rotTypeName) {
 class VisitInfoSchema {
 public:
     table::Schema schema;
-    table::Key<table::RecordId> exposureId;
     table::Key<double> exposureTime;
     table::Key<double> darkTime;
     table::Key<std::int64_t> tai;
@@ -348,9 +347,9 @@ public:
         bool hasSimulatedContent = version >= 4 ? record.get(keys.hasSimulatedContent) : false;
 
         std::shared_ptr<VisitInfo> result(
-                new VisitInfo(record.get(keys.exposureId), record.get(keys.exposureTime),
-                              record.get(keys.darkTime), ::DateTime(record.get(keys.tai), ::DateTime::TAI),
-                              record.get(keys.ut1), record.get(keys.era), record.get(keys.boresightRaDec),
+                new VisitInfo(record.get(keys.exposureTime), record.get(keys.darkTime),
+                              ::DateTime(record.get(keys.tai), ::DateTime::TAI), record.get(keys.ut1),
+                              record.get(keys.era), record.get(keys.boresightRaDec),
                               lsst::geom::SpherePoint(record.get(keys.boresightAzAlt_az),
                                                       record.get(keys.boresightAzAlt_alt)),
                               record.get(keys.boresightAirmass), record.get(keys.boresightRotAngle),
@@ -390,35 +389,13 @@ namespace detail {
 int stripVisitInfoKeywords(daf::base::PropertySet& metadata) {
     int nstripped = 0;
 
-    std::vector<std::string> keyList = {"EXPID",
-                                        "EXPTIME",
-                                        "DARKTIME",
-                                        "DATE-AVG",
-                                        "TIMESYS",
-                                        "TIME-MID",
-                                        "MJD-AVG-UT1",
-                                        "AVG-ERA",
-                                        "BORE-RA",
-                                        "BORE-DEC",
-                                        "BORE-AZ",
-                                        "BORE-ALT",
-                                        "BORE-AIRMASS",
-                                        "BORE-ROTANG",
-                                        "ROTTYPE",
-                                        "OBS-LONG",
-                                        "OBS-LAT",
-                                        "OBS-ELEV",
-                                        "AIRTEMP",
-                                        "AIRPRESS",
-                                        "HUMIDITY",
-                                        "INSTRUMENT",
-                                        "IDNUM",
-                                        "FOCUSZ",
-                                        "OBSTYPE",
-                                        "PROGRAM",
-                                        "REASON",
-                                        "OBJECT",
-                                        "HAS-SIMULATED-CONTENT"};
+    std::vector<std::string> keyList = {"EXPTIME",     "DARKTIME",    "DATE-AVG", "TIMESYS",
+                                        "TIME-MID",    "MJD-AVG-UT1", "AVG-ERA",  "BORE-RA",
+                                        "BORE-DEC",    "BORE-AZ",     "BORE-ALT", "BORE-AIRMASS",
+                                        "BORE-ROTANG", "ROTTYPE",     "OBS-LONG", "OBS-LAT",
+                                        "OBS-ELEV",    "AIRTEMP",     "AIRPRESS", "HUMIDITY",
+                                        "INSTRUMENT",  "IDNUM",       "FOCUSZ",   "OBSTYPE",
+                                        "PROGRAM",     "REASON",      "OBJECT",   "HAS-SIMULATED-CONTENT"};
     for (auto&& key : keyList) {
         if (metadata.exists(key)) {
             metadata.remove(key);
@@ -429,9 +406,6 @@ int stripVisitInfoKeywords(daf::base::PropertySet& metadata) {
 }
 
 void setVisitInfoMetadata(daf::base::PropertyList& metadata, VisitInfo const& visitInfo) {
-    if (visitInfo.getExposureId() != 0) {
-        metadata.set("EXPID", visitInfo.getExposureId());
-    }
     setDouble(metadata, "EXPTIME", visitInfo.getExposureTime(), "Exposure time (sec)");
     setDouble(metadata, "DARKTIME", visitInfo.getDarkTime(), "Time from CCD flush to readout (sec)");
     if (visitInfo.getDate().isValid()) {
@@ -477,8 +451,7 @@ void setVisitInfoMetadata(daf::base::PropertyList& metadata, VisitInfo const& vi
 }  // namespace detail
 
 VisitInfo::VisitInfo(daf::base::PropertySet const& metadata)
-        : _exposureId(0),
-          _exposureTime(nan),  // don't use getDouble because str values are also accepted
+        : _exposureTime(nan),  // don't use getDouble because str values are also accepted
           _darkTime(getDouble(metadata, "DARKTIME")),
           _date(),
           _ut1(getDouble(metadata, "MJD-AVG-UT1")),
@@ -503,11 +476,7 @@ VisitInfo::VisitInfo(daf::base::PropertySet const& metadata)
           _object(getString(metadata, "OBJECT")),
           // default false for backwards compatibility
           _hasSimulatedContent(false) {
-    auto key = "EXPID";
-    if (metadata.exists(key) && !metadata.isUndefined(key)) {
-        _exposureId = metadata.getAsInt64(key);
-    }
-    key = "IDNUM";
+    auto key = "IDNUM";
     if (metadata.exists(key) && !metadata.isUndefined(key)) {
         _id = metadata.getAsInt64(key);
     }
@@ -580,9 +549,8 @@ bool _eqOrNonFinite(lsst::geom::SpherePoint const& lhs, lsst::geom::SpherePoint 
 }
 
 bool VisitInfo::operator==(VisitInfo const& other) const {
-    return _exposureId == other.getExposureId() && _eqOrNan(_exposureTime, other.getExposureTime()) &&
-           _eqOrNan(_darkTime, other.getDarkTime()) && _date == other.getDate() &&
-           _eqOrNan(_ut1, other.getUt1()) && _eqOrNan(_era, other.getEra()) &&
+    return _eqOrNan(_exposureTime, other.getExposureTime()) && _eqOrNan(_darkTime, other.getDarkTime()) &&
+           _date == other.getDate() && _eqOrNan(_ut1, other.getUt1()) && _eqOrNan(_era, other.getEra()) &&
            _eqOrNonFinite(_boresightRaDec, other.getBoresightRaDec()) &&
            _eqOrNonFinite(_boresightAzAlt, other.getBoresightAzAlt()) &&
            _eqOrNan(_boresightAirmass, other.getBoresightAirmass()) &&
@@ -597,7 +565,7 @@ bool VisitInfo::operator==(VisitInfo const& other) const {
 
 std::size_t VisitInfo::hash_value() const noexcept {
     // Completely arbitrary seed
-    return utils::hashCombine(17, _exposureId, _exposureTime, _darkTime, _date, _ut1, _era, _boresightRaDec,
+    return utils::hashCombine(17, _exposureTime, _darkTime, _date, _ut1, _era, _boresightRaDec,
                               _boresightAzAlt, _boresightAirmass, _boresightRotAngle, _rotType, _observatory,
                               _weather, _instrumentLabel, _id, _focusZ, _observationType, _scienceProgram,
                               _observationReason, _object, _hasSimulatedContent);
@@ -609,7 +577,6 @@ void VisitInfo::write(OutputArchiveHandle& handle) const {
     VisitInfoSchema const& keys = VisitInfoSchema::get();
     table::BaseCatalog cat = handle.makeCatalog(keys.schema);
     std::shared_ptr<table::BaseRecord> record = cat.addNew();
-    record->set(keys.exposureId, getExposureId());
     record->set(keys.exposureTime, getExposureTime());
     record->set(keys.darkTime, getDarkTime());
     record->set(keys.tai, getDate().nsecs(::DateTime::TAI));
@@ -671,7 +638,6 @@ bool VisitInfo::equals(typehandling::Storable const& other) const noexcept {
 std::string VisitInfo::toString() const {
     std::stringstream buffer;
     buffer << "VisitInfo(";
-    buffer << "exposureId=" << getExposureId() << ", ";
     buffer << "exposureTime=" << getExposureTime() << ", ";
     buffer << "darkTime=" << getDarkTime() << ", ";
     buffer << "date=" << (getDate().isValid() ? getDate().toString(daf::base::DateTime::TAI) : "<invalid>")

@@ -52,8 +52,7 @@ lon = 123.45*lsst.geom.degrees
 observatory = lsst.afw.coord.Observatory(lat, lon, 2000)
 # Skipping ut1, era, altAz, airmass, rotAngle, and weather.
 # They can be added later if someone needs them.
-visitInfo = lsst.afw.image.VisitInfo(exposureId=exposureId,
-                                     exposureTime=exposureTime,
+visitInfo = lsst.afw.image.VisitInfo(exposureTime=exposureTime,
                                      darkTime=darkTime,
                                      date=date,
                                      boresightRaDec=crval,

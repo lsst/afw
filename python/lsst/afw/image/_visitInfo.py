@@ -21,7 +21,6 @@
 """This file only exists to deprecate the Filter and FilterProperty classes.
 """
 
-from lsst.utils.deprecated import deprecate_pybind11
 from lsst.utils import continueClass
 from ._imageLib import VisitInfo
 
@@ -37,7 +36,6 @@ class VisitInfo:  # noqa: F811
 
     def copyWith(
         self,
-        exposureId=None,
         exposureTime=None,
         darkTime=None,
         date=None,
@@ -59,11 +57,6 @@ class VisitInfo:  # noqa: F811
         object=None,
         hasSimulatedContent=None,
     ):
-        if exposureId is None:
-            # Note: exposureId is deprecated and `VisitInfo` no longer contains
-            # an `exposureId` property, so we use the getter until
-            # this is removed in DM-32138.
-            exposureId = self.getExposureId()
         if exposureTime is None:
             exposureTime = self.exposureTime
         if darkTime is None:
@@ -106,7 +99,6 @@ class VisitInfo:  # noqa: F811
             hasSimulatedContent = self.hasSimulatedContent
 
         return VisitInfo(
-            exposureId=exposureId,
             exposureTime=exposureTime,
             darkTime=darkTime,
             date=date,
@@ -128,10 +120,3 @@ class VisitInfo:  # noqa: F811
             object=object,
             hasSimulatedContent=hasSimulatedContent,
         )
-
-
-VisitInfo.getExposureId = deprecate_pybind11(
-    VisitInfo.getExposureId,
-    reason="Replaced by VisitInfo.id for full focal plane identifiers and by ExposureInfo.id for "
-           "detector-level identifiers. Will be removed after v25.",
-    version="v24.0")

@@ -70,7 +70,6 @@ public:
     /**
      * Construct a VisitInfo
      *
-     * @param[in] exposureId  exposure ID
      * @param[in] exposureTime  exposure duration (shutter open time); (sec)
      * @param[in] darkTime  time from CCD flush to readout, including shutter open time (despite the name);
                     (sec)
@@ -96,10 +95,8 @@ public:
      * @param[in] object Object of interest or field name.
      * @param[in] hasSimulatedContent Was any part of this observation simulated?
      */
-    // TODO: remove exposureId on DM-32138
-    explicit VisitInfo(table::RecordId exposureId, double exposureTime, double darkTime,
-                       daf::base::DateTime const &date, double ut1, lsst::geom::Angle const &era,
-                       lsst::geom::SpherePoint const &boresightRaDec,
+    explicit VisitInfo(double exposureTime, double darkTime, daf::base::DateTime const &date, double ut1,
+                       lsst::geom::Angle const &era, lsst::geom::SpherePoint const &boresightRaDec,
                        lsst::geom::SpherePoint const &boresightAzAlt, double boresightAirmass,
                        lsst::geom::Angle const &boresightRotAngle, RotType const &rotType,
                        coord::Observatory const &observatory, coord::Weather const &weather,
@@ -107,8 +104,7 @@ public:
                        std::string const &observationType, std::string const &scienceProgram,
                        std::string const &observationReason, std::string const &object,
                        bool hasSimulatedContent)
-            : _exposureId(exposureId),
-              _exposureTime(exposureTime),
+            : _exposureTime(exposureTime),
               _darkTime(darkTime),
               _date(date),
               _ut1(ut1),
@@ -143,16 +139,6 @@ public:
 
     /// Return a hash of this object.
     std::size_t hash_value() const noexcept override;
-
-    /// get exposure ID
-    // TODO: remove on DM-32138
-    [[deprecated(
-            "Replaced by VisitInfo::getId() for full focal plane identifiers and by "
-            "ExposureInfo::getId() for detector-level identifiers. Will be removed after v25.")]] table::
-            RecordId
-            getExposureId() const {
-        return _exposureId;
-    }
 
     /// get exposure duration (shutter open time); (sec)
     double getExposureTime() const { return _exposureTime; }
@@ -249,7 +235,6 @@ protected:
     void write(OutputArchiveHandle &handle) const override;
 
 private:
-    table::RecordId _exposureId;  // TODO: remove on DM-32138
     double _exposureTime;
     double _darkTime;
     daf::base::DateTime _date;

@@ -138,25 +138,7 @@ table::RecordId ExposureInfo::getId() const {
     }
 }
 
-void ExposureInfo::setId(table::RecordId id) {
-    _exposureId = id;
-    // Ensure consistency with VisitInfo::getExposureId() until the latter is removed in DM-32138.
-    std::shared_ptr<VisitInfo const> oldVisitInfo = getVisitInfo();
-    if (oldVisitInfo) {
-        auto newVisitInfo = std::make_shared<VisitInfo>(
-                *_exposureId, oldVisitInfo->getExposureTime(), oldVisitInfo->getDarkTime(),
-                oldVisitInfo->getDate(), oldVisitInfo->getUt1(), oldVisitInfo->getEra(),
-                oldVisitInfo->getBoresightRaDec(), oldVisitInfo->getBoresightAzAlt(),
-                oldVisitInfo->getBoresightAirmass(), oldVisitInfo->getBoresightRotAngle(),
-                oldVisitInfo->getRotType(), oldVisitInfo->getObservatory(), oldVisitInfo->getWeather(),
-                oldVisitInfo->getInstrumentLabel(), oldVisitInfo->getId(), oldVisitInfo->getFocusZ(),
-                oldVisitInfo->getObservationType(), oldVisitInfo->getScienceProgram(),
-                oldVisitInfo->getObservationReason(), oldVisitInfo->getObject(),
-                oldVisitInfo->getHasSimulatedContent());
-        // Do not call setVisitInfo, to avoid recursion
-        _visitInfo = newVisitInfo;
-    }
-}
+void ExposureInfo::setId(table::RecordId id) { _exposureId = id; }
 
 void ExposureInfo::clearId() noexcept { _exposureId.reset(); }
 
@@ -345,7 +327,6 @@ ExposureInfo::FitsWriteData ExposureInfo::_startWriteFits(lsst::geom::Point2I co
         detail::setVisitInfoMetadata(*(data.metadata), *visitInfoPtr);
     }
 
-    // So long as VisitInfo also writes exposureId (until DM-32138), let ours take precedence.
     if (hasId()) {
         data.metadata->set("EXPID", getId());
     }
