@@ -25,6 +25,7 @@
 
 #include "pybind11/pybind11.h"
 
+#include "ndarray/pybind11.h"
 #include "lsst/utils/python.h"
 #include "lsst/afw/table/BaseColumnView.h"
 #include "lsst/afw/table/Catalog.h"
