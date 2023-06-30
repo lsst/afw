@@ -194,11 +194,8 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         kB = schema.addField("fB", type="B")
         kU = schema.addField("fU", type="U")
         kI = schema.addField("fI", type="I")
-        kFlag1 = schema.addField("fFlag1", type="Flag")
         kF = schema.addField("fF", type="F")
-        kFlag2 = schema.addField("fFlag2", type="Flag")
         kD = schema.addField("fD", type="D")
-        kFlag3 = schema.addField("fFlag3", type="Flag")
         kArrayF = schema.addField("fArrayF", type="ArrayF", size=2)
         kArrayD = schema.addField("fArrayD", type="ArrayD", size=3)
         kAngle = schema.addField("fAngle", type="Angle")
@@ -210,9 +207,6 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         catalog[0].set(kI, 2)
         catalog[0].set(kF, 0.5)
         catalog[0].set(kD, 0.25)
-        catalog[0].set(kFlag1, False)
-        catalog[0].set(kFlag2, True)
-        catalog[0].set(kFlag3, False)
         catalog[0].set(kArrayF, np.array([-0.5, -0.25], dtype=np.float32))
         catalog[0].set(kArrayD, np.array([-1.5, -1.25, 3.375], dtype=np.float64))
         catalog[0].set(kAngle, lsst.geom.Angle(0.25))
@@ -225,9 +219,6 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         catalog[1].set(kI, 3)
         catalog[1].set(kF, 2.5)
         catalog[1].set(kD, 0.75)
-        catalog[1].set(kFlag1, True)
-        catalog[1].set(kFlag2, False)
-        catalog[1].set(kFlag3, True)
         catalog[1].set(kArrayF, np.array([-3.25, -0.75], dtype=np.float32))
         catalog[1].set(kArrayD, np.array([-1.25, -2.75, 0.625], dtype=np.float64))
         catalog[1].set(kAngle, lsst.geom.Angle(0.15))
@@ -235,7 +226,7 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         col1b = catalog[kI]
         self.assertEqual(col1b.shape, (2,))
         columns = catalog.getColumnView()
-        for key in [kB, kU, kI, kF, kD, kFlag1, kFlag2, kFlag3]:
+        for key in [kB, kU, kI, kF, kD]:
             array = columns[key]
             for i in [0, 1]:
                 self.assertEqual(array[i], catalog[i].get(key))
@@ -265,7 +256,7 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
 
         # Accessing an invalid key should raise.
         for keyType in ["Angle", "ArrayB", "ArrayD", "ArrayF", "ArrayI",
-                        "ArrayU", "B", "D", "F", "Flag", "I", "L", "U"]:
+                        "ArrayU", "B", "D", "F", "I", "L", "U"]:
             # Default-constructed key is invalid
             invalidKey = getattr(lsst.afw.table, f"Key{keyType}")()
             self.assertFalse(invalidKey.isValid())
@@ -365,8 +356,6 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
             d = catalog.extract("*", **kwds)
             np.testing.assert_array_equal(
                 d["a_b_c1"], catalog.get("a_b_c1")[idx])
-            np.testing.assert_array_equal(
-                d["a_b_c2"], catalog.get("a_b_c2")[idx])
             np.testing.assert_array_equal(
                 d["a_d1"], catalog.get("a_d1")[idx])
             np.testing.assert_array_equal(
@@ -849,7 +838,7 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         self.assertFloatsEqual(catalog[key], np.array([[3.0, 4.0, 5.0], [6.0, 7.0, 8.0]]))
         record = catalog.addNew()
         self.assertFalse(catalog.isContiguous())
-        record[key] = [[9.0, 10.0, 11.0]]
+        record[key] = np.array([9.0, 10.0, 11.0])
         self.assertFloatsEqual(catalog[key], np.array([[3.0, 4.0, 5.0], [6.0, 7.0, 8.0], [9.0, 10.0, 11.0]]))
         self.assertFalse(catalog[key].flags.writeable)
 

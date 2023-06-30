@@ -301,16 +301,11 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(allBits.getMask("c_flag"), 0x4)
         self.assertEqual(someBits.getMask(self.fluxFlagKey), 0x1)
         self.assertEqual(someBits.getMask(self.shapeFlagKey), 0x2)
-        np.testing.assert_array_equal(
-            (allBits.array & 0x1 != 0), self.catalog.columns["a_flag"])
-        np.testing.assert_array_equal(
-            (allBits.array & 0x2 != 0), self.catalog.columns["b_flag"])
-        np.testing.assert_array_equal(
-            (allBits.array & 0x4 != 0), self.catalog.columns["c_flag"])
-        np.testing.assert_array_equal(
-            (someBits.array & 0x1 != 0), self.catalog.columns["a_flag"])
-        np.testing.assert_array_equal(
-            (someBits.array & 0x2 != 0), self.catalog.columns["c_flag"])
+        np.testing.assert_array_equal((allBits.array & 0x1 != 0), self.catalog["a_flag"])
+        np.testing.assert_array_equal((allBits.array & 0x2 != 0), self.catalog["b_flag"])
+        np.testing.assert_array_equal((allBits.array & 0x4 != 0), self.catalog["c_flag"])
+        np.testing.assert_array_equal((someBits.array & 0x1 != 0), self.catalog["a_flag"])
+        np.testing.assert_array_equal((someBits.array & 0x2 != 0), self.catalog["c_flag"])
 
     def testCast(self):
         baseCat = self.catalog.cast(lsst.afw.table.BaseCatalog)

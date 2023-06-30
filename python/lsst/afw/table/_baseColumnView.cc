@@ -60,10 +60,17 @@ static void declareBaseColumnViewArrayOverloads(PyClass &cls) {
             typename ndarray::Array<U, 2, 1> const { return self[key]; });
 };
 
+// TODO: remove this method and any calls to it on DM-32980.
 template <typename PyClass>
 static void declareBaseColumnViewFlagOverloads(PyClass &cls) {
     cls.def("_basicget",
             [](BaseColumnView &self, Key<Flag> const &key) -> ndarray::Array<bool const, 1, 1> const {
+                PyErr_WarnEx(
+                    PyExc_FutureWarning,
+                    "Flag/bool access via ColumnView objects is deprecated in favor of more compete support "
+                    "on Catalog.  Will be removed after v27.",
+                    2  // stack level
+                );
                 return ndarray::copy(self[key]);
             });
 };

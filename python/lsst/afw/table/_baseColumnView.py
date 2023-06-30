@@ -23,6 +23,8 @@ __all__ = []  # importing this module adds methods to BaseColumnView
 
 import numpy as np
 
+from deprecated.sphinx import deprecated
+
 from lsst.utils import continueClass
 from ._table import KeyFlag, _BaseColumnViewBase
 
@@ -78,6 +80,15 @@ class _BaseColumnViewBase:  # noqa: F811
 
     set = __setitem__
 
+    # TODO: remove on DM-32980.
+    @deprecated(
+        reason=(
+            "Catalog.__getitem__ now provides better support for "
+            "accessing Flag/bool columns.  Will be removed after v27."
+        ),
+        version="v26",
+        category=FutureWarning,
+    )
     def get_bool_array(self, key):
         """Get the value of a flag column as a boolean array; key must be a
         key object or the name of a field.
@@ -112,8 +123,9 @@ class _BaseColumnViewBase:  # noqa: F811
         row-major ColumnView into a possibly more efficient set of contiguous
         NumPy arrays.
 
-        This routines unpacks `Flag` columns into full boolean arrays.  String
-        fields are silently ignored.
+        String fields are silently ignored.  Support for `Flag` columns is
+        deprecated; at present they are copied into full boolean arrays, but
+        after v26 they will be silently ignored as well.
 
         Parameters
         ----------
