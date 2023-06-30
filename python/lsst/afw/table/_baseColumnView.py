@@ -113,11 +113,8 @@ class _BaseColumnViewBase:  # noqa: F811
         row-major ColumnView into a possibly more efficient set of contiguous
         NumPy arrays.
 
-        This routines unpacks `Flag` columns into full boolean arrays and
-        covariances into dense (i.e. non-triangular packed) arrays with
-        dimension (N,M,M), where N is the number of records and M is the
-        dimension of the covariance matrix.  String fields are silently
-        ignored.
+        This routines unpacks `Flag` columns into full boolean arrays.  String
+        fields are silently ignored.
 
         Parameters
         ----------
