@@ -819,6 +819,40 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         catalog["a"] = v2
         self.assertEqual(list(catalog[key]), list(v2))
 
+    def testAngleColumnArrayAccess(self):
+        """Test column-array access to Angle columns on both contiguous and
+        non-contiguous arrays.
+        """
+        schema = lsst.afw.table.Schema()
+        key = schema.addField("a", type="Angle", doc="doc for a")
+        catalog = lsst.afw.table.BaseCatalog(schema)
+        catalog.resize(2)
+        self.assertTrue(catalog.isContiguous())
+        catalog[key] = np.array([3.0, 4.0])
+        self.assertFloatsEqual(catalog[key], np.array([3.0, 4.0]))
+        record = catalog.addNew()
+        self.assertFalse(catalog.isContiguous())
+        record[key] = 5.0 * lsst.geom.radians
+        self.assertFloatsEqual(catalog[key], np.array([3.0, 4.0, 5.0]))
+        self.assertFalse(catalog[key].flags.writeable)
+
+    def testArrayColumnArrayAccess(self):
+        """Test column-array access to Array columns on both contiguous and
+        non-contiguous arrays.
+        """
+        schema = lsst.afw.table.Schema()
+        key = schema.addField("a", type="ArrayD", doc="doc for a", size=3)
+        catalog = lsst.afw.table.BaseCatalog(schema)
+        catalog.resize(2)
+        self.assertTrue(catalog.isContiguous())
+        catalog[key] = np.array([[3.0, 4.0, 5.0], [6.0, 7.0, 8.0]])
+        self.assertFloatsEqual(catalog[key], np.array([[3.0, 4.0, 5.0], [6.0, 7.0, 8.0]]))
+        record = catalog.addNew()
+        self.assertFalse(catalog.isContiguous())
+        record[key] = [[9.0, 10.0, 11.0]]
+        self.assertFloatsEqual(catalog[key], np.array([[3.0, 4.0, 5.0], [6.0, 7.0, 8.0], [9.0, 10.0, 11.0]]))
+        self.assertFalse(catalog[key].flags.writeable)
+
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
     pass

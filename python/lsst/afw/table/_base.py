@@ -101,19 +101,13 @@ class Catalog(metaclass=TemplateMeta):
             if key.dtype == bool:
                 return self.subset(key)
             raise RuntimeError(f"Unsupported array type for indexing non-contiguous Catalog: {key.dtype}")
-        elif isinstance(key, Key) or isinstance(key, str):
-            if not self.isContiguous():
-                if isinstance(key, str):
-                    key = self.schema[key].asKey()
-                array = self._getitem_(key)
-                # This array doesn't share memory with the Catalog, so don't let it be modified by
-                # the user who thinks that the Catalog itself is being modified.
-                # Just be aware that this array can only be passed down to C++ as an ndarray::Array<T const>
-                # instead of an ordinary ndarray::Array<T>. If pybind isn't letting it down into C++,
-                # you may have left off the 'const' in the definition.
-                array.flags.writeable = False
-                return array
-            return self.columns[key]
+        elif isinstance(key, str):
+            key = self.schema.find(key).key
+            result, self._columns = self._get_column_from_key(key, self._columns)
+            return result
+        elif isinstance(key, Key):
+            result, self._columns = self._get_column_from_key(key, self._columns)
+            return result
         else:
             return self._getitem_(key)
 
@@ -288,7 +282,7 @@ class Catalog(metaclass=TemplateMeta):
                                          "unless copy=True or unviewable='copy' or 'skip'.")
                     elif unviewable == "skip":
                         continue
-                data = self.columns.get_bool_array(key)
+                data = self[key]
             elif key.getTypeString() == "Angle":
                 data = self.columns.get(key)
                 unit = "radian"

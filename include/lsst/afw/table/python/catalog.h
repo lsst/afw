@@ -52,18 +52,34 @@ ndarray::Array<typename Field<T>::Value const, 1, 1> _getArrayFromCatalog(
     return out;
 }
 
-// Specialization of the above for lsst::geom::Angle: have to return a double array (in
-// radians), since NumPy arrays can't hold lsst::geom::Angles.
+/// Extract a column from a potentially non-contiguous Catalog (angle
+/// specialization)
 template <typename Record>
 ndarray::Array<double const, 1, 1> _getArrayFromCatalog(
-        CatalogT<Record> const &catalog,   ///< Catalog
-        Key<lsst::geom::Angle> const &key  ///< Key to column to extract
+        CatalogT<Record> const &catalog,  ///< Catalog
+        Key<Angle> const &key                 ///< Key to column to extract
 ) {
     ndarray::Array<double, 1, 1> out = ndarray::allocate(catalog.size());
     auto outIter = out.begin();
     auto inIter = catalog.begin();
     for (; inIter != catalog.end(); ++inIter, ++outIter) {
         *outIter = inIter->get(key).asRadians();
+    }
+    return out;
+}
+
+/// Extract an array-valued column from a potentially non-contiguous Catalog
+/// into a 2-d array.
+template <typename T, typename Record>
+ndarray::Array<typename Field<T>::Value const, 2, 2> _getArrayFromCatalog(
+        CatalogT<Record> const &catalog,  ///< Catalog
+        Key<Array<T>> const &key          ///< Key to column to extract
+) {
+    ndarray::Array<typename Field<T>::Value, 2, 2> out = ndarray::allocate(catalog.size(), key.getSize());
+    auto outIter = out.begin();
+    auto inIter = catalog.begin();
+    for (; inIter != catalog.end(); ++inIter, ++outIter) {
+        *outIter = inIter->get(key);
     }
     return out;
 }
@@ -154,6 +170,7 @@ void declareCatalogOverloads(PyCatalog<Record> &cls) {
 
     using Catalog = CatalogT<Record>;
     using Value = typename Field<T>::Value;
+    using ColumnView = typename Record::ColumnView;
 
     cls.def("isSorted", (bool (Catalog::*)(Key<T> const &) const) & Catalog::isSorted);
     cls.def("sort", (void (Catalog::*)(Key<T> const &)) & Catalog::sort);
@@ -180,8 +197,65 @@ void declareCatalogOverloads(PyCatalog<Record> &cls) {
         return py::slice(a, b, 1);
     });
 
-    cls.def("_getitem_",
-            [](Catalog const &self, Key<T> const &key) { return _getArrayFromCatalog(self, key); });
+    cls.def("_get_column_from_key",
+            [](Catalog const &self, Key<T> const &key, pybind11::object py_column_view) {
+                std::shared_ptr<ColumnView> column_view = py_column_view.cast<std::shared_ptr<ColumnView>>();
+                if (!column_view && self.isContiguous()) {
+                    // If there's no column view cached, but there could be,
+                    // make one (and we'll return it so it can be cached by
+                    // the calling Python code).
+                    column_view = std::make_shared<ColumnView>(self.getColumnView());
+                    py_column_view = pybind11::cast(column_view);
+                }
+                if (column_view) {
+                    // If there is a column view, use it to return a view.
+                    if constexpr (std::is_same_v<T, Angle>) {
+                        // numpy doesn't recognize our Angle type, so we return
+                        // double radians.
+                        return pybind11::make_tuple(column_view->get_radians_array(key), column_view);
+                    } else {
+                        return pybind11::make_tuple((*column_view)[key].shallow(), column_view);
+                    }
+                }
+                // If we can't make a column view, extract a copy.
+                return pybind11::make_tuple(_getArrayFromCatalog(self, key), column_view);
+            });
+}
+
+/**
+ * Declare field-type-specific overloaded catalog member functions for one array-valued field type
+ *
+ * @tparam T  Array element type.
+ * @tparam Record  Record type, e.g. BaseRecord or SimpleRecord.
+ *
+ * @param[in] cls  Catalog pybind11 class.
+ */
+template <typename T, typename Record>
+void declareCatalogArrayOverloads(PyCatalog<Record> &cls) {
+    namespace py = pybind11;
+    using namespace pybind11::literals;
+
+    using Catalog = CatalogT<Record>;
+    using Value = typename Field<T>::Value;
+    using ColumnView = typename Record::ColumnView;
+
+    cls.def("_get_column_from_key",
+            [](Catalog const &self, Key<Array<T>> const &key, pybind11::object py_column_view) {
+                std::shared_ptr<ColumnView> column_view = py_column_view.cast<std::shared_ptr<ColumnView>>();
+                if (!column_view && self.isContiguous()) {
+                    // If there's no column view cached, but there could be,
+                    // make one (and we'll return it so it can be cached by
+                    // the calling Python code).
+                    column_view = std::make_shared<ColumnView>(self.getColumnView());
+                    py_column_view = pybind11::cast(column_view);
+                }
+                if (column_view) {
+                    // If there is a column view, use it to return view.
+                    return pybind11::make_tuple((*column_view)[key].shallow(), column_view);
+                }
+                // If we can't make a column view, extract a copy.
+                return pybind11::make_tuple(_getArrayFromCatalog(self, key), column_view);
+            });
 }
 
 /**
@@ -205,6 +279,7 @@ PyCatalog<Record> declareCatalog(utils::python::WrapperCollection &wrappers, std
 
     using Catalog = CatalogT<Record>;
     using Table = typename Record::Table;
+    using ColumnView = typename Record::ColumnView;
 
     std::string fullName;
     if (isBase) {
@@ -323,10 +398,24 @@ PyCatalog<Record> declareCatalog(utils::python::WrapperCollection &wrappers, std
                 declareCatalogOverloads<float>(cls);
                 declareCatalogOverloads<double>(cls);
                 declareCatalogOverloads<lsst::geom::Angle>(cls);
+                declareCatalogArrayOverloads<std::uint8_t>(cls);
+                declareCatalogArrayOverloads<std::uint16_t>(cls);
+                declareCatalogArrayOverloads<int>(cls);
+                declareCatalogArrayOverloads<float>(cls);
+                declareCatalogArrayOverloads<double>(cls);
 
-                cls.def("_getitem_",
-                        [](Catalog const &self, Key<Flag> const &key) -> ndarray::Array<bool const, 1, 0> {
-                            return _getArrayFromCatalog(self, key);
+                cls.def("_get_column_from_key",
+                        [](Catalog const &self, Key<Flag> const &key, pybind11::object py_column_view) {
+                            // Extra ColumnView arg and return value here are
+                            // for consistency with the non-flag overload (up
+                            // in declareCatalogOverloads).  Casting the array
+                            // (from ndarray::Array to numpy.ndarray) before
+                            // return is also for consistency with that, though
+                            // it's not strictly necessary.
+                            return pybind11::make_tuple(
+                                _getArrayFromCatalog(self, key),
+                                py_column_view
+                            );
                         });
                 cls.def(
                     "_set_flag",
