@@ -60,7 +60,8 @@ namespace {
 // 2: id field
 // 3: focusZ field
 // 4: observationType, scienceProgram, observationReason, object, hasSimulatedContent fields
-int constexpr SERIALIZATION_VERSION = 4;
+// 5: remove exposureId field
+int constexpr SERIALIZATION_VERSION = 5;
 
 auto const nan = std::numeric_limits<double>::quiet_NaN();
 
@@ -234,9 +235,16 @@ public:
 
     static std::string const VERSION_KEY;
 
-    static VisitInfoSchema const& get() {
-        static VisitInfoSchema instance;
-        return instance;
+    static VisitInfoSchema const& get(int version = SERIALIZATION_VERSION) {
+        // This is always the latest version.
+        static VisitInfoSchema instanceLatest(SERIALIZATION_VERSION);
+        // Versions that need to be preserved (e.g., a removed field) should have a separate instance.
+        static VisitInfoSchema instanceWithExposureId(4);
+        if (version < 5) {
+            return instanceWithExposureId;
+        } else {
+            return instanceLatest;
+        }
     }
 
     // No copying
@@ -248,64 +256,66 @@ public:
     VisitInfoSchema& operator=(VisitInfoSchema&&) = delete;
 
 private:
-    VisitInfoSchema()
-            : schema(),
-              exposureId(schema.addField<table::RecordId>("exposureid", "exposure ID", "")),
-              exposureTime(schema.addField<double>("exposuretime", "exposure duration", "s")),
-              darkTime(schema.addField<double>("darktime", "time from CCD flush to readout", "s")),
-              tai(schema.addField<std::int64_t>(
-                      "tai", "TAI date and time at middle of exposure as nsec from unix epoch", "nsec")),
-              ut1(schema.addField<double>("ut1", "UT1 date and time at middle of exposure", "MJD")),
-              era(schema.addField<lsst::geom::Angle>("era", "earth rotation angle at middle of exposure",
-                                                     "")),
-              boresightRaDec(table::CoordKey::addFields(schema, "boresightradec",
-                                                        "sky position of boresight at middle of exposure")),
-              // CoordKey is intended for ICRS coordinates, so use a pair of lsst::geom::Angle fields
-              // to save boresightAzAlt
-              boresightAzAlt_az(schema.addField<lsst::geom::Angle>(
-                      "boresightazalt_az",
-                      "refracted apparent topocentric position of boresight at middle of exposure", "")),
-              boresightAzAlt_alt(schema.addField<lsst::geom::Angle>(
-                      "boresightazalt_alt",
-                      "refracted apparent topocentric position of boresight at middle of exposure", "")),
-              boresightAirmass(schema.addField<double>(
-                      "boresightairmass", "airmass at boresight, relative to zenith at sea level", "")),
-              boresightRotAngle(schema.addField<lsst::geom::Angle>(
-                      "boresightrotangle", "rotation angle at boresight at middle of exposure", "")),
-              rotType(schema.addField<int>("rottype", "rotation type; see VisitInfo.getRotType for details",
-                                           "MJD")),
+    VisitInfoSchema(int _version) : schema() {
+        if (_version < 5) {
+            // exposureId was removed in version 5, but we need to reserve space in the schema for old files.
+            // We don't save the field record, as we don't need to read into it.
+            schema.addField<table::RecordId>("exposureid", "exposure ID", "");
+        }
+        exposureTime = schema.addField<double>("exposuretime", "exposure duration", "s");
+        darkTime = schema.addField<double>("darktime", "time from CCD flush to readout", "s");
+        tai = schema.addField<std::int64_t>(
+                "tai", "TAI date and time at middle of exposure as nsec from unix epoch", "nsec");
+        ut1 = schema.addField<double>("ut1", "UT1 date and time at middle of exposure", "MJD");
+        era = schema.addField<lsst::geom::Angle>("era", "earth rotation angle at middle of exposure", "");
+        boresightRaDec = table::CoordKey::addFields(schema, "boresightradec",
+                                                    "sky position of boresight at middle of exposure");
+        // CoordKey is intended for ICRS coordinates, so use a pair of lsst::geom::Angle fields
+        // to save boresightAzAlt
+        boresightAzAlt_az = schema.addField<lsst::geom::Angle>(
+                "boresightazalt_az",
+                "refracted apparent topocentric position of boresight at middle of exposure", "");
+        boresightAzAlt_alt = schema.addField<lsst::geom::Angle>(
+                "boresightazalt_alt",
+                "refracted apparent topocentric position of boresight at middle of exposure", "");
+        boresightAirmass = schema.addField<double>(
+                "boresightairmass", "airmass at boresight, relative to zenith at sea level", "");
+        boresightRotAngle = schema.addField<lsst::geom::Angle>(
+                "boresightrotangle", "rotation angle at boresight at middle of exposure", "");
+        rotType =
+                schema.addField<int>("rottype", "rotation type; see VisitInfo.getRotType for details", "MJD");
 
-              // observatory data
-              latitude(schema.addField<lsst::geom::Angle>(
-                      "latitude", "latitude of telescope (+ is east of Greenwich)", "")),
-              longitude(schema.addField<lsst::geom::Angle>("longitude", "longitude of telescope", "")),
-              elevation(schema.addField<double>("elevation", "elevation of telescope", "")),
+        // observatory data
+        latitude = schema.addField<lsst::geom::Angle>("latitude",
+                                                      "latitude of telescope (+ is east of Greenwich)", "");
+        longitude = schema.addField<lsst::geom::Angle>("longitude", "longitude of telescope", "");
+        elevation = schema.addField<double>("elevation", "elevation of telescope", "");
 
-              // weather data
-              airTemperature(schema.addField<double>("airtemperature", "air temperature", "C")),
-              airPressure(schema.addField<double>("airpressure", "air pressure", "Pascal")),
-              humidity(schema.addField<double>("humidity", "humidity (%)", "")),
+        // weather data
+        airTemperature = schema.addField<double>("airtemperature", "air temperature", "C");
+        airPressure = schema.addField<double>("airpressure", "air pressure", "Pascal");
+        humidity = schema.addField<double>("humidity", "humidity (%)", "");
 
-              instrumentLabel(schema.addField<std::string>(
-                      "instrumentlabel", "Short name of the instrument that took this data", "", 0)),
+        instrumentLabel = schema.addField<std::string>(
+                "instrumentlabel", "Short name of the instrument that took this data", "", 0);
 
-              // for internal support
-              version(schema.addField<int>(VERSION_KEY, "version of this VisitInfo")),
+        // for internal support
+        version = schema.addField<int>(VERSION_KEY, "version of this VisitInfo");
 
-              idnum(schema.addField<table::RecordId>("idnum", "identifier of this full focal plane exposure",
-                                                     "")),
+        idnum = schema.addField<table::RecordId>("idnum", "identifier of this full focal plane exposure", "");
 
-              focusZ(schema.addField<double>("focusz", "defocal distance", "mm")),
+        focusZ = schema.addField<double>("focusz", "defocal distance", "mm");
 
-              observationType(schema.addField<std::string>(
-                      "observationType", "type of this observation (e.g. science, flat, bias)", "", 0)),
-              scienceProgram(schema.addField<std::string>(
-                      "scienceProgram", "observing program (survey or proposal) identifier", "", 0)),
-              observationReason(schema.addField<std::string>(
-                      "observationReason", "reason this observation was taken, or its purpose", "", 0)),
-              object(schema.addField<std::string>("object", "object of interest or field name", "", 0)),
-              hasSimulatedContent(schema.addField<afw::table::Flag>(
-                      "hasSimulatedContent", "Was any part of this observation simulated?")) {}
+        observationType = schema.addField<std::string>(
+                "observationType", "type of this observation (e.g. science, flat, bias)", "", 0);
+        scienceProgram = schema.addField<std::string>(
+                "scienceProgram", "observing program (survey or proposal) identifier", "", 0);
+        observationReason = schema.addField<std::string>(
+                "observationReason", "reason this observation was taken, or its purpose", "", 0);
+        object = schema.addField<std::string>("object", "object of interest or field name", "", 0);
+        hasSimulatedContent = schema.addField<afw::table::Flag>(
+                "hasSimulatedContent", "Was any part of this observation simulated?");
+    }
 };
 std::string const VisitInfoSchema::VERSION_KEY = "version";
 
@@ -313,7 +323,6 @@ class VisitInfoFactory : public table::io::PersistableFactory {
 public:
     std::shared_ptr<table::io::Persistable> read(InputArchive const& archive,
                                                  CatalogVector const& catalogs) const override {
-        VisitInfoSchema const& keys = VisitInfoSchema::get();
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
         table::BaseRecord const& record = catalogs.front().front();
@@ -325,6 +334,7 @@ public:
                                                                   std::to_string(version));
         }
 
+        VisitInfoSchema const& keys = VisitInfoSchema::get(version);
         // Version-dependent fields
         std::string instrumentLabel = version >= 1 ? record.get(keys.instrumentLabel) : "";
         table::RecordId id = version >= 2 ? record.get(keys.idnum) : 0;

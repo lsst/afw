@@ -351,6 +351,7 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
             self.assertEqual(visitInfo.getObservationReason(), "")
             self.assertEqual(visitInfo.getObject(), "")
             self.assertEqual(visitInfo.getHasSimulatedContent(), False)
+        # version == 5 removed the exposureId field
 
     def testPersistenceVersions(self):
         """Test that older versions are handled appropriately.
@@ -363,6 +364,7 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
         self._testFitsRead(self.data1, os.path.join(dataDir, "visitInfo-version-2.fits"), 2)
         self._testFitsRead(self.data1, os.path.join(dataDir, "visitInfo-version-3.fits"), 3)
         self._testFitsRead(self.data1, os.path.join(dataDir, "visitInfo-version-4.fits"), 4)
+        self._testFitsRead(self.data1, os.path.join(dataDir, "visitInfo-version-5.fits"), 5)
 
         # Check that reading a newer file raises a useful exception.
         with self.assertRaisesRegex(TypeError,
