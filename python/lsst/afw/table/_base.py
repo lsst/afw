@@ -101,19 +101,13 @@ class Catalog(metaclass=TemplateMeta):
             if key.dtype == bool:
                 return self.subset(key)
             raise RuntimeError(f"Unsupported array type for indexing non-contiguous Catalog: {key.dtype}")
-        elif isinstance(key, Key) or isinstance(key, str):
-            if not self.isContiguous():
-                if isinstance(key, str):
-                    key = self.schema[key].asKey()
-                array = self._getitem_(key)
-                # This array doesn't share memory with the Catalog, so don't let it be modified by
-                # the user who thinks that the Catalog itself is being modified.
-                # Just be aware that this array can only be passed down to C++ as an ndarray::Array<T const>
-                # instead of an ordinary ndarray::Array<T>. If pybind isn't letting it down into C++,
-                # you may have left off the 'const' in the definition.
-                array.flags.writeable = False
-                return array
-            return self.columns[key]
+        elif isinstance(key, str):
+            key = self.schema.find(key).key
+            result, self._columns = self._get_column_from_key(key, self._columns)
+            return result
+        elif isinstance(key, Key):
+            result, self._columns = self._get_column_from_key(key, self._columns)
+            return result
         else:
             return self._getitem_(key)
 
@@ -288,7 +282,7 @@ class Catalog(metaclass=TemplateMeta):
                                          "unless copy=True or unviewable='copy' or 'skip'.")
                     elif unviewable == "skip":
                         continue
-                data = self.columns.get_bool_array(key)
+                data = self[key]
             elif key.getTypeString() == "Angle":
                 data = self.columns.get(key)
                 unit = "radian"
@@ -355,6 +349,97 @@ class Catalog(metaclass=TemplateMeta):
 
     def __repr__(self):
         return "%s\n%s" % (type(self), self)
+
+    def extract(self, *patterns, **kwds):
+        """Extract a dictionary of {<name>: <column-array>} in which the field
+        names match the given shell-style glob pattern(s).
+
+        Any number of glob patterns may be passed (including none); the result
+        will be the union of all the result of each glob considered separately.
+
+        Note that extract("*", copy=True) provides an easy way to transform a
+        catalog into a set of writeable contiguous NumPy arrays.
+
+        This routines unpacks `Flag` columns into full boolean arrays.  String
+        fields are silently ignored.
+
+        Parameters
+        ----------
+        patterns : Array of `str`
+            List of glob patterns to use to select field names.
+        kwds : `dict`
+            Dictionary of additional keyword arguments.  May contain:
+
+            ``items`` : `list`
+                The result of a call to self.schema.extract(); this will be
+                used instead of doing any new matching, and allows the pattern
+                matching to be reused to extract values from multiple records.
+                This keyword is incompatible with any position arguments and
+                the regex, sub, and ordered keyword arguments.
+            ``where`` : array index expression
+                Any expression that can be passed as indices to a NumPy array,
+                including slices, boolean arrays, and index arrays, that will
+                be used to index each column array.  This is applied before
+                arrays are copied when copy is True, so if the indexing results
+                in an implicit copy no unnecessary second copy is performed.
+            ``copy`` : `bool`
+                If True, the returned arrays will be contiguous copies rather
+                than strided views into the catalog.  This ensures that the
+                lifetime of the catalog is not tied to the lifetime of a
+                particular catalog, and it also may improve the performance if
+                the array is used repeatedly. Default is False.  Copies are
+                always made if the catalog is noncontiguous, but if
+                ``copy=False`` these set as read-only to ensure code does not
+                assume they are views that could modify the original catalog.
+            ``regex`` : `str` or `re` pattern
+                A regular expression to be used in addition to any glob
+                patterns passed as positional arguments.  Note that this will
+                be compared with re.match, not re.search.
+            ``sub`` : `str`
+                A replacement string (see re.MatchObject.expand) used to set
+                the dictionary keys of any fields matched by regex.
+            ``ordered`` : `bool`
+                If True, a collections.OrderedDict will be returned instead of
+                a standard dict, with the order corresponding to the definition
+                order of the Schema. Default is False.
+
+        Returns
+        -------
+        d : `dict`
+            Dictionary of extracted name-column array sets.
+
+        Raises
+        ------
+        ValueError
+            Raised if a list of ``items`` is supplied with additional keywords.
+        """
+        copy = kwds.pop("copy", False)
+        where = kwds.pop("where", None)
+        d = kwds.pop("items", None)
+        # If ``items`` is given as a kwd, an extraction has already been
+        # performed and there shouldn't be any additional keywords. Otherwise
+        # call schema.extract to load the dictionary.
+        if d is None:
+            d = self.schema.extract(*patterns, **kwds).copy()
+        elif kwds:
+            raise ValueError(
+                "kwd 'items' was specified, which is not compatible with additional keywords")
+
+        def processArray(a):
+            if where is not None:
+                a = a[where]
+            if copy:
+                a = a.copy()
+            return a
+
+        # must use list because we might be adding/deleting elements
+        for name, schemaItem in list(d.items()):
+            key = schemaItem.key
+            if key.getTypeString() == "String":
+                del d[name]
+            else:
+                d[name] = processArray(self[schemaItem.key])
+        return d
 
 
 Catalog.register("Base", BaseCatalog)

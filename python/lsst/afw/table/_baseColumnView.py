@@ -23,6 +23,8 @@ __all__ = []  # importing this module adds methods to BaseColumnView
 
 import numpy as np
 
+from deprecated.sphinx import deprecated
+
 from lsst.utils import continueClass
 from ._table import KeyFlag, _BaseColumnViewBase
 
@@ -78,6 +80,15 @@ class _BaseColumnViewBase:  # noqa: F811
 
     set = __setitem__
 
+    # TODO: remove on DM-32980.
+    @deprecated(
+        reason=(
+            "Catalog.__getitem__ now provides better support for "
+            "accessing Flag/bool columns.  Will be removed after v27."
+        ),
+        version="v26",
+        category=FutureWarning,
+    )
     def get_bool_array(self, key):
         """Get the value of a flag column as a boolean array; key must be a
         key object or the name of a field.
@@ -106,18 +117,15 @@ class _BaseColumnViewBase:  # noqa: F811
         names match the given shell-style glob pattern(s).
 
         Any number of glob patterns may be passed (including none); the result
-        will be the union of all the result of each glob considered
-        separately.
+        will be the union of all the result of each glob considered separately.
 
         Note that extract("*", copy=True) provides an easy way to transform a
         row-major ColumnView into a possibly more efficient set of contiguous
         NumPy arrays.
 
-        This routines unpacks `Flag` columns into full boolean arrays and
-        covariances into dense (i.e. non-triangular packed) arrays with
-        dimension (N,M,M), where N is the number of records and M is the
-        dimension of the covariance matrix.  String fields are silently
-        ignored.
+        String fields are silently ignored.  Support for `Flag` columns is
+        deprecated; at present they are copied into full boolean arrays, but
+        after v26 they will be silently ignored as well.
 
         Parameters
         ----------
@@ -127,40 +135,34 @@ class _BaseColumnViewBase:  # noqa: F811
             Dictionary of additional keyword arguments.  May contain:
 
             ``items`` : `list`
-                The result of a call to self.schema.extract(); this
-                will be used instead of doing any new matching, and
-                allows the pattern matching to be reused to extract
-                values from multiple records.  This keyword is
-                incompatible with any position arguments and the
-                regex, sub, and ordered keyword arguments.
+                The result of a call to self.schema.extract(); this will be
+                used instead of doing any new matching, and allows the pattern
+                matching to be reused to extract values from multiple records.
+                This keyword is incompatible with any position arguments and
+                the regex, sub, and ordered keyword arguments.
             ``where`` : array index expression
-                Any expression that can be passed as indices to a
-                NumPy array, including slices, boolean arrays, and
-                index arrays, that will be used to index each column
-                array.  This is applied before arrays are copied when
-                copy is True, so if the indexing results in an
-                implicit copy no unnecessary second copy is performed.
+                Any expression that can be passed as indices to a NumPy array,
+                including slices, boolean arrays, and index arrays, that will
+                be used to index each column array.  This is applied before
+                arrays are copied when copy is True, so if the indexing results
+                in an implicit copy no unnecessary second copy is performed.
             ``copy`` : `bool`
-                If True, the returned arrays will be contiguous copies
-                rather than strided views into the catalog.  This
-                ensures that the lifetime of the catalog is not tied
-                to the lifetime of a particular catalog, and it also
-                may improve the performance if the array is used
-                repeatedly. Default is False.
+                If True, the returned arrays will be contiguous copies rather
+                than strided views into the catalog.  This ensures that the
+                lifetime of the catalog is not tied to the lifetime of a
+                particular catalog, and it also may improve the performance if
+                the array is used repeatedly. Default is False.
             ``regex`` : `str` or `re` pattern
-                A regular expression to be used in addition to any
-                glob patterns passed as positional arguments.  Note
-                that this will be compared with re.match, not
-                re.search.
+                A regular expression to be used in addition to any glob
+                patterns passed as positional arguments.  Note that this will
+                be compared with re.match, not re.search.
             ``sub`` : `str`
-                A replacement string (see re.MatchObject.expand) used
-                to set the dictionary keys of any fields matched by
-                regex.
+                A replacement string (see re.MatchObject.expand) used to set
+                the dictionary keys of any fields matched by regex.
             ``ordered`` : `bool`
-                If True, a collections.OrderedDict will be returned
-                instead of a standard dict, with the order
-                corresponding to the definition order of the
-                Schema. Default is False.
+                If True, a collections.OrderedDict will be returned instead of
+                a standard dict, with the order corresponding to the definition
+                order of the Schema. Default is False.
 
         Returns
         -------
@@ -170,15 +172,14 @@ class _BaseColumnViewBase:  # noqa: F811
         Raises
         ------
         ValueError
-            Raised if a list of ``items`` is supplied with additional
-            keywords.
+            Raised if a list of ``items`` is supplied with additional keywords.
         """
         copy = kwds.pop("copy", False)
         where = kwds.pop("where", None)
         d = kwds.pop("items", None)
-        # If ``items`` is given as a kwd, an extraction has already been performed and there shouldn't be
-        # any additional keywords. Otherwise call schema.extract to load the
-        # dictionary.
+        # If ``items`` is given as a kwd, an extraction has already been
+        # performed and there shouldn't be any additional keywords. Otherwise
+        # call schema.extract to load the dictionary.
         if d is None:
             d = self.schema.extract(*patterns, **kwds).copy()
         elif kwds:
