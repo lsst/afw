@@ -74,7 +74,6 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
     @staticmethod
     def createVisitInfo():
         return lsst.afw.image.VisitInfo(
-            10313423,
             10.01,
             11.02,
             DateTime(65321.1, DateTime.MJD, DateTime.TAI),

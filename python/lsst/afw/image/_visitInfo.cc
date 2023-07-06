@@ -60,14 +60,14 @@ void declareVisitInfo(lsst::utils::python::WrapperCollection &wrappers) {
                                                                                       "VisitInfo"),
             [](auto &mod, auto &cls) {
                 /* Constructors */
-                cls.def(py::init<table::RecordId, double, double, daf::base::DateTime const &, double,
+                cls.def(py::init<double, double, daf::base::DateTime const &, double,
                                  lsst::geom::Angle const &, lsst::geom::SpherePoint const &,
                                  lsst::geom::SpherePoint const &, double, lsst::geom::Angle const &,
                                  RotType const &, coord::Observatory const &, coord::Weather const &,
                                  std::string const &, table::RecordId const &, double, std::string const &,
                                  std::string const &, std::string const &, std::string const &, bool>(),
-                        "exposureId"_a = 0, "exposureTime"_a = nan, "darkTime"_a = nan,
-                        "date"_a = daf::base::DateTime(), "ut1"_a = nan, "era"_a = nanAngle,
+                        "exposureTime"_a = nan, "darkTime"_a = nan, "date"_a = daf::base::DateTime(),
+                        "ut1"_a = nan, "era"_a = nanAngle,
                         "boresightRaDec"_a = lsst::geom::SpherePoint(nanAngle, nanAngle),
                         "boresightAzAlt"_a = lsst::geom::SpherePoint(nanAngle, nanAngle),
                         "boresightAirmass"_a = nan, "boresightRotAngle"_a = nanAngle,
@@ -91,7 +91,6 @@ void declareVisitInfo(lsst::utils::python::WrapperCollection &wrappers) {
                         py::is_operator());
 
                 /* Members */
-                cls.def("getExposureId", &VisitInfo::getExposureId);
                 cls.def("getExposureTime", &VisitInfo::getExposureTime);
                 cls.def("getDarkTime", &VisitInfo::getDarkTime);
                 cls.def("getDate", &VisitInfo::getDate);

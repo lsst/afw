@@ -60,7 +60,8 @@ namespace {
 // 2: id field
 // 3: focusZ field
 // 4: observationType, scienceProgram, observationReason, object, hasSimulatedContent fields
-int constexpr SERIALIZATION_VERSION = 4;
+// 5: remove exposureId field
+int constexpr SERIALIZATION_VERSION = 5;
 
 auto const nan = std::numeric_limits<double>::quiet_NaN();
 
@@ -198,7 +199,6 @@ RotType rotTypeEnumFromStr(std::string const& rotTypeName) {
 class VisitInfoSchema {
 public:
     table::Schema schema;
-    table::Key<table::RecordId> exposureId;
     table::Key<double> exposureTime;
     table::Key<double> darkTime;
     table::Key<std::int64_t> tai;
@@ -234,9 +234,16 @@ public:
 
     static std::string const VERSION_KEY;
 
-    static VisitInfoSchema const& get() {
-        static VisitInfoSchema instance;
-        return instance;
+    static VisitInfoSchema const& get(int version = SERIALIZATION_VERSION) {
+        // This is always the latest version.
+        static VisitInfoSchema instanceLatest(SERIALIZATION_VERSION);
+        // Versions that need to be preserved (e.g., a removed field) should have a separate instance.
+        static VisitInfoSchema instanceWithExposureId(4);
+        if (version < 5) {
+            return instanceWithExposureId;
+        } else {
+            return instanceLatest;
+        }
     }
 
     // No copying
@@ -248,64 +255,66 @@ public:
     VisitInfoSchema& operator=(VisitInfoSchema&&) = delete;
 
 private:
-    VisitInfoSchema()
-            : schema(),
-              exposureId(schema.addField<table::RecordId>("exposureid", "exposure ID", "")),
-              exposureTime(schema.addField<double>("exposuretime", "exposure duration", "s")),
-              darkTime(schema.addField<double>("darktime", "time from CCD flush to readout", "s")),
-              tai(schema.addField<std::int64_t>(
-                      "tai", "TAI date and time at middle of exposure as nsec from unix epoch", "nsec")),
-              ut1(schema.addField<double>("ut1", "UT1 date and time at middle of exposure", "MJD")),
-              era(schema.addField<lsst::geom::Angle>("era", "earth rotation angle at middle of exposure",
-                                                     "")),
-              boresightRaDec(table::CoordKey::addFields(schema, "boresightradec",
-                                                        "sky position of boresight at middle of exposure")),
-              // CoordKey is intended for ICRS coordinates, so use a pair of lsst::geom::Angle fields
-              // to save boresightAzAlt
-              boresightAzAlt_az(schema.addField<lsst::geom::Angle>(
-                      "boresightazalt_az",
-                      "refracted apparent topocentric position of boresight at middle of exposure", "")),
-              boresightAzAlt_alt(schema.addField<lsst::geom::Angle>(
-                      "boresightazalt_alt",
-                      "refracted apparent topocentric position of boresight at middle of exposure", "")),
-              boresightAirmass(schema.addField<double>(
-                      "boresightairmass", "airmass at boresight, relative to zenith at sea level", "")),
-              boresightRotAngle(schema.addField<lsst::geom::Angle>(
-                      "boresightrotangle", "rotation angle at boresight at middle of exposure", "")),
-              rotType(schema.addField<int>("rottype", "rotation type; see VisitInfo.getRotType for details",
-                                           "MJD")),
+    VisitInfoSchema(int _version) : schema() {
+        if (_version < 5) {
+            // exposureId was removed in version 5, but we need to reserve space in the schema for old files.
+            // We don't save the field record, as we don't need to read into it.
+            schema.addField<table::RecordId>("exposureid", "exposure ID", "");
+        }
+        exposureTime = schema.addField<double>("exposuretime", "exposure duration", "s");
+        darkTime = schema.addField<double>("darktime", "time from CCD flush to readout", "s");
+        tai = schema.addField<std::int64_t>(
+                "tai", "TAI date and time at middle of exposure as nsec from unix epoch", "nsec");
+        ut1 = schema.addField<double>("ut1", "UT1 date and time at middle of exposure", "MJD");
+        era = schema.addField<lsst::geom::Angle>("era", "earth rotation angle at middle of exposure", "");
+        boresightRaDec = table::CoordKey::addFields(schema, "boresightradec",
+                                                    "sky position of boresight at middle of exposure");
+        // CoordKey is intended for ICRS coordinates, so use a pair of lsst::geom::Angle fields
+        // to save boresightAzAlt
+        boresightAzAlt_az = schema.addField<lsst::geom::Angle>(
+                "boresightazalt_az",
+                "refracted apparent topocentric position of boresight at middle of exposure", "");
+        boresightAzAlt_alt = schema.addField<lsst::geom::Angle>(
+                "boresightazalt_alt",
+                "refracted apparent topocentric position of boresight at middle of exposure", "");
+        boresightAirmass = schema.addField<double>(
+                "boresightairmass", "airmass at boresight, relative to zenith at sea level", "");
+        boresightRotAngle = schema.addField<lsst::geom::Angle>(
+                "boresightrotangle", "rotation angle at boresight at middle of exposure", "");
+        rotType =
+                schema.addField<int>("rottype", "rotation type; see VisitInfo.getRotType for details", "MJD");
 
-              // observatory data
-              latitude(schema.addField<lsst::geom::Angle>(
-                      "latitude", "latitude of telescope (+ is east of Greenwich)", "")),
-              longitude(schema.addField<lsst::geom::Angle>("longitude", "longitude of telescope", "")),
-              elevation(schema.addField<double>("elevation", "elevation of telescope", "")),
+        // observatory data
+        latitude = schema.addField<lsst::geom::Angle>("latitude",
+                                                      "latitude of telescope (+ is east of Greenwich)", "");
+        longitude = schema.addField<lsst::geom::Angle>("longitude", "longitude of telescope", "");
+        elevation = schema.addField<double>("elevation", "elevation of telescope", "");
 
-              // weather data
-              airTemperature(schema.addField<double>("airtemperature", "air temperature", "C")),
-              airPressure(schema.addField<double>("airpressure", "air pressure", "Pascal")),
-              humidity(schema.addField<double>("humidity", "humidity (%)", "")),
+        // weather data
+        airTemperature = schema.addField<double>("airtemperature", "air temperature", "C");
+        airPressure = schema.addField<double>("airpressure", "air pressure", "Pascal");
+        humidity = schema.addField<double>("humidity", "humidity (%)", "");
 
-              instrumentLabel(schema.addField<std::string>(
-                      "instrumentlabel", "Short name of the instrument that took this data", "", 0)),
+        instrumentLabel = schema.addField<std::string>(
+                "instrumentlabel", "Short name of the instrument that took this data", "", 0);
 
-              // for internal support
-              version(schema.addField<int>(VERSION_KEY, "version of this VisitInfo")),
+        // for internal support
+        version = schema.addField<int>(VERSION_KEY, "version of this VisitInfo");
 
-              idnum(schema.addField<table::RecordId>("idnum", "identifier of this full focal plane exposure",
-                                                     "")),
+        idnum = schema.addField<table::RecordId>("idnum", "identifier of this full focal plane exposure", "");
 
-              focusZ(schema.addField<double>("focusz", "defocal distance", "mm")),
+        focusZ = schema.addField<double>("focusz", "defocal distance", "mm");
 
-              observationType(schema.addField<std::string>(
-                      "observationType", "type of this observation (e.g. science, flat, bias)", "", 0)),
-              scienceProgram(schema.addField<std::string>(
-                      "scienceProgram", "observing program (survey or proposal) identifier", "", 0)),
-              observationReason(schema.addField<std::string>(
-                      "observationReason", "reason this observation was taken, or its purpose", "", 0)),
-              object(schema.addField<std::string>("object", "object of interest or field name", "", 0)),
-              hasSimulatedContent(schema.addField<afw::table::Flag>(
-                      "hasSimulatedContent", "Was any part of this observation simulated?")) {}
+        observationType = schema.addField<std::string>(
+                "observationType", "type of this observation (e.g. science, flat, bias)", "", 0);
+        scienceProgram = schema.addField<std::string>(
+                "scienceProgram", "observing program (survey or proposal) identifier", "", 0);
+        observationReason = schema.addField<std::string>(
+                "observationReason", "reason this observation was taken, or its purpose", "", 0);
+        object = schema.addField<std::string>("object", "object of interest or field name", "", 0);
+        hasSimulatedContent = schema.addField<afw::table::Flag>(
+                "hasSimulatedContent", "Was any part of this observation simulated?");
+    }
 };
 std::string const VisitInfoSchema::VERSION_KEY = "version";
 
@@ -313,7 +322,6 @@ class VisitInfoFactory : public table::io::PersistableFactory {
 public:
     std::shared_ptr<table::io::Persistable> read(InputArchive const& archive,
                                                  CatalogVector const& catalogs) const override {
-        VisitInfoSchema const& keys = VisitInfoSchema::get();
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
         table::BaseRecord const& record = catalogs.front().front();
@@ -325,6 +333,7 @@ public:
                                                                   std::to_string(version));
         }
 
+        VisitInfoSchema const& keys = VisitInfoSchema::get(version);
         // Version-dependent fields
         std::string instrumentLabel = version >= 1 ? record.get(keys.instrumentLabel) : "";
         table::RecordId id = version >= 2 ? record.get(keys.idnum) : 0;
@@ -338,9 +347,9 @@ public:
         bool hasSimulatedContent = version >= 4 ? record.get(keys.hasSimulatedContent) : false;
 
         std::shared_ptr<VisitInfo> result(
-                new VisitInfo(record.get(keys.exposureId), record.get(keys.exposureTime),
-                              record.get(keys.darkTime), ::DateTime(record.get(keys.tai), ::DateTime::TAI),
-                              record.get(keys.ut1), record.get(keys.era), record.get(keys.boresightRaDec),
+                new VisitInfo(record.get(keys.exposureTime), record.get(keys.darkTime),
+                              ::DateTime(record.get(keys.tai), ::DateTime::TAI), record.get(keys.ut1),
+                              record.get(keys.era), record.get(keys.boresightRaDec),
                               lsst::geom::SpherePoint(record.get(keys.boresightAzAlt_az),
                                                       record.get(keys.boresightAzAlt_alt)),
                               record.get(keys.boresightAirmass), record.get(keys.boresightRotAngle),
@@ -380,35 +389,13 @@ namespace detail {
 int stripVisitInfoKeywords(daf::base::PropertySet& metadata) {
     int nstripped = 0;
 
-    std::vector<std::string> keyList = {"EXPID",
-                                        "EXPTIME",
-                                        "DARKTIME",
-                                        "DATE-AVG",
-                                        "TIMESYS",
-                                        "TIME-MID",
-                                        "MJD-AVG-UT1",
-                                        "AVG-ERA",
-                                        "BORE-RA",
-                                        "BORE-DEC",
-                                        "BORE-AZ",
-                                        "BORE-ALT",
-                                        "BORE-AIRMASS",
-                                        "BORE-ROTANG",
-                                        "ROTTYPE",
-                                        "OBS-LONG",
-                                        "OBS-LAT",
-                                        "OBS-ELEV",
-                                        "AIRTEMP",
-                                        "AIRPRESS",
-                                        "HUMIDITY",
-                                        "INSTRUMENT",
-                                        "IDNUM",
-                                        "FOCUSZ",
-                                        "OBSTYPE",
-                                        "PROGRAM",
-                                        "REASON",
-                                        "OBJECT",
-                                        "HAS-SIMULATED-CONTENT"};
+    std::vector<std::string> keyList = {"EXPTIME",     "DARKTIME",    "DATE-AVG", "TIMESYS",
+                                        "TIME-MID",    "MJD-AVG-UT1", "AVG-ERA",  "BORE-RA",
+                                        "BORE-DEC",    "BORE-AZ",     "BORE-ALT", "BORE-AIRMASS",
+                                        "BORE-ROTANG", "ROTTYPE",     "OBS-LONG", "OBS-LAT",
+                                        "OBS-ELEV",    "AIRTEMP",     "AIRPRESS", "HUMIDITY",
+                                        "INSTRUMENT",  "IDNUM",       "FOCUSZ",   "OBSTYPE",
+                                        "PROGRAM",     "REASON",      "OBJECT",   "HAS-SIMULATED-CONTENT"};
     for (auto&& key : keyList) {
         if (metadata.exists(key)) {
             metadata.remove(key);
@@ -419,9 +406,6 @@ int stripVisitInfoKeywords(daf::base::PropertySet& metadata) {
 }
 
 void setVisitInfoMetadata(daf::base::PropertyList& metadata, VisitInfo const& visitInfo) {
-    if (visitInfo.getExposureId() != 0) {
-        metadata.set("EXPID", visitInfo.getExposureId());
-    }
     setDouble(metadata, "EXPTIME", visitInfo.getExposureTime(), "Exposure time (sec)");
     setDouble(metadata, "DARKTIME", visitInfo.getDarkTime(), "Time from CCD flush to readout (sec)");
     if (visitInfo.getDate().isValid()) {
@@ -467,8 +451,7 @@ void setVisitInfoMetadata(daf::base::PropertyList& metadata, VisitInfo const& vi
 }  // namespace detail
 
 VisitInfo::VisitInfo(daf::base::PropertySet const& metadata)
-        : _exposureId(0),
-          _exposureTime(nan),  // don't use getDouble because str values are also accepted
+        : _exposureTime(nan),  // don't use getDouble because str values are also accepted
           _darkTime(getDouble(metadata, "DARKTIME")),
           _date(),
           _ut1(getDouble(metadata, "MJD-AVG-UT1")),
@@ -493,11 +476,7 @@ VisitInfo::VisitInfo(daf::base::PropertySet const& metadata)
           _object(getString(metadata, "OBJECT")),
           // default false for backwards compatibility
           _hasSimulatedContent(false) {
-    auto key = "EXPID";
-    if (metadata.exists(key) && !metadata.isUndefined(key)) {
-        _exposureId = metadata.getAsInt64(key);
-    }
-    key = "IDNUM";
+    auto key = "IDNUM";
     if (metadata.exists(key) && !metadata.isUndefined(key)) {
         _id = metadata.getAsInt64(key);
     }
@@ -570,9 +549,8 @@ bool _eqOrNonFinite(lsst::geom::SpherePoint const& lhs, lsst::geom::SpherePoint 
 }
 
 bool VisitInfo::operator==(VisitInfo const& other) const {
-    return _exposureId == other.getExposureId() && _eqOrNan(_exposureTime, other.getExposureTime()) &&
-           _eqOrNan(_darkTime, other.getDarkTime()) && _date == other.getDate() &&
-           _eqOrNan(_ut1, other.getUt1()) && _eqOrNan(_era, other.getEra()) &&
+    return _eqOrNan(_exposureTime, other.getExposureTime()) && _eqOrNan(_darkTime, other.getDarkTime()) &&
+           _date == other.getDate() && _eqOrNan(_ut1, other.getUt1()) && _eqOrNan(_era, other.getEra()) &&
            _eqOrNonFinite(_boresightRaDec, other.getBoresightRaDec()) &&
            _eqOrNonFinite(_boresightAzAlt, other.getBoresightAzAlt()) &&
            _eqOrNan(_boresightAirmass, other.getBoresightAirmass()) &&
@@ -587,7 +565,7 @@ bool VisitInfo::operator==(VisitInfo const& other) const {
 
 std::size_t VisitInfo::hash_value() const noexcept {
     // Completely arbitrary seed
-    return utils::hashCombine(17, _exposureId, _exposureTime, _darkTime, _date, _ut1, _era, _boresightRaDec,
+    return utils::hashCombine(17, _exposureTime, _darkTime, _date, _ut1, _era, _boresightRaDec,
                               _boresightAzAlt, _boresightAirmass, _boresightRotAngle, _rotType, _observatory,
                               _weather, _instrumentLabel, _id, _focusZ, _observationType, _scienceProgram,
                               _observationReason, _object, _hasSimulatedContent);
@@ -599,7 +577,6 @@ void VisitInfo::write(OutputArchiveHandle& handle) const {
     VisitInfoSchema const& keys = VisitInfoSchema::get();
     table::BaseCatalog cat = handle.makeCatalog(keys.schema);
     std::shared_ptr<table::BaseRecord> record = cat.addNew();
-    record->set(keys.exposureId, getExposureId());
     record->set(keys.exposureTime, getExposureTime());
     record->set(keys.darkTime, getDarkTime());
     record->set(keys.tai, getDate().nsecs(::DateTime::TAI));
@@ -661,7 +638,6 @@ bool VisitInfo::equals(typehandling::Storable const& other) const noexcept {
 std::string VisitInfo::toString() const {
     std::stringstream buffer;
     buffer << "VisitInfo(";
-    buffer << "exposureId=" << getExposureId() << ", ";
     buffer << "exposureTime=" << getExposureTime() << ", ";
     buffer << "darkTime=" << getDarkTime() << ", ";
     buffer << "date=" << (getDate().isValid() ? getDate().toString(daf::base::DateTime::TAI) : "<invalid>")

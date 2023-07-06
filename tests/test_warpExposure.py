@@ -70,8 +70,7 @@ else:
 
 def makeVisitInfo():
     """Return a non-NaN visitInfo."""
-    return afwImage.VisitInfo(exposureId=10313423,
-                              exposureTime=10.01,
+    return afwImage.VisitInfo(exposureTime=10.01,
                               darkTime=11.02,
                               date=dafBase.DateTime(65321.1, dafBase.DateTime.MJD, dafBase.DateTime.TAI),
                               ut1=12345.1,
