@@ -203,7 +203,7 @@ public:
      * Return a subimage corresponding to the given box.
      *
      * @param  bbox   Bounding box of the subimage returned.
-     * @param  origin Origin bbox is rleative to; PARENT accounts for xy0, LOCAL does not.
+     * @param  origin Origin bbox is relative to; PARENT accounts for xy0, LOCAL does not.
      * @return        A subimage view into this.
      *
      * This method is wrapped as __getitem__ in Python.
