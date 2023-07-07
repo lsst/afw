@@ -137,9 +137,9 @@ PyExposure<PixelT> declareExposure(lsst::utils::python::WrapperCollection &wrapp
 
                 cls.def("subset", &ExposureT::subset, "bbox"_a, "origin"_a = PARENT);
 
-                cls.def("writeFits", (void (ExposureT::*)(std::string const &) const) & ExposureT::writeFits);
+                cls.def("writeFits", (void(ExposureT::*)(std::string const &) const) & ExposureT::writeFits);
                 cls.def("writeFits",
-                        (void (ExposureT::*)(fits::MemFileManager &) const) & ExposureT::writeFits);
+                        (void(ExposureT::*)(fits::MemFileManager &) const) & ExposureT::writeFits);
                 cls.def("writeFits", [](ExposureT &self, fits::Fits &fits) { self.writeFits(fits); });
 
                 cls.def(
