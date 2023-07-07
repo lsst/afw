@@ -180,6 +180,9 @@ PyExposure<PixelT> declareExposure(lsst::utils::python::WrapperCollection &wrapp
                         py::overload_cast<lsst::geom::Point2D const &, lsst::geom::Extent2I const &>(
                                 &ExposureT::getCutout, py::const_),
                         "center"_a, "size"_a);
+                cls.def("getCutout",
+                        py::overload_cast<lsst::geom::Box2I const &>(&ExposureT::getCutout, py::const_),
+                        "box"_a);
             });
 }
 }  // namespace

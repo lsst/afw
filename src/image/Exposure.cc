@@ -238,6 +238,12 @@ Exposure<ImageT, MaskT, VarianceT> Exposure<ImageT, MaskT, VarianceT>::getCutout
     return cutout;
 }
 
+template <typename ImageT, typename MaskT, typename VarianceT>
+Exposure<ImageT, MaskT, VarianceT> Exposure<ImageT, MaskT, VarianceT>::getCutout(
+        lsst::geom::Box2I const &box) const {
+    return getCutout(box.getCenter(), box.getDimensions());
+}
+
 // Explicit instantiations
 /// @cond
 template class Exposure<std::uint16_t>;

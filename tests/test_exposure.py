@@ -776,6 +776,11 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
                     # Same result even if there is a wcs.
                     cutoutWithWcs = self.smallExposure.getCutout(cutoutCenter, cutoutSize)
                     self.assertMaskedImagesEqual(cutout.maskedImage, cutoutWithWcs.maskedImage)
+
+                    # Getting a cutout with a bbox should produce the same result.
+                    box = lsst.geom.Box2I.makeCenteredBox(cutoutCenter, lsst.geom.Extent2I(cutoutSize))
+                    cutoutBox2I = self.exposureMiOnly.getCutout(box)
+                    self.assertMaskedImagesEqual(cutout.maskedImage, cutoutBox2I.maskedImage)
                 else:
                     with self.assertRaises(pexExcept.InvalidParameterError, msg=msg):
                         self.exposureMiOnly.getCutout(cutoutCenter, cutoutSize)

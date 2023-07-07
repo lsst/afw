@@ -447,6 +447,23 @@ public:
      */
     Exposure getCutout(lsst::geom::Point2D const& center, lsst::geom::Extent2I const& size) const;
 
+    /**
+     * Return an Exposure that is a small cutout of the original.
+     *
+     * This is distinguished from subset() by allowing the box to extend off the image, and padding with
+     * NaN and mask NO_DATA in that case.
+     *
+     * @param box Pixel box to cut from this exposure.
+     *
+     * @return An Exposure of the requested box to within half a pixel in either dimension. Pixels past the
+     *     edge of the original exposure will equal @ref math::edgePixel(image::detail::MaskedImage_tag)
+     *     "math::edgePixel<MaskedImageT>", with their Mask set to NO_DATA.
+     *
+     * @throws lsst::pex::exceptions::InvalidParameterError Thrown if the center of the box
+     *     falls outside this Exposure.
+     */
+    Exposure getCutout(lsst::geom::Box2I const& box) const;
+
 private:
     void _readFits(fits::Fits& fitsfile, lsst::geom::Box2I const& bbox, ImageOrigin origin,
                    bool conformMasks);
