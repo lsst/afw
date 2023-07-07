@@ -714,7 +714,10 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
             exposure3 = afwImage.ExposureF(tmpFile)
             self.assertIsNotNone(exposure3.getInfo().getCoaddInputs())
 
-    def testGetCutout(self):
+    def testGetCutoutSky(self):
+        """Test we can get cutouts in sky coordinates, so long as there is a
+        valid WCS.
+        """
         wcs = self.smallExposure.getWcs()
 
         dimensions = [lsst.geom.Extent2I(100, 50), lsst.geom.Extent2I(15, 15), lsst.geom.Extent2I(0, 10),
@@ -745,6 +748,37 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
                 else:
                     with self.assertRaises(pexExcept.InvalidParameterError, msg=msg):
                         self.smallExposure.getCutout(cutoutCenter, cutoutSize)
+
+    def testGetCutoutPixel(self):
+        """Test that we can get cutouts in pixel coordinates, even if the
+        extent is off the edge of the image, even if there is no WCS.
+        """
+        dimensions = [lsst.geom.Extent2I(100, 50), lsst.geom.Extent2I(15, 15), lsst.geom.Extent2I(0, 10),
+                      lsst.geom.Extent2I(25, 30), lsst.geom.Extent2I(15, -5),
+                      2*self.exposureMiOnly.getDimensions()]
+        locations = [("center", lsst.geom.Box2D(self.exposureMiOnly.getBBox()).getCenter()),
+                     ("edge", lsst.geom.Point2D(0, 0)),
+                     ("rounding test", lsst.geom.Point2D(0.2, 0.7)),
+                     ("just inside", lsst.geom.Point2D(-0.5 + 1e-4, -0.5 + 1e-4)),
+                     # These two should raise; center must be within image box.
+                     ("just outside", lsst.geom.Point2D(-0.5 - 1e-4, -0.5 - 1e-4)),
+                     ("outside", lsst.geom.Point2D(-1000, -1000))]
+        for cutoutSize in dimensions:
+            for label, cutoutCenter in locations:
+                msg = 'Cutout size = %s, location = %s' % (cutoutSize, label)
+                if "outside" not in label and all(cutoutSize.gt(0)):
+                    cutout = self.exposureMiOnly.getCutout(cutoutCenter, cutoutSize)
+                    self._checkCutoutPixels(
+                        cutout,
+                        self._getValidCorners(self.exposureMiOnly.getBBox(), cutout.getBBox()),
+                        msg)
+
+                    # Same result even if there is a wcs.
+                    cutoutWithWcs = self.smallExposure.getCutout(cutoutCenter, cutoutSize)
+                    self.assertMaskedImagesEqual(cutout.maskedImage, cutoutWithWcs.maskedImage)
+                else:
+                    with self.assertRaises(pexExcept.InvalidParameterError, msg=msg):
+                        self.exposureMiOnly.getCutout(cutoutCenter, cutoutSize)
 
     def testGetConvexPolygon(self):
         """Test the convex polygon."""

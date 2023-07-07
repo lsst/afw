@@ -172,7 +172,14 @@ PyExposure<PixelT> declareExposure(lsst::utils::python::WrapperCollection &wrapp
                 cls.def_static("readFits", (ExposureT(*)(std::string const &))ExposureT::readFits);
                 cls.def_static("readFits", (ExposureT(*)(fits::MemFileManager &))ExposureT::readFits);
 
-                cls.def("getCutout", &ExposureT::getCutout, "center"_a, "size"_a);
+                cls.def("getCutout",
+                        py::overload_cast<lsst::geom::SpherePoint const &, lsst::geom::Extent2I const &>(
+                                &ExposureT::getCutout, py::const_),
+                        "center"_a, "size"_a);
+                cls.def("getCutout",
+                        py::overload_cast<lsst::geom::Point2D const &, lsst::geom::Extent2I const &>(
+                                &ExposureT::getCutout, py::const_),
+                        "center"_a, "size"_a);
             });
 }
 }  // namespace
