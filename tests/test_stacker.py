@@ -273,16 +273,15 @@ class StackTestCase(lsst.utils.tests.TestCase):
 
     def test2145(self):
         """The how-to-repeat from #2145"""
-        Size = 5
+        size = 5
         statsCtrl = afwMath.StatisticsControl()
         statsCtrl.setCalcErrorFromInputVariance(True)
         maskedImageList = []
         weightList = []
         for i in range(3):
-            mi = afwImage.MaskedImageF(Size, Size)
-            imArr, maskArr, varArr = mi.getArrays()
-            imArr[:] = np.random.normal(10, 0.1, (Size, Size))
-            varArr[:] = np.random.normal(10, 0.1, (Size, Size))
+            mi = afwImage.MaskedImageF(size, size)
+            mi.image.array[:] = np.random.normal(10, 0.1, (size, size))
+            mi.variance.array[:] = np.random.normal(10, 0.1, (size, size))
             maskedImageList.append(mi)
             weightList.append(1.0)
 
@@ -345,12 +344,11 @@ class StackTestCase(lsst.utils.tests.TestCase):
         # add one more image with all permutations of the first two bits set in
         # different pixels
         mi = afwImage.MaskedImageF(4, 1)
-        imArr, maskArr, varArr = mi.getArrays()
-        imArr[0, :] = finalImage
-        maskArr[0, 1] |= (1 << rejectedBit)
-        maskArr[0, 2] |= (1 << propagatedBit)
-        maskArr[0, 3] |= (1 << rejectedBit)
-        maskArr[0, 3] |= (1 << propagatedBit)
+        mi.image.array[0, :] = finalImage
+        mi.mask.array[0, 1] |= (1 << rejectedBit)
+        mi.mask.array[0, 2] |= (1 << propagatedBit)
+        mi.mask.array[0, 3] |= (1 << rejectedBit)
+        mi.mask.array[0, 3] |= (1 << propagatedBit)
         maskedImageList.append(mi)
 
         # these will always be rejected

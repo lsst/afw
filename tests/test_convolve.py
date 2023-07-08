@@ -241,7 +241,9 @@ class ConvolveTestCase(lsst.utils.tests.TestCase):
         doCopyEdge = convControl.getDoCopyEdge()
         maxInterpDist = convControl.getMaxInterpolationDistance()
 
-        imMaskVar = self.maskedImage.getArrays()
+        imMaskVar = (self.maskedImage.image.array,
+                     self.maskedImage.mask.array,
+                     self.maskedImage.variance.array)
         xy0 = self.maskedImage.getXY0()
 
         refCnvImMaskVarArr = refConvolve(
@@ -398,7 +400,9 @@ class ConvolveTestCase(lsst.utils.tests.TestCase):
 
         afwMath.convolve(self.cnvMaskedImage, self.maskedImage,
                          kernel, convControl)
-        cnvImMaskVarArr = self.cnvMaskedImage.getArrays()
+        cnvImMaskVarArr = (self.cnvMaskedImage.image.array,
+                           self.cnvMaskedImage.mask.array,
+                           self.cnvMaskedImage.variance.array)
 
         skipMaskArr = numpy.array(numpy.isnan(
             cnvImMaskVarArr[0]), dtype=numpy.uint16)

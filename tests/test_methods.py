@@ -110,11 +110,12 @@ class TestTestUtils(lsst.utils.tests.TestCase):
         self.assertMaskedImagesAlmostEqual(mi0, mi1, atol=0, rtol=0)
         self.assertMaskedImagesAlmostEqual(mi0, mi1, atol=0, rtol=0)
         self.assertMaskedImagesAlmostEqual(
-            mi0.getArrays(), mi1, atol=0, rtol=0)
+            (mi0.image.array, mi0.mask.array, mi0.variance.array), mi1, atol=0, rtol=0)
         self.assertMaskedImagesAlmostEqual(
-            mi0, mi1.getArrays(), atol=0, rtol=0)
+            mi0, (mi1.image.array, mi1.mask.array, mi1.variance.array), atol=0, rtol=0)
         self.assertMaskedImagesAlmostEqual(
-            mi0.getArrays(), mi1.getArrays(), atol=0, rtol=0)
+            (mi0.image.array, mi0.mask.array, mi0.variance.array),
+            (mi1.image.array, mi1.mask.array, mi1.variance.array), atol=0, rtol=0)
         for getName in ("getImage", "getVariance"):
             plane0 = getattr(mi0, getName)()
             plane1 = getattr(mi1, getName)()
@@ -156,7 +157,7 @@ class TestTestUtils(lsst.utils.tests.TestCase):
                         self.assertMaskedImagesAlmostEqual(mi0, mi1)
                     with self.assertRaises(Exception):
                         self.assertMaskedImagesAlmostEqual(
-                            mi0, mi1.getArrays())
+                            mi0, (mi1.image.array, mi1.mask.array, mi1.variance.array))
                     with self.assertRaises(Exception):
                         self.assertMaskedImagesAlmostEqual(mi1, mi0)
 

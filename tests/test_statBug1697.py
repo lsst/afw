@@ -39,11 +39,9 @@ class WeightedStatsBugTestCase(unittest.TestCase):
         - the number of bad pixels in the mask plane
         - the number of non-finite values in the variance plane
         """
-        arrayList = maskedImage.getArrays()
-        nBadImg = np.logical_not(np.isfinite(arrayList[0])).sum()
-        nBadMsk = np.sum(np.bitwise_and(arrayList[1], badPixelMask) > 0)
-        nBadVar = np.logical_not(np.isfinite(arrayList[2])).sum()
-        print(f"{nBadImg} bad image pixels, {nBadMsk} bad mask pixels, {nBadVar} bad variance pixels")
+        nBadImg = np.logical_not(np.isfinite(maskedImage.image.array)).sum()
+        nBadMsk = np.sum(np.bitwise_and(maskedImage.mask.array, badPixelMask) > 0)
+        nBadVar = np.logical_not(np.isfinite(maskedImage.variance.array)).sum()
         self.assertEqual(nBadImg, 0)
         self.assertEqual(nBadMsk, 0)
         self.assertEqual(nBadVar, 0)

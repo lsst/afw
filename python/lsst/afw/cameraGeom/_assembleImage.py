@@ -29,20 +29,19 @@ _SliceDict = {
 }
 
 
-def _insertPixelChunk(outView, inView, amplifier, hasArrays):
+def _insertPixelChunk(outView, inView, amplifier):
     # For the sake of simplicity and robustness, this code does not short-circuit the case flipX=flipY=False.
     # However, it would save a bit of time, including the cost of making numpy array views.
     # If short circuiting is wanted, do it here.
 
     xSlice = _SliceDict[amplifier.getRawFlipX()]
     ySlice = _SliceDict[amplifier.getRawFlipY()]
-    if hasArrays:
-        # MaskedImage
-        inArrList = inView.getArrays()
-        outArrList = outView.getArrays()
+    if hasattr(inView, "image"):
+        inArrList = (inView.image.array, inView.mask.array, inView.variance.array)
+        outArrList = (outView.image.array, outView.mask.array, outView.variance.array)
     else:
-        inArrList = [inView.getArray()]
-        outArrList = [outView.getArray()]
+        inArrList = [inView.array]
+        outArrList = [outView.array]
 
     for inArr, outArr in zip(inArrList, outArrList):
         # y,x because numpy arrays are transposed w.r.t. afw Images
@@ -73,8 +72,7 @@ def assembleAmplifierImage(destImage, rawImage, amplifier):
     inView = rawImage.Factory(rawImage, amplifier.getRawDataBBox())
     outView = destImage.Factory(destImage, amplifier.getBBox())
 
-    _insertPixelChunk(outView, inView, amplifier,
-                      hasattr(rawImage, "getArrays"))
+    _insertPixelChunk(outView, inView, amplifier)
 
 
 def assembleAmplifierRawImage(destImage, rawImage, amplifier):
@@ -109,8 +107,7 @@ def assembleAmplifierRawImage(destImage, rawImage, amplifier):
     outBBox.shift(amplifier.getRawXYOffset())
     outView = destImage.Factory(destImage, outBBox)
 
-    _insertPixelChunk(outView, inView, amplifier,
-                      hasattr(rawImage, "getArrays"))
+    _insertPixelChunk(outView, inView, amplifier)
 
 
 def makeUpdatedDetector(ccd):

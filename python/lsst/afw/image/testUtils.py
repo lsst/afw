@@ -198,10 +198,18 @@ def assertMaskedImagesAlmostEqual(
     either mask plane is not of an integer type (unsigned or signed),
     or skipMask is not of a numeric data type.
     """
-    maskedImageArrList0 = maskedImage0.getArrays() if hasattr(
-        maskedImage0, "getArrays") else maskedImage0
-    maskedImageArrList1 = maskedImage1.getArrays() if hasattr(
-        maskedImage1, "getArrays") else maskedImage1
+    if hasattr(maskedImage0, "image"):
+        maskedImageArrList0 = (maskedImage0.image.array,
+                               maskedImage0.mask.array,
+                               maskedImage0.variance.array)
+    else:
+        maskedImageArrList0 = maskedImage0
+    if hasattr(maskedImage1, "image"):
+        maskedImageArrList1 = (maskedImage1.image.array,
+                               maskedImage1.mask.array,
+                               maskedImage1.variance.array)
+    else:
+        maskedImageArrList1 = maskedImage1
 
     for arrList, arg, name in (
         (maskedImageArrList0, maskedImage0, "maskedImage0"),
