@@ -287,9 +287,6 @@ class StackTestCase(lsst.utils.tests.TestCase):
 
         stack = afwMath.statisticsStack(
             maskedImageList, afwMath.MEAN, statsCtrl, weightList)
-        if False:
-            print("image=", stack.getImage().getArray())
-            print("variance=", stack.getVariance().getArray())
         self.assertNotEqual(np.sum(stack.getVariance().getArray()), 0.0)
 
     def testMosaicMode(self):
