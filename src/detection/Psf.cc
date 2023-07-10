@@ -98,10 +98,6 @@ std::shared_ptr<image::Image<double>> Psf::recenterKernelImage(std::shared_ptr<I
     return im;
 }
 
-std::shared_ptr<Psf::Image> Psf::computeImage() const {
-    return computeImage(makeNullPoint());
-}
-
 std::shared_ptr<Psf::Image> Psf::computeImage(lsst::geom::Point2D position, image::Color color,
                                               ImageOwnerEnum owner) const {
     if (isPointNull(position)) position = getAveragePosition();
@@ -113,10 +109,6 @@ std::shared_ptr<Psf::Image> Psf::computeImage(lsst::geom::Point2D position, imag
         result = std::make_shared<Image>(*result, true);
     }
     return result;
-}
-
-std::shared_ptr<Psf::Image> Psf::computeKernelImage() const {
-    return computeKernelImage(makeNullPoint());
 }
 
 std::shared_ptr<Psf::Image> Psf::computeKernelImage(lsst::geom::Point2D position, image::Color color,
@@ -132,10 +124,6 @@ std::shared_ptr<Psf::Image> Psf::computeKernelImage(lsst::geom::Point2D position
     return result;
 }
 
-lsst::geom::Box2I Psf::computeBBox() const {
-    return computeBBox(makeNullPoint());
-}
-
 lsst::geom::Box2I Psf::computeBBox(lsst::geom::Point2D position, image::Color color) const {
     if (isPointNull(position)) position = getAveragePosition();
     if (color.isIndeterminate()) color = getAverageColor();
@@ -145,10 +133,6 @@ lsst::geom::Box2I Psf::computeBBox(lsst::geom::Point2D position, image::Color co
     } else {
         return doComputeBBox(position, color);
     }
-}
-
-lsst::geom::Box2I Psf::computeImageBBox() const {
-    return computeImageBBox(makeNullPoint());
 }
 
 lsst::geom::Box2I Psf::computeImageBBox(lsst::geom::Point2D position, image::Color color) const {
@@ -162,10 +146,6 @@ lsst::geom::Box2I Psf::computeImageBBox(lsst::geom::Point2D position, image::Col
     }
 }
 
-std::shared_ptr<math::Kernel const> Psf::getLocalKernel() const {
-    return getLocalKernel(makeNullPoint());
-}
-
 std::shared_ptr<math::Kernel const> Psf::getLocalKernel(lsst::geom::Point2D position,
                                                         image::Color color) const {
     if (isPointNull(position)) position = getAveragePosition();
@@ -175,10 +155,6 @@ std::shared_ptr<math::Kernel const> Psf::getLocalKernel(lsst::geom::Point2D posi
     return std::make_shared<math::FixedKernel>(*image);
 }
 
-double Psf::computePeak() const {
-    return computePeak(makeNullPoint());
-}
-
 double Psf::computePeak(lsst::geom::Point2D position, image::Color color) const {
     if (isPointNull(position)) position = getAveragePosition();
     if (color.isIndeterminate()) color = getAverageColor();
@@ -186,18 +162,10 @@ double Psf::computePeak(lsst::geom::Point2D position, image::Color color) const 
     return (*image)(-image->getX0(), -image->getY0());
 }
 
-double Psf::computeApertureFlux(double radius) const {
-    return computeApertureFlux(radius, makeNullPoint());
-}
-
 double Psf::computeApertureFlux(double radius, lsst::geom::Point2D position, image::Color color) const {
     if (isPointNull(position)) position = getAveragePosition();
     if (color.isIndeterminate()) color = getAverageColor();
     return doComputeApertureFlux(radius, position, color);
-}
-
-geom::ellipses::Quadrupole Psf::computeShape() const {
-    return computeShape(makeNullPoint());
 }
 
 geom::ellipses::Quadrupole Psf::computeShape(lsst::geom::Point2D position, image::Color color) const {
