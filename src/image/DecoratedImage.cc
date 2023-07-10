@@ -100,13 +100,6 @@ void DecoratedImage<PixelT>::writeFits(std::string const& fileName,
 }
 
 template <typename PixelT>
-void DecoratedImage<PixelT>::writeFits(std::string const& fileName,
-                                       std::shared_ptr<daf::base::PropertySet const> metadata,
-                                       std::string const& mode) const {
-    writeFits(fileName, metadata.get(), mode);
-}
-
-template <typename PixelT>
 void DecoratedImage<PixelT>::writeFits(std::string const& fileName, fits::ImageWriteOptions const& options,
                                        daf::base::PropertySet const * metadata_i,
                                        std::string const& mode) const {
@@ -122,12 +115,6 @@ void DecoratedImage<PixelT>::writeFits(std::string const& fileName, fits::ImageW
     getImage()->writeFits(fileName, options, mode, metadata.get());
 }
 
-template <typename PixelT>
-void DecoratedImage<PixelT>::writeFits(std::string const& fileName, fits::ImageWriteOptions const& options,
-                                       std::shared_ptr<daf::base::PropertySet const> metadata_i,
-                                       std::string const& mode) const {
-    writeFits(fileName, options, metadata_i.get(), mode);
-}
 
 //
 // Explicit instantiations
