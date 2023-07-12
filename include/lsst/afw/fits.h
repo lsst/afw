@@ -517,12 +517,6 @@ public:
             image::ImageBase<T> const& image, ImageWriteOptions const& options,
             daf::base::PropertySet const * header = nullptr,
             image::Mask<image::MaskPixel> const * mask = nullptr);
-    template <typename T>
-    [[deprecated("Replaced by a non-shared_ptr overload.  Will be removed after v25.")]]
-    void writeImage(
-            image::ImageBase<T> const& image, ImageWriteOptions const& options,
-            std::shared_ptr<daf::base::PropertySet const> header = nullptr,
-            std::shared_ptr<image::Mask<image::MaskPixel> const> mask = nullptr);
     //@}
 
     /// Return the number of dimensions in the current HDU.
@@ -700,10 +694,6 @@ public:
 std::shared_ptr<daf::base::PropertyList> combineMetadata(
         daf::base::PropertyList const & first,
         daf::base::PropertyList const & second);
-[[deprecated("Replaced by a non-shared_ptr overload.  Will be removed after v25.")]]
-std::shared_ptr<daf::base::PropertyList> combineMetadata(
-        std::shared_ptr<daf::base::PropertyList const> first,
-        std::shared_ptr<daf::base::PropertyList const> second);
 //@}
 
 /** Read FITS header

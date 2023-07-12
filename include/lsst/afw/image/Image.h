@@ -236,10 +236,6 @@ public:
     void writeFits(std::string const& fileName,
                    daf::base::PropertySet const * metadata = nullptr,
                    std::string const& mode = "w") const;
-    [[deprecated("Replaced by a non-shared_ptr overload.  Will be removed after v25.")]]
-    void writeFits(std::string const& fileName,
-                   std::shared_ptr<daf::base::PropertySet const> metadata,
-                   std::string const& mode = "w") const;
     //@}
 
     //@{
@@ -253,10 +249,6 @@ public:
     void writeFits(fits::MemFileManager& manager,
                    daf::base::PropertySet const * metadata = nullptr,
                    std::string const& mode = "w") const;
-    [[deprecated("Replaced by a non-shared_ptr overload.  Will be removed after v25.")]]
-    void writeFits(fits::MemFileManager& manager,
-                   std::shared_ptr<daf::base::PropertySet const> metadata,
-                   std::string const& mode = "w") const;
     //@}
 
     //@{
@@ -267,8 +259,6 @@ public:
      *  @param[in] metadata      Additional values to write to the header (may be null).
      */
     void writeFits(fits::Fits& fitsfile, daf::base::PropertySet const * metadata = nullptr) const;
-    [[deprecated("Replaced by a non-shared_ptr overload.  Will be removed after v25.")]]
-    void writeFits(fits::Fits& fitsfile, std::shared_ptr<daf::base::PropertySet const> metadata) const;
     //@}
 
     //@{
@@ -285,11 +275,6 @@ public:
                    std::string const& mode = "w",
                    daf::base::PropertySet const * header = nullptr,
                    Mask<MaskPixel> const * mask = nullptr) const;
-    [[deprecated("Replaced by a non-shared_ptr overload.  Will be removed after v25.")]]
-    void writeFits(std::string const& filename, fits::ImageWriteOptions const& options,
-                   std::string const& mode,
-                   std::shared_ptr<daf::base::PropertySet const> header,
-                   std::shared_ptr<Mask<MaskPixel> const> mask = nullptr) const;
     //@}
 
     //@{
@@ -306,11 +291,6 @@ public:
                    std::string const& mode = "w",
                    daf::base::PropertySet const * header = nullptr,
                    Mask<MaskPixel> const *mask = nullptr) const;
-    [[deprecated("Replaced by a non-shared_ptr overload.  Will be removed after v25.")]]
-    void writeFits(fits::MemFileManager& manager, fits::ImageWriteOptions const& options,
-                   std::string const& mode,
-                   std::shared_ptr<daf::base::PropertySet const> header,
-                   std::shared_ptr<Mask<MaskPixel> const> mask = nullptr) const;
     //@}
 
     //@{
@@ -325,10 +305,6 @@ public:
     void writeFits(fits::Fits& fitsfile, fits::ImageWriteOptions const& options,
                    daf::base::PropertySet const * header = nullptr,
                    Mask<MaskPixel> const * mask = nullptr) const;
-    [[deprecated("Replaced by a non-shared_ptr overload.  Will be removed after v25.")]]
-    void writeFits(fits::Fits& fitsfile, fits::ImageWriteOptions const& options,
-                   std::shared_ptr<daf::base::PropertySet const> header,
-                   std::shared_ptr<Mask<MaskPixel> const> mask = nullptr) const;
     //@}
 
     /**
@@ -511,10 +487,6 @@ public:
     void writeFits(std::string const& fileName,
                    daf::base::PropertySet const * metadata = nullptr,
                    std::string const& mode = "w") const;
-    [[deprecated("Replaced by a non-shared_ptr overload.  Will be removed after v25.")]]
-    void writeFits(std::string const& fileName,
-                   std::shared_ptr<daf::base::PropertySet const> metadata,
-                   std::string const& mode = "w") const;
     //@}
 
     //@{
@@ -528,10 +500,6 @@ public:
      */
     void writeFits(std::string const& fileName, fits::ImageWriteOptions const& options,
                    daf::base::PropertySet const * metadata = nullptr,
-                   std::string const& mode = "w") const;
-    [[deprecated("Replaced by a non-shared_ptr overload.  Will be removed after v25.")]]
-    void writeFits(std::string const& fileName, fits::ImageWriteOptions const& options,
-                   std::shared_ptr<daf::base::PropertySet const> metadata,
                    std::string const& mode = "w") const;
     //@}
 

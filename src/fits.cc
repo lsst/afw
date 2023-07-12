@@ -1409,12 +1409,6 @@ void Fits::writeImage(image::ImageBase<T> const &image, ImageWriteOptions const 
     }
 }
 
-template <typename T>
-void Fits::writeImage(image::ImageBase<T> const &image, ImageWriteOptions const &options,
-                      std::shared_ptr<daf::base::PropertySet const> header,
-                      std::shared_ptr<image::Mask<image::MaskPixel> const> mask) {
-    writeImage(image, options, header.get(), mask.get());
-}
 
 namespace {
 
@@ -1676,18 +1670,6 @@ std::shared_ptr<daf::base::PropertyList> combineMetadata(
     return combined;
 }
 
-std::shared_ptr<daf::base::PropertyList> combineMetadata(
-        std::shared_ptr<daf::base::PropertyList const> first,
-        std::shared_ptr<daf::base::PropertyList const> second) {
-    if (!first) {
-        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, "First argument may not be null/None.");
-    }
-    if (!second) {
-        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, "Second argument may not be null/None.");
-    }
-    return combineMetadata(*first, *second);
-}
-
 using dafPlistPtr = std::shared_ptr<daf::base::PropertyList>;
 
 namespace detail {
@@ -1879,9 +1861,6 @@ std::shared_ptr<daf::base::PropertySet> ImageWriteOptions::validate(daf::base::P
     template void Fits::writeImage(image::ImageBase<T> const &, ImageWriteOptions const &, \
                                    daf::base::PropertySet const *,          \
                                    image::Mask<image::MaskPixel> const *);  \
-    template void Fits::writeImage(image::ImageBase<T> const &, ImageWriteOptions const &, \
-                                   std::shared_ptr<daf::base::PropertySet const>,          \
-                                   std::shared_ptr<image::Mask<image::MaskPixel> const>);  \
     template void Fits::readImageImpl(int, T *, long *, long *, long *);                   \
     template bool Fits::checkImageType<T>();                                               \
     template int getBitPix<T>();

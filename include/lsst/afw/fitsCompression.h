@@ -415,13 +415,6 @@ public:
         return determine(arrays.first, arrays.second);
     }
 
-    template <typename T>
-    [[deprecated("Replaced by a non-shared_ptr overload.  Will be removed after v25.")]]
-    ImageScale determine(image::ImageBase<T> const& image,
-                         std::shared_ptr<image::Mask<image::MaskPixel> const> mask) const {
-        return determine(image, mask.get());
-    }
-
     template <typename T, int N>
     ImageScale determine(ndarray::Array<T const, N, N> const& image,
                          ndarray::Array<bool, N, N> const& mask) const;
