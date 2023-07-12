@@ -149,12 +149,6 @@ public:
                                         image::Color color = image::Color(),
                                         ImageOwnerEnum owner = COPY) const;
 
-    // Using the default position automatically implies use of the default color, owner.
-    [[deprecated(
-        "Default position argument overload is deprecated and will be removed "
-        "in version 24.0.  Please use overload with explicit position."
-    )]]
-    std::shared_ptr<Image> computeImage() const;
 
     /**
      *  Return an Image of the PSF, in a form suitable for convolution.
@@ -181,12 +175,6 @@ public:
     std::shared_ptr<Image> computeKernelImage(lsst::geom::Point2D position,
                                               image::Color color = image::Color(),
                                               ImageOwnerEnum owner = COPY) const;
-    // Using the default position automatically implies use of the default color, owner.
-    [[deprecated(
-        "Default position argument overload is deprecated and will be removed "
-        "in version 24.0.  Please use overload with explicit position."
-    )]]
-    std::shared_ptr<Image> computeKernelImage() const;
 
     /**
      *   Return the peak value of the PSF image.
@@ -202,12 +190,6 @@ public:
     double computePeak(lsst::geom::Point2D position,
                        image::Color color = image::Color()) const;
 
-    [[deprecated(
-        "Default position argument overload is deprecated and will be removed "
-        "in version 24.0.  Please use overload with explicit position."
-    )]]
-    double computePeak() const;
-
     /**
      *  Compute the "flux" of the Psf model within a circular aperture of the given radius.
      *
@@ -222,12 +204,6 @@ public:
     double computeApertureFlux(double radius, lsst::geom::Point2D position,
                                image::Color color = image::Color()) const;
 
-    [[deprecated(
-        "Default position argument overload is deprecated and will be removed "
-        "in version 24.0.  Please use overload with explicit position."
-    )]]
-    double computeApertureFlux(double radius) const;
-
     /**
      *  Compute the ellipse corresponding to the second moments of the Psf.
      *
@@ -240,12 +216,6 @@ public:
      */
     geom::ellipses::Quadrupole computeShape(lsst::geom::Point2D position,
                                             image::Color color = image::Color()) const;
-
-    [[deprecated(
-        "Default position argument overload is deprecated and will be removed "
-        "in version 24.0.  Please use overload with explicit position."
-    )]]
-    geom::ellipses::Quadrupole computeShape() const;
 
     /**
      *  Return a FixedKernel corresponding to the Psf image at the given point.
@@ -260,11 +230,6 @@ public:
     std::shared_ptr<math::Kernel const> getLocalKernel(lsst::geom::Point2D position,
                                                        image::Color color = image::Color()) const;
 
-    [[deprecated(
-        "Default position argument overload is deprecated and will be removed "
-        "in version 24.0.  Please use overload with explicit position."
-    )]]
-    std::shared_ptr<math::Kernel const> getLocalKernel() const;
 
     /**
      *  Return the average Color of the stars used to construct the Psf
@@ -290,12 +255,6 @@ public:
     lsst::geom::Box2I computeBBox(lsst::geom::Point2D position,
                                   image::Color color = image::Color()) const;
 
-    [[deprecated(
-        "Default position argument overload is deprecated and will be removed "
-        "in version 24.0.  Please use overload with explicit position."
-    )]]
-    lsst::geom::Box2I computeBBox() const;
-
     /**
      *  Return the bounding box of the image returned by computeImage()
      *
@@ -305,12 +264,6 @@ public:
      */
     lsst::geom::Box2I computeImageBBox(lsst::geom::Point2D position,
                                        image::Color color = image::Color()) const;
-
-    [[deprecated(
-        "Default position argument overload is deprecated and will be removed "
-        "in version 24.0.  Please use overload with explicit position."
-    )]]
-    lsst::geom::Box2I computeImageBBox() const;
 
     /**
      *  Return the bounding box of the image returned by computeImage()
@@ -323,14 +276,6 @@ public:
     lsst::geom::Box2I computeKernelBBox(lsst::geom::Point2D position,
                                         image::Color color = image::Color()) const {
         return computeBBox(position, color);
-    }
-
-    [[deprecated(
-        "Default position argument overload is deprecated and will be removed "
-        "in version 24.0.  Please use overload with explicit position."
-    )]]
-    lsst::geom::Box2I computeKernelBBox() const {
-        return computeBBox();
     }
 
     /**
