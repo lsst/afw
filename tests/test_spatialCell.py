@@ -225,8 +225,8 @@ class SpatialCellSetTestCase(unittest.TestCase):
         dx, dy, sx, sy = 100, 100, 50, 50
         for x0, y0 in [(0, 0), (100, 100)]:
             # only works for tests where dx,dx is some multiple of sx,sy
-            assert(dx//sx == float(dx)/float(sx))
-            assert(dy//sy == float(dy)/float(sy))
+            assert dx//sx == float(dx)/float(sx)
+            assert dy//sy == float(dy)/float(sy)
 
             bbox = lsst.geom.Box2I(lsst.geom.Point2I(x0, y0),
                                    lsst.geom.Extent2I(dx, dy))
