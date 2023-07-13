@@ -205,7 +205,7 @@ class Mosaic:
             if nx > self.nImage:
                 nx = self.nImage
 
-            assert(nx*ny >= self.nImage)
+            assert nx*ny >= self.nImage
         elif mode == "x":
             nx, ny = self.nImage, 1
         elif mode == "y":
