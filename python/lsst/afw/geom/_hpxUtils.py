@@ -424,7 +424,7 @@ class _ZOrderCurve2DInt(object):
         ij : `np.int64`
             Single value from which 2d coordinates can be extracted.
         """
-        assert((0xFFFFFFFF33333333 & np.int64(_hash)) == 0)
+        assert (0xFFFFFFFF33333333 & np.int64(_hash)) == 0
         return self.hash2ij(_hash)
 
     def ij2i(self, ij):
