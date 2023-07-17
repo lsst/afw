@@ -413,8 +413,8 @@ public:
     /**
      * Return an Exposure that is a small cutout of the original.
      *
-     * @param center desired center of cutout (in RA and Dec)
-     * @param size width and height (in that order) of cutout in pixels
+     * @param center Desired center of cutout in RA and Dec.
+     * @param size Width and height (in that order) of cutout in pixels
      *
      * @return An Exposure of the requested size centered on `center` to within
      *     half a pixel in either dimension. Pixels past the edge of the original
@@ -423,8 +423,8 @@ public:
      *
      * @throws lsst::pex::exceptions::LogicError Thrown if this Exposure does
      *     not have a WCS.
-     * @throws lsst::pex::exceptions::InvalidParameterError Thrown if ``center``
-     *     falls outside this Exposure or if ``size`` is not a valid size.
+     * @throws lsst::pex::exceptions::InvalidParameterError Thrown if `center`
+     *     falls outside this Exposure or if `size` is not a valid size.
      */
     Exposure getCutout(lsst::geom::SpherePoint const& center, lsst::geom::Extent2I const& size) const;
 
