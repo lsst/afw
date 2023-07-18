@@ -203,7 +203,7 @@ public:
      * Return a subimage corresponding to the given box.
      *
      * @param  bbox   Bounding box of the subimage returned.
-     * @param  origin Origin bbox is rleative to; PARENT accounts for xy0, LOCAL does not.
+     * @param  origin Origin bbox is relative to; PARENT accounts for xy0, LOCAL does not.
      * @return        A subimage view into this.
      *
      * This method is wrapped as __getitem__ in Python.
@@ -294,9 +294,7 @@ public:
     }
 
     /// Set the Exposure's filter information
-    void setFilter(std::shared_ptr<FilterLabel const> filterLabel) {
-        _info->setFilter(filterLabel);
-    }
+    void setFilter(std::shared_ptr<FilterLabel const> filterLabel) { _info->setFilter(filterLabel); }
 
     /// Set the Exposure's PhotoCalib object
     void setPhotoCalib(std::shared_ptr<PhotoCalib const> photoCalib) { _info->setPhotoCalib(photoCalib); }
@@ -415,8 +413,8 @@ public:
     /**
      * Return an Exposure that is a small cutout of the original.
      *
-     * @param center desired center of cutout (in RA and Dec)
-     * @param size width and height (in that order) of cutout in pixels
+     * @param center Desired center of cutout in RA and Dec.
+     * @param size Width and height (in that order) of cutout in pixels
      *
      * @return An Exposure of the requested size centered on `center` to within
      *     half a pixel in either dimension. Pixels past the edge of the original
@@ -425,10 +423,46 @@ public:
      *
      * @throws lsst::pex::exceptions::LogicError Thrown if this Exposure does
      *     not have a WCS.
-     * @throws lsst::pex::exceptions::InvalidParameterError Thrown if ``center``
-     *     falls outside this Exposure or if ``size`` is not a valid size.
+     * @throws lsst::pex::exceptions::InvalidParameterError Thrown if `center`
+     *     falls outside this Exposure or if `size` is not a valid size.
      */
     Exposure getCutout(lsst::geom::SpherePoint const& center, lsst::geom::Extent2I const& size) const;
+
+    /**
+     * Return an Exposure that is a small cutout of the original.
+     *
+     * This is distinguished from subset() by allowing the cutout to extend off the image, and
+     * padding with NaN and mask NO_DATA in that case.
+     *
+     * @param center Desired center of cutout in image pixels.
+     * @param size Width and height (in that order) of cutout in pixels.
+     *
+     * @return An Exposure of the requested size centered on `center` to within
+     *     half a pixel in either dimension. Pixels past the edge of the original
+     *     exposure will equal @ref math::edgePixel(image::detail::MaskedImage_tag)
+     *     "math::edgePixel<MaskedImageT>".
+     *
+     * @throws lsst::pex::exceptions::InvalidParameterError Thrown if `center`
+     *     falls outside this Exposure or if `size` is not a valid size.
+     */
+    Exposure getCutout(lsst::geom::Point2D const& center, lsst::geom::Extent2I const& size) const;
+
+    /**
+     * Return an Exposure that is a small cutout of the original.
+     *
+     * This is distinguished from subset() by allowing the box to extend off the image, and padding with
+     * NaN and mask NO_DATA in that case.
+     *
+     * @param box Pixel box to cut from this exposure.
+     *
+     * @return An Exposure of the requested box to within half a pixel in either dimension. Pixels past the
+     *     edge of the original exposure will equal @ref math::edgePixel(image::detail::MaskedImage_tag)
+     *     "math::edgePixel<MaskedImageT>", with their Mask set to NO_DATA.
+     *
+     * @throws lsst::pex::exceptions::InvalidParameterError Thrown if the center of the box
+     *     falls outside this Exposure.
+     */
+    Exposure getCutout(lsst::geom::Box2I const& box) const;
 
 private:
     void _readFits(fits::Fits& fitsfile, lsst::geom::Box2I const& bbox, ImageOrigin origin,

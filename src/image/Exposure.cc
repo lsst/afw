@@ -208,9 +208,15 @@ Exposure<ImageT, MaskT, VarianceT> Exposure<ImageT, MaskT, VarianceT>::getCutout
     }
     lsst::geom::Point2D pixelCenter = getWcs()->skyToPixel(center);
 
-    if (!lsst::geom::Box2D(getBBox()).contains(pixelCenter)) {
+    return getCutout(pixelCenter, size);
+}
+
+template <typename ImageT, typename MaskT, typename VarianceT>
+Exposure<ImageT, MaskT, VarianceT> Exposure<ImageT, MaskT, VarianceT>::getCutout(
+        lsst::geom::Point2D const &center, lsst::geom::Extent2I const &size) const {
+    if (!lsst::geom::Box2D(getBBox()).contains(center)) {
         std::stringstream buffer;
-        buffer << "Point " << center << " lies at pixel " << pixelCenter << ", which lies outside Exposure "
+        buffer << "Point " << center << " lies at pixel " << center << ", which lies outside Exposure "
                << getBBox();
         throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, buffer.str());
     }
@@ -219,7 +225,7 @@ Exposure<ImageT, MaskT, VarianceT> Exposure<ImageT, MaskT, VarianceT>::getCutout
         buffer << "Cannot create bounding box with dimensions " << size;
         throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, buffer.str());
     }
-    lsst::geom::Box2I bbox = lsst::geom::Box2I::makeCenteredBox(pixelCenter, size);
+    lsst::geom::Box2I bbox = lsst::geom::Box2I::makeCenteredBox(center, size);
 
     // cutout must have independent ExposureInfo
     auto copyInfo = std::make_shared<ExposureInfo>(*getInfo());
@@ -230,6 +236,12 @@ Exposure<ImageT, MaskT, VarianceT> Exposure<ImageT, MaskT, VarianceT>::getCutout
 
     _copyCommonPixels(cutout, *this);
     return cutout;
+}
+
+template <typename ImageT, typename MaskT, typename VarianceT>
+Exposure<ImageT, MaskT, VarianceT> Exposure<ImageT, MaskT, VarianceT>::getCutout(
+        lsst::geom::Box2I const &box) const {
+    return getCutout(box.getCenter(), box.getDimensions());
 }
 
 // Explicit instantiations
