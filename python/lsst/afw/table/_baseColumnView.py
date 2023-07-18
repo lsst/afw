@@ -84,7 +84,7 @@ class _BaseColumnViewBase:  # noqa: F811
     @deprecated(
         reason=(
             "Catalog.__getitem__ now provides better support for "
-            "accessing Flag/bool columns.  Will be removed after v27."
+            "accessing Flag/bool columns.  Will be removed after v26."
         ),
         version="v26",
         category=FutureWarning,
@@ -125,7 +125,7 @@ class _BaseColumnViewBase:  # noqa: F811
 
         String fields are silently ignored.  Support for `Flag` columns is
         deprecated; at present they are copied into full boolean arrays, but
-        after v27 they will be silently ignored as well.
+        after v26 they will be silently ignored as well.
 
         Parameters
         ----------
@@ -175,7 +175,7 @@ class _BaseColumnViewBase:  # noqa: F811
             Raised if a list of ``items`` is supplied with additional keywords.
         """
         # TODO: on DM-32980, adjust docs above to reflect reference to
-        # "after v27."
+        # "after v26."
         copy = kwds.pop("copy", False)
         where = kwds.pop("where", None)
         d = kwds.pop("items", None)
