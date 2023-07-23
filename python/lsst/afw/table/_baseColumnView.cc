@@ -68,7 +68,7 @@ static void declareBaseColumnViewFlagOverloads(PyClass &cls) {
                 PyErr_WarnEx(
                     PyExc_FutureWarning,
                     "Flag/bool access via ColumnView objects is deprecated in favor of more complete support "
-                    "on Catalog.  Will be removed after v27.",
+                    "on Catalog.  Will be removed after v26.",
                     2  // stack level
                 );
                 return ndarray::copy(self[key]);
