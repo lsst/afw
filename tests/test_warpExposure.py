@@ -127,12 +127,10 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         afwWarpedMaskedImage = afwWarpedExposure.getMaskedImage()
         afwWarpedMask = afwWarpedMaskedImage.getMask()
         noDataBitMask = afwWarpedMask.getPlaneBitMask("NO_DATA")
-        afwWarpedMaskedImageArrSet = afwWarpedMaskedImage.getArrays()
-        afwWarpedMaskArr = afwWarpedMaskedImageArrSet[1]
 
         # compare all non-DATA pixels of image and variance, but relax specs a bit
         # because of minor noise introduced by bad pixels
-        noDataMaskArr = afwWarpedMaskArr & noDataBitMask
+        noDataMaskArr = afwWarpedMaskedImage.mask.array & noDataBitMask
         msg = "afw null-warped MaskedImage (all pixels, relaxed tolerance)"
         self.assertMaskedImagesAlmostEqual(afwWarpedMaskedImage, originalExposure.getMaskedImage(),
                                            doMask=False, skipMask=noDataMaskArr, atol=1e-5, msg=msg)
@@ -464,11 +462,10 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         # exception:
         numGoodPix = afwMath.warpExposure(toExp, fromExp, warpControl)
         self.assertEqual(numGoodPix, 0)
-        imArr, maskArr, varArr = toExp.getMaskedImage().getArrays()
-        self.assertTrue(np.all(np.isnan(imArr)))
-        self.assertTrue(np.all(np.isinf(varArr)))
+        self.assertTrue(np.all(np.isnan(toExp.image.array)))
+        self.assertTrue(np.all(np.isinf(toExp.variance.array)))
         noDataBitMask = afwImage.Mask.getPlaneBitMask("NO_DATA")
-        self.assertTrue(np.all(maskArr == noDataBitMask))
+        self.assertTrue(np.all(toExp.mask.array == noDataBitMask))
 
     def verifyMaskWarp(self, kernelName, maskKernelName, growFullMask, interpLength=10, cacheSize=100000,
                        rtol=4e-05, atol=1e-2):
@@ -499,11 +496,10 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         srcMaskedImage = afwImage.MaskedImageF(100, 101)
         srcExposure = afwImage.ExposureF(srcMaskedImage, srcWcs)
 
-        srcArrays = srcMaskedImage.getArrays()
-        shape = srcArrays[0].shape
-        srcArrays[0][:] = np.random.normal(10000, 1000, size=shape)
-        srcArrays[2][:] = np.random.normal(9000, 900, size=shape)
-        srcArrays[1][:] = np.reshape(
+        shape = srcMaskedImage.image.array.shape
+        srcMaskedImage.image.array[:] = np.random.normal(10000, 1000, size=shape)
+        srcMaskedImage.variance.array[:] = np.random.normal(9000, 900, size=shape)
+        srcMaskedImage.mask.array[:] = np.reshape(
             np.arange(0, shape[0] * shape[1], 1, dtype=np.uint16), shape)
 
         warpControl = afwMath.WarpingControl(
@@ -522,22 +518,20 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         narrowMaskedImage = afwImage.MaskedImageF(110, 121)
         narrowExposure = afwImage.ExposureF(narrowMaskedImage, destWcs)
         afwMath.warpExposure(narrowExposure, srcExposure, warpControl)
-        narrowArrays = narrowExposure.getMaskedImage().getArrays()
 
         warpControl.setMaskWarpingKernelName("")
         broadMaskedImage = afwImage.MaskedImageF(110, 121)
         broadExposure = afwImage.ExposureF(broadMaskedImage, destWcs)
         afwMath.warpExposure(broadExposure, srcExposure, warpControl)
-        broadArrays = broadExposure.getMaskedImage().getArrays()
 
         if (kernelName != maskKernelName) and (growFullMask != 0xFFFF):
             # we expect the mask planes to differ
-            if np.all(narrowArrays[1] == broadArrays[1]):
+            if np.all(narrowExposure.mask.array == broadExposure.mask.array):
                 self.fail("No difference between broad and narrow mask")
 
-        predMask = (broadArrays[1] & growFullMask) | (
-            narrowArrays[1] & ~growFullMask).astype(np.uint16)
-        predArraySet = (broadArrays[0], predMask, broadArrays[2])
+        predMask = (broadExposure.mask.array & growFullMask) | (
+            narrowExposure.mask.array & ~growFullMask).astype(np.uint16)
+        predArraySet = (broadExposure.image.array, predMask, broadExposure.variance.array)
         predExposure = afwImage.makeMaskedImageFromArrays(*predArraySet)
 
         msg = f"Separate mask warping failed; warpingKernel={kernelName}; maskWarpingKernel={maskKernelName}"

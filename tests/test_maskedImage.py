@@ -113,6 +113,7 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
         del self.mimage2
         del self.function
 
+    # TODO DM-39935: remove this test when you remove getArrays()
     def testArrays(self):
         """
         This method is testing that ``lsst.afw.image.MaskedImageF.getArrays()``
@@ -358,11 +359,8 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
                         destMIView = afwImage.MaskedImageF(destMI, bbox)
                     else:
                         destMI.assign(srcMI, bbox, origin)
-                        destMIView = afwImage.MaskedImageF(
-                            destMI, bbox, origin)
-                    for i in range(3):
-                        self.assertListEqual(destMIView.getArrays()[i].flatten().tolist(),
-                                             srcMI.getArrays()[i].flatten().tolist())
+                        destMIView = afwImage.MaskedImageF(destMI, bbox, origin)
+                    self.assertMaskedImagesEqual(destMIView, srcMI)
                     numPixNotAssigned = (
                         destMIDim[0] * destMIDim[1]) - (srcMIDim[0] * srcMIDim[1])
                     self.assertEqual(
@@ -409,17 +407,13 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
             destVariance[:] = -1.0
             destMask[:] = 0xFFFF
             destMI.assign(srcMI)
-            for i in range(3):
-                self.assertListEqual(destMI.getArrays()[i].flatten().tolist(),
-                                     srcMI.getArrays()[i].flatten().tolist())
+            self.assertMaskedImagesEqual(destMI, srcMI)
 
             destImage[:] = -1.0
             destVariance[:] = -1.0
             destMask[:] = 0xFFFF
             destMI.assign(srcMI, lsst.geom.Box2I())
-            for i in range(3):
-                self.assertListEqual(destMI.getArrays()[i].flatten().tolist(),
-                                     srcMI.getArrays()[i].flatten().tolist())
+            self.assertMaskedImagesEqual(destMI, srcMI)
 
     def testSubtractImages(self):
         "Test subtraction"

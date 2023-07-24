@@ -18,6 +18,9 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+from deprecated.sphinx import deprecated
+
 import numpy as np
 
 from lsst.utils import TemplateMeta
@@ -81,6 +84,9 @@ class MaskedImage(metaclass=TemplateMeta):
                 self.mask[index, origin],
                 self.variance[index, origin])
 
+    @deprecated(reason=("This method is being removed in favor of the individual properties."
+                        " It will be removed after v26."),
+                version="v26.0", category=FutureWarning)
     def getArrays(self):
         """Return a tuple (value, mask, variance) numpy arrays."""
         return (self.image.array if self.image else None,
