@@ -160,6 +160,7 @@ class ExposureSummaryStats(Storable):
                     "Please use a newer stack."
                 ),
                 FutureWarning,
+                stacklevel=2,
             )
         return ExposureSummaryStats(**yamlDict)
 
