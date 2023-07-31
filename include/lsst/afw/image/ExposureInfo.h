@@ -212,14 +212,6 @@ public:
     /// Set the exposure's aperture correction map (null pointer if !hasApCorrMap())
     void setApCorrMap(std::shared_ptr<ApCorrMap const> apCorrMap);
 
-    /**
-     *  Set the exposure's aperture correction map to a new, empty map
-     *
-     *  Note that the ExposureInfo constructors do not create an empty aperture correction map,
-     *  so this method provide a convenient way to initialize one before filling it.
-     */
-    void initApCorrMap();
-
     /// Does this exposure have coadd provenance catalogs?
     bool hasCoaddInputs() const;
 

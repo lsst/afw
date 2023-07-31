@@ -30,6 +30,7 @@
 #include "lsst/afw/image/FilterLabel.h"
 #include "lsst/afw/image/Exposure.h"
 #include "lsst/afw/detection/Psf.h"
+#include "lsst/afw/image/ApCorrMap.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -134,6 +135,9 @@ PyExposure<PixelT> declareExposure(lsst::utils::python::WrapperCollection &wrapp
 
                 cls.def_property_readonly("visitInfo",
                                           [](ExposureT &self) { return self.getInfo()->getVisitInfo(); });
+
+                cls.def("setApCorrMap", &ExposureT::setApCorrMap, "apCorrMap"_a);
+                cls.def_property_readonly("apCorrMap", [](ExposureT &self) { return self.getApCorrMap(); });
 
                 cls.def("subset", &ExposureT::subset, "bbox"_a, "origin"_a = PARENT);
 
