@@ -432,7 +432,7 @@ class MultibandMask(MultibandImageBase):
         bit value : `int`
            Bit value for all of the combined bits described by `names`.
         """
-        return self._refMask.getPlaneBitMask(names)
+        return self._refMask.getBitMask(names)
 
     def getNumPlanesMax(self):
         """Maximum number of mask planes available

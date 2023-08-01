@@ -673,7 +673,7 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         mi.setXY0(lsst.geom.PointI(2, 2))
         afwDetect.FootprintSet(mi, afwDetect.Threshold(1), "DETECTED")
 
-        bitmask = mi.getMask().getPlaneBitMask("DETECTED")
+        bitmask = mi.getMask().getBitMask("DETECTED")
         for y in range(im.getHeight()):
             for x in range(im.getWidth()):
                 self.assertEqual(mi.getMask()[x, y, afwImage.LOCAL], bitmask)
@@ -1123,7 +1123,7 @@ class FootprintSetTestCase(unittest.TestCase):
             for sp in objects[i].getSpans():
                 for x in range(sp.getX0(), sp.getX1() + 1):
                     self.assertEqual(mask[x, sp.getY(), afwImage.LOCAL],
-                                     mask.getPlaneBitMask("OBJECT"))
+                                     mask.getBitMask("OBJECT"))
 
     def testFootprintsImageId(self):
         """Check that we can insert footprints into an Image"""

@@ -124,14 +124,26 @@ static void declareImageBase(lsst::utils::python::WrapperCollection &wrappers, s
     });
 }
 
-static void declareMaskDict(lsst::utils::python::WrapperCollection &wrappers) {
+static void declareC_MaskDict(lsst::utils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(
-            py::class_<detail::MaskDict, std::shared_ptr<detail::MaskDict>>(wrappers.module, "MaskDict"),
+            py::class_<detail::MaskDict, std::shared_ptr<detail::MaskDict>>(wrappers.module, "C_MaskDict"),
             [](auto &mod, auto &cls) {
+                cls.def("_print", &detail::MaskDict::print);
+                cls.def("_getPlaneId", &detail::MaskDict::getPlaneId);
+                cls.def("_getPlaneDoc", &detail::MaskDict::getPlaneDoc);
+                cls.def("_getPlaneNames", [](detail::MaskDict const &self) {
+                    std::vector<std::string> names;
+                    names.reserve(self.getMaskPlaneDict().size());
+                    for (auto const &pair : self.getMaskPlaneDict()) {
+                        names.push_back(pair.first);
+                    }
+                    return names;
+                });
+                cls.def("_size", [](detail::MaskDict const &self) { return self.getMaskPlaneDict().size(); });
                 cls.def_static("getDefault", &detail::MaskDict::getDefault);
-                cls.def("print", &detail::MaskDict::print);
-                cls.def("getMaskPlaneDict", &detail::MaskDict::getMaskPlaneDict);
-                cls.def("getMaskPlaneDocDict", &detail::MaskDict::getMaskPlaneDocDict);
+                // TODO: I think these should go away...
+                cls.def("_getMaskPlaneDict", &detail::MaskDict::getMaskPlaneDict);
+                cls.def("_getMaskPlaneDocDict", &detail::MaskDict::getMaskPlaneDocDict);
             });
 }
 
@@ -241,14 +253,16 @@ static void declareMask(lsst::utils::python::WrapperCollection &wrappers, std::s
         cls.def_static("readFits",
                        (Mask<MaskPixelT>(*)(fits::MemFileManager &, int))Mask<MaskPixelT>::readFits,
                        "manager"_a, "hdu"_a = fits::DEFAULT_HDU);
-        cls.def_static("interpret", Mask<MaskPixelT>::interpret);
+        cls.def("interpret", &Mask<MaskPixelT>::interpret);
         cls.def("subset", &Mask<MaskPixelT>::subset, "bbox"_a, "origin"_a = PARENT);
         cls.def("getAsString", &Mask<MaskPixelT>::getAsString);
         cls.def("clearAllMaskPlanes", &Mask<MaskPixelT>::clearAllMaskPlanes);
         cls.def("clearMaskPlane", &Mask<MaskPixelT>::clearMaskPlane);
-        cls.def("setMaskPlaneValues", &Mask<MaskPixelT>::setMaskPlaneValues);
+        cls.def_static("clearDefaultMaskDict", &Mask<MaskPixelT>::clearDefaultMaskDict,
+                       "clearCanonical"_a = false);
+        cls.def_static("setDefaultMaskDict", &Mask<MaskPixelT>::setDefaultMaskDict);
+        // cls.def("setMaskPlaneValues", &Mask<MaskPixelT>::setMaskPlaneValues);
         cls.def_static("parseMaskPlaneMetadata", Mask<MaskPixelT>::parseMaskPlaneMetadata);
-        cls.def_static("clearMaskPlaneDict", Mask<MaskPixelT>::clearMaskPlaneDict);
         cls.def_static("removeMaskPlane", Mask<MaskPixelT>::removeMaskPlane);
         cls.def("removeAndClearMaskPlane", &Mask<MaskPixelT>::removeAndClearMaskPlane, "name"_a,
                 "removeFromDefault"_a = false);
@@ -257,14 +271,20 @@ static void declareMask(lsst::utils::python::WrapperCollection &wrappers, std::s
                        (MaskPixelT(*)(const std::string &))Mask<MaskPixelT>::getPlaneBitMask);
         cls.def_static("getPlaneBitMask",
                        (MaskPixelT(*)(const std::vector<std::string> &))Mask<MaskPixelT>::getPlaneBitMask);
+        cls.def("getBitMask", (MaskPixelT(*)(const std::string &))Mask<MaskPixelT>::getPlaneBitMask);
+        cls.def("getBitMask",
+                (MaskPixelT(*)(const std::vector<std::string> &))Mask<MaskPixelT>::getPlaneBitMask);
         cls.def_static("getNumPlanesMax", Mask<MaskPixelT>::getNumPlanesMax);
-        cls.def_static("getNumPlanesUsed", Mask<MaskPixelT>::getNumPlanesUsed);
+        cls.def("getNumPlanesUsed", &Mask<MaskPixelT>::getNumPlanesUsed);
+
+        // TODO: remove these?
         cls.def("getMaskPlaneDict", &Mask<MaskPixelT>::getMaskPlaneDict);
         cls.def("getMaskPlaneDocDict", &Mask<MaskPixelT>::getMaskPlaneDocDict);
+
         // TODO: do we really want this one?
-        cls.def("getMaskDict", &Mask<MaskPixelT>::getMaskDict);
+        cls.def("_getMaskDict", &Mask<MaskPixelT>::getMaskDict);
         cls.def("printMaskPlanes", &Mask<MaskPixelT>::printMaskPlanes);
-        cls.def_static("addMaskPlanesToMetadata", Mask<MaskPixelT>::addMaskPlanesToMetadata);
+        cls.def("addMaskPlanesToMetadata", &Mask<MaskPixelT>::addMaskPlanesToMetadata);
         cls.def("conformMaskPlanes", &Mask<MaskPixelT>::conformMaskPlanes);
         // Temporary name for deprecation. Restore `addMaskPlane` name once the non-doc overload is removed.
         cls.def_static("addMaskPlaneWithDoc",
@@ -476,7 +496,7 @@ void wrapImage(lsst::utils::python::WrapperCollection &wrappers) {
     declareImageBase<std::uint16_t>(wrappers, "U");
     declareImageBase<std::uint64_t>(wrappers, "L");
 
-    declareMaskDict(wrappers);
+    declareC_MaskDict(wrappers);
     // Mask must be declared before Image because a mask is used as a default value in at least one method
     declareMask<MaskPixel>(wrappers, "X");
 

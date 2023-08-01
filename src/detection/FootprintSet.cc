@@ -844,7 +844,7 @@ FootprintSet::FootprintSet(const image::MaskedImage<ImagePixelT, MaskPixelT> &ma
     //
     const std::shared_ptr<image::Mask<MaskPixelT>> mask = maskedImg.getMask();
 
-    MaskPixelT const bitPlane = mask->getPlaneBitMask(planeName);
+    MaskPixelT const bitPlane = mask->getBitMask(planeName);
     //
     // Set the bits where objects are detected
     //

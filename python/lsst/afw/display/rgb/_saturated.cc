@@ -59,7 +59,7 @@ void replaceSaturatedPixels(ImageT& rim,      // R image (e.g. i)
 
     // Find all the saturated pixels in any of the three image
     int const npixMin = 1;  // minimum number of pixels in an object
-    afw::image::MaskPixel const SAT = rim.getMask()->getPlaneBitMask("SAT");
+    afw::image::MaskPixel const SAT = rim.getMask()->getBitMask("SAT");
     detection::Threshold const satThresh(SAT, detection::Threshold::BITMASK);
 
     detection::FootprintSet sat(*rim.getMask(), satThresh, npixMin);

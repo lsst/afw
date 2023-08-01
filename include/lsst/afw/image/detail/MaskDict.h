@@ -24,12 +24,15 @@
 
 #include <memory>
 #include <map>
-#include "lsst/afw/image/Mask.h"
+#include <iostream>
 
 namespace lsst {
 namespace afw {
 namespace image {
 namespace detail {
+
+using MaskPlaneDict = std::map<std::string, int>;
+using MaskPlaneDocDict = std::map<std::string, std::string>;
 
 /*
  * MaskDict is the internal object that relates Mask's string plane names
@@ -66,29 +69,70 @@ namespace detail {
  * With the exception of addMaskPlane, all MaskDict methods provide strong
  * exception safety.
  */
-class MaskDict final {
+class MaskDict final : public std::enable_shared_from_this<MaskDict> {
 public:
     using value_type = MaskPlaneDict::value_type;
     using const_iterator = MaskPlaneDict::const_iterator;
 
-    // Return a new MaskDict with the same plane definitions as the given
-    // MaskPlaneDict, or return the default mask dict if it is empty.
+    // NEW STUFF
 
-    static std::shared_ptr<MaskDict> copyOrGetDefault(MaskPlaneDict const &dict,
-                                                      MaskPlaneDocDict const &docs);
-    static std::shared_ptr<MaskDict> copyOrGetDefault(std::shared_ptr<MaskDict> const &dict);
+    /// Return the default MaskDict if `dict` is null or an empty map.
+    static std::shared_ptr<MaskDict> getDefaultIfEmpty(std::shared_ptr<MaskDict> const &dict);
+
+    /**
+     * Add a mask plane with the given name and doc.
+     *
+     * * If the name doesn't exit, add it to this, and reserve the bit for this name in the global state,
+     * and return the new bit id and this.
+     * * If the name already exists and has the same doc, do nothing, return the existing bit id and this.
+     * * If the name already exists and `doc` is empty, do nothing, return the existing bit id and this.
+     * * If the name already exists and has no doc, replace the doc with the new doc, and return the existing
+     * bit id and this.
+     * * If the name already exists and has a different doc, modify a copy of this and return it along with
+     * the new bit.
+     *
+     * @param name Mask plane name to add.
+     * @param doc Docstring for new mask plane.
+     *
+     * @return Tuple containing the new bit id added and a pointer to the ????
+     */
+    std::tuple<int, std::shared_ptr<MaskDict>> withNewMaskPlane(std::string name, std::string doc,
+                                                                int maxPlanes);
+
+    /// Return a mask dict without the given mask plane (may or may not be a copy).
+    std::shared_ptr<MaskDict> withRemovedMaskPlane(std::string name);
 
     // Return the default MaskDict to be used for new Mask instances.
     static std::shared_ptr<MaskDict> getDefault();
 
     // Set the default MaskDict.
-    static void setDefault(std::shared_ptr<MaskDict> dict);
+    static void setDefault(std::shared_ptr<MaskDict> dict, bool resetCanonicalPlanes = true);
+
+    /**
+     * Get the id of this name in the global list of canonical planes.
+     *
+     * Warns if the default plane map has a different bit id than the canonical planes.
+     *
+     * @param name [description]
+     * @return [description]
+     */
+    static int getCanonicalPlaneId(std::string name);
+
+    /// Remove all defined ids and docs from the default map and canonical list.
+    static void clearDefaultPlanes(bool clearCanonical = false);
+
+    // OLD STUFF
+
+    // Return a new MaskDict with the same plane definitions as the given
+    // MaskPlaneDict, or return the default mask dict if it is empty.
+    static std::shared_ptr<MaskDict> newMaskDictFromMaps(MaskPlaneDict const &dict,
+                                                         MaskPlaneDocDict const &docs);
 
     /*
      * Set the default MaskDict to a copy of the current one, returning the
      * new default.
      */
-    static std::shared_ptr<MaskDict> detachDefault();
+    // static std::shared_ptr<MaskDict> detachDefault();
 
     /*
      * Add the given mask plane to all active MaskDicts for which there is
@@ -102,7 +146,7 @@ public:
      * the mask plane to later ones (though the only exception that could
      * be thrown in practice is std::bad_alloc).
      */
-    static void addAllMasksPlane(std::string const &name, int bitId, std::string const &doc);
+    // static void addAllMasksPlane(std::string const &name, int bitId, std::string const &doc);
 
     // Assignment is disabled; we don't need it.
     MaskDict &operator=(MaskDict const &) = delete;
@@ -111,7 +155,7 @@ public:
     ~MaskDict() noexcept;
 
     // Return a deep copy of the MaskDict.
-    std::shared_ptr<MaskDict> clone() const;
+    // std::shared_ptr<MaskDict> clone() const;
 
     /*
      * Return an integer bit ID that is not currently used in this MaskDict.
@@ -120,17 +164,18 @@ public:
      * unlikely case that int overflows), but is is the responsibility of the
      * caller to check that the Mask pixel size has enough bits for it.
      */
-    int getUnusedPlane() const;
+    // int getUnusedPlane() const;
 
     /*
      * Return the bit ID associated with the given mask plane name.
      *
      * Returns -1 if no such plane is found.
      */
-    int getMaskPlane(std::string const &name) const;
+    int getPlaneId(std::string const &name) const;
+    std::string getPlaneDoc(std::string const &name) const;
 
-    // Print a formatted string showing the mask plane bits, names, and docs.
-    void print(std::ostream &out = std::cout) const;
+    /// Return a formatted string showing the mask plane bits, names, and docs.
+    std::string print() const;
 
     // Fast comparison of MaskDicts, using the hash (and assuming there are
     // no unlucky collisions).
@@ -138,17 +183,17 @@ public:
     bool operator!=(MaskDict const &rhs) const { return !(*this == rhs); }
 
     // Iterators over MaskDict items (yields std::pair<std::string, int>).
-    const_iterator begin() const noexcept { return _dict.begin(); }
-    const_iterator end() const noexcept { return _dict.end(); }
+    // const_iterator begin() const noexcept { return _dict.begin(); }
+    // const_iterator end() const noexcept { return _dict.end(); }
 
-    // Return an iterator to the item with the given name, or end().
-    const_iterator find(std::string const &name) const { return _dict.find(name); }
+    // // Return an iterator to the item with the given name, or end().
+    // const_iterator find(std::string const &name) const { return _dict.find(name); }
 
     // Return the number of planes in this MaskDict.
-    std::size_t size() const noexcept { return _dict.size(); }
+    // std::size_t size() const noexcept { return _dict.size(); }
 
     // Return true if the MaskDict contains no mask planes.
-    bool empty() const noexcept { return _dict.empty(); }
+    // bool empty() const noexcept { return _dict.empty(); }
 
     // Return the internal MaskPlaneDict.
     MaskPlaneDict const &getMaskPlaneDict() const noexcept { return _dict; }
@@ -159,14 +204,14 @@ public:
     // If a plane with the given name already exists, it is overridden.
     // Caller is responsible for ensuring that the bit is not in use; if it is,
     // the MaskDict will be in a corrupted state.
-    void add(std::string const &name, int bitId, std::string const &doc);
+    // void add(std::string const &name, int bitId, std::string const &doc);
 
     // Remove the plane with the given name from just this MaskDict.
     // Does nothing if no such plane exists.
-    void erase(std::string const &name);
+    // void erase(std::string const &name);
 
     // Remove all planes from this MaskDict.
-    void clear();
+    // void clear();
 
 private:
     class GlobalState;
@@ -175,9 +220,6 @@ private:
     // explicitly remove them.  Called exactly once, when initalizing
     // GlobalState.
     void _addInitialMaskPlanes();
-
-    /// Return the hash of the dict and docs.
-    std::size_t _computeHash() const;
 
     // ALL MaskDict constructors should only be from GlobalState,
     // in order to ensure the global set of active dictionaries
@@ -190,7 +232,6 @@ private:
 
     MaskPlaneDict _dict;
     MaskPlaneDocDict _docs;
-    std::size_t _hash;
 };
 
 }  // namespace detail

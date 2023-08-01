@@ -127,7 +127,7 @@ class ImageScalingTestCase(lsst.utils.tests.TestCase):
         image = ImageClass(self.bbox)
         mask = lsst.afw.image.Mask(self.bbox)
         mask.addMaskPlane(self.badMask)
-        bad = mask.getPlaneBitMask(self.badMask)
+        bad = mask.getBitMask(self.badMask)
         image.set(self.base)
         image[self.highPixel, LOCAL] = self.highValue
         image[self.lowPixel, LOCAL] = self.lowValue
@@ -551,7 +551,7 @@ class ImageCompressionTestCase(lsst.utils.tests.TestCase):
             unpersisted = self.checkCompressedImage(lsst.afw.image.Mask, mask, compression, atol=0.0)
             for mp in mask.getMaskPlaneDict():
                 self.assertIn(mp, unpersisted.getMaskPlaneDict())
-                unpersisted.getPlaneBitMask(mp)
+                unpersisted.getBitMask(mp)
 
     def testLossyFloatCfitsio(self):
         """Test lossy compresion of floating-point images with cfitsio
@@ -635,7 +635,7 @@ class ImageCompressionTestCase(lsst.utils.tests.TestCase):
 
             for mp in image.getMask().getMaskPlaneDict():
                 self.assertIn(mp, unpersisted.getMask().getMaskPlaneDict())
-                unpersisted.getMask().getPlaneBitMask(mp)
+                unpersisted.getMask().getBitMask(mp)
 
     def checkMaskedImage(self, imageOptions, maskOptions, varianceOptions, atol=0.0):
         """Check that we can compress a MaskedImage and Exposure

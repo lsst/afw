@@ -907,7 +907,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
             An error message suffix describing test parameters.
         """
         mask = cutout.getMaskedImage().getMask()
-        edgeMask = mask.getPlaneBitMask("NO_DATA")
+        edgeMask = mask.getBitMask("NO_DATA")
 
         for corner in cutout.getBBox().getCorners():
             maskBitsSet = mask[corner] & edgeMask

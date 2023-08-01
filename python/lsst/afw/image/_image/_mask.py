@@ -21,13 +21,14 @@
 
 __all__ = ["Mask", "MaskPixel"]
 
+import collections.abc
 import warnings
 
 import numpy as np
 
 from lsst.utils import TemplateMeta
 from ._fitsIoWithOptions import imageReadFitsWithOptions, imageWriteFitsWithOptions
-from ._imageLib import MaskX
+from ._imageLib import MaskX #, _MaskDict
 from ._slicing import supportSlicing
 from ._disableArithmetic import disableMaskArithmetic
 
@@ -43,7 +44,7 @@ class Mask(metaclass=TemplateMeta):
         return reduceToFits(self)
 
     def __str__(self):
-        return f"{self.array}, bbox={self.getBBox()}, maskPlaneDict={self.getMaskPlaneDict()}"
+        return f"{self.array}, bbox={self.getBBox()}, maskPlaneDict={self.getMaskDict()}"
 
     def __repr__(self):
         return "{}.{}={}".format(self.__module__, self.__class__.__name__, str(self))
@@ -79,6 +80,61 @@ class Mask(metaclass=TemplateMeta):
             warnings.warn("Doc field will become non-optional. Will be removed after v26.", FutureWarning)
             doc = ""
         return Mask.addMaskPlaneWithDoc(name, doc)
+
+    def getMaskPlaneDict(self):
+        """For backwards compatibility."""
+        return self.getMaskDict()
+
+    def getMaskDict(self):
+        return MaskDict(self._getMaskDict())
+
+
+# class MaskDict(_MaskDict, collections.abc.Mapping):
+#     """
+#     Stuff
+#     """
+#     __metaclass__ = collections.abc.Mapping
+
+#     def __init__(self, c_maskDict):
+#         self._c_maskDict = c_maskDict
+#         # self._doc = _MaskDocMappingView(c_maskDict)
+
+#     @property
+#     def doc(self):
+#         return self._doc
+
+#     def __getitem__(self, name):
+#         if (id := self._c_maskDict.getPlaneId(name)) < 0:
+#             raise KeyError(name)
+#         return id
+
+#     def __len__(self):
+#         return self._c_maskDict.size()
+
+#     def __iter__(self):
+#         return iter(self._c_maskDict.getPlaneNames())
+
+#     def __repr__(self):
+#         return self._c_maskDict.print()
+
+
+# class _MaskDocMappingView(collections.abc.Mapping):
+#     """
+#     stuff
+#     """
+#     def __init__(self, c_maskDict):
+#         self._c_maskDict = c_maskDict
+
+#     def __iter__(self):
+#         return iter(self._c_maskDict.getPlaneNames())
+
+#     def __len__(self):
+#         return self._c_maskDict.size()
+
+#     def __getitem__(self, name):
+#         if self._c_maskDict.getPlaneId(name) < 0:
+#             raise KeyError(name)
+#         return self._c_maskDict.getPlaneDoc(name)
 
 
 Mask.register(MaskPixel, MaskX)

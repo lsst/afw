@@ -83,8 +83,8 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
         #
         # Set center of mask to 0, with 2 pixel border set to EDGE
         #
-        self.BAD = afwImage.Mask.getPlaneBitMask("BAD")
-        self.EDGE = afwImage.Mask.getPlaneBitMask("EDGE")
+        self.BAD = self.mimage.mask.getBitMask("BAD")
+        self.EDGE = self.mimage.mask.getBitMask("EDGE")
 
         self.mimage.mask.set(self.EDGE)
         centre = afwImage.Mask(

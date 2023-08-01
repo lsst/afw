@@ -33,7 +33,7 @@ Mask<PixelT> MaskFitsReader::read(lsst::geom::Box2I const &bbox, ImageOrigin ori
     auto metadata = readMetadata();
     // look for mask planes in the file
     std::shared_ptr<detail::MaskDict> fileMaskDict = Mask<PixelT>::parseMaskPlaneMetadata(metadata);
-    std::shared_ptr<detail::MaskDict> fileMD = detail::MaskDict::copyOrGetDefault(fileMaskDict);
+    std::shared_ptr<detail::MaskDict> fileMD = fileMaskDict->getDefaultIfEmpty(fileMaskDict);
     if (*fileMD == *detail::MaskDict::getDefault()) {  // file is already consistent with Mask
         return result;
     }

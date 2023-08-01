@@ -40,23 +40,17 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image/ImageBase.h"
 #include "lsst/afw/image/LsstImageTypes.h"
+#include "lsst/afw/image/detail/MaskDict.h"
 #include "lsst/afw/fitsDefaults.h"
 
 namespace lsst {
 namespace afw {
 namespace image {
 
-namespace detail {
-class MaskDict;  // forward declaration
-}
-
 // all masks will initially be instantiated with the same pixel type
 namespace detail {
 /// tag for a Mask
 struct Mask_tag : public detail::basic_tag {};
-
-using MaskPlaneDict = std::map<std::string, int>;
-using MaskPlaneDocDict = std::map<std::string, std::string>;
 }  // namespace detail
 
 /**
@@ -88,7 +82,7 @@ public:
      * @param height number of rows
      * @param planeDefs desired mask planes
      */
-    // [[deprecated("Replaced by a shared_ptr interface to MaskDict. Will be removed after v26.")]
+    // [[deprecated("Replaced by a shared_ptr interface to MaskDict. Will be removed after v27.")]
     explicit Mask(unsigned int width, unsigned int height, MaskPlaneDict const& planeDefs);
     explicit Mask(unsigned int width, unsigned int height,
                   std::shared_ptr<detail::MaskDict> maskDict = nullptr);
@@ -100,7 +94,7 @@ public:
      * @param initialValue Initial value
      * @param planeDefs desired mask planes
      */
-    // [[deprecated("Replaced by a shared_ptr interface to MaskDict. Will be removed after v26.")]
+    // [[deprecated("Replaced by a shared_ptr interface to MaskDict. Will be removed after v27.")]
     explicit Mask(unsigned int width, unsigned int height, MaskPixelT initialValue,
                   MaskPlaneDict const& planeDefs);
     explicit Mask(unsigned int width, unsigned int height, MaskPixelT initialValue,
@@ -111,7 +105,7 @@ public:
      * @param dimensions Number of columns, rows
      * @param planeDefs desired mask planes
      */
-    // [[deprecated("Replaced by a shared_ptr interface to MaskDict. Will be removed after v26.")]
+    // [[deprecated("Replaced by a shared_ptr interface to MaskDict. Will be removed after v27.")]
     explicit Mask(lsst::geom::Extent2I const& dimensions, MaskPlaneDict const& planeDefs);
     explicit Mask(lsst::geom::Extent2I const& dimensions = lsst::geom::Extent2I(),
                   std::shared_ptr<detail::MaskDict> maskDict = nullptr);
@@ -122,7 +116,7 @@ public:
      * @param initialValue Initial value
      * @param planeDefs desired mask planes
      */
-    // [[deprecated("Replaced by a shared_ptr interface to MaskDict. Will be removed after v26.")]
+    // [[deprecated("Replaced by a shared_ptr interface to MaskDict. Will be removed after v27.")]
     explicit Mask(lsst::geom::Extent2I const& dimensions, MaskPixelT initialValue,
                   MaskPlaneDict const& planeDefs);
     explicit Mask(lsst::geom::Extent2I const& dimensions, MaskPixelT initialValue,
@@ -133,7 +127,7 @@ public:
      * @param bbox Desired number of columns/rows and origin
      * @param planeDefs desired mask planes
      */
-    // [[deprecated("Replaced by a shared_ptr interface to MaskDict. Will be removed after v26.")]]
+    // [[deprecated("Replaced by a shared_ptr interface to MaskDict. Will be removed after v27.")]]
     explicit Mask(lsst::geom::Box2I const& bbox, MaskPlaneDict const& planeDefs);
 
     // Nullptr constructor makes a default MaskDict
@@ -146,7 +140,7 @@ public:
      * @param initialValue Initial value
      * @param planeDefs desired mask planes
      */
-    // [[deprecated("Replaced by a shared_ptr interface to MaskDict. Will be removed after v26.")]
+    // [[deprecated("Replaced by a shared_ptr interface to MaskDict. Will be removed after v27.")]
     explicit Mask(lsst::geom::Box2I const& bbox, MaskPixelT initialValue, MaskPlaneDict const& planeDefs);
     explicit Mask(lsst::geom::Box2I const& bbox, MaskPixelT initialValue,
                   std::shared_ptr<detail::MaskDict> maskDict = nullptr);
@@ -292,13 +286,6 @@ public:
 
     using ImageBase<MaskPixelT>::operator[];
 
-    /**
-     * Return the bitmask corresponding to a vector of plane names OR'd together
-     *
-     * @throws lsst::pex::exceptions::InvalidParameterError if plane is invalid
-     */
-    static MaskPixelT getPlaneBitMask(const std::vector<std::string>& names);
-
     /// XOR a Mask into a Mask
     Mask& operator^=(Mask const& rhs);
     /// XOR a bitmask into a Mask
@@ -363,7 +350,7 @@ public:
      */
     void writeFits(std::string const& fileName, daf::base::PropertySet const* metadata = nullptr,
                    std::string const& mode = "w") const;
-    [[deprecated("Replaced by a non-shared_ptr overload.  Will be removed after v25.")]] void writeFits(
+    [[deprecated("Replaced by a non-shared_ptr overload.  Will be removed after v27.")]] void writeFits(
             std::string const& fileName, std::shared_ptr<daf::base::PropertySet const> metadata,
             std::string const& mode = "w") const;
     //@}
@@ -378,7 +365,7 @@ public:
      */
     void writeFits(fits::MemFileManager& manager, daf::base::PropertySet const* metadata = nullptr,
                    std::string const& mode = "w") const;
-    [[deprecated("Replaced by a non-shared_ptr overload.  Will be removed after v25.")]] void writeFits(
+    [[deprecated("Replaced by a non-shared_ptr overload.  Will be removed after v27.")]] void writeFits(
             fits::MemFileManager& manager, std::shared_ptr<daf::base::PropertySet const> metadata,
             std::string const& mode = "w") const;
     //@}
@@ -391,7 +378,7 @@ public:
      *  @param[in] metadata      Additional values to write to the header (may be null).
      */
     void writeFits(fits::Fits& fitsfile, daf::base::PropertySet const* metadata = nullptr) const;
-    [[deprecated("Replaced by a non-shared_ptr overload.  Will be removed after v25.")]] void writeFits(
+    [[deprecated("Replaced by a non-shared_ptr overload.  Will be removed after v27.")]] void writeFits(
             fits::Fits& fitsfile, std::shared_ptr<daf::base::PropertySet const> metadata) const;
     //@}
 
@@ -406,7 +393,7 @@ public:
      */
     void writeFits(std::string const& filename, fits::ImageWriteOptions const& options,
                    std::string const& mode = "w", daf::base::PropertySet const* header = nullptr) const;
-    [[deprecated("Replaced by a non-shared_ptr overload.  Will be removed after v25.")]] void writeFits(
+    [[deprecated("Replaced by a non-shared_ptr overload.  Will be removed after v27.")]] void writeFits(
             std::string const& filename, fits::ImageWriteOptions const& options, std::string const& mode,
             std::shared_ptr<daf::base::PropertySet const> header) const;
     //@}
@@ -422,7 +409,7 @@ public:
      */
     void writeFits(fits::MemFileManager& manager, fits::ImageWriteOptions const& options,
                    std::string const& mode = "w", daf::base::PropertySet const* header = nullptr) const;
-    [[deprecated("Replaced by a non-shared_ptr overload.  Will be removed after v25.")]] void writeFits(
+    [[deprecated("Replaced by a non-shared_ptr overload.  Will be removed after v27.")]] void writeFits(
             fits::MemFileManager& manager, fits::ImageWriteOptions const& options, std::string const& mode,
             std::shared_ptr<daf::base::PropertySet const> header) const;
     //@}
@@ -437,7 +424,7 @@ public:
      */
     void writeFits(fits::Fits& fitsfile, fits::ImageWriteOptions const& options,
                    daf::base::PropertySet const* header = nullptr) const;
-    [[deprecated("Replaced by a non-shared_ptr overload.  Will be removed after v25.")]] void writeFits(
+    [[deprecated("Replaced by a non-shared_ptr overload.  Will be removed after v27.")]] void writeFits(
             fits::Fits& fitsfile, fits::ImageWriteOptions const& options,
             std::shared_ptr<daf::base::PropertySet const> header) const;
     //@}
@@ -467,7 +454,7 @@ public:
     }
 
     /// Interpret a mask value as a comma-separated list of mask plane names
-    static std::string interpret(MaskPixelT value);
+    std::string interpret(MaskPixelT value);
 
     std::string getAsString(int x, int y) { return interpret((*this)(x, y)); }
 
@@ -477,28 +464,44 @@ public:
     void clearAllMaskPlanes();
     /// Clear the specified bit in all pixels
     void clearMaskPlane(int plane);
+
+    /**
+     * Clears default MaskDict planes and docs.
+     *
+     * TODO: do we actually want clearCanonical to be an option, or just always do it to keep things
+     * consistent?
+     * @param clearCanonical Also remove all canonical planes, so that new planes start at 0.
+     */
+    static void clearDefaultMaskDict(bool clearCanonical = false);
+
+    /// Set the default MaskDict to a new MaskDict, and override the canonical planes to match.
+    static void setDefaultMaskDict(std::shared_ptr<detail::MaskDict> maskDict);
+
     /**
      * Set the bit specified by "planeId" for pixels (x0, y) ... (x1, y)
      */
     void setMaskPlaneValues(const int plane, const int x0, const int x1, const int y);
 
     /**
-     * Given a PropertySet that contains the MaskPlane assignments, setup the MaskPlanes.
+     * Given a PropertySet that contains the MaskPlane assignments, return a MaskDict containing those planes.
      *
-     * @param metadata metadata from a Mask
-     * @returns a dictionary of mask plane name: plane ID
+     * @param metadata Metadata from a Mask.
+     * @returns MaskDict containing the plane names, ids, and docs read from the metadata.
      */
     static std::shared_ptr<detail::MaskDict> parseMaskPlaneMetadata(
             std::shared_ptr<lsst::daf::base::PropertySet const> metadata);
 
     // Operations on the mask plane dictionary
 
-    /// Reset the maskPlane dictionary
-    static void clearMaskPlaneDict();
-    [[deprecated("Doc field will become non-optional. Will be removed after v26.")]] static int addMaskPlane(
+    [[deprecated("Doc field will become non-optional. Will be removed after v27.")]] static int addMaskPlane(
             const std::string& name);
+    // TODO: can we deprecate these two?
     static int addMaskPlane(const std::string& name, const std::string& doc);
     static void removeMaskPlane(const std::string& name);
+
+    /// Add a new named mask plane and doc to this Mask's plane map.
+    int addPlane(const std::string& name, const std::string& doc);
+
     /**
      * @brief Clear all pixels of the specified mask and remove the plane from the mask plane dictionary;
      * optionally remove the plane from the default dictionary too.
@@ -511,25 +514,43 @@ public:
     void removeAndClearMaskPlane(const std::string& name, bool const removeFromDefault = false);
 
     /**
-     * Return the mask plane number corresponding to a plane name
+     * Return the mask plane number corresponding to a plane name.
      *
      * @throws lsst::pex::exceptions::InvalidParameterError if plane is invalid
      */
-    static int getMaskPlane(const std::string& name);
+    [[deprecated("Replaced with non-static `getPlaneId()`. Will be removed after v27.")]] static int
+    getMaskPlane(const std::string& name);
+    int getPlaneId(std::string name) const;
+
     /**
-     * Return the bitmask corresponding to a plane name
+     * Return the bitmask corresponding to a vector of plane names OR'd together
+     *
+     * @throws lsst::pex::exceptions::InvalidParameterError if plane is invalid
+     */
+    [[deprecated("Replaced with non-static `getBitMask()`.  Will be removed after v27.")]] static MaskPixelT
+    getPlaneBitMask(const std::vector<std::string>& names);
+    MaskPixelT getBitMask(const std::vector<std::string>& names) const;
+
+    /**
+     * Return the bitmask corresponding to a plane name.
      *
      * @throws lsst::pex::exceptions::InvalidParameterError if plane is invalid
      */
     static MaskPixelT getPlaneBitMask(const std::string& name);
+    MaskPixelT getBitMask(std::string name) const;
+
+    // Return the bit mask corresponding to the given plane id.
+    static MaskPixelT getBitMaskFromPlaneId(int id) {
+        return (id >= 0 && id < getNumPlanesMax()) ? (1 << static_cast<MaskPixelT>(id)) : 0;
+    }
 
     static int getNumPlanesMax() { return 8 * sizeof(MaskPixelT); }
-    static int getNumPlanesUsed();
+    int getNumPlanesUsed();
 
     /// Return the Mask's bit plane map.
-    MaskPlaneDict const& getMaskPlaneDict() const;
+    MaskPlaneDict const& getMaskPlaneDict() const { return _maskDict->getMaskPlaneDict(); }
     /// Return the Mask's bit plane map docstrings.
-    MaskPlaneDocDict const& getMaskPlaneDocDict() const;
+    MaskPlaneDocDict const& getMaskPlaneDocDict() const { return _maskDict->getMaskPlaneDocDict(); }
 
     // TODO: not sure we want to keep this?
     std::shared_ptr<detail::MaskDict const> const getMaskDict() const { return _maskDict; }
@@ -540,7 +561,7 @@ public:
     /**
      * Given a PropertySet, replace any existing MaskPlane assignments with the current ones.
      */
-    static void addMaskPlanesToMetadata(std::shared_ptr<lsst::daf::base::PropertySet>);
+    void addMaskPlanesToMetadata(std::shared_ptr<lsst::daf::base::PropertySet>) const;
 
     // This one isn't static, it fixes up a given Mask's planes.
     /**
@@ -564,32 +585,9 @@ private:
 
     std::shared_ptr<detail::MaskDict> _maskDict;  // our bitplane dictionary
 
-    static std::shared_ptr<detail::MaskDict> _maskPlaneDict();
     static int _setMaskPlaneDict(MaskPlaneDict const& mpd);
     static const std::string maskPlanePrefix;
     static const std::string maskPlaneDocPrefix;
-
-    /**
-     * set the name of a mask plane, with minimal checking.
-     *
-     * This is a private function and is mainly used by setMaskPlaneMetadata
-     *
-     * @param name new name of mask plane
-     * @param plane ID of mask plane to be (re)named
-     * @param description of the mask plane
-     */
-    static int addMaskPlane(std::string name, int plane, std::string doc);
-
-    /// Return the mask plane number corresponding to a plane name, or -1 if not found
-    static int getMaskPlaneNoThrow(const std::string& name);
-    /// Return the bitmask corresponding to a plane ID, or 0 if invalid
-    static MaskPixelT getBitMaskNoThrow(int plane);
-    /**
-     * Return the bitmask corresponding to plane ID
-     *
-     * @throws lsst::pex::exceptions::InvalidParameterError if plane is invalid
-     */
-    static MaskPixelT getBitMask(int plane);
 
     /**
      * Initialise mask planes; called by constructors
@@ -605,7 +603,7 @@ private:
     using ImageBase<MaskPixelT>::swap;
 
     /**
-     * Check that masks have the same dictionary version
+     * Check that masks have the same dictionary version.
      *
      * @throws lsst::pex::exceptions::RuntimeError
      */

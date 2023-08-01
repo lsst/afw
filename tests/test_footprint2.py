@@ -443,7 +443,7 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
             fs = afwDetect.FootprintSet(fs, grow, True)
             msk = self.im.getMask()
             afwDetect.setMaskFromFootprintList(
-                msk, fs.getFootprints(), msk.getPlaneBitMask("DETECTED"))
+                msk, fs.getFootprints(), msk.getBitMask("DETECTED"))
             del msk
 
         self.fs = fs
@@ -591,7 +591,7 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
         grow = 2
         self.fs = afwDetect.FootprintSet(self.fs, grow, False)
         afwDetect.setMaskFromFootprintList(msk, self.fs.getFootprints(),
-                                           msk.getPlaneBitMask("DETECTED_NEGATIVE"))
+                                           msk.getBitMask("DETECTED_NEGATIVE"))
 
         if display:
             frame = 0
@@ -633,7 +633,7 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
 
             msk = self.im.getMask()
             afwDetect.setMaskFromFootprintList(
-                msk, fs2.getFootprints(), msk.getPlaneBitMask("DETECTED_NEGATIVE"))
+                msk, fs2.getFootprints(), msk.getBitMask("DETECTED_NEGATIVE"))
 
             self.fs.merge(fs2, grow1, grow2)
             self.peaks[-2] += peaks2
@@ -644,7 +644,7 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
                 self.peaks[0] = sorted(sum(self.peaks, []), key=peaksSortKey)
 
             afwDetect.setMaskFromFootprintList(
-                msk, self.fs.getFootprints(), msk.getPlaneBitMask("EDGE"))
+                msk, self.fs.getFootprints(), msk.getBitMask("EDGE"))
 
             self.checkPeaks(frame=3)
 
@@ -733,7 +733,7 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
 
         msk = self.im.getMask()
         afwDetect.setMaskFromFootprintList(
-            msk, fs2.getFootprints(), msk.getPlaneBitMask("DETECTED_NEGATIVE"))
+            msk, fs2.getFootprints(), msk.getBitMask("DETECTED_NEGATIVE"))
 
         self.fs.merge(fs2, grow1, grow2)
         self.peaks[0] += peaks2
@@ -743,7 +743,7 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
         self.peaks[0] = sorted(sum(self.peaks, []), key=peaksSortKey)
 
         afwDetect.setMaskFromFootprintList(
-            msk, self.fs.getFootprints(), msk.getPlaneBitMask("EDGE"))
+            msk, self.fs.getFootprints(), msk.getBitMask("EDGE"))
 
         self.checkPeaks(frame=3)
 
