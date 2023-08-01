@@ -47,49 +47,30 @@ except LookupError:
 afwDisplay.setDefaultMaskTransparency(75)
 
 
-def showMaskDict(d=None, msg=None):
-    if not d:
-        d = afwImage.Mask(0, 0)
-        if not msg:
-            msg = "default"
-
-    try:
-        d = d.getMaskPlaneDict()
-    except AttributeError:
-        pass
-
-    if msg:
-        print("%-15s" % msg, end=' ')
-    print(sorted([(d[p], p) for p in d]))
-
-
 class MaskTestCase(utilsTests.TestCase):
-    """A test case for Mask"""
-
+    """Test Masks and MaskDicts.
+    """
     def setUp(self):
         np.random.seed(1)
         self.Mask = afwImage.Mask[afwImage.MaskPixel]
 
-        # Store the default mask planes for later use
-        maskPlaneDict = self.Mask().getMaskPlaneDict()
-        self.defaultMaskPlanes = sorted(
-            maskPlaneDict, key=maskPlaneDict.__getitem__)
-
+        self.mask1 = afwImage.Mask(100, 200)
         # reset so tests will be deterministic
-        self.Mask.clearMaskPlaneDict()
+        self.Mask.clearDefaultMaskDict()
         for p in ("BAD", "SAT", "INTRP", "CR", "EDGE"):
-            self.Mask.addMaskPlane(p, "some docs")
+            self.mask1.addMaskPlane(p, f"docs for {p}")
+            # self.mask2.addMaskPlane(p, f"docs for {p}")
+        self.Mask.setDefaultMaskDict(self.mask1.getMaskDict()._c_maskDict)
 
-        self.BAD = self.Mask.getPlaneBitMask("BAD")
-        self.CR = self.Mask.getPlaneBitMask("CR")
-        self.EDGE = self.Mask.getPlaneBitMask("EDGE")
+        self.mask2 = afwImage.Mask(self.mask1.getDimensions())
+        self.BAD = self.mask1.getPlaneBitMask("BAD")
+        self.CR = self.mask1.getPlaneBitMask("CR")
+        self.EDGE = self.mask1.getPlaneBitMask("EDGE")
 
         self.val1 = self.BAD | self.CR
         self.val2 = self.val1 | self.EDGE
 
-        self.mask1 = afwImage.Mask(100, 200)
         self.mask1.set(self.val1)
-        self.mask2 = afwImage.Mask(self.mask1.getDimensions())
         self.mask2.set(self.val2)
 
         if afwdataDir is not None:
@@ -182,7 +163,7 @@ class MaskTestCase(utilsTests.TestCase):
             i1 ^= i2
 
     def testMaskPlanes(self):
-        planes = self.Mask().getMaskPlaneDict()
+        planes = self.Mask().getMaskDict()
         self.assertEqual(len(planes), self.Mask.getNumPlanesUsed())
 
         for k in sorted(planes.keys()):
@@ -273,7 +254,7 @@ class MaskTestCase(utilsTests.TestCase):
 
             # Check that we wrote (and read) the metadata successfully
             mp_ = "MP_" if True else self.Mask.maskPlanePrefix()  # currently private
-            for (k, v) in self.Mask().getMaskPlaneDict().items():
+            for (k, v) in self.Mask().getMaskDict().items():
                 self.assertEqual(md.getArray(mp_ + k), v)
 
     def testReadWriteXY0(self):
@@ -308,7 +289,7 @@ class MaskTestCase(utilsTests.TestCase):
     #     """Test that we can create a Mask with a given MaskPlaneDict"""
     #     FOO, val = "FOO", 2
     #     mask = afwImage.Mask(100, 200, {FOO: val})
-    #     mpd = mask.getMaskPlaneDict()
+    #     mpd = mask.getMaskDict()
     #     self.assertIn(FOO, mpd.keys())
     #     self.assertEqual(mpd[FOO], val)
 
@@ -337,7 +318,7 @@ class MaskTestCase(utilsTests.TestCase):
 
     def testInterpret(self):
         """Interpretation of Mask values"""
-        planes = self.Mask().getMaskPlaneDict()
+        planes = self.Mask().getMaskDict()
         im = self.Mask(len(planes), 1)
 
         allBits = 0
@@ -354,12 +335,47 @@ class MaskTestCase(utilsTests.TestCase):
         mask = afwImage.Mask(100, 100)
         self.assertIn(str(np.zeros((100, 100), dtype=mask.dtype)), str(mask))
         self.assertIn("bbox=%s"%str(mask.getBBox()), str(mask))
-        self.assertIn("maskPlaneDict=%s"%str(mask.getMaskPlaneDict()), str(mask))
+        self.assertIn("maskPlaneDict=%s"%str(mask.getMaskDict()), str(mask))
 
         smallMask = afwImage.Mask(2, 2)
         self.assertIn(str(np.zeros((2, 2), dtype=mask.dtype)), str(smallMask))
 
         self.assertIn("MaskX=", repr(mask))
+
+    def testMetadata(self):
+        """Test mask plane metadata interchange with MaskPlaneDict"""
+        # Demonstrate that we can extract a MaskPlaneDict into metadata
+        metadata = lsst.daf.base.PropertySet()
+
+        import os; print(os.getpid()); import ipdb; ipdb.set_trace()
+        self.mask1.addMaskPlanesToMetadata(metadata)
+        for (k, v) in self.mask1.getMaskDict().items():
+            self.assertEqual(metadata.getInt(f"MP_{k}"), v)
+        for (k, v) in self.mask1.getMaskDict().doc.items():
+            self.assertEqual(metadata.getString(f"MPD_{k}"), v)
+
+        # Now add another plane to metadata and make it appear in the mask Dict, albeit
+        # in general at another location (hence the getNumPlanesUsed call)
+        metadata.addInt("MP_" + "Whatever", self.mask1.getNumPlanesUsed())
+        import os; print(os.getpid()); import ipdb; ipdb.set_trace()
+        self.mask1.conformMaskPlanes(self.mask1.parseMaskPlaneMetadata(metadata))
+        for (k, v) in self.mask1.getMaskDict().items():
+            self.assertEqual(metadata.getInt(f"MP_{k}"), v)
+        # We didn't add a corresponding docstring: it defaults to empty.
+        self.assertEqual(self.mask1.getMaskDict().doc["Whatever"], "")
+
+        # Add the corresponding docstring.
+        metadata.addString("MPD_" + "Whatever", "docs for whatever")
+        self.testMask.conformMaskPlanes(self.mask1.parseMaskPlaneMetadata(metadata))
+        self.assertEqual(self.mask1.getMaskDict().doc["Whatever"], "docs for whatever")
+
+        # Loading the planes via the above metadata could scramble their
+        # printing layout: confirm that it comes out right.
+        expect = ("Plane 0 -> CR : some docs\n"
+                  "Plane 1 -> BP : some docs\n"
+                  "Plane 2 -> Whatever : docs for whatever")
+        result = str(self.mask1.printMaskPlanes())
+        self.assertEqual(expect, result)
 
 
 class OldMaskTestCase(unittest.TestCase):
@@ -371,13 +387,10 @@ class OldMaskTestCase(unittest.TestCase):
 
         self.testMask = self.Mask(lsst.geom.Extent2I(300, 400), 0)
 
-        # Store the default mask planes for later use
-        maskPlaneDict = self.Mask().getMaskPlaneDict()
-        self.defaultMaskPlanes = sorted(
-            maskPlaneDict, key=maskPlaneDict.__getitem__)
-
         # reset so tests will be deterministic
-        self.Mask.clearMaskPlaneDict()
+        # TODO: replace with new python interface
+        self.Mask.getMaskDict().getMaskDict().clear()
+        self.Mask.getMaskDict().getMaskDict().clear()
         for p in ("CR", "BP"):
             self.Mask.addMaskPlane(p, "some docs")
 
@@ -414,43 +427,10 @@ class OldMaskTestCase(unittest.TestCase):
         self.assertEqual(nplane, self.testMask.getNumPlanesUsed(),
                          "Adding and removing planes")
 
-    def testMetadata(self):
-        """Test mask plane metadata interchange with MaskPlaneDict"""
-        # Demonstrate that we can extract a MaskPlaneDict into metadata
-        metadata = lsst.daf.base.PropertySet()
-
-        self.Mask.addMaskPlanesToMetadata(metadata)
-        for (k, v) in self.Mask().getMaskPlaneDict().items():
-            self.assertEqual(metadata.getInt(f"MP_{k}"), v)
-        for (k, v) in self.Mask().getMaskPlaneDocDict().items():
-            self.assertEqual(metadata.getString(f"MPD_{k}"), v)
-
-        # Now add another plane to metadata and make it appear in the mask Dict, albeit
-        # in general at another location (hence the getNumPlanesUsed call)
-        metadata.addInt("MP_" + "Whatever", self.Mask.getNumPlanesUsed())
-        self.testMask.conformMaskPlanes(self.Mask.parseMaskPlaneMetadata(metadata))
-        for (k, v) in self.Mask().getMaskPlaneDict().items():
-            self.assertEqual(metadata.getInt(f"MP_{k}"), v)
-        # We didn't add a corresponding docstring: it defaults to empty.
-        self.assertEqual(self.Mask().getMaskPlaneDocDict()["Whatever"], "")
-
-        # Add the corresponding docstring.
-        metadata.addString("MPD_" + "Whatever", "docs for whatever")
-        self.testMask.conformMaskPlanes(self.Mask.parseMaskPlaneMetadata(metadata))
-        self.assertEqual(self.Mask().getMaskPlaneDocDict()["Whatever"], "docs for whatever")
-
-        # Loading the planes via the above metadata could scramble their
-        # printing layout: confirm that it comes out right.
-        expect = ("Plane 0 -> CR : some docs\n"
-                  "Plane 1 -> BP : some docs\n"
-                  "Plane 2 -> Whatever : docs for whatever")
-        result = str(self.Mask().printMaskPlanes())
-        self.assertEqual(expect, result)
-
     def testPlaneOperations(self):
         """Test mask plane operations"""
 
-        planes = self.Mask().getMaskPlaneDict()
+        planes = self.Mask().getMaskDict()
         self.testMask.clearMaskPlane(planes['CR'])
         # print "\nClearing mask"
         self.testMask.clearMaskPlane(planes['CR'])
@@ -465,12 +445,12 @@ class OldMaskTestCase(unittest.TestCase):
         self.testMask = self.Mask(self.testMask.getDimensions())
         self.testMask.removeAndClearMaskPlane("BP")
 
-        testMask2.getMaskPlaneDict()
+        testMask2.getMaskDict()
 
         # still present in default mask
         checkPlaneBP()
         # should still be in testMask2
-        self.assertIn("BP", testMask2.getMaskPlaneDict())
+        self.assertIn("BP", testMask2.getMaskDict())
 
         self.Mask.removeMaskPlane("BP")  # remove from default mask too
 
@@ -488,10 +468,10 @@ class OldMaskTestCase(unittest.TestCase):
         self.Mask.addMaskPlane("P1", "some doc")
         # Check that removing default mask planes doesn't affect pre-existing planes
         msk = self.Mask()
-        nmask = len(msk.getMaskPlaneDict())
+        nmask = len(msk.getMaskDict())
         self.Mask.removeMaskPlane("P0")
         self.Mask.removeMaskPlane("P1")
-        self.assertEqual(len(msk.getMaskPlaneDict()), nmask)
+        self.assertEqual(len(msk.getMaskDict()), nmask)
         del msk
         # Check that removeAndClearMaskPlane can clear the default too
         self.Mask.addMaskPlane("BP", "some doc")
@@ -509,7 +489,7 @@ class OldMaskTestCase(unittest.TestCase):
         testMask3.removeAndClearMaskPlane(name)
 
         self.Mask.getMaskPlane(name)    # should be fine
-        self.assertRaises(KeyError, lambda: testMask3.getMaskPlaneDict()[name])
+        self.assertRaises(KeyError, lambda: testMask3.getMaskDict()[name])
 
         def tst():
             self.testMask |= testMask3
@@ -536,7 +516,7 @@ class OldMaskTestCase(unittest.TestCase):
         self.Mask.addMaskPlane(name, "some doc")
         self.Mask.addMaskPlane(name2, "some doc")
         # a description of the Mask's current dictionary
-        oldDict = testMask3.getMaskPlaneDict()
+        oldDict = testMask3.getMaskDict()
 
         for n in (name, name2):
             self.testMask.removeAndClearMaskPlane(n, True)
@@ -545,7 +525,7 @@ class OldMaskTestCase(unittest.TestCase):
         self.Mask.addMaskPlane(name2, "some doc")
         self.Mask.addMaskPlane(name, "some doc")
 
-        self.assertNotEqual(self.testMask.getMaskPlaneDict()[
+        self.assertNotEqual(self.testMask.getMaskDict()[
                             name], oldDict[name])
 
         self.testMask.removeAndClearMaskPlane("BP")
@@ -567,7 +547,7 @@ class OldMaskTestCase(unittest.TestCase):
 
         name = "XXX"
         self.Mask.addMaskPlane(name, "some doc")
-        oldDict = testMask3.getMaskPlaneDict()
+        oldDict = testMask3.getMaskDict()
         # invalidates dictionary version
         testMask3.removeAndClearMaskPlane(name)
 
@@ -584,7 +564,7 @@ class OldMaskTestCase(unittest.TestCase):
         name2 = "Our Boss"
         p1 = self.Mask.addMaskPlane(name1, "some doc")
         p2 = self.Mask.addMaskPlane(name2, "some doc")
-        oldDict = self.testMask.getMaskPlaneDict()
+        oldDict = self.testMask.getMaskDict()
 
         testMask3.setMaskPlaneValues(p1, 0, 5, 0)
         testMask3.setMaskPlaneValues(p2, 0, 5, 1)
