@@ -319,8 +319,6 @@ void declareAnyTypeFunctions(py::module& mod) {
 }  // namespace
 
 PYBIND11_MODULE(testGenericMapLib, mod) {
-    using lsst::cpputils::python::PySharedPtr;
-
     py::module::import("lsst.afw.typehandling");
 
     declareAnyTypeFunctions<bool>(mod);
@@ -343,7 +341,7 @@ PYBIND11_MODULE(testGenericMapLib, mod) {
     mod.def("keepStaticStorable", &keepStaticStorable, "storable"_a = nullptr);
     mod.def("duplicate", &duplicate, "input"_a);
 
-    py::class_<CppStorable, PySharedPtr<CppStorable>, Storable, StorableHelper<CppStorable>> cls(
+    py::class_<CppStorable, Storable, StorableHelper<CppStorable>> cls(
             mod, "CppStorable");
     cls.def(py::init<std::string>());
     cls.def("__eq__", &CppStorable::operator==, py::is_operator());
