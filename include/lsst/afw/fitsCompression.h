@@ -438,7 +438,7 @@ private:
         if (imageArray.empty()) imageArray = ndarray::copy(image.getArray());
         ndarray::Array<bool, 2, 2> maskArray = ndarray::allocate(imageArray.getShape());
         if (mask) {
-            maskArray.deep() = (mask->getArray() & mask->getPlaneBitMask(maskPlanes));
+            maskArray.deep() = (mask->getArray() & mask->getBitMask(maskPlanes));
         } else {
             maskArray.deep() = false;
         }
