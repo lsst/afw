@@ -15,7 +15,7 @@ namespace {
 template <typename ImageT>
 class SetPixels {
 public:
-    explicit SetPixels()  {}
+    explicit SetPixels() {}
 
     void setValue(float value) { _value = value; }
 

@@ -410,7 +410,7 @@ public:
     /// @param[in] mask  Mask for image (used to measuring statistics)
     template <typename T>
     ImageScale determine(image::ImageBase<T> const& image,
-                         image::Mask<image::MaskPixel> const * mask = nullptr) const {
+                         image::Mask<image::MaskPixel> const* mask = nullptr) const {
         auto const arrays = _toArray(image, mask);
         return determine(arrays.first, arrays.second);
     }
@@ -424,8 +424,7 @@ private:
     /// Convert image,mask to arrays
     template <typename T>
     std::pair<ndarray::Array<T const, 2, 2>, ndarray::Array<bool, 2, 2>> _toArray(
-            image::ImageBase<T> const& image,
-            image::Mask<image::MaskPixel> const * mask = nullptr) const {
+            image::ImageBase<T> const& image, image::Mask<image::MaskPixel> const* mask = nullptr) const {
         if (mask && image.getDimensions() != mask->getDimensions()) {
             std::ostringstream os;
             os << "Size mismatch between image and mask: ";
