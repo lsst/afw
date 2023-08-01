@@ -37,8 +37,8 @@ namespace lsst {
 namespace afw {
 namespace geom {
 namespace ellipses {
-void wrapBaseCore(lsst::cpputils::python::WrapperCollection &wrappers) {
-    wrappers.wrapType(py::class_<BaseCore, std::shared_ptr<BaseCore>>(wrappers.module, "BaseCore"),
+void wrapBaseCore(lsst::utils::python::WrapperCollection &wrappers) {
+    wrappers.wrapType(py::class_<BaseCore>(wrappers.module, "BaseCore"),
                       [](auto &mod, auto &cls) {
                           cls.def("__eq__", &BaseCore::operator==, py::is_operator());
                           cls.def("__nq__", &BaseCore::operator!=, py::is_operator());
