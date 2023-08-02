@@ -155,7 +155,8 @@ class ExposureSummaryStats(Storable):
         if len(droppedFields) > 0:
             droppedFieldString = ", ".join([str(f) for f in droppedFields])
             warnings.warn(
-                f"Could not read summary fields [{droppedFieldString}]. Please use a newer stack.",
+                f"Summary fields [{droppedFieldString}] not recognized by this software version;"
+                " ignoring them.",
                 FutureWarning,
                 stacklevel=2,
             )
