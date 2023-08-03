@@ -154,12 +154,13 @@ class ExposureSummaryStats(Storable):
                 yamlDict.pop(_field)
         if len(droppedFields) > 0:
             droppedFieldString = ", ".join([str(f) for f in droppedFields])
+            plural = "s" if len(droppedFields) != 1 else ""
+            them = "them" if len(droppedFields) > 1 else "it"
             warnings.warn(
-                (
-                    f"Could not read summary fields [{droppedFieldString}]. "
-                    "Please use a newer stack."
-                ),
+                f"Summary field{plural} [{droppedFieldString}] not recognized by this software version;"
+                f" ignoring {them}.",
                 FutureWarning,
+                stacklevel=2,
             )
         return ExposureSummaryStats(**yamlDict)
 
