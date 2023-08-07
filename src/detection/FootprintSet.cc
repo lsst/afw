@@ -222,7 +222,6 @@ FootprintSet mergeFootprintSets(FootprintSet const &lhs,      // the FootprintSe
     // The isXXX routines return <isset, value>
     bool const circular = ctrl.isCircular().first && ctrl.isCircular().second;
     bool const isotropic = ctrl.isIsotropic().second;  // isotropic grow as opposed to a Manhattan metric
-                                                       // n.b. Isotropic grows are significantly slower
     bool const left = ctrl.isLeft().first && ctrl.isLeft().second;
     bool const right = ctrl.isRight().first && ctrl.isRight().second;
     bool const up = ctrl.isUp().first && ctrl.isUp().second;
