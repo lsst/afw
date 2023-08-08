@@ -224,7 +224,7 @@ public:
      * @param rhs the Footprints to merge
      * @param tGrow No. of pixels to grow this Footprints
      * @param rGrow No. of pixels to grow rhs Footprints
-     * @param isotropic Use (expensive) isotropic grow
+     * @param isotropic Grow isotropically (as opposed to a Manhattan metric)
      */
     void merge(FootprintSet const& rhs, int tGrow = 0, int rGrow = 0, bool isotropic = true);
 
