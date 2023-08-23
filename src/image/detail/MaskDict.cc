@@ -255,7 +255,7 @@ std::string MaskDict::print() const {
     auto it_dict = _dict.begin();
     auto it_doc = _docs.begin();
     std::map<int, std::string> lines;
-    while (it_dict == _dict.end()) {
+    while (it_dict != _dict.end()) {
         std::stringstream line;
         line << "Plane " << it_dict->second << " -> " << it_dict->first << " : " << it_doc->second;
         lines[it_dict->second] = line.str();
@@ -265,7 +265,6 @@ std::string MaskDict::print() const {
     // Ensure the newlines are correct, with the output ordered on bit number.
     auto i_line = lines.begin();
     while (i_line != lines.end()) {
-        std::cout << ">>> " << i_line->first << " " << i_line->second << std::endl;
         // newline on every line but the last
         if (i_line != lines.begin()) {
             out << std::endl;

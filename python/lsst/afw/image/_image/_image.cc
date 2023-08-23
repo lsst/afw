@@ -124,9 +124,9 @@ static void declareImageBase(lsst::utils::python::WrapperCollection &wrappers, s
     });
 }
 
-static void declareC_MaskDict(lsst::utils::python::WrapperCollection &wrappers) {
+static void declareMaskDict(lsst::utils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(
-            py::class_<detail::MaskDict, std::shared_ptr<detail::MaskDict>>(wrappers.module, "C_MaskDict"),
+            py::class_<detail::MaskDict, std::shared_ptr<detail::MaskDict>>(wrappers.module, "MaskDict"),
             [](auto &mod, auto &cls) {
                 cls.def("_print", &detail::MaskDict::print);
                 cls.def("_getPlaneId", &detail::MaskDict::getPlaneId);
@@ -266,6 +266,7 @@ static void declareMask(lsst::utils::python::WrapperCollection &wrappers, std::s
         cls.def_static("removeMaskPlane", Mask<MaskPixelT>::removeMaskPlane);
         cls.def("removeAndClearMaskPlane", &Mask<MaskPixelT>::removeAndClearMaskPlane, "name"_a,
                 "removeFromDefault"_a = false);
+        cls.def("addPlane", &Mask<MaskPixelT>::addPlane);
         cls.def_static("getMaskPlane", Mask<MaskPixelT>::getMaskPlane);
         cls.def_static("getPlaneBitMask",
                        (MaskPixelT(*)(const std::string &))Mask<MaskPixelT>::getPlaneBitMask);
@@ -282,7 +283,7 @@ static void declareMask(lsst::utils::python::WrapperCollection &wrappers, std::s
         cls.def("getMaskPlaneDocDict", &Mask<MaskPixelT>::getMaskPlaneDocDict);
 
         // TODO: do we really want this one?
-        cls.def("_getMaskDict", &Mask<MaskPixelT>::getMaskDict);
+        cls.def("getMaskDict", &Mask<MaskPixelT>::getMaskDict);
         cls.def("printMaskPlanes", &Mask<MaskPixelT>::printMaskPlanes);
         cls.def("addMaskPlanesToMetadata", &Mask<MaskPixelT>::addMaskPlanesToMetadata);
         cls.def("conformMaskPlanes", &Mask<MaskPixelT>::conformMaskPlanes);
@@ -496,7 +497,7 @@ void wrapImage(lsst::utils::python::WrapperCollection &wrappers) {
     declareImageBase<std::uint16_t>(wrappers, "U");
     declareImageBase<std::uint64_t>(wrappers, "L");
 
-    declareC_MaskDict(wrappers);
+    declareMaskDict(wrappers);
     // Mask must be declared before Image because a mask is used as a default value in at least one method
     declareMask<MaskPixel>(wrappers, "X");
 

@@ -448,7 +448,7 @@ void Mask<MaskPixelT>::clearMaskPlane(int planeId) {
 // NOTE: static
 template <typename MaskPixelT>
 void Mask<MaskPixelT>::clearDefaultMaskDict(bool clearCanonical) {
-    detail::MaskDict::getDefault()->clearDefaultPlanes(clearCanonical);
+    detail::MaskDict::clearDefaultPlanes(clearCanonical);
 }
 
 // NOTE: static

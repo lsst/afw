@@ -26,9 +26,9 @@ import warnings
 
 import numpy as np
 
-from lsst.utils import TemplateMeta
+from lsst.utils import continueClass, TemplateMeta
 from ._fitsIoWithOptions import imageReadFitsWithOptions, imageWriteFitsWithOptions
-from ._imageLib import MaskX #, _MaskDict
+from ._imageLib import MaskX, MaskDict
 from ._slicing import supportSlicing
 from ._disableArithmetic import disableMaskArithmetic
 
@@ -85,15 +85,71 @@ class Mask(metaclass=TemplateMeta):
         """For backwards compatibility."""
         return self.getMaskDict()
 
-    def getMaskDict(self):
-        return MaskDict(self._getMaskDict())
+    @property
+    def maskDict(self):
+        return self.getMaskDict()
 
 
-# class MaskDict(_MaskDict, collections.abc.Mapping):
+# @collections.abc.Mapping.register
+@continueClass
+class MaskDict(collections.abc.Mapping):  # noqa: F811
+
+    @property
+    def doc(self):
+        return self._getMaskPlaneDocDict()
+
+    # def __contains__(self, name):
+    #     # TODO: try this??
+    #     return collections.abc.Mapping.__contains__(self, name)
+
+    def __iter__(self):
+        return iter(self._getPlaneNames())
+
+    def __len__(self):
+        return self._size()
+
+    def __getitem__(self, name):
+        if (id := self._getPlaneId(name)) < 0:
+            raise KeyError(name)
+        return id
+
+    def __repr__(self):
+        return self._print()
+
+    # def keys(self):
+    #     None
+
+    # def items(self):
+    #     None
+
+    # def values(self):
+    #     None
+
+    # def get(self, name):
+    #     None
+
+    # def __eq__(self, other):
+    #     None
+
+    # TODO: check that we get this for free
+    # def __ne__(self, other):
+    #     None
+
+
+# @collections.abc.Mapping.register
+# class MaskDict(C_MaskDict):
 #     """
-#     Stuff
+#     Mapping view of the underlying C++ MaskDict state.
+
+#     Modifying the mask planes this is a view of may invalidate this view
+#     instance.
+
+#     Notes
+#     -----
+#     This class directly implements all of the abc.Mapping interface, instead
+#     of inheriting, to avoid metaclass conflicts with pybind11. We need the
+#     C_MaskDict parent to allow passing this into pybind11.
 #     """
-#     __metaclass__ = collections.abc.Mapping
 
 #     def __init__(self, c_maskDict):
 #         self._c_maskDict = c_maskDict
@@ -103,20 +159,42 @@ class Mask(metaclass=TemplateMeta):
 #     def doc(self):
 #         return self._doc
 
+#     def __contains__(self, name):
+#         # TODO: try this??
+#         return collections.abc.Mapping.__contains__(self, name)
+
+#     def __iter__(self):
+#         return iter(self._c_maskDict.getPlaneNames())
+
+#     def __len__(self):
+#         return self._c_maskDict.size()
+
 #     def __getitem__(self, name):
 #         if (id := self._c_maskDict.getPlaneId(name)) < 0:
 #             raise KeyError(name)
 #         return id
 
-#     def __len__(self):
-#         return self._c_maskDict.size()
-
-#     def __iter__(self):
-#         return iter(self._c_maskDict.getPlaneNames())
-
 #     def __repr__(self):
 #         return self._c_maskDict.print()
 
+#     def keys(self):
+#         None
+
+#     def items(self):
+#         None
+
+#     def values(self):
+#         None
+
+#     def get(self, name):
+#         None
+
+#     def __eq__(self, other):
+#         None
+
+    # TODO: check that we get this for free
+    # def __ne__(self, other):
+    #     None
 
 # class _MaskDocMappingView(collections.abc.Mapping):
 #     """
