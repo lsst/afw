@@ -121,6 +121,9 @@ public:
     /// Remove all defined ids and docs from the default map and canonical list.
     static void clearDefaultPlanes(bool clearCanonical = false);
 
+    /// Reset the default MaskDict to the normal initial list, and set the canonical planes to match.
+    static void restoreDefaultMaskDict();
+
     // OLD STUFF
 
     // Return a new MaskDict with the same plane definitions as the given

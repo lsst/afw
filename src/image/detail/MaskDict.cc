@@ -197,6 +197,13 @@ void MaskDict::clearDefaultPlanes(bool clearCanonical) {
     }
 }
 
+// NOTE: static
+void MaskDict::restoreDefaultMaskDict() {
+    clearDefaultPlanes(true);
+    GlobalState::get().getDefault()->_addInitialMaskPlanes();
+    GlobalState::get().setCanonicalPlanesFromDefault();
+}
+
 // std::shared_ptr<MaskDict> MaskDict::detachDefault() { return GlobalState::get().detachDefault(); }
 
 // void MaskDict::addMaskPlane(std::string const &name, int bitId, std::string const &doc) {

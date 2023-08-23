@@ -260,6 +260,7 @@ static void declareMask(lsst::utils::python::WrapperCollection &wrappers, std::s
         cls.def("clearMaskPlane", &Mask<MaskPixelT>::clearMaskPlane);
         cls.def_static("clearDefaultMaskDict", &Mask<MaskPixelT>::clearDefaultMaskDict,
                        "clearCanonical"_a = false);
+        cls.def_static("restoreDefaultMaskDict", &Mask<MaskPixelT>::restoreDefaultMaskDict);
         cls.def_static("setDefaultMaskDict", &Mask<MaskPixelT>::setDefaultMaskDict);
         // cls.def("setMaskPlaneValues", &Mask<MaskPixelT>::setMaskPlaneValues);
         cls.def_static("parseMaskPlaneMetadata", Mask<MaskPixelT>::parseMaskPlaneMetadata);

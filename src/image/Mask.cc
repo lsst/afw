@@ -453,6 +453,12 @@ void Mask<MaskPixelT>::clearDefaultMaskDict(bool clearCanonical) {
 
 // NOTE: static
 template <typename MaskPixelT>
+void Mask<MaskPixelT>::restoreDefaultMaskDict() {
+    detail::MaskDict::restoreDefaultMaskDict();
+}
+
+// NOTE: static
+template <typename MaskPixelT>
 void Mask<MaskPixelT>::setDefaultMaskDict(std::shared_ptr<detail::MaskDict> maskDict) {
     detail::MaskDict::setDefault(maskDict);
 }

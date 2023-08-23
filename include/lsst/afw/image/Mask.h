@@ -468,11 +468,16 @@ public:
     /**
      * Clears default MaskDict planes and docs.
      *
+     * TODO: this feels dangerous; once done, it applies everywhere, we can't remake it unless it's been
+     * saved.
      * TODO: do we actually want clearCanonical to be an option, or just always do it to keep things
      * consistent?
      * @param clearCanonical Also remove all canonical planes, so that new planes start at 0.
      */
     static void clearDefaultMaskDict(bool clearCanonical = false);
+
+    /// Reset the default MaskDict to the normal initial list, and set the canonical planes to match.
+    static void restoreDefaultMaskDict();
 
     /// Set the default MaskDict to a new MaskDict, and override the canonical planes to match.
     static void setDefaultMaskDict(std::shared_ptr<detail::MaskDict> maskDict);
