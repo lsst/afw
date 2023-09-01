@@ -141,8 +141,8 @@ static void declareMaskDict(lsst::utils::python::WrapperCollection &wrappers) {
                 });
                 cls.def("_size", [](detail::MaskDict const &self) { return self.getMaskPlaneDict().size(); });
                 cls.def_static("getDefault", &detail::MaskDict::getDefault);
-                // TODO: I think these should go away...
-                cls.def("_getMaskPlaneDict", &detail::MaskDict::getMaskPlaneDict);
+                // TODO: I think this should go away...
+                // cls.def("_getMaskPlaneDict", &detail::MaskDict::getMaskPlaneDict);
                 cls.def("_getMaskPlaneDocDict", &detail::MaskDict::getMaskPlaneDocDict);
             });
 }
@@ -280,8 +280,8 @@ static void declareMask(lsst::utils::python::WrapperCollection &wrappers, std::s
         cls.def("getNumPlanesUsed", &Mask<MaskPixelT>::getNumPlanesUsed);
 
         // TODO: remove these?
-        cls.def("getMaskPlaneDict", &Mask<MaskPixelT>::getMaskPlaneDict);
-        cls.def("getMaskPlaneDocDict", &Mask<MaskPixelT>::getMaskPlaneDocDict);
+        // cls.def("getMaskPlaneDict", &Mask<MaskPixelT>::getMaskPlaneDict);
+        // cls.def("getMaskPlaneDocDict", &Mask<MaskPixelT>::getMaskPlaneDocDict);
 
         // TODO: do we really want this one?
         cls.def("getMaskDict", &Mask<MaskPixelT>::getMaskDict);

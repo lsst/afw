@@ -500,7 +500,7 @@ public:
 
     [[deprecated("Doc field will become non-optional. Will be removed after v27.")]] static int addMaskPlane(
             const std::string& name);
-    // TODO: can we deprecate these two?
+    // TODO: can we deprecate these two? Hope so!
     static int addMaskPlane(const std::string& name, const std::string& doc);
     static void removeMaskPlane(const std::string& name);
 
@@ -552,10 +552,11 @@ public:
     static int getNumPlanesMax() { return 8 * sizeof(MaskPixelT); }
     int getNumPlanesUsed();
 
+    // TODO: I think we can drop these.
     /// Return the Mask's bit plane map.
-    MaskPlaneDict const& getMaskPlaneDict() const { return _maskDict->getMaskPlaneDict(); }
+    // MaskPlaneDict const& getMaskPlaneDict() const { return _maskDict->getMaskPlaneDict(); }
     /// Return the Mask's bit plane map docstrings.
-    MaskPlaneDocDict const& getMaskPlaneDocDict() const { return _maskDict->getMaskPlaneDocDict(); }
+    // MaskPlaneDocDict const& getMaskPlaneDocDict() const { return _maskDict->getMaskPlaneDocDict(); }
 
     // TODO: not sure we want to keep this?
     std::shared_ptr<detail::MaskDict const> const getMaskDict() const { return _maskDict; }

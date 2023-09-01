@@ -35,8 +35,10 @@ using MaskPlaneDict = std::map<std::string, int>;
 using MaskPlaneDocDict = std::map<std::string, std::string>;
 
 /*
- * MaskDict is the internal object that relates Mask's string plane names
+ * MaskDict is the internal copy-on-write object that relates Mask's string plane names
  * to bit IDs.
+ *
+ * TODO: the below text should be rewritten for the new interface.
  *
  * The Mask public API only uses MaskPlaneDict, which is just a typedef
  * to std::map.  A MaskDict holds this MaskPlaneDict, limiting non-const
@@ -93,6 +95,7 @@ public:
      *
      * @param name Mask plane name to add.
      * @param doc Docstring for new mask plane.
+     * @param maxPlanes Maximum number of allowed planes (defined by the pixel type of the Mask).
      *
      * @return Tuple containing the new bit id added and a pointer to the ????
      */
