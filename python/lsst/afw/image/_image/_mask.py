@@ -23,6 +23,7 @@ __all__ = ["Mask", "MaskPixel"]
 
 import collections.abc
 import warnings
+import types
 
 import numpy as np
 
@@ -96,7 +97,9 @@ class MaskDict(collections.abc.Mapping):  # noqa: F811
 
     @property
     def doc(self):
-        return self._getMaskPlaneDocDict()
+        """A view of the docstrings for these mask planes.
+        """
+        return types.MappingProxyType(self._getMaskPlaneDocDict())
 
     # def __contains__(self, name):
     #     # TODO: try this??

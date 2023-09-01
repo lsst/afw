@@ -34,7 +34,6 @@ class MaskDictTestCase(lsst.utils.tests.TestCase):
     """
     def setUp(self):
         np.random.seed(1)  # for consistency
-        # self.Mask = afwImage.Mask[afwImage.MaskPixel]
         # Default mask planes, in bit number order.
         self.defaultPlanes = ('BAD', 'CR', 'DETECTED', 'DETECTED_NEGATIVE', 'EDGE',
                               'INTRP', 'NO_DATA', 'SAT', 'SUSPECT')
@@ -51,6 +50,7 @@ class MaskDictTestCase(lsst.utils.tests.TestCase):
         for doc in default.doc:
             self.assertNotEqual(doc, "")
 
+        # Check clearing of default mask while leaving canonical planes.
         afwImage.Mask.clearDefaultMaskDict()
         self.assertEqual(default, {})
         # Haven't cleared the canonical planes, so new bits don't start at 0.
@@ -63,6 +63,7 @@ class MaskDictTestCase(lsst.utils.tests.TestCase):
         afwImage.Mask.restoreDefaultMaskDict()
         self.assertEqual(tuple(default.keys()), self.defaultPlanes)
 
+        # Check clearing of canonical planes.
         afwImage.Mask.clearDefaultMaskDict(clearCanonical=True)
         self.assertEqual(default, {})
         bit = mask.addPlane("NEW0", "a new plane for bit 0")
@@ -89,6 +90,127 @@ class MaskDictTestCase(lsst.utils.tests.TestCase):
                   )
 
         self.assertEqual(str(default), expect)
+
+    def testDictLike(self):
+        """Test the (frozen) dict-like behavior of MaskDict and the docs.
+        """
+        mask = afwImage.Mask(100, 200)
+        self.assertIn("BAD", mask.maskDict)
+        self.assertNotIn("NotIn", mask.maskDict)
+        self.assertEqual(len(mask.maskDict), 9)
+        with self.assertRaises(TypeError):
+            mask.maskDict["CannotAdd"] = 10
+        with self.assertRaises(TypeError):
+            del mask.maskDict["BAD"]
+
+        self.assertIn("BAD", mask.maskDict.doc)
+        self.assertNotIn("NotIn", mask.maskDict.doc)
+        self.assertEqual(len(mask.maskDict.doc), 9)
+        with self.assertRaises(TypeError):
+            mask.maskDict.doc["CannotAdd"] = "sometext"
+        with self.assertRaises(TypeError):
+            del mask.maskDict.doc["BAD"]
+
+    def testAddPlanes(self):
+        mask1 = afwImage.Mask(100, 200)
+        mask2 = afwImage.Mask(100, 200)
+        # Initially, all MaskDicts are the default one.
+        self.assertIs(mask1.maskDict, mask2.maskDict)
+        self.assertIs(mask1.maskDict, afwImage.MaskDict.getDefault())
+
+        # Normal behavior when adding a new plane that doesn't exist: keep the
+        # same object, thus adding it to the default dict as well.
+        bit = mask1.addPlane("TEST", "some docs")
+        self.assertEqual(bit, 9)
+        self.assertIs(mask1.maskDict, mask2.maskDict)
+        self.assertIs(mask1.maskDict, afwImage.MaskDict.getDefault())
+        self.assertIn("TEST", mask1.maskDict)
+        self.assertIn("TEST", mask2.maskDict)
+
+        # Adding the same plane with an empty doc does not change anything.
+        bit = mask1.addPlane("TEST", "")
+        self.assertEqual(bit, 9)
+        self.assertIs(mask1.maskDict, mask2.maskDict)
+
+        # Adding the same plane with the same doc does not change anything.
+        bit = mask1.addPlane("TEST", "some docs")
+        self.assertEqual(bit, 9)
+        self.assertIs(mask1.maskDict, mask2.maskDict)
+
+        # Adding the same plane name with new docs will bifurcate this object
+        # from the others.
+        bit = mask1.addPlane("TEST", "new docs")
+        self.assertEqual(bit, 9)
+        self.assertIsNot(mask1.maskDict, mask2.maskDict)
+        self.assertEqual(mask1.maskDict.doc["TEST"], "new docs")
+        self.assertEqual(mask2.maskDict.doc["TEST"], "some docs")
+        # The default list retains the original definition.
+        self.assertEqual(afwImage.MaskDict.getDefault().doc["TEST"], "some docs")
+
+        # Adding the same plane with an empty doc does not change anything.
+        bit = mask1.addPlane("TEST", "")
+        self.assertEqual(bit, 9)
+        self.assertIsNot(mask1.maskDict, mask2.maskDict)
+        self.assertEqual(mask1.maskDict.doc["TEST"], "new docs")
+        self.assertEqual(mask2.maskDict.doc["TEST"], "some docs")
+
+        # Adding the same plane with the same doc does not change anything.
+        bit = mask1.addPlane("TEST", "new docs")
+        self.assertEqual(bit, 9)
+        self.assertIsNot(mask1.maskDict, mask2.maskDict)
+        self.assertEqual(mask1.maskDict.doc["TEST"], "new docs")
+        self.assertEqual(mask2.maskDict.doc["TEST"], "some docs")
+
+        # Adding an empty doc and then adding a non-empty docstring on the
+        # same key just fills in the empty value, without bifurcating.
+        bit = mask2.addPlane("EMPTYDOC", "")
+        self.assertEqual(bit, 10)
+        self.assertIs(mask2.maskDict, afwImage.MaskDict.getDefault())
+        self.assertEqual(mask2.maskDict.doc["EMPTYDOC"], "")
+        bit = mask2.addPlane("EMPTYDOC", "non empty doc")
+        self.assertEqual(bit, 10)
+        self.assertIs(mask2.maskDict, afwImage.MaskDict.getDefault())
+        self.assertEqual(mask2.maskDict.doc["EMPTYDOC"], "non empty doc")
+
+    def testAddPlanesMax(self):
+        """Test raising when adding more planes than the maximum allowed.
+        """
+        mask = afwImage.Mask(100, 200)
+        maxbits = mask.array.dtype.type().nbytes * 8
+        for i in range(maxbits - len(mask.maskDict)):
+            mask.addPlane(f"plane{i}", f"docstring {i}")
+        with self.assertRaisesRegex(RuntimeError, "Max number of planes"):
+            mask.addPlane("TooBig", "not enough bits for this one")
+
+    def testRemoveAndClearMaskPlane(self):
+        mask1 = afwImage.Mask(100, 200)
+        mask2 = afwImage.Mask(100, 200)
+        mask1.addPlane("TEST", "some docs")
+        mask1.addPlane("TEST", "new docs")
+        # consistency checks
+        self.assertEqual(mask1.maskDict.doc["TEST"], "new docs")
+        self.assertEqual(mask2.maskDict.doc["TEST"], "some docs")
+        self.assertIs(mask2.maskDict, afwImage.MaskDict.getDefault())
+
+        # Does not modify the default dict, and thus does not modify mask2.
+        mask1.removeAndClearMaskPlane("TEST")
+        self.assertNotIn("TEST", mask1.maskDict)
+        self.assertEqual(mask2.maskDict.doc["TEST"], "some docs")
+        self.assertIs(mask2.maskDict, afwImage.MaskDict.getDefault())
+
+        mask1.addPlane("TEST", "new docs")
+        # consistency checks
+        self.assertEqual(mask1.maskDict.doc["TEST"], "new docs")
+        self.assertEqual(mask2.maskDict.doc["TEST"], "some docs")
+
+        # Does modify the default dict, but still does not change mask2;
+        # mask2 and the default have now bifurcated.
+        mask1.removeAndClearMaskPlane("TEST", removeFromDefault=True)
+        self.assertNotIn("TEST", mask1.maskDict)
+        self.assertNotIn("TEST", afwImage.MaskDict.getDefault())
+        self.assertEqual(mask2.maskDict.doc["TEST"], "some docs")
+        self.assertIsNot(mask2.maskDict, afwImage.MaskDict.getDefault())
+        self.assertIsNot(mask1.maskDict, afwImage.MaskDict.getDefault())
 
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
