@@ -140,7 +140,7 @@ class Schema:  # noqa: F811
             afw.table.Field dictionary.
         doc : `str`
             Documentation for the field.
-        unit : `str`
+        units : `str`
             Units for the field, or an empty string if unitless.
         size : `int`
             Size of the field; valid for string and array fields only.
