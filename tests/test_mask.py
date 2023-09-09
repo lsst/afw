@@ -117,11 +117,13 @@ class MaskDictTestCase(lsst.utils.tests.TestCase):
         # Initially, all MaskDicts are the default one.
         self.assertIs(mask1.maskDict, mask2.maskDict)
         self.assertIs(mask1.maskDict, afwImage.MaskDict.getDefault())
+        self.assertEqual(mask1.getNumPlanesUsed(), 9)
 
         # Normal behavior when adding a new plane that doesn't exist: keep the
         # same object, thus adding it to the default dict as well.
         bit = mask1.addPlane("TEST", "some docs")
         self.assertEqual(bit, 9)
+        self.assertEqual(mask1.getNumPlanesUsed(), 10)
         self.assertIs(mask1.maskDict, mask2.maskDict)
         self.assertIs(mask1.maskDict, afwImage.MaskDict.getDefault())
         self.assertIn("TEST", mask1.maskDict)
@@ -130,17 +132,21 @@ class MaskDictTestCase(lsst.utils.tests.TestCase):
         # Adding the same plane with an empty doc does not change anything.
         bit = mask1.addPlane("TEST", "")
         self.assertEqual(bit, 9)
+        self.assertEqual(mask1.getNumPlanesUsed(), 10)
         self.assertIs(mask1.maskDict, mask2.maskDict)
 
         # Adding the same plane with the same doc does not change anything.
         bit = mask1.addPlane("TEST", "some docs")
         self.assertEqual(bit, 9)
+        self.assertEqual(mask1.getNumPlanesUsed(), 10)
         self.assertIs(mask1.maskDict, mask2.maskDict)
 
         # Adding the same plane name with new docs will bifurcate this object
         # from the others.
         bit = mask1.addPlane("TEST", "new docs")
         self.assertEqual(bit, 9)
+        self.assertEqual(mask1.getNumPlanesUsed(), 10)
+        self.assertEqual(mask2.getNumPlanesUsed(), 10)
         self.assertIsNot(mask1.maskDict, mask2.maskDict)
         self.assertEqual(mask1.maskDict.doc["TEST"], "new docs")
         self.assertEqual(mask2.maskDict.doc["TEST"], "some docs")
@@ -150,6 +156,7 @@ class MaskDictTestCase(lsst.utils.tests.TestCase):
         # Adding the same plane with an empty doc does not change anything.
         bit = mask1.addPlane("TEST", "")
         self.assertEqual(bit, 9)
+        self.assertEqual(mask1.getNumPlanesUsed(), 10)
         self.assertIsNot(mask1.maskDict, mask2.maskDict)
         self.assertEqual(mask1.maskDict.doc["TEST"], "new docs")
         self.assertEqual(mask2.maskDict.doc["TEST"], "some docs")
@@ -157,6 +164,7 @@ class MaskDictTestCase(lsst.utils.tests.TestCase):
         # Adding the same plane with the same doc does not change anything.
         bit = mask1.addPlane("TEST", "new docs")
         self.assertEqual(bit, 9)
+        self.assertEqual(mask1.getNumPlanesUsed(), 10)
         self.assertIsNot(mask1.maskDict, mask2.maskDict)
         self.assertEqual(mask1.maskDict.doc["TEST"], "new docs")
         self.assertEqual(mask2.maskDict.doc["TEST"], "some docs")
@@ -165,10 +173,14 @@ class MaskDictTestCase(lsst.utils.tests.TestCase):
         # same key just fills in the empty value, without bifurcating.
         bit = mask2.addPlane("EMPTYDOC", "")
         self.assertEqual(bit, 10)
+        self.assertEqual(mask1.getNumPlanesUsed(), 10)
+        self.assertEqual(mask2.getNumPlanesUsed(), 11)
         self.assertIs(mask2.maskDict, afwImage.MaskDict.getDefault())
         self.assertEqual(mask2.maskDict.doc["EMPTYDOC"], "")
         bit = mask2.addPlane("EMPTYDOC", "non empty doc")
         self.assertEqual(bit, 10)
+        self.assertEqual(mask1.getNumPlanesUsed(), 10)
+        self.assertEqual(mask2.getNumPlanesUsed(), 11)
         self.assertIs(mask2.maskDict, afwImage.MaskDict.getDefault())
         self.assertEqual(mask2.maskDict.doc["EMPTYDOC"], "non empty doc")
 
@@ -179,6 +191,7 @@ class MaskDictTestCase(lsst.utils.tests.TestCase):
         maxbits = mask.array.dtype.type().nbytes * 8
         for i in range(maxbits - len(mask.maskDict)):
             mask.addPlane(f"plane{i}", f"docstring {i}")
+        self.assertEqual(mask.getNumPlanesUsed(), maxbits)
         with self.assertRaisesRegex(RuntimeError, "Max number of planes"):
             mask.addPlane("TooBig", "not enough bits for this one")
 
