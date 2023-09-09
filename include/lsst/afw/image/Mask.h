@@ -82,7 +82,7 @@ public:
      * @param height number of rows
      * @param planeDefs desired mask planes
      */
-    // [[deprecated("Replaced by a shared_ptr interface to MaskDict. Will be removed after v27.")]
+    // [[deprecated("Replaced by a shared_ptr interface to MaskDict. Will be removed after v28.")]
     explicit Mask(unsigned int width, unsigned int height, MaskPlaneDict const& planeDefs);
     explicit Mask(unsigned int width, unsigned int height,
                   std::shared_ptr<detail::MaskDict> maskDict = nullptr);
@@ -94,7 +94,7 @@ public:
      * @param initialValue Initial value
      * @param planeDefs desired mask planes
      */
-    // [[deprecated("Replaced by a shared_ptr interface to MaskDict. Will be removed after v27.")]
+    // [[deprecated("Replaced by a shared_ptr interface to MaskDict. Will be removed after v28.")]
     explicit Mask(unsigned int width, unsigned int height, MaskPixelT initialValue,
                   MaskPlaneDict const& planeDefs);
     explicit Mask(unsigned int width, unsigned int height, MaskPixelT initialValue,
@@ -105,7 +105,7 @@ public:
      * @param dimensions Number of columns, rows
      * @param planeDefs desired mask planes
      */
-    // [[deprecated("Replaced by a shared_ptr interface to MaskDict. Will be removed after v27.")]
+    // [[deprecated("Replaced by a shared_ptr interface to MaskDict. Will be removed after v28.")]
     explicit Mask(lsst::geom::Extent2I const& dimensions, MaskPlaneDict const& planeDefs);
     explicit Mask(lsst::geom::Extent2I const& dimensions = lsst::geom::Extent2I(),
                   std::shared_ptr<detail::MaskDict> maskDict = nullptr);
@@ -116,7 +116,7 @@ public:
      * @param initialValue Initial value
      * @param planeDefs desired mask planes
      */
-    // [[deprecated("Replaced by a shared_ptr interface to MaskDict. Will be removed after v27.")]
+    // [[deprecated("Replaced by a shared_ptr interface to MaskDict. Will be removed after v28.")]
     explicit Mask(lsst::geom::Extent2I const& dimensions, MaskPixelT initialValue,
                   MaskPlaneDict const& planeDefs);
     explicit Mask(lsst::geom::Extent2I const& dimensions, MaskPixelT initialValue,
@@ -127,7 +127,7 @@ public:
      * @param bbox Desired number of columns/rows and origin
      * @param planeDefs desired mask planes
      */
-    // [[deprecated("Replaced by a shared_ptr interface to MaskDict. Will be removed after v27.")]]
+    // [[deprecated("Replaced by a shared_ptr interface to MaskDict. Will be removed after v28.")]]
     explicit Mask(lsst::geom::Box2I const& bbox, MaskPlaneDict const& planeDefs);
 
     // Nullptr constructor makes a default MaskDict
@@ -140,7 +140,7 @@ public:
      * @param initialValue Initial value
      * @param planeDefs desired mask planes
      */
-    // [[deprecated("Replaced by a shared_ptr interface to MaskDict. Will be removed after v27.")]
+    // [[deprecated("Replaced by a shared_ptr interface to MaskDict. Will be removed after v28.")]
     explicit Mask(lsst::geom::Box2I const& bbox, MaskPixelT initialValue, MaskPlaneDict const& planeDefs);
     explicit Mask(lsst::geom::Box2I const& bbox, MaskPixelT initialValue,
                   std::shared_ptr<detail::MaskDict> maskDict = nullptr);
@@ -350,7 +350,7 @@ public:
      */
     void writeFits(std::string const& fileName, daf::base::PropertySet const* metadata = nullptr,
                    std::string const& mode = "w") const;
-    [[deprecated("Replaced by a non-shared_ptr overload.  Will be removed after v27.")]] void writeFits(
+    [[deprecated("Replaced by a non-shared_ptr overload.  Will be removed after v28.")]] void writeFits(
             std::string const& fileName, std::shared_ptr<daf::base::PropertySet const> metadata,
             std::string const& mode = "w") const;
     //@}
@@ -365,7 +365,7 @@ public:
      */
     void writeFits(fits::MemFileManager& manager, daf::base::PropertySet const* metadata = nullptr,
                    std::string const& mode = "w") const;
-    [[deprecated("Replaced by a non-shared_ptr overload.  Will be removed after v27.")]] void writeFits(
+    [[deprecated("Replaced by a non-shared_ptr overload.  Will be removed after v28.")]] void writeFits(
             fits::MemFileManager& manager, std::shared_ptr<daf::base::PropertySet const> metadata,
             std::string const& mode = "w") const;
     //@}
@@ -378,7 +378,7 @@ public:
      *  @param[in] metadata      Additional values to write to the header (may be null).
      */
     void writeFits(fits::Fits& fitsfile, daf::base::PropertySet const* metadata = nullptr) const;
-    [[deprecated("Replaced by a non-shared_ptr overload.  Will be removed after v27.")]] void writeFits(
+    [[deprecated("Replaced by a non-shared_ptr overload.  Will be removed after v28.")]] void writeFits(
             fits::Fits& fitsfile, std::shared_ptr<daf::base::PropertySet const> metadata) const;
     //@}
 
@@ -393,7 +393,7 @@ public:
      */
     void writeFits(std::string const& filename, fits::ImageWriteOptions const& options,
                    std::string const& mode = "w", daf::base::PropertySet const* header = nullptr) const;
-    [[deprecated("Replaced by a non-shared_ptr overload.  Will be removed after v27.")]] void writeFits(
+    [[deprecated("Replaced by a non-shared_ptr overload.  Will be removed after v28.")]] void writeFits(
             std::string const& filename, fits::ImageWriteOptions const& options, std::string const& mode,
             std::shared_ptr<daf::base::PropertySet const> header) const;
     //@}
@@ -409,7 +409,7 @@ public:
      */
     void writeFits(fits::MemFileManager& manager, fits::ImageWriteOptions const& options,
                    std::string const& mode = "w", daf::base::PropertySet const* header = nullptr) const;
-    [[deprecated("Replaced by a non-shared_ptr overload.  Will be removed after v27.")]] void writeFits(
+    [[deprecated("Replaced by a non-shared_ptr overload.  Will be removed after v28.")]] void writeFits(
             fits::MemFileManager& manager, fits::ImageWriteOptions const& options, std::string const& mode,
             std::shared_ptr<daf::base::PropertySet const> header) const;
     //@}
@@ -424,7 +424,7 @@ public:
      */
     void writeFits(fits::Fits& fitsfile, fits::ImageWriteOptions const& options,
                    daf::base::PropertySet const* header = nullptr) const;
-    [[deprecated("Replaced by a non-shared_ptr overload.  Will be removed after v27.")]] void writeFits(
+    [[deprecated("Replaced by a non-shared_ptr overload.  Will be removed after v28.")]] void writeFits(
             fits::Fits& fitsfile, fits::ImageWriteOptions const& options,
             std::shared_ptr<daf::base::PropertySet const> header) const;
     //@}
@@ -498,7 +498,7 @@ public:
 
     // Operations on the mask plane dictionary
 
-    [[deprecated("Doc field will become non-optional. Will be removed after v27.")]] static int addMaskPlane(
+    [[deprecated("Doc field will become non-optional. Will be removed after v28.")]] static int addMaskPlane(
             const std::string& name);
     // TODO: can we deprecate these two? Hope so!
     [[deprecated("Replaced with non-static `addBitMask()`.  Will be removed after v28.")]] static int
@@ -521,11 +521,11 @@ public:
     void removeAndClearMaskPlane(const std::string& name, bool const removeFromDefault = false);
 
     /**
-     * Return the mask plane number corresponding to a plane name.
+     * Return the mask plane bit number corresponding to a plane name.
      *
      * @throws lsst::pex::exceptions::InvalidParameterError if plane is invalid
      */
-    [[deprecated("Replaced with non-static `getPlaneId()`. Will be removed after v27.")]] static int
+    [[deprecated("Replaced with non-static `getPlaneId()`. Will be removed after v28.")]] static int
     getMaskPlane(const std::string& name);
     int getPlaneId(std::string name) const;
 
@@ -534,7 +534,7 @@ public:
      *
      * @throws lsst::pex::exceptions::InvalidParameterError if plane is invalid
      */
-    [[deprecated("Replaced with non-static `getBitMask()`.  Will be removed after v27.")]] static MaskPixelT
+    [[deprecated("Replaced with non-static `getBitMask()`.  Will be removed after v28.")]] static MaskPixelT
     getPlaneBitMask(const std::vector<std::string>& names);
     MaskPixelT getBitMask(const std::vector<std::string>& names) const;
 
