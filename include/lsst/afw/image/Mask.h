@@ -501,8 +501,10 @@ public:
     [[deprecated("Doc field will become non-optional. Will be removed after v27.")]] static int addMaskPlane(
             const std::string& name);
     // TODO: can we deprecate these two? Hope so!
-    static int addMaskPlane(const std::string& name, const std::string& doc);
-    static void removeMaskPlane(const std::string& name);
+    [[deprecated("Replaced with non-static `addBitMask()`.  Will be removed after v28.")]] static int
+    addMaskPlane(const std::string& name, const std::string& doc);
+    [[deprecated("Replaced with non-static `removeBitMask()`.  Will be removed after v28.")]] static void
+    removeMaskPlane(const std::string& name);
 
     /// Add a new named mask plane and doc to this Mask's plane map.
     int addPlane(const std::string& name, const std::string& doc);
@@ -541,7 +543,8 @@ public:
      *
      * @throws lsst::pex::exceptions::InvalidParameterError if plane is invalid
      */
-    static MaskPixelT getPlaneBitMask(const std::string& name);
+    [[deprecated("Replaced with non-static `getBitMask()`.  Will be removed after v28.")]] static MaskPixelT
+    getPlaneBitMask(const std::string& name);
     MaskPixelT getBitMask(std::string name) const;
 
     // Return the bit mask corresponding to the given plane id.
