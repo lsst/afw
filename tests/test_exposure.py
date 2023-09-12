@@ -26,6 +26,7 @@ Test lsst.afw.image.Exposure
 import dataclasses
 import os.path
 import unittest
+import warnings
 
 import numpy as np
 from numpy.testing import assert_allclose
@@ -1151,6 +1152,31 @@ class ExposureNoAfwdataTestCase(lsst.utils.tests.TestCase):
         testDict = {'ra': 0.0,
                     'dec': 0.0,
                     'nonsense': 1.0}
+        bytes = yaml.dump(testDict, encoding='utf-8')
+        with self.assertWarns(FutureWarning):
+            summaryStats = lsst.afw.image.ExposureSummaryStats._read(bytes)
+
+        self.assertEqual(summaryStats.ra, testDict['ra'])
+        self.assertEqual(summaryStats.dec, testDict['dec'])
+
+    def testExposureSummaryForwardComponents(self):
+        """Test that we can forward extra components (e.g. decl->dec).
+        """
+        testDict = {'ra': 10.0,
+                    'decl': 10.0}
+        bytes = yaml.dump(testDict, encoding='utf-8')
+        # Cleanly forwarded fields must not result in a warning.
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            summaryStats = lsst.afw.image.ExposureSummaryStats._read(bytes)
+
+        self.assertEqual(summaryStats.ra, testDict['ra'])
+        self.assertEqual(summaryStats.dec, testDict['decl'])
+
+        # And check if there are both listed, it should use the new dec value.
+        testDict = {'ra': 10.0,
+                    'dec': 5.0,
+                    'decl': 10.0}
         bytes = yaml.dump(testDict, encoding='utf-8')
         with self.assertWarns(FutureWarning):
             summaryStats = lsst.afw.image.ExposureSummaryStats._read(bytes)

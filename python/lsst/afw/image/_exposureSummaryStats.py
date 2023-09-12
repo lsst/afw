@@ -145,12 +145,19 @@ class ExposureSummaryStats(Storable):
     @staticmethod
     def _read(bytes):
         yamlDict = yaml.load(bytes, Loader=yaml.SafeLoader)
+
+        # Special list of fields to forward to new names.
+        forwardFieldDict = {"decl": "dec"}
+
         # For forwards compatibility, filter out any fields that are
         # not defined in the dataclass.
         droppedFields = []
         for _field in list(yamlDict.keys()):
             if _field not in ExposureSummaryStats.__dataclass_fields__:
-                droppedFields.append(_field)
+                if _field in forwardFieldDict and forwardFieldDict[_field] not in yamlDict:
+                    yamlDict[forwardFieldDict[_field]] = yamlDict[_field]
+                else:
+                    droppedFields.append(_field)
                 yamlDict.pop(_field)
         if len(droppedFields) > 0:
             droppedFieldString = ", ".join([str(f) for f in droppedFields])
