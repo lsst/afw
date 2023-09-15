@@ -135,6 +135,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.makeInstFlux(self.schema, "a", 1)
         self.makeCentroid(self.schema, "b", 2)
         self.makeShape(self.schema, "c", 2)
+        lsst.afw.table.CoordKey.addErrorFields(self.schema)
         self.table = lsst.afw.table.SourceTable.make(self.schema)
         self.catalog = lsst.afw.table.SourceCatalog(self.table)
         self.record = self.catalog.addNew()

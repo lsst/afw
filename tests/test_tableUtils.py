@@ -64,6 +64,10 @@ class UpdateTestCase(lsst.utils.tests.TestCase):
         srcSchema = afwTable.SourceTable.makeMinimalSchema()
         self.srcCentroidKey = afwTable.Point2DKey.addFields(srcSchema, "base_SdssCentroid",
                                                             "centroid", "pixels")
+        self.srcCentroidErrKey = afwTable.CovarianceMatrix2fKey.addFields(srcSchema, "base_SdssCentroid",
+                                                                          ["x", "y"], "pixels")
+        self.srcCoordErrKey = afwTable.CoordKey.addErrorFields(srcSchema)
+
         srcAliases = srcSchema.getAliasMap()
         srcAliases.set("slot_Centroid", "base_SdssCentroid")
         self.srcCoordKey = afwTable.CoordKey(srcSchema["coord"])
@@ -146,6 +150,33 @@ class UpdateTestCase(lsst.utils.tests.TestCase):
         # check that centroids and coords match
         self.checkCatalogs()
 
+    def testCoordErrors(self):
+        """Check that updateSourceCoords has correctly propagated the centroid
+        errors.
+        """
+        maxPix = 2000
+        numPoints = 10
+
+        self.setCatalogs(maxPix=maxPix, numPoints=numPoints)
+        scale = (1.0 * lsst.geom.arcseconds).asDegrees()
+        # update the catalogs
+        afwTable.updateSourceCoords(self.wcs, self.sourceCat)
+        for src in self.sourceCat:
+            center = src.get(self.srcCentroidKey)
+            skyCenter = self.wcs.pixelToSky(center)
+            localGnomonicWcs = lsst.afw.geom.makeSkyWcs(
+                center, skyCenter, np.diag((scale, scale)))
+            measurementToLocalGnomonic = self.wcs.getTransform().then(
+                localGnomonicWcs.getTransform().inverted()
+            )
+            localMatrix = measurementToLocalGnomonic.getJacobian(center)
+            radMatrix = np.radians(localMatrix / 3600)
+
+            centroidErr = src.get(self.srcCentroidErrKey)
+            coordErr = radMatrix.dot(centroidErr.dot(radMatrix.T))
+            catCoordErr = src.get(self.srcCoordErrKey)
+            np.testing.assert_almost_equal(coordErr, catCoordErr)
+
     def checkCatalogs(self, maxPixDiff=1e-5, maxSkyDiff=0.001*lsst.geom.arcseconds):
         """Check that the source and reference object catalogs have equal centroids and coords"""
         self.assertEqual(len(self.sourceCat), len(self.refCat))
@@ -182,8 +213,10 @@ class UpdateTestCase(lsst.utils.tests.TestCase):
         for i in np.linspace(-maxPix, maxPix, numPoints):
             for j in np.linspace(-maxPix, maxPix, numPoints):
                 centroid = lsst.geom.Point2D(i, j)
+                centroidErr = np.array([[0.05, 0], [0, 0.05]])
                 src = self.sourceCat.addNew()
                 src.set(self.srcCentroidKey, centroid)
+                src.set(self.srcCentroidErrKey, centroidErr)
 
                 refObj = self.refCat.addNew()
                 coord = self.wcs.pixelToSky(centroid)

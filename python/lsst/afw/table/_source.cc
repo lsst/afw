@@ -103,12 +103,12 @@ PySourceRecord declareSourceRecord(WrapperCollection &wrappers) {
         cls.def("getIxx", &SourceRecord::getIxx);
         cls.def("getIyy", &SourceRecord::getIyy);
         cls.def("getIxy", &SourceRecord::getIxy);
-        cls.def("updateCoord", (void (SourceRecord::*)(geom::SkyWcs const &)) & SourceRecord::updateCoord,
-                "wcs"_a);
+        cls.def("updateCoord", (void (SourceRecord::*)(geom::SkyWcs const &, bool)) & SourceRecord::updateCoord,
+                "wcs"_a, "include_covariance"_a=true);
         cls.def("updateCoord",
-                (void (SourceRecord::*)(geom::SkyWcs const &, PointKey<double> const &)) &
+                (void (SourceRecord::*)(geom::SkyWcs const &, PointKey<double> const &, bool)) &
                         SourceRecord::updateCoord,
-                "wcs"_a, "key"_a);
+                "wcs"_a, "key"_a, "include_covariance"_a=true);
     });
 }
 

@@ -112,6 +112,8 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
             self.schema, "d", "", lsst.afw.table.CoordinateType.PIXEL)
         self.psfShapeFlagKey = self.schema.addField("d_flag", type="Flag")
 
+        self.coordErrKey = lsst.afw.table.CoordKey.addErrorFields(self.schema)
+
         self.table = lsst.afw.table.SourceTable.make(self.schema)
         self.catalog = lsst.afw.table.SourceCatalog(self.table)
         self.record = self.catalog.addNew()
@@ -222,6 +224,31 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         coord1 = self.record.getCoord()
         coord2 = wcs.pixelToSky(self.record.get(self.centroidKey))
         self.assertEqual(coord1, coord2)
+
+    def testCoordErrors(self):
+        self.table.defineCentroid("b")
+        wcs = makeWcs()
+        self.record.updateCoord(wcs)
+
+        scale = (1.0 * lsst.geom.arcseconds).asDegrees()
+        center = self.record.getCentroid()
+        skyCenter = wcs.pixelToSky(center)
+        localGnomonicWcs = lsst.afw.geom.makeSkyWcs(
+            center, skyCenter, np.diag((scale, scale)))
+        measurementToLocalGnomonic = wcs.getTransform().then(
+            localGnomonicWcs.getTransform().inverted()
+        )
+        localMatrix = measurementToLocalGnomonic.getJacobian(center)
+        radMatrix = np.radians(localMatrix / 3600)
+
+        centroidErr = self.record.getCentroidErr()
+        coordErr = radMatrix.dot(centroidErr.dot(radMatrix.T))
+        # multiply RA by cos(Dec):
+        cosDec = np.cos(skyCenter.getDec().asRadians())
+        decCorr = np.array([[cosDec, 0], [0, 1]])
+        coordErrCorr = decCorr.dot(coordErr.dot(decCorr))
+        catCoordErr = self.record.get(self.coordErrKey)
+        np.testing.assert_almost_equal(coordErrCorr, catCoordErr, decimal=16)
 
     def testSorting(self):
         self.assertFalse(self.catalog.isSorted())

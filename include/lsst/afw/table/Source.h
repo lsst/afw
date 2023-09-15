@@ -24,7 +24,6 @@
 #ifndef AFW_TABLE_Source_h_INCLUDED
 #define AFW_TABLE_Source_h_INCLUDED
 
-
 #include "lsst/afw/detection/Footprint.h"
 #include "lsst/afw/table/Simple.h"
 #include "lsst/afw/table/aggregates.h"
@@ -33,6 +32,7 @@
 #include "lsst/afw/table/BaseColumnView.h"
 #include "lsst/afw/table/slots.h"
 #include "lsst/afw/table/io/FitsWriter.h"
+#include "lsst/afw/table/wcsUtils.h"
 
 namespace lsst {
 namespace afw {
@@ -188,10 +188,10 @@ public:
     double getIxy() const;
 
     /// Update the coord field using the given Wcs and the field in the centroid slot.
-    void updateCoord(geom::SkyWcs const &wcs);
+    void updateCoord(geom::SkyWcs const &wcs, bool include_covariance = true);
 
     /// Update the coord field using the given Wcs and the image center from the given key.
-    void updateCoord(geom::SkyWcs const &wcs, PointKey<double> const &key);
+    void updateCoord(geom::SkyWcs const &wcs, PointKey<double> const &key,  bool include_covariance = true);
 
     SourceRecord(const SourceRecord &) = delete;
     SourceRecord &operator=(const SourceRecord &) = delete;

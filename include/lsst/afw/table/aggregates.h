@@ -42,6 +42,8 @@ class Quadrupole;
 
 namespace table {
 
+template <typename T, int N>
+class CovarianceMatrixKey;
 /**
  *  A FunctorKey used to get or set a lsst::geom::Point from an (x,y) pair of int or double Keys.
  */
@@ -298,6 +300,11 @@ public:
      *  @param[in]     doc     String used as the documentation for the fields.
      */
     static CoordKey addFields(afw::table::Schema& schema, std::string const& name, std::string const& doc);
+    
+    using ErrorKey = CovarianceMatrixKey<float, 2>;
+    static ErrorKey getErrorKey(Schema const & schema);
+
+    static ErrorKey addErrorFields(Schema & schema);
 
     /// Default constructor; instance will not be usable unless subsequently assigned to.
     CoordKey() noexcept : _ra(), _dec() {}
@@ -620,6 +627,27 @@ public:
     /// Return a hash of this object.
     std::size_t hash_value() const noexcept;
 
+private:
+    ErrKeyArray _err;
+    CovarianceKeyArray _cov;
+};
+
+class CoordErrKey : public CovarianceMatrixKey<float, 2> {
+public:
+    using ErrKeyArray = std::vector<Key<float>>;
+    using CovarianceKeyArray = std::vector<Key<float>>;
+    using NameArray = std::vector<std::string>;
+
+    static CoordErrKey addFields(Schema& schema, std::string const& name, std::string const& unit,
+                                 bool diagonalOnly = false);
+    static CoordErrKey addFields(Schema& schema, std::string const& name, NameArray const& units,
+                                 bool diagonalOnly = false);
+    
+    CoordErrKey();
+
+    explicit CoordErrKey(ErrKeyArray const& err,
+                         CovarianceKeyArray const& cov = CovarianceKeyArray());
+    CoordErrKey(SubSchema const& s, std::string const& name);
 private:
     ErrKeyArray _err;
     CovarianceKeyArray _cov;
