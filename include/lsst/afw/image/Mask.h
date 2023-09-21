@@ -437,15 +437,10 @@ public:
     void clearMaskPlane(int plane);
 
     /**
-     * Clears default MaskDict planes and docs.
-     *
-     * TODO: this feels dangerous; once done, it applies everywhere, we can't remake it unless it's been
-     * saved.
-     * TODO: do we actually want clearCanonical to be an option, or just always do it to keep things
-     * consistent?
-     * @param clearCanonical Also remove all canonical planes, so that new planes start at 0.
+     * Clears default MaskDict planes and docs, but retains canonical list of all planes
+     * that have been defined.
      */
-    static void clearDefaultMaskDict(bool clearCanonical = false);
+    static void clearDefaultMaskDict();
 
     /// Reset the default MaskDict to the normal initial list, and set the canonical planes to match.
     static void restoreDefaultMaskDict();
@@ -472,20 +467,26 @@ public:
     [[deprecated("Doc field will become non-optional. Will be removed after v28.")]] static int addMaskPlane(
             const std::string& name);
     // TODO: can we deprecate these two? Hope so!
-    [[deprecated("Replaced with non-static `addBitMask()`.  Will be removed after v28.")]] static int
+    [[deprecated("Replaced with non-static `addPlane()`.  Will be removed after v28.")]] static int
     addMaskPlane(const std::string& name, const std::string& doc);
-    [[deprecated("Replaced with non-static `removeBitMask()`.  Will be removed after v28.")]] static void
+    [[deprecated(
+            "Replaced with non-static `removeAndClearMaskPlane()`.  Will be removed after v28.")]] static void
     removeMaskPlane(const std::string& name);
 
-    /// Add a new named mask plane and doc to this Mask's plane map.
-    int addPlane(const std::string& name, const std::string& doc);
+    /**
+     * Add a new named mask plane and doc to this Mask's plane map.
+     *
+     * @param ignoreCanonical Use the first free bit in this mask, ignoring the canonical planes
+     * used in other masks.
+     */
+    int addPlane(const std::string& name, const std::string& doc, bool ignoreCanonical = false);
 
     /**
      * @brief Clear all pixels of the specified mask and remove the plane from the mask plane dictionary;
      * optionally remove the plane from the default dictionary too.
      *
-     * @param name of maskplane
-     * @param removeFromDefault remove from default mask plane dictionary too
+     * @param Name of maskplane to remove.
+     * @param removeFromDefault Remove from default mask plane dictionary too.
      *
      * @throws lsst::pex::exceptions::InvalidParameterError if plane is invalid
      */
@@ -572,7 +573,7 @@ private:
     /**
      * Initialise mask planes; called by constructors
      */
-    // deprecated on DM-32438
+    // TODO DM-XXXXX: deprecated on DM-32438
     void _initializePlanes(MaskPlaneDict const& planeDefs);  // called by ctors
 
     /// Initialise mask planes; called by constructors.

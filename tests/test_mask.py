@@ -22,6 +22,7 @@
 """Tests of the Mask and MaskDict objects."""
 
 import unittest
+import warnings
 
 import numpy as np
 
@@ -62,6 +63,9 @@ class MaskDictTestCase(lsst.utils.tests.TestCase):
 
         afwImage.Mask.restoreDefaultMaskDict()
         self.assertEqual(tuple(default.keys()), self.defaultPlanes)
+        # Check that all of the default docstrings are non-empty.
+        for doc in default.doc:
+            self.assertNotEqual(doc, "")
 
         # Check clearing of canonical planes.
         afwImage.Mask.clearDefaultMaskDict(clearCanonical=True)
@@ -90,6 +94,25 @@ class MaskDictTestCase(lsst.utils.tests.TestCase):
                   )
 
         self.assertEqual(str(default), expect)
+
+        # Remove and re-add the first numbered mask; printout should not change.
+        # This tests that the output order is sorted on bit number, not on
+        # map insertion order.
+        mask = afwImage.Mask()
+        mask.removeAndClearMaskPlane("BAD")
+        mask.addPlane("BAD", "Adding original first plane")
+        temp = expect.splitlines()[1:]
+        temp.insert(0, "Plane 0 -> BAD : Adding original first plane")
+        expect = "\n".join(temp)
+        self.assertEqual(str(mask.maskDict), expect)
+
+        # Similarly, remove from the default list and re-add
+        mask.removeAndClearMaskPlane("BAD", True)
+        mask.addPlane("BAD", "Re-adding original first plane")
+        temp = expect.splitlines()[1:]
+        temp.append("Plane 9 -> BAD : Re-adding original first plane")
+        expect = "\n".join(temp)
+        self.assertEqual(expect, str(mask.maskDict))
 
     def testDictLike(self):
         """Test the (frozen) dict-like behavior of MaskDict and the docs.

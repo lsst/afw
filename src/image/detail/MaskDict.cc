@@ -32,7 +32,7 @@ namespace afw {
 namespace image {
 namespace detail {
 
-// A thread-safe singleton that manages MaskDict's global state.
+// A thread-safe singleton that manages MaskDict's global canonical state.
 class MaskDict::GlobalState final {
 public:
     static GlobalState &get() {
@@ -111,7 +111,8 @@ private:
     std::recursive_mutex _mutex;  // guards _allMaskDicts and synchronizes updates to it and _defaultMaskDict
     std::shared_ptr<MaskDict> _defaultMaskDict;
     // Maintains the list of all plane names; bit ids are the vector index.
-    // New planes always are added to the end (thus always receiving a larger bit id).
+    // New planes always are added to the end (thus always receiving a larger bit id),
+    // even if there are gaps in the list that could be used.
     std::vector<std::string> _canonicalPlanes;
 };
 
@@ -128,10 +129,33 @@ std::shared_ptr<MaskDict> MaskDict::getDefaultIfEmpty(std::shared_ptr<MaskDict> 
 }
 
 std::tuple<int, std::shared_ptr<MaskDict>> MaskDict::withNewMaskPlane(std::string name, std::string doc,
-                                                                      int maxPlanes) {
+                                                                      int maxPlanes, bool ignoreCanonical) {
     auto iter = _dict.find(name);
     if (iter == _dict.end()) {
-        int id = GlobalState::get().getBitIdForNewPlane(name);
+        int id = maxPlanes;
+        std::set<int> existingIds;  // to check for empty bits we can re-use
+        for (auto const &item : _dict) {
+            existingIds.insert(item.second);
+            std::cout << item.second << std::endl;
+        }
+        if (ignoreCanonical) {
+            for (int i; i < maxPlanes; ++i) {
+                if (existingIds.find(i) == existingIds.end()) {
+                    id = i;
+                    break;
+                }
+            }
+        } else {
+            id = GlobalState::get().getBitIdForNewPlane(name);
+            if (existingIds.find(id) != existingIds.end()) {
+                throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
+                                  (boost::format("Plane %1% cannot be added because it will duplicate "
+                                                 "canonical plane id %2%.") %
+                                   name % id)
+                                          .str());
+            }
+        }
+        std::cout << name << " " << id << std::endl;
         if (id >= maxPlanes) {
             // TODO?? iterate over _dict looking for gaps.
             throw LSST_EXCEPT(
@@ -140,9 +164,16 @@ std::tuple<int, std::shared_ptr<MaskDict>> MaskDict::withNewMaskPlane(std::strin
                      maxPlanes % name)
                             .str());
         }
-        _dict[name] = id;
-        _docs[name] = doc;
-        return std::make_tuple(id, shared_from_this());
+        if (existingIds.find(id) != existingIds.end()) {
+            auto newMaskDict = GlobalState::get().copy(*this);
+            newMaskDict->_dict[name] = id;
+            newMaskDict->_docs[name] = doc;
+            return std::make_tuple(id, newMaskDict);
+        } else {
+            _dict[name] = id;
+            _docs[name] = doc;
+            return std::make_tuple(id, shared_from_this());
+        }
     }
 
     int id = iter->second;

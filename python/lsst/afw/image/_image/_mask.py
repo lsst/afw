@@ -74,36 +74,54 @@ class Mask(metaclass=TemplateMeta):
             item = "mask" if "mask" in options else "image"
         return imageWriteFitsWithOptions(self, dest, options, item=item)
 
-    @staticmethod
-    def addMaskPlane(name, doc=None):
-        # Temporary overload helper for deprecation message.
-        if doc is None:
-            warnings.warn("Doc field will become non-optional. Will be removed after v26.", FutureWarning)
-            doc = ""
-        return Mask.addMaskPlaneWithDoc(name, doc)
-
-    def getMaskPlaneDict(self):
-        """For backwards compatibility."""
-        return self.getMaskDict()
-
     @property
     def maskDict(self):
         return self.getMaskDict()
 
+    @staticmethod
+    def addMaskPlane(name, doc=None):
+        # TODO DM-XXXXX: Temporary overload helper for deprecation message.
+        if doc is None:
+            warnings.warn("Doc field will become non-optional. Will be removed after v28.", FutureWarning)
+            doc = ""
+        return Mask.addMaskPlaneWithDoc(name, doc)
 
-# @collections.abc.Mapping.register
+    def getMaskPlaneDict(self):
+        """For backwards compatibility.
+        """
+        # TODO DM-XXXXX: remove
+        return self.getMaskDict()
+
+    # TODO DM-XXXXX: remove
+    @staticmethod
+    def getPlaneBitMask(name):
+        warnings.warn("Replaced by non-static getBitMask. Will be removed after v28.", FutureWarning)
+        return Mask._getPlaneBitMask(name)
+
+    @staticmethod
+    def removeMaskPlane(name):
+        warnings.warn("Replaced by non-static removeAndClearMaskPlane. Will be removed after v28.",
+                      FutureWarning)
+        return Mask._removeMaskPlane(name)
+
+    @staticmethod
+    def getMaskPlane(name):
+        warnings.warn("Replaced by non-static getPlaneId. Will be removed after v28.", FutureWarning)
+        return Mask._getMaskPlane(name)
+
+
 @continueClass
 class MaskDict(collections.abc.Mapping):  # noqa: F811
+    """Dict-like view to the underlying C++ MaskDict object.
+
+    TODO: More docs of what it is here?
+    """
 
     @property
     def doc(self):
-        """A view of the docstrings for these mask planes.
+        """A view of the docstring mapping for these mask planes.
         """
         return types.MappingProxyType(self._getMaskPlaneDocDict())
-
-    # def __contains__(self, name):
-    #     # TODO: try this??
-    #     return collections.abc.Mapping.__contains__(self, name)
 
     def __iter__(self):
         return iter(self._getPlaneNames())
@@ -118,104 +136,6 @@ class MaskDict(collections.abc.Mapping):  # noqa: F811
 
     def __repr__(self):
         return self._print()
-
-    # def keys(self):
-    #     None
-
-    # def items(self):
-    #     None
-
-    # def values(self):
-    #     None
-
-    # def get(self, name):
-    #     None
-
-    # def __eq__(self, other):
-    #     None
-
-    # TODO: check that we get this for free
-    # def __ne__(self, other):
-    #     None
-
-
-# @collections.abc.Mapping.register
-# class MaskDict(C_MaskDict):
-#     """
-#     Mapping view of the underlying C++ MaskDict state.
-
-#     Modifying the mask planes this is a view of may invalidate this view
-#     instance.
-
-#     Notes
-#     -----
-#     This class directly implements all of the abc.Mapping interface, instead
-#     of inheriting, to avoid metaclass conflicts with pybind11. We need the
-#     C_MaskDict parent to allow passing this into pybind11.
-#     """
-
-#     def __init__(self, c_maskDict):
-#         self._c_maskDict = c_maskDict
-#         # self._doc = _MaskDocMappingView(c_maskDict)
-
-#     @property
-#     def doc(self):
-#         return self._doc
-
-#     def __contains__(self, name):
-#         # TODO: try this??
-#         return collections.abc.Mapping.__contains__(self, name)
-
-#     def __iter__(self):
-#         return iter(self._c_maskDict.getPlaneNames())
-
-#     def __len__(self):
-#         return self._c_maskDict.size()
-
-#     def __getitem__(self, name):
-#         if (id := self._c_maskDict.getPlaneId(name)) < 0:
-#             raise KeyError(name)
-#         return id
-
-#     def __repr__(self):
-#         return self._c_maskDict.print()
-
-#     def keys(self):
-#         None
-
-#     def items(self):
-#         None
-
-#     def values(self):
-#         None
-
-#     def get(self, name):
-#         None
-
-#     def __eq__(self, other):
-#         None
-
-    # TODO: check that we get this for free
-    # def __ne__(self, other):
-    #     None
-
-# class _MaskDocMappingView(collections.abc.Mapping):
-#     """
-#     stuff
-#     """
-#     def __init__(self, c_maskDict):
-#         self._c_maskDict = c_maskDict
-
-#     def __iter__(self):
-#         return iter(self._c_maskDict.getPlaneNames())
-
-#     def __len__(self):
-#         return self._c_maskDict.size()
-
-#     def __getitem__(self, name):
-#         if self._c_maskDict.getPlaneId(name) < 0:
-#             raise KeyError(name)
-#         return self._c_maskDict.getPlaneDoc(name)
 
 
 Mask.register(MaskPixel, MaskX)

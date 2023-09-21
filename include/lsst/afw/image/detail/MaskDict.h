@@ -96,11 +96,13 @@ public:
      * @param name Mask plane name to add.
      * @param doc Docstring for new mask plane.
      * @param maxPlanes Maximum number of allowed planes (defined by the pixel type of the Mask).
+     * @param ignoreCanonical Use the first free bit in this mask, ignoring the canonical planes
+     *        used in other masks.
      *
      * @return Tuple containing the new bit id added and a pointer to the ????
      */
     std::tuple<int, std::shared_ptr<MaskDict>> withNewMaskPlane(std::string name, std::string doc,
-                                                                int maxPlanes);
+                                                                int maxPlanes, bool ignoreCanonical = false);
 
     /// Return a mask dict without the given mask plane (may or may not be a copy).
     std::shared_ptr<MaskDict> withRemovedMaskPlane(std::string name);

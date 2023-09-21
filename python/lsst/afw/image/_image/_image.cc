@@ -258,24 +258,32 @@ static void declareMask(lsst::utils::python::WrapperCollection &wrappers, std::s
         cls.def("getAsString", &Mask<MaskPixelT>::getAsString);
         cls.def("clearAllMaskPlanes", &Mask<MaskPixelT>::clearAllMaskPlanes);
         cls.def("clearMaskPlane", &Mask<MaskPixelT>::clearMaskPlane);
-        cls.def_static("clearDefaultMaskDict", &Mask<MaskPixelT>::clearDefaultMaskDict,
-                       "clearCanonical"_a = false);
+        cls.def_static("clearDefaultMaskDict", &Mask<MaskPixelT>::clearDefaultMaskDict);
         cls.def_static("restoreDefaultMaskDict", &Mask<MaskPixelT>::restoreDefaultMaskDict);
         cls.def_static("setDefaultMaskDict", &Mask<MaskPixelT>::setDefaultMaskDict);
         // cls.def("setMaskPlaneValues", &Mask<MaskPixelT>::setMaskPlaneValues);
         cls.def_static("parseMaskPlaneMetadata", Mask<MaskPixelT>::parseMaskPlaneMetadata);
-        cls.def_static("removeMaskPlane", Mask<MaskPixelT>::removeMaskPlane);
+        cls.def_static("_removeMaskPlane", Mask<MaskPixelT>::removeMaskPlane);
         cls.def("removeAndClearMaskPlane", &Mask<MaskPixelT>::removeAndClearMaskPlane, "name"_a,
                 "removeFromDefault"_a = false);
-        cls.def("addPlane", &Mask<MaskPixelT>::addPlane);
-        cls.def_static("getMaskPlane", Mask<MaskPixelT>::getMaskPlane);
-        cls.def_static("getPlaneBitMask",
+        cls.def("addPlane", &Mask<MaskPixelT>::addPlane, "name"_a, "doc"_a, "ignoreCanonical"_a = false);
+
+        // TODO DM-XXXXX: remove these
+        cls.def_static("_getMaskPlane", Mask<MaskPixelT>::getMaskPlane);
+        cls.def_static("_getPlaneBitMask",
                        (MaskPixelT(*)(const std::string &))Mask<MaskPixelT>::getPlaneBitMask);
-        cls.def_static("getPlaneBitMask",
+        cls.def_static("_getPlaneBitMask",
                        (MaskPixelT(*)(const std::vector<std::string> &))Mask<MaskPixelT>::getPlaneBitMask);
-        cls.def("getBitMask", (MaskPixelT(*)(const std::string &))Mask<MaskPixelT>::getPlaneBitMask);
+        // Temporary name for deprecation. Restore `addMaskPlane` name once the non-doc overload is removed.
+        cls.def_static("addMaskPlaneWithDoc",
+                       (int (*)(const std::string &, const std::string &))Mask<MaskPixelT>::addMaskPlane);
+
+        cls.def("getBitMask", py::overload_cast<std::string>(&Mask<MaskPixelT>::getBitMask, py::const_),
+                "name"_a);
         cls.def("getBitMask",
-                (MaskPixelT(*)(const std::vector<std::string> &))Mask<MaskPixelT>::getPlaneBitMask);
+                py::overload_cast<const std::vector<std::string> &>(&Mask<MaskPixelT>::getBitMask,
+                                                                    py::const_),
+                "names"_a);
         cls.def_static("getNumPlanesMax", Mask<MaskPixelT>::getNumPlanesMax);
         cls.def("getNumPlanesUsed", &Mask<MaskPixelT>::getNumPlanesUsed);
 

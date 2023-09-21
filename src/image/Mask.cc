@@ -342,8 +342,8 @@ void Mask<MaskPixelT>::removeMaskPlane(const std::string& name) {
 }
 
 template <typename MaskPixelT>
-int Mask<MaskPixelT>::addPlane(const std::string& name, const std::string& doc) {
-    auto [id, newMaskDict] = _maskDict->withNewMaskPlane(name, doc, getNumPlanesMax());
+int Mask<MaskPixelT>::addPlane(const std::string& name, const std::string& doc, bool ignoreCanonical) {
+    auto [id, newMaskDict] = _maskDict->withNewMaskPlane(name, doc, getNumPlanesMax(), ignoreCanonical);
     _maskDict = newMaskDict;
     return id;
 }
@@ -447,8 +447,8 @@ void Mask<MaskPixelT>::clearMaskPlane(int planeId) {
 
 // NOTE: static
 template <typename MaskPixelT>
-void Mask<MaskPixelT>::clearDefaultMaskDict(bool clearCanonical) {
-    detail::MaskDict::clearDefaultPlanes(clearCanonical);
+void Mask<MaskPixelT>::clearDefaultMaskDict() {
+    detail::MaskDict::clearDefaultPlanes();
 }
 
 // NOTE: static
