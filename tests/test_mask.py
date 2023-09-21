@@ -249,6 +249,118 @@ class MaskDictTestCase(lsst.utils.tests.TestCase):
         self.assertIsNot(mask1.maskDict, afwImage.MaskDict.getDefault())
 
 
+class MaskTestCase(lsst.utils.tests.TestCase):
+    def setUp(self):
+        # Ensure the planes are always the same at the start of each test.
+        afwImage.Mask.restoreDefaultMaskDict()
+
+        self.mask1 = afwImage.Mask(100, 200)
+        self.mask2 = afwImage.Mask(self.mask1.getDimensions())
+
+        self.BAD = self.mask1.getBitMask("BAD")
+        self.CR = self.mask1.getBitMask("CR")
+        self.EDGE = self.mask1.getBitMask("EDGE")
+        self.SAT = self.mask1.getBitMask("SAT")
+
+        # So we can both AND and OR the masks in tests.
+        self.value1 = self.BAD | self.CR
+        self.value2 = self.CR | self.EDGE
+
+        self.mask1.set(self.value1)
+        self.mask2.set(self.value2)
+
+    def testAddMaskPlaneDeprecation(self):
+        """Remove this method on DM-XXXXX once the doc is non-optional.
+        """
+        with self.assertWarnsRegex(FutureWarning, "Doc field will become non-optional"):
+            self.mask1.addMaskPlane("NODOCSTRING")
+
+        # This should not raise
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", category=FutureWarning)
+            self.mask1.addMaskPlane("YESDOCSTRING", "some docs")
+
+    def testArrays(self):
+        """Tests of the ndarray interface to the underlying Mask array.
+        """
+        # could use Mask(5, 6) but check extent(5, 6) form too
+        image1 = afwImage.Mask(lsst.geom.ExtentI(5, 6))
+        self.assertEqual(image1.array.shape[0], image1.getHeight())
+        self.assertEqual(image1.array.shape[1], image1.getWidth())
+
+        image2 = afwImage.Mask(image1.array, False)
+        self.assertEqual(image1.array.shape[0], image2.getHeight())
+        self.assertEqual(image1.array.shape[1], image2.getWidth())
+
+        image3 = afwImage.makeMaskFromArray(image1.array)
+        self.assertEqual(image1.array.shape[0], image2.getHeight())
+        self.assertEqual(image1.array.shape[1], image2.getWidth())
+        self.assertEqual(type(image3), afwImage.Mask[afwImage.MaskPixel])
+        image1.array[:, :] = np.random.uniform(low=0, high=10, size=image1.array.shape)
+        self.assertMasksEqual(image1, image1.array)
+        array3 = np.random.uniform(low=0, high=10, size=image1.array.shape).astype(image1.array.dtype)
+        image1.array = array3
+        np.testing.assert_array_equal(image1.array, array3)
+
+    def testInitializeMask(self):
+        value = 0x1234
+        mask = afwImage.Mask(lsst.geom.ExtentI(10, 10), value)
+        self.assertEqual(mask[0, 0], value)
+
+    def testOrMasks(self):
+        expect = np.empty_like(self.mask1.array)
+        expect[:] = self.value2 | self.value1
+
+        # Check or-ing with another mask array.
+        self.mask2 |= self.mask1
+        self.assertMasksEqual(self.mask2, expect)
+
+        # Check or-ing with a number.
+        self.mask1 |= self.value2
+        self.assertMasksEqual(self.mask1, expect)
+
+    def testAndMasks(self):
+        expect = np.empty_like(self.mask1.array)
+        expect[:] = self.value1 & self.value2
+
+        # Check and-ing with another mask array.
+        self.mask2 &= self.mask1
+        self.assertMasksEqual(self.mask2, expect)
+
+        # Check and-ing with a number.
+        self.mask1 &= self.value2
+        self.assertMasksEqual(self.mask1, expect)
+
+    def testXorMasks(self):
+        expect = np.empty_like(self.mask1.array)
+        expect[:] = self.value1 ^ self.value2
+
+        # Check xor-ing with another mask array.
+        self.mask2 ^= self.mask1
+        self.assertMasksEqual(self.mask2, expect)
+
+        # Check xor-ing with a number.
+        self.mask1 ^= self.value2
+        self.assertMasksEqual(self.mask1, expect)
+
+    def testLogicalMasksMismatch(self):
+        """Logical operations on Masks of different sizes should raise.
+        """
+        i1 = afwImage.Mask(lsst.geom.ExtentI(100, 100))
+        i1.set(100)
+        i2 = afwImage.Mask(lsst.geom.ExtentI(10, 10))
+        i2.set(10)
+
+        with self.assertRaises(lsst.pex.exceptions.LengthError):
+            i1 |= i2
+
+        with self.assertRaises(lsst.pex.exceptions.LengthError):
+            i1 &= i2
+
+        with self.assertRaises(lsst.pex.exceptions.LengthError):
+            i1 ^= i2
+
+
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
 
