@@ -45,6 +45,12 @@ class IncompleteDataError(Exception):
     partialPsf: `MultibandImage`
         The image of the PSF using only the bands that successfully
         computed a PSF image.
+
+    Parameters
+    ----------
+    bands : `list` of `str`
+        The full list of bands in the `MultibandExposure` generating
+        the PSF.
     """
     def __init__(self, bands, position, partialPsf):
         missingBands = [band for band in bands if band not in partialPsf.filters]
@@ -74,7 +80,7 @@ def computePsfImage(psfModels, position, useKernelImage=True):
 
     Returns
     -------
-    psfs: `np.ndarray`
+    psfs: `lsst.afw.image.MultibandImage`
         The multiband PSF image.
     """
     psfs = {}
@@ -275,7 +281,7 @@ class MultibandExposure(MultibandTripleBase):
 
         Returns
         -------
-        psfs : `list` of `lsst.afw.detection.Psf`
+        psfs : `dict` of `lsst.afw.detection.Psf`
             The PSF in each band
         """
         return {band: self[band].getPsf() for band in self.filters}
