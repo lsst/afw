@@ -93,7 +93,7 @@ That's not the case if we make a subimage of our subimage:
 >>> sub2b.getBBox(LOCAL)
 (minimum=(0, 0), maximum=(2, 1))
 
-As in the previous case, when we make a subimage using a box in `PARENT`coordinates, the PARENT bounding box of the result is that same box.
+As in the previous case, when we make a subimage using a box in `PARENT` coordinates, the PARENT bounding box of the result is that same box.
 When we make a subimage using a box in `LOCAL` coordinates, that input box is different from both the resulting subimage's `LOCAL` bounding box and its `PARENT` bounding box.
 
 .. note::
