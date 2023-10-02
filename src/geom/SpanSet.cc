@@ -863,6 +863,18 @@ std::shared_ptr<SpanSet> SpanSet::transformedBy(TransformPoint2ToPoint2 const& t
         fromCorners.emplace_back(lsst::geom::Point2D(fc));
     }
     auto toPoints = t.applyForward(fromCorners);
+
+    // Check that this was a valid transformation.
+    // Inverses should be good to floating point precision, this is just
+    // a very rough check.
+    auto fromToPoints = t.applyInverse(toPoints);
+    for (int i = 0; i < 4; ++i) {
+        if ((std::abs(fromToPoints[i].getX() - fromCorners[i].getX()) > 1.0) ||
+            (std::abs(fromToPoints[i].getY() - fromCorners[i].getY()) > 1.0)) {
+            return std::make_shared<SpanSet>();
+        }
+    }
+
     for (auto const& tc : toPoints) {
         newBBoxD.include(tc);
     }
