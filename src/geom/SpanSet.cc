@@ -848,6 +848,12 @@ std::shared_ptr<SpanSet> SpanSet::transformedBy(lsst::geom::AffineTransform cons
 }
 
 std::shared_ptr<SpanSet> SpanSet::transformedBy(TransformPoint2ToPoint2 const& t) const {
+    // If the SpanSet is empty, its bounding box corners are not
+    // meaningful and cannot be transformed.
+    if (_spanVector.empty()) {
+        return std::make_shared<SpanSet>();
+    }
+
     // Transform points in SpanSet by Transform<Point2Endpoint, Point2Endpoint>
     // Transform the original bounding box
     lsst::geom::Box2D newBBoxD;
