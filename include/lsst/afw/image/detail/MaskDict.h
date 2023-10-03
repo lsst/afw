@@ -31,6 +31,8 @@ namespace afw {
 namespace image {
 namespace detail {
 
+struct MaskDictImpl;
+
 using MaskPlaneDict = std::map<std::string, int>;
 using MaskPlaneDocDict = std::map<std::string, std::string>;
 
@@ -71,15 +73,17 @@ using MaskPlaneDocDict = std::map<std::string, std::string>;
  * With the exception of addMaskPlane, all MaskDict methods provide strong
  * exception safety.
  */
-class MaskDict final : public std::enable_shared_from_this<MaskDict> {
+class MaskDict final {
 public:
     using value_type = MaskPlaneDict::value_type;
     using const_iterator = MaskPlaneDict::const_iterator;
 
-    // NEW STUFF
+    explicit MaskDict(int maxPlanes, bool _default = true);
+    explicit MaskDict(int maxPlanes, MaskPlaneDict const &dict, MaskPlaneDocDict const &docs);
 
-    /// Return the default MaskDict if `dict` is null or an empty map.
-    static std::shared_ptr<MaskDict> getDefaultIfEmpty(std::shared_ptr<MaskDict> const &dict);
+    int add(std::string name, std::string doc);
+    void remove(std::string name);
+    void conformTo(MaskDict const &other);
 
     /**
      * Add a mask plane with the given name and doc.
@@ -156,14 +160,16 @@ public:
      */
     // static void addAllMasksPlane(std::string const &name, int bitId, std::string const &doc);
 
-    // Assignment is disabled; we don't need it.
-    MaskDict &operator=(MaskDict const &) = delete;
-    MaskDict &operator=(MaskDict &&) = delete;
+    // ??? - I think these are all good to have?
+    MaskDict &operator=(MaskDict const &) = default;
+    MaskDict &operator=(MaskDict &&) = default;
+    MaskDict(MaskDict const &) = default;
+    MaskDict(MaskDict &&) = default;
 
-    ~MaskDict() noexcept;
+    ~MaskDict() noexcept = default;
 
-    // Return a deep copy of the MaskDict.
-    // std::shared_ptr<MaskDict> clone() const;
+    /// Return a deep copy of the MaskDict.
+    MaskDict clone() const;
 
     /*
      * Return an integer bit ID that is not currently used in this MaskDict.
@@ -204,9 +210,9 @@ public:
     // bool empty() const noexcept { return _dict.empty(); }
 
     // Return the internal MaskPlaneDict.
-    MaskPlaneDict const &getMaskPlaneDict() const noexcept { return _dict; }
+    MaskPlaneDict const &getMaskPlaneDict() const noexcept { return _dict->_dict; }
     // Return the internal MaskPlaneDocDict.
-    MaskPlaneDocDict const &getMaskPlaneDocDict() const noexcept { return _docs; }
+    MaskPlaneDocDict const &getMaskPlaneDocDict() const noexcept { return _dict->_docs; }
 
     // Add a mask plane to just this MaskDict.
     // If a plane with the given name already exists, it is overridden.
@@ -222,24 +228,19 @@ public:
     // void clear();
 
 private:
-    class GlobalState;
+    // Internal shared_ptr storage for the maps.
+    struct MaskDictImpl {
+        MaskPlaneDict _dict;
+        MaskPlaneDocDict _docs;
+        explicit MaskDictImpl(bool _default);
+        explicit MaskDictImpl(MaskPlaneDict const &dict, MaskPlaneDocDict const &docs);
 
-    // Add mask planes that should be present on all Masks that don't
-    // explicitly remove them.  Called exactly once, when initalizing
-    // GlobalState.
-    void _addInitialMaskPlanes();
+        // Add mask planes that should be present in a default Mask.
+        void _addInitialMaskPlanes();
+    };
 
-    // ALL MaskDict constructors should only be from GlobalState,
-    // in order to ensure the global set of active dictionaries
-    // is kept up-to-date.
-    MaskDict();
-    explicit MaskDict(MaskPlaneDict const &dict, MaskPlaneDocDict const &docs);
-
-    MaskDict(MaskDict const &) = default;
-    MaskDict(MaskDict &&) = default;
-
-    MaskPlaneDict _dict;
-    MaskPlaneDocDict _docs;
+    int _maxPlanes;
+    std::shared_ptr<MaskDictImpl> _dict;
 };
 
 }  // namespace detail

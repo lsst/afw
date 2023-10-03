@@ -128,6 +128,13 @@ static void declareMaskDict(lsst::utils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(
             py::class_<detail::MaskDict, std::shared_ptr<detail::MaskDict>>(wrappers.module, "MaskDict"),
             [](auto &mod, auto &cls) {
+                cls.def(py::init<int, bool>(), "maxPlanes"_a, py::kw_only(), "default"_a = true);
+                cls.def(py::init<int, detail::MaskPlaneDict, detail::MaskPlaneDocDict>());
+                cls.def("__eq__", &detail::MaskDict::operator==, py::is_operator());
+                cls.def("__ne__", &detail::MaskDict::operator!=, py::is_operator());
+                cls.def("add", &detail::MaskDict::add);
+                cls.def("remove", &detail::MaskDict::remove);
+                cls.def("clone", &detail::MaskDict::clone);
                 cls.def("_print", &detail::MaskDict::print);
                 cls.def("_getPlaneId", &detail::MaskDict::getPlaneId);
                 cls.def("_getPlaneDoc", &detail::MaskDict::getPlaneDoc);
@@ -154,36 +161,36 @@ static void declareMask(lsst::utils::python::WrapperCollection &wrappers, std::s
         /* Constructors */
         // cls.def(py::init<unsigned int, unsigned int, typename Mask<MaskPixelT>::MaskPlaneDict const &>(),
         //         "width"_a, "height"_a, "planeDefs"_a);
-        cls.def(py::init<unsigned int, unsigned int, std::shared_ptr<detail::MaskDict>>(), "width"_a,
-                "height"_a, "maskDict"_a = nullptr);
+        cls.def(py::init<unsigned int, unsigned int, std::optional<detail::MaskDict>>(), "width"_a,
+                "height"_a, "maskDict"_a = std::nullopt);
 
         // cls.def(py::init<unsigned int, unsigned int, MaskPixelT,
         //                  typename Mask<MaskPixelT>::MaskPlaneDict const &>(),
         //         "width"_a, "height"_a, "initialValue"_a, "planeDefs"_a);
-        cls.def(py::init<unsigned int, unsigned int, MaskPixelT, std::shared_ptr<detail::MaskDict>>(),
-                "width"_a, "height"_a, "initialValue"_a, "maskDict"_a = nullptr);
+        cls.def(py::init<unsigned int, unsigned int, MaskPixelT, std::optional<detail::MaskDict>>(),
+                "width"_a, "height"_a, "initialValue"_a, "maskDict"_a = std::nullopt);
 
         // cls.def(py::init<lsst::geom::Extent2I const &, typename Mask<MaskPixelT>::MaskPlaneDict const &>(),
         //         "dimensions"_a, "planeDefs"_a);
-        cls.def(py::init<lsst::geom::Extent2I const &, std::shared_ptr<detail::MaskDict>>(),
-                "dimensions"_a = lsst::geom::Extent2I(), "maskDict"_a = nullptr);
+        cls.def(py::init<lsst::geom::Extent2I const &, std::optional<detail::MaskDict>>(),
+                "dimensions"_a = lsst::geom::Extent2I(), "maskDict"_a = std::nullopt);
 
         // cls.def(py::init<lsst::geom::Extent2I const &, MaskPixelT,
         //                  typename Mask<MaskPixelT>::MaskPlaneDict const &>(),
         //         "dimensions"_a, "initialValue"_a, "planeDefs"_a);
-        cls.def(py::init<lsst::geom::Extent2I const &, MaskPixelT, std::shared_ptr<detail::MaskDict>>(),
-                "dimensions"_a, "initialValue"_a, "maskDict"_a = nullptr);
+        cls.def(py::init<lsst::geom::Extent2I const &, MaskPixelT, std::optional<detail::MaskDict>>(),
+                "dimensions"_a, "initialValue"_a, "maskDict"_a = std::nullopt);
 
         // cls.def(py::init<lsst::geom::Box2I const &, typename Mask<MaskPixelT>::MaskPlaneDict const &>(),
         //         "bbox"_a, "planeDefs"_a);
-        cls.def(py::init<lsst::geom::Box2I const &, std::shared_ptr<detail::MaskDict>>(), "bbox"_a,
-                "maskDict"_a = nullptr);
+        cls.def(py::init<lsst::geom::Box2I const &, std::optional<detail::MaskDict>>(), "bbox"_a,
+                "maskDict"_a = std::nullopt);
 
         // cls.def(py::init<lsst::geom::Box2I const &, MaskPixelT,
         //                  typename Mask<MaskPixelT>::MaskPlaneDict const &>(),
         //         "bbox"_a, "initialValue"_a, "planeDefs"_a);
-        cls.def(py::init<lsst::geom::Box2I const &, MaskPixelT, std::shared_ptr<detail::MaskDict>>(),
-                "bbox"_a, "initialValue"_a, "maskDict"_a = nullptr);
+        cls.def(py::init<lsst::geom::Box2I const &, MaskPixelT, std::optional<detail::MaskDict>>(), "bbox"_a,
+                "initialValue"_a, "maskDict"_a = std::nullopt);
 
         cls.def(py::init<const Mask<MaskPixelT> &, const bool>(), "src"_a, "deep"_a = false);
         cls.def(py::init<const Mask<MaskPixelT> &, const lsst::geom::Box2I &, ImageOrigin const,
@@ -263,10 +270,9 @@ static void declareMask(lsst::utils::python::WrapperCollection &wrappers, std::s
         cls.def_static("setDefaultMaskDict", &Mask<MaskPixelT>::setDefaultMaskDict);
         // cls.def("setMaskPlaneValues", &Mask<MaskPixelT>::setMaskPlaneValues);
         cls.def_static("parseMaskPlaneMetadata", Mask<MaskPixelT>::parseMaskPlaneMetadata);
-        cls.def_static("_removeMaskPlane", Mask<MaskPixelT>::removeMaskPlane);
-        cls.def("removeAndClearMaskPlane", &Mask<MaskPixelT>::removeAndClearMaskPlane, "name"_a,
-                "removeFromDefault"_a = false);
-        cls.def("addPlane", &Mask<MaskPixelT>::addPlane, "name"_a, "doc"_a, "ignoreCanonical"_a = false);
+        // cls.def_static("_removeMaskPlane", Mask<MaskPixelT>::removeMaskPlane);
+        cls.def("removeAndClearMaskPlane", &Mask<MaskPixelT>::removeAndClearMaskPlane, "name"_a);
+        cls.def("addPlane", &Mask<MaskPixelT>::addPlane, "name"_a, "doc"_a);
 
         // TODO DM-XXXXX: remove these
         cls.def_static("_getMaskPlane", Mask<MaskPixelT>::getMaskPlane);

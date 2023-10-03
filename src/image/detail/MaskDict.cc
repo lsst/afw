@@ -190,42 +190,16 @@ std::tuple<int, std::shared_ptr<MaskDict>> MaskDict::withNewMaskPlane(std::strin
     }
 }
 
-std::shared_ptr<MaskDict> MaskDict::withRemovedMaskPlane(std::string name) {
-    auto newMaskDict = GlobalState::get().copy(*this);
-    newMaskDict->_dict.erase(name);
-    newMaskDict->_docs.erase(name);
-    return newMaskDict;
-}
-
-std::shared_ptr<MaskDict> MaskDict::getDefault() { return GlobalState::get().getDefault(); }
-
-void MaskDict::setDefault(std::shared_ptr<MaskDict> dict, bool resetCanonicalPlanes) {
-    GlobalState::get().setDefault(std::move(dict));
-    if (resetCanonicalPlanes) {
-        GlobalState::get().setCanonicalPlanesFromDefault();
+void MaskDict::remove(std::string name) {
+    if (_dict.use_count() != 1) {
+        throw LSST_EXCEPT(
+                lsst::pex::exceptions::RuntimeError,
+                (boost::format("Cannot remove plane '%1%'; there are '%2%' entities sharing this MaskDict.") %
+                 name % _dict.use_count())
+                        .str());
     }
-}
-
-// NOTE: static
-int MaskDict::getCanonicalPlaneId(std::string name) {
-    int id = GlobalState::get().getBitIdForNewPlane(name);
-    auto iter = GlobalState::get().getDefault()->_dict.find(name);
-    if (iter->second != id) {
-        throw LSST_EXCEPT(pexExcept::LogicError,
-                          (boost::format("Canonical plane id (%1%) does not match global plane id (%2%)") %
-                           id % iter->second)
-                                  .str());
-    }
-    return id;
-}
-
-// NOTE: static
-void MaskDict::clearDefaultPlanes(bool clearCanonical) {
-    GlobalState::get().getDefault()->_dict.clear();
-    GlobalState::get().getDefault()->_docs.clear();
-    if (clearCanonical) {
-        GlobalState::get().clearCanonicalPlanes();
-    }
+    _dict->_dict.erase(name);
+    _dict->_docs.erase(name);
 }
 
 // NOTE: static

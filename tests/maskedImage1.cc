@@ -73,7 +73,7 @@ int test(int argc, char **argv) {
     }
 
     *testMaskedImage1->getVariance() = 10.0;
-    testMaskedImage1->getMask()->addMaskPlane("CR");
+    testMaskedImage1->getMask()->addPlane("CR", "a cosmic ray");
 
     // verify that copy constructor and operator= build and do not leak
     MaskedImage::Image testImage(lsst::geom::Extent2I(100, 100));

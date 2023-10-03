@@ -146,6 +146,13 @@ void computeMaskedImageStack(image::MaskedImage<PixelT> &imgStack,
     }
     assert(weights.empty() || weights.size() == images.size());
 
+    image::MaskPixel noGoodPixelsMask = 0;
+    try {
+        noGoodPixelsMask = imgStack.getMask()->getBitMask(sctrlTmp.getNoGoodPixels());
+    } catch (lsst::pex::exceptions::InvalidParameterError const &) {
+        ;
+    }
+
     // loop over x,y ... the loop over the stack to fill pixelSet
     // - get the stats on pixelSet and put the value in the output image at x,y
     for (int y = 0; y != imgStack.getHeight(); ++y) {
@@ -176,7 +183,7 @@ void computeMaskedImageStack(image::MaskedImage<PixelT> &imgStack,
             image::MaskPixel msk(stat.getOrMask());
             int const npoint = stat.getValue(NPOINT);
             if (npoint == 0) {
-                msk = sctrlTmp.getNoGoodPixelsMask();
+                msk = noGoodPixelsMask;
             } else if (npoint == 1) {
                 /*
                  * you should be using sctrl.setCalcErrorFromInputVariance(true) if you want to avoid

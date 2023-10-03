@@ -230,8 +230,7 @@ Exposure<ImageT, MaskT, VarianceT> Exposure<ImageT, MaskT, VarianceT>::getCutout
     // cutout must have independent ExposureInfo
     auto copyInfo = std::make_shared<ExposureInfo>(*getInfo());
     MaskedImageT blank(bbox);  // Can't initialize Exposure with a temporary
-    blank = math::edgePixel<MaskedImageT>(
-            typename image::detail::image_traits<MaskedImageT>::image_category());
+    blank = math::getEdgePixelDefault(_maskedImage);
     Exposure cutout(blank, copyInfo);
 
     _copyCommonPixels(cutout, *this);

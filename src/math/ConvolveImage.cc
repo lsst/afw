@@ -65,8 +65,7 @@ inline void setEdgePixels(OutImageT& outImage, Kernel const& kernel, InImageT co
     const unsigned int kCtrX = kernel.getCtr().getX();
     const unsigned int kCtrY = kernel.getCtr().getY();
 
-    const typename OutImageT::SinglePixel edgePixel =
-            math::edgePixel<OutImageT>(typename image::detail::image_traits<OutImageT>::image_category());
+    const typename OutImageT::SinglePixel edgePixel = math::getEdgePixelDefault(outImage);
     std::vector<lsst::geom::Box2I> bboxList;
 
     // create a list of bounding boxes describing edge regions, in this order:
@@ -116,8 +115,7 @@ inline void setEdgePixels(OutImageT& outImage, Kernel const& kernel, InImageT co
     const unsigned int kCtrX = kernel.getCtr().getX();
     const unsigned int kCtrY = kernel.getCtr().getY();
 
-    const typename OutImageT::SinglePixel edgePixel =
-            math::edgePixel<OutImageT>(typename image::detail::image_traits<OutImageT>::image_category());
+    const typename OutImageT::SinglePixel edgePixel = math::getEdgePixelDefault(outImage);
     std::vector<lsst::geom::Box2I> bboxList;
 
     // create a list of bounding boxes describing edge regions, in this order:
@@ -133,8 +131,9 @@ inline void setEdgePixels(OutImageT& outImage, Kernel const& kernel, InImageT co
     bboxList.emplace_back(lsst::geom::Point2I(imWidth - numWidth, kCtrY),
                                          lsst::geom::Extent2I(numWidth, imHeight + 1 - kHeight));
 
-    image::MaskPixel const edgeMask = image::Mask<image::MaskPixel>::getPlaneBitMask("EDGE");
-    for (auto const &bboxIter : bboxList) {
+    // TODO: this needs to use the actual mask
+    image::MaskPixel const edgeMask = outImage.getMask()->getBitMask("EDGE");
+    for (auto const& bboxIter : bboxList) {
         OutImageT outView(outImage, bboxIter, image::LOCAL);
         if (doCopyEdge) {
             // note: set only works with data of the same type

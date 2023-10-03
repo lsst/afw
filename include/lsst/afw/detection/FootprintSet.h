@@ -207,7 +207,7 @@ public:
                  std::string const& planeName    ///< Here's the name of the mask plane to fit
     ) {
         for (auto const& foot : *_footprints) {
-            foot->getSpans()->setMask(*mask, image::Mask<MaskPixelT>::getPlaneBitMask(planeName));
+            foot->getSpans()->setMask(*mask, mask->getBitMask(planeName));
         }
     }
 

@@ -112,7 +112,7 @@ void declareStatistics(lsst::utils::python::WrapperCollection &wrappers) {
         cls.def("getNumSigmaClip", &StatisticsControl::getNumSigmaClip);
         cls.def("getNumIter", &StatisticsControl::getNumIter);
         cls.def("getAndMask", &StatisticsControl::getAndMask);
-        cls.def("getNoGoodPixelsMask", &StatisticsControl::getNoGoodPixelsMask);
+        cls.def("getNoGoodPixels", &StatisticsControl::getNoGoodPixels);
         cls.def("getNanSafe", &StatisticsControl::getNanSafe);
         cls.def("getWeighted", &StatisticsControl::getWeighted);
         cls.def("getWeightedIsSet", &StatisticsControl::getWeightedIsSet);
@@ -121,7 +121,7 @@ void declareStatistics(lsst::utils::python::WrapperCollection &wrappers) {
         cls.def("setNumSigmaClip", &StatisticsControl::setNumSigmaClip);
         cls.def("setNumIter", &StatisticsControl::setNumIter);
         cls.def("setAndMask", &StatisticsControl::setAndMask);
-        cls.def("setNoGoodPixelsMask", &StatisticsControl::setNoGoodPixelsMask);
+        cls.def("setNoGoodPixels", &StatisticsControl::setNoGoodPixels);
         cls.def("setNanSafe", &StatisticsControl::setNanSafe);
         cls.def("setWeighted", &StatisticsControl::setWeighted);
         cls.def("setCalcErrorFromInputVariance", &StatisticsControl::setCalcErrorFromInputVariance);

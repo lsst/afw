@@ -111,14 +111,14 @@ class Mask(metaclass=TemplateMeta):
 
 
 @continueClass
-class MaskDict(collections.abc.Mapping):  # noqa: F811
+class MaskDict:  # noqa: F811
     """Dict-like view to the underlying C++ MaskDict object.
 
     TODO: More docs of what it is here?
     """
 
     @property
-    def doc(self):
+    def docs(self):
         """A view of the docstring mapping for these mask planes.
         """
         return types.MappingProxyType(self._getMaskPlaneDocDict())
@@ -137,6 +137,26 @@ class MaskDict(collections.abc.Mapping):  # noqa: F811
     def __repr__(self):
         return self._print()
 
+    def keys(self):
+        for k in self:
+            yield k
+
+    def values(self):
+        for k in self:
+            yield self[k]
+
+    def items(self):
+        for k in self:
+            yield (k, self[k])
+
+    def get(self, name, default=None):
+        try:
+            return self[name]
+        except KeyError:
+            return default
+
+
+collections.abc.Mapping.register(MaskDict)
 
 Mask.register(MaskPixel, MaskX)
 Mask.alias("X", MaskX)

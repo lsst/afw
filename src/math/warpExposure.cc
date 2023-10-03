@@ -391,7 +391,7 @@ void WarpingControl::write(OutputArchiveHandle &handle) const {
 
 template <typename DestExposureT, typename SrcExposureT>
 int warpExposure(DestExposureT &destExposure, SrcExposureT const &srcExposure, WarpingControl const &control,
-                 typename DestExposureT::MaskedImageT::SinglePixel padValue) {
+                 std::optional<typename DestExposureT::MaskedImageT::SinglePixel> padValue) {
     if (!destExposure.hasWcs()) {
         throw LSST_EXCEPT(pexExcept::InvalidParameterError, "destExposure has no Wcs");
     }
@@ -406,7 +406,7 @@ int warpExposure(DestExposureT &destExposure, SrcExposureT const &srcExposure, W
     destExposure.setFilter(srcExposure.getFilter());
     destExposure.getInfo()->setVisitInfo(srcExposure.getInfo()->getVisitInfo());
     return warpImage(mi, *destExposure.getWcs(), srcExposure.getMaskedImage(), *srcExposure.getWcs(), control,
-                     padValue);
+                     padValue.value_or(math::getEdgePixelDefault(destExposure.getMaskedImage())));
 }
 
 namespace {
@@ -440,15 +440,16 @@ inline double computeRelativeArea(
 template <typename DestImageT, typename SrcImageT>
 int warpImage(DestImageT &destImage, geom::SkyWcs const &destWcs, SrcImageT const &srcImage,
               geom::SkyWcs const &srcWcs, WarpingControl const &control,
-              typename DestImageT::SinglePixel padValue) {
+              std::optional<typename DestImageT::SinglePixel> padValue) {
     auto srcToDest = geom::makeWcsPairTransform(srcWcs, destWcs);
-    return warpImage(destImage, srcImage, *srcToDest, control, padValue);
+    return warpImage(destImage, srcImage, *srcToDest, control,
+                     padValue.value_or(math::getEdgePixelDefault(destImage)));
 }
 
 template <typename DestImageT, typename SrcImageT>
 int warpImage(DestImageT &destImage, SrcImageT const &srcImage,
               geom::TransformPoint2ToPoint2 const &srcToDest, WarpingControl const &control,
-              typename DestImageT::SinglePixel padValue) {
+              std::optional<typename DestImageT::SinglePixel> padValue) {
     if (imagesOverlap(destImage, srcImage)) {
         throw LSST_EXCEPT(pexExcept::InvalidParameterError, "destImage overlaps srcImage; cannot warp");
     }
@@ -463,7 +464,7 @@ int warpImage(DestImageT &destImage, SrcImageT const &srcImage,
         for (int y = 0, height = destImage.getHeight(); y < height; ++y) {
             for (typename DestImageT::x_iterator destPtr = destImage.row_begin(y), end = destImage.row_end(y);
                  destPtr != end; ++destPtr) {
-                *destPtr = padValue;
+                *destPtr = padValue.value_or(math::getEdgePixelDefault(destImage));
             }
         }
         return 0;
@@ -497,7 +498,8 @@ int warpImage(DestImageT &destImage, SrcImageT const &srcImage,
     int const maxCol = destWidth - 1;
     int const maxRow = destHeight - 1;
 
-    detail::WarpAtOnePoint<DestImageT, SrcImageT> warpAtOnePoint(srcImage, control, padValue);
+    detail::WarpAtOnePoint<DestImageT, SrcImageT> warpAtOnePoint(
+            srcImage, control, padValue.value_or(math::getEdgePixelDefault(destImage)));
 
     if (interpLength > 0) {
         // Use interpolation. Note that 1 produces the same result as no interpolation
@@ -666,7 +668,7 @@ template <typename DestImageT, typename SrcImageT>
 int warpCenteredImage(DestImageT &destImage, SrcImageT const &srcImage,
                       lsst::geom::LinearTransform const &linearTransform,
                       lsst::geom::Point2D const &centerPosition, WarpingControl const &control,
-                      typename DestImageT::SinglePixel padValue) {
+                      std::optional<typename DestImageT::SinglePixel> padValue) {
     // force src and dest to be the same size and xy0
     if ((destImage.getWidth() != srcImage.getWidth()) || (destImage.getHeight() != srcImage.getHeight()) ||
         (destImage.getXY0() != srcImage.getXY0())) {
@@ -698,7 +700,8 @@ int warpCenteredImage(DestImageT &destImage, SrcImageT const &srcImage,
     t += dt;
     std::cout <<srcImage.getWidth()<<"x"<<srcImage.getHeight()<<": "<< dt <<" "<< t <<std::endl;
 #else
-    int n = warpImage(destImage, srcImageCopy, *affineTransform22, control, padValue);
+    int n = warpImage(destImage, srcImageCopy, *affineTransform22, control,
+                      padValue.value_or(math::getEdgePixelDefault(destImage)));
 #endif
 
     // fix the origin and we're done.
@@ -721,28 +724,31 @@ int warpCenteredImage(DestImageT &destImage, SrcImageT const &srcImage,
     template int warpCenteredImage(                                                                          \
             IMAGE(DESTIMAGEPIXELT) & destImage, IMAGE(SRCIMAGEPIXELT) const &srcImage,                       \
             lsst::geom::LinearTransform const &linearTransform, lsst::geom::Point2D const &centerPosition,   \
-            WarpingControl const &control, IMAGE(DESTIMAGEPIXELT)::SinglePixel padValue);                    \
+            WarpingControl const &control, std::optional<IMAGE(DESTIMAGEPIXELT)::SinglePixel> padValue);     \
     NL template int warpCenteredImage(                                                                       \
             MASKEDIMAGE(DESTIMAGEPIXELT) & destImage, MASKEDIMAGE(SRCIMAGEPIXELT) const &srcImage,           \
             lsst::geom::LinearTransform const &linearTransform, lsst::geom::Point2D const &centerPosition,   \
-            WarpingControl const &control, MASKEDIMAGE(DESTIMAGEPIXELT)::SinglePixel padValue);              \
+            WarpingControl const &control,                                                                   \
+            std::optional<MASKEDIMAGE(DESTIMAGEPIXELT)::SinglePixel> padValue);                              \
     NL template int warpImage(IMAGE(DESTIMAGEPIXELT) & destImage, IMAGE(SRCIMAGEPIXELT) const &srcImage,     \
                               geom::TransformPoint2ToPoint2 const &srcToDest, WarpingControl const &control, \
-                              IMAGE(DESTIMAGEPIXELT)::SinglePixel padValue);                                 \
+                              std::optional<IMAGE(DESTIMAGEPIXELT)::SinglePixel> padValue);                  \
     NL template int warpImage(MASKEDIMAGE(DESTIMAGEPIXELT) & destImage,                                      \
                               MASKEDIMAGE(SRCIMAGEPIXELT) const &srcImage,                                   \
                               geom::TransformPoint2ToPoint2 const &srcToDest, WarpingControl const &control, \
-                              MASKEDIMAGE(DESTIMAGEPIXELT)::SinglePixel padValue);                           \
+                              std::optional<MASKEDIMAGE(DESTIMAGEPIXELT)::SinglePixel> padValue);            \
     NL template int warpImage(IMAGE(DESTIMAGEPIXELT) & destImage, geom::SkyWcs const &destWcs,               \
                               IMAGE(SRCIMAGEPIXELT) const &srcImage, geom::SkyWcs const &srcWcs,             \
-                              WarpingControl const &control, IMAGE(DESTIMAGEPIXELT)::SinglePixel padValue);  \
+                              WarpingControl const &control,                                                 \
+                              std::optional<IMAGE(DESTIMAGEPIXELT)::SinglePixel> padValue);                  \
     NL template int warpImage(MASKEDIMAGE(DESTIMAGEPIXELT) & destImage, geom::SkyWcs const &destWcs,         \
                               MASKEDIMAGE(SRCIMAGEPIXELT) const &srcImage, geom::SkyWcs const &srcWcs,       \
                               WarpingControl const &control,                                                 \
-                              MASKEDIMAGE(DESTIMAGEPIXELT)::SinglePixel padValue);                           \
-    NL template int warpExposure(EXPOSURE(DESTIMAGEPIXELT) & destExposure,                                   \
-                                 EXPOSURE(SRCIMAGEPIXELT) const &srcExposure, WarpingControl const &control, \
-                                 EXPOSURE(DESTIMAGEPIXELT)::MaskedImageT::SinglePixel padValue);
+                              std::optional<MASKEDIMAGE(DESTIMAGEPIXELT)::SinglePixel> padValue);            \
+    NL template int warpExposure(                                                                            \
+            EXPOSURE(DESTIMAGEPIXELT) & destExposure, EXPOSURE(SRCIMAGEPIXELT) const &srcExposure,           \
+            WarpingControl const &control,                                                                   \
+            std::optional<EXPOSURE(DESTIMAGEPIXELT)::MaskedImageT::SinglePixel> padValue);
 
 INSTANTIATE(double, double)
 INSTANTIATE(double, float)

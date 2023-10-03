@@ -437,10 +437,7 @@ int warpExposure(
                                       ///< All other attributes are left alone (including Detector and Psf)
         SrcExposureT const &srcExposure,  ///< Source exposure
         WarpingControl const &control,    ///< control parameters
-        typename DestExposureT::MaskedImageT::SinglePixel padValue =
-                lsst::afw::math::edgePixel<typename DestExposureT::MaskedImageT>(
-                        typename lsst::afw::image::detail::image_traits<
-                                typename DestExposureT::MaskedImageT>::image_category())
+        std::optional<typename DestExposureT::MaskedImageT::SinglePixel> padValue
         ///< use this value for undefined (edge) pixels
 );
 
@@ -496,8 +493,7 @@ int warpImage(DestImageT &destImage,          ///< remapped %image
               SrcImageT const &srcImage,      ///< source %image
               geom::SkyWcs const &srcWcs,     ///< WCS of source %image
               WarpingControl const &control,  ///< control parameters
-              typename DestImageT::SinglePixel padValue = lsst::afw::math::edgePixel<DestImageT>(
-                      typename lsst::afw::image::detail::image_traits<DestImageT>::image_category())
+              std::optional<typename DestImageT::SinglePixel> padValue
               ///< use this value for undefined (edge) pixels
 );
 
@@ -518,8 +514,7 @@ int warpImage(DestImageT &destImage,          ///< remapped %image
 template <typename DestImageT, typename SrcImageT>
 int warpImage(DestImageT &destImage, SrcImageT const &srcImage,
               geom::TransformPoint2ToPoint2 const &srcToDest, WarpingControl const &control,
-              typename DestImageT::SinglePixel padValue = lsst::afw::math::edgePixel<DestImageT>(
-                      typename lsst::afw::image::detail::image_traits<DestImageT>::image_category()));
+              std::optional<typename DestImageT::SinglePixel> padValue);
 
 /**
  * Warp an image with a LinearTranform about a specified point.
@@ -533,8 +528,7 @@ int warpCenteredImage(
         lsst::geom::LinearTransform const &linearTransform,  ///< linear transformation to apply
         lsst::geom::Point2D const &centerPosition,  ///< pixel position for location of linearTransform
         WarpingControl const &control,              ///< control parameters
-        typename DestImageT::SinglePixel padValue = lsst::afw::math::edgePixel<DestImageT>(
-                typename lsst::afw::image::detail::image_traits<DestImageT>::image_category())
+        std::optional<typename DestImageT::SinglePixel> padValue
         ///< use this value for undefined (edge) pixels
 );
 

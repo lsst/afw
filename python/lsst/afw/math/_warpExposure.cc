@@ -91,22 +91,20 @@ for a particular pair of image or masked image types
 template <typename DestImageT, typename SrcImageT>
 void declareImageWarpingFunctions(lsst::utils::python::WrapperCollection &wrappers) {
     wrappers.wrap([](auto &mod) {
-        typename DestImageT::SinglePixel const EdgePixel =
-                edgePixel<DestImageT>(typename image::detail::image_traits<DestImageT>::image_category());
         mod.def("warpImage",
                 (int (*)(DestImageT &, geom::SkyWcs const &, SrcImageT const &, geom::SkyWcs const &,
-                         WarpingControl const &, typename DestImageT::SinglePixel)) &
+                         WarpingControl const &, std::optional<typename DestImageT::SinglePixel>)) &
                         warpImage<DestImageT, SrcImageT>,
-                "destImage"_a, "destWcs"_a, "srcImage"_a, "srcWcs"_a, "control"_a, "padValue"_a = EdgePixel);
+                "destImage"_a, "destWcs"_a, "srcImage"_a, "srcWcs"_a, "control"_a, "padValue"_a);
 
         mod.def("warpImage",
                 (int (*)(DestImageT &, SrcImageT const &, geom::TransformPoint2ToPoint2 const &,
-                         WarpingControl const &, typename DestImageT::SinglePixel)) &
+                         WarpingControl const &, std::optional<typename DestImageT::SinglePixel>)) &
                         warpImage<DestImageT, SrcImageT>,
-                "destImage"_a, "srcImage"_a, "srcToDest"_a, "control"_a, "padValue"_a = EdgePixel);
+                "destImage"_a, "srcImage"_a, "srcToDest"_a, "control"_a, "padValue"_a);
 
         mod.def("warpCenteredImage", &warpCenteredImage<DestImageT, SrcImageT>, "destImage"_a, "srcImage"_a,
-                "linearTransform"_a, "centerPoint"_a, "control"_a, "padValue"_a = EdgePixel);
+                "linearTransform"_a, "centerPoint"_a, "control"_a, "padValue"_a);
     });
 }
 
@@ -130,9 +128,7 @@ void declareWarpingFunctions(lsst::utils::python::WrapperCollection &wrappers) {
     using SrcMaskedImageT = image::MaskedImage<SrcPixelT, image::MaskPixel, image::VariancePixel>;
     wrappers.wrap([](auto &mod) {
         mod.def("warpExposure", &warpExposure<DestExposureT, SrcExposureT>, "destExposure"_a, "srcExposure"_a,
-                "control"_a,
-                "padValue"_a = edgePixel<DestMaskedImageT>(
-                        typename image::detail::image_traits<DestMaskedImageT>::image_category()));
+                "control"_a, "padValue"_a);
     });
     declareImageWarpingFunctions<DestImageT, SrcImageT>(wrappers);
     declareImageWarpingFunctions<DestMaskedImageT, SrcMaskedImageT>(wrappers);

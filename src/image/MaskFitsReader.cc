@@ -29,18 +29,22 @@ namespace image {
 template <typename PixelT>
 Mask<PixelT> MaskFitsReader::read(lsst::geom::Box2I const &bbox, ImageOrigin origin, bool conformMasks,
                                   bool allowUnsafe) {
+    // TODO: deprecate conformMasks?
     Mask<PixelT> result(readArray<PixelT>(bbox, origin, allowUnsafe), false, readXY0(bbox, origin));
     auto metadata = readMetadata();
     // look for mask planes in the file
-    std::shared_ptr<detail::MaskDict> fileMaskDict = Mask<PixelT>::parseMaskPlaneMetadata(metadata);
-    std::shared_ptr<detail::MaskDict> fileMD = fileMaskDict->getDefaultIfEmpty(fileMaskDict);
-    if (*fileMD == *detail::MaskDict::getDefault()) {  // file is already consistent with Mask
-        return result;
-    }
-    if (conformMasks) {  // adopt the definitions in the file
-        detail::MaskDict::setDefault(fileMD);
-        result._maskDict = fileMD;
-    }
+    detail::MaskDict fileMaskDict = Mask<PixelT>::parseMaskPlaneMetadata(metadata);
+    // detail::MaskDict fileMD = fileMaskDict.getDefaultIfEmpty(fileMaskDict);
+    // if (fileMD == detail::MaskDict(Mask::getNumPlanesMax())) {  // file is already consistent with Mask
+    //     return result;
+    // }
+    // TODO: deprecate conformMasks?
+
+    // if (conformMasks) {  // adopt the definitions in the file
+    //     detail::MaskDict::setDefault(fileMD);
+    //     result._maskDict = fileMD;
+    // }
+    // TODO: do we care about this?
     result.conformMaskPlanes(fileMaskDict);  // convert planes defined by fileMaskDict to the order
                                              // defined by Mask::_maskPlaneDict
     return result;

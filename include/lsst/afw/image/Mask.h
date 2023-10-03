@@ -85,7 +85,7 @@ public:
     // [[deprecated("Replaced by a shared_ptr interface to MaskDict. Will be removed after v28.")]
     explicit Mask(unsigned int width, unsigned int height, MaskPlaneDict const& planeDefs);
     explicit Mask(unsigned int width, unsigned int height,
-                  std::shared_ptr<detail::MaskDict> maskDict = nullptr);
+                  std::optional<detail::MaskDict> maskDict = std::nullopt);
     /**
      * Construct a Mask initialized to a specified value
      *
@@ -98,7 +98,7 @@ public:
     explicit Mask(unsigned int width, unsigned int height, MaskPixelT initialValue,
                   MaskPlaneDict const& planeDefs);
     explicit Mask(unsigned int width, unsigned int height, MaskPixelT initialValue,
-                  std::shared_ptr<detail::MaskDict> maskDict = nullptr);
+                  std::optional<detail::MaskDict> maskDict = std::nullopt);
     /**
      * Construct a Mask initialized to 0x0
      *
@@ -108,7 +108,7 @@ public:
     // [[deprecated("Replaced by a shared_ptr interface to MaskDict. Will be removed after v28.")]
     explicit Mask(lsst::geom::Extent2I const& dimensions, MaskPlaneDict const& planeDefs);
     explicit Mask(lsst::geom::Extent2I const& dimensions = lsst::geom::Extent2I(),
-                  std::shared_ptr<detail::MaskDict> maskDict = nullptr);
+                  std::optional<detail::MaskDict> maskDict = std::nullopt);
     /**
      * Construct a Mask initialized to a specified value
      *
@@ -120,7 +120,7 @@ public:
     explicit Mask(lsst::geom::Extent2I const& dimensions, MaskPixelT initialValue,
                   MaskPlaneDict const& planeDefs);
     explicit Mask(lsst::geom::Extent2I const& dimensions, MaskPixelT initialValue,
-                  std::shared_ptr<detail::MaskDict> maskDict = nullptr);
+                  std::optional<detail::MaskDict> maskDict = std::nullopt);
     /**
      * Construct a Mask initialized to 0x0
      *
@@ -131,7 +131,7 @@ public:
     explicit Mask(lsst::geom::Box2I const& bbox, MaskPlaneDict const& planeDefs);
 
     // Nullptr constructor makes a default MaskDict
-    explicit Mask(lsst::geom::Box2I const& bbox, std::shared_ptr<detail::MaskDict> maskDict = nullptr);
+    explicit Mask(lsst::geom::Box2I const& bbox, std::optional<detail::MaskDict> maskDict = std::nullopt);
 
     /**
      * Construct a Mask initialized to a specified value
@@ -143,7 +143,7 @@ public:
     // [[deprecated("Replaced by a shared_ptr interface to MaskDict. Will be removed after v28.")]
     explicit Mask(lsst::geom::Box2I const& bbox, MaskPixelT initialValue, MaskPlaneDict const& planeDefs);
     explicit Mask(lsst::geom::Box2I const& bbox, MaskPixelT initialValue,
-                  std::shared_ptr<detail::MaskDict> maskDict = nullptr);
+                  std::optional<detail::MaskDict> maskDict = std::nullopt);
     /**
      *  Construct a Mask by reading a regular FITS file.
      *
@@ -245,7 +245,8 @@ public:
          const bool deep = false);
 
     explicit Mask(ndarray::Array<MaskPixelT, 2, 1> const& array, bool deep = false,
-                  lsst::geom::Point2I const& xy0 = lsst::geom::Point2I());
+                  lsst::geom::Point2I const& xy0 = lsst::geom::Point2I(),
+                  std::optional<detail::MaskDict> maskDict = std::nullopt);
 
     void swap(Mask& rhs);
     // Operators
@@ -459,7 +460,7 @@ public:
      * @param metadata Metadata from a Mask.
      * @returns MaskDict containing the plane names, ids, and docs read from the metadata.
      */
-    static std::shared_ptr<detail::MaskDict> parseMaskPlaneMetadata(
+    static detail::MaskDict parseMaskPlaneMetadata(
             std::shared_ptr<lsst::daf::base::PropertySet const> metadata);
 
     // Operations on the mask plane dictionary
@@ -534,7 +535,7 @@ public:
     // MaskPlaneDocDict const& getMaskPlaneDocDict() const { return _maskDict->getMaskPlaneDocDict(); }
 
     // TODO: not sure we want to keep this?
-    std::shared_ptr<detail::MaskDict const> const getMaskDict() const { return _maskDict; }
+    detail::MaskDict const getMaskDict() const { return _maskDict; }
 
     /// Print a formatted string showing the mask plane bits, names, and docs.
     std::string printMaskPlanes() const;
@@ -559,12 +560,12 @@ public:
      *
      * @param currentMaskDict mask plane dictionary currently in use for this mask.
      */
-    void conformMaskPlanes(std::shared_ptr<detail::MaskDict> const& currentMaskDict);
+    void conformMaskPlanes(detail::MaskDict const currentMaskDict);
 
 private:
     friend class MaskFitsReader;
 
-    std::shared_ptr<detail::MaskDict> _maskDict;  // our bitplane dictionary
+    detail::MaskDict _maskDict;  // Map of name->(bit, docstring), shared_ptr under the hood.
 
     static int _setMaskPlaneDict(MaskPlaneDict const& mpd);
     static const std::string maskPlanePrefix;
@@ -577,7 +578,7 @@ private:
     void _initializePlanes(MaskPlaneDict const& planeDefs);  // called by ctors
 
     /// Initialise mask planes; called by constructors.
-    void _initializeMaskDict(std::shared_ptr<detail::MaskDict> maskDict);
+    void _initializeMaskDict(std::optional<detail::MaskDict> maskDict);
 
     // Make names in templatized base class visible (Meyers, Effective C++, Item 43)
     using ImageBase<MaskPixelT>::_getRawView;

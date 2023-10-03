@@ -82,7 +82,7 @@ void statisticsStack(
  *                      corresponding pixel on the output.
  *
  * If none of the input images are valid for some pixel,
- * the afwMath::StatisticsControl::getNoGoodPixelsMask() bit(s) are set.
+ * the afwMath::StatisticsControl::getNoGoodPixels() bit(s) are set.
  *
  * All the work is done in the function computeMaskedImageStack.
  */
@@ -96,7 +96,7 @@ std::shared_ptr<lsst::afw::image::MaskedImage<PixelT>> statisticsStack(
  * A function to compute some statistics of a stack of Masked Images
  *
  * If none of the input images are valid for some pixel,
- * the afwMath::StatisticsControl::getNoGoodPixelsMask() bit(s) are set.
+ * the afwMath::StatisticsControl::getNoGoodPixels() bit(s) are set.
  *
  * Delegates to the more general version of statisticsStack taking a maskMap.
  */
@@ -128,7 +128,7 @@ std::shared_ptr<lsst::afw::image::MaskedImage<PixelT>> statisticsStack(
  *                      corresponding pixel on the output.
  *
  * If none of the input images are valid for some pixel,
- * the afwMath::StatisticsControl::getNoGoodPixelsMask() bit(s) are set.
+ * the afwMath::StatisticsControl::getNoGoodPixels() bit(s) are set.
  *
  * All the work is done in the function computeMaskedImageStack.
  */

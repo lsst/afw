@@ -95,18 +95,12 @@ public:
             : _numSigmaClip(numSigmaClip),
               _numIter(numIter),
               _andMask(andMask),
-              _noGoodPixelsMask(0x0),
+              _noGoodPixels("NO_DATA"),
               _isNanSafe(isNanSafe),
               _useWeights(useWeights),
               _calcErrorFromInputVariance(false),
               _calcErrorMosaicMode(false),
               _maskPropagationThresholds() {
-        try {
-            _noGoodPixelsMask = lsst::afw::image::Mask<>::getPlaneBitMask("NO_DATA");
-        } catch (lsst::pex::exceptions::InvalidParameterError const &) {
-            ;  // Mask has no NO_DATA plane defined
-        }
-
         assert(_numSigmaClip > 0);
         assert(_numIter > 0);
     }
@@ -124,7 +118,7 @@ public:
     double getNumSigmaClip() const noexcept { return _numSigmaClip; }
     int getNumIter() const noexcept { return _numIter; }
     int getAndMask() const noexcept { return _andMask; }
-    int getNoGoodPixelsMask() const noexcept { return _noGoodPixelsMask; }
+    std::string getNoGoodPixels() const noexcept { return _noGoodPixels; }
     bool getNanSafe() const noexcept { return _isNanSafe; }
     bool getWeighted() const noexcept { return _useWeights == WEIGHTS_TRUE ? true : false; }
     bool getWeightedIsSet() const noexcept { return _useWeights != WEIGHTS_NONE ? true : false; }
@@ -146,7 +140,7 @@ public:
         _numIter = numIter;
     }
     void setAndMask(int andMask) { _andMask = andMask; }
-    void setNoGoodPixelsMask(int noGoodPixelsMask) { _noGoodPixelsMask = noGoodPixelsMask; }
+    void setNoGoodPixels(std::string noGoodPixels) { _noGoodPixels = noGoodPixels; }
     void setNanSafe(bool isNanSafe) noexcept { _isNanSafe = isNanSafe; }
     void setWeighted(bool useWeights) noexcept { _useWeights = useWeights ? WEIGHTS_TRUE : WEIGHTS_FALSE; }
     void setCalcErrorFromInputVariance(bool calcErrorFromInputVariance) noexcept {
@@ -162,7 +156,7 @@ private:
     double _numSigmaClip;              // Number of standard deviations to clip at
     int _numIter;                      // Number of iterations
     int _andMask;                      // and-Mask to specify which mask planes to ignore
-    int _noGoodPixelsMask;             // mask to set if no values are acceptable
+    std::string _noGoodPixels;         // Mask name to set if no values are acceptable.
     bool _isNanSafe;                   // Check for NaNs & Infs before running (slower)
     WeightsBoolean _useWeights;        // Calculate weighted statistics (enum because of 3-valued logic)
     bool _calcErrorFromInputVariance;  // Calculate errors from the input variances, if available
