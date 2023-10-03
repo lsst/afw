@@ -75,13 +75,12 @@ inline void setEdgePixels(OutImageT& outImage, Kernel const& kernel, InImageT co
     int const numWidth = kWidth - (1 + kCtrX);
     bboxList.emplace_back(lsst::geom::Point2I(0, 0), lsst::geom::Extent2I(imWidth, kCtrY));
     bboxList.emplace_back(lsst::geom::Point2I(0, imHeight - numHeight),
-                                         lsst::geom::Extent2I(imWidth, numHeight));
-    bboxList.emplace_back(lsst::geom::Point2I(0, kCtrY),
-                                         lsst::geom::Extent2I(kCtrX, imHeight + 1 - kHeight));
+                          lsst::geom::Extent2I(imWidth, numHeight));
+    bboxList.emplace_back(lsst::geom::Point2I(0, kCtrY), lsst::geom::Extent2I(kCtrX, imHeight + 1 - kHeight));
     bboxList.emplace_back(lsst::geom::Point2I(imWidth - numWidth, kCtrY),
-                                         lsst::geom::Extent2I(numWidth, imHeight + 1 - kHeight));
+                          lsst::geom::Extent2I(numWidth, imHeight + 1 - kHeight));
 
-    for (auto const &bboxIter : bboxList) {
+    for (auto const& bboxIter : bboxList) {
         OutImageT outView(outImage, bboxIter, image::LOCAL);
         if (doCopyEdge) {
             // note: set only works with data of the same type
@@ -125,11 +124,10 @@ inline void setEdgePixels(OutImageT& outImage, Kernel const& kernel, InImageT co
     int const numWidth = kWidth - (1 + kCtrX);
     bboxList.emplace_back(lsst::geom::Point2I(0, 0), lsst::geom::Extent2I(imWidth, kCtrY));
     bboxList.emplace_back(lsst::geom::Point2I(0, imHeight - numHeight),
-                                         lsst::geom::Extent2I(imWidth, numHeight));
-    bboxList.emplace_back(lsst::geom::Point2I(0, kCtrY),
-                                         lsst::geom::Extent2I(kCtrX, imHeight + 1 - kHeight));
+                          lsst::geom::Extent2I(imWidth, numHeight));
+    bboxList.emplace_back(lsst::geom::Point2I(0, kCtrY), lsst::geom::Extent2I(kCtrX, imHeight + 1 - kHeight));
     bboxList.emplace_back(lsst::geom::Point2I(imWidth - numWidth, kCtrY),
-                                         lsst::geom::Extent2I(numWidth, imHeight + 1 - kHeight));
+                          lsst::geom::Extent2I(numWidth, imHeight + 1 - kHeight));
 
     // TODO: this needs to use the actual mask
     image::MaskPixel const edgeMask = outImage.getMask()->getBitMask("EDGE");
@@ -216,11 +214,11 @@ void convolve(OutImageT& convolvedImage, InImageT const& inImage, KernelT const&
 // IMGMACRO = IMAGE or MASKEDIMAGE
 // KERNELTYPE = a kernel class
 //
-#define INSTANTIATE_IM_OR_MI_KERNEL(IMGMACRO, OUTPIXTYPE, INPIXTYPE, KERNELTYPE)                        \
-    template void convolve(IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const &, KERNELTYPE const&, bool, \
-                           bool);                                                                       \
-    NL template void convolve(IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const &, KERNELTYPE const&,    \
-                              ConvolutionControl const&);                                               \
+#define INSTANTIATE_IM_OR_MI_KERNEL(IMGMACRO, OUTPIXTYPE, INPIXTYPE, KERNELTYPE)                       \
+    template void convolve(IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, KERNELTYPE const&, bool, \
+                           bool);                                                                      \
+    NL template void convolve(IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, KERNELTYPE const&,    \
+                              ConvolutionControl const&);                                              \
     NL
 //
 // Instantiate Image or MaskedImage versions of all functions defined in this file.
@@ -228,8 +226,8 @@ void convolve(OutImageT& convolvedImage, InImageT const& inImage, KernelT const&
 // IMGMACRO = IMAGE or MASKEDIMAGE
 //
 #define INSTANTIATE_IM_OR_MI(IMGMACRO, OUTPIXTYPE, INPIXTYPE)                                             \
-    template void scaledPlus(IMGMACRO(OUTPIXTYPE)&, double, IMGMACRO(INPIXTYPE) const &, double,          \
-                             IMGMACRO(INPIXTYPE) const &);                                                \
+    template void scaledPlus(IMGMACRO(OUTPIXTYPE)&, double, IMGMACRO(INPIXTYPE) const&, double,           \
+                             IMGMACRO(INPIXTYPE) const&);                                                 \
     NL INSTANTIATE_IM_OR_MI_KERNEL(IMGMACRO, OUTPIXTYPE, INPIXTYPE,                                       \
                                    AnalyticKernel) INSTANTIATE_IM_OR_MI_KERNEL(IMGMACRO, OUTPIXTYPE,      \
                                                                                INPIXTYPE,                 \

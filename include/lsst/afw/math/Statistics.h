@@ -127,15 +127,13 @@ public:
 
     void setNumSigmaClip(double numSigmaClip) {
         if (!(numSigmaClip > 0)) {
-            throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
-                              "numSigmaClip has to be positive.");
+            throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, "numSigmaClip has to be positive.");
         }
         _numSigmaClip = numSigmaClip;
     }
     void setNumIter(int numIter) {
         if (!(numIter > 0)) {
-            throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
-                              "numIter has to be positive.");
+            throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, "numIter has to be positive.");
         }
         _numIter = numIter;
     }

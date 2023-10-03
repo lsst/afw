@@ -399,6 +399,7 @@ int warpExposure(DestExposureT &destExposure, SrcExposureT const &srcExposure, W
         throw LSST_EXCEPT(pexExcept::InvalidParameterError, "srcExposure has no Wcs");
     }
     typename DestExposureT::MaskedImageT mi = destExposure.getMaskedImage();
+
     if (srcExposure.getInfo()->hasId()) {
         destExposure.getInfo()->setId(srcExposure.getInfo()->getId());
     }
@@ -456,6 +457,7 @@ int warpImage(DestImageT &destImage, SrcImageT const &srcImage,
     if (destImage.getBBox(image::LOCAL).isEmpty()) {
         return 0;
     }
+
     // if src image is too small then don't try to warp
     std::shared_ptr<SeparableKernel> warpingKernelPtr = control.getWarpingKernel();
     try {

@@ -38,7 +38,7 @@
 namespace pexExcept = lsst::pex::exceptions;
 
 namespace {
-    LOG_LOGGER _log = LOG_GET("lsst.afw.math.Stack");
+LOG_LOGGER _log = LOG_GET("lsst.afw.math.Stack");
 }
 
 namespace lsst {
@@ -273,8 +273,8 @@ void statisticsStack(image::MaskedImage<PixelT> &out,
     } else {
         if (!wvector.empty()) {
             LOGL_WARN(_log,
-               "Weights passed on to statisticsStack are ignored as sctrl.getWeighted() is False."
-               "Set sctrl.setWeighted(True) for them to be used.");
+                      "Weights passed on to statisticsStack are ignored as sctrl.getWeighted() is False."
+                      "Set sctrl.setWeighted(True) for them to be used.");
         }
         return computeMaskedImageStack<PixelT, false, false>(out, images, flags, sctrl, clipped, excuse);
     }
@@ -391,9 +391,9 @@ namespace {
  *   to handle cases when we are, or are not, weighting
  */
 template <typename PixelT, bool isWeighted>
-std::vector<PixelT> computeVectorStack(
-        std::vector<std::vector<PixelT>> &vectors, Property flags,
-        StatisticsControl const &sctrl, WeightVector const &wvector = WeightVector()) {
+std::vector<PixelT> computeVectorStack(std::vector<std::vector<PixelT>> &vectors, Property flags,
+                                       StatisticsControl const &sctrl,
+                                       WeightVector const &wvector = WeightVector()) {
     // create the image to be returned
     using Vect = std::vector<PixelT>;
     Vect vecStack(vectors[0].size(), 0.0);
@@ -428,9 +428,8 @@ std::vector<PixelT> computeVectorStack(
 }  // end anonymous namespace
 
 template <typename PixelT>
-std::vector<PixelT> statisticsStack(
-        std::vector<std::vector<PixelT>> &vectors, Property flags,
-        StatisticsControl const &sctrl, WeightVector const &wvector) {
+std::vector<PixelT> statisticsStack(std::vector<std::vector<PixelT>> &vectors, Property flags,
+                                    StatisticsControl const &sctrl, WeightVector const &wvector) {
     checkObjectsAndWeights(vectors, wvector);
     checkOnlyOneFlag(flags);
 
@@ -562,9 +561,9 @@ std::shared_ptr<image::MaskedImage<PixelT>> statisticsStack(image::MaskedImage<P
             image::MaskedImage<TYPE> & out, std::vector<std::shared_ptr<image::MaskedImage<TYPE>>> & images, \
             Property flags, StatisticsControl const &sctrl, WeightVector const &wvector, image::MaskPixel,   \
             std::vector<std::pair<image::MaskPixel, image::MaskPixel>> const &);                             \
-    template std::vector<TYPE> statisticsStack<TYPE>(                                       \
-            std::vector<std::vector<TYPE>> & vectors, Property flags,                       \
-            StatisticsControl const &sctrl, WeightVector const &wvector);                                    \
+    template std::vector<TYPE> statisticsStack<TYPE>(std::vector<std::vector<TYPE>> & vectors,               \
+                                                     Property flags, StatisticsControl const &sctrl,         \
+                                                     WeightVector const &wvector);                           \
     template std::shared_ptr<image::MaskedImage<TYPE>> statisticsStack(image::Image<TYPE> const &image,      \
                                                                        Property flags, char dimension,       \
                                                                        StatisticsControl const &sctrl);      \

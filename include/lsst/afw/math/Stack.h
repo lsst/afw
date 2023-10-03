@@ -159,9 +159,9 @@ void statisticsStack(lsst::afw::image::MaskedImage<PixelT>& out,  ///< Output im
  */
 template <typename PixelT>
 std::vector<PixelT> statisticsStack(
-        std::vector<std::vector<PixelT>>& vectors,  ///< Vectors to process
-        Property flags,                                              ///< statistics requested
-        StatisticsControl const& sctrl = StatisticsControl(),        ///< control structure
+        std::vector<std::vector<PixelT>>& vectors,             ///< Vectors to process
+        Property flags,                                        ///< statistics requested
+        StatisticsControl const& sctrl = StatisticsControl(),  ///< control structure
         std::vector<lsst::afw::image::VariancePixel> const& wvector =
                 std::vector<lsst::afw::image::VariancePixel>(0)  ///< vector containing weights
 );

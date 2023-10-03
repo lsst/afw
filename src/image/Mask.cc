@@ -256,14 +256,12 @@ void Mask<MaskPixelT>::writeFits(std::string const& fileName, daf::base::Propert
     writeFits(fitsfile, metadata_i);
 }
 
-
 template <typename MaskPixelT>
 void Mask<MaskPixelT>::writeFits(fits::MemFileManager& manager, daf::base::PropertySet const* metadata_i,
                                  std::string const& mode) const {
     fits::Fits fitsfile(manager, mode, fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
     writeFits(fitsfile, metadata_i);
 }
-
 
 template <typename MaskPixelT>
 void Mask<MaskPixelT>::writeFits(fits::Fits& fitsfile, daf::base::PropertySet const* metadata) const {
@@ -277,14 +275,12 @@ void Mask<MaskPixelT>::writeFits(std::string const& filename, fits::ImageWriteOp
     writeFits(fitsfile, options, header);
 }
 
-
 template <typename MaskPixelT>
 void Mask<MaskPixelT>::writeFits(fits::MemFileManager& manager, fits::ImageWriteOptions const& options,
                                  std::string const& mode, daf::base::PropertySet const* header) const {
     fits::Fits fitsfile(manager, mode, fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
     writeFits(fitsfile, options, header);
 }
-
 
 template <typename MaskPixelT>
 void Mask<MaskPixelT>::writeFits(fits::Fits& fitsfile, fits::ImageWriteOptions const& options,
