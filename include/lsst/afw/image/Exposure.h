@@ -423,8 +423,8 @@ public:
      *
      * @return An Exposure of the requested size centered on `center` to within
      *     half a pixel in either dimension. Pixels past the edge of the original
-     *     exposure will equal @ref math::edgePixel(image::detail::MaskedImage_tag)
-     *     "math::edgePixel<MaskedImageT>".
+     *     exposure will equal @ref math::getEdgePixelDefault()
+     *     "math::getEdgePixelDefault<MaskedImageT>".
      *
      * @throws lsst::pex::exceptions::LogicError Thrown if this Exposure does
      *     not have a WCS.
@@ -444,8 +444,8 @@ public:
      *
      * @return An Exposure of the requested size centered on `center` to within
      *     half a pixel in either dimension. Pixels past the edge of the original
-     *     exposure will equal @ref math::edgePixel(image::detail::MaskedImage_tag)
-     *     "math::edgePixel<MaskedImageT>".
+     *     exposure will equal @ref math::getEdgePixelDefault()
+     *     "math::getEdgePixelDefault<MaskedImageT>".
      *
      * @throws lsst::pex::exceptions::InvalidParameterError Thrown if `center`
      *     falls outside this Exposure or if `size` is not a valid size.
@@ -461,8 +461,8 @@ public:
      * @param box Pixel box to cut from this exposure.
      *
      * @return An Exposure of the requested box to within half a pixel in either dimension. Pixels past the
-     *     edge of the original exposure will equal @ref math::edgePixel(image::detail::MaskedImage_tag)
-     *     "math::edgePixel<MaskedImageT>", with their Mask set to NO_DATA.
+     *     edge of the original exposure will equal @ref math::getEdgePixelDefault()
+     *     "math::getEdgePixelDefault<MaskedImageT>", with their Mask set to NO_DATA.
      *
      * @throws lsst::pex::exceptions::InvalidParameterError Thrown if the center of the box
      *     falls outside this Exposure.

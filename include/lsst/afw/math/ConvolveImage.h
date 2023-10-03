@@ -140,9 +140,10 @@ inline typename OutImageT::SinglePixel convolveAtAPoint(
  * Use the smallest kernel that will do the job.
  *
  * convolvedImage has a border of edge pixels which cannot be computed normally. Normally these pixels
- * are set to the standard edge pixel, as returned by edgePixel(). However, if your code cannot handle
- * nans in the %image or infs in the variance, you may set doCopyEdge true, in which case the edge pixels
- * are set to the corresponding pixels of the input %image and (if there is a mask) the mask EDGE bit is set.
+ * are set to the standard edge pixel, as returned by getEdgePixelDefault(). However, if your code cannot
+ * handle nans in the %image or infs in the variance, you may set doCopyEdge true, in which case the edge
+ * pixels are set to the corresponding pixels of the input %image and (if there is a mask) the mask EDGE bit
+ * is set.
  *
  * The border of edge pixels has size:
  * - kernel.getCtr().getX() along the left edge
@@ -190,47 +191,42 @@ void convolve(OutImageT& convolvedImage, InImageT const& inImage, KernelT const&
               ConvolutionControl const& convolutionControl = ConvolutionControl());
 
 /**
- * Return an off-the-edge pixel appropriate for a given Image type
+ * Return an off-the-edge pixel appropriate for a given Image type.
  *
- * The value is quiet_NaN if that exists for the pixel type, else 0
+ * The value is quiet_NaN if that exists for the pixel type, else 0.
+ * No mask here, so no need for a mask plane bit.
  */
-template <typename ImageT>
-typename ImageT::SinglePixel edgePixel(lsst::afw::image::detail::Image_tag
-                                       ///< lsst::afw::image::detail::image_traits<ImageT>::image_category()
-) {
-    using SinglePixelT = typename ImageT::SinglePixel;
-    return SinglePixelT(std::numeric_limits<SinglePixelT>::has_quiet_NaN
-                                ? std::numeric_limits<SinglePixelT>::quiet_NaN()
-                                : 0);
+template <typename T>
+typename image::Image<T>::SinglePixel getEdgePixelDefault(image::Image<T> const& image) {
+    using ImagePixelT = typename image::Image<T>::SinglePixel;
+    return ImagePixelT(std::numeric_limits<ImagePixelT>::has_quiet_NaN
+                               ? std::numeric_limits<ImagePixelT>::quiet_NaN()
+                               : 0);
 }
 
 /**
  * Return an off-the-edge pixel appropriate for a given MaskedImage type
  *
  * The components are:
- * - %image = quiet_NaN if that exists for the pixel type, else 0
- * - mask = NO_DATA bit set
- * - variance = infinity if that exists for the pixel type, else 0
+ * - %image = quiet_NaN if that exists for the pixel type, else 0.
+ * - mask = NO_DATA bit set.
+ * - variance = infinity if that exists for the pixel type, else 0.
  *
- * @throws lsst::pex::exceptions::LogicError Thrown if the global
- *     mask plane dictionary does not have a NO_DATA bit.
+ * @throws lsst::pex::exceptions::LogicError Thrown if the mask plane dictionary does not have a NO_DATA bit.
  */
-template <typename MaskedImageT>
-typename MaskedImageT::SinglePixel edgePixel(
-        lsst::afw::image::detail::MaskedImage_tag
-        ///< lsst::afw::image::detail::image_traits<MaskedImageT>::image_category()
-) {
-    using ImagePixelT = typename MaskedImageT::Image::Pixel;
-    using VariancePixelT = typename MaskedImageT::Variance::Pixel;
+template <typename T>
+typename image::MaskedImage<T>::SinglePixel getEdgePixelDefault(image::MaskedImage<T> const& maskedImage) {
+    using ImagePixelT = typename image::MaskedImage<T>::Image::Pixel;
+    using VariancePixelT = typename image::MaskedImage<T>::Variance::Pixel;
 
     auto imagePixel = std::numeric_limits<ImagePixelT>::has_quiet_NaN
                               ? std::numeric_limits<ImagePixelT>::quiet_NaN()
                               : 0;
-    auto maskPixel = MaskedImageT::Mask::getPlaneBitMask("NO_DATA");
+    auto maskPixel = maskedImage.getMask()->getBitMask("NO_DATA");
     auto variancePixel = std::numeric_limits<VariancePixelT>::has_infinity
                                  ? std::numeric_limits<VariancePixelT>::infinity()
                                  : 0;
-    return typename MaskedImageT::SinglePixel(imagePixel, maskPixel, variancePixel);
+    return typename image::MaskedImage<T>::SinglePixel(imagePixel, maskPixel, variancePixel);
 }
 
 /*
