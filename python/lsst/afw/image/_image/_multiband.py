@@ -380,6 +380,7 @@ class MultibandMask(MultibandImageBase):
         """
         return makeImageFromKwargs(MultibandMask, filters, filterKwargs, singleType, **kwargs)
 
+    # TODO: why does this exist?
     def getMaskPlane(self, key):
         """Get the bit number of a mask in the `MaskPlaneDict`
 
@@ -404,6 +405,7 @@ class MultibandMask(MultibandImageBase):
         """
         return self._refMask.getMaskPlaneDict()[key]
 
+    # TODO: why does this exist?
     def getPlaneBitMask(self, names):
         """Get the bit number of a mask in the `MaskPlaneDict`
 
