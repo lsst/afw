@@ -32,161 +32,58 @@ namespace afw {
 namespace image {
 namespace detail {
 
-// A thread-safe singleton that manages MaskDict's global canonical state.
-class MaskDict::GlobalState final {
-public:
-    static GlobalState &get() {
-        static GlobalState instance;
-        return instance;
-    }
+MaskDict::MaskDict(int maxPlanes, bool _default)
+        : _maxPlanes(maxPlanes), _dict(std::make_shared<MaskDictImpl>(_default)) {}
 
-    // TODO: I don't think we want to deprecate this, for parseing MaskDicts from metadata
-    std::shared_ptr<MaskDict> newMaskDictFromMaps(MaskPlaneDict const &mpd, MaskPlaneDocDict const &docs) {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        if (!mpd.empty()) {
-            std::shared_ptr<MaskDict> dict(new MaskDict(mpd, docs));
-            return dict;
-        }
-        return copy(*_defaultMaskDict);
-    }
+MaskDict::MaskDict(int maxPlanes, MaskPlaneDict const &dict, MaskPlaneDocDict const &docs)
+        : _maxPlanes(maxPlanes), _dict(std::make_shared<MaskDictImpl>(dict, docs)) {}
 
-    std::shared_ptr<MaskDict> copy(MaskDict const &dict) {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        std::shared_ptr<MaskDict> result(new MaskDict(dict));
-        return result;
-    }
-
-    std::shared_ptr<MaskDict> getDefault() const noexcept { return _defaultMaskDict; }
-
-    void setDefault(std::shared_ptr<MaskDict> dict) { _defaultMaskDict = std::move(dict); }
-
-    // std::shared_ptr<MaskDict> detachDefault() {
-    //     std::lock_guard<std::recursive_mutex> lock(_mutex);
-    //     _defaultMaskDict = copy(*_defaultMaskDict);
-    //     return _defaultMaskDict;
-    // }
-
-    // template <typename Functor>
-    // void forEachMaskDict(Functor functor) {
-    //     std::lock_guard<std::recursive_mutex> lock(_mutex);
-    //     _prune();  // guarantees dereference below is safe
-    //     for (auto const &ptr : _allMaskDicts) {
-    //         functor(*ptr.lock());
-    //     }
-    // }
-
-    // Return the bit id of an existing plane, or the next available bit, if the name is not in the list of
-    // canonical planes.
-    int getBitIdForNewPlane(std::string name) {
-        auto iter = std::find(_canonicalPlanes.begin(), _canonicalPlanes.end(), name);
-        if (iter == _canonicalPlanes.end()) {
-            _canonicalPlanes.push_back(name);
-            return _canonicalPlanes.size() - 1;
-        } else {
-            return iter - _canonicalPlanes.begin();
-        }
-    }
-
-    void clearCanonicalPlanes() { _canonicalPlanes.clear(); }
-
-    // Set the canonical planes to the current contents of the default MaskDict.
-    void setCanonicalPlanesFromDefault() {
-        _canonicalPlanes.clear();
-        for (auto const &pair : _defaultMaskDict->getMaskPlaneDict()) {
-            _canonicalPlanes.push_back(pair.first);
-        }
-    }
-
-private:
-    GlobalState() : _defaultMaskDict(new MaskDict()) { _defaultMaskDict->_addInitialMaskPlanes(); }
-
-    GlobalState(GlobalState const &) = delete;
-    GlobalState(GlobalState &&) = delete;
-
-    GlobalState &operator=(GlobalState const &) = delete;
-    GlobalState &operator=(GlobalState &&) = delete;
-
-    ~GlobalState() = default;
-
-    std::recursive_mutex _mutex;  // guards _allMaskDicts and synchronizes updates to it and _defaultMaskDict
-    std::shared_ptr<MaskDict> _defaultMaskDict;
-    // Maintains the list of all plane names; bit ids are the vector index.
-    // New planes always are added to the end (thus always receiving a larger bit id),
-    // even if there are gaps in the list that could be used.
-    std::vector<std::string> _canonicalPlanes;
-};
-
-std::shared_ptr<MaskDict> MaskDict::newMaskDictFromMaps(MaskPlaneDict const &mpd,
-                                                        MaskPlaneDocDict const &docs) {
-    return GlobalState::get().newMaskDictFromMaps(mpd, docs);
-}
-
-std::shared_ptr<MaskDict> MaskDict::getDefaultIfEmpty(std::shared_ptr<MaskDict> const &dict) {
-    if (dict != nullptr) {
-        return dict;
-    }
-    return getDefault();
-}
-
-std::tuple<int, std::shared_ptr<MaskDict>> MaskDict::withNewMaskPlane(std::string name, std::string doc,
-                                                                      int maxPlanes, bool ignoreCanonical) {
-    auto iter = _dict.find(name);
-    if (iter == _dict.end()) {
-        int id = maxPlanes;
-        std::set<int> existingIds;  // to check for empty bits we can re-use
-        for (auto const &item : _dict) {
+int MaskDict::add(std::string name, std::string doc) {
+    auto iter = _dict->_dict.find(name);
+    // New name does not exist in the map.
+    if (iter == _dict->_dict.end()) {
+        int id = _maxPlanes;
+        // check for empty bits we can re-use
+        std::set<int> existingIds;
+        for (auto const &item : _dict->_dict) {
             existingIds.insert(item.second);
-            std::cout << item.second << std::endl;
         }
-        if (ignoreCanonical) {
-            for (int i; i < maxPlanes; ++i) {
-                if (existingIds.find(i) == existingIds.end()) {
-                    id = i;
-                    break;
-                }
-            }
-        } else {
-            id = GlobalState::get().getBitIdForNewPlane(name);
-            if (existingIds.find(id) != existingIds.end()) {
-                throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
-                                  (boost::format("Plane %1% cannot be added because it will duplicate "
-                                                 "canonical plane id %2%.") %
-                                   name % id)
-                                          .str());
+        // Use the first empty id.
+        for (int i = 0; i < _maxPlanes; ++i) {
+            if (existingIds.find(i) == existingIds.end()) {
+                id = i;
+                break;
             }
         }
-        std::cout << name << " " << id << std::endl;
-        if (id >= maxPlanes) {
-            // TODO?? iterate over _dict looking for gaps.
+        if (id >= _maxPlanes) {
             throw LSST_EXCEPT(
                     lsst::pex::exceptions::RuntimeError,
                     (boost::format("Max number of planes (%1%) already used when trying to add '%2%'") %
-                     maxPlanes % name)
+                     _maxPlanes % name)
                             .str());
         }
-        if (existingIds.find(id) != existingIds.end()) {
-            auto newMaskDict = GlobalState::get().copy(*this);
-            newMaskDict->_dict[name] = id;
-            newMaskDict->_docs[name] = doc;
-            return std::make_tuple(id, newMaskDict);
-        } else {
-            _dict[name] = id;
-            _docs[name] = doc;
-            return std::make_tuple(id, shared_from_this());
-        }
+        _dict->_dict[name] = id;
+        _dict->_docs[name] = doc;
+        return id;
     }
 
+    // New name already exists in the map.
     int id = iter->second;
-    if (_docs.at(name) == doc || doc.empty()) {
-        return std::make_tuple(id, shared_from_this());
-    } else if (_docs.at(name).empty()) {
-        _docs[name] = doc;
-        return std::make_tuple(id, shared_from_this());
+    if (_dict->_docs.at(name) == doc || doc.empty()) {
+        // Matching docs require no change.
+        return id;
+    } else if (_dict->_docs.at(name).empty()) {
+        // Overwrite an existing empty docstring.
+        _dict->_docs[name] = doc;
+        return id;
     } else {
-        auto newMaskDict = GlobalState::get().copy(*this);
-        newMaskDict->_dict[name] = id;
-        newMaskDict->_docs[name] = doc;
-        return std::make_tuple(id, newMaskDict);
+        // Don't allow changing an existing docstring.
+        throw LSST_EXCEPT(
+                lsst::pex::exceptions::RuntimeError,
+                (boost::format(
+                         "Not changing existing docstring for plane '%1%'; remove and re-add to modify it.") %
+                 name)
+                        .str());
     }
 }
 
@@ -202,72 +99,28 @@ void MaskDict::remove(std::string name) {
     _dict->_docs.erase(name);
 }
 
-// NOTE: static
-void MaskDict::restoreDefaultMaskDict() {
-    clearDefaultPlanes(true);
-    GlobalState::get().getDefault()->_addInitialMaskPlanes();
-    GlobalState::get().setCanonicalPlanesFromDefault();
+void MaskDict::conformTo(MaskDict const &other) {
+    // TODO
 }
 
-// std::shared_ptr<MaskDict> MaskDict::detachDefault() { return GlobalState::get().detachDefault(); }
-
-// void MaskDict::addMaskPlane(std::string const &name, int bitId, std::string const &doc) {
-//     // GlobalState::get().forEachMaskDict([&name, bitId, doc](MaskDict &dict) {
-//     auto const found = std::find_if(dict.begin(), dict.end(),
-//                                     [bitId](auto const &item) { return item.second == bitId; });
-//     if (found == dict.end()) {
-//         // is name already in use?
-//         if (dict.find(name) == dict.end()) {
-//             dict.add(name, bitId, doc);
-//         }
-//         // TODO: need to do something here when the docstrings don't match?
-//     }
-//     // });
-// }
-
-MaskDict::~MaskDict() noexcept = default;
-
-// std::shared_ptr<MaskDict> MaskDict::clone() const { return GlobalState::get().copy(*this); }
-
-// int MaskDict::getUnusedPlane() const {
-//     if (empty()) {
-//         return 0;
-//     }
-
-//     auto const maxIter = std::max_element(begin(), end(),
-//                                           [](auto const &a, auto const &b) { return a.second < b.second;
-//                                           });
-//     assert(maxIter != end());
-//     int id = maxIter->second + 1;  // The maskPlane to use if there are no gaps
-
-//     for (int i = 0; i < id; ++i) {
-//         // is i already used in this Mask?
-//         auto const sameIter =
-//                 std::find_if(begin(), end(), [i](auto const &item) { return item.second == i; });
-//         if (sameIter == end()) {  // Not used; so we'll use it
-//             return i;
-//         }
-//     }
-
-//     return id;
-// }
+MaskDict MaskDict::clone() const { return MaskDict(_maxPlanes, _dict->_dict, _dict->_docs); }
 
 int MaskDict::getPlaneId(std::string const &name) const {
-    auto iter = _dict.find(name);
-    return (iter == _dict.end()) ? -1 : iter->second;
+    auto iter = _dict->_dict.find(name);
+    return (iter == _dict->_dict.end()) ? -1 : iter->second;
 }
 
 std::string MaskDict::getPlaneDoc(std::string const &name) const {
-    auto iter = _docs.find(name);
-    return (iter == _docs.end()) ? "" : iter->second;
+    auto iter = _dict->_docs.find(name);
+    return (iter == _dict->_docs.end()) ? "" : iter->second;
 }
 
 std::string MaskDict::print() const {
     std::ostringstream out;
-    auto it_dict = _dict.begin();
-    auto it_doc = _docs.begin();
+    auto it_dict = _dict->_dict.begin();
+    auto it_doc = _dict->_docs.begin();
     std::map<int, std::string> lines;
-    while (it_dict != _dict.end()) {
+    while (it_dict != _dict->_dict.end()) {
         std::stringstream line;
         line << "Plane " << it_dict->second << " -> " << it_dict->first << " : " << it_doc->second;
         lines[it_dict->second] = line.str();
@@ -288,10 +141,20 @@ std::string MaskDict::print() const {
 }
 
 bool MaskDict::operator==(MaskDict const &rhs) const {
-    return this == &rhs || (_dict == rhs._dict && _docs == rhs._docs);
+    return this == &rhs || _dict == rhs._dict ||
+           (_dict->_dict == rhs._dict->_dict && _dict->_docs == rhs._dict->_docs);
 }
 
-void MaskDict::_addInitialMaskPlanes() {
+MaskDict::MaskDictImpl::MaskDictImpl(bool _default) {
+    if (_default) {
+        _addInitialMaskPlanes();
+    }
+}
+
+MaskDict::MaskDictImpl::MaskDictImpl(MaskPlaneDict const &dict, MaskPlaneDocDict const &docs)
+        : _dict(dict), _docs(docs) {}
+
+void MaskDict::MaskDictImpl::_addInitialMaskPlanes() {
     int i = -1;
     _dict["BAD"] = ++i;
     _docs["BAD"] = "This pixel is known to be bad (e.g. the amplifier is not working).";
@@ -318,10 +181,6 @@ void MaskDict::_addInitialMaskPlanes() {
             "There was no data at this pixel location (e.g. no input images at this location in a coadd, or "
             "extremely high vignetting, such that there is no incoming signal).";
 }
-
-MaskDict::MaskDict() : _dict(), _docs() {}
-
-MaskDict::MaskDict(MaskPlaneDict const &dict, MaskPlaneDocDict const &docs) : _dict(dict), _docs(docs) {}
 
 }  // namespace detail
 }  // namespace image

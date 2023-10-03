@@ -100,51 +100,31 @@ public:
      * @param name Mask plane name to add.
      * @param doc Docstring for new mask plane.
      * @param maxPlanes Maximum number of allowed planes (defined by the pixel type of the Mask).
-     * @param ignoreCanonical Use the first free bit in this mask, ignoring the canonical planes
-     *        used in other masks.
      *
      * @return Tuple containing the new bit id added and a pointer to the ????
      */
-    std::tuple<int, std::shared_ptr<MaskDict>> withNewMaskPlane(std::string name, std::string doc,
-                                                                int maxPlanes, bool ignoreCanonical = false);
+    // std::tuple<int, std::shared_ptr<MaskDict>> withNewMaskPlane(std::string name, std::string doc,
+    //                                                             int maxPlanes);
 
     /// Return a mask dict without the given mask plane (may or may not be a copy).
-    std::shared_ptr<MaskDict> withRemovedMaskPlane(std::string name);
+    // std::shared_ptr<MaskDict> withRemovedMaskPlane(std::string name);
+
+    /// Return the default MaskDict if `dict` is an empty map.
+    // static MaskDict getDefaultIfEmpty(MaskDict const dict);
 
     // Return the default MaskDict to be used for new Mask instances.
-    static std::shared_ptr<MaskDict> getDefault();
+    // static std::shared_ptr<MaskDict> getDefault();
 
     // Set the default MaskDict.
-    static void setDefault(std::shared_ptr<MaskDict> dict, bool resetCanonicalPlanes = true);
-
-    /**
-     * Get the id of this name in the global list of canonical planes.
-     *
-     * Warns if the default plane map has a different bit id than the canonical planes.
-     *
-     * @param name [description]
-     * @return [description]
-     */
-    static int getCanonicalPlaneId(std::string name);
+    // static void setDefault(std::shared_ptr<MaskDict> dict);
 
     /// Remove all defined ids and docs from the default map and canonical list.
-    static void clearDefaultPlanes(bool clearCanonical = false);
+    // static void clearDefaultPlanes(bool clearCanonical = false);
 
     /// Reset the default MaskDict to the normal initial list, and set the canonical planes to match.
-    static void restoreDefaultMaskDict();
+    // static void restoreDefaultMaskDict();
 
     // OLD STUFF
-
-    // Return a new MaskDict with the same plane definitions as the given
-    // MaskPlaneDict, or return the default mask dict if it is empty.
-    static std::shared_ptr<MaskDict> newMaskDictFromMaps(MaskPlaneDict const &dict,
-                                                         MaskPlaneDocDict const &docs);
-
-    /*
-     * Set the default MaskDict to a copy of the current one, returning the
-     * new default.
-     */
-    // static std::shared_ptr<MaskDict> detachDefault();
 
     /*
      * Add the given mask plane to all active MaskDicts for which there is

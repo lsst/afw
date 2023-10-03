@@ -147,7 +147,7 @@ static void declareMaskDict(lsst::utils::python::WrapperCollection &wrappers) {
                     return names;
                 });
                 cls.def("_size", [](detail::MaskDict const &self) { return self.getMaskPlaneDict().size(); });
-                cls.def_static("getDefault", &detail::MaskDict::getDefault);
+                // cls.def_static("getDefault", &detail::MaskDict::getDefault);
                 // TODO: I think this should go away...
                 // cls.def("_getMaskPlaneDict", &detail::MaskDict::getMaskPlaneDict);
                 cls.def("_getMaskPlaneDocDict", &detail::MaskDict::getMaskPlaneDocDict);
@@ -264,10 +264,10 @@ static void declareMask(lsst::utils::python::WrapperCollection &wrappers, std::s
         cls.def("subset", &Mask<MaskPixelT>::subset, "bbox"_a, "origin"_a = PARENT);
         cls.def("getAsString", &Mask<MaskPixelT>::getAsString);
         cls.def("clearAllMaskPlanes", &Mask<MaskPixelT>::clearAllMaskPlanes);
-        cls.def("clearMaskPlane", &Mask<MaskPixelT>::clearMaskPlane);
-        cls.def_static("clearDefaultMaskDict", &Mask<MaskPixelT>::clearDefaultMaskDict);
-        cls.def_static("restoreDefaultMaskDict", &Mask<MaskPixelT>::restoreDefaultMaskDict);
-        cls.def_static("setDefaultMaskDict", &Mask<MaskPixelT>::setDefaultMaskDict);
+        // cls.def("clearMaskPlane", &Mask<MaskPixelT>::clearMaskPlane);
+        // cls.def_static("clearDefaultMaskDict", &Mask<MaskPixelT>::clearDefaultMaskDict);
+        // cls.def_static("restoreDefaultMaskDict", &Mask<MaskPixelT>::restoreDefaultMaskDict);
+        // cls.def_static("setDefaultMaskDict", &Mask<MaskPixelT>::setDefaultMaskDict);
         // cls.def("setMaskPlaneValues", &Mask<MaskPixelT>::setMaskPlaneValues);
         cls.def_static("parseMaskPlaneMetadata", Mask<MaskPixelT>::parseMaskPlaneMetadata);
         // cls.def_static("_removeMaskPlane", Mask<MaskPixelT>::removeMaskPlane);
@@ -275,14 +275,14 @@ static void declareMask(lsst::utils::python::WrapperCollection &wrappers, std::s
         cls.def("addPlane", &Mask<MaskPixelT>::addPlane, "name"_a, "doc"_a);
 
         // TODO DM-XXXXX: remove these
-        cls.def_static("_getMaskPlane", Mask<MaskPixelT>::getMaskPlane);
-        cls.def_static("_getPlaneBitMask",
-                       (MaskPixelT(*)(const std::string &))Mask<MaskPixelT>::getPlaneBitMask);
-        cls.def_static("_getPlaneBitMask",
-                       (MaskPixelT(*)(const std::vector<std::string> &))Mask<MaskPixelT>::getPlaneBitMask);
+        // cls.def_static("_getMaskPlane", Mask<MaskPixelT>::getMaskPlane);
+        // cls.def_static("_getPlaneBitMask",
+        //                (MaskPixelT(*)(const std::string &))Mask<MaskPixelT>::getPlaneBitMask);
+        // cls.def_static("_getPlaneBitMask",
+        //                (MaskPixelT(*)(const std::vector<std::string> &))Mask<MaskPixelT>::getPlaneBitMask);
         // Temporary name for deprecation. Restore `addMaskPlane` name once the non-doc overload is removed.
-        cls.def_static("addMaskPlaneWithDoc",
-                       (int (*)(const std::string &, const std::string &))Mask<MaskPixelT>::addMaskPlane);
+        // cls.def_static("addMaskPlaneWithDoc",
+        //                (int (*)(const std::string &, const std::string &))Mask<MaskPixelT>::addMaskPlane);
 
         cls.def("getBitMask", py::overload_cast<std::string>(&Mask<MaskPixelT>::getBitMask, py::const_),
                 "name"_a);
@@ -302,9 +302,6 @@ static void declareMask(lsst::utils::python::WrapperCollection &wrappers, std::s
         cls.def("printMaskPlanes", &Mask<MaskPixelT>::printMaskPlanes);
         cls.def("addMaskPlanesToMetadata", &Mask<MaskPixelT>::addMaskPlanesToMetadata);
         cls.def("conformMaskPlanes", &Mask<MaskPixelT>::conformMaskPlanes);
-        // Temporary name for deprecation. Restore `addMaskPlane` name once the non-doc overload is removed.
-        cls.def_static("addMaskPlaneWithDoc",
-                       (int (*)(const std::string &, const std::string &))Mask<MaskPixelT>::addMaskPlane);
     });
 }
 

@@ -438,18 +438,6 @@ public:
     void clearMaskPlane(int plane);
 
     /**
-     * Clears default MaskDict planes and docs, but retains canonical list of all planes
-     * that have been defined.
-     */
-    static void clearDefaultMaskDict();
-
-    /// Reset the default MaskDict to the normal initial list, and set the canonical planes to match.
-    static void restoreDefaultMaskDict();
-
-    /// Set the default MaskDict to a new MaskDict, and override the canonical planes to match.
-    static void setDefaultMaskDict(std::shared_ptr<detail::MaskDict> maskDict);
-
-    /**
      * Set the bit specified by "planeId" for pixels (x0, y) ... (x1, y)
      */
     void setMaskPlaneValues(const int plane, const int x0, const int x1, const int y);
@@ -465,41 +453,39 @@ public:
 
     // Operations on the mask plane dictionary
 
-    [[deprecated("Doc field will become non-optional. Will be removed after v28.")]] static int addMaskPlane(
-            const std::string& name);
+    // [[deprecated("Doc field will become non-optional. Will be removed after v28.")]] static int
+    // addMaskPlane(
+    //         const std::string& name);
     // TODO: can we deprecate these two? Hope so!
-    [[deprecated("Replaced with non-static `addPlane()`.  Will be removed after v28.")]] static int
-    addMaskPlane(const std::string& name, const std::string& doc);
-    [[deprecated(
-            "Replaced with non-static `removeAndClearMaskPlane()`.  Will be removed after v28.")]] static void
-    removeMaskPlane(const std::string& name);
+    // [[deprecated("Replaced with non-static `addPlane()`.  Will be removed after v28.")]] static int
+    // addMaskPlane(const std::string& name, const std::string& doc);
+    // [[deprecated(
+    //         "Replaced with non-static `removeAndClearMaskPlane()`.  Will be removed after v28.")]] static
+    //         void
+    // removeMaskPlane(const std::string& name);
 
     /**
      * Add a new named mask plane and doc to this Mask's plane map.
-     *
-     * @param ignoreCanonical Use the first free bit in this mask, ignoring the canonical planes
-     * used in other masks.
      */
-    int addPlane(const std::string& name, const std::string& doc, bool ignoreCanonical = false);
+    int addPlane(const std::string& name, const std::string& doc);
 
     /**
      * @brief Clear all pixels of the specified mask and remove the plane from the mask plane dictionary;
      * optionally remove the plane from the default dictionary too.
      *
      * @param Name of maskplane to remove.
-     * @param removeFromDefault Remove from default mask plane dictionary too.
      *
      * @throws lsst::pex::exceptions::InvalidParameterError if plane is invalid
      */
-    void removeAndClearMaskPlane(const std::string& name, bool const removeFromDefault = false);
+    void removeAndClearMaskPlane(const std::string& name);
 
     /**
      * Return the mask plane bit number corresponding to a plane name.
      *
      * @throws lsst::pex::exceptions::InvalidParameterError if plane is invalid
      */
-    [[deprecated("Replaced with non-static `getPlaneId()`. Will be removed after v28.")]] static int
-    getMaskPlane(const std::string& name);
+    // [[deprecated("Replaced with non-static `getPlaneId()`. Will be removed after v28.")]] static int
+    // getMaskPlane(const std::string& name);
     int getPlaneId(std::string name) const;
 
     /**
@@ -507,8 +493,8 @@ public:
      *
      * @throws lsst::pex::exceptions::InvalidParameterError if plane is invalid
      */
-    [[deprecated("Replaced with non-static `getBitMask()`.  Will be removed after v28.")]] static MaskPixelT
-    getPlaneBitMask(const std::vector<std::string>& names);
+    // [[deprecated("Replaced with non-static `getBitMask()`.  Will be removed after v28.")]] static
+    // MaskPixelT getPlaneBitMask(const std::vector<std::string>& names);
     MaskPixelT getBitMask(const std::vector<std::string>& names) const;
 
     /**
@@ -516,8 +502,8 @@ public:
      *
      * @throws lsst::pex::exceptions::InvalidParameterError if plane is invalid
      */
-    [[deprecated("Replaced with non-static `getBitMask()`.  Will be removed after v28.")]] static MaskPixelT
-    getPlaneBitMask(const std::string& name);
+    // [[deprecated("Replaced with non-static `getBitMask()`.  Will be removed after v28.")]] static
+    // MaskPixelT getPlaneBitMask(const std::string& name);
     MaskPixelT getBitMask(std::string name) const;
 
     // Return the bit mask corresponding to the given plane id.
