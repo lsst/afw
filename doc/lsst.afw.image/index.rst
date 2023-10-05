@@ -18,6 +18,7 @@ Using lsst.afw.image
 
    indexing-conventions
    exposure-fits-metadata
+   masks-and-mask-planes
 
 .. _lsst.afw.image-contributing:
 
