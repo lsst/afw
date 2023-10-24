@@ -177,7 +177,7 @@ class ChebyshevBoundedFieldTestCase(lsst.utils.tests.TestCase):
         field = lsst.afw.math.ChebyshevBoundedField(self.image.getBBox(), coefficients)
         subBox = lsst.geom.Box2I(lsst.geom.Point2I(0, 3), lsst.geom.Point2I(3, 4))
         subImage = self.image.subset(subBox)
-        with(self.assertRaises(RuntimeError)):
+        with self.assertRaises(RuntimeError):
             field.multiplyImage(subImage)
 
     def testMultiplyImageOverlapSubImage(self):
