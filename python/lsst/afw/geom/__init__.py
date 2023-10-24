@@ -29,4 +29,4 @@ from .skyWcs import *
 from .transformFromString import *
 from .wcsUtils import *
 from ._calculateSipWcsHeader import *
-
+from ._spanSetContinued import *
