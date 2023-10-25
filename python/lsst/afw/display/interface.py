@@ -542,7 +542,27 @@ class Display:
                 self.setDefaultMaskPlaneColor(name, next(colorGenerator))
 
     def mtv(self, data, title="", wcs=None):
-        """Display an `~lsst.afw.image.Image` or `~lsst.afw.image.Mask` on a display
+        """Display an image on a display, with semi-transparent masks
+        overlaid, if available.
+
+        Parameters
+        ----------
+        data : `lsst.afw.image.Exposure` or `lsst.afw.image.MaskedImage` or `lsst.afw.image.Image`
+            Image to display.
+        title : `str`, optional
+            Title for the display window.
+        wcs : `lsst.afw.geom.SkyWcs`, optional
+            World Coordinate System to align an `~lsst.afw.image.MaskedImage`
+            or `~lsst.afw.image.Image` to; raise an exception if ``data``
+            is an `~lsst.afw.image.Exposure`.
+
+        Raises
+        ------
+        RuntimeError
+            Raised if an Exposure is passed with a non-None wcs when the
+            ``wcs`` kwarg is also non-None.
+        TypeError
+            Raised if data is an incompatible type.
 
         Notes
         -----
@@ -557,8 +577,7 @@ class Display:
         # it's an Exposure; display the MaskedImage with the WCS
         if isinstance(data, afwImage.Exposure):
             if wcs:
-                raise RuntimeError(
-                    "You may not specify a wcs with an Exposure")
+                raise RuntimeError("You may not specify a wcs with an Exposure")
             data, wcs = data.getMaskedImage(), data.getWcs()
         elif isinstance(data, afwImage.DecoratedImage):  # it's a DecoratedImage; display it
             try:
@@ -584,7 +603,7 @@ class Display:
             self.__addMissingMaskPlanes(data.mask)
             self._impl._mtv(data.getImage(), data.getMask(), wcs, title)
         else:
-            raise RuntimeError(f"Unsupported type {data!r}")
+            raise TypeError(f"Unsupported type {data!r}")
     #
     # Graphics commands
     #
