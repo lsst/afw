@@ -149,7 +149,7 @@ void SpatialCell::visitCandidates(CandidateVisitor *visitor, int const nMaxPerCe
             visitor->processCandidate((*candidate).get());
         } catch (lsst::pex::exceptions::Exception &e) {
             if (ignoreExceptions) {
-                ;
+                --i;  // Don't count the candidate if it raises an exception
             } else {
                 LSST_EXCEPT_ADD(e, "Visiting candidate");
                 throw e;
