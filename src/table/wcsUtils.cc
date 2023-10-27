@@ -97,8 +97,8 @@ Eigen::Matrix2f calculateCoordCovariance(geom::SkyWcs const &wcs, lsst::geom::Po
     // propagate the centroid uncertainty to coordinate uncertainty. Note that
     // the calculation is done in arcseconds, then converted to radians in
     // order to achieve higher precision.
-    double scale = 1.0 / 3600.0;
-    Eigen::Matrix2d cdMatrix{{scale, 0}, {0, scale}};
+    const static double scale = 1.0 / 3600.0;
+    const static Eigen::Matrix2d cdMatrix{{scale, 0}, {0, scale}};
 
     lsst::geom::SpherePoint skyCenter = wcs.pixelToSky(center);
     auto localGnomonicWcs = geom::makeSkyWcs(center, skyCenter, cdMatrix);
