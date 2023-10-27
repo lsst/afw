@@ -22,6 +22,7 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
+#include <cmath>
 #include <memory>
 #include <vector>
 
@@ -93,6 +94,9 @@ void updateRefCentroids(geom::SkyWcs const &wcs, ReferenceCollection &refList) {
 
 Eigen::Matrix2f calculateCoordCovariance(geom::SkyWcs const &wcs, lsst::geom::Point2D center,
                                          Eigen::Matrix2f err) {
+    if (!std::isfinite(center.getX()) || !std::isfinite(center.getY())) {
+        return Eigen::Matrix2f::Constant(NAN);
+    }
     // Get the derivative of the pixel-to-sky transformation, then use it to
     // propagate the centroid uncertainty to coordinate uncertainty. Note that
     // the calculation is done in arcseconds, then converted to radians in
