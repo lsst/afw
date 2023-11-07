@@ -35,6 +35,7 @@ void wrapExposure(lsst::utils::python::WrapperCollection &);
 void wrapExposureInfo(lsst::utils::python::WrapperCollection &);
 void wrapFilterLabel(lsst::utils::python::WrapperCollection &);
 void wrapImagePca(lsst::utils::python::WrapperCollection &);
+void wrapImageSummary(lsst::utils::python::WrapperCollection &);
 void wrapImageUtils(lsst::utils::python::WrapperCollection &);
 void wrapPhotoCalib(lsst::utils::python::WrapperCollection &);
 void wrapReaders(lsst::utils::python::WrapperCollection &);
@@ -50,6 +51,7 @@ PYBIND11_MODULE(_imageLib, mod) {
     wrapExposureInfo(wrappers);
     wrapFilterLabel(wrappers);
     wrapImagePca(wrappers);
+    wrapImageSummary(wrappers);
     wrapImageUtils(wrappers);
     wrapPhotoCalib(wrappers);
     wrapReaders(wrappers);
