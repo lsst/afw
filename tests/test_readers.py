@@ -30,7 +30,7 @@ from lsst.daf.base import PropertyList
 from lsst.geom import Box2I, Point2I, Extent2I, Point2D, Box2D, SpherePoint, degrees
 from lsst.afw.geom import makeSkyWcs, Polygon
 from lsst.afw.table import ExposureTable
-from lsst.afw.image import (Image, Mask, Exposure, LOCAL, PARENT, MaskPixel, VariancePixel,
+from lsst.afw.image import (Image, Mask, MaskedImage, Exposure, LOCAL, PARENT, MaskPixel, VariancePixel,
                             ImageFitsReader, MaskFitsReader, MaskedImageFitsReader, ExposureFitsReader,
                             FilterLabel, PhotoCalib, ApCorrMap, VisitInfo, TransmissionCurve,
                             CoaddInputs, ExposureInfo, ExposureF)
@@ -102,6 +102,29 @@ class FitsReaderTestCase(lsst.utils.tests.TestCase):
                     self.assertTrue(np.all(subIn.array == array))
                     self.assertEqual(subIn.getXY0(), reader.readXY0(*args))
                     self.assertImagesEqual(subIn, mask)
+
+    def testMaskedImageFitsReader(self):
+        for n, dtypeIn in enumerate(self.dtypes):
+            with self.subTest(dtypeIn=dtypeIn):
+                maskedImageIn = MaskedImage(self.bbox, dtype=dtypeIn)
+                maskedImageIn.image.array[:, :] = np.random.randint(low=1, high=5,
+                                                                    size=maskedImageIn.image.array.shape
+                                                                    )
+                maskedImageIn.mask.array[:, :] = np.random.randint(low=1, high=5,
+                                                                   size=maskedImageIn.mask.array.shape
+                                                                   )
+                maskedImageIn.variance.array[:, :] = np.random.randint(low=1, high=5,
+                                                                       size=maskedImageIn.variance.array.shape
+                                                                       )
+                with lsst.utils.tests.getTempFilePath(".fits") as fileName:
+                    maskedImageIn.writeFits(fileName)
+                    reader = MaskedImageFitsReader(fileName)
+                    self.assertEqual(reader.readBBox(), self.bbox)
+                    self.assertEqual(reader.readImageDType(), dtypeIn)
+                    self.assertEqual(reader.fileName, fileName)
+                    self.checkMultiPlaneReader(reader, maskedImageIn, fileName, self.dtypes[n:],
+                                               compare=self.assertMaskedImagesEqual)
+                    self.checkMaskedImageFitsReader(maskedImageIn, fileName, self.dtypes[n:])
 
     def checkMultiPlaneReader(self, reader, objectIn, fileName, dtypesOut, compare):
         """Test operations common to MaskedImageFitsReader and ExposureFitsReader.
