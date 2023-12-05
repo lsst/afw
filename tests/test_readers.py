@@ -148,12 +148,12 @@ class FitsReaderTestCase(lsst.utils.tests.TestCase):
                         self.assertImagesEqual(image2, object2.image)
                         compare(subIn, object2)
 
-    def checkMaskedImageFitsReader(self, exposureIn, fileName, dtypesOut):
+    def checkMaskedImageFitsReader(self, maskedImageIn, fileName, dtypesOut):
         """Test MaskedImageFitsReader.
 
         Parameters
         ----------
-        exposureIn : `Exposure`
+        maskedImageIn : `MaskedImage`
             Object originally saved, to compare against.
         fileName : `str`
             Name of the file the reader is reading.
@@ -161,7 +161,7 @@ class FitsReaderTestCase(lsst.utils.tests.TestCase):
             Compatible image pixel types to try to read in.
         """
         reader = MaskedImageFitsReader(fileName)
-        self.checkMultiPlaneReader(reader, exposureIn.maskedImage, fileName, dtypesOut,
+        self.checkMultiPlaneReader(reader, maskedImageIn, fileName, dtypesOut,
                                    compare=self.assertMaskedImagesEqual)
 
     def checkExposureFitsReader(self, exposureIn, fileName, dtypesOut):
@@ -295,7 +295,7 @@ class FitsReaderTestCase(lsst.utils.tests.TestCase):
                 exposureIn.setDetector(detector)
                 with lsst.utils.tests.getTempFilePath(".fits") as fileName:
                     exposureIn.writeFits(fileName)
-                    self.checkMaskedImageFitsReader(exposureIn, fileName, self.dtypes[n:])
+                    self.checkMaskedImageFitsReader(exposureIn.maskedImage, fileName, self.dtypes[n:])
                     self.checkExposureFitsReader(exposureIn, fileName, self.dtypes[n:])
 
     def test31035(self):
