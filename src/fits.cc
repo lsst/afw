@@ -194,8 +194,12 @@ StringStartSet const ignoreKeyStartsWrite{"TFORM", "TTYPE"};
 std::string strip(std::string const &s) {
     if (s.empty()) return s;
     std::size_t i1 = s.find_first_not_of(" '");
+    if (i1 == std::string::npos) {
+        return std::string();
+    }
     std::size_t i2 = s.find_last_not_of(" '");
-    return s.substr(i1, (i1 == std::string::npos) ? 0 : 1 + i2 - i1);
+    // if there's an i1, there must be an i2
+    return s.substr(i1, 1 + i2 - i1);
 }
 
 // ---- FITS binary table format codes for various C++ types. -----------------------------------------------
