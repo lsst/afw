@@ -73,6 +73,16 @@ class FitsTestCase(lsst.utils.tests.TestCase):
 
         self.assertEqual(output.toDict(), header.toDict())
 
+    def testReadEmptyValue(self):
+        """Read a header with an extended comment including an empty value."""
+        testFile = os.path.join(testPath, "data", "ticket42210.fits")
+        metadata = lsst.afw.fits.readMetadata(testFile)
+        self.assertEqual(
+            metadata.getComment("TTYPE251"),
+            "ellipse used to set the pixel region for the final fit (before "
+            "applying bad pixel mask)"
+        )
+
     def testReadUndefined(self):
         """Read a header with some undefined values that might override."""
         testFile = os.path.join(testPath, "data", "ticket18864.fits")
