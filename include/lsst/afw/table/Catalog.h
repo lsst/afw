@@ -103,7 +103,6 @@ public:
     using Table = typename Record::Table;
     using ColumnView = typename Record::ColumnView;
 
-    using value_type = RecordT;
     using reference = RecordT &;
     using pointer = std::shared_ptr<RecordT>;
     using size_type = typename Internal::size_type;
