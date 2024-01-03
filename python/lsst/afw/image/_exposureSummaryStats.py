@@ -127,6 +127,11 @@ class ExposureSummaryStats(Storable):
     (pixels).
     """
 
+    effectiveTime: float = float('nan')
+    """Effective exposure time calculated from psfSigma, skyBg, and
+    zeroPoint (seconds).
+    """
+
     def __post_init__(self):
         Storable.__init__(self)
 
@@ -284,6 +289,12 @@ class ExposureSummaryStats(Storable):
             "maxDistToNearestPsf",
             type="F",
             doc="Maximum distance of an unmasked pixel to its nearest model psf star (pixel).",
+        )
+        schema.addField(
+            "effectiveTime",
+            type="F",
+            doc="Effective exposure time calculated from psfSigma, skyBg, and "
+            "zeroPoint (seconds)."
         )
 
     def update_record(self, record: BaseRecord) -> None:
