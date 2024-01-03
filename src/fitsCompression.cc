@@ -336,7 +336,16 @@ public:
     /// Ctor
     CfitsioRandom(int seed) : _seed(seed) {
         assert(seed != 0 && seed < N_RANDOM);
-        fits_init_randoms();
+        // Ensure that cfitsio has the correct locks initialized
+        // prior to initializing the random number table.
+        if (fitsio_init_lock()) {
+            throw LSST_EXCEPT(pex::exceptions::RuntimeError,
+                              "Failed to initialize cfitsio locks for random table");
+        }
+        if (fits_init_randoms()) {
+            throw LSST_EXCEPT(pex::exceptions::RuntimeError,
+                              "Failed to initialize cfitsio random table");
+        }
         resetForTile(0);
     }
 
