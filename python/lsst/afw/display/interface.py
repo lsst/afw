@@ -644,6 +644,26 @@ class Display:
         """
         self._impl._erase()
 
+    def centroids(self, catalog, *, symbol="o", **kwargs):
+        """Draw the sources from a catalog at their pixel centroid positions
+        as given by `~lsst.afw.table.Catalog.getX()` and
+        `~lsst.afw.table.Catalog.getY()`.
+
+        See `dot` for an explanation of ``symbol`` and available args/kwargs,
+        which are passed to `dot`.
+
+        Parameters
+        ----------
+        catalog : `lsst.afw.table.Catalog`
+            Catalog to display centroids for. Must have valid `slot_Centroid`.
+        """
+        if not catalog.getCentroidSlot().isValid():
+            raise RuntimeError("Catalog must have a valid `slot_Centroid` defined to get X/Y positions.")
+
+        with self.Buffering():
+            for pt in catalog:
+                self.dot(symbol, pt.getX(), pt.getY(), **kwargs)
+
     def dot(self, symb, c, r, size=2, ctype=None, origin=afwImage.PARENT, *args, **kwargs):
         """Draw a symbol onto the specified display frame
 
