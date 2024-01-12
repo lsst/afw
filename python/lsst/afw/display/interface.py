@@ -132,8 +132,6 @@ class Display:
         An identifier for the display
     backend : `str`
         The backend to use (defaults to value set by setDefaultBackend())
-    *args
-        Arguments to pass to the backend
     **kwargs
         Arguments to pass to the backend
     """
@@ -157,7 +155,7 @@ class Display:
     _defaultMaskTransparency = {}
     _defaultImageColormap = "gray"
 
-    def __init__(self, frame=None, backend=None, *args, **kwargs):
+    def __init__(self, frame=None, backend=None, **kwargs):
         if frame is None:
             frame = getDefaultFrame()
 
@@ -171,7 +169,7 @@ class Display:
             backend = Display._defaultBackend
 
         self.frame = frame
-        self._impl = _makeDisplayImpl(self, backend, *args, **kwargs)
+        self._impl = _makeDisplayImpl(self, backend, **kwargs)
         self.name = backend
 
         self._xy0 = None                # displayed data's XY0
@@ -366,8 +364,8 @@ class Display:
         self._impl._setImageColormap(cmap)
 
     @staticmethod
-    def getDisplay(frame=None, backend=None, create=True, verbose=False, *args, **kwargs):
-        """Return a specific `Display`, creating it if need be
+    def getDisplay(frame=None, backend=None, create=True, verbose=False, **kwargs):
+        """Return a specific `Display`, creating it if need be.
 
         Parameters
         ----------
@@ -381,8 +379,6 @@ class Display:
             create the display if it doesn't already exist.
         verbose : `bool`
             Allow backend to be chatty
-        *args
-            arguments passed to `Display` constructor
         **kwargs
             keyword arguments passed to `Display` constructor
         """
@@ -395,7 +391,7 @@ class Display:
                 raise RuntimeError(f"Frame {frame} does not exist")
 
             Display._displays[frame] = Display(
-                frame, backend, verbose=verbose, *args, **kwargs)
+                frame, backend, verbose=verbose, **kwargs)
 
         Display._displays[frame].verbose = verbose
         return Display._displays[frame]
@@ -657,8 +653,8 @@ class Display:
             for pt in catalog:
                 self.dot(symbol, pt.getX(), pt.getY(), **kwargs)
 
-    def dot(self, symb, c, r, size=2, ctype=None, origin=afwImage.PARENT, *args, **kwargs):
-        """Draw a symbol onto the specified display frame
+    def dot(self, symb, c, r, size=2, ctype=None, origin=afwImage.PARENT, **kwargs):
+        """Draw a symbol onto the specified display frame.
 
         Parameters
         ----------
@@ -689,8 +685,6 @@ class Display:
             The desired color, either e.g. `lsst.afw.display.RED` or a color name known to X11
         origin : `lsst.afw.image.ImageOrigin`
             Coordinate system for the given positions.
-        *args
-            Extra arguments to backend
         **kwargs
             Extra keyword arguments to backend
         """
@@ -754,8 +748,9 @@ class Display:
 
                 self._impl._drawLines(points, ctype)
 
-    def scale(self, algorithm, min, max=None, unit=None, *args, **kwargs):
-        """Set the range of the scaling from DN in the image to the image display
+    def scale(self, algorithm, min, max=None, unit=None, **kwargs):
+        """Set the range of the scaling from DN in the image to the image
+        display.
 
         Parameters
         ----------
@@ -767,8 +762,6 @@ class Display:
             Maximum value (must be `None` for minmax|zscale)
         unit
             Units for min and max (e.g. Percent, Absolute, Sigma; `None` if min==minmax|zscale)
-        *args
-            Optional arguments to the backend
         **kwargs
             Optional keyword arguments to the backend
         """
@@ -778,7 +771,7 @@ class Display:
         elif max is None:
             raise RuntimeError("Please specify max")
 
-        self._impl._scale(algorithm, min, max, unit, *args, **kwargs)
+        self._impl._scale(algorithm, min, max, unit, **kwargs)
 
     def zoom(self, zoomfac=None, colc=None, rowc=None, origin=afwImage.PARENT):
         """Zoom frame by specified amount, optionally panning also
@@ -963,8 +956,8 @@ def setDefaultMaskPlaneColor(name=None, color=None):
     return Display.setDefaultMaskPlaneColor(name, color)
 
 
-def getDisplay(frame=None, backend=None, create=True, verbose=False, *args, **kwargs):
-    """Return a specific `Display`, creating it if need be
+def getDisplay(frame=None, backend=None, create=True, verbose=False, **kwargs):
+    """Return a specific `Display`, creating it if need be.
 
     Parameters
     ----------
@@ -978,8 +971,6 @@ def getDisplay(frame=None, backend=None, create=True, verbose=False, *args, **kw
         Create the display if it doesn't already exist.
     verbose : `bool`
         Allow backend to be chatty
-    *args
-        arguments passed to `Display` constructor
     **kwargs
         keyword arguments passed to `Display` constructor
 
@@ -988,7 +979,7 @@ def getDisplay(frame=None, backend=None, create=True, verbose=False, *args, **kw
     Display.getDisplay
     """
 
-    return Display.getDisplay(frame, backend, create, verbose, *args, **kwargs)
+    return Display.getDisplay(frame, backend, create, verbose, **kwargs)
 
 
 def delAllDisplays():
