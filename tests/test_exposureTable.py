@@ -19,15 +19,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-"""
-Tests for lsst.afw.table.ExposureTable
-
-Run with:
-   python test_exposureTable.py
-or
-   pytest test_exposureTable.py
-"""
-
 import os.path
 import unittest
 
