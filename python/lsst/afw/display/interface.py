@@ -1,4 +1,3 @@
-
 # This file is part of afw.
 #
 # Developed for the LSST Data Management System.
@@ -38,9 +37,7 @@ import lsst.log
 
 logger = lsst.log.Log.getLogger(__name__)
 
-#
 # Symbolic names for mask/line colors.  N.b. ds9 supports any X11 color for masks
-#
 WHITE = "white"
 BLACK = "black"
 RED = "red"
@@ -269,9 +266,8 @@ class Display:
     def __str__(self):
         return f"Display[{self.frame}]"
 
-    #
     # Handle Displays, including the default one (the frame to use when a user specifies None)
-    #
+
     @staticmethod
     def setDefaultBackend(backend):
         try:
@@ -333,9 +329,7 @@ class Display:
             for k, v in name.items():
                 setDefaultMaskPlaneColor(k, v)
             return
-        #
         # Set the individual color values
-        #
         Display._defaultMaskPlaneColor[name] = color
 
     @staticmethod
@@ -461,7 +455,6 @@ class Display:
 
             The advantage of using the symbolic names is that the python interpreter can detect typos.
         """
-
         if isinstance(name, dict):
             assert color is None
             for k, v in name.items():
@@ -478,7 +471,6 @@ class Display:
         name : `str`
             Desired mask plane; if `None`, return entire dict
         """
-
         if name is None:
             return self._maskPlaneColors
         else:
@@ -492,7 +484,6 @@ class Display:
     def setMaskTransparency(self, transparency=None, name=None):
         """Specify display's mask transparency (percent); or `None` to not set it when loading masks
         """
-
         if isinstance(transparency, dict):
             assert name is None
             for k, v in transparency.items():
@@ -513,7 +504,6 @@ class Display:
     def getMaskTransparency(self, name=None):
         """Return the current display's mask transparency
         """
-
         return self._impl._getMaskTransparency(name)
 
     def show(self):
@@ -531,7 +521,8 @@ class Display:
         maskPlanes = mask.getMaskPlaneDict()
         nMaskPlanes = max(maskPlanes.values()) + 1
 
-        planes = {}                      # build inverse dictionary from mask plane index to name
+        # Build inverse dictionary from mask plane index to name.
+        planes = {}
         for key in maskPlanes:
             planes[maskPlanes[key]] = key
 
@@ -574,7 +565,7 @@ class Display:
         else:
             self._xy0 = None
 
-        # it's an Exposure; display the MaskedImage with the WCS
+        # It's an Exposure; display the MaskedImage with the WCS
         if isinstance(data, afwImage.Exposure):
             if wcs:
                 raise RuntimeError("You may not specify a wcs with an Exposure")
@@ -590,7 +581,7 @@ class Display:
 
         if isinstance(data, afwImage.Image):  # it's an Image; display it
             self._impl._mtv(data, None, wcs, title)
-        # it's a Mask; display it, bitplane by bitplane
+        # It's a Mask; display it, bitplane by bitplane.
         elif isinstance(data, afwImage.Mask):
             self.__addMissingMaskPlanes(data)
             #
@@ -604,14 +595,10 @@ class Display:
             self._impl._mtv(data.getImage(), data.getMask(), wcs, title)
         else:
             raise TypeError(f"Unsupported type {data!r}")
-    #
-    # Graphics commands
-    #
 
     class _Buffering:
         """A class intended to be used with python's with statement
         """
-
         def __init__(self, _impl):
             self._impl = _impl
 
@@ -760,9 +747,6 @@ class Display:
                     points = _points
 
                 self._impl._drawLines(points, ctype)
-    #
-    # Set gray scale
-    #
 
     def scale(self, algorithm, min, max=None, unit=None, *args, **kwargs):
         """Set the range of the scaling from DN in the image to the image display
@@ -789,14 +773,10 @@ class Display:
             raise RuntimeError("Please specify max")
 
         self._impl._scale(algorithm, min, max, unit, *args, **kwargs)
-    #
-    # Zoom and Pan
-    #
 
     def zoom(self, zoomfac=None, colc=None, rowc=None, origin=afwImage.PARENT):
         """Zoom frame by specified amount, optionally panning also
         """
-
         if (rowc and colc is None) or (colc and rowc is None):
             raise RuntimeError(
                 "Please specify row and column center to pan about")
@@ -829,7 +809,6 @@ class Display:
         --------
         Display.zoom
         """
-
         self.zoom(None, colc, rowc, origin)
 
     def interact(self):
@@ -892,13 +871,11 @@ class Display:
         onlyActive : `bool`
             If `True` only return keys that do something
         """
-
         return sorted([k for k, func in self._callbacks.items() if
                        not (onlyActive and func == noop_callback)])
 
-#
+
 # Callbacks for display events
-#
 
 
 class Event:
@@ -912,9 +889,9 @@ class Event:
 
     def __str__(self):
         return f"{self.k} ({self.x:.2f}, {self.y:.2f}"
-#
+
+
 # Default fallback function
-#
 
 
 def noop_callback(k, x, y):
@@ -933,11 +910,8 @@ def h_callback(k, x, y):
     print("Enter q or <ESC> to leave interactive mode, h for this help, or a letter to fire a callback")
     return False
 
-#
 # Handle Displays, including the default one (the frame to use when a user specifies None)
-#
 # If the default frame is None, image display is disabled
-#
 
 
 def setDefaultBackend(backend):
