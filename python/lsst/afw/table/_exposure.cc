@@ -73,11 +73,11 @@ PyExposureRecord declareExposureRecord(WrapperCollection &wrappers) {
         cls.def("getTable", &ExposureRecord::getTable);
         cls.def_property_readonly("table", &ExposureRecord::getTable);
         cls.def("contains",
-                (bool (ExposureRecord::*)(lsst::geom::SpherePoint const &, bool) const) &
+                (bool(ExposureRecord::*)(lsst::geom::SpherePoint const &, bool) const) &
                         ExposureRecord::contains,
                 "coord"_a, "includeValidPolygon"_a = false);
         cls.def("contains",
-                (bool (ExposureRecord::*)(lsst::geom::Point2D const &, geom::SkyWcs const &, bool) const) &
+                (bool(ExposureRecord::*)(lsst::geom::Point2D const &, geom::SkyWcs const &, bool) const) &
                         ExposureRecord::contains,
                 "point"_a, "wcs"_a, "includeValidPolygon"_a = false);
         cls.def("getWcs", &ExposureRecord::getWcs);
@@ -92,7 +92,8 @@ PyExposureRecord declareExposureRecord(WrapperCollection &wrappers) {
         cls.def("getValidPolygon", &ExposureRecord::getValidPolygon);
 
         // Workaround for DM-10289.
-        cls.def("setValidPolygon",
+        cls.def(
+                "setValidPolygon",
                 [](ExposureRecord &self, py::object polygon) {
                     if (polygon.is(py::none())) {
                         self.setValidPolygon(nullptr);
