@@ -532,14 +532,15 @@ class Display:
             if name not in self._defaultMaskPlaneColor:
                 self.setDefaultMaskPlaneColor(name, next(colorGenerator))
 
-    def mtv(self, data, title="", wcs=None):
+    def image(self, data, title="", wcs=None):
         """Display an image on a display, with semi-transparent masks
         overlaid, if available.
 
         Parameters
         ----------
         data : `lsst.afw.image.Exposure` or `lsst.afw.image.MaskedImage` or `lsst.afw.image.Image`
-            Image to display.
+            Image to display; Exposure and MaskedImage will show transparent
+            mask planes.
         title : `str`, optional
             Title for the display window.
         wcs : `lsst.afw.geom.SkyWcs`, optional
@@ -554,11 +555,6 @@ class Display:
             ``wcs`` kwarg is also non-None.
         TypeError
             Raised if data is an incompatible type.
-
-        Notes
-        -----
-        Historical note: the name "mtv" comes from Jim Gunn's forth imageprocessing
-        system, Mirella (named after Mirella Freni); The "m" stands for Mirella.
         """
         if hasattr(data, "getXY0"):
             self._xy0 = data.getXY0()
@@ -595,6 +591,17 @@ class Display:
             self._impl._mtv(data.getImage(), data.getMask(), wcs, title)
         else:
             raise TypeError(f"Unsupported type {data!r}")
+
+    def mtv(self, data, title="", wcs=None):
+        """Display an image on a display, with semi-transparent masks
+        overlaid, if available.
+
+        Notes
+        -----
+        Historical note: the name "mtv" comes from Jim Gunn's forth imageprocessing
+        system, Mirella (named after Mirella Freni); The "m" stands for Mirella.
+        """
+        self.image(self, data, title="", wcs=None)
 
     class _Buffering:
         """A class intended to be used with python's with statement
