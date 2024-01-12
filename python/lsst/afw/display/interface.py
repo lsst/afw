@@ -565,8 +565,9 @@ class Display:
         if isinstance(data, afwImage.Exposure):
             if wcs:
                 raise RuntimeError("You may not specify a wcs with an Exposure")
-            data, wcs = data.getMaskedImage(), data.getWcs()
-        elif isinstance(data, afwImage.DecoratedImage):  # it's a DecoratedImage; display it
+            data, wcs = data.getMaskedImage(), data.wcs
+        # it's a DecoratedImage; display it
+        elif isinstance(data, afwImage.DecoratedImage):
             try:
                 wcs = afwGeom.makeSkyWcs(data.getMetadata())
             except TypeError:
@@ -580,15 +581,13 @@ class Display:
         # It's a Mask; display it, bitplane by bitplane.
         elif isinstance(data, afwImage.Mask):
             self.__addMissingMaskPlanes(data)
-            #
-            # Some displays can't display a Mask without an image; so display an Image too,
-            # with pixel values set to the mask
-            #
-            self._impl._mtv(afwImage.ImageI(data.getArray()), data, wcs, title)
-        # it's a MaskedImage; display Image and overlay Mask
+            # Some displays can't display a Mask without an image; so display
+            # an Image too, with pixel values set to the mask.
+            self._impl._mtv(afwImage.ImageI(data.array), data, wcs, title)
+        # It's a MaskedImage; display Image and overlay Mask.
         elif isinstance(data, afwImage.MaskedImage):
             self.__addMissingMaskPlanes(data.mask)
-            self._impl._mtv(data.getImage(), data.getMask(), wcs, title)
+            self._impl._mtv(data.image, data.mask, wcs, title)
         else:
             raise TypeError(f"Unsupported type {data!r}")
 
