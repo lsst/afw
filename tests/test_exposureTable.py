@@ -19,15 +19,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-"""
-Tests for lsst.afw.table.ExposureTable
-
-Run with:
-   python test_exposureTable.py
-or
-   pytest test_exposureTable.py
-"""
-
 import os.path
 import unittest
 
@@ -121,6 +112,8 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
                 self.wcs.getPixelOrigin() + lsst.geom.Extent2D(3.0, 6.0)
             )
         )
+        self.apCorrMap = lsst.afw.image.ApCorrMap()
+        self.transmissionCurve = lsst.afw.image.TransmissionCurve.makeIdentity()
         # these numbers are what were persisted as `Calib` objects in the files.
         self.photoCalib = lsst.afw.image.makePhotoCalibFromCalibZeroPoint(56.0, 2.2)
         self.visitInfo = self.createVisitInfo()
@@ -144,6 +137,8 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
         record1.setBBox(self.bbox1)
         record1.setValidPolygon(self.makePolygon())
         record1.setDetector(self.detector)
+        record1.setApCorrMap(self.apCorrMap)
+        record1.setTransmissionCurve(self.transmissionCurve)
 
     def tearDown(self):
         del self.cat
@@ -168,10 +163,57 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
         self.assertIsNone(record1.getPhotoCalib())
         self.assertEqual(record0.getVisitInfo(), self.visitInfo)
         self.assertIsNone(record1.getVisitInfo())
-        self.assertEqual(record0.getValidPolygon(), None)
+        self.assertIsNone(record0.getValidPolygon())
         self.assertEqual(record1.getValidPolygon(), self.makePolygon())
         self.assertIsNone(record0.getDetector())
         self.assertDetectorsEqual(record1.getDetector(), self.detector)
+        self.assertEqual(record1.getApCorrMap(), self.apCorrMap)
+        self.assertEqual(record1.getTransmissionCurve(), self.transmissionCurve)
+
+    def testProperties(self):
+        """Test that we can get/set with the properties; some of them are
+        readonly, so check that those raise if set.
+        """
+        # getters
+        record = self.cat[1]
+        self.assertEqual(record.id, 2)
+        self.assertEqual(record.wcs, self.wcs)
+        self.assertIsNone(record.psf)
+        self.assertIsNone(record.photoCalib)
+        self.assertIsNone(record.visitInfo)
+        self.assertEqual(record.validPolygon, self.makePolygon())
+        self.assertDetectorsEqual(record.detector, self.detector)
+        self.assertEqual(record.apCorrMap, self.apCorrMap)
+        self.assertEqual(record.transmissionCurve, self.transmissionCurve)
+        self.assertEqual(record.table, record.getTable())
+
+        # no property for bbox: it is returned by value, but is mutable.
+        with self.assertRaises(AttributeError):
+            record.bbox
+
+        # table has no setter
+        with self.assertRaises(AttributeError):
+            record.table = None
+
+        # read/write properties
+        record.id = 10
+        self.assertEqual(record.id, 10)
+        record.wcs = None
+        self.assertIsNone(record.wcs)
+        record.psf = self.psf
+        self.assertEqual(record.psf, self.psf)
+        record.photoCalib = self.photoCalib
+        self.assertEqual(record.photoCalib, self.photoCalib)
+        record.visitInfo = self.visitInfo
+        self.assertEqual(record.visitInfo, self.visitInfo)
+        record.validPolygon = None
+        self.assertIsNone(record.validPolygon)
+        record.detector = None
+        self.assertIsNone(record.detector)
+        record.apCorrMap = None
+        self.assertIsNone(record.apCorrMap)
+        record.transmissionCurve = None
+        self.assertIsNone(record.transmissionCurve)
 
     def testPersistence(self):
         with lsst.utils.tests.getTempFilePath(".fits") as tmpFile:

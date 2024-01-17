@@ -68,46 +68,47 @@ PyExposureRecord declareExposureRecord(WrapperCollection &wrappers) {
     return wrappers.wrapType(PyExposureRecord(wrappers.module, "ExposureRecord"), [](auto &mod, auto &cls) {
         cls.def("getId", &ExposureRecord::getId);
         cls.def("setId", &ExposureRecord::setId, "id"_a);
+        cls.def_property("id", &ExposureRecord::getId, &ExposureRecord::setId);
         cls.def("getBBox", &ExposureRecord::getBBox);
         cls.def("setBBox", &ExposureRecord::setBBox, "bbox"_a);
+        // No property for bbox, as it returns by value.
         cls.def("getTable", &ExposureRecord::getTable);
+        // table has no setter
         cls.def_property_readonly("table", &ExposureRecord::getTable);
         cls.def("contains",
-                (bool (ExposureRecord::*)(lsst::geom::SpherePoint const &, bool) const) &
+                (bool(ExposureRecord::*)(lsst::geom::SpherePoint const &, bool) const) &
                         ExposureRecord::contains,
                 "coord"_a, "includeValidPolygon"_a = false);
         cls.def("contains",
-                (bool (ExposureRecord::*)(lsst::geom::Point2D const &, geom::SkyWcs const &, bool) const) &
+                (bool(ExposureRecord::*)(lsst::geom::Point2D const &, geom::SkyWcs const &, bool) const) &
                         ExposureRecord::contains,
                 "point"_a, "wcs"_a, "includeValidPolygon"_a = false);
         cls.def("getWcs", &ExposureRecord::getWcs);
         cls.def("setWcs", &ExposureRecord::setWcs, "wcs"_a);
+        cls.def_property("wcs", &ExposureRecord::getWcs, &ExposureRecord::setWcs);
         cls.def("getPsf", &ExposureRecord::getPsf);
         cls.def("setPsf", &ExposureRecord::setPsf, "psf"_a);
+        cls.def_property("psf", &ExposureRecord::getPsf, &ExposureRecord::setPsf);
 
         cls.def("getPhotoCalib", &ExposureRecord::getPhotoCalib);
         cls.def("setPhotoCalib", &ExposureRecord::setPhotoCalib, "photoCalib"_a);
+        cls.def_property("photoCalib", &ExposureRecord::getPhotoCalib, &ExposureRecord::setPhotoCalib);
         cls.def("getApCorrMap", &ExposureRecord::getApCorrMap);
         cls.def("setApCorrMap", &ExposureRecord::setApCorrMap, "apCorrMap"_a);
+        cls.def_property("apCorrMap", &ExposureRecord::getApCorrMap, &ExposureRecord::setApCorrMap);
         cls.def("getValidPolygon", &ExposureRecord::getValidPolygon);
-
-        // Workaround for DM-10289.
-        cls.def("setValidPolygon",
-                [](ExposureRecord &self, py::object polygon) {
-                    if (polygon.is(py::none())) {
-                        self.setValidPolygon(nullptr);
-                    } else {
-                        self.setValidPolygon(py::cast<std::shared_ptr<afw::geom::polygon::Polygon>>(polygon));
-                    }
-                },
-                "polygon"_a);
-
+        cls.def("setValidPolygon", &ExposureRecord::setValidPolygon);
+        cls.def_property("validPolygon", &ExposureRecord::getValidPolygon, &ExposureRecord::setValidPolygon);
         cls.def("getVisitInfo", &ExposureRecord::getVisitInfo);
         cls.def("setVisitInfo", &ExposureRecord::setVisitInfo, "visitInfo"_a);
+        cls.def_property("visitInfo", &ExposureRecord::getVisitInfo, &ExposureRecord::setVisitInfo);
         cls.def("getTransmissionCurve", &ExposureRecord::getTransmissionCurve);
         cls.def("setTransmissionCurve", &ExposureRecord::setTransmissionCurve, "transmissionCurve"_a);
+        cls.def_property("transmissionCurve", &ExposureRecord::getTransmissionCurve,
+                         &ExposureRecord::setTransmissionCurve);
         cls.def("getDetector", &ExposureRecord::getDetector);
         cls.def("setDetector", &ExposureRecord::setDetector, "detector"_a);
+        cls.def_property("detector", &ExposureRecord::getDetector, &ExposureRecord::setDetector);
     });
 }
 
