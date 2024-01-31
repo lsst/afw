@@ -132,13 +132,13 @@ class ExposureSummaryStats(Storable):
     zeroPoint (seconds).
     """
 
-    effTimeScalePsfSigma: float = float('nan')
+    effTimePsfSigmaScale: float = float('nan')
     """PSF scaling of the effective exposure time."""
 
-    effTimeScaleSkyBg: float = float('nan')
+    effTimeSkyBgScale: float = float('nan')
     """Sky background scaling of the effective exposure time."""
 
-    effTimeScaleZeroPoint: float = float('nan')
+    effTimeZeroPointScale: float = float('nan')
     """Zeropoint scaling of the effective exposure time."""
 
     def __post_init__(self):
@@ -198,59 +198,99 @@ class ExposureSummaryStats(Storable):
             "psfSigma",
             type="F",
             doc="PSF model second-moments determinant radius (center of chip) (pixel)",
+            units="pixel",
         )
         schema.addField(
             "psfArea",
             type="F",
             doc="PSF model effective area (center of chip) (pixel**2)",
+            units='pixel**2',
         )
         schema.addField(
-            "psfIxx", type="F", doc="PSF model Ixx (center of chip) (pixel**2)"
+            "psfIxx",
+            type="F",
+            doc="PSF model Ixx (center of chip) (pixel**2)",
+            units='pixel**2',
         )
         schema.addField(
-            "psfIyy", type="F", doc="PSF model Iyy (center of chip) (pixel**2)"
+            "psfIyy",
+            type="F",
+            doc="PSF model Iyy (center of chip) (pixel**2)",
+            units='pixel**2',
         )
         schema.addField(
-            "psfIxy", type="F", doc="PSF model Ixy (center of chip) (pixel**2)"
+            "psfIxy",
+            type="F",
+            doc="PSF model Ixy (center of chip) (pixel**2)",
+            units='pixel**2',
         )
         schema.addField(
             "raCorners",
             type="ArrayD",
             size=4,
             doc="Right Ascension of bounding box corners (degrees)",
+            units="degree",
         )
         schema.addField(
             "decCorners",
             type="ArrayD",
             size=4,
             doc="Declination of bounding box corners (degrees)",
+            units="degree",
         )
         schema.addField(
-            "ra", type="D", doc="Right Ascension of bounding box center (degrees)"
+            "ra",
+            type="D",
+            doc="Right Ascension of bounding box center (degrees)",
+            units="degree",
         )
         schema.addField(
-            "dec", type="D", doc="Declination of bounding box center (degrees)"
+            "dec",
+            type="D",
+            doc="Declination of bounding box center (degrees)",
+            units="degree",
         )
         schema.addField(
             "zenithDistance",
             type="F",
             doc="Zenith distance of bounding box center (degrees)",
+            units="degree",
         )
-        schema.addField("zeroPoint", type="F", doc="Mean zeropoint in detector (mag)")
-        schema.addField("skyBg", type="F", doc="Average sky background (ADU)")
-        schema.addField("skyNoise", type="F", doc="Average sky noise (ADU)")
         schema.addField(
-            "meanVar", type="F", doc="Mean variance of the weight plane (ADU**2)"
+            "zeroPoint",
+            type="F",
+            doc="Mean zeropoint in detector (mag)",
+            units="mag",
+        )
+        schema.addField(
+            "skyBg",
+            type="F",
+            doc="Average sky background (ADU)",
+            units="adu",
+        )
+        schema.addField(
+            "skyNoise",
+            type="F",
+            doc="Average sky noise (ADU)",
+            units="adu",
+        )
+        schema.addField(
+            "meanVar",
+            type="F",
+            doc="Mean variance of the weight plane (ADU**2)",
+            units="adu**2"
         )
         schema.addField(
             "astromOffsetMean",
             type="F",
             doc="Mean offset of astrometric calibration matches (arcsec)",
+            units="arcsec",
         )
         schema.addField(
             "astromOffsetStd",
             type="F",
             doc="Standard deviation of offsets of astrometric calibration matches (arcsec)",
+            units="arcsec",
         )
         schema.addField("nPsfStar", type="I", doc="Number of stars used for PSF model")
         schema.addField(
@@ -277,11 +317,13 @@ class ExposureSummaryStats(Storable):
             "psfStarDeltaSizeMedian",
             type="F",
             doc="Median size residual (starSize - psfSize) for psf stars (pixel)",
+            units="pixel",
         )
         schema.addField(
             "psfStarDeltaSizeScatter",
             type="F",
             doc="Scatter (via MAD) of size residual (starSize - psfSize) for psf stars (pixel)",
+            units="pixel",
         )
         schema.addField(
             "psfStarScaledDeltaSizeScatter",
@@ -293,30 +335,33 @@ class ExposureSummaryStats(Storable):
             type="F",
             doc="Delta (max - min) of the model psf trace radius values evaluated on a grid of "
             "unmasked pixels (pixel).",
+            units="pixel",
         )
         schema.addField(
             "maxDistToNearestPsf",
             type="F",
             doc="Maximum distance of an unmasked pixel to its nearest model psf star (pixel).",
+            units="pixel",
         )
         schema.addField(
             "effTime",
             type="F",
             doc="Effective exposure time calculated from psfSigma, skyBg, and "
-            "zeroPoint (seconds)."
+            "zeroPoint (seconds).",
+            units="second",
         )
         schema.addField(
-            "effTimeScalePsfSigma",
+            "effTimePsfSigmaScale",
             type="F",
             doc="PSF scaling of the effective exposure time."
         )
         schema.addField(
-            "effTimeScaleSkyBg",
+            "effTimeSkyBgScale",
             type="F",
             doc="Sky background scaling of the effective exposure time."
         )
         schema.addField(
-            "effTimeScaleZeroPoint",
+            "effTimeZeroPointScale",
             type="F",
             doc="Zeropoint scaling of the effective exposure time."
         )
