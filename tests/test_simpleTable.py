@@ -842,6 +842,17 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         self.assertFloatsEqual(catalog[key], np.array([[3.0, 4.0, 5.0], [6.0, 7.0, 8.0], [9.0, 10.0, 11.0]]))
         self.assertFalse(catalog[key].flags.writeable)
 
+    def testMetadataProperty(self):
+        """Test that the metadata property of BaseTable works as expected.
+        """
+        schema = lsst.afw.table.Schema()
+        table = lsst.afw.table.BaseTable.make(schema)
+        self.assertEqual(table.metadata, None)
+        metadata = lsst.daf.base.PropertyList()
+        metadata["one"] = 1
+        table.metadata = metadata
+        self.assertEqual(table.metadata["one"], 1)
+
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
     pass

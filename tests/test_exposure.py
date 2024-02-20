@@ -43,6 +43,7 @@ import lsst.afw.table as afwTable
 import lsst.pex.exceptions as pexExcept
 from lsst.afw.fits import readMetadata, FitsError
 from lsst.afw.cameraGeom.testUtils import DetectorWrapper
+from lsst.daf.base import PropertyList
 from lsst.log import Log
 from testTableArchivesLib import DummyPsf
 
@@ -1211,6 +1212,19 @@ class ExposureNoAfwdataTestCase(lsst.utils.tests.TestCase):
         summary1.update_record(record)
         summary2 = afwImage.ExposureSummaryStats.from_record(record)
         self.assertEqual(summary1, summary2)
+
+    def testMetadataProperty(self):
+        """Test that the metadata property works as expected.
+        """
+        exposure = afwImage.ExposureF(3, 4)
+        self.assertFalse(exposure.metadata)
+        self.assertIsNotNone(exposure.metadata)
+        exposure.metadata = None
+        self.assertIsNone(exposure.metadata)
+        metadata = PropertyList()
+        metadata["one"] = 1
+        exposure.metadata = metadata
+        self.assertEqual(exposure.metadata["one"], 1)
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
