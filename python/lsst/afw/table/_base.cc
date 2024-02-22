@@ -155,6 +155,7 @@ PyBaseTable declareBaseTable(WrapperCollection &wrappers) {
         cls.def("getMetadata", &BaseTable::getMetadata);
         cls.def("setMetadata", &BaseTable::setMetadata, "metadata"_a);
         cls.def("popMetadata", &BaseTable::popMetadata);
+        cls.def_property("metadata", &BaseTable::getMetadata, &BaseTable::setMetadata);
         cls.def("makeRecord", &BaseTable::makeRecord);
         cls.def("copyRecord",
                 (std::shared_ptr<BaseRecord>(BaseTable::*)(BaseRecord const &)) & BaseTable::copyRecord);

@@ -96,6 +96,7 @@ PyExposure<PixelT> declareExposure(lsst::utils::python::WrapperCollection &wrapp
                                  &ExposureT::setMaskedImage);
                 cls.def("getMetadata", &ExposureT::getMetadata);
                 cls.def("setMetadata", &ExposureT::setMetadata, "metadata"_a);
+                cls.def_property("metadata", &ExposureT::getMetadata, &ExposureT::setMetadata);
                 cls.def("getWidth", &ExposureT::getWidth);
                 cls.def("getHeight", &ExposureT::getHeight);
                 cls.def_property_readonly("width", &ExposureT::getWidth);
