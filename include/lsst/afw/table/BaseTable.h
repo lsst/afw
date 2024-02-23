@@ -214,7 +214,7 @@ protected:
     virtual std::shared_ptr<BaseRecord> _makeRecord();
 
     /// Construct from a schema.
-    explicit BaseTable(Schema const& schema);
+    explicit BaseTable(Schema const& schema, std::shared_ptr<daf::base::PropertyList> metadata = nullptr);
 
     /// Copy construct.
     BaseTable(BaseTable const& other) : _schema(other._schema), _metadata(other._metadata) {

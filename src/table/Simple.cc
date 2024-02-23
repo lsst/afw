@@ -82,7 +82,7 @@ std::shared_ptr<SimpleTable> SimpleTable::make(Schema const& schema,
 }
 
 SimpleTable::SimpleTable(Schema const& schema, std::shared_ptr<IdFactory> const& idFactory)
-        : BaseTable(schema), _idFactory(idFactory) {}
+        : BaseTable(schema, std::make_shared<daf::base::PropertyList>()), _idFactory(idFactory) {}
 
 SimpleTable::SimpleTable(SimpleTable const& other)
         : BaseTable(other), _idFactory(other._idFactory ? other._idFactory->clone() : other._idFactory) {}

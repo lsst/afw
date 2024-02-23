@@ -847,11 +847,17 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         """
         schema = lsst.afw.table.Schema()
         table = lsst.afw.table.BaseTable.make(schema)
-        self.assertEqual(table.metadata, None)
+        # BaseTable should not have a metadata property on construction.
+        self.assertIsNone(table.metadata)
         metadata = lsst.daf.base.PropertyList()
         metadata["one"] = 1
         table.metadata = metadata
         self.assertEqual(table.metadata["one"], 1)
+
+        # SimpleTable should have an empty metadata property on construction.
+        schema = lsst.afw.table.SimpleTable.makeMinimalSchema()
+        table = lsst.afw.table.SimpleTable.make(schema)
+        self.assertEqual(table.metadata, lsst.daf.base.PropertyList())
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):

@@ -149,7 +149,8 @@ std::shared_ptr<BaseRecord> BaseTable::_makeRecord() {
     return constructRecord<BaseRecord>();
 }
 
-BaseTable::BaseTable(Schema const &schema) : _schema(schema) {
+BaseTable::BaseTable(Schema const &schema, std::shared_ptr<daf::base::PropertyList> metadata)
+        : _schema(schema), _metadata(metadata) {
     Block::padSchema(_schema);
     _schema.disconnectAliases();
     _schema.getAliasMap()->_table = this;
