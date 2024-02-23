@@ -19,14 +19,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-"""
-Tests for table.SimpleTable
-
-Run with:
-   python test_simpleTable.py
-or
-   pytest test_simpleTable.py
-"""
 import os.path
 import unittest
 

@@ -19,14 +19,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-"""
-Tests for table.SourceTable
-
-Run with:
-   python test_sourceTable.py
-or
-   pytest test_sourceTable.py
-"""
 import os
 import unittest
 import tempfile
