@@ -603,7 +603,7 @@ class Display:
         Historical note: the name "mtv" comes from Jim Gunn's forth imageprocessing
         system, Mirella (named after Mirella Freni); The "m" stands for Mirella.
         """
-        self.image(self, data, title="", wcs=None)
+        self.image(data, title, wcs)
 
     class _Buffering:
         """Context manager for buffering repeated display commands.
