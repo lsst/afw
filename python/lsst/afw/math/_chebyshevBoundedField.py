@@ -72,3 +72,29 @@ class ChebyshevBoundedField:  # noqa: F811
         y = np.repeat(ySteps, nStepX)
 
         return cls.fit(bbox, x, y, boundedField.evaluate(x, y), ctrl)
+
+    def evaluateArray(self, x, y):
+        """Evaluate a ChebyshevBoundedField at an array of positions.
+
+        This is a simple shim around evaluate() to use the same API
+        as the Python vectorized lsst.meas.algorithms.CoaddBoundedField.
+
+        Parameters
+        ----------
+        x : `np.ndarray`
+            Array of x values.
+        y : `np.ndarray`
+            Array of y values.
+
+        Returns
+        -------
+        values : `np.ndarray`
+            Array of evaluated values.
+        """
+        _x = np.atleast_1d(x).ravel()
+        _y = np.atleast_1d(y).ravel()
+
+        if len(_x) != len(_y):
+            raise ValueError("x and y arrays must be the same length.")
+
+        return self.evaluate(_x, _y)

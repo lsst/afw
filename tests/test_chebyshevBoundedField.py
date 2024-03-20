@@ -147,6 +147,9 @@ class ChebyshevBoundedFieldTestCase(lsst.utils.tests.TestCase):
                                          rtol=factor*1E-13)
             self.assertFloatsEqual(
                 scaled.getCoefficients(), factor*field.getCoefficients())
+            self.assertFloatsAlmostEqual(scaled.evaluateArray(x, y),
+                                         factor*z2,
+                                         rtol=factor*1E-13)
 
     def testProductEvaluate(self):
         """Test that ProductBoundedField.evaluate is equivalent to multiplying
