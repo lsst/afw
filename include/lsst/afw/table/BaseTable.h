@@ -30,12 +30,12 @@ namespace detail {
  *  Table and Record classes.
  */
 struct RecordData {
-    void * data;
+    void* data;
     std::shared_ptr<BaseTable> table;
     ndarray::Manager::Ptr manager;
 };
 
-} // namespace detail
+}  // namespace detail
 
 /**
  *  Base class for all tables.
@@ -185,7 +185,6 @@ public:
     virtual ~BaseTable();
 
 protected:
-
     /**
      *  Helper function that must be used by all _makeRecord overrides to
      *  actually construct records.
@@ -202,8 +201,8 @@ protected:
      */
     // n.b. this is implemented in BaseRecord.h, as it requires the BaseRecord
     // definition, and must go in a header.
-    template <typename RecordT, typename ...Args>
-    std::shared_ptr<RecordT> constructRecord(Args && ...args);
+    template <typename RecordT, typename... Args>
+    std::shared_ptr<RecordT> constructRecord(Args&&... args);
 
     virtual void handleAliasChange(std::string const& alias) {}
 
@@ -214,7 +213,7 @@ protected:
     virtual std::shared_ptr<BaseRecord> _makeRecord();
 
     /// Construct from a schema.
-    explicit BaseTable(Schema const& schema);
+    explicit BaseTable(Schema const& schema, std::shared_ptr<daf::base::PropertyList> metadata = nullptr);
 
     /// Copy construct.
     BaseTable(BaseTable const& other) : _schema(other._schema), _metadata(other._metadata) {

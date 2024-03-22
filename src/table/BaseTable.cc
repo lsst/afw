@@ -121,9 +121,7 @@ std::shared_ptr<BaseTable> BaseTable::make(Schema const &schema) {
     return std::shared_ptr<BaseTable>(new BaseTable(schema));
 }
 
-Schema BaseTable::makeMinimalSchema() {
-    return Schema();
-}
+Schema BaseTable::makeMinimalSchema() { return Schema(); }
 
 std::shared_ptr<BaseRecord> BaseTable::copyRecord(BaseRecord const &input) {
     std::shared_ptr<BaseRecord> output = makeRecord();
@@ -145,11 +143,10 @@ std::shared_ptr<BaseTable> BaseTable::_clone() const {
     return std::shared_ptr<BaseTable>(new BaseTable(*this));
 }
 
-std::shared_ptr<BaseRecord> BaseTable::_makeRecord() {
-    return constructRecord<BaseRecord>();
-}
+std::shared_ptr<BaseRecord> BaseTable::_makeRecord() { return constructRecord<BaseRecord>(); }
 
-BaseTable::BaseTable(Schema const &schema) : _schema(schema) {
+BaseTable::BaseTable(Schema const &schema, std::shared_ptr<daf::base::PropertyList> metadata)
+        : _schema(schema), _metadata(metadata) {
     Block::padSchema(_schema);
     _schema.disconnectAliases();
     _schema.getAliasMap()->_table = this;
@@ -189,9 +186,8 @@ struct RecordDestroyer {
 detail::RecordData BaseTable::_makeNewRecordData() {
     auto data = Block::get(_schema.getRecordSize(), _manager);
     return detail::RecordData{
-        data,
-        shared_from_this(),
-        _manager  // manager always points to the most recently-used block.
+            data, shared_from_this(),
+            _manager  // manager always points to the most recently-used block.
     };
 }
 
