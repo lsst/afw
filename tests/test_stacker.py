@@ -334,10 +334,9 @@ class StackTestCase(lsst.utils.tests.TestCase):
         finalImage = np.array([12.0, 12.0, 12.0, 12.0], dtype=np.float32)
         for i in range(4):
             mi = afwImage.MaskedImageF(4, 1)
-            imArr, maskArr, varArr = mi.getArrays()
-            imArr[:, :] = np.ones((1, 4), dtype=np.float32)
+            mi.image.array[:, :] = np.ones((1, 4), dtype=np.float32)
             maskedImageList.append(mi)
-            partialSum += imArr
+            partialSum += mi.image.array
         # add one more image with all permutations of the first two bits set in
         # different pixels
         mi = afwImage.MaskedImageF(4, 1)

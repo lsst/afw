@@ -113,19 +113,6 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
         del self.mimage2
         del self.function
 
-    # TODO DM-39935: remove this test when you remove getArrays()
-    def testArrays(self):
-        """
-        This method is testing that ``lsst.afw.image.MaskedImageF.getArrays()``
-        returns the proper image, mask, and variance.
-        """
-        image, mask, variance = self.mimage.getArrays()
-        self.assertFloatsEqual(self.mimage.image.getArray(), image)
-        self.assertFloatsEqual(self.mimage.mask.getArray(), mask)
-        self.assertFloatsEqual(self.mimage.variance.getArray(), variance)
-        mimage2 = afwImage.makeMaskedImageFromArrays(image, mask, variance)
-        self.assertEqual(type(mimage2), type(self.mimage))
-
     def testProperties(self):
         self.assertImagesEqual(self.mimage.image, self.mimage.image)
         self.assertMasksEqual(self.mimage.mask, self.mimage.mask)
