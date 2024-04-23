@@ -96,6 +96,9 @@ def bbox_contains_sky_coords(bbox, wcs, ra, dec, padding=10):
 
     x_in, y_in = wcs.skyToPixelArray(_ra, _dec, degrees=False)
 
-    xy_contained = bbox.contains(x_in, y_in)
+    # Assume any non-finite point is far outside the box
+    xy_contained = np.zeros_like(x_in, dtype=bool)
+    finite = np.isfinite(x_in) & np.isfinite(y_in)
+    xy_contained[finite] = bbox.contains(x_in[finite], y_in[finite])
 
     return radec_contained & xy_contained
