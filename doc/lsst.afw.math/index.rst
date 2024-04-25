@@ -37,7 +37,7 @@ Contributing
 ============
 
 ``lsst.afw.math`` is developed at https://github.com/lsst/afw.
-You can find Jira issues for this module under the `afw <https://jira.lsstcorp.org/issues/?jql=project%20%3D%20DM%20AND%20component%20%3D%20afw>`_ component.
+You can find Jira issues for this module under the `afw <https://rubinobs.atlassian.net/issues/?jql=project%20%3D%20DM%20AND%20component%20%3D%20afw>`_ component.
 
 .. If there are topics related to developing this module (rather than using it), link to this from a toctree placed here.
 
