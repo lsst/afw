@@ -94,8 +94,11 @@ def bbox_contains_sky_coords(bbox, wcs, ra, dec, padding=10):
 
     radec_contained = poly.contains(_ra, _dec)
 
-    x_in, y_in = wcs.skyToPixelArray(_ra, _dec, degrees=False)
+    contained = np.zeros_like(radec_contained, dtype=bool)
 
+    x_in, y_in = wcs.skyToPixelArray(_ra[radec_contained], _dec[radec_contained], degrees=False)
     xy_contained = bbox.contains(x_in, y_in)
 
-    return radec_contained & xy_contained
+    # contained[not radec_contained] is already false
+    contained[radec_contained] = xy_contained
+    return contained

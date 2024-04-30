@@ -866,8 +866,11 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         ra = np.concatenate(([300.0], ra, [180.]))
         dec = np.concatenate(([50.0], dec, [50.0]))
 
-        contains = self.exposureMiWcs.containsSkyCoords(ra*units.degree,
-                                                        dec*units.degree)
+        # Bad NaN handling appears as a warning, not an error
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", category=RuntimeWarning)
+            contains = self.exposureMiWcs.containsSkyCoords(ra*units.degree,
+                                                            dec*units.degree)
         compare = np.ones(len(contains), dtype=bool)
         compare[0] = False
         compare[-1] = False
