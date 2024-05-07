@@ -28,6 +28,7 @@
 
 #include <memory>
 
+#include "lsst/pex/exceptions.h"
 #include "lsst/utils/CacheFwd.h"
 #include "lsst/afw/geom/ellipses/Quadrupole.h"
 #include "lsst/afw/math/Kernel.h"
@@ -44,6 +45,11 @@ namespace detail {
 struct PsfCacheKey;
 
 }  // namespace detail
+
+/**
+ *  An exception thrown when we have an invalid PSF.
+ */
+LSST_EXCEPTION_TYPE(InvalidPsfError, lsst::pex::exceptions::InvalidParameterError, lsst::afw::detection::InvalidPsfError)
 
 /**
  *  A polymorphic base class for representing an image's Point Spread Function

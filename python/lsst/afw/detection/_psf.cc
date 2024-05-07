@@ -28,6 +28,8 @@
 #include "lsst/utils/python.h"
 #include "lsst/utils/python/PySharedPtr.h"
 
+#include "lsst/pex/exceptions/Runtime.h"
+#include "lsst/pex/exceptions/python/Exception.h"
 #include "lsst/geom/Point.h"
 #include "lsst/afw/image/Color.h"
 #include "lsst/afw/table/io/python.h"  // for addPersistableMethods
@@ -50,6 +52,10 @@ void wrapPsf(utils::python::WrapperCollection& wrappers) {
     wrappers.addSignatureDependency("lsst.afw.geom.ellipses");
     wrappers.addSignatureDependency("lsst.afw.image");
     wrappers.addSignatureDependency("lsst.afw.fits");
+
+    auto cls = wrappers.wrapException<InvalidPsfError, pex::exceptions::InvalidParameterError>("InvalidPsfError",
+                                                                                               "InvalidParameterError");
+    cls.def(py::init<std::string const &>());
 
     auto clsPsf = wrappers.wrapType(
             py::class_<Psf, PySharedPtr<Psf>, typehandling::Storable, PsfTrampoline<>>(
