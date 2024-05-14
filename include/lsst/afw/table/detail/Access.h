@@ -68,20 +68,41 @@ public:
 
     /// @internal Access to the private Key constructor.
     template <typename T>
+    static void makeKey(Key<T> *key, std::size_t offset) {
+        new (key) Key<T>(offset);
+    }
+
+    /// @internal Access to the private Key constructor.
+    template <typename T>
     static Key<T> makeKey(Field<T> const &field, std::size_t offset) {
         return Key<T>(offset, field);
+    }
+
+    /// @internal Access to the private Key constructor.
+    template <typename T>
+    static Key<T> makeKey(Key<T> *key, Field<T> const &field, std::size_t offset) {
+        new (key) Key<T>(offset, field);
     }
 
     /// @internal Access to the private Key constructor.
     static Key<Flag> makeKey(std::size_t offset, std::size_t bit) { return Key<Flag>(offset, bit); }
 
     /// @internal Access to the private Key constructor.
+    static void makeKey(Key<Flag> *key, std::size_t offset, std::size_t bit) { new (key) Key<Flag>(offset, bit); }
+
+    /// @internal Access to the private Key constructor.
     static Key<std::string> makeKeyString(std::size_t offset, std::size_t size) { return Key<std::string>(offset, size); }
+    static void makeKeyString(Key<std::string> *key,std::size_t offset, std::size_t size) {new (key) Key<std::string>(offset, size); }
 
     /// @internal Access to the private Key constructor.
     template <typename T>
     static Key<Array<T>> makeKeyArray(std::size_t offset, std::size_t size) {
         return Key<Array<T>>(offset, size);
+    }
+
+    template <typename T>
+    static void makeKeyArray(Key<Array<T>> *array, std::size_t offset, std::size_t size) {
+        new (array) Key<Array<T>>(offset, size);
     }
 
     /// @internal Add some padding to a schema without adding a field.

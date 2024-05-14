@@ -23,7 +23,7 @@
 
 #include <memory>
 
-#include <pybind11/pybind11.h>
+#include <nanobind/nanobind.h>
 
 #include "lsst/cpputils/python.h"
 #include "lsst/cpputils/python/PySharedPtr.h"
@@ -34,11 +34,12 @@
 #include "lsst/afw/image/Color.h"
 #include "lsst/afw/table/io/python.h"  // for addPersistableMethods
 #include "lsst/afw/typehandling/Storable.h"
+#include "lsst/afw/typehandling/python.h"
 #include "lsst/afw/detection/Psf.h"
 #include "lsst/afw/detection/python.h"
 
-namespace py = pybind11;
-using namespace pybind11::literals;
+namespace nb = nanobind;
+using namespace nanobind::literals;
 
 using lsst::cpputils::python::PySharedPtr;
 
@@ -48,22 +49,14 @@ namespace detection {
 
 
 void wrapPsf(cpputils::python::WrapperCollection& wrappers) {
-    wrappers.addInheritanceDependency("lsst.afw.typehandling");
-    wrappers.addSignatureDependency("lsst.afw.geom.ellipses");
-    wrappers.addSignatureDependency("lsst.afw.image");
-    wrappers.addSignatureDependency("lsst.afw.fits");
-
-    auto cls = wrappers.wrapException<InvalidPsfError, pex::exceptions::InvalidParameterError>("InvalidPsfError",
-                                                                                               "InvalidParameterError");
-    cls.def(py::init<std::string const &>());
-
     auto clsPsf = wrappers.wrapType(
-            py::class_<Psf, PySharedPtr<Psf>, typehandling::Storable, PsfTrampoline<>>(
+            nb::class_<Psf, typehandling::Storable, PsfTrampoline<>>(
                 wrappers.module, "Psf"
             ),
             [](auto& mod, auto& cls) {
                 table::io::python::addPersistableMethods<Psf>(cls);
-                cls.def(py::init<bool, size_t>(), "isFixed"_a=false, "capacity"_a=100);  // Constructor for pure-Python subclasses
+		        typehandling::python::addStorableMethods<Psf>(cls);
+                cls.def(nb::init<bool, size_t>(), "isFixed"_a=false, "capacity"_a=100);  // Constructor for pure-Python subclasses
                 cls.def("clone", &Psf::clone);
                 cls.def("resized", &Psf::resized, "width"_a, "height"_a);
 
@@ -71,13 +64,13 @@ void wrapPsf(cpputils::python::WrapperCollection& wrappers) {
                         &Psf::computeImage,
                         "position"_a,
                         "color"_a = image::Color(),
-                        "owner"_a = Psf::ImageOwnerEnum::COPY
+                        "owner"_a = int(Psf::ImageOwnerEnum::COPY)
                 );
                 cls.def("computeKernelImage",
                         &Psf::computeKernelImage,
                         "position"_a,
                         "color"_a = image::Color(),
-                        "owner"_a = Psf::ImageOwnerEnum::COPY
+                        "owner"_a = int(Psf::ImageOwnerEnum::COPY)
                 );
                 cls.def("computePeak",
                         &Psf::computePeak,
@@ -125,7 +118,7 @@ void wrapPsf(cpputils::python::WrapperCollection& wrappers) {
             }
     );
 
-    wrappers.wrapType(py::enum_<Psf::ImageOwnerEnum>(clsPsf, "ImageOwnerEnum"), [](auto& mod, auto& enm) {
+    wrappers.wrapType(nb::enum_<Psf::ImageOwnerEnum>(clsPsf, "ImageOwnerEnum"), [](auto& mod, auto& enm) {
         enm.value("COPY", Psf::ImageOwnerEnum::COPY);
         enm.value("INTERNAL", Psf::ImageOwnerEnum::INTERNAL);
         enm.export_values();

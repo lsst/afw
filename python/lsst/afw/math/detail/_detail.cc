@@ -1,4 +1,4 @@
-#include "pybind11/pybind11.h"
+#include "nanobind/nanobind.h"
 #include <lsst/cpputils/python.h>
 
 namespace lsst {
@@ -8,7 +8,7 @@ namespace detail {
 void wrapConvolve(lsst::cpputils::python::WrapperCollection &);
 void wrapSpline(lsst::cpputils::python::WrapperCollection &);
 
-PYBIND11_MODULE(_detail, mod) {
+NB_MODULE(_detail, mod) {
     lsst::cpputils::python::WrapperCollection wrappers(mod, "lsst.afw.math.detail");
     wrapConvolve(wrappers);
     wrapSpline(wrappers);

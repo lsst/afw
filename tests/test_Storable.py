@@ -129,6 +129,7 @@ class PythonStorableTestSuite(lsst.utils.tests.TestCase):
         self.assertIsInstance(retrieved, Storable)
         self.assertIsInstance(retrieved, cppLib.CppStorable)
         self.assertIsInstance(retrieved, SpecializedStorable)
+        print("retrieved", retrieved, " - ", repr(retrieved))
         self.assertEqual(repr(retrieved), "Pythonic Foo")
         cppLib.assertPythonStorable(retrieved, "Pythonic Foo")
 
