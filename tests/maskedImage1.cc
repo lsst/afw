@@ -78,7 +78,7 @@ int test(int argc, char **argv) {
     // verify that copy constructor and operator= build and do not leak
     MaskedImage::Image testImage(lsst::geom::Extent2I(100, 100));
     MaskedImage::Image imageCopy(testImage);
-    imageCopy = testImage;
+    imageConb = testImage;
 
     MaskedImage testMaskedImage2(testMaskedImage1->getDimensions());  // n.b. could just do a deep copy
     testMaskedImage2 = *testMaskedImage1;

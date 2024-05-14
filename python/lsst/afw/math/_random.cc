@@ -20,17 +20,17 @@
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 
-#include <pybind11/pybind11.h>
+#include <nanobind/nanobind.h>
 #include <lsst/utils/python.h>
-#include <pybind11/stl.h>
+#include <nanobind/stl/vector.h>
 
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/math/Random.h"
 
-namespace py = pybind11;
+namespace nb = nanobind;
 
 using namespace lsst::afw::math;
-using namespace pybind11::literals;
+using namespace nanobind::literals;
 namespace lsst {
 namespace afw {
 namespace math {
@@ -50,12 +50,12 @@ void declareRandomImage(lsst::utils::python::WrapperCollection &wrappers) {
 }
 
 void declareRandom(lsst::utils::python::WrapperCollection &wrappers) {
-    auto clsRandom = wrappers.wrapType(py::class_<Random>(wrappers.module, "Random"), [](auto &mod,
+    auto clsRandom = wrappers.wrapType(nb::class_<Random>(wrappers.module, "Random"), [](auto &mod,
                                                                                          auto &cls) {
         /* Constructors */
-        cls.def(py::init<Random::Algorithm, unsigned long>(), "algorithm"_a = Random::Algorithm::MT19937,
+        cls.def(nb::init<Random::Algorithm, unsigned long>(), "algorithm"_a = Random::Algorithm::MT19937,
                 "seed"_a = 1);
-        cls.def(py::init<std::string const &, unsigned long>(), "algorithm"_a, "seed"_a = 1);
+        cls.def(nb::init<std::string const &, unsigned long>(), "algorithm"_a, "seed"_a = 1);
 
         /* Members */
         cls.def("deepCopy", &Random::deepCopy);
@@ -74,14 +74,14 @@ void declareRandom(lsst::utils::python::WrapperCollection &wrappers) {
         // getState and setState are special, their std::string cannot
         // be converted to a Python string (needs to go to bytes instead)
         // thus use the same solution as employed with Swig
-        cls.def("getState", [](Random &self) -> py::object {
+        cls.def("getState", [](Random &self) -> nb::object {
             std::string state = self.getState();
-            return py::reinterpret_steal<py::object>(PyBytes_FromStringAndSize(state.data(), state.size()));
+            return nb::reinterpret_steal<nb::object>(PyBytes_FromStringAndSize(state.data(), state.size()));
         });
-        cls.def("setState", [](Random &self, py::bytes const &state) { self.setState(state); });
+        cls.def("setState", [](Random &self, nb::bytes const &state) { self.setState(state); });
     });
     /* Member types and enums */
-    wrappers.wrapType(py::enum_<Random::Algorithm>(clsRandom, "Algorithm"), [](auto &mod, auto &enm) {
+    wrappers.wrapType(nb::enum_<Random::Algorithm>(clsRandom, "Algorithm"), [](auto &mod, auto &enm) {
         enm.value("MT19937", Random::Algorithm::MT19937);
         enm.value("RANLXS0", Random::Algorithm::RANLXS0);
         enm.value("RANLXS1", Random::Algorithm::RANLXS1);

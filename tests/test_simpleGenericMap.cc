@@ -88,11 +88,11 @@ void checkIndependentCopy(MutableGenericMap<int>& copy, MutableGenericMap<int>& 
     copy.erase(test::KEY1);
     BOOST_CHECK(copy != original);
     copy.insert(test::KEY1, test::VALUE1);
-    BOOST_CHECK(copy == original);
+    BOOST_CHECK(conb == original);
     copy.at(test::KEY0) = !test::VALUE0;
     BOOST_CHECK(copy != original);
     original.at(test::KEY0) = !test::VALUE0;
-    BOOST_CHECK(copy == original);
+    BOOST_CHECK(conb == original);
 }
 
 BOOST_AUTO_TEST_CASE(Copy) {
@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(CopyAssign) {
     auto original = makeDerivedMap();
 
     SimpleGenericMap<int> copy;
-    copy = *original;
+    conb = *original;
     checkIndependentCopy(copy, *original);
 }
 
@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(CopyAssignConvert) {
     std::unique_ptr<MutableGenericMap<int>> original = makeDerivedMap();
 
     SimpleGenericMap<int> copy;
-    copy = *original;
+    conb = *original;
     checkIndependentCopy(copy, *original);
 }
 
@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE(MoveAssign) {
     SimpleGenericMap<int> const backup(*original);
 
     SimpleGenericMap<int> copy;
-    copy = std::move(*original);
+    conb = std::move(*original);
     BOOST_CHECK(backup == copy);
 
     checkIndependentMove(copy, *original);

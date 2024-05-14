@@ -21,25 +21,25 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "pybind11/pybind11.h"
+#include "nanobind/nanobind.h"
 
 #include "lsst/utils/python.h"
 
 #include "lsst/afw/table/AliasMap.h"
 
-namespace py = pybind11;
-using namespace pybind11::literals;
+namespace nb = nanobind;
+using namespace nanobind::literals;
 
 namespace lsst {
 namespace afw {
 namespace table {
 
-using PyAliasMap = py::class_<AliasMap, std::shared_ptr<AliasMap>>;
+using PyAliasMap = nb::class_<AliasMap, std::shared_ptr<AliasMap>>;
 
 void wrapAliasMap(utils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(PyAliasMap(wrappers.module, "AliasMap"), [](auto &mod, auto &cls) {
-        cls.def(py::init<>());
-        cls.def(py::init<AliasMap const &>());
+        cls.def(nb::init<>());
+        cls.def(nb::init<AliasMap const &>());
 
         cls.def("__len__", &AliasMap::size);
         cls.def("empty", &AliasMap::empty);
@@ -54,8 +54,8 @@ void wrapAliasMap(utils::python::WrapperCollection &wrappers) {
         cls.def("__ne__", [](AliasMap &self, AliasMap &other) { return self != other; });
         cls.def("contains", &AliasMap::contains, "other"_a);
         cls.def("__contains__", &AliasMap::contains);
-        cls.def("items", [](AliasMap &self) { return py::make_iterator(self.begin(), self.end()); },
-                py::keep_alive<0, 1>());
+        cls.def("items", [](AliasMap &self) { return nb::make_iterator(self.begin(), self.end()); },
+                nb::keep_alive<0, 1>());
     });
 }
 

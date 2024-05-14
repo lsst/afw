@@ -20,13 +20,13 @@
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
+#include <nanobind/nanobind.h>
+#include <nanobind/stl/vector.h>
 #include <lsst/utils/python.h>
 
 #include <memory>
 
-#include "ndarray/pybind11.h"
+#include "ndarray/nanobind.h"
 
 #include "lsst/utils/python.h"
 
@@ -35,17 +35,17 @@
 #include "lsst/afw/math/BoundedField.h"
 #include "lsst/afw/table/io/python.h"  // for addPersistableMethods
 
-namespace py = pybind11;
+namespace nb = nanobind;
 
 using namespace lsst::afw::math;
-using namespace py::literals;
+using namespace nb::literals;
 
 namespace lsst {
 namespace afw {
 namespace math {
 namespace {
 
-using PyClass = py::class_<BoundedField, std::shared_ptr<BoundedField>>;
+using PyClass = nb::class_<BoundedField, std::shared_ptr<BoundedField>>;
 
 template <typename PixelT>
 void declareTemplates(PyClass &cls) {
@@ -65,11 +65,11 @@ void declareBoundedField(lsst::utils::python::WrapperCollection &wrappers) {
 
         cls.def(
                 "__rmul__", [](BoundedField &bf, double const scale) { return bf * scale; },
-                py::is_operator());
-        cls.def("__mul__", &BoundedField::operator*, py::is_operator());
-        cls.def("__truediv__", &BoundedField::operator/, py::is_operator());
-        cls.def("__eq__", &BoundedField::operator==, py::is_operator());
-        cls.def("__ne__", &BoundedField::operator!=, py::is_operator());
+                nb::is_operator());
+        cls.def("__mul__", &BoundedField::operator*, nb::is_operator());
+        cls.def("__truediv__", &BoundedField::operator/, nb::is_operator());
+        cls.def("__eq__", &BoundedField::operator==, nb::is_operator());
+        cls.def("__ne__", &BoundedField::operator!=, nb::is_operator());
 
         cls.def("evaluate", (double (BoundedField::*)(double, double) const) & BoundedField::evaluate);
         cls.def("evaluate", (ndarray::Array<double, 1, 1>(BoundedField::*)(

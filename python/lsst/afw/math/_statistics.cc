@@ -20,14 +20,14 @@
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 
-#include <pybind11/pybind11.h>
+#include <nanobind/nanobind.h>
 #include <lsst/utils/python.h>
-#include <pybind11/stl.h>
+#include <nanobind/stl/vector.h>
 
 #include "lsst/afw/math/Statistics.h"
 
-namespace py = pybind11;
-using namespace pybind11::literals;
+namespace nb = nanobind;
+using namespace nanobind::literals;
 
 namespace lsst {
 namespace afw {
@@ -75,7 +75,7 @@ void declareStatisticsVectorOverloads(lsst::utils::python::WrapperCollection &wr
 
 void declareStatistics(lsst::utils::python::WrapperCollection &wrappers) {
     /* Module level */
-    wrappers.wrapType(py::enum_<Property>(wrappers.module, "Property", py::arithmetic()),
+    wrappers.wrapType(nb::enum_<Property>(wrappers.module, "Property", nb::arithmetic()),
                       [](auto &mod, auto &enm) {
                           enm.value("NOTHING", Property::NOTHING);
                           enm.value("ERRORS", Property::ERRORS);
@@ -100,9 +100,9 @@ void declareStatistics(lsst::utils::python::WrapperCollection &wrappers) {
 
     wrappers.wrap([](auto &mod) { mod.def("stringToStatisticsProperty", stringToStatisticsProperty); });
 
-    using PyClass = py::class_<StatisticsControl, std::shared_ptr<StatisticsControl>>;
+    using PyClass = nb::class_<StatisticsControl, std::shared_ptr<StatisticsControl>>;
     auto control = wrappers.wrapType(PyClass(wrappers.module, "StatisticsControl"), [](auto &mod, auto &cls) {
-        cls.def(py::init<double, int, lsst::afw::image::MaskPixel, bool,
+        cls.def(nb::init<double, int, lsst::afw::image::MaskPixel, bool,
                          typename StatisticsControl::WeightsBoolean>(),
                 "numSigmaClip"_a = 3.0, "numIter"_a = 3, "andMask"_a = 0x0, "isNanSafe"_a = true,
                 "useWeights"_a = StatisticsControl::WEIGHTS_NONE);
@@ -128,7 +128,7 @@ void declareStatistics(lsst::utils::python::WrapperCollection &wrappers) {
         cls.def("setCalcErrorMosaicMode", &StatisticsControl::setCalcErrorMosaicMode);
     });
 
-    wrappers.wrapType(py::enum_<StatisticsControl::WeightsBoolean>(control, "WeightsBoolean"),
+    wrappers.wrapType(nb::enum_<StatisticsControl::WeightsBoolean>(control, "WeightsBoolean"),
                       [](auto &mod, auto &enm) {
                           enm.value("WEIGHTS_FALSE", StatisticsControl::WeightsBoolean::WEIGHTS_FALSE);
                           enm.value("WEIGHTS_TRUE", StatisticsControl::WeightsBoolean::WEIGHTS_TRUE);
@@ -136,7 +136,7 @@ void declareStatistics(lsst::utils::python::WrapperCollection &wrappers) {
                           enm.export_values();
                       });
 
-    wrappers.wrapType(py::class_<Statistics>(wrappers.module, "Statistics"), [](auto &mod, auto &cls) {
+    wrappers.wrapType(nb::class_<Statistics>(wrappers.module, "Statistics"), [](auto &mod, auto &cls) {
         cls.def("getResult", &Statistics::getResult, "prop"_a = Property::NOTHING);
         cls.def("getError", &Statistics::getError, "prop"_a = Property::NOTHING);
         cls.def("getValue", &Statistics::getValue, "prop"_a = Property::NOTHING);

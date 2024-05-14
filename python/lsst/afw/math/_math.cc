@@ -20,7 +20,7 @@
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 
-#include <pybind11/pybind11.h>
+#include <nanobind/nanobind.h>
 #include <lsst/utils/python.h>
 namespace lsst {
 namespace afw {
@@ -48,7 +48,7 @@ void wrapStatistics(lsst::utils::python::WrapperCollection &);
 void wrapTransformBoundedField(lsst::utils::python::WrapperCollection &);
 void wrapWarpExposure(lsst::utils::python::WrapperCollection &);
 
-PYBIND11_MODULE(_math, mod) {
+NB_MODULE(_math, mod) {
     lsst::utils::python::WrapperCollection wrappers(mod, "lsst.afw.math");
     wrapApproximate(wrappers);
     wrapBackground(wrappers);

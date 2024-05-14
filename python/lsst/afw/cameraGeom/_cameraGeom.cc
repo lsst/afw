@@ -21,7 +21,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <pybind11/pybind11.h>
+#include <nanobind/nanobind.h>
 #include <lsst/utils/python.h>
 namespace lsst {
 namespace afw {
@@ -35,7 +35,7 @@ void wrapDetectorCollection(lsst::utils::python::WrapperCollection &);
 void wrapOrientation(lsst::utils::python::WrapperCollection &);
 void wrapTransformMap(lsst::utils::python::WrapperCollection &);
 
-PYBIND11_MODULE(_cameraGeom, mod) {
+NB_MODULE(_cameraGeom, mod) {
     lsst::utils::python::WrapperCollection wrappers(mod, "lsst.afw.cameraGeom");
     wrapAmplifier(wrappers);
     wrapDetectorCollection(wrappers);

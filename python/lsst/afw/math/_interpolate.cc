@@ -20,23 +20,23 @@
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 
-#include <pybind11/pybind11.h>
+#include <nanobind/nanobind.h>
 #include <lsst/utils/python.h>
-#include <pybind11/stl.h>
+#include <nanobind/stl/vector.h>
 
-#include "ndarray/pybind11.h"
+#include "ndarray/nanobind.h"
 
 #include "lsst/afw/math/Interpolate.h"
 
-namespace py = pybind11;
-using namespace pybind11::literals;
+namespace nb = nanobind;
+using namespace nanobind::literals;
 
 using namespace lsst::afw::math;
 namespace lsst {
 namespace afw {
 namespace math {
 void wrapInterpolate(lsst::utils::python::WrapperCollection &wrappers) {
-    using PyClass = py::class_<Interpolate, std::shared_ptr<Interpolate>>;
+    using PyClass = nb::class_<Interpolate, std::shared_ptr<Interpolate>>;
 
     auto clsInterpolate = wrappers.wrapType(PyClass(wrappers.module, "Interpolate"), [](auto &mod,
                                                                                         auto &cls) {
@@ -68,7 +68,7 @@ void wrapInterpolate(lsst::utils::python::WrapperCollection &wrappers) {
         mod.def("lookupMaxInterpStyle", lookupMaxInterpStyle, "n"_a);
         mod.def("lookupMinInterpPoints", lookupMinInterpPoints, "style"_a);
     });
-    wrappers.wrapType(py::enum_<Interpolate::Style>(clsInterpolate, "Style"), [](auto &mod, auto &enm) {
+    wrappers.wrapType(nb::enum_<Interpolate::Style>(clsInterpolate, "Style"), [](auto &mod, auto &enm) {
         enm.value("UNKNOWN", Interpolate::Style::UNKNOWN);
         enm.value("CONSTANT", Interpolate::Style::CONSTANT);
         enm.value("LINEAR", Interpolate::Style::LINEAR);

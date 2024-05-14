@@ -23,7 +23,7 @@
 
 #include <memory>
 
-#include <pybind11/pybind11.h>
+#include <nanobind/nanobind.h>
 
 #include "lsst/utils/python.h"
 #include "lsst/utils/python/PySharedPtr.h"
@@ -35,8 +35,8 @@
 #include "lsst/afw/detection/Psf.h"
 #include "lsst/afw/detection/python.h"
 
-namespace py = pybind11;
-using namespace pybind11::literals;
+namespace nb = nanobind;
+using namespace nanobind::literals;
 
 using lsst::utils::python::PySharedPtr;
 
@@ -52,12 +52,12 @@ void wrapPsf(utils::python::WrapperCollection& wrappers) {
     wrappers.addSignatureDependency("lsst.afw.fits");
 
     auto clsPsf = wrappers.wrapType(
-            py::class_<Psf, PySharedPtr<Psf>, typehandling::Storable, PsfTrampoline<>>(
+            nb::class_<Psf, PsfTrampoline<>>(
                 wrappers.module, "Psf"
             ),
             [](auto& mod, auto& cls) {
                 table::io::python::addPersistableMethods<Psf>(cls);
-                cls.def(py::init<bool, size_t>(), "isFixed"_a=false, "capacity"_a=100);  // Constructor for pure-Python subclasses
+                cls.def(nb::init<bool, size_t>(), "isFixed"_a=false, "capacity"_a=100);  // Constructor for pure-Python subclasses
                 cls.def("clone", &Psf::clone);
                 cls.def("resized", &Psf::resized, "width"_a, "height"_a);
 
@@ -119,7 +119,7 @@ void wrapPsf(utils::python::WrapperCollection& wrappers) {
             }
     );
 
-    wrappers.wrapType(py::enum_<Psf::ImageOwnerEnum>(clsPsf, "ImageOwnerEnum"), [](auto& mod, auto& enm) {
+    wrappers.wrapType(nb::enum_<Psf::ImageOwnerEnum>(clsPsf, "ImageOwnerEnum"), [](auto& mod, auto& enm) {
         enm.value("COPY", Psf::ImageOwnerEnum::COPY);
         enm.value("INTERNAL", Psf::ImageOwnerEnum::INTERNAL);
         enm.export_values();

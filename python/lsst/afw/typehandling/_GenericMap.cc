@@ -21,8 +21,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "pybind11/pybind11.h"
-#include "pybind11/stl.h"
+#include "nanobind/nanobind.h"
+#include "nanobind/stl/vector.h"
 
 #include <cstdint>
 #include <exception>
@@ -36,8 +36,8 @@
 #include "lsst/afw/typehandling/GenericMap.h"
 #include "lsst/afw/typehandling/python.h"
 
-namespace py = pybind11;
-using namespace py::literals;
+namespace nb = nanobind;
+using namespace nb::literals;
 
 namespace lsst {
 namespace afw {
@@ -46,7 +46,7 @@ namespace typehandling {
 namespace {
 
 // Type safety pointless in Python, use unsafe methods to avoid manual type checking
-// https://pybind11.readthedocs.io/en/stable/advanced/classes.html#binding-protected-member-functions
+// https://nanobind.readthedocs.io/en/stable/advanced/classes.html#binding-protected-member-functions
 template <typename K>
 class Publicist : public MutableGenericMap<K> {
 public:
@@ -71,20 +71,20 @@ class Getter {
 public:
 
     template <typename T>
-    py::object operator()(std::reference_wrapper<T const> const & value) const {
+    nb::object operator()(std::reference_wrapper<T const> const & value) const {
         T copy(value);
-        return py::cast(copy);
+        return nb::cast(copy);
     }
 
-    py::object operator()(std::reference_wrapper<PolymorphicValue const> const & value) const {
+    nb::object operator()(std::reference_wrapper<PolymorphicValue const> const & value) const {
         // Specialization for polymorphic Storables: extract the Storable,
-        // clone it explicitly, and return that (letting pybind11's downcasting
+        // clone it explicitly, and return that (letting nanobind's downcasting
         // take over from there).
         Storable const& storable = value.get();
-        return py::cast(storable.cloneStorable());
+        return nb::cast(storable.cloneStorable());
     }
 
-    py::object apply(GenericMap<K>& self, K const& key) const {
+    nb::object apply(GenericMap<K>& self, K const& key) const {
         auto callable = static_cast<typename Publicist<K>::ConstValueReference (GenericMap<K>::*)(K) const>(
             &Publicist<K>::unsafeLookup);
         auto variant = (self.*callable)(key);
@@ -97,7 +97,7 @@ template <typename K>
 void declareGenericMap(utils::python::WrapperCollection& wrappers, std::string const& suffix,
                        std::string const& key) {
     using Class = GenericMap<K>;
-    using PyClass = py::class_<Class, std::shared_ptr<Class>>;
+    using PyClass = nb::class_<Class, std::shared_ptr<Class>>;
 
     std::string className = "GenericMap" + suffix;
     // Give the class a custom docstring to avoid confusing Python users
@@ -111,7 +111,7 @@ void declareGenericMap(utils::python::WrapperCollection& wrappers, std::string c
         // __eq__ easier to implement in Python
         // __ne__ easier to implement in Python
         // For unknown reasons, overload_cast doesn't work
-        // cls.def("__contains__", py::overload_cast<K const&>(&Class::contains, py::const_), "key"_a);
+        // cls.def("__contains__", nb::overload_cast<K const&>(&Class::contains, nb::const_), "key"_a);
         cls.def("__contains__", static_cast<bool (Class::*)(K const&) const>(&Class::contains), "key"_a);
 
         cls.def("__getitem__",
@@ -119,15 +119,15 @@ void declareGenericMap(utils::python::WrapperCollection& wrappers, std::string c
                     try {
                         return Getter<K>().apply(self, key);
                     } catch (pex::exceptions::OutOfRangeError const& e) {
-                        // pybind11 doesn't seem to recognize chained exceptions
+                        // nanobind doesn't seem to recognize chained exceptions
                         std::stringstream buffer;
                         buffer << "Unknown key: " << key;
-                        std::throw_with_nested(py::key_error(buffer.str()));
+                        std::throw_with_nested(nb::key_error(buffer.str()));
                     }
                 },
                 "key"_a);
         cls.def("get",
-                [](Class& self, K const& key, py::object const& def) {
+                [](Class& self, K const& key, nb::object const& def) {
                     try {
                         return Getter<K>().apply(self, key);
                     } catch (pex::exceptions::OutOfRangeError const& e) {
@@ -136,13 +136,13 @@ void declareGenericMap(utils::python::WrapperCollection& wrappers, std::string c
                 },
                 // Prevent segfaults when assigning a key<Storable> to Python variable, then deleting from map
                 // No existing code depends on being able to modify an item stored by value
-                "key"_a, "default"_a = py::none(), py::return_value_policy::copy);
+                "key"_a, "default"_a = nb::none(), nb::return_value_policy::copy);
         cls.def("__iter__",
-                [](Class const& self) { return py::make_iterator(self.keys().begin(), self.keys().end()); },
-                py::keep_alive<0, 1>());
+                [](Class const& self) { return nb::make_iterator(self.keys().begin(), self.keys().end()); },
+                nb::keep_alive<0, 1>());
         cls.def("__len__", &Class::size);
         cls.def("__bool__", [](Class const& self) { return !self.empty(); });
-        // Can't wrap keys directly because pybind11 always copies vectors, so it won't be a view
+        // Can't wrap keys directly because nanobind always copies vectors, so it won't be a view
         // items easier to implement in Python
         // values easier to implement in Python
     });
@@ -170,7 +170,7 @@ template <typename K>
 void declareMutableGenericMap(utils::python::WrapperCollection& wrappers, std::string const& suffix,
                               std::string const& key) {
     using Class = MutableGenericMap<K>;
-    using PyClass = py::class_<Class, std::shared_ptr<Class>, GenericMap<K>>;
+    using PyClass = nb::class_<Class, std::shared_ptr<Class>, GenericMap<K>>;
 
     std::string className = "MutableGenericMap" + suffix;
     // Give the class a custom docstring to avoid confusing Python users
@@ -197,7 +197,7 @@ void declareMutableGenericMap(utils::python::WrapperCollection& wrappers, std::s
                                       } else {
                                           std::stringstream buffer;
                                           buffer << "Unknown key: " << key;
-                                          throw py::key_error(buffer.str());
+                                          throw nb::key_error(buffer.str());
                                       }
                                   },
                                   "key"_a);
@@ -209,7 +209,7 @@ void declareMutableGenericMap(utils::python::WrapperCollection& wrappers, std::s
                                   (self.*callable)(key);
                                   return result;
                               } else {
-                                  throw py::key_error("Cannot pop from empty GenericMap.");
+                                  throw nb::key_error("Cannot pop from empty GenericMap.");
                               }
                           });
                           cls.def("clear", &Class::clear);

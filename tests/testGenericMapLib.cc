@@ -21,7 +21,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <pybind11/pybind11.h>
+#include <nanobind/nanobind.h>
 
 #include <memory>
 #include <sstream>
@@ -34,8 +34,8 @@
 #include "lsst/afw/typehandling/Storable.h"
 #include "lsst/afw/typehandling/python.h"
 
-namespace py = pybind11;
-using namespace pybind11::literals;
+namespace nb = nanobind;
+using namespace nanobind::literals;
 using namespace std::string_literals;
 
 namespace lsst {
@@ -309,7 +309,7 @@ namespace {
 
 // Functions for working with values of arbitrary type
 template <typename T>
-void declareAnyTypeFunctions(py::module& mod) {
+void declareAnyTypeFunctions(nb::module& mod) {
     mod.def("assertKeyValue",
             static_cast<void (*)(GenericMap<std::string> const&, std::string const&, T const&)>(
                     &assertKeyValue),
@@ -318,10 +318,10 @@ void declareAnyTypeFunctions(py::module& mod) {
 
 }  // namespace
 
-PYBIND11_MODULE(testGenericMapLib, mod) {
+NB_MODULE(testGenericMapLib, mod) {
     using lsst::utils::python::PySharedPtr;
 
-    py::module::import("lsst.afw.typehandling");
+    nb::module::import("lsst.afw.typehandling");
 
     declareAnyTypeFunctions<bool>(mod);
     declareAnyTypeFunctions<std::int64_t>(mod);
@@ -330,10 +330,10 @@ PYBIND11_MODULE(testGenericMapLib, mod) {
     declareAnyTypeFunctions<Storable>(mod);
     mod.def("assertCppValue", &assertCppValue, "storable"_a, "value"_a);
     mod.def("assertPythonStorable",
-            py::overload_cast<Storable const&, std::string const&>(&assertPythonStorable), "storable"_a,
+            nb::overload_cast<Storable const&, std::string const&>(&assertPythonStorable), "storable"_a,
             "repr"_a);
     mod.def("assertPythonStorable",
-            py::overload_cast<GenericMap<std::string> const&, std::string const&, std::string const&>(
+            nb::overload_cast<GenericMap<std::string> const&, std::string const&, std::string const&>(
                     &assertPythonStorable),
             "testmap"_a, "key"_a, "repr"_a);
 
@@ -343,11 +343,11 @@ PYBIND11_MODULE(testGenericMapLib, mod) {
     mod.def("keepStaticStorable", &keepStaticStorable, "storable"_a = nullptr);
     mod.def("duplicate", &duplicate, "input"_a);
 
-    py::class_<CppStorable, PySharedPtr<CppStorable>, Storable, StorableHelper<CppStorable>> cls(
+    nb::class_<CppStorable, PySharedPtr<CppStorable>, Storable, StorableHelper<CppStorable>> cls(
             mod, "CppStorable");
-    cls.def(py::init<std::string>());
-    cls.def("__eq__", &CppStorable::operator==, py::is_operator());
-    cls.def("__ne__", &CppStorable::operator!=, py::is_operator());
+    cls.def(nb::init<std::string>());
+    cls.def("__eq__", &CppStorable::operator==, nb::is_operator());
+    cls.def("__ne__", &CppStorable::operator!=, nb::is_operator());
     cls.def_property("value", &CppStorable::get, &CppStorable::reset);
     cls.def("__str__", &CppStorable::toString);
     cls.def("__repr__", &CppStorable::toString);
