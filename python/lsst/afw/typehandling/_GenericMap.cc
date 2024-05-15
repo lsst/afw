@@ -29,6 +29,7 @@
 #include <iostream>
 #include <utility>
 #include <variant>
+#include <nanobind/make_iterator.h>
 
 #include "lsst/utils/python.h"
 #include "lsst/pex/exceptions.h"
@@ -97,7 +98,7 @@ template <typename K>
 void declareGenericMap(utils::python::WrapperCollection& wrappers, std::string const& suffix,
                        std::string const& key) {
     using Class = GenericMap<K>;
-    using PyClass = nb::class_<Class, std::shared_ptr<Class>>;
+    using PyClass = nb::class_<Class>;
 
     std::string className = "GenericMap" + suffix;
     // Give the class a custom docstring to avoid confusing Python users
@@ -122,7 +123,7 @@ void declareGenericMap(utils::python::WrapperCollection& wrappers, std::string c
                         // nanobind doesn't seem to recognize chained exceptions
                         std::stringstream buffer;
                         buffer << "Unknown key: " << key;
-                        std::throw_with_nested(nb::key_error(buffer.str()));
+                        std::throw_with_nested(nb::key_error(buffer.str().c_str()));
                     }
                 },
                 "key"_a);
@@ -136,9 +137,9 @@ void declareGenericMap(utils::python::WrapperCollection& wrappers, std::string c
                 },
                 // Prevent segfaults when assigning a key<Storable> to Python variable, then deleting from map
                 // No existing code depends on being able to modify an item stored by value
-                "key"_a, "default"_a = nb::none(), nb::return_value_policy::copy);
+                "key"_a, "default"_a = nb::none(), nb::rv_policy::copy);
         cls.def("__iter__",
-                [](Class const& self) { return nb::make_iterator(self.keys().begin(), self.keys().end()); },
+                [](Class const& self) { return nb::make_iterator(nb::type<PyClass>(), "iterator", self.keys().begin(), self.keys().end()); },
                 nb::keep_alive<0, 1>());
         cls.def("__len__", &Class::size);
         cls.def("__bool__", [](Class const& self) { return !self.empty(); });
@@ -150,7 +151,7 @@ void declareGenericMap(utils::python::WrapperCollection& wrappers, std::string c
 
 template <typename V, class PyClass>
 void declareMutableGenericMapTypedMethods(PyClass& cls) {
-    using Class = typename PyClass::type;
+    using Class = typename PyClass::Type;
     cls.def("__setitem__",
             [](Class& self, typename Class::key_type const& key, V const& value) {
                 // Need to delete previous key, which may not be of type V
@@ -170,7 +171,7 @@ template <typename K>
 void declareMutableGenericMap(utils::python::WrapperCollection& wrappers, std::string const& suffix,
                               std::string const& key) {
     using Class = MutableGenericMap<K>;
-    using PyClass = nb::class_<Class, std::shared_ptr<Class>, GenericMap<K>>;
+    using PyClass = nb::class_<Class, GenericMap<K>>;
 
     std::string className = "MutableGenericMap" + suffix;
     // Give the class a custom docstring to avoid confusing Python users
@@ -197,7 +198,7 @@ void declareMutableGenericMap(utils::python::WrapperCollection& wrappers, std::s
                                       } else {
                                           std::stringstream buffer;
                                           buffer << "Unknown key: " << key;
-                                          throw nb::key_error(buffer.str());
+                                          throw nb::key_error(buffer.str().c_str());
                                       }
                                   },
                                   "key"_a);

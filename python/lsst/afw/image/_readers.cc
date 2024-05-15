@@ -24,7 +24,7 @@
 #include "nanobind/nanobind.h"
 #include "nanobind/stl/vector.h"
 #include "lsst/utils/python.h"
-
+#include <numpy/arrayobject.h>
 #include "ndarray/nanobind.h"
 
 #include "lsst/utils/python/TemplateInvoker.h"
@@ -51,6 +51,12 @@ namespace afw {
 namespace image {
 namespace {
 
+   static nanobind::object create_dtype(std::string const type) {
+        PyObject* numpy_module = PyImport_AddModule("numpy");
+        PyObject* dtype_attr = PyObject_GetAttrString(numpy_module, "dtype");
+        PyObject *dtype = PyObject_CallMethod(dtype_attr, "dtype", "s", type.c_str());
+        return nanobind::object(nanobind::handle(dtype), nanobind::detail::steal_t());
+    }
 // ImageBaseFitsReader is an implementation detail and is not exposed directly
 // to Python, as we have better ways to share wrapper code between classes
 // at the nanobind level (e.g. declareCommon below).
@@ -75,7 +81,7 @@ void declareSinglePlaneMethods(nb::class_<Class, Args...> &cls) {
     cls.def(nb::init<std::string const &, int>(), "fileName"_a, "hdu"_a = fits::DEFAULT_HDU);
     cls.def(nb::init<fits::MemFileManager &, int>(), "manager"_a, "hdu"_a = fits::DEFAULT_HDU);
     cls.def("readMetadata", &Class::readMetadata);
-    cls.def("readDType", [](Class &self) { return nb::dtype(self.readDType()); });
+    cls.def("readDType", [](Class &self) { auto t=self.readDType() ; return create_dtype(self.readDType()); });
     cls.def("getHdu", &Class::getHdu);
     cls.def_prop_ro("hdu", &Class::getHdu);
     cls.def(
@@ -83,13 +89,13 @@ void declareSinglePlaneMethods(nb::class_<Class, Args...> &cls) {
             [](Class &self, lsst::geom::Box2I const &bbox, ImageOrigin origin, bool allowUnsafe,
                nb::object dtype) {
                 if (dtype.is(nb::none())) {
-                    dtype = nb::dtype(self.readDType());
+                    dtype = create_dtype(self.readDType());
                 }
                 return utils::python::TemplateInvoker().apply(
                         [&](auto t) {
                             return self.template readArray<decltype(t)>(bbox, origin, allowUnsafe);
                         },
-                        nb::dtype(dtype),
+                        dtype,
                         utils::python::TemplateInvoker::Tag<std::uint16_t, int, float, double,
                                                             std::uint64_t>());
             },
@@ -100,21 +106,21 @@ void declareSinglePlaneMethods(nb::class_<Class, Args...> &cls) {
 // Declare attributes shared by MaskedImageFitsReader and MaskedImageFitsReader.
 template <typename Class, typename... Args>
 void declareMultiPlaneMethods(nb::class_<Class, Args...> &cls) {
-    cls.def("readImageDType", [](Class &self) { return nb::dtype(self.readImageDType()); });
-    cls.def("readMaskDType", [](Class &self) { return nb::dtype(self.readMaskDType()); });
-    cls.def("readVarianceDType", [](Class &self) { return nb::dtype(self.readVarianceDType()); });
+    cls.def("readImageDType", [](Class &self) { return create_dtype(self.readImageDType()); });
+    cls.def("readMaskDType", [](Class &self) { return create_dtype(self.readMaskDType()); });
+    cls.def("readVarianceDType", [](Class &self) { return create_dtype(self.readVarianceDType()); });
     cls.def(
             "readImage",
             [](Class &self, lsst::geom::Box2I const &bbox, ImageOrigin origin, bool allowUnsafe,
                nb::object dtype) {
                 if (dtype.is(nb::none())) {
-                    dtype = nb::dtype(self.readImageDType());
+                    dtype = create_dtype(self.readImageDType());
                 }
                 return utils::python::TemplateInvoker().apply(
                         [&](auto t) {
                             return self.template readImage<decltype(t)>(bbox, origin, allowUnsafe);
                         },
-                        nb::dtype(dtype),
+                        dtype,
                         utils::python::TemplateInvoker::Tag<std::uint16_t, int, float, double,
                                                             std::uint64_t>());
             },
@@ -125,13 +131,13 @@ void declareMultiPlaneMethods(nb::class_<Class, Args...> &cls) {
             [](Class &self, lsst::geom::Box2I const &bbox, ImageOrigin origin, bool allowUnsafe,
                nb::object dtype) {
                 if (dtype.is(nb::none())) {
-                    dtype = nb::dtype(self.readImageDType());
+                    dtype = create_dtype(self.readImageDType());
                 }
                 return utils::python::TemplateInvoker().apply(
                         [&](auto t) {
                             return self.template readImageArray<decltype(t)>(bbox, origin, allowUnsafe);
                         },
-                        nb::dtype(dtype),
+                        dtype,
                         utils::python::TemplateInvoker::Tag<std::uint16_t, int, float, double,
                                                             std::uint64_t>());
             },
@@ -142,14 +148,14 @@ void declareMultiPlaneMethods(nb::class_<Class, Args...> &cls) {
             [](Class &self, lsst::geom::Box2I const &bbox, ImageOrigin origin, bool conformMasks,
                bool allowUnsafe, nb::object dtype) {
                 if (dtype.is(nb::none())) {
-                    dtype = nb::dtype(self.readMaskDType());
+                    dtype = create_dtype(self.readMaskDType());
                 }
                 return utils::python::TemplateInvoker().apply(
                         [&](auto t) {
                             return self.template readMask<decltype(t)>(bbox, origin, conformMasks,
                                                                        allowUnsafe);
                         },
-                        nb::dtype(dtype), utils::python::TemplateInvoker::Tag<MaskPixel>());
+                        dtype, utils::python::TemplateInvoker::Tag<MaskPixel>());
             },
             "bbox"_a = lsst::geom::Box2I(), "origin"_a = PARENT, "conformMasks"_a = false,
             "allowUnsafe"_a = false, "dtype"_a = nb::none());
@@ -158,13 +164,13 @@ void declareMultiPlaneMethods(nb::class_<Class, Args...> &cls) {
             [](Class &self, lsst::geom::Box2I const &bbox, ImageOrigin origin, bool allowUnsafe,
                nb::object dtype) {
                 if (dtype.is(nb::none())) {
-                    dtype = nb::dtype(self.readMaskDType());
+                    dtype = create_dtype(self.readMaskDType());
                 }
                 return utils::python::TemplateInvoker().apply(
                         [&](auto t) {
                             return self.template readMaskArray<decltype(t)>(bbox, origin, allowUnsafe);
                         },
-                        nb::dtype(dtype), utils::python::TemplateInvoker::Tag<MaskPixel>());
+                        dtype, utils::python::TemplateInvoker::Tag<MaskPixel>());
             },
             "bbox"_a = lsst::geom::Box2I(), "origin"_a = PARENT, "allowUnsafe"_a = false,
             "dtype"_a = nb::none());
@@ -173,13 +179,13 @@ void declareMultiPlaneMethods(nb::class_<Class, Args...> &cls) {
             [](Class &self, lsst::geom::Box2I const &bbox, ImageOrigin origin, bool allowUnsafe,
                nb::object dtype) {
                 if (dtype.is(nb::none())) {
-                    dtype = nb::dtype(self.readVarianceDType());
+                    dtype = create_dtype(self.readVarianceDType());
                 }
                 return utils::python::TemplateInvoker().apply(
                         [&](auto t) {
                             return self.template readVariance<decltype(t)>(bbox, origin, allowUnsafe);
                         },
-                        nb::dtype(dtype), utils::python::TemplateInvoker::Tag<VariancePixel>());
+                        dtype, utils::python::TemplateInvoker::Tag<VariancePixel>());
             },
             "bbox"_a = lsst::geom::Box2I(), "origin"_a = PARENT, "allowUnsafe"_a = false,
             "dtype"_a = nb::none());
@@ -188,13 +194,13 @@ void declareMultiPlaneMethods(nb::class_<Class, Args...> &cls) {
             [](Class &self, lsst::geom::Box2I const &bbox, ImageOrigin origin, bool allowUnsafe,
                nb::object dtype) {
                 if (dtype.is(nb::none())) {
-                    dtype = nb::dtype(self.readVarianceDType());
+                    dtype = create_dtype(self.readVarianceDType());
                 }
                 return utils::python::TemplateInvoker().apply(
                         [&](auto t) {
                             return self.template readVarianceArray<decltype(t)>(bbox, origin, allowUnsafe);
                         },
-                        nb::dtype(dtype), utils::python::TemplateInvoker::Tag<VariancePixel>());
+                        dtype, utils::python::TemplateInvoker::Tag<VariancePixel>());
             },
             "bbox"_a = lsst::geom::Box2I(), "origin"_a = PARENT, "allowUnsafe"_a = false,
             "dtype"_a = nb::none());
@@ -209,11 +215,11 @@ void declareImageFitsReader(lsst::utils::python::WrapperCollection &wrappers) {
                 [](ImageFitsReader &self, lsst::geom::Box2I const &bbox, ImageOrigin origin, bool allowUnsafe,
                    nb::object dtype) {
                     if (dtype.is(nb::none())) {
-                        dtype = nb::dtype(self.readDType());
+                        dtype = create_dtype(self.readDType());
                     }
                     return utils::python::TemplateInvoker().apply(
                             [&](auto t) { return self.read<decltype(t)>(bbox, origin, allowUnsafe); },
-                            nb::dtype(dtype),
+                            dtype,
                             utils::python::TemplateInvoker::Tag<std::uint16_t, int, float, double,
                                                                 std::uint64_t>());
                 },
@@ -231,13 +237,13 @@ void declareMaskFitsReader(lsst::utils::python::WrapperCollection &wrappers) {
                 [](MaskFitsReader &self, lsst::geom::Box2I const &bbox, ImageOrigin origin, bool conformMasks,
                    bool allowUnsafe, nb::object dtype) {
                     if (dtype.is(nb::none())) {
-                        dtype = nb::dtype(self.readDType());
+                        dtype = create_dtype(self.readDType());
                     }
                     return utils::python::TemplateInvoker().apply(
                             [&](auto t) {
                                 return self.read<decltype(t)>(bbox, origin, conformMasks, allowUnsafe);
                             },
-                            nb::dtype(dtype), utils::python::TemplateInvoker::Tag<MaskPixel>());
+                            dtype, utils::python::TemplateInvoker::Tag<MaskPixel>());
                 },
                 "bbox"_a = lsst::geom::Box2I(), "origin"_a = PARENT, "conformMasks"_a = false,
                 "allowUnsafe"_a = false, "dtype"_a = nb::none());
@@ -261,13 +267,13 @@ void declareMaskedImageFitsReader(lsst::utils::python::WrapperCollection &wrappe
                 [](MaskedImageFitsReader &self, lsst::geom::Box2I const &bbox, ImageOrigin origin,
                    bool conformMasks, bool needAllHdus, bool allowUnsafe, nb::object dtype) {
                     if (dtype.is(nb::none())) {
-                        dtype = nb::dtype(self.readImageDType());
+                        dtype = create_dtype(self.readImageDType());
                     }
                     return utils::python::TemplateInvoker().apply(
                             [&](auto t) {
                                 return self.read<decltype(t)>(bbox, origin, conformMasks, allowUnsafe);
                             },
-                            nb::dtype(dtype),
+                            dtype,
                             utils::python::TemplateInvoker::Tag<std::uint16_t, int, float, double,
                                                                 std::uint64_t>());
                 },
@@ -302,14 +308,14 @@ void declareExposureFitsReader(lsst::utils::python::WrapperCollection &wrappers)
                 [](ExposureFitsReader &self, lsst::geom::Box2I const &bbox, ImageOrigin origin,
                    bool conformMasks, bool allowUnsafe, nb::object dtype) {
                     if (dtype.is(nb::none())) {
-                        dtype = nb::dtype(self.readImageDType());
+                        dtype = create_dtype(self.readImageDType());
                     }
                     return utils::python::TemplateInvoker().apply(
                             [&](auto t) {
                                 return self.readMaskedImage<decltype(t)>(bbox, origin, conformMasks,
                                                                          allowUnsafe);
                             },
-                            nb::dtype(dtype),
+                            dtype,
                             utils::python::TemplateInvoker::Tag<std::uint16_t, int, float, double,
                                                                 std::uint64_t>());
                 },
@@ -320,13 +326,13 @@ void declareExposureFitsReader(lsst::utils::python::WrapperCollection &wrappers)
                 [](ExposureFitsReader &self, lsst::geom::Box2I const &bbox, ImageOrigin origin,
                    bool conformMasks, bool allowUnsafe, nb::object dtype) {
                     if (dtype.is(nb::none())) {
-                        dtype = nb::dtype(self.readImageDType());
+                        dtype = create_dtype(self.readImageDType());
                     }
                     return utils::python::TemplateInvoker().apply(
                             [&](auto t) {
                                 return self.read<decltype(t)>(bbox, origin, conformMasks, allowUnsafe);
                             },
-                            nb::dtype(dtype),
+                            dtype,
                             utils::python::TemplateInvoker::Tag<std::uint16_t, int, float, double,
                                                                 std::uint64_t>());
                 },

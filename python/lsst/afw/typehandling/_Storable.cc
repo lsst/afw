@@ -38,7 +38,7 @@ namespace lsst {
 namespace afw {
 namespace typehandling {
 
-using PyStorable = nb::class_<Storable, PySharedPtr<Storable>, table::io::Persistable, StorableHelper<>>;
+using PyStorable = nb::class_<Storable, table::io::Persistable, StorableHelper<>>;
 
 void wrapStorable(utils::python::WrapperCollection& wrappers) {
     wrappers.addInheritanceDependency("lsst.afw.table.io");

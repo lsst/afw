@@ -23,6 +23,7 @@
 #include <nanobind/nanobind.h>
 #include <lsst/utils/python.h>
 #include <nanobind/stl/vector.h>
+#include <nanobind/stl/string.h>
 
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/math/Random.h"
@@ -76,9 +77,9 @@ void declareRandom(lsst::utils::python::WrapperCollection &wrappers) {
         // thus use the same solution as employed with Swig
         cls.def("getState", [](Random &self) -> nb::object {
             std::string state = self.getState();
-            return nb::reinterpret_steal<nb::object>(PyBytes_FromStringAndSize(state.data(), state.size()));
+            return nb::steal<nb::object>(PyBytes_FromStringAndSize(state.data(), state.size()));
         });
-        cls.def("setState", [](Random &self, nb::bytes const &state) { self.setState(state); });
+        cls.def("setState", [](Random &self, nb::bytes const &state) { self.setState(state.c_str()); });
     });
     /* Member types and enums */
     wrappers.wrapType(nb::enum_<Random::Algorithm>(clsRandom, "Algorithm"), [](auto &mod, auto &enm) {

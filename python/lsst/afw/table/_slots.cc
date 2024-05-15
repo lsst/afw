@@ -22,7 +22,7 @@
  */
 
 #include "nanobind/nanobind.h"
-#include "nanobind/eigen.h"
+#include "nanobind/eigen/dense.h"
 
 #include "lsst/utils/python.h"
 

@@ -42,7 +42,7 @@ template <typename ReturnT>
 void declareFunction(lsst::utils::python::WrapperCollection &wrappers, std::string const &suffix) {
     auto const name = "Function" + suffix;
     wrappers.wrapType(
-            nb::class_<Function<ReturnT>, std::shared_ptr<Function<ReturnT>>>(wrappers.module, name.c_str()),
+            nb::class_<Function<ReturnT>>(wrappers.module, name.c_str()),
             [](auto &mod, auto &cls) {
                 cls.def(nb::init<unsigned int>(), "nParams"_a);
                 cls.def(nb::init<std::vector<double> const &>(), "params"_a);
@@ -50,7 +50,7 @@ void declareFunction(lsst::utils::python::WrapperCollection &wrappers, std::stri
                 table::io::python::addPersistableMethods<Function<ReturnT>>(cls);
 
                 cls.def("getNParameters", &Function<ReturnT>::getNParameters);
-                cls.def("getParameters", &Function<ReturnT>::getParameters, nb::return_value_policy::copy);
+                cls.def("getParameters", &Function<ReturnT>::getParameters, nb::rv_policy::copy);
                 cls.def("getParameter", &Function<ReturnT>::getParameter, "index"_a);
                 cls.def("isLinearCombination", &Function<ReturnT>::isLinearCombination);
                 cls.def("setParameter", &Function<ReturnT>::setParameter, "index"_a, "value"_a);
@@ -62,7 +62,7 @@ void declareFunction(lsst::utils::python::WrapperCollection &wrappers, std::stri
 template <typename ReturnT>
 void declareFunction1(lsst::utils::python::WrapperCollection &wrappers, const std::string &suffix) {
     auto const name = "Function1" + suffix;
-    using PyClass = nb::class_<Function1<ReturnT>, std::shared_ptr<Function1<ReturnT>>, Function<ReturnT>>;
+    using PyClass = nb::class_<Function1<ReturnT>, Function<ReturnT>>;
     wrappers.wrapType(PyClass(wrappers.module, name.c_str()), [](auto &mod, auto &cls) {
         table::io::python::addPersistableMethods<Function1<ReturnT>>(cls);
 
@@ -76,7 +76,7 @@ void declareFunction1(lsst::utils::python::WrapperCollection &wrappers, const st
 template <typename ReturnT>
 void declareFunction2(lsst::utils::python::WrapperCollection &wrappers, const std::string &suffix) {
     auto const name = "Function2" + suffix;
-    using PyClass = nb::class_<Function2<ReturnT>, std::shared_ptr<Function2<ReturnT>>, Function<ReturnT>>;
+    using PyClass = nb::class_<Function2<ReturnT>, Function<ReturnT>>;
     wrappers.wrapType(PyClass(wrappers.module, name.c_str()), [](auto &mod, auto &cls) {
         table::io::python::addPersistableMethods<Function2<ReturnT>>(cls);
 
@@ -91,8 +91,7 @@ template <typename ReturnT>
 void declareBasePolynomialFunction2(lsst ::utils::python::WrapperCollection &wrappers,
                                     const std::string &suffix) {
     auto const name = "BasePolynomialFunction2" + suffix;
-    using PyClass = nb::class_<BasePolynomialFunction2<ReturnT>,
-                               std::shared_ptr<BasePolynomialFunction2<ReturnT>>, Function2<ReturnT>>;
+    using PyClass = nb::class_<BasePolynomialFunction2<ReturnT>, Function2<ReturnT>>;
     wrappers.wrapType(PyClass(wrappers.module, name.c_str()), [](auto &mod, auto &cls) {
         cls.def("getOrder", &BasePolynomialFunction2<ReturnT>::getOrder);
         cls.def("isLinearCombination", &BasePolynomialFunction2<ReturnT>::isLinearCombination);
@@ -108,7 +107,7 @@ template <typename ReturnT>
 void declareNullFunction1(lsst::utils::python::WrapperCollection &wrappers, const std::string &suffix) {
     auto const name = "NullFunction1" + suffix;
     using PyClass =
-            nb::class_<NullFunction1<ReturnT>, std::shared_ptr<NullFunction1<ReturnT>>, Function1<ReturnT>>;
+            nb::class_<NullFunction1<ReturnT>, Function1<ReturnT>>;
     wrappers.wrapType(PyClass(wrappers.module, name.c_str()), [](auto &mod, auto &cls) {
         cls.def(nb::init<>());
 
@@ -120,7 +119,7 @@ template <typename ReturnT>
 void declareNullFunction2(lsst::utils::python::WrapperCollection &wrappers, const std::string &suffix) {
     auto const name = "NullFunction2" + suffix;
     using PyClass =
-            nb::class_<NullFunction2<ReturnT>, std::shared_ptr<NullFunction2<ReturnT>>, Function2<ReturnT>>;
+            nb::class_<NullFunction2<ReturnT>, Function2<ReturnT>>;
     wrappers.wrapType(PyClass(wrappers.module, name.c_str()), [](auto &mod, auto &cls) {
         cls.def(nb::init<>());
         cls.def("clone", &NullFunction2<ReturnT>::clone);

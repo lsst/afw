@@ -128,12 +128,11 @@ void DummyPsf::write(OutputArchiveHandle& handle) const {
     handle.saveCatalog(catalog);
 }
 
-NB_DECLARE_HOLDER_TYPE(MyType, std::shared_ptr<MyType>);
 
 NB_MODULE(testTableArchivesLib, mod) {
-    nb::module::import("lsst.afw.detection");
+    nb::module_::import_("lsst.afw.detection");
 
-    nb::class_<DummyPsf, std::shared_ptr<DummyPsf>, lsst::afw::detection::Psf> cls(mod, "DummyPsf");
+    nb::class_<DummyPsf, lsst::afw::detection::Psf> cls(mod, "DummyPsf");
 
     cls.def(nb::init<double>());
 

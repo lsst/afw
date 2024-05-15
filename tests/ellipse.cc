@@ -113,7 +113,7 @@ struct EllipticityConversionTest {
             std::cerr << orig.getComplex() << " ---- " << copy.getComplex() << "\n";
         }
         T2 other(orig);
-        conb = other;
+        copy = other;
         BOOST_CHECK(approx(orig, copy, 1E-12));
         typename T1::Jacobian a1 = copy.dAssign(other);
         typename T1::Jacobian a2 = other.dAssign(copy);
@@ -173,7 +173,7 @@ struct CoreConversionTest {
                       << copy.getParameterVector().transpose() << "\n";
         }
         T2 other(core);
-        conb = other;
+        copy = other;
         BOOST_CHECK(approx(core, copy, 1E-12));
         BaseCore::Jacobian a1 = copy.dAssign(other);
         BaseCore::Jacobian a2 = other.dAssign(copy);

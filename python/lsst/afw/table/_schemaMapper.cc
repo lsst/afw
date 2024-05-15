@@ -40,7 +40,7 @@ namespace afw {
 namespace table {
 
 using utils::python::WrapperCollection;
-using PySchemaMapper = nb::class_<SchemaMapper, std::shared_ptr<SchemaMapper>>;
+using PySchemaMapper = nb::class_<SchemaMapper>;
 
 namespace {
 
@@ -61,7 +61,7 @@ void wrapSchemaMapper(WrapperCollection &wrappers) {
         cls.def("getInputSchema", &SchemaMapper::getInputSchema);
         cls.def("getOutputSchema", &SchemaMapper::getOutputSchema);
         cls.def("editOutputSchema", &SchemaMapper::editOutputSchema,
-                nb::return_value_policy::reference_internal);
+                nb::rv_policy::reference_internal);
         cls.def("addMinimalSchema", &SchemaMapper::addMinimalSchema, "minimal"_a, "doMap"_a = true);
         cls.def_static("removeMinimalSchema", &SchemaMapper::removeMinimalSchema);
         cls.def_static("join", &SchemaMapper::join, "inputs"_a, "prefixes"_a = std::vector<std::string>());

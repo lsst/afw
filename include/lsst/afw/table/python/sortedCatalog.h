@@ -1,5 +1,5 @@
-#ifndef AFW_TABLE_PYBIND11_SORTEDCATALOG_H_INCLUDED
-#define AFW_TABLE_PYBIND11_SORTEDCATALOG_H_INCLUDED
+#ifndef AFW_TABLE_NANOBIND_SORTEDCATALOG_H_INCLUDED
+#define AFW_TABLE_NANOBIND_SORTEDCATALOG_H_INCLUDED
 /*
  * This file is part of afw.
  *
@@ -23,7 +23,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "pybind11/pybind11.h"
+#include "nanobind/nanobind.h"
 
 #include "lsst/utils/python.h"
 
@@ -37,7 +37,7 @@ namespace python {
 
 template <typename Record>
 using PySortedCatalog =
-        pybind11::class_<SortedCatalogT<Record>, std::shared_ptr<SortedCatalogT<Record>>, CatalogT<Record>>;
+        nanobind::class_<SortedCatalogT<Record>, CatalogT<Record>>;
 
 /**
  * Wrap an instantiation of lsst::afw::table::SortedCatalogT<Record>.
@@ -56,8 +56,8 @@ using PySortedCatalog =
 template <typename Record>
 PySortedCatalog<Record> declareSortedCatalog(utils::python::WrapperCollection &wrappers,
                                              std::string const &name, bool isBase = false) {
-    namespace py = pybind11;
-    using namespace pybind11::literals;
+    namespace py = nanobind;
+    using namespace nanobind::literals;
 
     using Catalog = SortedCatalogT<Record>;
     using Table = typename Record::Table;
@@ -77,10 +77,10 @@ PySortedCatalog<Record> declareSortedCatalog(utils::python::WrapperCollection &w
             PySortedCatalog<Record>(wrappers.module, fullName.c_str(), py::dynamic_attr()),
             [clsBase](auto &mod, auto &cls) {
                 /* Constructors */
-                cls.def(pybind11::init<Schema const &>());
-                cls.def(pybind11::init<std::shared_ptr<Table> const &>(),
+                cls.def(nanobind::init<Schema const &>());
+                cls.def(nanobind::init<std::shared_ptr<Table> const &>(),
                         "table"_a = std::shared_ptr<Table>());
-                cls.def(pybind11::init<Catalog const &>());
+                cls.def(nanobind::init<Catalog const &>());
 
                 /* Overridden and Variant Methods */
                 cls.def_static("readFits", (Catalog(*)(std::string const &, int, int)) & Catalog::readFits,
@@ -133,4 +133,4 @@ PySortedCatalog<Record> declareSortedCatalog(utils::python::WrapperCollection &w
 }  // namespace afw
 }  // namespace lsst
 
-#endif  // !AFW_TABLE_PYBIND11_CATALOG_H_INCLUDED
+#endif  // !AFW_TABLE_NANOBIND_CATALOG_H_INCLUDED

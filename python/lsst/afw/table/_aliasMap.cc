@@ -21,6 +21,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <nanobind/make_iterator.h>
 #include "nanobind/nanobind.h"
 
 #include "lsst/utils/python.h"
@@ -34,7 +35,7 @@ namespace lsst {
 namespace afw {
 namespace table {
 
-using PyAliasMap = nb::class_<AliasMap, std::shared_ptr<AliasMap>>;
+using PyAliasMap = nb::class_<AliasMap>;
 
 void wrapAliasMap(utils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(PyAliasMap(wrappers.module, "AliasMap"), [](auto &mod, auto &cls) {
@@ -54,7 +55,7 @@ void wrapAliasMap(utils::python::WrapperCollection &wrappers) {
         cls.def("__ne__", [](AliasMap &self, AliasMap &other) { return self != other; });
         cls.def("contains", &AliasMap::contains, "other"_a);
         cls.def("__contains__", &AliasMap::contains);
-        cls.def("items", [](AliasMap &self) { return nb::make_iterator(self.begin(), self.end()); },
+        cls.def("items", [](AliasMap &self) { return nb::make_iterator(nb::type<PyAliasMap>(), "iterator", self.begin(), self.end()); },
                 nb::keep_alive<0, 1>());
     });
 }

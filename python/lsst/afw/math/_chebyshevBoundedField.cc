@@ -40,7 +40,7 @@ namespace lsst {
 namespace afw {
 namespace math {
 namespace {
-using ClsField = nb::class_<ChebyshevBoundedField, std::shared_ptr<ChebyshevBoundedField>, BoundedField>;
+using ClsField = nb::class_<ChebyshevBoundedField, BoundedField>;
 
 template <typename PixelT>
 void declareTemplates(ClsField &cls) {

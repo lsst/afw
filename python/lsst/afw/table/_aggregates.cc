@@ -22,7 +22,7 @@
  */
 
 #include "nanobind/nanobind.h"
-#include "nanobind/eigen.h"
+#include "nanobind/eigen/dense.h"
 #include "nanobind/stl/vector.h"
 
 #include "ndarray/nanobind.h"
@@ -54,23 +54,23 @@ namespace {
 // define a CRTP interface in C++ and in Python that's just duck-typing.
 
 template <typename T>
-using PyPointKey = nb::class_<PointKey<T>, std::shared_ptr<PointKey<T>>>;
+using PyPointKey = nb::class_<PointKey<T>>;
 
 template <typename T>
-using PyPoint3Key = nb::class_<Point3Key<T>, std::shared_ptr<Point3Key<T>>>;
+using PyPoint3Key = nb::class_<Point3Key<T>>;
 
 template <typename Box>
-using PyBoxKey = nb::class_<BoxKey<Box>, std::shared_ptr<BoxKey<Box>>>;
+using PyBoxKey = nb::class_<BoxKey<Box>>;
 
-using PyCoordKey = nb::class_<CoordKey, std::shared_ptr<CoordKey>>;
+using PyCoordKey = nb::class_<CoordKey>;
 
-using PyQuadrupoleKey = nb::class_<QuadrupoleKey, std::shared_ptr<QuadrupoleKey>>;
+using PyQuadrupoleKey = nb::class_<QuadrupoleKey>;
 
-using PyEllipseKey = nb::class_<EllipseKey, std::shared_ptr<EllipseKey>>;
+using PyEllipseKey = nb::class_<EllipseKey>;
 
 template <typename T, int N>
 using PyCovarianceMatrixKey =
-        nb::class_<CovarianceMatrixKey<T, N>, std::shared_ptr<CovarianceMatrixKey<T, N>>>;
+        nb::class_<CovarianceMatrixKey<T, N>>;
 
 template <typename T>
 static void declarePointKey(WrapperCollection &wrappers, std::string const &suffix) {

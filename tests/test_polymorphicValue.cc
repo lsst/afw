@@ -108,8 +108,8 @@ BOOST_AUTO_TEST_CASE(Hash) {
 
 BOOST_AUTO_TEST_CASE(Copy) {
     auto original = PolymorphicValue(ComplexStorable(3.5));
-    auto conb = PolymorphicValue(original);
-    BOOST_CHECK(conb == original);
+    auto copy = PolymorphicValue(original);
+    BOOST_CHECK(copy == original);
 
     // Independent copy?
     static_cast<ComplexStorable&>(copy.get()) = 4.2;
@@ -119,9 +119,9 @@ BOOST_AUTO_TEST_CASE(Copy) {
 BOOST_AUTO_TEST_CASE(Move) {
     auto original = PolymorphicValue(ComplexStorable(3.5));
     auto backup = PolymorphicValue(original);
-    auto conb = PolymorphicValue(std::move(original));
+    auto copy = PolymorphicValue(std::move(original));
 
-    BOOST_CHECK(conb == backup);
+    BOOST_CHECK(copy == backup);
 
     // changes to copy shouldn't affect original
     auto postMove = PolymorphicValue(original);
@@ -132,9 +132,9 @@ BOOST_AUTO_TEST_CASE(Move) {
 
 BOOST_AUTO_TEST_CASE(CopyAssign) {
     auto original = PolymorphicValue(ComplexStorable(3.5));
-    auto conb = PolymorphicValue(SimpleStorable());
-    conb = original;
-    BOOST_CHECK(conb == original);
+    auto copy = PolymorphicValue(SimpleStorable());
+    copy = original;
+    BOOST_CHECK(copy == original);
 
     // Independent copy?
     static_cast<ComplexStorable&>(copy.get()) = 4.2;
@@ -144,10 +144,10 @@ BOOST_AUTO_TEST_CASE(CopyAssign) {
 BOOST_AUTO_TEST_CASE(MoveAssign) {
     auto original = PolymorphicValue(ComplexStorable(3.5));
     auto backup = PolymorphicValue(original);
-    auto conb = PolymorphicValue(SimpleStorable());
-    conb = std::move(original);
+    auto copy = PolymorphicValue(SimpleStorable());
+    copy = std::move(original);
 
-    BOOST_CHECK(conb == backup);
+    BOOST_CHECK(copy == backup);
 
     // changes to copy shouldn't affect original
     auto postMove = PolymorphicValue(original);

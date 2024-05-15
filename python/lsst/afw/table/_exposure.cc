@@ -58,10 +58,10 @@ using utils::python::WrapperCollection;
 
 namespace {
 
-using PyExposureRecord = nb::class_<ExposureRecord, std::shared_ptr<ExposureRecord>, BaseRecord>;
-using PyExposureTable = nb::class_<ExposureTable, std::shared_ptr<ExposureTable>, BaseTable>;
+using PyExposureRecord = nb::class_<ExposureRecord, BaseRecord>;
+using PyExposureTable = nb::class_<ExposureTable, BaseTable>;
 using PyExposureCatalog =
-        nb::class_<ExposureCatalogT<ExposureRecord>, std::shared_ptr<ExposureCatalogT<ExposureRecord>>,
+        nb::class_<ExposureCatalogT<ExposureRecord>,
                    SortedCatalogT<ExposureRecord>>;
 
 PyExposureRecord declareExposureRecord(WrapperCollection &wrappers) {

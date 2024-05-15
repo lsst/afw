@@ -309,7 +309,7 @@ namespace {
 
 // Functions for working with values of arbitrary type
 template <typename T>
-void declareAnyTypeFunctions(nb::module& mod) {
+void declareAnyTypeFunctions(nb::module_& mod) {
     mod.def("assertKeyValue",
             static_cast<void (*)(GenericMap<std::string> const&, std::string const&, T const&)>(
                     &assertKeyValue),
@@ -321,7 +321,7 @@ void declareAnyTypeFunctions(nb::module& mod) {
 NB_MODULE(testGenericMapLib, mod) {
     using lsst::utils::python::PySharedPtr;
 
-    nb::module::import("lsst.afw.typehandling");
+    nb::module_::import_("lsst.afw.typehandling");
 
     declareAnyTypeFunctions<bool>(mod);
     declareAnyTypeFunctions<std::int64_t>(mod);
@@ -343,12 +343,12 @@ NB_MODULE(testGenericMapLib, mod) {
     mod.def("keepStaticStorable", &keepStaticStorable, "storable"_a = nullptr);
     mod.def("duplicate", &duplicate, "input"_a);
 
-    nb::class_<CppStorable, PySharedPtr<CppStorable>, Storable, StorableHelper<CppStorable>> cls(
+    nb::class_<CppStorable, Storable, StorableHelper<CppStorable>> cls(
             mod, "CppStorable");
     cls.def(nb::init<std::string>());
     cls.def("__eq__", &CppStorable::operator==, nb::is_operator());
     cls.def("__ne__", &CppStorable::operator!=, nb::is_operator());
-    cls.def_property("value", &CppStorable::get, &CppStorable::reset);
+    cls.def_prop_rw("value", &CppStorable::get, &CppStorable::reset);
     cls.def("__str__", &CppStorable::toString);
     cls.def("__repr__", &CppStorable::toString);
 }

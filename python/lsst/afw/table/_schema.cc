@@ -61,7 +61,7 @@ template <typename T>
 using PyField = nb::class_<Field<T>, FieldBase<T>>;
 
 template <typename T>
-using PyKey = nb::class_<Key<T>, KeyBase<T>, FieldBase<T>>;
+using PyKey = nb::class_<Key<T>, KeyBase<T>>;
 
 template <typename T>
 using PySchemaItem = nb::class_<SchemaItem<T>>;
@@ -75,13 +75,13 @@ void declareFieldBaseSpecializations(PyFieldBase<T> &cls) {
 
 template <typename T>
 void declareFieldBaseSpecializations(PyFieldBase<Array<T>> &cls) {
-    cls.def(nb::init<int>(), "size"_a = 0);
+    cls.def(nb::init<size_t>(), "size"_a = 0);
     cls.def("getSize", &FieldBase<Array<T>>::getSize);
     cls.def("isVariableLength", &FieldBase<Array<T>>::isVariableLength);
 }
 
 void declareFieldBaseSpecializations(PyFieldBase<std::string> &cls) {
-    cls.def(nb::init<int>(), "size"_a = -1);
+    cls.def(nb::init<size_t>(), "size"_a = -1);
     cls.def("getSize", &FieldBase<std::string>::getSize);
 }
 
@@ -89,11 +89,12 @@ void declareFieldBaseSpecializations(PyFieldBase<std::string> &cls) {
 
 template <typename T>
 void declareFieldSpecializations(PyField<T> &cls) {
-    cls.def(nb::pickle(
+    cls.def("__getstate__",
             [](Field<T> const &self) {
                 /* Return a tuple that fully encodes the state of the object */
                 return nb::make_tuple(self.getName(), self.getDoc(), self.getUnits());
-            },
+            });
+    cls.def("__setstate__",
             [](nb::tuple t) {
                 int const NPARAMS = 3;
                 if (t.size() != NPARAMS) {
@@ -102,18 +103,19 @@ void declareFieldSpecializations(PyField<T> &cls) {
                        << NPARAMS;
                     throw std::runtime_error(os.str());
                 }
-                return Field<T>(t[0].cast<std::string>(), t[1].cast<std::string>(), t[2].cast<std::string>());
-            }));
+                return Field<T>(nb::cast<std::string>(t[0]), nb::cast<std::string>(t[1]), nb::cast<std::string>(t[2]));
+            });
 }
 
 // Field<Array<T>> and Field<std::string> have the same pickle implementation
 template <typename T>
 void _sequenceFieldSpecializations(PyField<T> &cls) {
-    cls.def(nb::pickle(
+    cls.def("__getstate__",
             [](Field<T> const &self) {
                 /* Return a tuple that fully encodes the state of the object */
                 return nb::make_tuple(self.getName(), self.getDoc(), self.getUnits(), self.getSize());
-            },
+            });
+    cls.def("__setstate__",
             [](nb::tuple t) {
                 int const NPARAMS = 4;
                 if (t.size() != NPARAMS) {
@@ -122,9 +124,9 @@ void _sequenceFieldSpecializations(PyField<T> &cls) {
                        << NPARAMS;
                     throw std::runtime_error(os.str());
                 }
-                return Field<T>(t[0].cast<std::string>(), t[1].cast<std::string>(), t[2].cast<std::string>(),
-                                t[3].cast<int>());
-            }));
+                return Field<T>(nb::cast<std::string>(t[0]), nb::cast<std::string>(t[1]), nb::cast<std::string>(t[2]),
+                                nb::cast<int>(t[3]));
+            });
 }
 
 template <typename T>
@@ -143,9 +145,15 @@ template <typename T>
 void declareKeyBaseSpecializations(PyKeyBase<Array<T>> &cls) {
     cls.def("__getitem__", [](Key<Array<T>> const &self, nb::object const &index) -> nb::object {
         if (nb::isinstance<nb::slice>(index)) {
-            nb::slice slice(index);
-            nb::size_t start = 0, stop = 0, step = 0, length = 0;
-            bool valid = slice.compute(self.getSize(), &start, &stop, &step, &length);
+            nb::slice slice = (nanobind::slice &&) index;
+            Py_ssize_t start = 0, stop = 0, step = 0;
+            size_t length = 0;
+            auto result  = slice.compute(self.getSize());
+            start = result.template get<0>();
+            stop = result.template get<1>();
+            step = result.template get<2>();
+            length = result.template get<3>();
+            bool valid = true;
             if (!valid) throw nb::python_error();
             if (step != 1) {
                 throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
@@ -203,11 +211,12 @@ void declareKeySpecializations(PyKey<T> &cls) {
     declareKeyAccessors(cls);
     cls.def_prop_ro("subfields", [](nb::object const &) { return nb::none(); });
     cls.def_prop_ro("subkeys", [](nb::object const &) { return nb::none(); });
-    cls.def(nb::pickle(
+    cls.def("__getstate__",
             [](Key<T> const &self) {
                 /* Return a tuple that fully encodes the state of the object */
                 return nb::make_tuple(self.getOffset());
-            },
+            });
+            cls.def("__getstate__",
             [](nb::tuple t) {
                 int const NPARAMS = 1;
                 if (t.size() != NPARAMS) {
@@ -216,8 +225,8 @@ void declareKeySpecializations(PyKey<T> &cls) {
                        << NPARAMS;
                     throw std::runtime_error(os.str());
                 }
-                return detail::Access::makeKey<T>(t[0].cast<int>());
-            }));
+                return detail::Access::makeKey<T>(nb::cast<int>(t[0]));
+            });
 }
 
 void declareKeySpecializations(PyKey<Flag> &cls) {
@@ -225,11 +234,12 @@ void declareKeySpecializations(PyKey<Flag> &cls) {
     cls.def_prop_ro("subfields", [](nb::object const &) { return nb::none(); });
     cls.def_prop_ro("subkeys", [](nb::object const &) { return nb::none(); });
     cls.def("getBit", &Key<Flag>::getBit);
-    cls.def(nb::pickle(
+    cls.def("__getstate__",
             [](Key<Flag> const &self) {
                 /* Return a tuple that fully encodes the state of the object */
                 return nb::make_tuple(self.getOffset(), self.getBit());
-            },
+            });
+    cls.def("__setstate__",
             [](nb::tuple t) {
                 int const NPARAMS = 2;
                 if (t.size() != NPARAMS) {
@@ -238,8 +248,8 @@ void declareKeySpecializations(PyKey<Flag> &cls) {
                        << NPARAMS;
                     throw std::runtime_error(os.str());
                 }
-                return detail::Access::makeKey(t[0].cast<int>(), t[1].cast<int>());
-            }));
+                return detail::Access::makeKey(nb::cast<int>(t[0]), nb::cast<int>(t[1]));
+            });
 }
 
 template <typename T>
@@ -259,11 +269,12 @@ void declareKeySpecializations(PyKey<Array<T>> &cls) {
         }
         return nb::tuple(result);
     });
-    cls.def(nb::pickle(
+    cls.def("__getstate__",
             [](Key<Array<T>> const &self) {
                 /* Return a tuple that fully encodes the state of the object */
                 return nb::make_tuple(self.getOffset(), self.getElementCount());
-            },
+            });
+    cls.def("__setstate__",
             [](nb::tuple t) {
                 int const NPARAMS = 2;
                 if (t.size() != NPARAMS) {
@@ -272,19 +283,20 @@ void declareKeySpecializations(PyKey<Array<T>> &cls) {
                        << NPARAMS;
                     throw std::runtime_error(os.str());
                 }
-                return detail::Access::makeKeyArray<T>(t[0].cast<int>(), t[1].cast<int>());
-            }));
+                return detail::Access::makeKeyArray<T>(nb::cast<int>(t[0]), nb::cast<int>(t[1]));
+            });
 }
 
 void declareKeySpecializations(PyKey<std::string> &cls) {
     declareKeyAccessors(cls);
     cls.def_prop_ro("subfields", [](nb::object const &) { return nb::none(); });
     cls.def_prop_ro("subkeys", [](nb::object const &) { return nb::none(); });
-    cls.def(nb::pickle(
+    cls.def("__getstate__",
             [](Key<std::string> const &self) {
                 /* Return a tuple that fully encodes the state of the object */
                 return nb::make_tuple(self.getOffset(), self.getElementCount());
-            },
+            });
+    cls.def("__setstate__",
             [](nb::tuple t) {
                 int const NPARAMS = 2;
                 if (t.size() != NPARAMS) {
@@ -293,17 +305,17 @@ void declareKeySpecializations(PyKey<std::string> &cls) {
                        << NPARAMS;
                     throw std::runtime_error(os.str());
                 }
-                return detail::Access::makeKeyString(t[0].cast<int>(), t[1].cast<int>());
-            }));
+                return detail::Access::makeKeyString(nb::cast<int>(t[0]), nb::cast<int>(t[1]));
+            });
 }
 
 // Wrap all helper classes (FieldBase, KeyBase, Key, Field, SchemaItem) declarefor a Schema field type.
 template <typename T>
 void declareSchemaType(WrapperCollection &wrappers) {
     std::string suffix = FieldBase<T>::getTypeString();
-    nb::str pySuffix(suffix);
+    nb::str pySuffix(suffix.c_str());
 
-    nb::object astropyUnit = nb::module::import("astropy.units").attr("Unit");
+    nb::object astropyUnit = nb::module_::import_("astropy.units").attr("Unit");
 
     // FieldBase
     wrappers.wrapType(PyFieldBase<T>(wrappers.module, ("FieldBase" + suffix).c_str()),
@@ -324,18 +336,18 @@ void declareSchemaType(WrapperCollection &wrappers) {
 
         mod.attr("_Field")[pySuffix] = cls;
 
-        cls.def(nb::init([astropyUnit](  // capture by value to refcount in Python instead of dangle in C++
+        cls.def("__init__", [astropyUnit](PyField<T> *field, // capture by value to refcount in Python instead of dangle in C++
                                  std::string const &name, std::string const &doc, nb::str const &units,
                                  nb::object const &size, nb::str const &parse_strict) {
                     astropyUnit(units, "parse_strict"_a = parse_strict);
                     std::string u = nb::cast<std::string>(units);
                     if (size.is(nb::none())) {
-                        return new Field<T>(name, doc, u);
+                        new (field) Field<T>(name, doc, u);
                     } else {
                         int s = nb::cast<int>(size);
-                        return new Field<T>(name, doc, u, s);
+                        new (field) Field<T>(name, doc, u, s);
                     }
-                }),
+                },
                 "name"_a, "doc"_a = "", "units"_a = "", "size"_a = nb::none(), "parse_strict"_a = "raise");
         cls.def("_addTo", [](Field<T> const &self, Schema &schema, bool doReplace) -> Key<T> {
             return schema.addField(self, doReplace);
@@ -400,11 +412,12 @@ void declareSchemaType(WrapperCollection &wrappers) {
                           cls.def("__repr__", [](nb::object const &self) -> nb::str {
                               return nb::str("SchemaItem(key={0.key}, field={0.field})").format(self);
                           });
-                          cls.def(nb::pickle(
+                          cls.def("__getstate__",
                                   [](SchemaItem<T> const &self) {
                                       /* Return a tuple that fully encodes the state of the object */
                                       return nb::make_tuple(self.key, self.field);
-                                  },
+                                  });
+                          cls.def("__setstate__",
                                   [](nb::tuple t) {
                                       int const NPARAMS = 2;
                                       if (t.size() != NPARAMS) {
@@ -413,8 +426,8 @@ void declareSchemaType(WrapperCollection &wrappers) {
                                              << ") when unpickling; expected " << NPARAMS;
                                           throw std::runtime_error(os.str());
                                       }
-                                      return SchemaItem<T>(t[0].cast<Key<T>>(), t[1].cast<Field<T>>());
-                                  }));
+                                      return SchemaItem<T>(nb::cast<Key<T>>(t[0]), nb::cast<Field<T>>(t[1]));
+                                  });
                       });
 }
 

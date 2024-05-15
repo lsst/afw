@@ -54,7 +54,7 @@ template <typename T>
 void declareCovariograms(lsst::utils::python::WrapperCollection &wrappers, const std::string &suffix) {
     /* Covariogram */
 
-    wrappers.wrapType(nb::class_<Covariogram<T>, std::shared_ptr<Covariogram<T>>>(
+    wrappers.wrapType(nb::class_<Covariogram<T>>(
                               wrappers.module, ("Covariogram" + suffix).c_str()),
                       [](auto &mod, auto &cls) {
                           cls.def(nb::init<>());
@@ -62,7 +62,7 @@ void declareCovariograms(lsst::utils::python::WrapperCollection &wrappers, const
                       });
     /* SquaredExpCovariogram */
     wrappers.wrapType(
-            nb::class_<SquaredExpCovariogram<T>, std::shared_ptr<SquaredExpCovariogram<T>>, Covariogram<T>>(
+            nb::class_<SquaredExpCovariogram<T>, Covariogram<T>>(
                     wrappers.module, ("SquaredExpCovariogram" + suffix).c_str()),
             [](auto &mod, auto &cls) {
                 cls.def(nb::init<>());
@@ -71,7 +71,7 @@ void declareCovariograms(lsst::utils::python::WrapperCollection &wrappers, const
             });
     /* NeuralNetCovariogram */
     wrappers.wrapType(
-            nb::class_<NeuralNetCovariogram<T>, std::shared_ptr<NeuralNetCovariogram<T>>, Covariogram<T>>(
+            nb::class_<NeuralNetCovariogram<T>, Covariogram<T>>(
                     wrappers.module, ("NeuralNetCovariogram" + suffix).c_str()),
             [](auto &mod, auto &cls) {
                 cls.def(nb::init<>());

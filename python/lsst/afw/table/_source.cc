@@ -22,7 +22,7 @@
  */
 
 #include "nanobind/nanobind.h"
-#include "nanobind/eigen.h"
+#include "nanobind/eigen/dense.h"
 
 #include <memory>
 
@@ -51,10 +51,10 @@ using utils::python::WrapperCollection;
 
 namespace {
 
-using PySourceRecord = nb::class_<SourceRecord, std::shared_ptr<SourceRecord>, SimpleRecord>;
-using PySourceTable = nb::class_<SourceTable, std::shared_ptr<SourceTable>, SimpleTable>;
+using PySourceRecord = nb::class_<SourceRecord, SimpleRecord>;
+using PySourceTable = nb::class_<SourceTable, SimpleTable>;
 using PySourceColumnView =
-        nb::class_<SourceColumnViewT<SourceRecord>, std::shared_ptr<SourceColumnViewT<SourceRecord>>,
+        nb::class_<SourceColumnViewT<SourceRecord>,
                    ColumnViewT<SourceRecord>>;
 
 /*

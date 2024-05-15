@@ -47,7 +47,7 @@ namespace {
 // define a CRTP interface in C++ and in Python that's just duck-typing.
 
 template <typename T>
-using PyArrayKey = nb::class_<ArrayKey<T>, std::shared_ptr<ArrayKey<T>>>;
+using PyArrayKey = nb::class_<ArrayKey<T>>;
 
 template <typename T>
 void declareArrayKey(WrapperCollection &wrappers, std::string const &suffix) {
@@ -77,9 +77,15 @@ void declareArrayKey(WrapperCollection &wrappers, std::string const &suffix) {
                         // Special implementation of __getitem__ to support ints and slices
                         [](ArrayKey<T> const &self, nb::object const &index) -> nb::object {
                             if (nb::isinstance<nb::slice>(index)) {
-                                nb::slice slice(index);
-                                nb::size_t start = 0, stop = 0, step = 0, length = 0;
-                                bool valid = slice.compute(self.getSize(), &start, &stop, &step, &length);
+                                nb::slice slice = (nanobind::slice &&) index;
+                                Py_ssize_t start = 0, stop = 0, step = 0;
+                                size_t length = 0;
+                                auto result  = slice.compute(self.getSize());
+                                start = result.template get<0>();
+                                stop = result.template get<1>();
+                                step = result.template get<2>();
+                                length = result.template get<3>();
+                                bool valid = true;
                                 if (!valid) throw nb::python_error();
                                 if (step != 1) {
                                     throw nb::index_error("Step for ArrayKey must be 1.");
