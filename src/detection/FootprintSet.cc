@@ -959,6 +959,7 @@ void FootprintSet::makeHeavy(image::MaskedImage<ImagePixelT, MaskPixelT> const &
 }
 
 void FootprintSet::makeSources(afw::table::SourceCatalog &cat) const {
+    cat.reserve(cat.size() + _footprints->size());
     for (auto const &i : *_footprints) {
         std::shared_ptr<afw::table::SourceRecord> r = cat.addNew();
         r->setFootprint(i);
