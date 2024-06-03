@@ -122,6 +122,16 @@ class ExposureSummaryStats(Storable):
     grid of unmasked pixels (pixels).
     """
 
+    psfApFluxDelta: float = float('nan')
+    """Delta (max - min) of the model psf aperture flux (with aperture radius of
+    max(2, 3*psfSigma)) values evaluated on a grid of unmasked pixels.
+    """
+
+    psfApCorrSigmaScaledDelta: float = float('nan')
+    """Delta (max - min) of the psf flux aperture correction factors scaled (divided)
+    by the psfSigma evaluated on a grid of unmasked pixels.
+    """
+
     maxDistToNearestPsf: float = float('nan')
     """Maximum distance of an unmasked pixel to its nearest model psf star
     (pixels).
@@ -336,6 +346,18 @@ class ExposureSummaryStats(Storable):
             doc="Delta (max - min) of the model psf trace radius values evaluated on a grid of "
             "unmasked pixels (pixel).",
             units="pixel",
+        )
+        schema.addField(
+            "psfApFluxDelta",
+            type="F",
+            doc="Delta (max - min) of the model psf aperture flux (with aperture radius of "
+            "max(2, 3*psfSigma)) values evaluated on a grid of unmasked pixels.",
+        )
+        schema.addField(
+            "psfApCorrSigmaScaledDelta",
+            type="F",
+            doc="Delta (max - min) of the model psf aperture correction factors scaled (divided) "
+            "by the psfSigma evaluated on a grid of unmasked pixels.",
         )
         schema.addField(
             "maxDistToNearestPsf",
