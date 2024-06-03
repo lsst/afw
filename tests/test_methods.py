@@ -20,7 +20,6 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 import unittest
-import re
 
 import numpy as np
 
@@ -303,9 +302,7 @@ class TestTestUtils(lsst.utils.tests.TestCase):
 
         # arrays differ by a maximum of 2
         errMsg1 = imagesDiffer(image0, image1)
-        match = re.match(r"maxDiff *= *(\d+)", errMsg1, re.IGNORECASE)
-        self.assertIsNotNone(match)
-        self.assertEqual(match.group(1), "2")
+        self.assertIn("maximum absolute error: |0 - 2| = 2 at position (0, 1).", errMsg1)
 
         # arrays are equal to within 5
         self.assertImagesAlmostEqual(image0, image1, atol=5)

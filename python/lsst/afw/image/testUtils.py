@@ -370,10 +370,23 @@ def imagesDiffer(image0, image1, skipMask=None, rtol=1.0e-05, atol=1e-08):
     if not np.allclose(valFilledArr1, valFilledArr2, rtol=rtol, atol=atol):
         errArr = np.abs(valFilledArr1 - valFilledArr2)
         maxErr = errArr.max()
-        maxPosInd = np.where(errArr == maxErr)
-        maxPosTuple = (maxPosInd[1][0], maxPosInd[0][0])
-        errStr = f"maxDiff={maxErr} at position {maxPosTuple}; " \
-                 f"value={valFilledArr1[maxPosInd][0]} vs. {valFilledArr2[maxPosInd][0]}"
+        maxAbsInd = np.where(errArr == maxErr)
+        maxAbsTuple = (maxAbsInd[0][0], maxAbsInd[1][0])
+        # NOTE: use the second image, because the numpy test is:
+        # |a - b| <= (atol + rtol * |b|)
+        allcloseLimit = rtol*np.abs(valFilledArr2) + atol
+        failing = np.where(errArr >= allcloseLimit)
+        # We want value of the largest absolute error.
+        maxFailing = errArr[failing].max()
+        maxFailingInd = np.where(errArr == maxFailing)
+        maxFailingTuple = (maxFailingInd[0][0], maxFailingInd[1][0])
+        errStr = (f"{len(failing[0])} pixels failing np.allclose(), worst is: "
+                  f"|{valFilledArr1[maxFailingTuple]} - {valFilledArr2[maxFailingTuple]}| = "
+                  f"{maxFailing} > {allcloseLimit[maxFailingTuple]} "
+                  f"(rtol*abs(image2)+atol with rtol={rtol}, atol={atol}) "
+                  f"at position {maxFailingTuple}, and maximum absolute error: "
+                  f"|{valFilledArr1[maxAbsInd][0]} - {valFilledArr2[maxAbsInd][0]}| = {maxErr} "
+                  f"at position {maxAbsTuple}.")
         errStrList.insert(0, errStr)
 
     return "; ".join(errStrList)
