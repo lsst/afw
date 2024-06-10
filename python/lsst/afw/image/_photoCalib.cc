@@ -154,10 +154,10 @@ void declarePhotoCalib(lsst::utils::python::WrapperCollection &wrappers) {
                 cls.def("magnitudeToInstFlux",
                         py::overload_cast<double, lsst::geom::Point<double, 2> const &>(
                                 &PhotoCalib::magnitudeToInstFlux, py::const_),
-                        "instFlux"_a, "point"_a);
+                        "magnitude"_a, "point"_a);
                 cls.def("magnitudeToInstFlux",
                         py::overload_cast<double>(&PhotoCalib::magnitudeToInstFlux, py::const_),
-                        "instFlux"_a);
+                        "magnitude"_a);
 
                 /* from nanojansky. */
                 cls.def("nanojanskyToInstFlux",
