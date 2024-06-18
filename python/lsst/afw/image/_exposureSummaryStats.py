@@ -66,6 +66,9 @@ class ExposureSummaryStats(Storable):
     dec: float = float('nan')
     """Bounding box center Declination (degrees)."""
 
+    pixelScale: float = float('nan')
+    """Measured detector pixel scale (arcsec/pixel)."""
+
     zenithDistance: float = float('nan')
     """Bounding box center zenith distance (degrees)."""
 
@@ -268,6 +271,12 @@ class ExposureSummaryStats(Storable):
             type="F",
             doc="Zenith distance of bounding box center (degrees)",
             units="degree",
+        )
+        schema.addField(
+            "pixelScale",
+            type="F",
+            doc="Measured detector pixel scale (arcsec/pixel)",
+            units="arcsec/pixel",
         )
         schema.addField(
             "expTime",
