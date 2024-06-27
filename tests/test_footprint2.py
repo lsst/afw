@@ -363,7 +363,7 @@ class FootprintSetTestCase(unittest.TestCase):
 
         import numpy
         for x in range(im.getWidth()):
-            im[x, -1, afwImage.LOCAL] = (numpy.Inf, 0x0, 0)
+            im[x, -1, afwImage.LOCAL] = (numpy.inf, 0x0, 0)
 
         ds = afwDetect.FootprintSet(im, afwDetect.createThreshold(100))
 
