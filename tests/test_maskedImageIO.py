@@ -254,7 +254,7 @@ def tmpFits(*hdus):
         hdulist.writeto(filename)
         yield filename
     finally:
-        shutil.rmtree(tempdir)
+        shutil.rmtree(tempdir, ignore_errors=True)
 
 
 class MultiExtensionTestCase:

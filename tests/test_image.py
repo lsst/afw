@@ -751,7 +751,7 @@ class DecoratedImageTestCase(lsst.utils.tests.TestCase):
             meta = readMetadata(testfile)
             self.assertEqual(meta.getScalar("A.B.C.D"), 12345)
         finally:
-            shutil.rmtree(tempdir)
+            shutil.rmtree(tempdir, ignore_errors=True)
 
     def testLargeImage(self):
         """Test that creating an extremely large image raises, rather than segfaulting. DM-89, -527."""
