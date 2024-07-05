@@ -499,7 +499,7 @@ class ButlerImage(FakeImageDataSource):
         if self.callback:
             try:
                 im = self.callback(im, ccd, imageSource=self)
-            except Exception as e:
+            except Exception:
                 if self.verbose:
                     log.exception("callback failed.")
                 im = imageFactory(*bbox.getDimensions())
@@ -917,7 +917,7 @@ def makeImageFromCamera(camera, detectorNameList=None, background=numpy.nan, buf
         imView = camIm.Factory(camIm, bbox, afwImage.LOCAL)
         try:
             imView[:] = im
-        except pexExceptions.LengthError as e:
+        except pexExceptions.LengthError:
             log.exception("Unable to fit image for detector \"%s\" into image of camera.", det.getName())
 
     return camIm

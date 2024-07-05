@@ -29,6 +29,7 @@ from ._imageLib import ImageOrigin
 
 _LOG = logging.getLogger("lsst.afw.image")
 
+
 # This must be added to a class as a *classmethod*, for example:
 #
 # @continueclass
