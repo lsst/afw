@@ -28,14 +28,14 @@ __all__ = [
     "getDisplay", "delAllDisplays",
 ]
 
+import logging
 import re
 import sys
 import importlib
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
-import lsst.log
 
-logger = lsst.log.Log.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 # Symbolic names for mask/line colors.  N.b. ds9 supports any X11 color for masks
 WHITE = "white"
@@ -837,13 +837,13 @@ class Display:
             k, x, y = ev.k, ev.x, ev.y      # for now
 
             if k not in self._callbacks:
-                logger.warn("No callback registered for {0}".format(k))
+                logger.warning("No callback registered for %s", k)
             else:
                 try:
                     interactFinished = self._callbacks[k](k, x, y)
-                except Exception as e:
-                    logger.error(
-                        "Display._callbacks['{0}']({0},{1},{2}) failed: {3}".format(k, x, y, e))
+                except Exception:
+                    logger.exception(
+                        "Display._callbacks['%s'](%s,%s,%s) failed.", k, x, y)
 
     def setCallback(self, k, func=None, noRaise=False):
         """Set the callback for a key.
