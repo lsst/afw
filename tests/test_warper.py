@@ -25,6 +25,7 @@ import os
 import unittest
 
 import lsst.utils
+import lsst.utils.logging
 import lsst.utils.tests
 import lsst.geom
 import lsst.afw.geom as afwGeom
@@ -34,8 +35,9 @@ from lsst.log import Log
 
 # Change the level to Log.DEBUG to see debug messages
 Log.getLogger("lsst.afw.image.Mask").setLevel(Log.INFO)
-Log.getLogger("TRACE3.lsst.afw.math.warp").setLevel(Log.INFO)
-Log.getLogger("TRACE4.lsst.afw.math.warp").setLevel(Log.INFO)
+
+# Change integer argument to adjust trace logging.
+lsst.utils.logging.trace_set_at("lsst.afw.math.warp", -1)
 
 try:
     afwdataDir = lsst.utils.getPackageDir("afwdata")

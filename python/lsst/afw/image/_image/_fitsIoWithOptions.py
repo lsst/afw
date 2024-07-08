@@ -22,10 +22,12 @@
 __all__ = ["imageReadFitsWithOptions",
            "imageWriteFitsWithOptions", "exposureWriteFitsWithOptions"]
 
+import logging
 import lsst.geom
-from lsst.log import Log
 from lsst.afw.fits import ImageWriteOptions
 from ._imageLib import ImageOrigin
+
+_LOG = logging.getLogger("lsst.afw.image")
 
 
 # This must be added to a class as a *classmethod*, for example:
@@ -102,9 +104,8 @@ def imageWriteFitsWithOptions(self, dest, options, item="image"):
     if options is not None:
         try:
             writeOptions = ImageWriteOptions(options.getPropertySet(item))
-        except Exception as e:
-            log = Log.getLogger("lsst.afw.image")
-            log.warning("Could not parse item %s from options; writing with defaults: %s", item, e)
+        except Exception:
+            _LOG.exception("Could not parse item %s from options; writing with defaults.", item)
         else:
             self.writeFits(dest, writeOptions)
             return
@@ -127,9 +128,8 @@ def exposureWriteFitsWithOptions(self, dest, options):
         try:
             writeOptionDict = {name + "Options": ImageWriteOptions(options.getPropertySet(name))
                                for name in ("image", "mask", "variance")}
-        except Exception as e:
-            log = Log.getLogger("lsst.afw.image")
-            log.warning("Could not parse options; writing with defaults: %s", e)
+        except Exception:
+            _LOG.exception("Could not parse options; writing with defaults.")
         else:
             self.writeFits(dest, **writeOptionDict)
             return

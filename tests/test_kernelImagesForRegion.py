@@ -24,15 +24,15 @@ import unittest
 
 import numpy as np
 
+import lsst.utils.logging
 import lsst.utils.tests
 import lsst.geom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.math.detail as mathDetail
-from lsst.log import Log
 
-# Change the level to Log.DEBUG to see debug messages
-Log.getLogger("TRACE5.lsst.afw.math.convolve").setLevel(Log.INFO)
+# Change integer argument to adjust trace logging.
+lsst.utils.logging.trace_set_at("lsst.afw.math.convolve", -1)
 
 LocNameDict = {
     mathDetail.KernelImagesForRegion.BOTTOM_LEFT: "BOTTOM_LEFT",

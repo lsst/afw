@@ -20,11 +20,11 @@
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
+import logging
 import sys
 import matplotlib.pyplot as plt
 
 import lsst.afw.cameraGeom.utils as cameraGeomUtils
-from lsst.log import Log
 
 if __name__ == '__main__':
     import argparse
@@ -64,10 +64,10 @@ if __name__ == '__main__':
         print("Unable to find mapper {mapperName} in {obsPackageName}", file=sys.stderr)
         sys.exit(1)
     #
-    # Control verbosity from butler
+    # Control verbosity from obs packages
     #
-    log = Log.getLogger("CameraMapper")
-    log.setLevel(Log.FATAL)
+    log = logging.getLogger("lsst.obs")
+    log.setLevel(logging.FATAL)
     #
     # And finally find the camera
     #

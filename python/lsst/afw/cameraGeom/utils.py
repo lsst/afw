@@ -28,6 +28,7 @@ __all__ = ['prepareWcsData', 'plotFocalPlane', 'makeImageFromAmp', 'calcRawCcdBB
            'showAmp', 'showCcd', 'getCcdInCamBBoxList', 'getCameraImageBBox',
            'makeImageFromCamera', 'showCamera', 'makeFocalPlaneWcs', 'findAmp']
 
+import logging
 import math
 import numpy
 
@@ -38,7 +39,6 @@ import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.cameraGeom as afwCameraGeom
 import lsst.daf.base as dafBase
-import lsst.log
 import lsst.pex.exceptions as pexExceptions
 
 from ._rotateBBoxBy90 import rotateBBoxBy90
@@ -50,7 +50,7 @@ from lsst.afw.cameraGeom import DetectorType
 import lsst.afw.display as afwDisplay
 import lsst.afw.display.utils as displayUtils
 
-_LOG = lsst.log.Log.getLogger(__name__)
+_LOG = logging.getLogger(__name__)
 
 
 def prepareWcsData(wcs, amp, isTrimmed=True):
@@ -499,9 +499,9 @@ class ButlerImage(FakeImageDataSource):
         if self.callback:
             try:
                 im = self.callback(im, ccd, imageSource=self)
-            except Exception as e:
+            except Exception:
                 if self.verbose:
-                    log.error("callback failed: %s", e)
+                    log.exception("callback failed.")
                 im = imageFactory(*bbox.getDimensions())
             else:
                 allowRotate = False     # the callback was responsible for any rotations
@@ -917,9 +917,8 @@ def makeImageFromCamera(camera, detectorNameList=None, background=numpy.nan, buf
         imView = camIm.Factory(camIm, bbox, afwImage.LOCAL)
         try:
             imView[:] = im
-        except pexExceptions.LengthError as e:
-            log.error("Unable to fit image for detector \"%s\" into image of camera: %s",
-                      det.getName(), e)
+        except pexExceptions.LengthError:
+            log.exception("Unable to fit image for detector \"%s\" into image of camera.", det.getName())
 
     return camIm
 
