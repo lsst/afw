@@ -530,7 +530,7 @@ private:
     // Assume that each operator() has the same return type; variant will enforce it
     /// @cond
     template <class Visitor>
-    using _VisitorResult = std::result_of_t<Visitor && (K&&, bool&)>;
+    using _VisitorResult = std::invoke_result_t<Visitor, K&&, bool&>;
     /// @endcond
 
     // No return value, const GenericMap
