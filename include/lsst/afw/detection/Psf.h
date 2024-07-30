@@ -29,7 +29,7 @@
 #include <memory>
 
 #include "lsst/pex/exceptions.h"
-#include "lsst/utils/CacheFwd.h"
+#include "lsst/cpputils/CacheFwd.h"
 #include "lsst/afw/geom/ellipses/Quadrupole.h"
 #include "lsst/afw/math/Kernel.h"
 #include "lsst/afw/image/Color.h"
@@ -41,7 +41,7 @@ namespace afw {
 namespace detection {
 namespace detail {
 
-/// Key for caching PSFs with lsst::utils::Cache
+/// Key for caching PSFs with lsst::cpputils::Cache
 struct PsfCacheKey;
 
 }  // namespace detail
@@ -364,7 +364,7 @@ private:
     //@}
 
     bool const _isFixed;
-    using PsfCache = utils::Cache<detail::PsfCacheKey, std::shared_ptr<Image>>;
+    using PsfCache = cpputils::Cache<detail::PsfCacheKey, std::shared_ptr<Image>>;
     std::unique_ptr<PsfCache> _imageCache;
     std::unique_ptr<PsfCache> _kernelImageCache;
 };

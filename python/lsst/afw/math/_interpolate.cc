@@ -21,7 +21,7 @@
  */
 
 #include <pybind11/pybind11.h>
-#include <lsst/utils/python.h>
+#include <lsst/cpputils/python.h>
 #include <pybind11/stl.h>
 
 #include "ndarray/pybind11.h"
@@ -35,7 +35,7 @@ using namespace lsst::afw::math;
 namespace lsst {
 namespace afw {
 namespace math {
-void wrapInterpolate(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapInterpolate(lsst::cpputils::python::WrapperCollection &wrappers) {
     using PyClass = py::class_<Interpolate, std::shared_ptr<Interpolate>>;
 
     auto clsInterpolate = wrappers.wrapType(PyClass(wrappers.module, "Interpolate"), [](auto &mod,

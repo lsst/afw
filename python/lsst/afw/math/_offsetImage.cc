@@ -21,7 +21,7 @@
  */
 
 #include <pybind11/pybind11.h>
-#include <lsst/utils/python.h>
+#include <lsst/cpputils/python.h>
 
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/Mask.h"
@@ -37,7 +37,7 @@ namespace math {
 
 namespace {
 template <typename ImageT>
-static void declareOffsetImage(lsst::utils::python::WrapperCollection &wrappers) {
+static void declareOffsetImage(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrap([](auto &mod) {
         mod.def("offsetImage", offsetImage<ImageT>, "image"_a, "dx"_a, "dy"_a, "algorithmName"_a = "lanczos5",
                 "buffer"_a = 0);
@@ -45,19 +45,19 @@ static void declareOffsetImage(lsst::utils::python::WrapperCollection &wrappers)
 }
 
 template <typename ImageT>
-static void declareRotateImageBy90(lsst::utils::python::WrapperCollection &wrappers) {
+static void declareRotateImageBy90(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrap(
             [](auto &mod) { mod.def("rotateImageBy90", rotateImageBy90<ImageT>, "image"_a, "nQuarter"_a); });
 }
 
 template <typename ImageT>
-static void declareFlipImage(lsst::utils::python::WrapperCollection &wrappers) {
+static void declareFlipImage(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrap(
             [](auto &mod) { mod.def("flipImage", flipImage<ImageT>, "inImage"_a, "flipLR"_a, "flipTB"_a); });
 }
 
 template <typename ImageT>
-static void declareBinImage(lsst::utils::python::WrapperCollection &wrappers) {
+static void declareBinImage(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrap([](auto &mod) {
         mod.def("binImage",
                 (std::shared_ptr<ImageT>(*)(ImageT const &, int const, int const,
@@ -71,7 +71,7 @@ static void declareBinImage(lsst::utils::python::WrapperCollection &wrappers) {
 }
 }  // namespace
 
-void wrapOffsetImage(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapOffsetImage(lsst::cpputils::python::WrapperCollection &wrappers) {
     using MaskPixel = lsst::afw::image::MaskPixel;
     wrappers.addSignatureDependency("lsst.afw.image");
 

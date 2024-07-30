@@ -21,7 +21,7 @@
  */
 
 #include "pybind11/pybind11.h"
-#include "lsst/utils/python.h"
+#include "lsst/cpputils/python.h"
 
 #include <cstdint>
 #include <string>
@@ -49,7 +49,7 @@ namespace {
 @param[in] name  Name of Python class, e.g. "SinglePixelI" if PixelT is `int`.
 */
 template <typename PixelT>
-void declareSinglePixel(lsst::utils::python::WrapperCollection &wrappers, std::string const &name) {
+void declareSinglePixel(lsst::cpputils::python::WrapperCollection &wrappers, std::string const &name) {
     wrappers.wrapType(
             py::class_<SinglePixel<PixelT, MaskPixel, VariancePixel>>(wrappers.module, name.c_str()),
             [](auto &mod, auto &cls) {
@@ -63,7 +63,7 @@ void declareSinglePixel(lsst::utils::python::WrapperCollection &wrappers, std::s
 }  // namespace
 
 PYBIND11_MODULE(_pixel, mod) {
-    lsst::utils::python::WrapperCollection wrappers(mod, "lsst.afw.image.pixel");
+    lsst::cpputils::python::WrapperCollection wrappers(mod, "lsst.afw.image.pixel");
     declareSinglePixel<float>(wrappers, "SinglePixelF");
     declareSinglePixel<double>(wrappers, "SinglePixelD");
     declareSinglePixel<int>(wrappers, "SinglePixelI");

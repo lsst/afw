@@ -33,7 +33,7 @@ and makes wrapping Base catalogs more similar to all other types of catalog.
 
 #include "ndarray/pybind11.h"
 
-#include "lsst/utils/python.h"
+#include "lsst/cpputils/python.h"
 
 #include "lsst/afw/table/Flag.h"
 #include "lsst/afw/table/SchemaMapper.h"
@@ -50,7 +50,7 @@ namespace lsst {
 namespace afw {
 namespace table {
 
-using utils::python::WrapperCollection;
+using cpputils::python::WrapperCollection;
 
 namespace {
 
@@ -96,7 +96,7 @@ void declareBaseRecordArrayOverloads(PyBaseRecord &cls, std::string const &suffi
 
 PyBaseRecord declareBaseRecord(WrapperCollection &wrappers) {
     return wrappers.wrapType(PyBaseRecord(wrappers.module, "BaseRecord"), [](auto &mod, auto &cls) {
-        utils::python::addSharedPtrEquality<BaseRecord>(cls);
+        cpputils::python::addSharedPtrEquality<BaseRecord>(cls);
         cls.def("assign", (void (BaseRecord::*)(BaseRecord const &)) & BaseRecord::assign);
         cls.def("assign",
                 (void (BaseRecord::*)(BaseRecord const &, SchemaMapper const &)) & BaseRecord::assign);
@@ -119,7 +119,7 @@ PyBaseRecord declareBaseRecord(WrapperCollection &wrappers) {
         declareBaseRecordArrayOverloads<int>(cls, "ArrayI");
         declareBaseRecordArrayOverloads<float>(cls, "ArrayF");
         declareBaseRecordArrayOverloads<double>(cls, "ArrayD");
-        utils::python::addOutputOp(cls, "__str__");  // __repr__ is defined in baseContinued.py
+        cpputils::python::addOutputOp(cls, "__str__");  // __repr__ is defined in baseContinued.py
 
         // These are master getters and setters that can take either strings, Keys, or
         // FunctorKeys, and dispatch to key.get.
@@ -150,7 +150,7 @@ PyBaseRecord declareBaseRecord(WrapperCollection &wrappers) {
 
 PyBaseTable declareBaseTable(WrapperCollection &wrappers) {
     return wrappers.wrapType(PyBaseTable(wrappers.module, "BaseTable"), [](auto &mod, auto &cls) {
-        utils::python::addSharedPtrEquality<BaseTable>(cls);
+        cpputils::python::addSharedPtrEquality<BaseTable>(cls);
         cls.def_static("make", &BaseTable::make);
         cls.def("getMetadata", &BaseTable::getMetadata);
         cls.def("setMetadata", &BaseTable::setMetadata, "metadata"_a);

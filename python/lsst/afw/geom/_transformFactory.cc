@@ -23,7 +23,7 @@
 
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
-#include <lsst/utils/python.h>
+#include <lsst/cpputils/python.h>
 
 #include "ndarray/pybind11.h"
 
@@ -39,7 +39,7 @@ namespace afw {
 namespace geom {
 namespace {
 
-void declareTransformFactory(lsst::utils::python::WrapperCollection &wrappers) {
+void declareTransformFactory(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrap([](auto &mod) {
         mod.def("linearizeTransform",
                 (lsst::geom::AffineTransform(*)(TransformPoint2ToPoint2 const &,
@@ -63,7 +63,7 @@ void declareTransformFactory(lsst::utils::python::WrapperCollection &wrappers) {
     });
 }
 }  // namespace
-void wrapTransformFactory(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapTransformFactory(lsst::cpputils::python::WrapperCollection &wrappers) {
     declareTransformFactory(wrappers);
     wrappers.addSignatureDependency("astshim");
 }

@@ -29,7 +29,7 @@
 
 #include "lsst/afw/geom/ellipses/Quadrupole.h"
 
-#include "lsst/utils/python.h"
+#include "lsst/cpputils/python.h"
 #include "lsst/geom/Angle.h"
 #include "lsst/geom/SpherePoint.h"
 #include "lsst/geom/Box.h"
@@ -46,7 +46,7 @@ namespace lsst {
 namespace afw {
 namespace table {
 
-using utils::python::WrapperCollection;
+using cpputils::python::WrapperCollection;
 
 namespace {
 

@@ -26,7 +26,7 @@
 #include "boost/test/unit_test.hpp"
 #pragma clang diagnostic pop
 
-#include "lsst/utils/tests.h"
+#include "lsst/cpputils/tests.h"
 
 #include "lsst/afw/geom/Span.h"
 
@@ -35,10 +35,10 @@ namespace afw {
 namespace geom {
 
 BOOST_AUTO_TEST_CASE(Hash) {
-    utils::assertValidHash<Span>();
+    cpputils::assertValidHash<Span>();
 
-    utils::assertHashesEqual(Span(42, 26, 28), Span(42, 26, 28));
-    utils::assertHashesEqual(Span(20, 1, 5), Span(20, 1, 5));
+    cpputils::assertHashesEqual(Span(42, 26, 28), Span(42, 26, 28));
+    cpputils::assertHashesEqual(Span(20, 1, 5), Span(20, 1, 5));
 }
 
 }  // namespace geom

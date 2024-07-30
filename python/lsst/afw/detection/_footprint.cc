@@ -28,7 +28,7 @@
 
 #include "ndarray/pybind11.h"
 
-#include "lsst/utils/python.h"
+#include "lsst/cpputils/python.h"
 
 #include "lsst/afw/image/Image.h"
 #include "lsst/pex/exceptions.h"
@@ -42,7 +42,7 @@ namespace lsst {
 namespace afw {
 namespace detection {
 
-using utils::python::WrapperCollection;
+using cpputils::python::WrapperCollection;
 
 namespace {
 
@@ -166,7 +166,7 @@ void wrapFootprint(WrapperCollection &wrappers) {
                         "__eq__",
                         [](Footprint const &self, Footprint const &other) -> bool { return self == other; },
                         py::is_operator());
-                utils::python::addOutputOp(cls, "__repr__");
+                cpputils::python::addOutputOp(cls, "__repr__");
             });
 
     declareMaskFromFootprintList<lsst::afw::image::MaskPixel>(wrappers);

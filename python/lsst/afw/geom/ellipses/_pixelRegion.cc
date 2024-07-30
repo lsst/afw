@@ -22,7 +22,7 @@
  */
 
 #include "pybind11/pybind11.h"
-#include <lsst/utils/python.h>
+#include <lsst/cpputils/python.h>
 
 #include "lsst/afw/geom/ellipses/PixelRegion.h"
 
@@ -32,7 +32,7 @@ namespace lsst {
 namespace afw {
 namespace geom {
 namespace ellipses {
-void wrapPixelRegion(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapPixelRegion(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(py::class_<PixelRegion>(wrappers.module, "PixelRegion"), [](auto &mod, auto &cls) {
         /* Constructors */
         cls.def(py::init<Ellipse const &>());

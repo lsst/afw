@@ -22,26 +22,26 @@
  */
 
 #include "pybind11/pybind11.h"
-#include "lsst/utils/python.h"
+#include "lsst/cpputils/python.h"
 
 namespace lsst {
 namespace afw {
 namespace geom {
 namespace ellipses {
-void wrapEllipse(lsst::utils::python::WrapperCollection &);
-void wrapPixelRegion(lsst::utils::python::WrapperCollection &);
-void wrapBaseCore(lsst::utils::python::WrapperCollection &);
-void wrapAxes(lsst::utils::python::WrapperCollection &);
-void wrapRadii(lsst::utils::python::WrapperCollection &);
-void wrapEllipticityBase(lsst::utils::python::WrapperCollection &);
-void wrapDistortion(lsst::utils::python::WrapperCollection &);
-void wrapConformalShear(lsst::utils::python::WrapperCollection &);
-void wrapReducedShear(lsst::utils::python::WrapperCollection &);
-void wrapQuadrupole(lsst::utils::python::WrapperCollection &);
-void wrapSeparable(lsst::utils::python::WrapperCollection &);
+void wrapEllipse(lsst::cpputils::python::WrapperCollection &);
+void wrapPixelRegion(lsst::cpputils::python::WrapperCollection &);
+void wrapBaseCore(lsst::cpputils::python::WrapperCollection &);
+void wrapAxes(lsst::cpputils::python::WrapperCollection &);
+void wrapRadii(lsst::cpputils::python::WrapperCollection &);
+void wrapEllipticityBase(lsst::cpputils::python::WrapperCollection &);
+void wrapDistortion(lsst::cpputils::python::WrapperCollection &);
+void wrapConformalShear(lsst::cpputils::python::WrapperCollection &);
+void wrapReducedShear(lsst::cpputils::python::WrapperCollection &);
+void wrapQuadrupole(lsst::cpputils::python::WrapperCollection &);
+void wrapSeparable(lsst::cpputils::python::WrapperCollection &);
 
 PYBIND11_MODULE(_ellipses, mod) {
-    lsst::utils::python::WrapperCollection wrappers(mod, "lsst.afw.geom.ellipses");
+    lsst::cpputils::python::WrapperCollection wrappers(mod, "lsst.afw.geom.ellipses");
     wrappers.addSignatureDependency("lsst.afw.geom");
     wrapEllipse(wrappers);
     wrapPixelRegion(wrappers);

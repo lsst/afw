@@ -28,7 +28,7 @@
 #include <iostream>
 #include <type_traits>
 
-#include "lsst/utils/hashCombine.h"
+#include "lsst/cpputils/hashCombine.h"
 
 namespace lsst {
 namespace afw {
@@ -239,7 +239,7 @@ public:
     std::size_t hash_value() const noexcept {
         // Completely arbitrary seed
         // Convert to double to avoid inconsistently hashing equal numbers of different types
-        return utils::hashCombine(17, static_cast<double>(image()), static_cast<double>(mask()),
+        return cpputils::hashCombine(17, static_cast<double>(image()), static_cast<double>(mask()),
                                   static_cast<double>(variance()));
     }
 

@@ -21,7 +21,7 @@
  */
 
 #include <pybind11/pybind11.h>
-#include <lsst/utils/python.h>
+#include <lsst/cpputils/python.h>
 
 #include "lsst/afw/math/ConvolveImage.h"
 
@@ -34,7 +34,7 @@ namespace math {
 
 namespace {
 template <typename OutImageT, typename InImageT, typename KernelT>
-void declareConvolve(lsst::utils::python::WrapperCollection &wrappers) {
+void declareConvolve(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrap([](auto &mod) {
         mod.def("convolve",
                 (void (*)(OutImageT &, InImageT const &, KernelT const &,
@@ -48,7 +48,7 @@ void declareConvolve(lsst::utils::python::WrapperCollection &wrappers) {
 }
 
 template <typename ImageType1, typename ImageType2>
-void declareScaledPlus(lsst::utils::python::WrapperCollection &wrappers) {
+void declareScaledPlus(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrap([](auto &mod) {
         mod.def("scaledPlus",
                 (void (*)(ImageType1 &, double, ImageType2 const &, double, ImageType2 const &))scaledPlus);
@@ -56,7 +56,7 @@ void declareScaledPlus(lsst::utils::python::WrapperCollection &wrappers) {
 }
 
 template <typename ImageType1, typename ImageType2>
-void declareByType(lsst::utils::python::WrapperCollection &wrappers) {
+void declareByType(lsst::cpputils::python::WrapperCollection &wrappers) {
     declareConvolve<ImageType1, ImageType2, AnalyticKernel>(wrappers);
     declareConvolve<ImageType1, ImageType2, DeltaFunctionKernel>(wrappers);
     declareConvolve<ImageType1, ImageType2, FixedKernel>(wrappers);
@@ -67,7 +67,7 @@ void declareByType(lsst::utils::python::WrapperCollection &wrappers) {
 }
 
 template <typename PixelType1, typename PixelType2>
-void declareAll(lsst::utils::python::WrapperCollection &wrappers) {
+void declareAll(lsst::cpputils::python::WrapperCollection &wrappers) {
     using M1 = image::MaskedImage<PixelType1, image::MaskPixel, image::VariancePixel>;
     using M2 = image::MaskedImage<PixelType2, image::MaskPixel, image::VariancePixel>;
 
@@ -75,7 +75,7 @@ void declareAll(lsst::utils::python::WrapperCollection &wrappers) {
     declareByType<M1, M2>(wrappers);
 }
 
-void declareConvolveImage(lsst::utils::python::WrapperCollection &wrappers) {
+void declareConvolveImage(lsst::cpputils::python::WrapperCollection &wrappers) {
     using PyClass = py::class_<ConvolutionControl, std::shared_ptr<ConvolutionControl>>;
     wrappers.wrapType(PyClass(wrappers.module, "ConvolutionControl"), [](auto &mod, auto &clsl) {
         clsl.def(py::init<bool, bool, int>(), "doNormalize"_a = true, "doCopyEdge"_a = false,
@@ -91,7 +91,7 @@ void declareConvolveImage(lsst::utils::python::WrapperCollection &wrappers) {
 }
 }  // namespace
 
-void wrapConvolveImage(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapConvolveImage(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.addSignatureDependency("lsst.afw.image");
     declareConvolveImage(wrappers);
     declareAll<double, double>(wrappers);

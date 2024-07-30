@@ -23,7 +23,7 @@
 #ifndef AFW_TABLE_aggregates_h_INCLUDED
 #define AFW_TABLE_aggregates_h_INCLUDED
 
-#include "lsst/utils/hashCombine.h"
+#include "lsst/cpputils/hashCombine.h"
 
 #include "lsst/afw/table/FunctorKey.h"
 #include "lsst/afw/table/Schema.h"
@@ -99,7 +99,7 @@ public:
     /// Return a hash of this object.
     std::size_t hash_value() const noexcept {
         // Completely arbitrary seed
-        return utils::hashCombine(17, _x, _y);
+        return cpputils::hashCombine(17, _x, _y);
     }
 
     /// Return True if both the x and y Keys are valid.
@@ -175,7 +175,7 @@ public:
     /// Return a hash of this object.
     std::size_t hash_value() const noexcept {
         // Completely arbitrary seed
-        return utils::hashCombine(137, _x, _y, _z);
+        return cpputils::hashCombine(137, _x, _y, _z);
     }
 
     /// Return True if all of the x, y, and z Keys are valid.
@@ -251,7 +251,7 @@ public:
     /// Return a hash of this object.
     std::size_t hash_value() const noexcept {
         // Completely arbitrary seed
-        return utils::hashCombine(17, _min, _max);
+        return cpputils::hashCombine(17, _min, _max);
     }
 
     /// Get a Box from the given record
@@ -344,7 +344,7 @@ public:
     /// Return a hash of this object.
     std::size_t hash_value() const noexcept {
         // Completely arbitrary seed
-        return utils::hashCombine(17, _ra, _dec);
+        return cpputils::hashCombine(17, _ra, _dec);
     }
 
     bool isValid() const noexcept { return _ra.isValid() && _dec.isValid(); }
@@ -422,7 +422,7 @@ public:
     /// Return a hash of this object.
     std::size_t hash_value() const noexcept {
         // Completely arbitrary seed
-        return utils::hashCombine(17, _ixx, _iyy, _ixy);
+        return cpputils::hashCombine(17, _ixx, _iyy, _ixy);
     }
 
     /// Return True if all the constituent Keys are valid.
@@ -498,7 +498,7 @@ public:
     /// Return a hash of this object.
     std::size_t hash_value() const noexcept {
         // Completely arbitrary seed
-        return utils::hashCombine(17, _qKey, _pKey);
+        return cpputils::hashCombine(17, _qKey, _pKey);
     }
 
     /// Return True if all the constituent Keys are valid.

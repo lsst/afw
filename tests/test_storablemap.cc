@@ -34,7 +34,7 @@
 #include <string>
 
 #include "lsst/pex/exceptions.h"
-#include "lsst/utils/tests.h"
+#include "lsst/cpputils/tests.h"
 
 #include "lsst/afw/typehandling/Key.h"
 #include "lsst/afw/image/detail/StorableMap.h"

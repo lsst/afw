@@ -26,7 +26,7 @@
 #include "pybind11/pybind11.h"
 
 #include "ndarray/pybind11.h"
-#include "lsst/utils/python.h"
+#include "lsst/cpputils/python.h"
 
 #include "lsst/afw/table/BaseColumnView.h"
 
@@ -50,7 +50,7 @@ using PyColumnView =
  *                     (used to set the class name).
  */
 template <typename Record>
-PyColumnView<Record> declareColumnView(utils::python::WrapperCollection& wrappers, std::string const& name,
+PyColumnView<Record> declareColumnView(cpputils::python::WrapperCollection& wrappers, std::string const& name,
                                        bool isBase = false) {
     std::string fullName;
     if (isBase) {

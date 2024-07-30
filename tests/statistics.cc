@@ -35,7 +35,7 @@
 #pragma clang diagnostic pop
 #include "boost/test/tools/floating_point_comparison.hpp"
 
-#include "lsst/utils/packaging.h"
+#include "lsst/cpputils/packaging.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/geom.h"
 #include "lsst/afw/image/Image.h"
@@ -259,7 +259,7 @@ BOOST_AUTO_TEST_CASE(StatisticsTestImages,
 
         std::string afwdata_dir;
         try {
-            afwdata_dir = lsst::utils::getPackageDir("afwdata");
+            afwdata_dir = lsst::cpputils::getPackageDir("afwdata");
         } catch (lsst::pex::exceptions::NotFoundError const&) {
             cerr << "Skipping: Test requires afwdata to be available" << endl;
             return;

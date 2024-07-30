@@ -25,7 +25,7 @@
 #include <cmath>
 #include <sstream>
 
-#include "lsst/utils/hashCombine.h"
+#include "lsst/cpputils/hashCombine.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/coord/Weather.h"
 
@@ -51,7 +51,7 @@ bool Weather::operator==(Weather const& other) const noexcept {
 
 std::size_t Weather::hash_value() const noexcept {
     // Completely arbitrary seed
-    return utils::hashCombine(17, _airTemperature, _airPressure, _humidity);
+    return cpputils::hashCombine(17, _airTemperature, _airPressure, _humidity);
 }
 
 void Weather::validate() const {

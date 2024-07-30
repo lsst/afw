@@ -22,12 +22,12 @@
  */
 
 #include "pybind11/pybind11.h"
-#include <lsst/utils/python.h>
+#include <lsst/cpputils/python.h>
 #include "pybind11/stl.h"
 
 #include <vector>
 
-#include "lsst/utils/python.h"
+#include "lsst/cpputils/python.h"
 #include "lsst/geom/Point.h"
 #include "lsst/afw/table/io/python.h"
 #include "lsst/afw/cameraGeom/CameraSys.h"
@@ -45,7 +45,7 @@ using PyTransformMap = py::class_<TransformMap, std::shared_ptr<TransformMap>>;
 using PyTransformMapConnection =
         py::class_<TransformMap::Connection, std::shared_ptr<TransformMap::Connection>>;
 
-void declareTransformMap(lsst::utils::python::WrapperCollection &wrappers) {
+void declareTransformMap(lsst::cpputils::python::WrapperCollection &wrappers) {
     auto transformMap = wrappers.wrapType(PyTransformMap(wrappers.module, "TransformMap"), [](auto &mod,
                                                                                               auto &cls) {
         cls.def(py::init([](CameraSys const &reference, TransformMap::Transforms const &transforms) {
@@ -87,11 +87,11 @@ void declareTransformMap(lsst::utils::python::WrapperCollection &wrappers) {
         cls.def_readwrite("transform", &TransformMap::Connection::transform);
         cls.def_readwrite("fromSys", &TransformMap::Connection::fromSys);
         cls.def_readwrite("toSys", &TransformMap::Connection::toSys);
-        utils::python::addOutputOp(cls, "__repr__");
+        cpputils::python::addOutputOp(cls, "__repr__");
     });
 }
 }  // namespace
-void wrapTransformMap(lsst::utils::python::WrapperCollection &wrappers) { declareTransformMap(wrappers); }
+void wrapTransformMap(lsst::cpputils::python::WrapperCollection &wrappers) { declareTransformMap(wrappers); }
 
 }  // namespace cameraGeom
 }  // namespace afw

@@ -7,7 +7,7 @@
 
 #include <memory>
 
-#include "lsst/utils/tests.h"
+#include "lsst/cpputils/tests.h"
 #include "lsst/afw/table/AliasMap.h"
 #include "lsst/afw/table/Schema.h"
 #include "lsst/afw/table/BaseTable.h"
@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(aliasMapLinks) {
 }
 
 BOOST_AUTO_TEST_CASE(Hash) {
-    lsst::utils::assertValidHash<lsst::afw::table::AliasMap>();
+    lsst::cpputils::assertValidHash<lsst::afw::table::AliasMap>();
 
     lsst::afw::table::AliasMap map1, map2;
     lsst::afw::table::Schema schema;
@@ -88,6 +88,6 @@ BOOST_AUTO_TEST_CASE(Hash) {
     std::shared_ptr<TestTable> table = TestTable::make(schema);
     lsst::afw::table::AliasMap map3 = *(table->getSchema().getAliasMap());
 
-    lsst::utils::assertHashesEqual(map1, map2);
-    lsst::utils::assertHashesEqual(map2, map3);
+    lsst::cpputils::assertHashesEqual(map1, map2);
+    lsst::cpputils::assertHashesEqual(map2, map3);
 }

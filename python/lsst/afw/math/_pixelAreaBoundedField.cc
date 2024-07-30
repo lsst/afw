@@ -21,7 +21,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include <pybind11/pybind11.h>
-#include <lsst/utils/python.h>
+#include <lsst/cpputils/python.h>
 
 #include "lsst/afw/math/PixelAreaBoundedField.h"
 
@@ -34,7 +34,7 @@ namespace math {
 
 using PyClass = py::class_<PixelAreaBoundedField, std::shared_ptr<PixelAreaBoundedField>, BoundedField>;
 
-void wrapPixelAreaBoundedField(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapPixelAreaBoundedField(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(PyClass(wrappers.module, "PixelAreaBoundedField"), [](auto &mod, auto &cls) {
         cls.def(py::init<lsst::geom::Box2I const &, std::shared_ptr<afw::geom::SkyWcs const>,
                          lsst::geom::AngleUnit const &, double>(),

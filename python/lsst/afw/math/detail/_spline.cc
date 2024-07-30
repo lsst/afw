@@ -21,7 +21,7 @@
  */
 
 #include <pybind11/pybind11.h>
-#include <lsst/utils/python.h>
+#include <lsst/cpputils/python.h>
 
 #include <pybind11/stl.h>
 
@@ -35,7 +35,7 @@ namespace lsst {
 namespace afw {
 namespace math {
 namespace detail {
-void wrapSpline(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapSpline(lsst::cpputils::python::WrapperCollection &wrappers) {
     /* Module level */
     wrappers.wrapType(py::class_<Spline>(wrappers.module, "Spline"), [](auto &mod, auto &cls) {
         cls.def("interpolate", &Spline::interpolate);

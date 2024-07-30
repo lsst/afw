@@ -25,13 +25,13 @@
 #include <string>
 
 #include "pybind11/pybind11.h"
-#include <lsst/utils/python.h>
+#include <lsst/cpputils/python.h>
 
 #include "pybind11/stl.h"
 
 #include "ndarray/pybind11.h"
 
-#include "lsst/utils/python.h"
+#include "lsst/cpputils/python.h"
 #include "lsst/afw/cameraGeom/CameraSys.h"
 #include "lsst/afw/cameraGeom/Orientation.h"
 #include "lsst/geom.h"
@@ -88,7 +88,7 @@ void declare2SysMethods(PyClass &cls) {
             "points"_a, "fromSys"_a, "toSys"_a);
 }
 
-void declareDetectorBase(lsst::utils::python::WrapperCollection &wrappers) {
+void declareDetectorBase(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(PyDetectorBase(wrappers.module, "DetectorBase"), [](auto &mod, auto &cls) {
         cls.def("getName", &DetectorBase::getName);
         cls.def("getId", &DetectorBase::getId);
@@ -114,7 +114,7 @@ void declareDetectorBuilder(PyDetector &parent);
 void declareDetectorPartialRebuilder(PyDetector &parent);
 void declareDetectorInCameraBuilder(PyDetector &parent);
 
-void declareDetector(lsst::utils::python::WrapperCollection &wrappers) {
+void declareDetector(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(PyDetector(wrappers.module, "Detector"), [](auto &mod, auto &cls) {
         declareDetectorBuilder(cls);
         declareDetectorPartialRebuilder(cls);
@@ -132,7 +132,7 @@ void declareDetector(lsst::utils::python::WrapperCollection &wrappers) {
         cls.def(
                 "__getitem__",
                 [](Detector const &self, std::ptrdiff_t i) {
-                    return self[utils::python::cppIndex(self.size(), i)];
+                    return self[cpputils::python::cppIndex(self.size(), i)];
                 },
                 "i"_a);
         cls.def("__getitem__", py::overload_cast<std::string const &>(&Detector::operator[], py::const_),
@@ -154,7 +154,7 @@ void declareDetectorBuilder(PyDetector &parent) {
     cls.def(
             "__getitem__",
             [](Detector::Builder const &self, std::ptrdiff_t i) {
-                return self[utils::python::cppIndex(self.size(), i)];
+                return self[cpputils::python::cppIndex(self.size(), i)];
             },
             "i"_a);
     cls.def("__getitem__", py::overload_cast<std::string const &>(&Detector::Builder::operator[], py::const_),
@@ -192,7 +192,7 @@ void declareDetectorInCameraBuilder(PyDetector &parent) {
             "toSys"_a);
 }
 }  // namespace
-void wrapDetector(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapDetector(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.addInheritanceDependency("lsst.afw.typehandling");
     wrappers.wrapType(py::enum_<DetectorType>(wrappers.module, "DetectorType"), [](auto &mod, auto &enm) {
         enm.value("SCIENCE", DetectorType::SCIENCE);

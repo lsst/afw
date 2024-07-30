@@ -1,15 +1,15 @@
 #include "pybind11/pybind11.h"
-#include <lsst/utils/python.h>
+#include <lsst/cpputils/python.h>
 
 namespace lsst {
 namespace afw {
 namespace math {
 namespace detail {
-void wrapConvolve(lsst::utils::python::WrapperCollection &);
-void wrapSpline(lsst::utils::python::WrapperCollection &);
+void wrapConvolve(lsst::cpputils::python::WrapperCollection &);
+void wrapSpline(lsst::cpputils::python::WrapperCollection &);
 
 PYBIND11_MODULE(_detail, mod) {
-    lsst::utils::python::WrapperCollection wrappers(mod, "lsst.afw.math.detail");
+    lsst::cpputils::python::WrapperCollection wrappers(mod, "lsst.afw.math.detail");
     wrapConvolve(wrappers);
     wrapSpline(wrappers);
     wrappers.finish();

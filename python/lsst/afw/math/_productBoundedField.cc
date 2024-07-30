@@ -21,7 +21,7 @@
  */
 
 #include "pybind11/pybind11.h"
-#include <lsst/utils/python.h>
+#include <lsst/cpputils/python.h>
 #include "pybind11/stl.h"
 
 #include "lsst/afw/math/ProductBoundedField.h"
@@ -34,7 +34,7 @@ namespace afw {
 namespace math {
 using PyClass = py::class_<ProductBoundedField, std::shared_ptr<ProductBoundedField>, BoundedField>;
 
-void wrapProductBoundedField(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapProductBoundedField(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(PyClass(wrappers.module, "ProductBoundedField"), [](auto &mod, auto &cls) {
         cls.def(py::init<std::vector<std::shared_ptr<BoundedField const>>>());
         // All other operations are wrapped by the BoundedField base class.

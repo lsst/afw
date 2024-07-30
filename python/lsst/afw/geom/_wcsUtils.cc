@@ -22,7 +22,7 @@
  */
 
 #include "pybind11/pybind11.h"
-#include "lsst/utils/python.h"
+#include "lsst/cpputils/python.h"
 #include "pybind11/eigen.h"
 
 #include <memory>
@@ -43,7 +43,7 @@ namespace lsst {
 namespace afw {
 namespace geom {
 
-void wrapWcsUtils(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapWcsUtils(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrap([](auto &mod) {
         mod.def("createTrivialWcsMetadata", createTrivialWcsMetadata, "wcsName"_a, "xy0"_a);
         mod.def("deleteBasicWcsMetadata", deleteBasicWcsMetadata, "metadata"_a, "wcsName"_a);

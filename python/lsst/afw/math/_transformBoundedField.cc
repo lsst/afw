@@ -21,7 +21,7 @@
  */
 
 #include <pybind11/pybind11.h>
-#include <lsst/utils/python.h>
+#include <lsst/cpputils/python.h>
 #include <pybind11/stl.h>
 
 #include "ndarray/pybind11.h"
@@ -41,7 +41,7 @@ namespace math {
 
 using ClsField = py::class_<TransformBoundedField, std::shared_ptr<TransformBoundedField>, BoundedField>;
 
-void declareTransformBoundedField(lsst::utils::python::WrapperCollection &wrappers) {
+void declareTransformBoundedField(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(ClsField(wrappers.module, "TransformBoundedField"), [](auto &mod, auto &cls) {
         cls.def(py::init<lsst::geom::Box2I const &, TransformBoundedField::Transform const &>(), "bbox"_a,
                 "transform"_a);
@@ -61,7 +61,7 @@ void declareTransformBoundedField(lsst::utils::python::WrapperCollection &wrappe
                                     TransformBoundedField::evaluate);
     });
 }
-void wrapTransformBoundedField(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapTransformBoundedField(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.addSignatureDependency("lsst.afw.table.io");
     declareTransformBoundedField(wrappers);
 }

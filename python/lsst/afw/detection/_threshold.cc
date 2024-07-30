@@ -27,7 +27,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "lsst/utils/python.h"
+#include "lsst/cpputils/python.h"
 
 #include "lsst/afw/detection/Threshold.h"
 
@@ -38,7 +38,7 @@ namespace lsst {
 namespace afw {
 namespace detection {
 
-void wrapThreshold(utils::python::WrapperCollection& wrappers) {
+void wrapThreshold(cpputils::python::WrapperCollection& wrappers) {
     auto clsThreshold = wrappers.wrapType(
             py::class_<Threshold, std::shared_ptr<Threshold>>(wrappers.module, "Threshold"),
             [](auto& mod, auto& cls) {

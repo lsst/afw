@@ -24,7 +24,7 @@
 #include <vector>
 
 #include <pybind11/pybind11.h>
-#include <lsst/utils/python.h>
+#include <lsst/cpputils/python.h>
 #include <pybind11/stl.h>
 
 #include "lsst/geom/Box.h"
@@ -43,7 +43,7 @@ namespace {
 using CandidateList = std::vector<std::shared_ptr<SpatialCellCandidate>>;
 
 // Wrap SpatialCellCandidate (an abstract class so no constructor is wrapped)
-void declareSpatialCellCandidate(lsst::utils::python::WrapperCollection &wrappers) {
+void declareSpatialCellCandidate(lsst::cpputils::python::WrapperCollection &wrappers) {
     using PyClass = py::class_<SpatialCellCandidate, std::shared_ptr<SpatialCellCandidate>>;
     auto clsSpatialCellCandidate =
             wrappers.wrapType(PyClass(wrappers.module, "SpatialCellCandidate"), [](auto &mod, auto &cls) {
@@ -67,7 +67,7 @@ void declareSpatialCellCandidate(lsst::utils::python::WrapperCollection &wrapper
 }
 
 // Wrap SpatialCellCandidateIterator
-void declareSpatialCellCandidateIterator(lsst::utils::python::WrapperCollection &wrappers) {
+void declareSpatialCellCandidateIterator(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(
             py::class_<SpatialCellCandidateIterator>(wrappers.module, "SpatialCellCandidateIterator"),
             [](auto &mod, auto &cls) {
@@ -85,7 +85,7 @@ void declareSpatialCellCandidateIterator(lsst::utils::python::WrapperCollection 
 }
 
 // Wrap SpatialCell
-void declareSpatialCell(lsst::utils::python::WrapperCollection &wrappers) {
+void declareSpatialCell(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(
             py::class_<SpatialCell, std::shared_ptr<SpatialCell>>(wrappers.module, "SpatialCell"),
             [](auto &mod, auto &cls) {
@@ -120,7 +120,7 @@ void declareSpatialCell(lsst::utils::python::WrapperCollection &wrappers) {
 }
 
 // Wrap SpatialCellSet
-void declareSpatialCellSet(lsst::utils::python::WrapperCollection &wrappers) {
+void declareSpatialCellSet(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(
             py::class_<SpatialCellSet, std::shared_ptr<SpatialCellSet>>(wrappers.module, "SpatialCellSet"),
             [](auto &mod, auto &cls) {
@@ -145,7 +145,7 @@ void declareSpatialCellSet(lsst::utils::python::WrapperCollection &wrappers) {
 }
 
 // Wrap CandidateVisitor
-void declareCandidateVisitor(lsst::utils::python::WrapperCollection &wrappers) {
+void declareCandidateVisitor(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(py::class_<CandidateVisitor, std::shared_ptr<CandidateVisitor>>(wrappers.module,
                                                                                       "CandidateVisitor"),
                       [](auto &mod, auto &cls) {
@@ -157,7 +157,7 @@ void declareCandidateVisitor(lsst::utils::python::WrapperCollection &wrappers) {
 }
 
 // Wrap class SpatialCellImageCandidate (an abstract class, so no constructor is wrapped)
-void declareSpatialCellImageCandidate(lsst::utils::python::WrapperCollection &wrappers) {
+void declareSpatialCellImageCandidate(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(py::class_<SpatialCellImageCandidate, std::shared_ptr<SpatialCellImageCandidate>,
                                  SpatialCellCandidate>(wrappers.module, "SpatialCellImageCandidate"),
                       [](auto &mod, auto &cls) {
@@ -170,7 +170,7 @@ void declareSpatialCellImageCandidate(lsst::utils::python::WrapperCollection &wr
                       });
 }
 
-void declareTestClasses(lsst::utils::python::WrapperCollection &wrappers) {
+void declareTestClasses(lsst::cpputils::python::WrapperCollection &wrappers) {
     /*
      * Test class for SpatialCellCandidate
      */
@@ -259,7 +259,7 @@ void declareTestClasses(lsst::utils::python::WrapperCollection &wrappers) {
             });
 };
 }  // namespace
-void wrapSpatialCell(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapSpatialCell(lsst::cpputils::python::WrapperCollection &wrappers) {
     declareSpatialCellCandidate(wrappers);
     declareSpatialCellCandidateIterator(wrappers);
     declareSpatialCell(wrappers);

@@ -22,7 +22,7 @@
  */
 
 #include "pybind11/pybind11.h"
-#include "lsst/utils/python.h"
+#include "lsst/cpputils/python.h"
 
 #include "lsst/afw/image/Defect.h"
 
@@ -36,7 +36,7 @@ namespace {
 
 using PyDefectBase = py::class_<DefectBase, std::shared_ptr<DefectBase>>;
 
-void declareDefects(lsst::utils::python::WrapperCollection &wrappers) {
+void declareDefects(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(PyDefectBase(wrappers.module, "DefectBase"), [](auto &mod, auto &cls) {
         /* Constructors */
         cls.def(py::init<const lsst::geom::Box2I &>(), "bbox"_a);
@@ -53,7 +53,7 @@ void declareDefects(lsst::utils::python::WrapperCollection &wrappers) {
     });
 }
 }  // namespace
-void wrapDefect(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapDefect(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.addSignatureDependency("lsst.afw.geom");
     declareDefects(wrappers);
 }

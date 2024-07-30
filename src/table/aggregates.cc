@@ -362,8 +362,8 @@ bool CovarianceMatrixKey<T, N>::operator==(CovarianceMatrixKey const &other) con
 template <typename T, int N>
 std::size_t CovarianceMatrixKey<T, N>::hash_value() const noexcept {
     // Completely arbitrary seeds, different to avoid any weird degeneracies/interactions
-    return utils::hashCombine(17, utils::hashIterable(19, _err.begin(), _err.end()),
-                              utils::hashIterable(23, _cov.begin(), _cov.end()));
+    return cpputils::hashCombine(17, cpputils::hashIterable(19, _err.begin(), _err.end()),
+                                 cpputils::hashIterable(23, _cov.begin(), _cov.end()));
 }
 
 template <typename T, int N>

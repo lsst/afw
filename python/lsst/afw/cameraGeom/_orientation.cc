@@ -22,7 +22,7 @@
  */
 
 #include <pybind11/pybind11.h>
-#include <lsst/utils/python.h>
+#include <lsst/cpputils/python.h>
 
 #include "lsst/afw/cameraGeom/Orientation.h"
 
@@ -33,7 +33,7 @@ namespace lsst {
 namespace afw {
 namespace cameraGeom {
 
-void wrapOrientation(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapOrientation(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.addSignatureDependency("lsst.geom");
     wrappers.wrapType(py::class_<Orientation>(wrappers.module, "Orientation"), [](auto &mod, auto &cls) {
         /* Constructors */

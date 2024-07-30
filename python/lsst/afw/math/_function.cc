@@ -23,7 +23,7 @@
 #include <string>
 
 #include <pybind11/pybind11.h>
-#include <lsst/utils/python.h>
+#include <lsst/cpputils/python.h>
 #include <pybind11/stl.h>
 
 #include "lsst/afw/table/io/python.h"  // for addPersistableMethods
@@ -39,7 +39,7 @@ namespace math {
 namespace {
 
 template <typename ReturnT>
-void declareFunction(lsst::utils::python::WrapperCollection &wrappers, std::string const &suffix) {
+void declareFunction(lsst::cpputils::python::WrapperCollection &wrappers, std::string const &suffix) {
     auto const name = "Function" + suffix;
     wrappers.wrapType(
             py::class_<Function<ReturnT>, std::shared_ptr<Function<ReturnT>>>(wrappers.module, name.c_str()),
@@ -60,7 +60,7 @@ void declareFunction(lsst::utils::python::WrapperCollection &wrappers, std::stri
 }
 
 template <typename ReturnT>
-void declareFunction1(lsst::utils::python::WrapperCollection &wrappers, const std::string &suffix) {
+void declareFunction1(lsst::cpputils::python::WrapperCollection &wrappers, const std::string &suffix) {
     auto const name = "Function1" + suffix;
     using PyClass = py::class_<Function1<ReturnT>, std::shared_ptr<Function1<ReturnT>>, Function<ReturnT>>;
     wrappers.wrapType(PyClass(wrappers.module, name.c_str()), [](auto &mod, auto &cls) {
@@ -74,7 +74,7 @@ void declareFunction1(lsst::utils::python::WrapperCollection &wrappers, const st
 }
 
 template <typename ReturnT>
-void declareFunction2(lsst::utils::python::WrapperCollection &wrappers, const std::string &suffix) {
+void declareFunction2(lsst::cpputils::python::WrapperCollection &wrappers, const std::string &suffix) {
     auto const name = "Function2" + suffix;
     using PyClass = py::class_<Function2<ReturnT>, std::shared_ptr<Function2<ReturnT>>, Function<ReturnT>>;
     wrappers.wrapType(PyClass(wrappers.module, name.c_str()), [](auto &mod, auto &cls) {
@@ -88,7 +88,7 @@ void declareFunction2(lsst::utils::python::WrapperCollection &wrappers, const st
 }
 
 template <typename ReturnT>
-void declareBasePolynomialFunction2(lsst ::utils::python::WrapperCollection &wrappers,
+void declareBasePolynomialFunction2(lsst::cpputils::python::WrapperCollection &wrappers,
                                     const std::string &suffix) {
     auto const name = "BasePolynomialFunction2" + suffix;
     using PyClass = py::class_<BasePolynomialFunction2<ReturnT>,
@@ -105,7 +105,7 @@ void declareBasePolynomialFunction2(lsst ::utils::python::WrapperCollection &wra
 }
 
 template <typename ReturnT>
-void declareNullFunction1(lsst::utils::python::WrapperCollection &wrappers, const std::string &suffix) {
+void declareNullFunction1(lsst::cpputils::python::WrapperCollection &wrappers, const std::string &suffix) {
     auto const name = "NullFunction1" + suffix;
     using PyClass =
             py::class_<NullFunction1<ReturnT>, std::shared_ptr<NullFunction1<ReturnT>>, Function1<ReturnT>>;
@@ -117,7 +117,7 @@ void declareNullFunction1(lsst::utils::python::WrapperCollection &wrappers, cons
 }
 
 template <typename ReturnT>
-void declareNullFunction2(lsst::utils::python::WrapperCollection &wrappers, const std::string &suffix) {
+void declareNullFunction2(lsst::cpputils::python::WrapperCollection &wrappers, const std::string &suffix) {
     auto const name = "NullFunction2" + suffix;
     using PyClass =
             py::class_<NullFunction2<ReturnT>, std::shared_ptr<NullFunction2<ReturnT>>, Function2<ReturnT>>;
@@ -128,7 +128,7 @@ void declareNullFunction2(lsst::utils::python::WrapperCollection &wrappers, cons
 }
 
 template <typename ReturnT>
-void declareAllFunctions(lsst::utils::python::WrapperCollection &wrappers, const std::string &suffix) {
+void declareAllFunctions(lsst::cpputils::python::WrapperCollection &wrappers, const std::string &suffix) {
     declareFunction<ReturnT>(wrappers, suffix);
     declareFunction1<ReturnT>(wrappers, suffix);
     declareFunction2<ReturnT>(wrappers, suffix);
@@ -139,7 +139,7 @@ void declareAllFunctions(lsst::utils::python::WrapperCollection &wrappers, const
 
 }  // namespace
 
-void wrapFunction(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapFunction(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.addSignatureDependency("lsst.afw.table.io");
     declareAllFunctions<float>(wrappers, "F");
     declareAllFunctions<double>(wrappers, "D");

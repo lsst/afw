@@ -26,7 +26,7 @@
 
 #include "boost/algorithm/string/trim.hpp"
 
-#include "lsst/utils/hashCombine.h"
+#include "lsst/cpputils/hashCombine.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/geom/Angle.h"
 #include "lsst/geom/SpherePoint.h"
@@ -565,7 +565,7 @@ bool VisitInfo::operator==(VisitInfo const& other) const {
 
 std::size_t VisitInfo::hash_value() const noexcept {
     // Completely arbitrary seed
-    return utils::hashCombine(17, _exposureTime, _darkTime, _date, _ut1, _era, _boresightRaDec,
+    return cpputils::hashCombine(17, _exposureTime, _darkTime, _date, _ut1, _era, _boresightRaDec,
                               _boresightAzAlt, _boresightAirmass, _boresightRotAngle, _rotType, _observatory,
                               _weather, _instrumentLabel, _id, _focusZ, _observationType, _scienceProgram,
                               _observationReason, _object, _hasSimulatedContent);

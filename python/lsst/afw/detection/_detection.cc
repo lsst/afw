@@ -23,7 +23,7 @@
 
 #include "pybind11/pybind11.h"
 
-#include "lsst/utils/python.h"
+#include "lsst/cpputils/python.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -32,7 +32,7 @@ namespace lsst {
 namespace afw {
 namespace detection {
 
-using utils::python::WrapperCollection;
+using cpputils::python::WrapperCollection;
 
 void wrapFootprint(WrapperCollection&);
 void wrapFootprintCtrl(WrapperCollection&);

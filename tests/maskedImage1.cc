@@ -28,7 +28,7 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/log/Log.h"
 #include "lsst/afw/image.h"
-#include "lsst/utils/packaging.h"
+#include "lsst/cpputils/packaging.h"
 
 using namespace std;
 namespace pexEx = lsst::pex::exceptions;
@@ -39,7 +39,7 @@ int test(int argc, char **argv) {
     string dataDir, inImagePath1, inImagePath2, outImagePath1, outImagePath2;
     if (argc < 2) {
         try {
-            dataDir = lsst::utils::getPackageDir("afwdata");
+            dataDir = lsst::cpputils::getPackageDir("afwdata");
             inImagePath1 = dataDir + "/data/871034p_1_MI.fits";
             inImagePath2 = dataDir + "/data/871034p_1_MI.fits";  // afw/tests/SConscript passes the same file
                                                                  // twice in the previous avatar.

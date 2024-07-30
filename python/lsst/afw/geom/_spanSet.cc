@@ -22,7 +22,7 @@
  */
 
 #include "pybind11/pybind11.h"
-#include <lsst/utils/python.h>
+#include <lsst/cpputils/python.h>
 #include "pybind11/stl.h"
 
 #include <cstdint>
@@ -195,7 +195,7 @@ void declareImageTypes(PyClass &cls) {
     declareSetImage<Pixel>(cls);
 }
 
-void declareStencil(lsst::utils::python::WrapperCollection &wrappers) {
+void declareStencil(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(py::enum_<Stencil>(wrappers.module, "Stencil"), [](auto &mod, auto &enm) {
         enm.value("CIRCLE", Stencil::CIRCLE);
         enm.value("BOX", Stencil::BOX);
@@ -203,7 +203,7 @@ void declareStencil(lsst::utils::python::WrapperCollection &wrappers) {
     });
 }
 
-void declareSpanSet(lsst::utils::python::WrapperCollection &wrappers) {
+void declareSpanSet(lsst::cpputils::python::WrapperCollection &wrappers) {
     using MaskPixel = image::MaskPixel;
 
     wrappers.wrapType(PySpanSet(wrappers.module, "SpanSet"), [](auto &mod, auto &cls) {
@@ -333,7 +333,7 @@ void declareSpanSet(lsst::utils::python::WrapperCollection &wrappers) {
     });
 }
 }  // end anonymous namespace
-void wrapSpanSet(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapSpanSet(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.addSignatureDependency("lsst.afw.table.io");
     wrappers.addSignatureDependency("lsst.afw.geom.ellipses");
     declareStencil(wrappers);

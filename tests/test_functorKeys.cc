@@ -27,7 +27,7 @@
 #include "boost/test/unit_test.hpp"
 #pragma clang diagnostic pop
 
-#include "lsst/utils/tests.h"
+#include "lsst/cpputils/tests.h"
 
 #include "lsst/geom/Angle.h"
 #include "lsst/afw/table/aggregates.h"
@@ -42,20 +42,20 @@ namespace afw {
 namespace table {
 
 BOOST_AUTO_TEST_CASE(ArrayKeyHash) {
-    utils::assertValidHash<ArrayKey<double>>();
+    cpputils::assertValidHash<ArrayKey<double>>();
 
     Schema schema;
     Key<double> a0 = schema.addField<double>("a_0", "");
     Key<double> a1 = schema.addField<double>("a_1", "");
     Key<double> a2 = schema.addField<double>("a_2", "");
 
-    utils::assertHashesEqual(ArrayKey<double>(), ArrayKey<double>());
-    utils::assertHashesEqual(ArrayKey<double>({a0, a1, a2}), ArrayKey<double>(schema["a"]));
+    cpputils::assertHashesEqual(ArrayKey<double>(), ArrayKey<double>());
+    cpputils::assertHashesEqual(ArrayKey<double>({a0, a1, a2}), ArrayKey<double>(schema["a"]));
 }
 
 BOOST_AUTO_TEST_CASE(PointKeyHash) {
-    utils::assertValidHash<Point2IKey>();
-    utils::assertValidHash<Point2DKey>();
+    cpputils::assertValidHash<Point2IKey>();
+    cpputils::assertValidHash<Point2DKey>();
 
     Schema schema;
     Key<double> aX = schema.addField<double>("a_x", "");
@@ -63,14 +63,14 @@ BOOST_AUTO_TEST_CASE(PointKeyHash) {
     Key<int> bY = schema.addField<int>("b_y", "");
     Key<double> aY = schema.addField<double>("a_y", "");
 
-    utils::assertHashesEqual(Point2DKey(), Point2DKey());
-    utils::assertHashesEqual(Point2DKey(aX, aY), Point2DKey(schema["a"]));
-    utils::assertHashesEqual(Point2IKey(bX, bY), Point2IKey(schema["b"]));
+    cpputils::assertHashesEqual(Point2DKey(), Point2DKey());
+    cpputils::assertHashesEqual(Point2DKey(aX, aY), Point2DKey(schema["a"]));
+    cpputils::assertHashesEqual(Point2IKey(bX, bY), Point2IKey(schema["b"]));
 }
 
 BOOST_AUTO_TEST_CASE(BoxKeyHash) {
-    utils::assertValidHash<Box2IKey>();
-    utils::assertValidHash<Box2DKey>();
+    cpputils::assertValidHash<Box2IKey>();
+    cpputils::assertValidHash<Box2DKey>();
 
     Schema schema;
     Key<double> aX = schema.addField<double>("a_min_x", "");
@@ -78,37 +78,37 @@ BOOST_AUTO_TEST_CASE(BoxKeyHash) {
     Key<double> bY = schema.addField<double>("a_max_y", "");
     Key<double> aY = schema.addField<double>("a_min_y", "");
 
-    utils::assertHashesEqual(Box2IKey(), Box2IKey());
-    utils::assertHashesEqual(Box2DKey(Point2DKey(schema["a_min"]), Point2DKey(bX, bY)),
+    cpputils::assertHashesEqual(Box2IKey(), Box2IKey());
+    cpputils::assertHashesEqual(Box2DKey(Point2DKey(schema["a_min"]), Point2DKey(bX, bY)),
                              Box2DKey(schema["a"]));
 }
 
 BOOST_AUTO_TEST_CASE(CoordKeyHash) {
-    utils::assertValidHash<CoordKey>();
+    cpputils::assertValidHash<CoordKey>();
 
     Schema schema;
     Key<lsst::geom::Angle> aRa = schema.addField<lsst::geom::Angle>("a_ra", "");
     Key<lsst::geom::Angle> aDec = schema.addField<lsst::geom::Angle>("a_dec", "");
 
-    utils::assertHashesEqual(CoordKey(), CoordKey());
-    utils::assertHashesEqual(CoordKey(aRa, aDec), CoordKey(schema["a"]));
-    utils::assertHashesEqual(CoordKey(aRa, aDec), CoordKey(schema["a"]));
+    cpputils::assertHashesEqual(CoordKey(), CoordKey());
+    cpputils::assertHashesEqual(CoordKey(aRa, aDec), CoordKey(schema["a"]));
+    cpputils::assertHashesEqual(CoordKey(aRa, aDec), CoordKey(schema["a"]));
 }
 
 BOOST_AUTO_TEST_CASE(QuadrupoleKeyHash) {
-    utils::assertValidHash<QuadrupoleKey>();
+    cpputils::assertValidHash<QuadrupoleKey>();
 
     Schema schema;
     Key<double> aXX = schema.addField<double>("a_xx", "");
     Key<double> aYY = schema.addField<double>("a_yy", "");
     Key<double> aXY = schema.addField<double>("a_xy", "");
 
-    utils::assertHashesEqual(QuadrupoleKey(), QuadrupoleKey());
-    utils::assertHashesEqual(QuadrupoleKey(aXX, aYY, aXY), QuadrupoleKey(schema["a"]));
+    cpputils::assertHashesEqual(QuadrupoleKey(), QuadrupoleKey());
+    cpputils::assertHashesEqual(QuadrupoleKey(aXX, aYY, aXY), QuadrupoleKey(schema["a"]));
 }
 
 BOOST_AUTO_TEST_CASE(EllipseKeyHash) {
-    utils::assertValidHash<EllipseKey>();
+    cpputils::assertValidHash<EllipseKey>();
 
     Schema schema;
     Key<double> aXX = schema.addField<double>("a_xx", "");
@@ -117,16 +117,16 @@ BOOST_AUTO_TEST_CASE(EllipseKeyHash) {
     Key<double> aX = schema.addField<double>("a_x", "");
     Key<double> aXY = schema.addField<double>("a_xy", "");
 
-    utils::assertHashesEqual(EllipseKey(), EllipseKey());
-    utils::assertHashesEqual(EllipseKey(QuadrupoleKey(aXX, aYY, aXY), Point2DKey(aX, aY)),
+    cpputils::assertHashesEqual(EllipseKey(), EllipseKey());
+    cpputils::assertHashesEqual(EllipseKey(QuadrupoleKey(aXX, aYY, aXY), Point2DKey(aX, aY)),
                              EllipseKey(schema["a"]));
 }
 
 BOOST_AUTO_TEST_CASE(CovarianceMatrixKeyHash) {
     using namespace std::string_literals;
 
-    utils::assertValidHash<CovarianceMatrixKey<double, 5>>();
-    utils::assertValidHash<CovarianceMatrixKey<float, Eigen::Dynamic>>();
+    cpputils::assertValidHash<CovarianceMatrixKey<double, 5>>();
+    cpputils::assertValidHash<CovarianceMatrixKey<float, Eigen::Dynamic>>();
 
     Schema schema;
     Key<double> a00 = schema.addField<double>("a_fooErr", "");
@@ -137,8 +137,8 @@ BOOST_AUTO_TEST_CASE(CovarianceMatrixKeyHash) {
     Key<double> a12 = schema.addField<double>("a_bar_cow_Cov", "");
     auto names = {"foo"s, "bar"s, "cow"s};
 
-    utils::assertHashesEqual(CovarianceMatrixKey<float, 2>(), CovarianceMatrixKey<float, 2>());
-    utils::assertHashesEqual(CovarianceMatrixKey<double, 3>({a00, a11, a22}, {a01, a02, a12}),
+    cpputils::assertHashesEqual(CovarianceMatrixKey<float, 2>(), CovarianceMatrixKey<float, 2>());
+    cpputils::assertHashesEqual(CovarianceMatrixKey<double, 3>({a00, a11, a22}, {a01, a02, a12}),
                              CovarianceMatrixKey<double, 3>(schema["a"], names));
 }
 

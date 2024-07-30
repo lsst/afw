@@ -4,7 +4,7 @@
 
 #include <cstdint>
 
-#include "lsst/utils/hashCombine.h"
+#include "lsst/cpputils/hashCombine.h"
 
 #include "lsst/afw/table/misc.h"
 #include "lsst/afw/table/FieldBase.h"
@@ -119,7 +119,7 @@ public:
     /// Return a hash of this object.
     std::size_t hash_value() const noexcept {
         // Completely arbitrary seed
-        return utils::hashCombine(17, _offset, _bit);
+        return cpputils::hashCombine(17, _offset, _bit);
     }
 
     /// Return the offset in bytes of the integer element that holds this field's bit.

@@ -29,7 +29,7 @@
 #include "boost/test/unit_test.hpp"
 #pragma clang diagnostic pop
 
-#include "lsst/utils/tests.h"
+#include "lsst/cpputils/tests.h"
 #include "lsst/afw/typehandling/PolymorphicValue.h"
 #include "lsst/afw/typehandling/test.h"
 
@@ -97,10 +97,10 @@ BOOST_AUTO_TEST_CASE(Equals) {
 }
 
 BOOST_AUTO_TEST_CASE(Hash) {
-    utils::assertValidHash<PolymorphicValue>();
+    cpputils::assertValidHash<PolymorphicValue>();
 
-    utils::assertHashesEqual(PolymorphicValue(ComplexStorable(1.0)), PolymorphicValue(ComplexStorable(1.0)));
-    utils::assertHashesEqual(PolymorphicValue(ComplexStorable(3.8)), PolymorphicValue(ComplexStorable(3.8)));
+    cpputils::assertHashesEqual(PolymorphicValue(ComplexStorable(1.0)), PolymorphicValue(ComplexStorable(1.0)));
+    cpputils::assertHashesEqual(PolymorphicValue(ComplexStorable(3.8)), PolymorphicValue(ComplexStorable(3.8)));
 
     auto unhashable = PolymorphicValue(SimpleStorable());
     BOOST_CHECK_THROW(std::hash<PolymorphicValue>()(unhashable), UnsupportedOperationException);

@@ -21,7 +21,7 @@
 
 #include "pybind11/pybind11.h"
 
-#include "lsst/utils/python.h"
+#include "lsst/cpputils/python.h"
 
 #include "lsst/afw/table/io/InputArchive.h"
 #include "lsst/afw/fits.h"
@@ -36,7 +36,7 @@ namespace io {
 
 using PyInputArchive = py::class_<InputArchive, std::shared_ptr<InputArchive>>;
 
-void wrapInputArchive(utils::python::WrapperCollection &wrappers) {
+void wrapInputArchive(cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(PyInputArchive(wrappers.module, "InputArchive"), [](auto &mod, auto &cls) {
         cls.def("get", &InputArchive::get<Persistable>);
         cls.def("readFits", &InputArchive::readFits);

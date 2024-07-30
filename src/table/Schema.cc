@@ -7,7 +7,7 @@
 #include "boost/preprocessor/seq/for_each.hpp"
 #include "boost/preprocessor/tuple/to_seq.hpp"
 
-#include "lsst/utils/hashCombine.h"
+#include "lsst/cpputils/hashCombine.h"
 #include "lsst/afw/table/Schema.h"
 #include "lsst/afw/table/detail/Access.h"
 #include "lsst/afw/table/io/FitsSchemaInputMapper.h"
@@ -520,7 +520,7 @@ int Schema::compare(Schema const &other, int flags) const {
 std::size_t Schema::hash_value() const noexcept {
     // Completely arbitrary seed
     std::size_t result = 17;
-    auto hasher = [&result](auto const &item) { result = utils::hashCombine(result, item.key); };
+    auto hasher = [&result](auto const &item) { result = cpputils::hashCombine(result, item.key); };
     forEach(hasher);
     return result;
 }

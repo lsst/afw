@@ -25,7 +25,7 @@
 
 #include "pybind11/pybind11.h"
 
-#include "lsst/utils/python.h"
+#include "lsst/cpputils/python.h"
 
 #include "lsst/afw/table/SortedCatalog.h"
 #include "lsst/afw/table/python/catalog.h"
@@ -54,7 +54,7 @@ using PySortedCatalog =
  *
  */
 template <typename Record>
-PySortedCatalog<Record> declareSortedCatalog(utils::python::WrapperCollection &wrappers,
+PySortedCatalog<Record> declareSortedCatalog(cpputils::python::WrapperCollection &wrappers,
                                              std::string const &name, bool isBase = false) {
     namespace py = pybind11;
     using namespace pybind11::literals;

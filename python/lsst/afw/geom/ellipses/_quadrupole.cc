@@ -24,7 +24,7 @@
 #include "pybind11/pybind11.h"
 #include "pybind11/eigen.h"
 #include "pybind11/stl.h"
-#include <lsst/utils/python.h>
+#include <lsst/cpputils/python.h>
 
 #include "lsst/afw/geom/ellipses/BaseCore.h"
 #include "lsst/afw/geom/ellipses/Quadrupole.h"
@@ -36,7 +36,7 @@ namespace lsst {
 namespace afw {
 namespace geom {
 namespace ellipses {
-void wrapQuadrupole(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapQuadrupole(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(
             py::class_<Quadrupole, std::shared_ptr<Quadrupole>, BaseCore>(wrappers.module, "Quadrupole"),
             [](auto &mod, auto &cls) {

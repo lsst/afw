@@ -20,7 +20,7 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-#include "lsst/utils/hashCombine.h"
+#include "lsst/cpputils/hashCombine.h"
 #include "lsst/afw/cameraGeom/CameraSys.h"
 
 namespace lsst {
@@ -41,7 +41,7 @@ size_t CameraSysPrefix::hash_value() const noexcept { return std::hash<std::stri
 
 size_t CameraSys::hash_value() const noexcept {
     // Completely arbitrary seed
-    return utils::hashCombine(43, _sysName, _detectorName);
+    return cpputils::hashCombine(43, _sysName, _detectorName);
 }
 
 std::ostream &operator<<(std::ostream &os, CameraSysPrefix const &camSysPrefix) {

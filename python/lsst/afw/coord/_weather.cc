@@ -25,7 +25,7 @@
 
 #include <pybind11/pybind11.h>
 
-#include "lsst/utils/python.h"
+#include "lsst/cpputils/python.h"
 
 #include "lsst/afw/coord/Weather.h"
 
@@ -36,7 +36,7 @@ namespace lsst {
 namespace afw {
 namespace coord {
 
-void wrapWeather(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapWeather(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(py::class_<lsst::afw::coord::Weather>(wrappers.module, "Weather"), [](auto &mod,
                                                                                             auto &cls) {
         /* Constructors */
@@ -55,8 +55,8 @@ void wrapWeather(lsst::utils::python::WrapperCollection &wrappers) {
         cls.def("getAirPressure", &lsst::afw::coord::Weather::getAirPressure);
         cls.def("getAirTemperature", &lsst::afw::coord::Weather::getAirTemperature);
         cls.def("getHumidity", &lsst::afw::coord::Weather::getHumidity);
-        utils::python::addOutputOp(cls, "__str__");
-        utils::python::addOutputOp(cls, "__repr__");
+        cpputils::python::addOutputOp(cls, "__str__");
+        cpputils::python::addOutputOp(cls, "__repr__");
     });
 }
 }  // namespace coord

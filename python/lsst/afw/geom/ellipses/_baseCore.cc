@@ -24,7 +24,7 @@
 #include "pybind11/pybind11.h"
 #include "pybind11/eigen.h"
 #include "pybind11/stl.h"
-#include <lsst/utils/python.h>
+#include <lsst/cpputils/python.h>
 
 #include "ndarray/pybind11.h"
 
@@ -37,7 +37,7 @@ namespace lsst {
 namespace afw {
 namespace geom {
 namespace ellipses {
-void wrapBaseCore(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapBaseCore(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(py::class_<BaseCore, std::shared_ptr<BaseCore>>(wrappers.module, "BaseCore"),
                       [](auto &mod, auto &cls) {
                           cls.def("__eq__", &BaseCore::operator==, py::is_operator());

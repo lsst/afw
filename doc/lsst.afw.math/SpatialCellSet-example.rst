@@ -12,7 +12,7 @@ Start by including needed headers, and declaring namespace aliases and a routine
 
    #include <string>
    #include "lsst/geom.h"
-   #include "lsst/utils/Utils.h"
+   #include "lsst/cpputils/Utils.h"
    #include "lsst/pex/exceptions.h"
    #include "lsst/daf/base.h"
    #include "lsst/afw/detection.h"
@@ -177,7 +177,7 @@ The use of a ``boost::shared_ptr<MaskedImage>`` (written as ``MaskedImage::Ptr``
        std::shared_ptr<afwImage::MaskedImage<PixelT>> mi;
 
        try {
-           std::string dataDir = lsst::utils::getPackageDir("afwdata");
+           std::string dataDir = lsst::cpputils::getPackageDir("afwdata");
 
            std::string filename = dataDir + "/CFHT/D4/cal-53535-i-797722_1.fits";
 

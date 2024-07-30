@@ -30,7 +30,7 @@
 
 #include <iostream>
 
-#include "lsst/utils/hashCombine.h"
+#include "lsst/cpputils/hashCombine.h"
 #include "lsst/geom/Angle.h"
 
 namespace lsst {
@@ -102,7 +102,7 @@ public:
     /// Return a hash of this object
     std::size_t hash_value() const noexcept {
         // Completely arbitrary seed
-        return utils::hashCombine(17, _latitude.wrapCtr(), _longitude.wrapCtr(), _elevation);
+        return cpputils::hashCombine(17, _latitude.wrapCtr(), _longitude.wrapCtr(), _elevation);
     }
 
 private:

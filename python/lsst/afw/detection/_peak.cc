@@ -26,7 +26,7 @@
 #include <memory>
 #include <sstream>
 
-#include "lsst/utils/python.h"
+#include "lsst/cpputils/python.h"
 
 #include "lsst/afw/table/BaseRecord.h"
 #include "lsst/afw/table/BaseTable.h"
@@ -68,8 +68,8 @@ void declarePeakRecord(PyPeakRecord &cls) {
     cls.def("getF", &PeakRecord::getF);
     cls.def("getPeakValue", &PeakRecord::getPeakValue);
     cls.def("setPeakValue", &PeakRecord::setPeakValue);
-    utils::python::addOutputOp(cls, "__str__");
-    utils::python::addOutputOp(cls, "__repr__");
+    cpputils::python::addOutputOp(cls, "__str__");
+    cpputils::python::addOutputOp(cls, "__repr__");
 }
 
 /**
@@ -98,7 +98,7 @@ void declarePeakTable(PyPeakTable &cls) {
 
 }  // namespace
 
-void wrapPeak(utils::python::WrapperCollection &wrappers) {
+void wrapPeak(cpputils::python::WrapperCollection &wrappers) {
     wrappers.addInheritanceDependency("lsst.afw.table");
 
     auto clsPeakRecord = wrappers.wrapType(PyPeakRecord(wrappers.module, "PeakRecord"),

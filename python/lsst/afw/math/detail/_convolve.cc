@@ -21,7 +21,7 @@
  */
 
 #include <pybind11/pybind11.h>
-#include <lsst/utils/python.h>
+#include <lsst/cpputils/python.h>
 
 #include "lsst/afw/math/detail/Convolve.h"
 
@@ -36,7 +36,7 @@ namespace detail {
 
 namespace {
 template <typename OutImageT, typename InImageT>
-void declareByType(lsst::utils::python::WrapperCollection &wrappers) {
+void declareByType(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrap([](auto &mod) {
         mod.def("basicConvolve",
                 (void (*)(OutImageT &, InImageT const &, lsst::afw::math::Kernel const &,
@@ -57,7 +57,7 @@ void declareByType(lsst::utils::python::WrapperCollection &wrappers) {
     });
 }
 template <typename PixelType1, typename PixelType2>
-void declareAll(lsst::utils::python::WrapperCollection &wrappers) {
+void declareAll(lsst::cpputils::python::WrapperCollection &wrappers) {
     using M1 = image::MaskedImage<PixelType1, image::MaskPixel, image::VariancePixel>;
     using M2 = image::MaskedImage<PixelType2, image::MaskPixel, image::VariancePixel>;
 
@@ -66,7 +66,7 @@ void declareAll(lsst::utils::python::WrapperCollection &wrappers) {
 }
 }  // namespace
 
-void declareConvolve(lsst::utils::python::WrapperCollection &wrappers) {
+void declareConvolve(lsst::cpputils::python::WrapperCollection &wrappers) {
     using PyClass = py::class_<KernelImagesForRegion, std::shared_ptr<KernelImagesForRegion>>;
     auto clsKernelImagesForRegion =
             wrappers.wrapType(PyClass(wrappers.module, "KernelImagesForRegion"), [](auto &mod, auto &cls) {
@@ -115,7 +115,7 @@ void declareConvolve(lsst::utils::python::WrapperCollection &wrappers) {
                           cls.def("incrYInd", &RowOfKernelImagesForRegion::incrYInd);
                       });
 }
-void wrapConvolve(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapConvolve(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.addSignatureDependency("lsst.afw.image");
     wrappers.addSignatureDependency("lsst.afw.math");
     declareConvolve(wrappers);

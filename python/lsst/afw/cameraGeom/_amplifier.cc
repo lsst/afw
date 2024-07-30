@@ -22,7 +22,7 @@
  */
 
 #include "pybind11/pybind11.h"
-#include <lsst/utils/python.h>
+#include <lsst/cpputils/python.h>
 #include "pybind11/stl.h"
 
 #include "ndarray/pybind11.h"
@@ -40,7 +40,7 @@ namespace cameraGeom {
 using PyAmplifier = py::class_<Amplifier, std::shared_ptr<Amplifier>>;
 using PyAmplifierBuilder = py::class_<Amplifier::Builder, Amplifier, std::shared_ptr<Amplifier::Builder>>;
 
-void wrapAmplifier(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapAmplifier(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.addInheritanceDependency("lsst.afw.table");
     wrappers.wrapType(py::enum_<ReadoutCorner>(wrappers.module, "ReadoutCorner"), [](auto &mod, auto &enm) {
         enm.value("LL", ReadoutCorner::LL);

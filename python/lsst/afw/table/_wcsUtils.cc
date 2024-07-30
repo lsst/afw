@@ -27,7 +27,7 @@
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 
-#include "lsst/utils/python.h"
+#include "lsst/cpputils/python.h"
 
 #include "lsst/afw/table/fwd.h"
 #include "lsst/afw/table/Simple.h"
@@ -41,7 +41,7 @@ namespace lsst {
 namespace afw {
 namespace table {
 
-using utils::python::WrapperCollection;
+using cpputils::python::WrapperCollection;
 
 namespace {
 

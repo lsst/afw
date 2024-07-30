@@ -22,17 +22,17 @@
  */
 
 #include "pybind11/pybind11.h"
-#include "lsst/utils/python.h"
+#include "lsst/cpputils/python.h"
 
 namespace lsst {
 namespace afw {
 namespace image {
 
-void wrapImage(lsst::utils::python::WrapperCollection &);
-void wrapImageSlice(lsst::utils::python::WrapperCollection &);
+void wrapImage(lsst::cpputils::python::WrapperCollection &);
+void wrapImageSlice(lsst::cpputils::python::WrapperCollection &);
 
 PYBIND11_MODULE(_imageLib, mod) {
-    lsst::utils::python::WrapperCollection wrappers(mod, "lsst.afw.image._image");
+    lsst::cpputils::python::WrapperCollection wrappers(mod, "lsst.afw.image._image");
     wrapImage(wrappers);
     wrapImageSlice(wrappers);
     wrappers.finish();

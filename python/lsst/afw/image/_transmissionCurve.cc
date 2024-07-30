@@ -23,7 +23,7 @@
 
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
-#include "lsst/utils/python.h"
+#include "lsst/cpputils/python.h"
 
 #include <memory>
 
@@ -43,7 +43,7 @@ namespace image {
 using PyTransmissionCurve =
         py::class_<TransmissionCurve, std::shared_ptr<TransmissionCurve>, typehandling::Storable>;
 
-void wrapTransmissionCurve(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapTransmissionCurve(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.addInheritanceDependency("lsst.afw.typehandling");
     wrappers.addSignatureDependency("lsst.afw.geom");
     wrappers.wrapType(PyTransmissionCurve(wrappers.module, "TransmissionCurve"), [](auto &mod, auto &cls) {

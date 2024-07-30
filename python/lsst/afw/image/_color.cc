@@ -22,7 +22,7 @@
  */
 
 #include "pybind11/pybind11.h"
-#include "lsst/utils/python.h"
+#include "lsst/cpputils/python.h"
 
 #include <limits>
 
@@ -37,7 +37,7 @@ namespace image {
 
 using PyColor = py::class_<Color, std::shared_ptr<Color>>;
 
-void wrapColor(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapColor(lsst::cpputils::python::WrapperCollection &wrappers) {
     /* Module level */
     wrappers.wrapType(PyColor(wrappers.module, "Color"), [](auto &mod, auto &cls) {
         /* Constructors */

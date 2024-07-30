@@ -21,7 +21,7 @@
 
 #include "pybind11/pybind11.h"
 
-#include "lsst/utils/python.h"
+#include "lsst/cpputils/python.h"
 
 #include "lsst/afw/table/io/Persistable.h"
 #include "lsst/afw/fits.h"
@@ -36,7 +36,7 @@ namespace io {
 
 using PyPersistable = py::class_<Persistable, std::shared_ptr<Persistable>>;
 
-void wrapPersistable(utils::python::WrapperCollection &wrappers) {
+void wrapPersistable(cpputils::python::WrapperCollection &wrappers) {
     // TODO: uncomment once afw.fits uses WrapperCollection
     // wrappers.addSignatureDependency("lsst.afw.fits");
 

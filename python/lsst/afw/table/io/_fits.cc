@@ -21,7 +21,7 @@
 
 #include "pybind11/pybind11.h"
 
-#include "lsst/utils/python.h"
+#include "lsst/cpputils/python.h"
 
 #include "lsst/afw/table/io/FitsSchemaInputMapper.h"
 
@@ -33,7 +33,7 @@ namespace afw {
 namespace table {
 namespace io {
 
-void wrapFits(utils::python::WrapperCollection& wrappers) {
+void wrapFits(cpputils::python::WrapperCollection& wrappers) {
     wrappers.wrap([](auto& mod) {
         mod.def("setPreppedRowsFactor",
                 [](std::size_t n) { FitsSchemaInputMapper::PREPPED_ROWS_FACTOR = n; });

@@ -26,7 +26,7 @@
 #include "boost/test/unit_test.hpp"
 #pragma clang diagnostic pop
 
-#include "lsst/utils/tests.h"
+#include "lsst/cpputils/tests.h"
 
 #include "lsst/geom/Angle.h"
 #include "lsst/afw/coord/Observatory.h"
@@ -39,18 +39,18 @@ namespace coord {
 BOOST_AUTO_TEST_CASE(ObservatoryHash) {
     using geom::radians;
 
-    utils::assertValidHash<Observatory>();
+    cpputils::assertValidHash<Observatory>();
 
-    utils::assertHashesEqual(Observatory(((geom::TWOPI + 1.2) * radians).wrap(), 0.4 * radians, 5143.0),
+    cpputils::assertHashesEqual(Observatory(((geom::TWOPI + 1.2) * radians).wrap(), 0.4 * radians, 5143.0),
                              Observatory((geom::TWOPI + 1.2) * radians, 0.4 * radians, 5143.0));
-    utils::assertHashesEqual(Observatory(-0.3 * radians, ((0.4 + geom::TWOPI) * radians).wrap(), 716.0),
+    cpputils::assertHashesEqual(Observatory(-0.3 * radians, ((0.4 + geom::TWOPI) * radians).wrap(), 716.0),
                              Observatory(-0.3 * radians, (0.4 + geom::TWOPI) * radians, 716.0));
 }
 
 BOOST_AUTO_TEST_CASE(WeatherHash) {
-    utils::assertValidHash<Weather>();
+    cpputils::assertValidHash<Weather>();
 
-    utils::assertHashesEqual(Weather(-5.0, 1.01e5, 70.0), Weather(-5.0, 1.01e5, 70.0));
+    cpputils::assertHashesEqual(Weather(-5.0, 1.01e5, 70.0), Weather(-5.0, 1.01e5, 70.0));
 }
 
 }  // namespace coord

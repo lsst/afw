@@ -28,7 +28,7 @@
 #include <type_traits>
 
 #include "pybind11/pybind11.h"
-#include <lsst/utils/python.h>
+#include <lsst/cpputils/python.h>
 #include "pybind11/stl.h"
 #include "ndarray/pybind11.h"
 
@@ -54,7 +54,7 @@ repr(self) = "lsst.afw.geom." + str(self), e.g. "lsst.afw.geom.GenericEndpoint(4
 template <typename PyClass>
 void addStrAndRepr(PyClass &cls) {
     using Class = typename PyClass::type;  // C++ class associated with pybind11 wrapper class
-    utils::python::addOutputOp(cls, "__str__");
+    cpputils::python::addOutputOp(cls, "__str__");
     cls.def("__repr__", [](Class const &self) {
         std::ostringstream os;
         os << "lsst.afw.geom." << self;
@@ -114,7 +114,7 @@ void addAllEquals(PyClass &cls) {
  * this is meant to be called by other `declare...` functions;
  */
 template <typename Point, typename Array>
-void declareBaseEndpoint(lsst::utils::python::WrapperCollection &wrappers, std::string const &suffix) {
+void declareBaseEndpoint(lsst::cpputils::python::WrapperCollection &wrappers, std::string const &suffix) {
     using Class = BaseEndpoint<Point, Array>;
     std::string const pyClassName = "_BaseEndpoint" + suffix;
     wrappers.wrapType(py::class_<Class, std::shared_ptr<Class>>(wrappers.module, pyClassName.c_str()),
@@ -130,7 +130,7 @@ void declareBaseEndpoint(lsst::utils::python::WrapperCollection &wrappers, std::
 // Declare BaseVectorEndpoint and all subclasses (the corresponding BaseEndpoint)
 // This is meant to be called by other `declare...` functions;
 template <typename Point>
-void declareBaseVectorEndpoint(lsst::utils::python::WrapperCollection &wrappers, std::string const &suffix) {
+void declareBaseVectorEndpoint(lsst::cpputils::python::WrapperCollection &wrappers, std::string const &suffix) {
     using Class = BaseVectorEndpoint<Point>;
     using Array = typename Class::Array;
 
@@ -143,7 +143,7 @@ void declareBaseVectorEndpoint(lsst::utils::python::WrapperCollection &wrappers,
 }
 
 // Declare GenericEndpoint and all subclasses
-void declareGenericEndpoint(lsst::utils::python::WrapperCollection &wrappers) {
+void declareGenericEndpoint(lsst::cpputils::python::WrapperCollection &wrappers) {
     using Class = GenericEndpoint;
     using Point = typename Class::Point;
     using Array = typename Class::Array;
@@ -160,7 +160,7 @@ void declareGenericEndpoint(lsst::utils::python::WrapperCollection &wrappers) {
 }
 
 /// @internal declare PointNEndpoint (for N = 2 or 3) and all subclasses
-void declarePoint2Endpoint(lsst::utils::python::WrapperCollection &wrappers) {
+void declarePoint2Endpoint(lsst::cpputils::python::WrapperCollection &wrappers) {
     using Class = Point2Endpoint;
     using Point = typename Class::Point;
     std::string const pointNumStr = "Point2";
@@ -180,7 +180,7 @@ void declarePoint2Endpoint(lsst::utils::python::WrapperCollection &wrappers) {
 }
 
 /// @internal declare SpherePointEndpoint and all subclasses
-void declareSpherePointEndpoint(lsst::utils::python::WrapperCollection &wrappers) {
+void declareSpherePointEndpoint(lsst::cpputils::python::WrapperCollection &wrappers) {
     using Class = SpherePointEndpoint;
     using Point = typename Class::Point;
 
@@ -198,7 +198,7 @@ void declareSpherePointEndpoint(lsst::utils::python::WrapperCollection &wrappers
                       });
 }
 }  // namespace
-void wrapEndpoint(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapEndpoint(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.addSignatureDependency("lsst.geom");
     declareGenericEndpoint(wrappers);
     declarePoint2Endpoint(wrappers);

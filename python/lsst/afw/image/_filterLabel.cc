@@ -25,7 +25,7 @@
 
 #include <exception>
 
-#include "lsst/utils/python.h"
+#include "lsst/cpputils/python.h"
 
 #include "lsst/afw/image/FilterLabel.h"
 #include "lsst/afw/typehandling/Storable.h"
@@ -51,7 +51,7 @@ using PyFilterLabel = py::class_<FilterLabel, std::shared_ptr<FilterLabel>, type
         std::throw_with_nested(py_ex(e.what())); \
     }
 
-void declareFilterLabel(lsst::utils::python::WrapperCollection &wrappers) {
+void declareFilterLabel(lsst::cpputils::python::WrapperCollection &wrappers) {
     // Include Python-only constructor in class doc, since it's what people should use
     auto initDoc = R"delim(
         Attributes
@@ -103,7 +103,7 @@ void declareFilterLabel(lsst::utils::python::WrapperCollection &wrappers) {
             _DELEGATE_EXCEPTION(label.getPhysicalLabel(), pex::exceptions::LogicError, std::runtime_error);
         });
         cls.def("__eq__", &FilterLabel::operator==, py::is_operator());
-        utils::python::addHash(cls);
+        cpputils::python::addHash(cls);
         cls.def("__ne__", &FilterLabel::operator!=, py::is_operator());
 
         cls.def("__repr__", &FilterLabel::toString);
@@ -113,7 +113,7 @@ void declareFilterLabel(lsst::utils::python::WrapperCollection &wrappers) {
     });
 }
 }  // namespace
-void wrapFilterLabel(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapFilterLabel(lsst::cpputils::python::WrapperCollection &wrappers) {
     // import inheritance dependencies
     wrappers.addInheritanceDependency("lsst.afw.typehandling");
     declareFilterLabel(wrappers);

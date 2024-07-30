@@ -2,7 +2,7 @@
 #ifndef AFW_TABLE_Key_h_INCLUDED
 #define AFW_TABLE_Key_h_INCLUDED
 
-#include "lsst/utils/hashCombine.h"
+#include "lsst/cpputils/hashCombine.h"
 
 #include "lsst/afw/table/FieldBase.h"
 #include "lsst/afw/table/Flag.h"
@@ -80,7 +80,7 @@ public:
     /// Return a hash of this object.
     std::size_t hash_value() const noexcept {
         // Completely arbitrary seed
-        return utils::hashCombine(17, _offset, this->getElementCount());
+        return cpputils::hashCombine(17, _offset, this->getElementCount());
     }
 
     /// Return the offset (in bytes) of this field within a record.

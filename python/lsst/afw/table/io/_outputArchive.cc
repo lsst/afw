@@ -21,7 +21,7 @@
 
 #include "pybind11/pybind11.h"
 
-#include "lsst/utils/python.h"
+#include "lsst/cpputils/python.h"
 
 #include "lsst/afw/table/io/OutputArchive.h"
 #include "lsst/afw/fits.h"
@@ -37,7 +37,7 @@ namespace io {
 
 using PyOutputArchive = py::class_<OutputArchive, std::shared_ptr<OutputArchive>>;
 
-void wrapOutputArchive(utils::python::WrapperCollection &wrappers) {
+void wrapOutputArchive(cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(PyOutputArchive(wrappers.module, "OutputArchive"), [](auto &mod, auto &cls) {
         cls.def(py::init<>());
         cls.def("put",

@@ -22,7 +22,7 @@
  */
 
 #include <pybind11/pybind11.h>
-#include <lsst/utils/python.h>
+#include <lsst/cpputils/python.h>
 
 #include "lsst/afw/geom/ellipses/Separable.h"
 #include "lsst/afw/geom/ellipses/BaseCore.h"
@@ -40,7 +40,7 @@ namespace afw {
 namespace geom {
 namespace ellipses {
 template <typename Ellipticity_, typename Radius_>
-void declareSeparable(lsst::utils::python::WrapperCollection &wrappers, const std::string &suffix) {
+void declareSeparable(lsst::cpputils::python::WrapperCollection &wrappers, const std::string &suffix) {
     using Class = Separable<Ellipticity_, Radius_>;
     wrappers.wrapType(
             py::class_<Class, std::shared_ptr<Class>, BaseCore>(wrappers.module,
@@ -79,7 +79,7 @@ void declareSeparable(lsst::utils::python::WrapperCollection &wrappers, const st
             });
 }
 
-void wrapSeparable(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapSeparable(lsst::cpputils::python::WrapperCollection &wrappers) {
     declareSeparable<Distortion, DeterminantRadius>(wrappers, "DistortionDeterminantRadius");
     declareSeparable<Distortion, TraceRadius>(wrappers, "DistortionTraceRadius");
     declareSeparable<Distortion, LogDeterminantRadius>(wrappers, "DistortionLogDeterminantRadius");

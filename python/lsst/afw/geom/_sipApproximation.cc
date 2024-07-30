@@ -22,7 +22,7 @@
  */
 
 #include "pybind11/pybind11.h"
-#include <lsst/utils/python.h>
+#include <lsst/cpputils/python.h>
 #include "pybind11/stl.h"
 #include "pybind11/eigen.h"
 
@@ -40,7 +40,7 @@ namespace {
 
 using PySipApproximation = py::class_<SipApproximation, std::shared_ptr<SipApproximation>>;
 
-void declareSipApproximation(lsst::utils::python::WrapperCollection &wrappers) {
+void declareSipApproximation(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(PySipApproximation(wrappers.module, "SipApproximation"), [](auto &mod, auto &cls) {
         cls.def(py::init<std::shared_ptr<TransformPoint2ToPoint2>, lsst::geom::Point2D const &,
                          Eigen::MatrixXd const &, lsst::geom::Box2D const &, lsst::geom::Extent2I const &,
@@ -85,7 +85,7 @@ void declareSipApproximation(lsst::utils::python::WrapperCollection &wrappers) {
     });
 }
 }  // namespace
-void wrapSipApproximation(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapSipApproximation(lsst::cpputils::python::WrapperCollection &wrappers) {
     declareSipApproximation(wrappers);
 }
 }  // namespace geom

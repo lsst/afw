@@ -23,7 +23,7 @@
 #ifndef AFW_TABLE_arrays_h_INCLUDED
 #define AFW_TABLE_arrays_h_INCLUDED
 
-#include "lsst/utils/hashCombine.h"
+#include "lsst/cpputils/hashCombine.h"
 
 #include "lsst/afw/table/FunctorKey.h"
 #include "lsst/afw/table/Schema.h"
@@ -130,7 +130,7 @@ public:
     /// Return a hash of this object.
     std::size_t hash_value() const noexcept {
         // Completely arbitrary seed
-        return utils::hashCombine(17, _begin, _size);
+        return cpputils::hashCombine(17, _begin, _size);
     }
 
     /// Return True if the FunctorKey contains valid scalar keys.

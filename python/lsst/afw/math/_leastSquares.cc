@@ -21,7 +21,7 @@
  */
 
 #include <pybind11/pybind11.h>
-#include <lsst/utils/python.h>
+#include <lsst/cpputils/python.h>
 
 #include "ndarray/pybind11.h"
 
@@ -36,7 +36,7 @@ namespace afw {
 namespace math {
 namespace {
 template <typename T1, typename T2, int C1, int C2>
-void declareLeastSquares(lsst::utils::python::WrapperCollection &wrappers) {
+void declareLeastSquares(lsst::cpputils::python::WrapperCollection &wrappers) {
     auto clsLeastSquares = wrappers.wrapType(
             py::class_<LeastSquares>(wrappers.module, "LeastSquares"), [](auto &mod, auto &cls) {
                 cls.def_static(
@@ -77,7 +77,7 @@ void declareLeastSquares(lsst::utils::python::WrapperCollection &wrappers) {
 };
 }  // namespace
 
-void wrapLeastSquares(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapLeastSquares(lsst::cpputils::python::WrapperCollection &wrappers) {
     declareLeastSquares<double, double, 0, 0>(wrappers);
 }
 }  // namespace math

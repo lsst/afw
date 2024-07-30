@@ -28,7 +28,7 @@
 
 #include "ndarray/pybind11.h"
 
-#include "lsst/utils/python.h"
+#include "lsst/cpputils/python.h"
 
 #include "lsst/afw/fits.h"
 #include "lsst/afw/table/detail/Access.h"
@@ -43,7 +43,7 @@ namespace lsst {
 namespace afw {
 namespace table {
 
-using utils::python::WrapperCollection;
+using cpputils::python::WrapperCollection;
 
 namespace {
 
@@ -344,8 +344,8 @@ void declareSchemaType(WrapperCollection &wrappers) {
         cls.def("getDoc", &Field<T>::getDoc);
         cls.def("getUnits", &Field<T>::getUnits);
         cls.def("copyRenamed", &Field<T>::copyRenamed);
-        utils::python::addOutputOp(cls, "__str__");
-        utils::python::addOutputOp(cls, "__repr__");
+        cpputils::python::addOutputOp(cls, "__str__");
+        cpputils::python::addOutputOp(cls, "__repr__");
     });
 
     // Key
@@ -354,13 +354,13 @@ void declareSchemaType(WrapperCollection &wrappers) {
         cls.def(py::init<>());
         cls.def("__eq__", [](Key<T> const &self, Key<T> const &other) -> bool { return self == other; },
                 py::is_operator());
-        utils::python::addHash(cls);
+        cpputils::python::addHash(cls);
         cls.def("__ne__", [](Key<T> const &self, Key<T> const &other) -> bool { return self != other; },
                 py::is_operator());
         cls.def("isValid", &Key<T>::isValid);
         cls.def("getOffset", &Key<T>::getOffset);
-        utils::python::addOutputOp(cls, "__str__");
-        utils::python::addOutputOp(cls, "__repr__");
+        cpputils::python::addOutputOp(cls, "__str__");
+        cpputils::python::addOutputOp(cls, "__repr__");
         // The Key methods below actually wrap templated methods on Schema and
         // SchemaMapper.  Rather than doing many-type overload resolution by
         // wrapping those methods directly, we use the visitor pattern by having
@@ -506,8 +506,8 @@ void declareSchema(WrapperCollection &wrappers) {
                                         std::string const &) const) &
                         Schema::join,
                 "a"_a, "b"_a, "c"_a, "d"_a);
-        utils::python::addOutputOp(cls, "__str__");
-        utils::python::addOutputOp(cls, "__repr__");
+        cpputils::python::addOutputOp(cls, "__str__");
+        cpputils::python::addOutputOp(cls, "__repr__");
     });
 }
 

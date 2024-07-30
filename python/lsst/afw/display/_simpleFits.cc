@@ -24,7 +24,7 @@
 #include <cstdint>
 
 #include <pybind11/pybind11.h>
-#include <lsst/utils/python.h>
+#include <lsst/cpputils/python.h>
 
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/Mask.h"
@@ -40,7 +40,7 @@ namespace display {
 namespace {
 
 template <typename ImageT>
-void declareAll(lsst::utils::python::WrapperCollection &wrappers) {
+void declareAll(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrap([](auto &mod) {
         mod.def("writeFitsImage",
                 (void (*)(int, ImageT const &, geom::SkyWcs const *, char const *)) & writeBasicFits<ImageT>,
@@ -56,7 +56,7 @@ void declareAll(lsst::utils::python::WrapperCollection &wrappers) {
 }  // namespace
 
 PYBIND11_MODULE(_simpleFits, mod) {
-    lsst::utils::python::WrapperCollection wrappers(mod, "lsst.afw.display");
+    lsst::cpputils::python::WrapperCollection wrappers(mod, "lsst.afw.display");
     declareAll<image::Image<std::uint16_t>>(wrappers);
     declareAll<image::Image<std::uint64_t>>(wrappers);
     declareAll<image::Image<int>>(wrappers);

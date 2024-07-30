@@ -22,7 +22,7 @@
  */
 
 #include "pybind11/pybind11.h"
-#include "lsst/utils/python.h"
+#include "lsst/cpputils/python.h"
 
 #include "lsst/afw/table/io/python.h"  // for addPersistableMethods
 #include "lsst/afw/table/Schema.h"
@@ -39,7 +39,7 @@ namespace image {
 
 using PyCoaddInputs = py::class_<CoaddInputs, std::shared_ptr<CoaddInputs>, typehandling::Storable>;
 
-void wrapCoaddInputs(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapCoaddInputs(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.addInheritanceDependency("lsst.afw.typehandling");
     wrappers.wrapType(PyCoaddInputs(wrappers.module, "CoaddInputs"), [](auto &mod, auto &cls) {
         /* Constructors */

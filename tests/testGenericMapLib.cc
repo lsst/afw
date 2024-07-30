@@ -26,7 +26,7 @@
 #include <memory>
 #include <sstream>
 
-#include "lsst/utils/python/PySharedPtr.h"
+#include "lsst/cpputils/python/PySharedPtr.h"
 #include "lsst/pex/exceptions.h"
 
 #include "lsst/afw/typehandling/GenericMap.h"
@@ -319,7 +319,7 @@ void declareAnyTypeFunctions(py::module& mod) {
 }  // namespace
 
 PYBIND11_MODULE(testGenericMapLib, mod) {
-    using lsst::utils::python::PySharedPtr;
+    using lsst::cpputils::python::PySharedPtr;
 
     py::module::import("lsst.afw.typehandling");
 

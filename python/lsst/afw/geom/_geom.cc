@@ -22,29 +22,29 @@
  */
 
 #include "pybind11/pybind11.h"
-#include "lsst/utils/python.h"
+#include "lsst/cpputils/python.h"
 
 namespace lsst {
 namespace afw {
 namespace geom {
 
-void wrapEndpoint(lsst::utils::python::WrapperCollection &);
+void wrapEndpoint(lsst::cpputils::python::WrapperCollection &);
 namespace polygon {
-void wrapPolygon(lsst::utils::python::WrapperCollection &);
+void wrapPolygon(lsst::cpputils::python::WrapperCollection &);
 }
-void wrapSipApproximation(lsst::utils::python::WrapperCollection &);
-void wrapSkyWcs(lsst::utils::python::WrapperCollection &);
-void wrapSpan(lsst::utils::python::WrapperCollection &);
-void wrapSpanSet(lsst::utils::python::WrapperCollection &);
-void wrapTransform(lsst::utils::python::WrapperCollection &);
-void wrapTransformFactory(lsst::utils::python::WrapperCollection &);
-void wrapWcsUtils(lsst::utils::python::WrapperCollection &);
+void wrapSipApproximation(lsst::cpputils::python::WrapperCollection &);
+void wrapSkyWcs(lsst::cpputils::python::WrapperCollection &);
+void wrapSpan(lsst::cpputils::python::WrapperCollection &);
+void wrapSpanSet(lsst::cpputils::python::WrapperCollection &);
+void wrapTransform(lsst::cpputils::python::WrapperCollection &);
+void wrapTransformFactory(lsst::cpputils::python::WrapperCollection &);
+void wrapWcsUtils(lsst::cpputils::python::WrapperCollection &);
 namespace detail {
-void wrapFrameSetUtils(lsst::utils::python::WrapperCollection &);
+void wrapFrameSetUtils(lsst::cpputils::python::WrapperCollection &);
 }
 
 PYBIND11_MODULE(_geom, mod) {
-    lsst::utils::python::WrapperCollection wrappers(mod, "lsst.afw.geom");
+    lsst::cpputils::python::WrapperCollection wrappers(mod, "lsst.afw.geom");
     wrapEndpoint(wrappers);
     polygon::wrapPolygon(wrappers);
     wrapSipApproximation(wrappers);

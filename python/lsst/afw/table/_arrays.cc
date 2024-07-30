@@ -26,7 +26,7 @@
 
 #include "ndarray/pybind11.h"
 
-#include "lsst/utils/python.h"
+#include "lsst/cpputils/python.h"
 #include "lsst/afw/table/Key.h"
 #include "lsst/afw/table/BaseRecord.h"
 #include "lsst/afw/table/FunctorKey.h"
@@ -39,7 +39,7 @@ namespace lsst {
 namespace afw {
 namespace table {
 
-using utils::python::WrapperCollection;
+using cpputils::python::WrapperCollection;
 
 namespace {
 
@@ -86,7 +86,7 @@ void declareArrayKey(WrapperCollection &wrappers, std::string const &suffix) {
                                 }
                                 return py::cast(self.slice(start, stop));
                             } else {
-                                std::size_t n = utils::python::cppIndex(self.getSize(),
+                                std::size_t n = cpputils::python::cppIndex(self.getSize(),
                                                                         py::cast<std::ptrdiff_t>(index));
                                 return py::cast(self[n]);
                             }

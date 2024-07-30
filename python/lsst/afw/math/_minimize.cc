@@ -21,7 +21,7 @@
  */
 
 #include <pybind11/pybind11.h>
-#include <lsst/utils/python.h>
+#include <lsst/cpputils/python.h>
 #include <pybind11/stl.h>
 
 #include "lsst/afw/math/minimize.h"
@@ -34,7 +34,7 @@ namespace afw {
 namespace math {
 namespace {
 template <typename ReturnT>
-void declareFitResults(lsst::utils::python::WrapperCollection &wrappers) {
+void declareFitResults(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrap([](auto &mod) {
         mod.def("minimize", (FitResults(*)(lsst::afw::math::Function1<ReturnT> const &,
                                            std::vector<double> const &, std::vector<double> const &,
@@ -48,7 +48,7 @@ void declareFitResults(lsst::utils::python::WrapperCollection &wrappers) {
     });
 };
 
-void declareMinimize(lsst::utils::python::WrapperCollection &wrappers) {
+void declareMinimize(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(py::class_<FitResults>(wrappers.module, "FitResults"), [](auto &mod, auto &cls) {
         cls.def_readwrite("isValid", &FitResults::isValid);
         cls.def_readwrite("chiSq", &FitResults::chiSq);
@@ -57,7 +57,7 @@ void declareMinimize(lsst::utils::python::WrapperCollection &wrappers) {
     });
 }
 }  // namespace
-void wrapMinimize(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapMinimize(lsst::cpputils::python::WrapperCollection &wrappers) {
     declareMinimize(wrappers);
     declareFitResults<double>(wrappers);
     declareFitResults<float>(wrappers);

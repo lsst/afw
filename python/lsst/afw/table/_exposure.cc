@@ -26,7 +26,7 @@
 
 #include <memory>
 
-#include "lsst/utils/python.h"
+#include "lsst/cpputils/python.h"
 
 #include "lsst/afw/detection/Psf.h"  // forward-declared by Exposure.h
 #include "lsst/afw/fits.h"
@@ -54,7 +54,7 @@ namespace lsst {
 namespace afw {
 namespace table {
 
-using utils::python::WrapperCollection;
+using cpputils::python::WrapperCollection;
 
 namespace {
 

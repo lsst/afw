@@ -27,7 +27,7 @@
 #include "boost/test/unit_test.hpp"
 #pragma clang diagnostic pop
 
-#include "lsst/utils/tests.h"
+#include "lsst/cpputils/tests.h"
 
 #include "lsst/afw/table/aggregates.h"
 #include "lsst/afw/table/Schema.h"
@@ -42,7 +42,7 @@ namespace afw {
 namespace table {
 
 BOOST_AUTO_TEST_CASE(Hash) {
-    utils::assertValidHash<Schema>();
+    cpputils::assertValidHash<Schema>();
 
     // Schemas are equal even if they have different key names, documentation, units, and aliases
     Schema schema1;
@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(Hash) {
     schema2.addField<float>("b_f", "non-descriptive description");
     schema2.addField<lsst::geom::Angle>("b_a", "");
 
-    utils::assertHashesEqual(schema1, schema2);
+    cpputils::assertHashesEqual(schema1, schema2);
 }
 
 }  // namespace table
