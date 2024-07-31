@@ -26,7 +26,6 @@
 
 #include "pybind11/stl.h"
 
-#include "lsst/cpputils/python.h"
 #include "lsst/afw/table/io/python.h"
 #include "lsst/afw/cameraGeom/Camera.h"
 

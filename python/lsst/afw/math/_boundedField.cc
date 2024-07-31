@@ -28,8 +28,6 @@
 
 #include "ndarray/pybind11.h"
 
-#include "lsst/cpputils/python.h"
-
 #include "lsst/afw/table/io/Persistable.h"
 #include "lsst/geom/Point.h"
 #include "lsst/afw/math/BoundedField.h"

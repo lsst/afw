@@ -26,8 +26,6 @@
 #include <pybind11/pybind11.h>
 #include <lsst/cpputils/python.h>
 
-#include "lsst/cpputils/python.h"
-
 #include "lsst/afw/cameraGeom/CameraSys.h"
 
 namespace py = pybind11;

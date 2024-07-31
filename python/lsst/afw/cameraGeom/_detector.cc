@@ -31,7 +31,6 @@
 
 #include "ndarray/pybind11.h"
 
-#include "lsst/cpputils/python.h"
 #include "lsst/afw/cameraGeom/CameraSys.h"
 #include "lsst/afw/cameraGeom/Orientation.h"
 #include "lsst/geom.h"

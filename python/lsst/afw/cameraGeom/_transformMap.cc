@@ -27,7 +27,6 @@
 
 #include <vector>
 
-#include "lsst/cpputils/python.h"
 #include "lsst/geom/Point.h"
 #include "lsst/afw/table/io/python.h"
 #include "lsst/afw/cameraGeom/CameraSys.h"
