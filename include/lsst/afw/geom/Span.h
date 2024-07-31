@@ -28,7 +28,7 @@
 #include <iostream>
 
 #include "lsst/base.h"
-#include "lsst/utils/hashCombine.h"
+#include "lsst/cpputils/hashCombine.h"
 #include "lsst/geom.h"
 #include "lsst/afw/geom/SpanPixelIterator.h"
 
@@ -121,7 +121,7 @@ public:
     /// Return a hash of this object.
     std::size_t hash_value() const noexcept {
         // Completely arbitrary seed
-        return utils::hashCombine(42, getY(), getMinX(), getMaxX());
+        return cpputils::hashCombine(42, getY(), getMinX(), getMaxX());
     }
 
     /* Required to make Span "LessThanComparable" so they can be used

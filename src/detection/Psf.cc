@@ -3,7 +3,7 @@
 #include <cmath>
 #include <memory>
 
-#include "lsst/utils/Cache.h"
+#include "lsst/cpputils/Cache.h"
 #include "lsst/afw/detection/Psf.h"
 #include "lsst/afw/math/offsetImage.h"
 #include "lsst/afw/table/io/Persistable.cc"
@@ -17,7 +17,7 @@ template std::shared_ptr<detection::Psf> table::io::PersistableFacade<detection:
 namespace detection {
 namespace detail {
 
-// Key for caching PSFs with lsst::utils::Cache
+// Key for caching PSFs with lsst::cpputils::Cache
 //
 // We cache PSFs by their x,y position. Although there are placeholders
 // in the `Psf` class and here for `image::Color`, these are not used

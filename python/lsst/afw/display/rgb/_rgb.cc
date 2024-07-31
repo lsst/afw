@@ -21,7 +21,7 @@
  */
 
 #include <pybind11/pybind11.h>
-#include <lsst/utils/python.h>
+#include <lsst/cpputils/python.h>
 #include <pybind11/stl.h>
 
 #include "lsst/afw/image/Image.h"
@@ -37,7 +37,7 @@ namespace display {
 
 PYBIND11_MODULE(_rgb, mod) {
     /* Module level */
-    lsst::utils::python::WrapperCollection wrappers(mod, "lsst.afw.display.rbg");
+    lsst::cpputils::python::WrapperCollection wrappers(mod, "lsst.afw.display.rbg");
     wrappers.wrap([](auto &mod) {
         mod.def("replaceSaturatedPixels", replaceSaturatedPixels<lsst::afw::image::MaskedImage<float>>,
                 "rim"_a, "gim"_a, "bim"_a, "borderWidth"_a = 2, "saturatedPixelValue"_a = 65535);

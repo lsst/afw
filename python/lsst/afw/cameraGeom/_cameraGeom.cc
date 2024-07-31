@@ -22,21 +22,21 @@
  */
 
 #include <pybind11/pybind11.h>
-#include <lsst/utils/python.h>
+#include <lsst/cpputils/python.h>
 namespace lsst {
 namespace afw {
 namespace cameraGeom {
 
-void wrapAmplifier(lsst::utils::python::WrapperCollection &);
-void wrapCamera(lsst::utils::python::WrapperCollection &);
-void wrapCameraSys(lsst::utils::python::WrapperCollection &);
-void wrapDetector(lsst::utils::python::WrapperCollection &);
-void wrapDetectorCollection(lsst::utils::python::WrapperCollection &);
-void wrapOrientation(lsst::utils::python::WrapperCollection &);
-void wrapTransformMap(lsst::utils::python::WrapperCollection &);
+void wrapAmplifier(lsst::cpputils::python::WrapperCollection &);
+void wrapCamera(lsst::cpputils::python::WrapperCollection &);
+void wrapCameraSys(lsst::cpputils::python::WrapperCollection &);
+void wrapDetector(lsst::cpputils::python::WrapperCollection &);
+void wrapDetectorCollection(lsst::cpputils::python::WrapperCollection &);
+void wrapOrientation(lsst::cpputils::python::WrapperCollection &);
+void wrapTransformMap(lsst::cpputils::python::WrapperCollection &);
 
 PYBIND11_MODULE(_cameraGeom, mod) {
-    lsst::utils::python::WrapperCollection wrappers(mod, "lsst.afw.cameraGeom");
+    lsst::cpputils::python::WrapperCollection wrappers(mod, "lsst.afw.cameraGeom");
     wrapAmplifier(wrappers);
     wrapDetectorCollection(wrappers);
     wrapDetector(wrappers);

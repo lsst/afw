@@ -26,7 +26,7 @@
 #include "boost/test/unit_test.hpp"
 #pragma clang diagnostic pop
 
-#include "lsst/utils/tests.h"
+#include "lsst/cpputils/tests.h"
 
 #include "lsst/geom/Point.h"
 #include "lsst/afw/geom/polygon/Polygon.h"
@@ -39,11 +39,11 @@ namespace polygon {
 BOOST_AUTO_TEST_CASE(Hash) {
     using lsst::geom::Point2D;
 
-    utils::assertValidHash<Polygon>();
+    cpputils::assertValidHash<Polygon>();
 
-    utils::assertHashesEqual(Polygon({Point2D(-1.0, -1.0), Point2D(-1.0, 1.0), Point2D(1.0, 1.0)}),
+    cpputils::assertHashesEqual(Polygon({Point2D(-1.0, -1.0), Point2D(-1.0, 1.0), Point2D(1.0, 1.0)}),
                              Polygon({Point2D(-1.0, -1.0), Point2D(-1.0, 1.0), Point2D(1.0, 1.0)}));
-    utils::assertHashesEqual(
+    cpputils::assertHashesEqual(
             Polygon({Point2D(-1.0, -1.0), Point2D(-1.0, 1.0), Point2D(1.0, 1.0), Point2D(1.0, -1.0)}),
             Polygon(lsst::geom::Box2D(Point2D(-1.0, -1.0), lsst::geom::Extent2D(2.0, 2.0))));
 }

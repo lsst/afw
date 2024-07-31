@@ -22,7 +22,7 @@
  */
 
 #include <pybind11/pybind11.h>
-#include <lsst/utils/python.h>
+#include <lsst/cpputils/python.h>
 
 #include "lsst/afw/geom/ellipses/radii.h"
 
@@ -34,7 +34,7 @@ namespace lsst {
 namespace afw {
 namespace geom {
 namespace ellipses {
-void wrapRadii(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapRadii(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(
             py::class_<DeterminantRadius>(wrappers.module, "DeterminantRadius"), [](auto &mod, auto &cls) {
                 cls.def(py::init<double>(), "value"_a = 1.0);

@@ -23,13 +23,13 @@
 
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
-#include "lsst/utils/python.h"
+#include "lsst/cpputils/python.h"
 
 #include <memory>
 
 #include "ndarray/pybind11.h"
 
-#include "lsst/utils/python.h"
+#include "lsst/cpputils/python.h"
 
 #include "lsst/daf/base/PropertySet.h"
 #include "lsst/afw/math/BoundedField.h"
@@ -46,14 +46,14 @@ namespace afw {
 namespace image {
 namespace {
 
-void declareMeasurement(lsst::utils::python::WrapperCollection &wrappers) {
+void declareMeasurement(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(py::class_<Measurement, std::shared_ptr<Measurement>>(wrappers.module, "Measurement"),
                       [](auto &mod, auto &cls) {
                           cls.def(py::init<double, double>(), "value"_a, "error"_a);
                           cls.def_readonly("value", &Measurement::value);
                           cls.def_readonly("error", &Measurement::error);
 
-                          utils::python::addOutputOp(cls, "__str__");
+                          cpputils::python::addOutputOp(cls, "__str__");
                           cls.def("__repr__", [](Measurement const &self) {
                               std::ostringstream os;
                               os << "Measurement(" << self << ")";
@@ -62,7 +62,7 @@ void declareMeasurement(lsst::utils::python::WrapperCollection &wrappers) {
                       });
 }
 
-void declarePhotoCalib(lsst::utils::python::WrapperCollection &wrappers) {
+void declarePhotoCalib(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(
             py::class_<PhotoCalib, std::shared_ptr<PhotoCalib>, typehandling::Storable>(wrappers.module,
                                                                                         "PhotoCalib"),
@@ -185,7 +185,7 @@ void declarePhotoCalib(lsst::utils::python::WrapperCollection &wrappers) {
                 /* Operators */
                 cls.def("__eq__", &PhotoCalib::operator==, py::is_operator());
                 cls.def("__ne__", &PhotoCalib::operator!=, py::is_operator());
-                utils::python::addOutputOp(cls, "__str__");
+                cpputils::python::addOutputOp(cls, "__str__");
                 cls.def("__repr__", [](PhotoCalib const &self) {
                     std::ostringstream os;
                     os << "PhotoCalib(" << self << ")";
@@ -194,7 +194,7 @@ void declarePhotoCalib(lsst::utils::python::WrapperCollection &wrappers) {
             });
 }
 
-void declareCalib(lsst::utils::python::WrapperCollection &wrappers) {
+void declareCalib(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrap([](auto &mod) {
         /* Utility functions */
         mod.def("makePhotoCalibFromMetadata",
@@ -206,7 +206,7 @@ void declareCalib(lsst::utils::python::WrapperCollection &wrappers) {
     });
 }
 }  // namespace
-void wrapPhotoCalib(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapPhotoCalib(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.addInheritanceDependency("lsst.afw.typehandling");
     declareMeasurement(wrappers);
     declarePhotoCalib(wrappers);

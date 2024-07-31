@@ -24,7 +24,7 @@
 #include <vector>
 
 #include <pybind11/pybind11.h>
-#include <lsst/utils/python.h>
+#include <lsst/cpputils/python.h>
 #include <pybind11/stl.h>
 
 #include "lsst/afw/math/Stack.h"
@@ -40,7 +40,7 @@ namespace math {
 namespace {
 
 template <typename PixelT>
-void declareStatisticsStack(lsst::utils::python::WrapperCollection &wrappers) {
+void declareStatisticsStack(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrap([](auto &mod) {
         mod.def("statisticsStack",
                 (std::shared_ptr<lsst::afw::image::MaskedImage<PixelT>>(*)(
@@ -110,7 +110,7 @@ void declareStatisticsStack(lsst::utils::python::WrapperCollection &wrappers) {
 
 }  // namespace
 
-void wrapStack(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapStack(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.addSignatureDependency("lsst.afw.image");
     declareStatisticsStack<float>(wrappers);
     declareStatisticsStack<double>(wrappers);

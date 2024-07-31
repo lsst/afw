@@ -23,7 +23,7 @@
 
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
-#include "lsst/utils/python.h"
+#include "lsst/cpputils/python.h"
 
 #include <string>
 #include <vector>
@@ -42,7 +42,7 @@ namespace {
 
 using PyApCorrMap = py::class_<ApCorrMap, std::shared_ptr<ApCorrMap>, typehandling::Storable>;
 
-void wrapApCorrMap(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapApCorrMap(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(PyApCorrMap(wrappers.module, "ApCorrMap"), [](auto &mod, auto &cls) {
         cls.def(py::init<>());
 
@@ -69,7 +69,7 @@ void wrapApCorrMap(lsst::utils::python::WrapperCollection &wrappers) {
 }
 
 PYBIND11_MODULE(_apCorrMap, mod) {
-    lsst::utils::python::WrapperCollection wrappers(mod, "lsst.afw.image._apCorrMap");
+    lsst::cpputils::python::WrapperCollection wrappers(mod, "lsst.afw.image._apCorrMap");
     wrappers.addInheritanceDependency("lsst.afw.table.io");
     wrappers.addInheritanceDependency("lsst.afw.typehandling");
     wrapApCorrMap(wrappers);

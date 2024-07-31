@@ -38,7 +38,7 @@
 #pragma clang diagnostic pop
 #include "boost/test/tools/floating_point_comparison.hpp"
 
-#include "lsst/utils/Demangle.h"
+#include "lsst/cpputils/Demangle.h"
 #include "lsst/afw/image/lsstGil.h"
 
 using namespace std;
@@ -61,8 +61,8 @@ struct do_check_conversion1 {
 
         if (dst(0, 0) != src(0, 0)) {
             // The BOOST_CHECK message is uninformative, to print our own.
-            cerr << lsst::utils::demangleType(typeid(SrcImageT).name()) << " ---- "
-                 << lsst::utils::demangleType(typeid(DstImageT).name()) << " " << dst(0, 0)
+            cerr << lsst::cpputils::demangleType(typeid(SrcImageT).name()) << " ---- "
+                 << lsst::cpputils::demangleType(typeid(DstImageT).name()) << " " << dst(0, 0)
                  << " != " << src(0, 0) << " ";
             BOOST_CHECK(src(0, 0) == dst(0, 0));  // this will fail
         }

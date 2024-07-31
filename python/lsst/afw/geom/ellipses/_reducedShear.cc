@@ -22,7 +22,7 @@
  */
 
 #include <pybind11/pybind11.h>
-#include <lsst/utils/python.h>
+#include <lsst/cpputils/python.h>
 
 #include "lsst/afw/geom/ellipses/ReducedShear.h"
 #include "lsst/afw/geom/ellipses/EllipticityBase.h"
@@ -35,7 +35,7 @@ namespace lsst {
 namespace afw {
 namespace geom {
 namespace ellipses {
-void wrapReducedShear(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapReducedShear(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(py::class_<ReducedShear, detail::EllipticityBase>(wrappers.module, "ReducedShear"),
                       [](auto &mod, auto &cls) {
                           /* Constructors */

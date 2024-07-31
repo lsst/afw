@@ -24,9 +24,7 @@
 #include <string>
 
 #include <pybind11/pybind11.h>
-#include <lsst/utils/python.h>
-
-#include "lsst/utils/python.h"
+#include <lsst/cpputils/python.h>
 
 #include "lsst/afw/cameraGeom/CameraSys.h"
 
@@ -53,16 +51,16 @@ void declareCommonSysMethods(PyClass &cls) {
     cls.def(
             "__ne__", [](CppClass const &self, CppClass const &other) { return self != other; },
             py::is_operator());
-    utils::python::addOutputOp(cls, "__str__");
-    utils::python::addOutputOp(cls, "__repr__");
-    utils::python::addHash(cls);
+    cpputils::python::addOutputOp(cls, "__str__");
+    cpputils::python::addOutputOp(cls, "__repr__");
+    cpputils::python::addHash(cls);
 
     /* Methods */
     cls.def("getSysName", &CppClass::getSysName);
 }
 }  // namespace
 
-void wrapCameraSys(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapCameraSys(lsst::cpputils::python::WrapperCollection &wrappers) {
     /* Module level */
     wrappers.wrapType(py::class_<CameraSysPrefix>(wrappers.module, "CameraSysPrefix"),
                       [](auto &mod, auto &cls) {

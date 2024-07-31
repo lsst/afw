@@ -23,7 +23,7 @@
 
 #include "pybind11/pybind11.h"
 
-#include "lsst/utils/python.h"
+#include "lsst/cpputils/python.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -32,11 +32,11 @@ namespace lsst {
 namespace afw {
 namespace typehandling {
 
-using utils::python::WrapperCollection;
+using cpputils::python::WrapperCollection;
 
-void wrapGenericMap(utils::python::WrapperCollection& wrappers);
-void wrapStorable(utils::python::WrapperCollection& wrappers);
-void wrapSimpleGenericMap(utils::python::WrapperCollection& wrappers);
+void wrapGenericMap(cpputils::python::WrapperCollection& wrappers);
+void wrapStorable(cpputils::python::WrapperCollection& wrappers);
+void wrapSimpleGenericMap(cpputils::python::WrapperCollection& wrappers);
 
 PYBIND11_MODULE(_typehandling, mod) {
     WrapperCollection w(mod, "lsst.afw.typehandling");

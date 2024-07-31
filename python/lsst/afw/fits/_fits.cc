@@ -24,7 +24,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "lsst/utils/python.h"
+#include "lsst/cpputils/python.h"
 
 #include "ndarray/pybind11.h"
 
@@ -43,7 +43,7 @@ namespace lsst {
 namespace afw {
 namespace fits {
 namespace {
-void declareImageCompression(lsst::utils::python::WrapperCollection &wrappers) {
+void declareImageCompression(lsst::cpputils::python::WrapperCollection &wrappers) {
     auto options = wrappers.wrapType(
             py::class_<ImageCompressionOptions>(wrappers.module, "ImageCompressionOptions"),
             [](auto &mod, auto &cls) {
@@ -101,7 +101,7 @@ void declareImageScalingOptionsTemplates(py::class_<ImageScalingOptions> &cls) {
     );
 }
 
-void declareImageScalingOptions(lsst::utils::python::WrapperCollection &wrappers) {
+void declareImageScalingOptions(lsst::cpputils::python::WrapperCollection &wrappers) {
     auto options = wrappers.wrapType(
             py::class_<ImageScalingOptions>(wrappers.module, "ImageScalingOptions"),
             [](auto &mod, auto &cls) {
@@ -144,7 +144,7 @@ void declareImageScaleTemplates(py::class_<ImageScale> &cls, std::string const &
     cls.def("fromFits", &ImageScale::fromFits<T>);
 }
 
-void declareImageScale(lsst::utils::python::WrapperCollection &wrappers) {
+void declareImageScale(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(py::class_<ImageScale>(wrappers.module, "ImageScale"), [](auto &mod, auto &cls) {
         cls.def(py::init<int, double, double>(), "bitpix"_a, "bscale"_a, "bzero"_a);
         cls.def_readonly("bitpix", &ImageScale::bitpix);
@@ -157,7 +157,7 @@ void declareImageScale(lsst::utils::python::WrapperCollection &wrappers) {
     });
 }
 
-void declareImageWriteOptions(lsst::utils::python::WrapperCollection &wrappers) {
+void declareImageWriteOptions(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(py::class_<ImageWriteOptions>(wrappers.module, "ImageWriteOptions"),
                       [](auto &mod, auto &cls) {
                           cls.def(py::init<lsst::afw::image::Image<std::uint16_t>>());
@@ -185,7 +185,7 @@ void declareImageWriteOptions(lsst::utils::python::WrapperCollection &wrappers) 
 //
 // Not every feature is wrapped, only those that we guess might be useful.
 // In particular, the header keyword read/write and table read/write are not wrapped.
-void declareFits(lsst::utils::python::WrapperCollection &wrappers) {
+void declareFits(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(py::class_<Fits>(wrappers.module, "Fits"), [](auto &mod, auto &cls) {
         cls.def(py::init<std::string const &, std::string const &, int>(), "filename"_a, "mode"_a,
                 "behavior"_a = Fits::AUTO_CLOSE | Fits::AUTO_CHECK);
@@ -224,7 +224,7 @@ void declareFits(lsst::utils::python::WrapperCollection &wrappers) {
     });
 }
 
-void declareFitsModule(lsst::utils::python::WrapperCollection &wrappers) {
+void declareFitsModule(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrap([](auto &mod) {
         py::class_<MemFileManager> clsMemFileManager(mod, "MemFileManager");
 
@@ -282,7 +282,7 @@ void declareFitsModule(lsst::utils::python::WrapperCollection &wrappers) {
 }
 }  // namespace
 PYBIND11_MODULE(_fits, mod) {
-    lsst::utils::python::WrapperCollection wrappers(mod, "lsst.afw.fits");
+    lsst::cpputils::python::WrapperCollection wrappers(mod, "lsst.afw.fits");
     wrappers.addInheritanceDependency("lsst.pex.exceptions");
     wrappers.addSignatureDependency("lsst.daf.base");
     // FIXME: after afw.image pybind wrappers are converted

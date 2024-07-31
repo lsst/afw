@@ -22,7 +22,7 @@
 #include <memory>
 
 #include <pybind11/pybind11.h>
-#include <lsst/utils/python.h>
+#include <lsst/cpputils/python.h>
 
 #include <pybind11/stl.h>
 
@@ -42,7 +42,7 @@ namespace afw {
 namespace math {
 
 template <typename ReturnT>
-void declarePolynomialFunctions(lsst::utils::python::WrapperCollection &wrappers, const std::string &suffix) {
+void declarePolynomialFunctions(lsst::cpputils::python::WrapperCollection &wrappers, const std::string &suffix) {
     /* PolynomialFunction1 */
 
     wrappers.wrapType(
@@ -76,7 +76,7 @@ void declarePolynomialFunctions(lsst::utils::python::WrapperCollection &wrappers
 };
 
 template <typename ReturnT>
-void declareChebyshevFunctions(lsst::utils::python::WrapperCollection &wrappers, const std::string &suffix) {
+void declareChebyshevFunctions(lsst::cpputils::python::WrapperCollection &wrappers, const std::string &suffix) {
     /* Chebyshev1Function1 */
 
     wrappers.wrapType(
@@ -118,7 +118,7 @@ void declareChebyshevFunctions(lsst::utils::python::WrapperCollection &wrappers,
 };
 
 template <typename ReturnT>
-void declareGaussianFunctions(lsst::utils::python::WrapperCollection &wrappers, const std::string &suffix) {
+void declareGaussianFunctions(lsst::cpputils::python::WrapperCollection &wrappers, const std::string &suffix) {
     /* GaussianFunction1 */
     wrappers.wrapType(py::class_<GaussianFunction1<ReturnT>, std::shared_ptr<GaussianFunction1<ReturnT>>,
                                  Function1<ReturnT>>(wrappers.module, ("GaussianFunction1" + suffix).c_str()),
@@ -159,7 +159,7 @@ void declareGaussianFunctions(lsst::utils::python::WrapperCollection &wrappers, 
 };
 
 template <typename ReturnT>
-void declareIntegerDeltaFunctions(lsst::utils::python::WrapperCollection &wrappers,
+void declareIntegerDeltaFunctions(lsst::cpputils::python::WrapperCollection &wrappers,
                                   const std::string &suffix) {
     /* IntegerDeltaFunction1 */
 
@@ -188,7 +188,7 @@ void declareIntegerDeltaFunctions(lsst::utils::python::WrapperCollection &wrappe
 };
 
 template <typename ReturnT>
-void declareLanczosFunctions(lsst::utils::python::WrapperCollection &wrappers, const std::string &suffix) {
+void declareLanczosFunctions(lsst::cpputils::python::WrapperCollection &wrappers, const std::string &suffix) {
     /* LanczosFunction1 */
 
     wrappers.wrapType(py::class_<LanczosFunction1<ReturnT>, std::shared_ptr<LanczosFunction1<ReturnT>>,
@@ -217,7 +217,7 @@ void declareLanczosFunctions(lsst::utils::python::WrapperCollection &wrappers, c
                       });
 };
 
-void wrapFunctionLibrary(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapFunctionLibrary(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.addInheritanceDependency("lsst.geom");
     declarePolynomialFunctions<float>(wrappers, "F");
     declareChebyshevFunctions<float>(wrappers, "F");

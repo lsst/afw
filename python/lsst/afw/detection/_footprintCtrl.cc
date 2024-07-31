@@ -24,7 +24,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "lsst/utils/python.h"
+#include "lsst/cpputils/python.h"
 
 #include "lsst/afw/detection/FootprintCtrl.h"
 
@@ -36,7 +36,7 @@ namespace lsst {
 namespace afw {
 namespace detection {
 
-void wrapFootprintCtrl(utils::python::WrapperCollection& wrappers) {
+void wrapFootprintCtrl(cpputils::python::WrapperCollection& wrappers) {
     wrappers.wrapType(py::class_<FootprintControl>(wrappers.module, "FootprintControl"),
                       [](auto& mod, auto& cls) {
                           cls.def(py::init<>());

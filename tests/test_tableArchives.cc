@@ -13,7 +13,7 @@
 
 #include "Eigen/Core"
 
-#include "lsst/utils/packaging.h"
+#include "lsst/cpputils/packaging.h"
 #include "lsst/geom.h"
 #include "lsst/afw/detection/Footprint.h"
 #include "lsst/afw/detection/HeavyFootprint.h"
@@ -671,7 +671,7 @@ BOOST_AUTO_TEST_CASE(ArchiveImporter) {
     std::cerr << "The following warning is expected, and is an indication the test has passed.\n";
     std::cerr << "--------------------------------------------------------------------------------------\n";
 
-    std::filesystem::path testFilePath(lsst::utils::getPackageDir("afw"));
+    std::filesystem::path testFilePath(lsst::cpputils::getPackageDir("afw"));
     std::filesystem::path testsDir("tests");
     std::filesystem::path dataDir("data");
     std::filesystem::path filename("archiveImportTest.fits");

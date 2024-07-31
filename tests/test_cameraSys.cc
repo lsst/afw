@@ -26,7 +26,7 @@
 #include "boost/test/unit_test.hpp"
 #pragma clang diagnostic pop
 
-#include "lsst/utils/tests.h"
+#include "lsst/cpputils/tests.h"
 
 #include "lsst/afw/cameraGeom/CameraSys.h"
 
@@ -35,15 +35,15 @@ namespace afw {
 namespace cameraGeom {
 
 BOOST_AUTO_TEST_CASE(Hash) {
-    utils::assertValidHash<CameraSysPrefix>();
+    cpputils::assertValidHash<CameraSysPrefix>();
 
-    utils::assertHashesEqual(PIXELS, CameraSysPrefix("Pixels"));
-    utils::assertHashesEqual(ACTUAL_PIXELS, CameraSysPrefix("ActualPixels"));
+    cpputils::assertHashesEqual(PIXELS, CameraSysPrefix("Pixels"));
+    cpputils::assertHashesEqual(ACTUAL_PIXELS, CameraSysPrefix("ActualPixels"));
 
-    utils::assertValidHash<CameraSys>();
+    cpputils::assertValidHash<CameraSys>();
 
-    utils::assertHashesEqual(FOCAL_PLANE, CameraSys("FocalPlane"));
-    utils::assertHashesEqual(FIELD_ANGLE, CameraSys("FieldAngle"));
+    cpputils::assertHashesEqual(FOCAL_PLANE, CameraSys("FocalPlane"));
+    cpputils::assertHashesEqual(FIELD_ANGLE, CameraSys("FieldAngle"));
 }
 
 }  // namespace cameraGeom

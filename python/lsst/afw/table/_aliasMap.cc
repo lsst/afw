@@ -23,7 +23,7 @@
 
 #include "pybind11/pybind11.h"
 
-#include "lsst/utils/python.h"
+#include "lsst/cpputils/python.h"
 
 #include "lsst/afw/table/AliasMap.h"
 
@@ -36,7 +36,7 @@ namespace table {
 
 using PyAliasMap = py::class_<AliasMap, std::shared_ptr<AliasMap>>;
 
-void wrapAliasMap(utils::python::WrapperCollection &wrappers) {
+void wrapAliasMap(cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(PyAliasMap(wrappers.module, "AliasMap"), [](auto &mod, auto &cls) {
         cls.def(py::init<>());
         cls.def(py::init<AliasMap const &>());

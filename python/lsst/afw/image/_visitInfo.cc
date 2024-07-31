@@ -22,13 +22,13 @@
  */
 
 #include "pybind11/pybind11.h"
-#include "lsst/utils/python.h"
+#include "lsst/cpputils/python.h"
 
 #include <memory>
 #include <limits>
 #include <sstream>
 
-#include "lsst/utils/python.h"
+#include "lsst/cpputils/python.h"
 
 #include "lsst/daf/base/PropertySet.h"
 #include "lsst/afw/coord/Observatory.h"
@@ -54,7 +54,7 @@ static lsst::geom::Angle const nanAngle(nan);
 
 }  // namespace
 
-void declareVisitInfo(lsst::utils::python::WrapperCollection &wrappers) {
+void declareVisitInfo(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(
             py::class_<VisitInfo, std::shared_ptr<VisitInfo>, typehandling::Storable>(wrappers.module,
                                                                                       "VisitInfo"),
@@ -142,10 +142,10 @@ void declareVisitInfo(lsst::utils::python::WrapperCollection &wrappers) {
                 cls.def_property_readonly("object", &VisitInfo::getObject);
                 cls.def_property_readonly("hasSimulatedContent", &VisitInfo::getHasSimulatedContent);
 
-                utils::python::addOutputOp(cls, "__repr__");
+                cpputils::python::addOutputOp(cls, "__repr__");
             });
 }
-void declareRotType(lsst::utils::python::WrapperCollection &wrappers) {
+void declareRotType(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(py::enum_<RotType>(wrappers.module, "RotType"), [](auto &mod, auto &enm) {
         enm.value("UNKNOWN", RotType::UNKNOWN);
         enm.value("SKY", RotType::SKY);
@@ -155,7 +155,7 @@ void declareRotType(lsst::utils::python::WrapperCollection &wrappers) {
     });
 }
 
-void wrapVisitInfo(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapVisitInfo(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.addInheritanceDependency("lsst.daf.base");
     wrappers.addInheritanceDependency("lsst.geom");
     wrappers.addInheritanceDependency("lsst.afw.coord");

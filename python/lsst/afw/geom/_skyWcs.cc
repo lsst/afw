@@ -22,7 +22,7 @@
  */
 
 #include "pybind11/pybind11.h"
-#include <lsst/utils/python.h>
+#include <lsst/cpputils/python.h>
 #include "pybind11/eigen.h"
 
 #include <memory>
@@ -46,7 +46,7 @@ namespace afw {
 namespace geom {
 namespace {
 
-void declareSkyWcs(lsst::utils::python::WrapperCollection &wrappers) {
+void declareSkyWcs(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrap([](auto &mod) {
         mod.def("makeCdMatrix", makeCdMatrix, "scale"_a, "orientation"_a = 0 * lsst::geom::degrees,
                 "flipX"_a = false);
@@ -156,13 +156,13 @@ void declareSkyWcs(lsst::utils::python::WrapperCollection &wrappers) {
                 cls.def_static("readString", &SkyWcs::readString);
                 cls.def("writeString", &SkyWcs::writeString);
 
-                utils::python::addOutputOp(cls, "__str__");
+                cpputils::python::addOutputOp(cls, "__str__");
                 // For repr, we could instead call writeString for the very long AST Frame/Mapping output.
-                utils::python::addOutputOp(cls, "__repr__");
+                cpputils::python::addOutputOp(cls, "__repr__");
             });
 }
 }  // namespace
-void wrapSkyWcs(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapSkyWcs(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.addInheritanceDependency("lsst.afw.table.io");
     wrappers.addInheritanceDependency("lsst.afw.typehandling");
     wrappers.addSignatureDependency("astshim");

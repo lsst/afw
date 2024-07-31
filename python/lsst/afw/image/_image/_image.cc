@@ -23,7 +23,7 @@
 
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
-#include "lsst/utils/python.h"
+#include "lsst/cpputils/python.h"
 #include "ndarray/pybind11.h"
 
 #include "lsst/afw/image/Image.h"
@@ -67,7 +67,7 @@ static void declareCastConstructor(PyImage<ToPixelT> &cls) {
 }
 
 template <typename PixelT>
-static void declareImageBase(lsst::utils::python::WrapperCollection &wrappers, std::string const &suffix) {
+static void declareImageBase(lsst::cpputils::python::WrapperCollection &wrappers, std::string const &suffix) {
     using Array = typename ImageBase<PixelT>::Array;
     wrappers.wrapType(PyImageBase<PixelT>(wrappers.module, ("ImageBase" + suffix).c_str()), [](auto &mod,
                                                                                                auto &cls) {
@@ -125,7 +125,7 @@ static void declareImageBase(lsst::utils::python::WrapperCollection &wrappers, s
 }
 
 template <typename MaskPixelT>
-static void declareMask(lsst::utils::python::WrapperCollection &wrappers, std::string const &suffix) {
+static void declareMask(lsst::cpputils::python::WrapperCollection &wrappers, std::string const &suffix) {
     wrappers.wrapType(PyMask<MaskPixelT>(wrappers.module, ("Mask" + suffix).c_str()), [](auto &mod,
                                                                                          auto &cls) {
         /* Constructors */
@@ -249,7 +249,7 @@ static void declareMask(lsst::utils::python::WrapperCollection &wrappers, std::s
 }
 
 template <typename PixelT>
-static PyImage<PixelT> declareImage(lsst::utils::python::WrapperCollection &wrappers,
+static PyImage<PixelT> declareImage(lsst::cpputils::python::WrapperCollection &wrappers,
                                     const std::string &suffix) {
     return wrappers.wrapType(PyImage<PixelT>(wrappers.module, ("Image" + suffix).c_str()), [](auto &mod,
                                                                                               auto &cls) {
@@ -348,7 +348,7 @@ static PyImage<PixelT> declareImage(lsst::utils::python::WrapperCollection &wrap
 }
 
 template <typename PixelT>
-static void declareDecoratedImage(lsst::utils::python::WrapperCollection &wrappers,
+static void declareDecoratedImage(lsst::cpputils::python::WrapperCollection &wrappers,
                                   std::string const &suffix) {
     wrappers.wrapType(
             PyDecoratedImage<PixelT>(wrappers.module, ("DecoratedImage" + suffix).c_str()),
@@ -445,7 +445,7 @@ static void addGeneralizedCopyConstructors(PyClass &cls) {
     cls.def("convertDouble", [](Image<PixelT> const &self) { return Image<double>(self, true); });
 }
 }  // namespace
-void wrapImage(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapImage(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.addSignatureDependency("lsst.daf.base");
     wrappers.addSignatureDependency("lsst.geom");
     wrappers.wrapType(py::enum_<ImageOrigin>(wrappers.module, "ImageOrigin"), [](auto &mod, auto &enm) {

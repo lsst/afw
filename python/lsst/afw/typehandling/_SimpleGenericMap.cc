@@ -25,7 +25,7 @@
 
 #include "pybind11/pybind11.h"
 
-#include "lsst/utils/python.h"
+#include "lsst/cpputils/python.h"
 
 #include "lsst/afw/typehandling/SimpleGenericMap.h"
 #include "lsst/afw/typehandling/python.h"
@@ -39,7 +39,7 @@ namespace typehandling {
 
 namespace {
 template <typename K>
-void declareSimpleGenericMap(utils::python::WrapperCollection& wrappers, std::string const& suffix,
+void declareSimpleGenericMap(cpputils::python::WrapperCollection& wrappers, std::string const& suffix,
                              std::string const& key) {
     using Class = SimpleGenericMap<K>;
     using PyClass = py::class_<Class, std::shared_ptr<Class>, MutableGenericMap<K>>;
@@ -76,7 +76,7 @@ iterable : iterable, optional
 
 }  // namespace
 
-void wrapSimpleGenericMap(utils::python::WrapperCollection& wrappers) {
+void wrapSimpleGenericMap(cpputils::python::WrapperCollection& wrappers) {
     declareSimpleGenericMap<std::string>(wrappers, "S", "strings");
 }
 

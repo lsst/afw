@@ -22,7 +22,7 @@
  */
 
 #include "pybind11/pybind11.h"
-#include "lsst/utils/python.h"
+#include "lsst/cpputils/python.h"
 
 #include "lsst/afw/image/ImageSlice.h"
 
@@ -36,7 +36,7 @@ namespace image {
 namespace {
 
 template <typename PixelT>
-static void declareImageSlice(lsst::utils::python::WrapperCollection &wrappers, std::string const &suffix) {
+static void declareImageSlice(lsst::cpputils::python::WrapperCollection &wrappers, std::string const &suffix) {
     using Class = ImageSlice<PixelT>;
 
     wrappers.wrapType(
@@ -112,7 +112,7 @@ static void declareImageSlice(lsst::utils::python::WrapperCollection &wrappers, 
             });
 }
 }  // namespace
-void wrapImageSlice(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapImageSlice(lsst::cpputils::python::WrapperCollection &wrappers) {
     declareImageSlice<float>(wrappers, "F");
     declareImageSlice<double>(wrappers, "D");
 }

@@ -22,13 +22,11 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include <lsst/utils/python.h>
+#include <lsst/cpputils/python.h>
 
 #include <memory>
 
 #include "ndarray/pybind11.h"
-
-#include "lsst/utils/python.h"
 
 #include "lsst/afw/table/io/Persistable.h"
 #include "lsst/geom/Point.h"
@@ -59,7 +57,7 @@ void declareTemplates(PyClass &cls) {
             "xStep"_a = 1, "yStep"_a = 1);
 }
 }  // namespace
-void declareBoundedField(lsst::utils::python::WrapperCollection &wrappers) {
+void declareBoundedField(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(PyClass(wrappers.module, "BoundedField"), [](auto &mod, auto &cls) {
         table::io::python::addPersistableMethods<BoundedField>(cls);
 
@@ -86,7 +84,7 @@ void declareBoundedField(lsst::utils::python::WrapperCollection &wrappers) {
         declareTemplates<double>(cls);
         declareTemplates<float>(cls);
 
-        utils::python::addOutputOp(cls, "__str__");
+        cpputils::python::addOutputOp(cls, "__str__");
         cls.def("__repr__", [](BoundedField const &self) {
             std::ostringstream os;
             os << "BoundedField(" << self << ")";
@@ -94,7 +92,7 @@ void declareBoundedField(lsst::utils::python::WrapperCollection &wrappers) {
         });
     });
 }
-void wrapBoundedField(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapBoundedField(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.addSignatureDependency("lsst.afw.table.io");
     declareBoundedField(wrappers);
 }

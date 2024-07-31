@@ -33,7 +33,7 @@
 #include "lsst/pex/exceptions.h"
 #include "ndarray.h"
 #include "lsst/afw/table/io/Persistable.cc"
-#include "lsst/utils/Magnitude.h"
+#include "lsst/cpputils/Magnitude.h"
 
 namespace lsst {
 namespace afw {
@@ -58,11 +58,11 @@ int const SERIALIZATION_VERSION = 1;
 
 double toNanojansky(double instFlux, double scale) { return instFlux * scale; }
 
-double toMagnitude(double instFlux, double scale) { return utils::nanojanskyToABMagnitude(instFlux * scale); }
+double toMagnitude(double instFlux, double scale) { return cpputils::nanojanskyToABMagnitude(instFlux * scale); }
 
 double toInstFluxFromMagnitude(double magnitude, double scale) {
     // Note: flux[nJy] / scale = instFlux[counts]
-    return utils::ABMagnitudeToNanojansky(magnitude) / scale;
+    return cpputils::ABMagnitudeToNanojansky(magnitude) / scale;
 }
 
 double toNanojanskyErr(double instFlux, double instFluxErr, double scale, double scaleErr,
@@ -492,9 +492,9 @@ public:
         LSST_ARCHIVE_ASSERT(catalogs.front().getSchema() == keys.schema);
         table::BaseRecord const &record = catalogs.front().front();
 
-        double calibration = utils::referenceFlux / record.get(keys.fluxMag0);
+        double calibration = cpputils::referenceFlux / record.get(keys.fluxMag0);
         double calibrationErr =
-                utils::referenceFlux * record.get(keys.fluxMag0Err) / std::pow(record.get(keys.fluxMag0), 2);
+                cpputils::referenceFlux * record.get(keys.fluxMag0Err) / std::pow(record.get(keys.fluxMag0), 2);
         return std::make_shared<PhotoCalib>(calibration, calibrationErr);
     }
 
@@ -612,8 +612,8 @@ std::shared_ptr<PhotoCalib> makePhotoCalibFromMetadata(daf::base::PropertySet &m
 }
 
 std::shared_ptr<PhotoCalib> makePhotoCalibFromCalibZeroPoint(double instFluxMag0, double instFluxMag0Err) {
-    double calibration = utils::referenceFlux / instFluxMag0;
-    double calibrationErr = utils::referenceFlux * instFluxMag0Err / std::pow(instFluxMag0, 2);
+    double calibration = cpputils::referenceFlux / instFluxMag0;
+    double calibrationErr = cpputils::referenceFlux * instFluxMag0Err / std::pow(instFluxMag0, 2);
     return std::make_shared<PhotoCalib>(calibration, calibrationErr);
 }
 

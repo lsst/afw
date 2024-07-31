@@ -28,7 +28,7 @@
 
 #include <limits>
 
-#include "lsst/utils/tests.h"
+#include "lsst/cpputils/tests.h"
 
 #include "lsst/afw/image.h"
 #include "lsst/afw/image/Color.h"
@@ -38,12 +38,12 @@ namespace afw {
 namespace image {
 
 BOOST_AUTO_TEST_CASE(ColorHash) {
-    utils::assertValidHash<Color>();
+    cpputils::assertValidHash<Color>();
 
-    utils::assertHashesEqual(Color(), Color());
-    utils::assertHashesEqual(Color(std::numeric_limits<double>::quiet_NaN()),
+    cpputils::assertHashesEqual(Color(), Color());
+    cpputils::assertHashesEqual(Color(std::numeric_limits<double>::quiet_NaN()),
                              Color(std::numeric_limits<double>::signaling_NaN()));
-    utils::assertHashesEqual(Color(2.7), Color(2.7));
+    cpputils::assertHashesEqual(Color(2.7), Color(2.7));
 }
 
 BOOST_AUTO_TEST_CASE(PixelHash) {
@@ -51,13 +51,13 @@ BOOST_AUTO_TEST_CASE(PixelHash) {
     using FloatPixel = pixel::Pixel<double, int, double>;
     using IntSinglePixel = pixel::SinglePixel<int, int, double>;
 
-    utils::assertValidHash<IntPixel>();
-    utils::assertValidHash<FloatPixel>();
-    utils::assertValidHash<IntSinglePixel>();
+    cpputils::assertValidHash<IntPixel>();
+    cpputils::assertValidHash<FloatPixel>();
+    cpputils::assertValidHash<IntSinglePixel>();
 
-    utils::assertHashesEqual(IntPixel(42, 0, 1.0), IntPixel(42, 0, 1.0));
-    utils::assertHashesEqual(FloatPixel(42.0, 0, 1.0), FloatPixel(42.0, 0, 1.0));
-    // utils::assertHashesEqual(IntSinglePixel(42, 0, 1.0), IntSinglePixel(42, 0, 1.0));
+    cpputils::assertHashesEqual(IntPixel(42, 0, 1.0), IntPixel(42, 0, 1.0));
+    cpputils::assertHashesEqual(FloatPixel(42.0, 0, 1.0), FloatPixel(42.0, 0, 1.0));
+    // cpputils::assertHashesEqual(IntSinglePixel(42, 0, 1.0), IntSinglePixel(42, 0, 1.0));
 
     // Asymmetric cross-class equality needs some special handling
     BOOST_TEST_REQUIRE(IntPixel(42, 0, 1.0) == FloatPixel(42.0, 0, 1.0));
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(VisitInfoHash) {
     using lsst::daf::base::DateTime;
     using lsst::geom::degrees;
 
-    utils::assertValidHash<VisitInfo>();
+    cpputils::assertValidHash<VisitInfo>();
 
     // A builder would be really nice...
     VisitInfo info1(10.01, 11.02, DateTime(65321.1, DateTime::MJD, DateTime::TAI), 12345.1, 45.1 * degrees,
@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(VisitInfoHash) {
                     coord::Weather(1.1, 2.2, 34.5), "testCam1", 123456, 1.5, "test", "program", "reason",
                     "object", true);
 
-    utils::assertHashesEqual(info1, info2);
+    cpputils::assertHashesEqual(info1, info2);
 }
 
 }  // namespace image

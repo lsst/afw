@@ -26,7 +26,7 @@
 #include "lsst/afw/table/io/python.h"  // for addPersistableMethods
 #include "lsst/afw/detection/GaussianPsf.h"
 
-#include "lsst/utils/python.h"
+#include "lsst/cpputils/python.h"
 
 namespace py = pybind11;
 using namespace py::literals;
@@ -35,7 +35,7 @@ namespace lsst {
 namespace afw {
 namespace detection {
 
-void wrapGaussianPsf(utils::python::WrapperCollection& wrappers) {
+void wrapGaussianPsf(cpputils::python::WrapperCollection& wrappers) {
     wrappers.wrapType(
             py::class_<GaussianPsf, std::shared_ptr<GaussianPsf>, Psf>(wrappers.module, "GaussianPsf"),
             [](auto& mod, auto& cls) {

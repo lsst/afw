@@ -27,7 +27,7 @@
 #include "boost/test/unit_test.hpp"
 #pragma clang diagnostic pop
 
-#include "lsst/utils/tests.h"
+#include "lsst/cpputils/tests.h"
 
 #include "lsst/geom/Angle.h"
 #include "lsst/afw/table/Key.h"
@@ -42,18 +42,18 @@ namespace afw {
 namespace table {
 
 BOOST_AUTO_TEST_CASE(Hash) {
-    utils::assertValidHash<Key<lsst::geom::Angle>>();
-    utils::assertValidHash<Key<std::string>>();
-    utils::assertValidHash<Key<Flag>>();
+    cpputils::assertValidHash<Key<lsst::geom::Angle>>();
+    cpputils::assertValidHash<Key<std::string>>();
+    cpputils::assertValidHash<Key<Flag>>();
 
     Schema schema;
     auto key1 = schema.addField<lsst::geom::Angle>("key1", "");
     auto key2 = schema.addField<std::string>("key2", "", "", 42);
     auto key3 = schema.addField<Flag>("key3", "");
 
-    utils::assertHashesEqual(key1, schema.find<lsst::geom::Angle>("key1").key);
-    utils::assertHashesEqual(key2, schema.find<std::string>("key2").key);
-    utils::assertHashesEqual(key3, schema.find<Flag>("key3").key);
+    cpputils::assertHashesEqual(key1, schema.find<lsst::geom::Angle>("key1").key);
+    cpputils::assertHashesEqual(key2, schema.find<std::string>("key2").key);
+    cpputils::assertHashesEqual(key3, schema.find<Flag>("key3").key);
 }
 
 }  // namespace table

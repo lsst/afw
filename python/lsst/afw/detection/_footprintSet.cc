@@ -24,7 +24,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "lsst/utils/python.h"
+#include "lsst/cpputils/python.h"
 
 #include "lsst/afw/detection/FootprintSet.h"
 
@@ -83,7 +83,7 @@ void declareTemplatedMembers(PyClass &cls) {
 }
 }  // namespace
 
-void wrapFootprintSet(utils::python::WrapperCollection &wrappers) {
+void wrapFootprintSet(cpputils::python::WrapperCollection &wrappers) {
     wrappers.addSignatureDependency("lsst.afw.image");
     wrappers.addSignatureDependency("lsst.afw.table");
 
@@ -126,7 +126,7 @@ void wrapFootprintSet(utils::python::WrapperCollection &wrappers) {
                                 FootprintSet::setMask<lsst::afw::image::MaskPixel>);
                 cls.def("merge", &FootprintSet::merge, "rhs"_a, "tGrow"_a = 0, "rGrow"_a = 0,
                         "isotropic"_a = true);
-                utils::python::addOutputOp(cls, "__repr__");
+                cpputils::python::addOutputOp(cls, "__repr__");
             });
 }
 

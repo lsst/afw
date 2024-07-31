@@ -22,7 +22,7 @@
  */
 
 #include "pybind11/pybind11.h"
-#include "lsst/utils/python.h"
+#include "lsst/cpputils/python.h"
 
 #include "lsst/afw/image/ImageUtils.h"
 
@@ -32,7 +32,7 @@ using namespace lsst::afw::image;
 namespace lsst {
 namespace afw {
 namespace image {
-void wrapImageUtils(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapImageUtils(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrap([](auto &mod) {
         mod.def("indexToPosition", indexToPosition);
         mod.def("positionToIndex", (int (*)(double))positionToIndex);

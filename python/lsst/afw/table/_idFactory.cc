@@ -23,7 +23,7 @@
 
 #include "pybind11/pybind11.h"
 
-#include "lsst/utils/python.h"
+#include "lsst/cpputils/python.h"
 #include "lsst/afw/table/IdFactory.h"
 
 namespace py = pybind11;
@@ -35,7 +35,7 @@ namespace table {
 
 using PyIdFactory = py::class_<IdFactory, std::shared_ptr<IdFactory>>;
 
-void wrapIdFactory(utils::python::WrapperCollection& wrappers) {
+void wrapIdFactory(cpputils::python::WrapperCollection& wrappers) {
     wrappers.wrapType(PyIdFactory(wrappers.module, "IdFactory"), [](auto& mod, auto& cls) {
         cls.def("__call__", &IdFactory::operator());
         cls.def("notify", &IdFactory::notify, "id"_a);

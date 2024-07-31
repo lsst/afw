@@ -21,7 +21,7 @@
  */
 
 #include <pybind11/pybind11.h>
-#include <lsst/utils/python.h>
+#include <lsst/cpputils/python.h>
 
 #include "ndarray/pybind11.h"
 
@@ -35,7 +35,7 @@ namespace afw {
 namespace math {
 namespace {
 template <typename T>
-void declareKdTree(lsst::utils::python::WrapperCollection &wrappers, const std::string &suffix) {
+void declareKdTree(lsst::cpputils::python::WrapperCollection &wrappers, const std::string &suffix) {
     wrappers.wrapType(
             py::class_<KdTree<T>>(wrappers.module, ("KdTree" + suffix).c_str()), [](auto &mod, auto &cls) {
                 cls.def(py::init<>());
@@ -51,7 +51,7 @@ void declareKdTree(lsst::utils::python::WrapperCollection &wrappers, const std::
 };
 
 template <typename T>
-void declareCovariograms(lsst::utils::python::WrapperCollection &wrappers, const std::string &suffix) {
+void declareCovariograms(lsst::cpputils::python::WrapperCollection &wrappers, const std::string &suffix) {
     /* Covariogram */
 
     wrappers.wrapType(py::class_<Covariogram<T>, std::shared_ptr<Covariogram<T>>>(
@@ -81,7 +81,7 @@ void declareCovariograms(lsst::utils::python::WrapperCollection &wrappers, const
 };
 
 template <typename T>
-void declareGaussianProcess(lsst::utils::python::WrapperCollection &wrappers, const std::string &suffix) {
+void declareGaussianProcess(lsst::cpputils::python::WrapperCollection &wrappers, const std::string &suffix) {
     wrappers.wrapType(
             py::class_<GaussianProcess<T>>(wrappers.module, ("GaussianProcess" + suffix).c_str()),
             [](auto &mod, auto &cls) {
@@ -150,7 +150,7 @@ void declareGaussianProcess(lsst::utils::python::WrapperCollection &wrappers, co
 };
 }  // namespace
 
-void wrapGaussianProcess(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapGaussianProcess(lsst::cpputils::python::WrapperCollection &wrappers) {
     declareCovariograms<double>(wrappers, "D");
     declareGaussianProcess<double>(wrappers, "D");
     declareKdTree<double>(wrappers, "D");

@@ -25,7 +25,7 @@
 #include <string>
 
 #include <pybind11/pybind11.h>
-#include <lsst/utils/python.h>
+#include <lsst/cpputils/python.h>
 
 #include "lsst/afw/geom/SkyWcs.h"
 #include "lsst/afw/image/Exposure.h"
@@ -52,7 +52,7 @@ namespace {
 @param[in] addConstructor  If true then add a default constructor.
 */
 template <typename KernelT>
-void declareWarpingKernel(lsst::utils::python::WrapperCollection &wrappers, std::string const &name) {
+void declareWarpingKernel(lsst::cpputils::python::WrapperCollection &wrappers, std::string const &name) {
     using PyClass = py::class_<KernelT, std::shared_ptr<KernelT>, SeparableKernel>;
     wrappers.wrapType(PyClass(wrappers.module, name.c_str()), [](auto &mod, auto &cls) {
         cls.def(py::init<int>(), "order"_a);
@@ -71,7 +71,7 @@ void declareWarpingKernel(lsst::utils::python::WrapperCollection &wrappers, std:
 @param[in] addConstructor  If true then add a default constructor.
 */
 template <typename KernelT>
-void declareSimpleWarpingKernel(lsst::utils::python::WrapperCollection &wrappers, std::string const &name) {
+void declareSimpleWarpingKernel(lsst::cpputils::python::WrapperCollection &wrappers, std::string const &name) {
     using PyClass = py::class_<KernelT, std::shared_ptr<KernelT>, SeparableKernel>;
     wrappers.wrapType(PyClass(wrappers.module, name.c_str()), [](auto &mod, auto &cls) {
         cls.def(py::init<>());
@@ -89,7 +89,7 @@ for a particular pair of image or masked image types
 @param[in,out] mod  pybind11 module for which to declare the function wrappers
 */
 template <typename DestImageT, typename SrcImageT>
-void declareImageWarpingFunctions(lsst::utils::python::WrapperCollection &wrappers) {
+void declareImageWarpingFunctions(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrap([](auto &mod) {
         typename DestImageT::SinglePixel const EdgePixel =
                 edgePixel<DestImageT>(typename image::detail::image_traits<DestImageT>::image_category());
@@ -121,7 +121,7 @@ Declares both image and masked image variants of warpImage and warpCenteredImage
 @param[in,out] mod  pybind11 module for which to declare the function wrappers
 */
 template <typename DestPixelT, typename SrcPixelT>
-void declareWarpingFunctions(lsst::utils::python::WrapperCollection &wrappers) {
+void declareWarpingFunctions(lsst::cpputils::python::WrapperCollection &wrappers) {
     using DestExposureT = image::Exposure<DestPixelT, image::MaskPixel, image::VariancePixel>;
     using SrcExposureT = image::Exposure<SrcPixelT, image::MaskPixel, image::VariancePixel>;
     using DestImageT = image::Image<DestPixelT>;
@@ -138,7 +138,7 @@ void declareWarpingFunctions(lsst::utils::python::WrapperCollection &wrappers) {
     declareImageWarpingFunctions<DestMaskedImageT, SrcMaskedImageT>(wrappers);
 }
 
-void declareWarpExposure(lsst::utils::python::WrapperCollection &wrappers) {
+void declareWarpExposure(lsst::cpputils::python::WrapperCollection &wrappers) {
     using PyClass = py::class_<WarpingControl, std::shared_ptr<WarpingControl>>;
     wrappers.wrapType(PyClass(wrappers.module, "WarpingControl"), [](auto &mod, auto cls) {
         cls.def(py::init<std::string, std::string, int, int, image::MaskPixel>(), "warpingKernelName"_a,
@@ -165,7 +165,7 @@ void declareWarpExposure(lsst::utils::python::WrapperCollection &wrappers) {
     });
 }
 }  // namespace
-void wrapWarpExposure(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapWarpExposure(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.addSignatureDependency("lsst.afw.image");
     wrappers.addSignatureDependency("lsst.afw.geom.skyWcs");
 

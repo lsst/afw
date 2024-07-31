@@ -28,7 +28,7 @@
 
 #include <string>
 
-#include "lsst/utils/tests.h"
+#include "lsst/cpputils/tests.h"
 
 #include "lsst/afw/image/FilterLabel.h"
 
@@ -40,18 +40,18 @@ BOOST_AUTO_TEST_CASE(Hash) {
     std::string const band = "k";
     std::string const physical = "MyScope-K";
 
-    utils::assertValidHash<FilterLabel>();
+    cpputils::assertValidHash<FilterLabel>();
 
-    utils::assertHashesEqual(FilterLabel::fromBand(band), FilterLabel::fromBand(band));
-    utils::assertHashesEqual(FilterLabel::fromPhysical(physical), FilterLabel::fromPhysical(physical));
-    utils::assertHashesEqual(FilterLabel::fromBandPhysical(band, physical),
+    cpputils::assertHashesEqual(FilterLabel::fromBand(band), FilterLabel::fromBand(band));
+    cpputils::assertHashesEqual(FilterLabel::fromPhysical(physical), FilterLabel::fromPhysical(physical));
+    cpputils::assertHashesEqual(FilterLabel::fromBandPhysical(band, physical),
                              FilterLabel::fromBandPhysical(band, physical));
 
     // There are multiple ways to represent a label without a band/filter; these can arise
     // from e.g. depersistence. Such objects compare equal; ensure they hash equally as well.
-    utils::assertHashesEqual(impl::makeTestFilterLabel(false, "", true, physical),
+    cpputils::assertHashesEqual(impl::makeTestFilterLabel(false, "", true, physical),
                              impl::makeTestFilterLabel(false, "null", true, physical));
-    utils::assertHashesEqual(impl::makeTestFilterLabel(true, band, false, ""),
+    cpputils::assertHashesEqual(impl::makeTestFilterLabel(true, band, false, ""),
                              impl::makeTestFilterLabel(true, band, false, "undefined"));
 }
 

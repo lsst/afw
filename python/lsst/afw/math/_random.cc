@@ -21,7 +21,7 @@
  */
 
 #include <pybind11/pybind11.h>
-#include <lsst/utils/python.h>
+#include <lsst/cpputils/python.h>
 #include <pybind11/stl.h>
 
 #include "lsst/afw/image/Image.h"
@@ -35,7 +35,7 @@ namespace lsst {
 namespace afw {
 namespace math {
 template <typename ImageT>
-void declareRandomImage(lsst::utils::python::WrapperCollection &wrappers) {
+void declareRandomImage(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrap([](auto &mod) {
         mod.def("randomUniformImage", (void (*)(ImageT *, Random &))randomUniformImage<ImageT>);
         mod.def("randomUniformPosImage", (void (*)(ImageT *, Random &))randomUniformPosImage<ImageT>);
@@ -49,7 +49,7 @@ void declareRandomImage(lsst::utils::python::WrapperCollection &wrappers) {
     });
 }
 
-void declareRandom(lsst::utils::python::WrapperCollection &wrappers) {
+void declareRandom(lsst::cpputils::python::WrapperCollection &wrappers) {
     auto clsRandom = wrappers.wrapType(py::class_<Random>(wrappers.module, "Random"), [](auto &mod,
                                                                                          auto &cls) {
         /* Constructors */
@@ -100,7 +100,7 @@ void declareRandom(lsst::utils::python::WrapperCollection &wrappers) {
     });
 }
 
-void wrapRandom(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapRandom(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.addSignatureDependency("lsst.afw.image");
     declareRandom(wrappers);
     declareRandomImage<lsst::afw::image::Image<double>>(wrappers);

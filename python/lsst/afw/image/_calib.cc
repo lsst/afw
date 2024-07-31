@@ -22,7 +22,7 @@
  */
 
 #include "pybind11/pybind11.h"
-#include "lsst/utils/python.h"
+#include "lsst/cpputils/python.h"
 
 #include <memory>
 #include <vector>
@@ -40,7 +40,7 @@ namespace image {
 namespace {
 
 template <typename T>
-void declareVectorOperations(lsst::utils::python::WrapperCollection &wrappers) {
+void declareVectorOperations(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrap([](auto &mod) {
         using Array = ndarray::Array<T, 1>;
         using ConstArray = ndarray::Array<const T, 1>;
@@ -55,7 +55,7 @@ void declareVectorOperations(lsst::utils::python::WrapperCollection &wrappers) {
     });
 }
 
-void declareCalib(lsst::utils::python::WrapperCollection &wrappers) {
+void declareCalib(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrap([](auto &mod) {
         mod.def("abMagFromFlux", (double (*)(double)) & abMagFromFlux, "flux"_a);
         mod.def("abMagErrFromFluxErr", (double (*)(double, double)) & abMagErrFromFluxErr, "fluxErr"_a,
@@ -66,7 +66,7 @@ void declareCalib(lsst::utils::python::WrapperCollection &wrappers) {
     });
 }
 }  // namespace
-void wrapCalib(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapCalib(lsst::cpputils::python::WrapperCollection &wrappers) {
     /* Module level */
     declareCalib(wrappers);
     declareVectorOperations<float>(wrappers);

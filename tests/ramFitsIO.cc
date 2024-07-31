@@ -25,7 +25,7 @@
 #include "lsst/afw/geom/SkyWcs.h"
 #include "lsst/afw/image.h"
 #include "lsst/afw/image/Image.h"
-#include "lsst/utils/packaging.h"
+#include "lsst/cpputils/packaging.h"
 #include <fstream>
 #include <iostream>
 #include <memory>
@@ -167,7 +167,7 @@ string GetGFilenamePath(int argc, char **argv) {
     string inImagePath;
     if (argc < 2) {
         try {
-            string dataDir = lsst::utils::getPackageDir("afwdata");
+            string dataDir = lsst::cpputils::getPackageDir("afwdata");
             // inImagePath = dataDir + "/data/fpC-002570-r6-0199_sub.fits"; //Also works - this one was not
             // used at all in the previous avatar of this test.
             inImagePath = dataDir + "/data/fpC-005902-r6-0677_sub.fits";

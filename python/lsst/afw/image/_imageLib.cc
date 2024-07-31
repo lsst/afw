@@ -22,27 +22,27 @@
  */
 
 #include "pybind11/pybind11.h"
-#include "lsst/utils/python.h"
+#include "lsst/cpputils/python.h"
 
 namespace lsst {
 namespace afw {
 namespace image {
-void wrapCalib(lsst::utils::python::WrapperCollection &);
-void wrapColor(lsst::utils::python::WrapperCollection &);
-void wrapCoaddInputs(lsst::utils::python::WrapperCollection &);
-void wrapDefect(lsst::utils::python::WrapperCollection &);
-void wrapExposure(lsst::utils::python::WrapperCollection &);
-void wrapExposureInfo(lsst::utils::python::WrapperCollection &);
-void wrapFilterLabel(lsst::utils::python::WrapperCollection &);
-void wrapImagePca(lsst::utils::python::WrapperCollection &);
-void wrapImageUtils(lsst::utils::python::WrapperCollection &);
-void wrapPhotoCalib(lsst::utils::python::WrapperCollection &);
-void wrapReaders(lsst::utils::python::WrapperCollection &);
-void wrapTransmissionCurve(lsst::utils::python::WrapperCollection &);
-void wrapVisitInfo(lsst::utils::python::WrapperCollection &);
+void wrapCalib(lsst::cpputils::python::WrapperCollection &);
+void wrapColor(lsst::cpputils::python::WrapperCollection &);
+void wrapCoaddInputs(lsst::cpputils::python::WrapperCollection &);
+void wrapDefect(lsst::cpputils::python::WrapperCollection &);
+void wrapExposure(lsst::cpputils::python::WrapperCollection &);
+void wrapExposureInfo(lsst::cpputils::python::WrapperCollection &);
+void wrapFilterLabel(lsst::cpputils::python::WrapperCollection &);
+void wrapImagePca(lsst::cpputils::python::WrapperCollection &);
+void wrapImageUtils(lsst::cpputils::python::WrapperCollection &);
+void wrapPhotoCalib(lsst::cpputils::python::WrapperCollection &);
+void wrapReaders(lsst::cpputils::python::WrapperCollection &);
+void wrapTransmissionCurve(lsst::cpputils::python::WrapperCollection &);
+void wrapVisitInfo(lsst::cpputils::python::WrapperCollection &);
 
 PYBIND11_MODULE(_imageLib, mod) {
-    lsst::utils::python::WrapperCollection wrappers(mod, "lsst.afw.image");
+    lsst::cpputils::python::WrapperCollection wrappers(mod, "lsst.afw.image");
     wrapCalib(wrappers);
     wrapColor(wrappers);
     wrapCoaddInputs(wrappers);

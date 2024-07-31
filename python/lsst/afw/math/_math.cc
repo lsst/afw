@@ -21,35 +21,35 @@
  */
 
 #include <pybind11/pybind11.h>
-#include <lsst/utils/python.h>
+#include <lsst/cpputils/python.h>
 namespace lsst {
 namespace afw {
 namespace math {
 
-void wrapApproximate(lsst::utils::python::WrapperCollection &);
-void wrapBackground(lsst::utils::python::WrapperCollection &);
-void wrapBoundedField(lsst::utils::python::WrapperCollection &);
-void wrapChebyshevBoundedField(lsst::utils::python::WrapperCollection &);
-void wrapConvolveImage(lsst::utils::python::WrapperCollection &);
-void wrapFunction(lsst::utils::python::WrapperCollection &);
-void wrapFunctionLibrary(lsst::utils::python::WrapperCollection &);
-void wrapGaussianProcess(lsst::utils::python::WrapperCollection &);
-void wrapInterpolate(lsst::utils::python::WrapperCollection &);
-void wrapKernel(lsst::utils::python::WrapperCollection &);
-void wrapLeastSquares(lsst::utils::python::WrapperCollection &);
-void wrapMinimize(lsst::utils::python::WrapperCollection &);
-void wrapOffsetImage(lsst::utils::python::WrapperCollection &);
-void wrapPixelAreaBoundedField(lsst::utils::python::WrapperCollection &);
-void wrapProductBoundedField(lsst::utils::python::WrapperCollection &);
-void wrapRandom(lsst::utils::python::WrapperCollection &);
-void wrapSpatialCell(lsst::utils::python::WrapperCollection &);
-void wrapStack(lsst::utils::python::WrapperCollection &);
-void wrapStatistics(lsst::utils::python::WrapperCollection &);
-void wrapTransformBoundedField(lsst::utils::python::WrapperCollection &);
-void wrapWarpExposure(lsst::utils::python::WrapperCollection &);
+void wrapApproximate(lsst::cpputils::python::WrapperCollection &);
+void wrapBackground(lsst::cpputils::python::WrapperCollection &);
+void wrapBoundedField(lsst::cpputils::python::WrapperCollection &);
+void wrapChebyshevBoundedField(lsst::cpputils::python::WrapperCollection &);
+void wrapConvolveImage(lsst::cpputils::python::WrapperCollection &);
+void wrapFunction(lsst::cpputils::python::WrapperCollection &);
+void wrapFunctionLibrary(lsst::cpputils::python::WrapperCollection &);
+void wrapGaussianProcess(lsst::cpputils::python::WrapperCollection &);
+void wrapInterpolate(lsst::cpputils::python::WrapperCollection &);
+void wrapKernel(lsst::cpputils::python::WrapperCollection &);
+void wrapLeastSquares(lsst::cpputils::python::WrapperCollection &);
+void wrapMinimize(lsst::cpputils::python::WrapperCollection &);
+void wrapOffsetImage(lsst::cpputils::python::WrapperCollection &);
+void wrapPixelAreaBoundedField(lsst::cpputils::python::WrapperCollection &);
+void wrapProductBoundedField(lsst::cpputils::python::WrapperCollection &);
+void wrapRandom(lsst::cpputils::python::WrapperCollection &);
+void wrapSpatialCell(lsst::cpputils::python::WrapperCollection &);
+void wrapStack(lsst::cpputils::python::WrapperCollection &);
+void wrapStatistics(lsst::cpputils::python::WrapperCollection &);
+void wrapTransformBoundedField(lsst::cpputils::python::WrapperCollection &);
+void wrapWarpExposure(lsst::cpputils::python::WrapperCollection &);
 
 PYBIND11_MODULE(_math, mod) {
-    lsst::utils::python::WrapperCollection wrappers(mod, "lsst.afw.math");
+    lsst::cpputils::python::WrapperCollection wrappers(mod, "lsst.afw.math");
     wrapApproximate(wrappers);
     wrapBackground(wrappers);
     wrapBoundedField(wrappers);

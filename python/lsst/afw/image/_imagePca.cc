@@ -23,7 +23,7 @@
 
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
-#include "lsst/utils/python.h"
+#include "lsst/cpputils/python.h"
 
 #include "lsst/afw/image/ImagePca.h"
 
@@ -38,7 +38,7 @@ namespace image {
 namespace {
 
 template <typename ImageT>
-static void declareImagePca(lsst::utils::python::WrapperCollection &wrappers, std::string const &suffix) {
+static void declareImagePca(lsst::cpputils::python::WrapperCollection &wrappers, std::string const &suffix) {
     std::string name = "ImagePca" + suffix;
     wrappers.wrapType(
             py::class_<ImagePca<ImageT>, std::shared_ptr<ImagePca<ImageT>>>(wrappers.module, name.c_str()),
@@ -60,7 +60,7 @@ static void declareImagePca(lsst::utils::python::WrapperCollection &wrappers, st
 }
 
 template <typename Image1T, typename Image2T>
-static void declareInnerProduct(lsst::utils::python::WrapperCollection &wrappers) {
+static void declareInnerProduct(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrap([](auto &mod) {
         mod.def("innerProduct",
                 (double (*)(Image1T const &, Image2T const &, int const))innerProduct<Image1T, Image2T>,
@@ -70,7 +70,7 @@ static void declareInnerProduct(lsst::utils::python::WrapperCollection &wrappers
 
 }  // namespace
 
-void wrapImagePca(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapImagePca(lsst::cpputils::python::WrapperCollection &wrappers) {
     declareImagePca<Image<int>>(wrappers, "I");
     declareImagePca<Image<float>>(wrappers, "F");
     declareImagePca<Image<double>>(wrappers, "D");

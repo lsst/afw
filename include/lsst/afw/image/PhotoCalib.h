@@ -41,7 +41,7 @@
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/daf/base/PropertyList.h"
 #include "lsst/pex/exceptions/Exception.h"
-#include "lsst/utils/Magnitude.h"
+#include "lsst/cpputils/Magnitude.h"
 
 namespace lsst {
 namespace afw {
@@ -436,7 +436,7 @@ public:
      *
      * @returns     The instFlux magnitude zero point.
      */
-    double getInstFluxAtZeroMagnitude() const { return utils::referenceFlux / _calibrationMean; }
+    double getInstFluxAtZeroMagnitude() const { return cpputils::referenceFlux / _calibrationMean; }
 
     /**
      * Get the local calibration at a point.

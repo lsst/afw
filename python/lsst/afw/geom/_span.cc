@@ -24,7 +24,7 @@
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 #include "pybind11/numpy.h"
-#include <lsst/utils/python.h>
+#include <lsst/cpputils/python.h>
 
 #include "lsst/afw/geom/Span.h"
 #include "lsst/afw/geom/SpanPixelIterator.h"
@@ -58,14 +58,14 @@ private:
     Span::Iterator _end;
 };
 
-static void declareSpanIterator(lsst::utils::python::WrapperCollection &wrappers) {
+static void declareSpanIterator(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(py::class_<SpanIterator>(wrappers.module, "SpanIterator"), [](auto &mod, auto &cls) {
         cls.def("__iter__", [](SpanIterator &it) -> SpanIterator & { return it; });
         cls.def("__next__", &SpanIterator::next);
     });
 }
 
-void declareSpan(lsst::utils::python::WrapperCollection &wrappers) {
+void declareSpan(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(PySpan(wrappers.module, "Span"), [](auto &mod, auto &cls) {
         cls.def(py::init<int, int, int>());
         cls.def(py::init<Span::Interval const &, int>());
@@ -99,7 +99,7 @@ void declareSpan(lsst::utils::python::WrapperCollection &wrappers) {
     });
 }
 }  // namespace
-void wrapSpan(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapSpan(lsst::cpputils::python::WrapperCollection &wrappers) {
     declareSpanIterator(wrappers);
     declareSpan(wrappers);
 }

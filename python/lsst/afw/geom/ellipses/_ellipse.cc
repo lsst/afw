@@ -24,7 +24,7 @@
 #include "pybind11/pybind11.h"
 #include "pybind11/eigen.h"
 #include "pybind11/stl.h"
-#include <lsst/utils/python.h>
+#include <lsst/cpputils/python.h>
 
 #include "ndarray/pybind11.h"
 
@@ -41,7 +41,7 @@ namespace lsst {
 namespace afw {
 namespace geom {
 namespace ellipses {
-void wrapEllipse(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapEllipse(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(
             py::class_<Ellipse, std::shared_ptr<Ellipse>>(wrappers.module, "Ellipse"),
             [](auto &mod, auto &cls) {

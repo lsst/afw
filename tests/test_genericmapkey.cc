@@ -32,7 +32,7 @@
 #include <string>
 #include <sstream>
 
-#include "lsst/utils/tests.h"
+#include "lsst/cpputils/tests.h"
 
 #include "lsst/afw/math/ChebyshevBoundedField.h"
 #include "lsst/afw/typehandling/Key.h"
@@ -141,12 +141,12 @@ BOOST_AUTO_TEST_CASE(KeySorting) {
 }
 
 BOOST_AUTO_TEST_CASE(KeyHash) {
-    utils::assertValidHash<Key<std::string, int>>();
-    utils::assertValidHash<Key<int, lsst::afw::math::ChebyshevBoundedField>>();
+    cpputils::assertValidHash<Key<std::string, int>>();
+    cpputils::assertValidHash<Key<int, lsst::afw::math::ChebyshevBoundedField>>();
 
     using TestKey = Key<std::string, int>;
-    utils::assertHashesEqual(TestKey("foo"s), TestKey("foo"s));
-    utils::assertHashesEqual(TestKey("bar"s), makeKey<int>("bar"s));
+    cpputils::assertHashesEqual(TestKey("foo"s), TestKey("foo"s));
+    cpputils::assertHashesEqual(TestKey("bar"s), makeKey<int>("bar"s));
 }
 
 BOOST_AUTO_TEST_CASE(KeyConvertPrimitives) {

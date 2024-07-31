@@ -22,7 +22,7 @@
  */
 
 #include "pybind11/pybind11.h"
-#include "lsst/utils/python.h"
+#include "lsst/cpputils/python.h"
 
 #include "lsst/daf/base/PropertySet.h"
 #include "lsst/afw/cameraGeom/Detector.h"
@@ -89,7 +89,7 @@ void declareGenericMethodsMerged(PyExposureInfo &cls) {
             "key"_a);
 }
 
-void declareExposureInfo(lsst::utils::python::WrapperCollection &wrappers) {
+void declareExposureInfo(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(PyExposureInfo(wrappers.module, "ExposureInfo"), [](auto &mod, auto &cls) {
         /* Constructors */
         cls.def(py::init<std::shared_ptr<geom::SkyWcs const> const &,
@@ -221,7 +221,7 @@ void declareExposureInfo(lsst::utils::python::WrapperCollection &wrappers) {
     });
 }
 }  // namespace
-void wrapExposureInfo(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapExposureInfo(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.addSignatureDependency("lsst.daf.base");
     wrappers.addSignatureDependency("lsst.afw.geom");
     wrappers.addSignatureDependency("lsst.afw.cameraGeom");

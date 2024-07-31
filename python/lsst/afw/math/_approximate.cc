@@ -21,7 +21,7 @@
  */
 
 #include <pybind11/pybind11.h>
-#include <lsst/utils/python.h>
+#include <lsst/cpputils/python.h>
 #include <pybind11/stl.h>
 
 #include "lsst/afw/image/MaskedImage.h"
@@ -37,7 +37,7 @@ namespace math {
 
 namespace {
 template <typename PixelT>
-void declareApproximate(lsst::utils::python::WrapperCollection &wrappers, std::string const &suffix) {
+void declareApproximate(lsst::cpputils::python::WrapperCollection &wrappers, std::string const &suffix) {
     using Class = Approximate<PixelT>;
 
     wrappers.wrapType(
@@ -54,7 +54,7 @@ void declareApproximate(lsst::utils::python::WrapperCollection &wrappers, std::s
                         "x"_a, "y"_a, "im"_a, "bbox"_a, "ctrl"_a);
             });
 }
-void declareApproximate(lsst::utils::python::WrapperCollection &wrappers) {
+void declareApproximate(lsst::cpputils::python::WrapperCollection &wrappers) {
     auto control =
             wrappers.wrapType(py::class_<ApproximateControl, std::shared_ptr<ApproximateControl>>(
                                       wrappers.module, "ApproximateControl"),
@@ -80,7 +80,7 @@ void declareApproximate(lsst::utils::python::WrapperCollection &wrappers) {
     declareApproximate<float>(wrappers, "F");
 }
 }  // namespace
-void wrapApproximate(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapApproximate(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.addSignatureDependency("lsst.afw.image");
     declareApproximate(wrappers);
 }

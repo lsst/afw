@@ -21,7 +21,7 @@
  */
 
 #include <pybind11/pybind11.h>
-#include <lsst/utils/python.h>
+#include <lsst/cpputils/python.h>
 #include <pybind11/stl.h>
 
 #include "lsst/afw/math/Statistics.h"
@@ -34,7 +34,7 @@ namespace afw {
 namespace math {
 
 template <typename Pixel>
-void declareStatistics(lsst::utils::python::WrapperCollection &wrappers) {
+void declareStatistics(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrap([](auto &mod) {
         mod.def("makeStatistics",
                 (Statistics(*)(image::Image<Pixel> const &, image::Mask<image::MaskPixel> const &, int const,
@@ -60,7 +60,7 @@ void declareStatistics(lsst::utils::python::WrapperCollection &wrappers) {
 }
 
 template <typename Pixel>
-void declareStatisticsVectorOverloads(lsst::utils::python::WrapperCollection &wrappers) {
+void declareStatisticsVectorOverloads(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrap([](auto &mod) {
         mod.def("makeStatistics",
                 (Statistics(*)(std::vector<Pixel> const &, int const,
@@ -73,7 +73,7 @@ void declareStatisticsVectorOverloads(lsst::utils::python::WrapperCollection &wr
     });
 }
 
-void declareStatistics(lsst::utils::python::WrapperCollection &wrappers) {
+void declareStatistics(lsst::cpputils::python::WrapperCollection &wrappers) {
     /* Module level */
     wrappers.wrapType(py::enum_<Property>(wrappers.module, "Property", py::arithmetic()),
                       [](auto &mod, auto &enm) {
@@ -143,7 +143,7 @@ void declareStatistics(lsst::utils::python::WrapperCollection &wrappers) {
         cls.def("getOrMask", &Statistics::getOrMask);
     });
 }
-void wrapStatistics(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapStatistics(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.addSignatureDependency("lsst.afw.image");
     declareStatistics(wrappers);
     declareStatistics<unsigned short>(wrappers);

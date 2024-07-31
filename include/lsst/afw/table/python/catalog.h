@@ -26,7 +26,7 @@
 #include "pybind11/pybind11.h"
 
 #include "ndarray/pybind11.h"
-#include "lsst/utils/python.h"
+#include "lsst/cpputils/python.h"
 #include "lsst/afw/table/BaseColumnView.h"
 #include "lsst/afw/table/Catalog.h"
 
@@ -273,7 +273,7 @@ void declareCatalogArrayOverloads(PyCatalog<Record> &cls) {
  *                   (used to set the class name).
  */
 template <typename Record>
-PyCatalog<Record> declareCatalog(utils::python::WrapperCollection &wrappers, std::string const &name,
+PyCatalog<Record> declareCatalog(cpputils::python::WrapperCollection &wrappers, std::string const &name,
                                  bool isBase = false) {
     namespace py = pybind11;
     using namespace pybind11::literals;
@@ -328,7 +328,7 @@ PyCatalog<Record> declareCatalog(utils::python::WrapperCollection &wrappers, std
                 cls.def("_append",
                         [](Catalog &self, std::shared_ptr<Record> const &rec) { self.push_back(rec); });
                 cls.def("_delitem_", [](Catalog &self, std::ptrdiff_t i) {
-                    self.erase(self.begin() + utils::python::cppIndex(self.size(), i));
+                    self.erase(self.begin() + cpputils::python::cppIndex(self.size(), i));
                 });
                 cls.def("_delslice_", [](Catalog &self, py::slice const &s) {
                     Py_ssize_t start = 0, stop = 0, step = 0, length = 0;
@@ -344,7 +344,7 @@ PyCatalog<Record> declareCatalog(utils::python::WrapperCollection &wrappers, std
 
                 cls.def("set", &Catalog::set);
                 cls.def("_getitem_", [](Catalog &self, int i) {
-                    return self.get(utils::python::cppIndex(self.size(), i));
+                    return self.get(cpputils::python::cppIndex(self.size(), i));
                 });
                 cls.def("__iter__", [](Catalog & self) {
                     // We wrap a custom iterator class here for two reasons:

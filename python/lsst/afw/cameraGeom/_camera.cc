@@ -22,11 +22,10 @@
  */
 
 #include "pybind11/pybind11.h"
-#include <lsst/utils/python.h>
+#include <lsst/cpputils/python.h>
 
 #include "pybind11/stl.h"
 
-#include "lsst/utils/python.h"
 #include "lsst/afw/table/io/python.h"
 #include "lsst/afw/cameraGeom/Camera.h"
 
@@ -45,7 +44,7 @@ using PyCameraBuilder = py::class_<Camera::Builder, DetectorCollectionBase<Detec
 // Camera.h to the greatest extent possible; modifications to this file should
 // attempt to preserve this.
 
-void wrapCamera(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapCamera(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.addInheritanceDependency("lsst.afw.table.io");
     wrappers.addSignatureDependency("lsst.afw.cameraGeom");
     auto camera = wrappers.wrapType(PyCamera(wrappers.module, "Camera"), [](auto &mod, auto &cls) {

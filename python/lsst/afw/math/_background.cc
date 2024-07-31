@@ -21,7 +21,7 @@
  */
 
 #include <pybind11/pybind11.h>
-#include <lsst/utils/python.h>
+#include <lsst/cpputils/python.h>
 #include <pybind11/stl.h>
 
 #include "lsst/afw/image/Image.h"
@@ -38,7 +38,7 @@ namespace math {
 
 namespace {
 template <typename ImageT>
-void declareMakeBackground(lsst::utils::python::WrapperCollection &wrappers) {
+void declareMakeBackground(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrap([](auto &mod) { mod.def("makeBackground", makeBackground<ImageT>, "img"_a, "bgCtrl"_a); });
 }
 
@@ -70,7 +70,7 @@ void declareGetImage(PyClass &cls, std::string const &suffix) {
 }
 }  // namespace
 
-void declareBackground(lsst::utils::python::WrapperCollection &wrappers) {
+void declareBackground(lsst::cpputils::python::WrapperCollection &wrappers) {
     /* Member types and enums */
     wrappers.wrapType(py::enum_<UndersampleStyle>(wrappers.module, "UndersampleStyle"),
                       [](auto &mod, auto &enm) {
@@ -159,7 +159,7 @@ void declareBackground(lsst::utils::python::WrapperCollection &wrappers) {
         // Yes, really only float
     });
 }
-void wrapBackground(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapBackground(lsst::cpputils::python::WrapperCollection &wrappers) {
     // FIXME: review when lsst.afw.image is converted to python wrappers
     wrappers.addInheritanceDependency("lsst.afw.image");
     declareBackground(wrappers);

@@ -25,7 +25,7 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
-#include <lsst/utils/python.h>
+#include <lsst/cpputils/python.h>
 
 #include <pybind11/stl.h>
 
@@ -47,7 +47,7 @@ namespace afw {
 namespace geom {
 namespace polygon {
 namespace {
-void declarePolygon(lsst::utils::python::WrapperCollection &wrappers) {
+void declarePolygon(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(
             py::class_<Polygon, std::shared_ptr<Polygon>, typehandling::Storable>(wrappers.module, "Polygon"),
             [](auto &mod, auto &cls) {
@@ -134,7 +134,7 @@ void declarePolygon(lsst::utils::python::WrapperCollection &wrappers) {
             });
 }
 }  // namespace
-void wrapPolygon(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapPolygon(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.addInheritanceDependency("lsst.pex.exceptions");
     wrappers.addInheritanceDependency("lsst.afw.typehandling");
     wrappers.addSignatureDependency("lsst.afw.table.io");

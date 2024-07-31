@@ -22,7 +22,7 @@
  */
 
 #include <pybind11/pybind11.h>
-#include <lsst/utils/python.h>
+#include <lsst/cpputils/python.h>
 
 #include "lsst/afw/geom/ellipses/Axes.h"
 
@@ -34,7 +34,7 @@ namespace lsst {
 namespace afw {
 namespace geom {
 namespace ellipses {
-void wrapAxes(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapAxes(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(
             py::class_<Axes, std::shared_ptr<Axes>, BaseCore>(wrappers.module, "Axes"),
             [](auto &mod, auto &cls) {

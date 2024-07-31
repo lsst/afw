@@ -23,7 +23,7 @@
 
 #include <pybind11/pybind11.h>
 
-#include <lsst/utils/python.h>
+#include <lsst/cpputils/python.h>
 
 #include "lsst/afw/geom/ellipses/ConformalShear.h"
 #include "lsst/afw/geom/ellipses/EllipticityBase.h"
@@ -36,7 +36,7 @@ namespace afw {
 namespace geom {
 namespace ellipses {
 
-void wrapConformalShear(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapConformalShear(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(py::class_<ConformalShear, detail::EllipticityBase>(wrappers.module, "ConformalShear"),
                       [](auto &mod, auto &cls) {
                           /* Constructors */

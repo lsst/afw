@@ -22,7 +22,7 @@
  */
 
 #include "pybind11/pybind11.h"
-#include <lsst/utils/python.h>
+#include <lsst/cpputils/python.h>
 
 #include "pybind11/stl.h"
 
@@ -63,7 +63,7 @@ void declareDetectorCollectionBase(PyDetectorCollectionBase<T> &cls) {
             [](DetectorCollectionBase<T> const &self, int id) { return self.get(id) != nullptr; });
 }
 }  // namespace
-void wrapDetectorCollection(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapDetectorCollection(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.addInheritanceDependency("lsst.afw.table.io");
     wrappers.wrapType(
             PyDetectorCollectionBase<Detector const>(wrappers.module, "DetectorCollectionDetectorBase"),

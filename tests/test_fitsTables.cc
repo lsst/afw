@@ -10,7 +10,7 @@
 #include <cmath>
 #include <filesystem>
 
-#include "lsst/utils/packaging.h"
+#include "lsst/cpputils/packaging.h"
 #include "lsst/afw/table/Source.h"
 #include "lsst/afw/geom/Span.h"
 #include "lsst/afw/geom/SpanSet.h"
@@ -47,7 +47,7 @@ struct ExtractSchemaStrings {
 BOOST_AUTO_TEST_CASE(testFits) {
     using namespace lsst::afw::table;
 
-    std::string afwDir = lsst::utils::getPackageDir("afw");
+    std::string afwDir = lsst::cpputils::getPackageDir("afw");
     std::string filename = afwDir + "/tests/data/testTable.fits";
 
     Schema schema = SourceTable::makeMinimalSchema();

@@ -22,7 +22,7 @@
  */
 
 #include "pybind11/pybind11.h"
-#include "lsst/utils/python.h"
+#include "lsst/cpputils/python.h"
 
 #include "lsst/afw/cameraGeom/Detector.h"
 #include "lsst/afw/geom/SkyWcs.h"
@@ -56,7 +56,7 @@ void declareCastConstructor(PyExposure<ToPixelT> &cls) {
 }
 
 template <typename PixelT>  // only the image type varies; mask and variance are fixed to default tparams
-PyExposure<PixelT> declareExposure(lsst::utils::python::WrapperCollection &wrappers,
+PyExposure<PixelT> declareExposure(lsst::cpputils::python::WrapperCollection &wrappers,
                                    const std::string &suffix) {
     using ExposureT = Exposure<PixelT>;
     using MaskedImageT = typename ExposureT::MaskedImageT;
@@ -192,7 +192,7 @@ PyExposure<PixelT> declareExposure(lsst::utils::python::WrapperCollection &wrapp
 }
 }  // namespace
 PYBIND11_MODULE(_exposure, mod) {
-    lsst::utils::python::WrapperCollection wrappers(mod, "lsst.afw.image._exposure");
+    lsst::cpputils::python::WrapperCollection wrappers(mod, "lsst.afw.image._exposure");
     wrappers.addSignatureDependency("lsst.afw.image._apCorrMap");
     wrappers.addSignatureDependency("lsst.afw.geom");
     wrappers.addSignatureDependency("lsst.afw.detection");

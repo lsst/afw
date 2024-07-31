@@ -23,8 +23,8 @@
 
 #include "pybind11/pybind11.h"
 
-#include "lsst/utils/python.h"
-#include "lsst/utils/python/PySharedPtr.h"
+#include "lsst/cpputils/python.h"
+#include "lsst/cpputils/python/PySharedPtr.h"
 
 #include "lsst/afw/typehandling/Storable.h"
 #include "lsst/afw/typehandling/python.h"
@@ -32,7 +32,7 @@
 namespace py = pybind11;
 using namespace py::literals;
 
-using lsst::utils::python::PySharedPtr;
+using lsst::cpputils::python::PySharedPtr;
 
 namespace lsst {
 namespace afw {
@@ -40,7 +40,7 @@ namespace typehandling {
 
 using PyStorable = py::class_<Storable, PySharedPtr<Storable>, table::io::Persistable, StorableHelper<>>;
 
-void wrapStorable(utils::python::WrapperCollection& wrappers) {
+void wrapStorable(cpputils::python::WrapperCollection& wrappers) {
     wrappers.addInheritanceDependency("lsst.afw.table.io");
 
     wrappers.wrapType(PyStorable(wrappers.module, "Storable"), [](auto& mod, auto& cls) {

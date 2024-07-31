@@ -24,7 +24,7 @@
 #include <algorithm>
 #include <string>
 
-#include "lsst/utils/hashCombine.h"
+#include "lsst/cpputils/hashCombine.h"
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/table/AliasMap.h"
@@ -101,7 +101,7 @@ std::size_t AliasMap::hash_value() const noexcept {
     // Completely arbitrary seed
     std::size_t result = 42;
     for (const auto& entry : _internal) {
-        result = utils::hashCombine(result, entry.first, entry.second);
+        result = cpputils::hashCombine(result, entry.first, entry.second);
     }
     return result;
 }

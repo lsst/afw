@@ -30,7 +30,7 @@
 #include <utility>
 #include <variant>
 
-#include "lsst/utils/python.h"
+#include "lsst/cpputils/python.h"
 #include "lsst/pex/exceptions.h"
 
 #include "lsst/afw/typehandling/GenericMap.h"
@@ -94,7 +94,7 @@ public:
 };
 
 template <typename K>
-void declareGenericMap(utils::python::WrapperCollection& wrappers, std::string const& suffix,
+void declareGenericMap(cpputils::python::WrapperCollection& wrappers, std::string const& suffix,
                        std::string const& key) {
     using Class = GenericMap<K>;
     using PyClass = py::class_<Class, std::shared_ptr<Class>>;
@@ -167,7 +167,7 @@ void declareMutableGenericMapTypedMethods(PyClass& cls) {
 }
 
 template <typename K>
-void declareMutableGenericMap(utils::python::WrapperCollection& wrappers, std::string const& suffix,
+void declareMutableGenericMap(cpputils::python::WrapperCollection& wrappers, std::string const& suffix,
                               std::string const& key) {
     using Class = MutableGenericMap<K>;
     using PyClass = py::class_<Class, std::shared_ptr<Class>, GenericMap<K>>;
@@ -218,7 +218,7 @@ void declareMutableGenericMap(utils::python::WrapperCollection& wrappers, std::s
 }
 }  // namespace
 
-void wrapGenericMap(utils::python::WrapperCollection& wrappers) {
+void wrapGenericMap(cpputils::python::WrapperCollection& wrappers) {
     declareGenericMap<std::string>(wrappers, "S", "strings");
     declareMutableGenericMap<std::string>(wrappers, "S", "strings");
 }

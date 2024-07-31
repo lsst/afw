@@ -24,7 +24,7 @@
 #include <memory>
 #include <regex>
 
-#include "lsst/utils/hashCombine.h"
+#include "lsst/cpputils/hashCombine.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image/FilterLabel.h"
 #include "lsst/afw/table/BaseRecord.h"
@@ -126,7 +126,7 @@ bool FilterLabel::operator==(FilterLabel const &rhs) const noexcept {
 std::size_t FilterLabel::hash_value() const noexcept {
     // Do not count _name unless _hasName
     // (_has=false, _name="A") and (_has=false, _name="B") compare equal, so must have same hash
-    return utils::hashCombine(42, _hasBand, _hasBand ? _band : ""s, _hasPhysical,
+    return cpputils::hashCombine(42, _hasBand, _hasBand ? _band : ""s, _hasPhysical,
                               _hasPhysical ? _physical : ""s);
 }
 

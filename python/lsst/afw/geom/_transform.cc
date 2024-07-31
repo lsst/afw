@@ -22,7 +22,7 @@
  */
 
 #include "pybind11/pybind11.h"
-#include "lsst/utils/python.h"
+#include "lsst/cpputils/python.h"
 #include "pybind11/eigen.h"
 
 #include <memory>
@@ -70,7 +70,7 @@ void declareMethodTemplates(PyClass &cls) {
 // where <X> and <Y> are the prefix of the from endpoint and to endpoint class, respectively,
 // for example TransformGenericToPoint2
 template <class FromEndpoint, class ToEndpoint>
-void declareTransform(lsst::utils::python::WrapperCollection &wrappers) {
+void declareTransform(lsst::cpputils::python::WrapperCollection &wrappers) {
     using Class = Transform<FromEndpoint, ToEndpoint>;
     using ToPoint = typename ToEndpoint::Point;
     using ToArray = typename ToEndpoint::Array;
@@ -127,7 +127,7 @@ void declareTransform(lsst::utils::python::WrapperCollection &wrappers) {
             });
 }
 }  // namespace
-void wrapTransform(lsst::utils::python::WrapperCollection &wrappers) {
+void wrapTransform(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.addSignatureDependency("lsst.afw.table.io");
     wrappers.addSignatureDependency("astshim");
     declareTransform<GenericEndpoint, GenericEndpoint>(wrappers);

@@ -22,7 +22,7 @@
  */
 
 #include <pybind11/pybind11.h>
-#include <lsst/utils/python.h>
+#include <lsst/cpputils/python.h>
 
 #include "lsst/afw/coord/Observatory.h"
 
@@ -33,7 +33,7 @@ namespace lsst {
 namespace afw {
 namespace coord {
 
-void wrapObservatory(lsst::utils::python::WrapperCollection& wrappers) {
+void wrapObservatory(lsst::cpputils::python::WrapperCollection& wrappers) {
     wrappers.wrapType(
             py::class_<Observatory, std::shared_ptr<Observatory>>(wrappers.module, "Observatory"),
             [](auto& mod, auto& cls) {

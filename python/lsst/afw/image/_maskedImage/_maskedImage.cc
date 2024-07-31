@@ -23,7 +23,7 @@
 
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
-#include "lsst/utils/python.h"
+#include "lsst/cpputils/python.h"
 
 #include "lsst/afw/fits.h"
 #include "lsst/afw/image/MaskedImage.h"
@@ -54,7 +54,7 @@ void declareCastConstructor(PyMaskedImage<ToPixelT> &cls) {
 }
 
 template <typename ImagePixelT>
-PyMaskedImage<ImagePixelT> declareMaskedImage(lsst::utils::python::WrapperCollection &wrappers,
+PyMaskedImage<ImagePixelT> declareMaskedImage(lsst::cpputils::python::WrapperCollection &wrappers,
                                               const std::string &suffix) {
     using MI = MaskedImage<ImagePixelT>;
 
@@ -215,7 +215,7 @@ PyMaskedImage<ImagePixelT> declareMaskedImage(lsst::utils::python::WrapperCollec
 }
 
 template <typename ImagePixelT>  // addtional template types do not seem to be needed
-void declareMakeMaskedImage(lsst::utils::python::WrapperCollection &wrappers) {
+void declareMakeMaskedImage(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrap([](auto &mod) {
         mod.def("makeMaskedImage", makeMaskedImage<ImagePixelT, MaskPixel, VariancePixel>, "image"_a,
                 "mask"_a = nullptr, "variance"_a = nullptr);
@@ -223,7 +223,7 @@ void declareMakeMaskedImage(lsst::utils::python::WrapperCollection &wrappers) {
 }
 
 template <typename ImagePixelT1, typename ImagePixelT2>
-void declareImagesOverlap(lsst::utils::python::WrapperCollection &wrappers) {
+void declareImagesOverlap(lsst::cpputils::python::WrapperCollection &wrappers) {
     // wrap both the Image and MaskedImage versions of imagesOverlap here, as wrapping
     // the Image version in the Image wrapper results in it being invisible in lsst.afw.image
     wrappers.wrap([](auto &mod) {
@@ -242,7 +242,7 @@ void declareImagesOverlap(lsst::utils::python::WrapperCollection &wrappers) {
 }  // namespace
 
 PYBIND11_MODULE(_maskedImage, mod) {
-    lsst::utils::python::WrapperCollection wrappers(mod, "lsst.afw.image._maskedImage");
+    lsst::cpputils::python::WrapperCollection wrappers(mod, "lsst.afw.image._maskedImage");
     wrappers.addSignatureDependency("lsst.afw.image._image");
     wrappers.addInheritanceDependency("lsst.daf.base");
 

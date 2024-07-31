@@ -26,7 +26,7 @@
 
 #include "ndarray/pybind11.h"
 
-#include "lsst/utils/python.h"
+#include "lsst/cpputils/python.h"
 
 #include "lsst/afw/table/Key.h"
 #include "lsst/afw/table/BaseColumnView.h"
@@ -38,7 +38,7 @@ namespace lsst {
 namespace afw {
 namespace table {
 
-using utils::python::WrapperCollection;
+using cpputils::python::WrapperCollection;
 
 namespace {
 
