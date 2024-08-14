@@ -214,6 +214,7 @@ void MaskDict::_addInitialMaskPlanes() {
     _dict["DETECTED_NEGATIVE"] = ++i;
     _dict["SUSPECT"] = ++i;
     _dict["NO_DATA"] = ++i;
+    _dict["VIGNETTED"] = ++i;
     _hash = boost::hash<MaskPlaneDict>()(_dict);
 }
 
