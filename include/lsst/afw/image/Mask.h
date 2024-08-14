@@ -72,6 +72,10 @@ using MaskPlaneDict = std::map<std::string, int>;
  * - `INTRP` This pixel has been interpolated over @note should be called `INTERPOLATED`
  * - `SAT` This pixel is saturated and has bloomed @note should be called `SATURATED`
  * - `SUSPECT` This pixel is untrustworthy, and you may wish to discard any Source containing it
+ * - `NO_DATA` This pixel could not have received flux, e.g. fully vignetted, no available flux from coadd
+ * input exposures.
+ * - `VIGNETTED` This pixel is in a highly vignetted region, and has received less than XX% of the expected
+ * flux.
  */
 template <typename MaskPixelT = lsst::afw::image::MaskPixel>
 class Mask : public ImageBase<MaskPixelT> {
