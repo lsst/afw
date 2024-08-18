@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(Copy) {
     BOOST_CHECK(copy == original);
 
     // Independent copy?
-    static_cast<ComplexStorable&>(copy.get()) = 4.2;
+    dynamic_cast<ComplexStorable&>(copy.get()) = 4.2;
     BOOST_CHECK(copy != original);
 }
 
@@ -126,7 +126,7 @@ BOOST_AUTO_TEST_CASE(Move) {
     // changes to copy shouldn't affect original
     auto postMove = PolymorphicValue(original);
     BOOST_REQUIRE(original == postMove);
-    static_cast<ComplexStorable&>(copy.get()) = 4.2;
+    dynamic_cast<ComplexStorable&>(copy.get()) = 4.2;
     BOOST_CHECK(original == postMove);
 }
 
@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(CopyAssign) {
     BOOST_CHECK(copy == original);
 
     // Independent copy?
-    static_cast<ComplexStorable&>(copy.get()) = 4.2;
+    dynamic_cast<ComplexStorable&>(copy.get()) = 4.2;
     BOOST_CHECK(copy != original);
 }
 
@@ -152,7 +152,7 @@ BOOST_AUTO_TEST_CASE(MoveAssign) {
     // changes to copy shouldn't affect original
     auto postMove = PolymorphicValue(original);
     BOOST_REQUIRE(original == postMove);
-    static_cast<ComplexStorable&>(copy.get()) = 4.2;
+    dynamic_cast<ComplexStorable&>(copy.get()) = 4.2;
     BOOST_CHECK(original == postMove);
 }
 
@@ -168,7 +168,7 @@ BOOST_AUTO_TEST_CASE(ImplicitConversion) {
     // Does modifying contents change holder?
     Storable& contents = holder;
     BOOST_REQUIRE(holder == PolymorphicValue(ComplexStorable(3.5)));
-    static_cast<ComplexStorable&>(contents) = 1.6;
+    dynamic_cast<ComplexStorable&>(contents) = 1.6;
     BOOST_CHECK(holder != PolymorphicValue(ComplexStorable(3.5)));
 }
 
