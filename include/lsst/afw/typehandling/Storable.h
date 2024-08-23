@@ -57,7 +57,7 @@ LSST_EXCEPTION_TYPE(UnsupportedOperationException, pex::exceptions::RuntimeError
  */
 class Storable : public table::io::Persistable {
 public:
-    virtual ~Storable() noexcept = 0;
+    ~Storable() noexcept override = 0;
 
     /**
      * Create a new object that is a copy of this one (optional operation).

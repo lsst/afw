@@ -223,9 +223,14 @@ public:
     // Logical operators.  We don't need to construct BinaryExpr for them
     // as efficiency isn't a concern.
     //
-    /// Return true iff two pixels are equal (in all three of image, mask, and variance)
-    template <typename T1>
-    friend bool operator==(Pixel const& lhs, T1 const& rhs) {
+    /// Return true if two pixels are equal (in all three of image, mask, and variance)
+    /// Fix C++20 compilation ambiguous overload problem by creating overloads
+    template <typename T1,typename T2, typename T3>
+    friend bool operator==(Pixel const& lhs, Pixel<T1,T2,T3> const& rhs) {
+        return lhs.image() == rhs.image() && lhs.mask() == rhs.mask() && lhs.variance() == rhs.variance();
+    }
+    template <typename T1,typename T2, typename T3>
+    friend bool operator==(Pixel const& lhs, SinglePixel<T1, T2, T3> const& rhs) {
         return lhs.image() == rhs.image() && lhs.mask() == rhs.mask() && lhs.variance() == rhs.variance();
     }
 

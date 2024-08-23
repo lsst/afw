@@ -58,8 +58,9 @@ namespace test {
 
 namespace {
 class SimpleStorable : public Storable {
+friend class ComplexStorable;
 public:
-    virtual ~SimpleStorable() = default;
+    ~SimpleStorable() override = default;
 
     std::shared_ptr<Storable> cloneStorable() const override { return std::make_unique<SimpleStorable>(); }
 
@@ -87,17 +88,21 @@ public:
 
     std::size_t hash_value() const noexcept override { return std::hash<double>()(storage); }
 
-    // Warning: violates both substitution and equality symmetry!
+    // Fix violation of both substitution and equality symmetry
+    // as the code was broken on gcc with C++20 but passed on clang
     bool equals(Storable const& other) const noexcept override {
-        auto complexOther = dynamic_cast<ComplexStorable const*>(&other);
-        if (complexOther) {
+        if (auto complexOther = dynamic_cast<ComplexStorable const*>(&other)) {
             return this->storage == complexOther->storage;
-        } else {
-            return false;
         }
+        return SimpleStorable::equals(other);
     }
-    bool operator==(SimpleStorable const& other) const override { return this->equals(other); }
 
+    bool operator==(SimpleStorable const& other) const override {
+        if (auto complexOther = dynamic_cast<ComplexStorable const*>(&other)) {
+            return this->storage == complexOther->storage;
+        }
+        return SimpleStorable::operator==(other);
+    }
 private:
     double storage;
 };
@@ -107,7 +112,7 @@ std::string universalToString(T const& value) {
     std::stringstream buffer;
     buffer << value;
     return buffer.str();
-};
+}
 
 // Would make more sense as static constants in GenericFactory
 // but neither string nor Storable qualify as literal types
@@ -242,7 +247,7 @@ BOOST_TEST_CASE_TEMPLATE_FUNCTION(TestConstVisitor, GenericMapFactory) {
                 return universalToString(map->at(KEY6));
             default:
                 throw std::invalid_argument("Bad key found");
-        };
+        }
     };
     std::vector<std::string> expected;
     for (int key : mapKeys) {
