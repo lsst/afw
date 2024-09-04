@@ -22,6 +22,7 @@
 import unittest
 import os
 
+import astshim as ast
 import numpy as np
 
 import lsst.utils.tests
@@ -41,10 +42,12 @@ from lsst.afw.cameraGeom import (
     FIELD_ANGLE,
     FOCAL_PLANE,
     makeUpdatedDetector,
+    Orientation,
     PIXELS,
 )
 import lsst.afw.cameraGeom.testUtils as testUtils
 import lsst.afw.cameraGeom.utils as cameraGeomUtils
+from lsst.afw.geom import TransformPoint2ToPoint2
 
 try:
     type(display)
@@ -217,6 +220,36 @@ class CameraGeomTestCase(lsst.utils.tests.TestCase):
                     pixOffDetRoundTrip = otherPixelsToPixels.applyForward(otherPixels)
                     self.assertPairsAlmostEqual(pixOffDet, pixOffDetRoundTrip)
             self.assertEqual(numOffUsable, 5)
+
+    def testAACustomDetectorTransform(self):
+        """Test that user-set detector to focal plane transforms are not
+        overriden.
+        """
+        cameraBuilder = Camera.Builder("CameraWithCustomTransforms")
+
+        pixelSize = lsst.geom.Extent2D((0.02, 0.02))
+        # Detector with custom map:
+        detectorBuilder = cameraBuilder.add("Det0", 0)
+        detectorBuilder.setPixelSize(pixelSize)
+        detectorBuilder.setOrientation(Orientation())
+
+        customMap = ast.ZoomMap(2, 1.5)
+        transform = TransformPoint2ToPoint2(customMap)
+        detectorBuilder.setTransformFromPixelsTo(FOCAL_PLANE, transform)
+
+        # Detector with default map:
+        detectorBuilder = cameraBuilder.add("Det1", 1)
+        detectorBuilder.setPixelSize(pixelSize)
+        detectorBuilder.setOrientation(Orientation())
+
+        camera = cameraBuilder.finish()
+
+        testPoint = lsst.geom.Point2D(1, 1)
+        testPointFPDet0 = camera[0].getTransform(PIXELS, FOCAL_PLANE).applyForward(testPoint)
+        testPointFPDet1 = camera[1].getTransform(PIXELS, FOCAL_PLANE).applyForward(testPoint)
+
+        self.assertEqual(testPointFPDet0.x, 1.5)
+        self.assertNotEqual(testPointFPDet0.x, testPointFPDet1.x)
 
     def testFindDetectors(self):
         for cw in self.cameraList:

@@ -446,7 +446,7 @@ void Detector::InCameraBuilder::setTransformFromPixelsTo(
     CameraSys const & toSys,
     std::shared_ptr<afw::geom::TransformPoint2ToPoint2 const> transform
 ) {
-    if (toSys.getDetectorName() != getName()) {
+    if ((toSys.hasDetectorName()) && (toSys.getDetectorName() != getName())) {
         throw LSST_EXCEPT(
             pex::exceptions::InvalidParameterError,
             (boost::format("Cannot add coordinate system for detector '%s' to detector '%s'.") %
