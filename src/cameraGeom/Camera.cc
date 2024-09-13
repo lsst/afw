@@ -252,13 +252,25 @@ std::shared_ptr<Camera const> Camera::Builder::finish() const {
     // from PIXELS to other things.
     for (auto const & pair : getIdMap()) {
         auto const & detectorBuilder = *pair.second;
-        connections.push_back(
-            TransformMap::Connection{
-                detectorBuilder.getOrientation().makeFpPixelTransform(detectorBuilder.getPixelSize()),
-                getNativeCameraSys(),
-                detectorBuilder.getNativeCoordSys()
-            }
-        );
+        std::vector<TransformMap::Connection> detectorConnections = getDetectorBuilderConnections(detectorBuilder);
+        std::vector<std::vector<CameraSys>> allDetConnections;
+        for (auto const &connection : detectorConnections) {
+            std::vector<CameraSys> tmpConnection = {connection.fromSys, connection.toSys};
+            allDetConnections.push_back(tmpConnection);
+        }
+        std::vector<CameraSys> connection = {detectorBuilder.getNativeCoordSys(), getNativeCameraSys()};
+        std::vector<CameraSys> invConnection = {getNativeCameraSys(), detectorBuilder.getNativeCoordSys()};
+        if ((std::find(allDetConnections.begin(), allDetConnections.end(), connection) == allDetConnections.end()) 
+            && (std::find(allDetConnections.begin(), allDetConnections.end(), invConnection) == allDetConnections.end()) ) {
+        
+            connections.push_back(
+                TransformMap::Connection{
+                    detectorBuilder.getOrientation().makeFpPixelTransform(detectorBuilder.getPixelSize()),
+                    getNativeCameraSys(),
+                    detectorBuilder.getNativeCoordSys()
+                }
+            );
+        }
         connections.insert(connections.end(),
                            getDetectorBuilderConnections(detectorBuilder).begin(),
                            getDetectorBuilderConnections(detectorBuilder).end());
