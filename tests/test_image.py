@@ -121,6 +121,40 @@ class ImageTestCase(lsst.utils.tests.TestCase):
             image1.array += 5
             np.testing.assert_array_equal(image1.array, array4)
 
+    def testNumpyArrayInterface(self):
+        for cls in (afwImage.ImageU, afwImage.ImageI, afwImage.ImageF, afwImage.ImageD):
+            # Test copy-free interface.
+            image = cls(lsst.geom.Extent2I(5, 6))
+            array = np.array(image, copy=False)
+            np.testing.assert_array_equal(array, image.array)
+            array[:, :] = 5
+            np.testing.assert_array_equal(array, image.array)
+
+            # Test copy interface.
+            image = cls(lsst.geom.Extent2I(5, 6))
+            array = np.array(image, copy=True)
+            arrayOrig = image.array.copy()
+            np.testing.assert_array_equal(array, image.array)
+            array[:, :] = 5
+            np.testing.assert_array_equal(image.array, arrayOrig)
+
+            # Test dtype no conversion.
+            image = cls(lsst.geom.Extent2I(5, 6))
+            array = np.array(image, dtype=image.array.dtype, copy=False)
+            np.testing.assert_array_equal(array, image.array)
+            array[:, :] = 5
+            np.testing.assert_array_equal(array, image.array)
+
+            # Test dtype conversion, copy True.
+            image = cls(lsst.geom.Extent2I(5, 6))
+            array = np.array(image, dtype=np.float32, copy=True)
+            arrayOrig = image.array.copy()
+            np.testing.assert_array_equal(array, image.array)
+            array[:, :] = 5
+            np.testing.assert_array_equal(image.array, arrayOrig)
+
+            # More tests can be written for numpy 2 when we upgrade to it.
+
     def testImagesOverlap(self):
         dim = lsst.geom.Extent2I(10, 8)
         # a set of bounding boxes, some of which overlap each other
