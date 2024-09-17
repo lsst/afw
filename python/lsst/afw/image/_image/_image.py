@@ -46,6 +46,19 @@ class Image(metaclass=TemplateMeta):
     def __repr__(self):
         return "{}.{}={}".format(self.__module__, self.__class__.__name__, str(self))
 
+    def __array__(self, dtype=None, copy=None):
+        if dtype is None:
+            if copy:
+                return self.array.copy()
+            else:
+                return self.array
+        else:
+            if dtype != self.array.dtype and copy is False:
+                raise ValueError("copy=False and dtype change requires copy.")
+            if copy is None:
+                copy = False
+            return self.array.astype(dtype, copy=copy)
+
     readFitsWithOptions = classmethod(imageReadFitsWithOptions)
 
     writeFitsWithOptions = imageWriteFitsWithOptions
