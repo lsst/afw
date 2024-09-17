@@ -187,6 +187,22 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         # Test the property getter for a null VisitInfo.
         self.assertIsNone(self.exposureMiOnly.visitInfo)
 
+    def testNumpyArrayInterface(self):
+        # Test copy-free interface.
+        exposure = self.exposureMiOnly.clone()
+        array = np.array(exposure, copy=False)
+        np.testing.assert_array_equal(array, exposure.image.array)
+        array[:, :] = 5
+        np.testing.assert_array_equal(array, exposure.image.array)
+
+        # Test copy interface.
+        exposure = self.exposureMiOnly.clone()
+        array = np.array(exposure, copy=True)
+        arrayOrig = exposure.image.array.copy()
+        np.testing.assert_array_equal(array, exposure.image.array)
+        array[:, :] = 5
+        np.testing.assert_array_equal(exposure.image.array, arrayOrig)
+
     def testGetWcs(self):
         """Test that a WCS can be obtained from each Exposure created with
         a WCS, and that an Exposure lacking a WCS returns None.
