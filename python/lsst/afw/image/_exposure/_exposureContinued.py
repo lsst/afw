@@ -67,6 +67,9 @@ class Exposure(metaclass=TemplateMeta):
     def __deepcopy__(self, memo=None):
         return self.clone()
 
+    def __array__(self, dtype=None, copy=None):
+        return self.image.__array__(dtype=dtype, copy=copy)
+
     def convertF(self):
         return ExposureF(self, deep=True)
 
