@@ -25,18 +25,20 @@
 #include "boost/functional/hash.hpp"
 #include "lsst/afw/image/detail/MaskDict.h"
 
-namespace lsst { namespace afw { namespace image { namespace detail {
+namespace lsst {
+namespace afw {
+namespace image {
+namespace detail {
 
 // A thread-safe singleton that manages MaskDict's global state.
 class MaskDict::GlobalState final {
 public:
-
-    static GlobalState & get() {
+    static GlobalState &get() {
         static GlobalState instance;
         return instance;
     }
 
-    std::shared_ptr<MaskDict> copyOrGetDefault(MaskPlaneDict const & mpd) {
+    std::shared_ptr<MaskDict> copyOrGetDefault(MaskPlaneDict const &mpd) {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         if (!mpd.empty()) {
             std::shared_ptr<MaskDict> dict(new MaskDict(mpd));
@@ -46,20 +48,16 @@ public:
         return _defaultMaskDict;
     }
 
-    std::shared_ptr<MaskDict> copy(MaskDict const & dict) {
+    std::shared_ptr<MaskDict> copy(MaskDict const &dict) {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         std::shared_ptr<MaskDict> result(new MaskDict(dict));
         _allMaskDicts.insert(result);
         return result;
     }
 
-    std::shared_ptr<MaskDict> getDefault() const noexcept {
-        return _defaultMaskDict;
-    }
+    std::shared_ptr<MaskDict> getDefault() const noexcept { return _defaultMaskDict; }
 
-    void setDefault(std::shared_ptr<MaskDict> dict) {
-        _defaultMaskDict = std::move(dict);
-    }
+    void setDefault(std::shared_ptr<MaskDict> dict) { _defaultMaskDict = std::move(dict); }
 
     std::shared_ptr<MaskDict> detachDefault() {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
@@ -71,13 +69,12 @@ public:
     void forEachMaskDict(Functor functor) {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         _prune();  // guarantees dereference below is safe
-        for (auto const & ptr : _allMaskDicts) {
+        for (auto const &ptr : _allMaskDicts) {
             functor(*ptr.lock());
         }
     }
 
 private:
-
     GlobalState() : _defaultMaskDict(new MaskDict()) {
         _allMaskDicts.insert(_defaultMaskDict);
         _defaultMaskDict->_addInitialMaskPlanes();
@@ -86,15 +83,15 @@ private:
     GlobalState(GlobalState const &) = delete;
     GlobalState(GlobalState &&) = delete;
 
-    GlobalState & operator=(GlobalState const &) = delete;
-    GlobalState & operator=(GlobalState &&) = delete;
+    GlobalState &operator=(GlobalState const &) = delete;
+    GlobalState &operator=(GlobalState &&) = delete;
 
     ~GlobalState() = default;
 
     // Prune expired weak_ptrs from _allMaskDicts.  Not thread safe; should
     // only be called by routines that have already locked the mutex.
     void _prune() {
-        for (auto iter = _allMaskDicts.begin(); iter != _allMaskDicts.end(); ) {
+        for (auto iter = _allMaskDicts.begin(); iter != _allMaskDicts.end();) {
             if (iter->expired()) {
                 iter = _allMaskDicts.erase(iter);
             } else {
@@ -108,63 +105,47 @@ private:
     std::shared_ptr<MaskDict> _defaultMaskDict;
 };
 
-std::shared_ptr<MaskDict> MaskDict::copyOrGetDefault(MaskPlaneDict const& mpd) {
+std::shared_ptr<MaskDict> MaskDict::copyOrGetDefault(MaskPlaneDict const &mpd) {
     return GlobalState::get().copyOrGetDefault(mpd);
 }
 
-std::shared_ptr<MaskDict> MaskDict::getDefault() {
-    return GlobalState::get().getDefault();
-}
+std::shared_ptr<MaskDict> MaskDict::getDefault() { return GlobalState::get().getDefault(); }
 
-void MaskDict::setDefault(std::shared_ptr<MaskDict> dict) {
-    GlobalState::get().setDefault(std::move(dict));
-}
+void MaskDict::setDefault(std::shared_ptr<MaskDict> dict) { GlobalState::get().setDefault(std::move(dict)); }
 
-std::shared_ptr<MaskDict> MaskDict::detachDefault() {
-    return GlobalState::get().detachDefault();
-}
+std::shared_ptr<MaskDict> MaskDict::detachDefault() { return GlobalState::get().detachDefault(); }
 
-void MaskDict::addAllMasksPlane(std::string const & name, int bitId) {
-    GlobalState::get().forEachMaskDict(
-        [&name, bitId](MaskDict & dict) {
-            auto const found = std::find_if(
-                dict.begin(), dict.end(),
-                [bitId](auto const & item) { return item.second == bitId; }
-            );
-            if (found == dict.end()) {
-                // is name already in use?
-                if (dict.find(name) == dict.end()) {
-                    dict.add(name, bitId);
-                }
+void MaskDict::addAllMasksPlane(std::string const &name, int bitId) {
+    GlobalState::get().forEachMaskDict([&name, bitId](MaskDict &dict) {
+        auto const found = std::find_if(dict.begin(), dict.end(),
+                                        [bitId](auto const &item) { return item.second == bitId; });
+        if (found == dict.end()) {
+            // is name already in use?
+            if (dict.find(name) == dict.end()) {
+                dict.add(name, bitId);
             }
         }
-    );
+    });
 }
 
 MaskDict::~MaskDict() noexcept = default;
 
-std::shared_ptr<MaskDict> MaskDict::clone() const {
-    return GlobalState::get().copy(*this);
-}
+std::shared_ptr<MaskDict> MaskDict::clone() const { return GlobalState::get().copy(*this); }
 
 int MaskDict::getUnusedPlane() const {
     if (empty()) {
         return 0;
     }
 
-    auto const maxIter = std::max_element(
-        begin(), end(),
-        [](auto const & a, auto const & b) { return a.second < b.second; }
-    );
+    auto const maxIter = std::max_element(begin(), end(),
+                                          [](auto const &a, auto const &b) { return a.second < b.second; });
     assert(maxIter != end());
     int id = maxIter->second + 1;  // The maskPlane to use if there are no gaps
 
     for (int i = 0; i < id; ++i) {
         // is i already used in this Mask?
-        auto const sameIter = std::find_if(
-            begin(), end(),
-            [i](auto const & item) { return item.second == i; }
-        );
+        auto const sameIter =
+                std::find_if(begin(), end(), [i](auto const &item) { return item.second == i; });
         if (sameIter == end()) {  // Not used; so we'll use it
             return i;
         }
@@ -173,27 +154,27 @@ int MaskDict::getUnusedPlane() const {
     return id;
 }
 
-int MaskDict::getMaskPlane(std::string const & name) const {
+int MaskDict::getMaskPlane(std::string const &name) const {
     auto iter = find(name);
     return (iter == end()) ? -1 : iter->second;
 }
 
 void MaskDict::print() const {
-    for (auto const & item : *this) {
+    for (auto const &item : *this) {
         std::cout << "Plane " << item.second << " -> " << item.first << std::endl;
     }
 }
 
-bool MaskDict::operator==(MaskDict const& rhs) const {
+bool MaskDict::operator==(MaskDict const &rhs) const {
     return this == &rhs || (_hash == rhs._hash && _dict == rhs._dict);
 }
 
-void MaskDict::add(std::string const & name, int bitId) {
+void MaskDict::add(std::string const &name, int bitId) {
     _dict[name] = bitId;
     _hash = boost::hash<MaskPlaneDict>()(_dict);
 }
 
-void MaskDict::erase(std::string const & name) {
+void MaskDict::erase(std::string const &name) {
     _dict.erase(name);
     _hash = boost::hash<MaskPlaneDict>()(_dict);
 }
@@ -220,6 +201,9 @@ void MaskDict::_addInitialMaskPlanes() {
 
 MaskDict::MaskDict() : _dict(), _hash(0x0) {}
 
-MaskDict::MaskDict(MaskPlaneDict const & dict) : _dict(dict), _hash(boost::hash<MaskPlaneDict>()(_dict)) {}
+MaskDict::MaskDict(MaskPlaneDict const &dict) : _dict(dict), _hash(boost::hash<MaskPlaneDict>()(_dict)) {}
 
-}}}} // lsst::afw::image::detail
+}  // namespace detail
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst
