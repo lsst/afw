@@ -81,15 +81,17 @@ std::string AliasMap::get(std::string const& name) const {
 
 void AliasMap::set(std::string const& alias, std::string const& target) {
     _internal[alias] = target;
-    if (_table) {
-        _table->handleAliasChange(alias);
+    auto table = _table.lock();
+    if (table) {
+        table->handleAliasChange(alias);
     }
 }
 
 bool AliasMap::erase(std::string const& alias) {
     bool result = _internal.erase(alias);
-    if (_table) {
-        _table->handleAliasChange(alias);
+    auto table = _table.lock();
+    if (table) {
+        table->handleAliasChange(alias);
     }
     return result;
 }

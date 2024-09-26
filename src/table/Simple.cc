@@ -78,7 +78,9 @@ std::shared_ptr<SimpleTable> SimpleTable::make(Schema const& schema,
         throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                           "Schema for Simple must contain at least the keys defined by makeMinimalSchema().");
     }
-    return std::shared_ptr<SimpleTable>(new SimpleTable(schema, idFactory));
+    std::shared_ptr<SimpleTable> table(new SimpleTable(schema, idFactory));
+    table->getSchema().getAliasMap()->setTable(table);
+    return table;
 }
 
 SimpleTable::SimpleTable(Schema const& schema, std::shared_ptr<IdFactory> const& idFactory)
@@ -106,7 +108,9 @@ std::shared_ptr<io::FitsWriter> SimpleTable::makeFitsWriter(fits::Fits* fitsfile
 }
 
 std::shared_ptr<BaseTable> SimpleTable::_clone() const {
-    return std::shared_ptr<SimpleTable>(new SimpleTable(*this));
+    std::shared_ptr<SimpleTable> table(new SimpleTable(*this));
+    table->getSchema().getAliasMap()->setTable(table);
+    return table;
 }
 
 std::shared_ptr<BaseRecord> SimpleTable::_makeRecord() {

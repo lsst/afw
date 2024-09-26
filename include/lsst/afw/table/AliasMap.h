@@ -38,14 +38,14 @@ class AliasMap final {
 
 public:
     // Create an empty AliasMap
-    AliasMap() : _internal(), _table(nullptr) {}
+    AliasMap() : _internal(), _table() {}
 
     /**
      *  Deep-copy an AliasMap
      *
      *  The new AliasMap will not be linked to any tables, even if other is.
      */
-    AliasMap(AliasMap const& other) : _internal(other._internal), _table(nullptr) {}
+    AliasMap(AliasMap const& other) : _internal(other._internal), _table() {}
     // Delegate to copy-constructor for backwards compatibility
     AliasMap(AliasMap&& other) : AliasMap(other) {}
 
@@ -124,7 +124,6 @@ public:
 private:
     friend class Schema;
     friend class SubSchema;
-    friend class BaseTable;
 
     // Internal in-place implementation of apply()
     void _apply(std::string& name) const;
@@ -134,7 +133,7 @@ private:
     // Table to notify of any changes.  We can't use a shared_ptr here because the Table needs to set
     // this in its own constructor, but the Table does guarantee that this pointer is either valid or
     // null.
-    BaseTable* _table;
+    std::weak_ptr<BaseTable> _table;
 };
 }  // namespace table
 }  // namespace afw
