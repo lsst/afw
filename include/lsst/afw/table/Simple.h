@@ -198,7 +198,6 @@ protected:
     SimpleTable(Schema const& schema, std::shared_ptr<IdFactory> const& idFactory);
 
     explicit SimpleTable(SimpleTable const& other);
-    explicit SimpleTable(SimpleTable&& other);
 
     std::shared_ptr<BaseTable> _clone() const override;
 

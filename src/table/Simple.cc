@@ -88,8 +88,6 @@ SimpleTable::SimpleTable(Schema const& schema, std::shared_ptr<IdFactory> const&
 
 SimpleTable::SimpleTable(SimpleTable const& other)
         : BaseTable(other), _idFactory(other._idFactory ? other._idFactory->clone() : other._idFactory) {}
-// Delegate to copy constructor for backwards compatibility
-SimpleTable::SimpleTable(SimpleTable&& other) : SimpleTable(other) {}
 
 SimpleTable::~SimpleTable() = default;
 

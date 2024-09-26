@@ -388,7 +388,6 @@ protected:
     SourceTable(Schema const &schema, std::shared_ptr<IdFactory> const &idFactory);
 
     SourceTable(SourceTable const &other);
-    SourceTable(SourceTable &&other);
 
     void handleAliasChange(std::string const &alias) override;
 

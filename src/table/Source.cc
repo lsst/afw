@@ -411,9 +411,7 @@ std::shared_ptr<SourceTable> SourceTable::make(Schema const &schema,
 SourceTable::SourceTable(Schema const &schema, std::shared_ptr<IdFactory> const &idFactory)
         : SimpleTable(schema, idFactory), _slots(schema) {}
 
-SourceTable::SourceTable(SourceTable const &other)  = default;
-// Delegate to copy constructor for backward compatibility
-SourceTable::SourceTable(SourceTable &&other) : SourceTable(other) {}
+SourceTable::SourceTable(SourceTable const &other) = default;
 
 void SourceTable::handleAliasChange(std::string const &alias) {
     if (alias.compare(0, 4, "slot") != 0) {

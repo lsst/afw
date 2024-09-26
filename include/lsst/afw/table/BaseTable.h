@@ -216,8 +216,7 @@ protected:
     explicit BaseTable(Schema const& schema, std::shared_ptr<daf::base::PropertyList> metadata = nullptr);
 
     BaseTable(BaseTable const& other);
-    // Delegate to copy-constructor for backwards compatibility
-    BaseTable(BaseTable&& other) : BaseTable(other) {}
+    BaseTable(BaseTable&& other) = delete;
 
 private:
     friend class BaseRecord;
