@@ -118,6 +118,9 @@ public:
     /// Return true if all aliases in this are also in other (with the same targets).
     bool contains(AliasMap const& other) const;
 
+    std::shared_ptr<BaseTable> getTable() const { return _table.lock(); }
+    void setTable(std::shared_ptr<BaseTable> table) { _table = table; }
+
 private:
     friend class Schema;
     friend class SubSchema;
