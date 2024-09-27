@@ -269,7 +269,6 @@ protected:
     explicit ExposureTable(Schema const& schema);
 
     ExposureTable(ExposureTable const& other);
-    ExposureTable(ExposureTable&& other);
 
     std::shared_ptr<BaseTable> _clone() const override;
 

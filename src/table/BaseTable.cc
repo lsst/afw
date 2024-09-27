@@ -118,7 +118,9 @@ std::size_t BaseTable::getBufferSize() const {
 }
 
 std::shared_ptr<BaseTable> BaseTable::make(Schema const &schema) {
-    return std::shared_ptr<BaseTable>(new BaseTable(schema));
+    std::shared_ptr<BaseTable> table(new BaseTable(schema));
+    table->getSchema().getAliasMap()->setTable(table);
+    return table;
 }
 
 Schema BaseTable::makeMinimalSchema() { return Schema(); }
@@ -140,7 +142,9 @@ std::shared_ptr<io::FitsWriter> BaseTable::makeFitsWriter(fits::Fits *fitsfile, 
 }
 
 std::shared_ptr<BaseTable> BaseTable::_clone() const {
-    return std::shared_ptr<BaseTable>(new BaseTable(*this));
+    std::shared_ptr<BaseTable> table(new BaseTable(*this));
+    table->getSchema().getAliasMap()->setTable(table);
+    return table;
 }
 
 std::shared_ptr<BaseRecord> BaseTable::_makeRecord() { return constructRecord<BaseRecord>(); }
@@ -149,10 +153,16 @@ BaseTable::BaseTable(Schema const &schema, std::shared_ptr<daf::base::PropertyLi
         : _schema(schema), _metadata(metadata) {
     Block::padSchema(_schema);
     _schema.disconnectAliases();
-    _schema.getAliasMap()->_table = this;
+    _schema.getAliasMap()->getTable().reset();
 }
 
-BaseTable::~BaseTable() { _schema.getAliasMap()->_table = nullptr; }
+BaseTable::BaseTable(BaseTable const &other) : _schema(other._schema), _metadata(other._metadata) {
+    _schema.disconnectAliases();
+    _schema.getAliasMap()->getTable().reset();
+    if (_metadata) _metadata = std::static_pointer_cast<daf::base::PropertyList>(_metadata->deepCopy());
+}
+
+BaseTable::~BaseTable() { _schema.getAliasMap()->getTable().reset(); }
 
 namespace {
 

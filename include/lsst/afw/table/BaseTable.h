@@ -215,12 +215,8 @@ protected:
     /// Construct from a schema.
     explicit BaseTable(Schema const& schema, std::shared_ptr<daf::base::PropertyList> metadata = nullptr);
 
-    /// Copy construct.
-    BaseTable(BaseTable const& other) : _schema(other._schema), _metadata(other._metadata) {
-        if (_metadata) _metadata = std::static_pointer_cast<daf::base::PropertyList>(_metadata->deepCopy());
-    }
-    // Delegate to copy-constructor for backwards compatibility
-    BaseTable(BaseTable&& other) : BaseTable(other) {}
+    BaseTable(BaseTable const& other);
+    BaseTable(BaseTable&& other) = delete;
 
 private:
     friend class BaseRecord;

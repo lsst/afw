@@ -397,14 +397,14 @@ std::shared_ptr<ExposureTable> ExposureTable::make(Schema const &schema) {
                 lsst::pex::exceptions::InvalidParameterError,
                 "Schema for Exposure must contain at least the keys defined by makeMinimalSchema().");
     }
-    return std::shared_ptr<ExposureTable>(new ExposureTable(schema));
+    std::shared_ptr<ExposureTable> table(new ExposureTable(schema));
+    table->getSchema().getAliasMap()->setTable(table);
+    return table;
 }
 
 ExposureTable::ExposureTable(Schema const &schema) : BaseTable(schema) {}
 
-ExposureTable::ExposureTable(ExposureTable const &other)  = default;
-// Delegate to copy-constructor for backward compatibility
-ExposureTable::ExposureTable(ExposureTable &&other) : ExposureTable(other) {}
+ExposureTable::ExposureTable(ExposureTable const &other) = default;
 
 ExposureTable::~ExposureTable() = default;
 
@@ -429,7 +429,9 @@ std::shared_ptr<io::FitsWriter> ExposureTable::makeFitsWriter(fits::Fits *fitsfi
 }
 
 std::shared_ptr<BaseTable> ExposureTable::_clone() const {
-    return std::shared_ptr<ExposureTable>(new ExposureTable(*this));
+    std::shared_ptr<ExposureTable> table(new ExposureTable(*this));
+    table->getSchema().getAliasMap()->setTable(table);
+    return table;
 }
 
 std::shared_ptr<BaseRecord> ExposureTable::_makeRecord() {

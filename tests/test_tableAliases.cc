@@ -31,7 +31,9 @@ public:
     mutable std::string lastAliasChanged;
 
     static std::shared_ptr<TestTable> make(lsst::afw::table::Schema const& schema) {
-        return std::make_shared<TestTable>(schema);
+        auto table = std::make_shared<TestTable>(schema);
+        table->getSchema().getAliasMap()->setTable(table);
+        return table;
     }
 
     explicit TestTable(lsst::afw::table::Schema const& schema) : lsst::afw::table::BaseTable(schema) {}
@@ -44,7 +46,9 @@ protected:
     void handleAliasChange(std::string const& alias) override { lastAliasChanged = alias; }
 
     std::shared_ptr<lsst::afw::table::BaseTable> _clone() const override {
-        return std::make_shared<TestTable>(*this);
+        auto table = std::make_shared<TestTable>(*this);
+        table->getSchema().getAliasMap()->setTable(table);
+        return table;
     }
 
     std::shared_ptr<lsst::afw::table::BaseRecord> _makeRecord() override {
