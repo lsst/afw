@@ -157,6 +157,11 @@ class ExposureSummaryStats(Storable):
     effTimeZeroPointScale: float = float('nan')
     """Zeropoint scaling of the effective exposure time."""
 
+    magLim: float = float('nan')
+    """Magnitude limit at fixed SNR (default SNR=5) calculated from psfSigma, skyBg,
+    zeroPoint, and readNoise.
+    """
+
     def __post_init__(self):
         Storable.__init__(self)
 
@@ -404,6 +409,13 @@ class ExposureSummaryStats(Storable):
             "effTimeZeroPointScale",
             type="F",
             doc="Zeropoint scaling of the effective exposure time."
+        )
+        schema.addField(
+            "magLim",
+            type="F",
+            doc="Magnitude limit at SNR=5 (M5) calculated from psfSigma, "
+            "skyBg, zeroPoint, and readNoise.",
+            units="mag",
         )
 
     def update_record(self, record: BaseRecord) -> None:
