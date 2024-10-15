@@ -148,7 +148,8 @@ MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(ImagePtr image, MaskPtr mask,
                                                                   VariancePtr variance)
-        : _image(image), _mask(mask), _variance(variance) {
+        : _image(image != nullptr ? image : std::make_shared<Image>()),
+          _mask(mask), _variance(variance) {
     conformSizes();
 }
 

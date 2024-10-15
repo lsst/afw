@@ -745,6 +745,12 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
         mi = afwImage.MaskedImageF(im)
         afwImage.ExposureF(mi)
 
+    def testTicket41478(self):
+        """Test for DM-41478 fix"""
+        masked_image = afwImage.MaskedImageF(None)
+        image = afwImage.ImageF(None)
+        self.assertEqual(masked_image.getBBox(), image.getBBox())
+
     def testMaskedImageInitialisation(self):
         dims = self.mimage.getDimensions()
         factory = self.mimage.Factory
