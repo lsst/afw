@@ -80,11 +80,11 @@ void declarePhotoCalib(lsst::cpputils::python::WrapperCollection &wrappers) {
 
                 /* Members - nanojansky */
                 cls.def("instFluxToNanojansky",
-                        (double (PhotoCalib::*)(double, lsst::geom::Point<double, 2> const &) const) &
+                        (double(PhotoCalib::*)(double, lsst::geom::Point<double, 2> const &) const) &
                                 PhotoCalib::instFluxToNanojansky,
                         "instFlux"_a, "point"_a);
                 cls.def("instFluxToNanojansky",
-                        (double (PhotoCalib::*)(double) const) & PhotoCalib::instFluxToNanojansky,
+                        (double(PhotoCalib::*)(double) const) & PhotoCalib::instFluxToNanojansky,
                         "instFlux"_a);
 
                 cls.def("instFluxToNanojansky",
@@ -109,18 +109,18 @@ void declarePhotoCalib(lsst::cpputils::python::WrapperCollection &wrappers) {
                         "sourceCatalog"_a, "instFluxField"_a);
 
                 cls.def("instFluxToNanojansky",
-                        (void (PhotoCalib::*)(afw::table::SourceCatalog &, std::string const &,
-                                              std::string const &) const) &
+                        (void(PhotoCalib::*)(afw::table::SourceCatalog &, std::string const &,
+                                             std::string const &) const) &
                                 PhotoCalib::instFluxToNanojansky,
                         "sourceCatalog"_a, "instFluxField"_a, "outField"_a);
 
                 /* Members - magnitudes */
                 cls.def("instFluxToMagnitude",
-                        (double (PhotoCalib::*)(double, lsst::geom::Point<double, 2> const &) const) &
+                        (double(PhotoCalib::*)(double, lsst::geom::Point<double, 2> const &) const) &
                                 PhotoCalib::instFluxToMagnitude,
                         "instFlux"_a, "point"_a);
                 cls.def("instFluxToMagnitude",
-                        (double (PhotoCalib::*)(double) const) & PhotoCalib::instFluxToMagnitude,
+                        (double(PhotoCalib::*)(double) const) & PhotoCalib::instFluxToMagnitude,
                         "instFlux"_a);
 
                 cls.def("instFluxToMagnitude",
@@ -145,8 +145,8 @@ void declarePhotoCalib(lsst::cpputils::python::WrapperCollection &wrappers) {
                         "sourceCatalog"_a, "instFluxField"_a);
 
                 cls.def("instFluxToMagnitude",
-                        (void (PhotoCalib::*)(afw::table::SourceCatalog &, std::string const &,
-                                              std::string const &) const) &
+                        (void(PhotoCalib::*)(afw::table::SourceCatalog &, std::string const &,
+                                             std::string const &) const) &
                                 PhotoCalib::instFluxToMagnitude,
                         "sourceCatalog"_a, "instFluxField"_a, "outField"_a);
 
@@ -170,6 +170,8 @@ void declarePhotoCalib(lsst::cpputils::python::WrapperCollection &wrappers) {
                 cls.def("computeScalingTo", &PhotoCalib::computeScalingTo);
 
                 cls.def("calibrateImage", &PhotoCalib::calibrateImage, "maskedImage"_a,
+                        "includeScaleUncertainty"_a = true);
+                cls.def("uncalibrateImage", &PhotoCalib::uncalibrateImage, "maskedImage"_a,
                         "includeScaleUncertainty"_a = true);
 
                 cls.def("calibrateCatalog",
