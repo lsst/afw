@@ -171,6 +171,8 @@ void declarePhotoCalib(lsst::cpputils::python::WrapperCollection &wrappers) {
 
                 cls.def("calibrateImage", &PhotoCalib::calibrateImage, "maskedImage"_a,
                         "includeScaleUncertainty"_a = true);
+                cls.def("uncalibrateImage", &PhotoCalib::uncalibrateImage, "maskedImage"_a,
+                        "includeScaleUncertainty"_a = true);
 
                 cls.def("calibrateCatalog",
                         py::overload_cast<afw::table::SourceCatalog const &,
