@@ -58,7 +58,9 @@ int const SERIALIZATION_VERSION = 1;
 
 double toNanojansky(double instFlux, double scale) { return instFlux * scale; }
 
-double toMagnitude(double instFlux, double scale) { return cpputils::nanojanskyToABMagnitude(instFlux * scale); }
+double toMagnitude(double instFlux, double scale) {
+    return cpputils::nanojanskyToABMagnitude(instFlux * scale);
+}
 
 double toInstFluxFromMagnitude(double magnitude, double scale) {
     // Note: flux[nJy] / scale = instFlux[counts]
@@ -446,8 +448,8 @@ private:
 
 class PhotoCalibFactory : public table::io::PersistableFactory {
 public:
-    std::shared_ptr<table::io::Persistable>
-    read(InputArchive const &archive, CatalogVector const &catalogs) const override {
+    std::shared_ptr<table::io::Persistable> read(InputArchive const &archive,
+                                                 CatalogVector const &catalogs) const override {
         table::BaseRecord const &record = catalogs.front().front();
         PhotoCalibSchema const &keys = PhotoCalibSchema::get();
         int version = getVersion(record);
@@ -529,7 +531,7 @@ public:
         int tableVersion = 1;
         try {
             catalogs.front().getSchema().find<double>(EXPTIME_FIELD_NAME);
-        } catch (pex::exceptions::NotFoundError const&) {
+        } catch (pex::exceptions::NotFoundError const &) {
             tableVersion = CALIB_TABLE_CURRENT_VERSION;
         }
 
@@ -540,8 +542,8 @@ public:
         table::BaseRecord const &record = catalogs.front().front();
 
         double calibration = cpputils::referenceFlux / record.get(keys.fluxMag0);
-        double calibrationErr =
-                cpputils::referenceFlux * record.get(keys.fluxMag0Err) / std::pow(record.get(keys.fluxMag0), 2);
+        double calibrationErr = cpputils::referenceFlux * record.get(keys.fluxMag0Err) /
+                                std::pow(record.get(keys.fluxMag0), 2);
         return std::make_shared<PhotoCalib>(calibration, calibrationErr);
     }
 
