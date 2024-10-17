@@ -647,8 +647,8 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
 
         # same test, but without using the calibration error
         expect = makeCalibratedMaskedImageNoCalibrationError(image, mask, variance, outImage)
-        result = photoCalib.calibrateImage(maskedImage, includeScaleUncertainty=False)
-        self.assertMaskedImagesAlmostEqual(expect, result)
+        result = photoCalib.calibrateImage(subImage, includeScaleUncertainty=False)
+        self.assertMaskedImagesAlmostEqual(expect.subset(subBox), result)
         uncalibrated = photoCalib.uncalibrateImage(result, includeScaleUncertainty=False)
         self.assertMaskedImagesAlmostEqual(subImage, uncalibrated)
 
