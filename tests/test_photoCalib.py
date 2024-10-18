@@ -594,11 +594,17 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
         photoCalib = lsst.afw.image.PhotoCalib(self.calibration, self.calibrationErr)
         result = photoCalib.calibrateImage(maskedImage)
         self.assertMaskedImagesAlmostEqual(expect, result)
+        uncalibrated = photoCalib.uncalibrateImage(result)
+        # High rtol because our specific choice of calib values results in a
+        # very-close-to-but-not-1 value, which results in poor round-tripping.
+        self.assertMaskedImagesAlmostEqual(maskedImage, uncalibrated, rtol=4e-2)
 
         # same test, but without using the calibration error
         expect = makeCalibratedMaskedImageNoCalibrationError(image, mask, variance, outImage)
         result = photoCalib.calibrateImage(maskedImage, includeScaleUncertainty=False)
         self.assertMaskedImagesAlmostEqual(expect, result)
+        uncalibrated = photoCalib.uncalibrateImage(result, includeScaleUncertainty=False)
+        self.assertMaskedImagesAlmostEqual(maskedImage, uncalibrated)
 
     def testCalibrateImageNonConstant(self):
         """Test a spatially-varying calibration."""
@@ -612,11 +618,17 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
         photoCalib = lsst.afw.image.PhotoCalib(self.linearXCalibration, self.calibrationErr)
         result = photoCalib.calibrateImage(maskedImage)
         self.assertMaskedImagesAlmostEqual(expect, result)
+        uncalibrated = photoCalib.uncalibrateImage(result)
+        # High rtol because our specific choice of calib values results in a
+        # very-close-to-but-not-1 value, which results in poor round-tripping.
+        self.assertMaskedImagesAlmostEqual(maskedImage, uncalibrated, rtol=4e-2)
 
         # same test, but without using the calibration error
         expect = makeCalibratedMaskedImageNoCalibrationError(image, mask, variance, outImage)
         result = photoCalib.calibrateImage(maskedImage, includeScaleUncertainty=False)
         self.assertMaskedImagesAlmostEqual(expect, result)
+        uncalibrated = photoCalib.uncalibrateImage(result, includeScaleUncertainty=False)
+        self.assertMaskedImagesAlmostEqual(maskedImage, uncalibrated)
 
     def testCalibrateImageNonConstantSubimage(self):
         """Test a non-constant calibration on a sub-image, to ensure we're
@@ -634,11 +646,17 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
         photoCalib = lsst.afw.image.PhotoCalib(self.linearXCalibration, self.calibrationErr)
         result = photoCalib.calibrateImage(subImage)
         self.assertMaskedImagesAlmostEqual(expect.subset(subBox), result)
+        uncalibrated = photoCalib.uncalibrateImage(result)
+        # High rtol because our specific choice of calib values results in a
+        # very-close-to-but-not-1 value, which results in poor round-tripping.
+        self.assertMaskedImagesAlmostEqual(subImage, uncalibrated, rtol=4e-3)
 
         # same test, but without using the calibration error
         expect = makeCalibratedMaskedImageNoCalibrationError(image, mask, variance, outImage)
-        result = photoCalib.calibrateImage(maskedImage, includeScaleUncertainty=False)
-        self.assertMaskedImagesAlmostEqual(expect, result)
+        result = photoCalib.calibrateImage(subImage, includeScaleUncertainty=False)
+        self.assertMaskedImagesAlmostEqual(expect.subset(subBox), result)
+        uncalibrated = photoCalib.uncalibrateImage(result, includeScaleUncertainty=False)
+        self.assertMaskedImagesAlmostEqual(subImage, uncalibrated)
 
     def testNonPositiveMeans(self):
         # no negative calibrations

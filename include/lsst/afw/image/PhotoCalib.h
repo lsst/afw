@@ -351,6 +351,20 @@ public:
                                       bool includeScaleUncertainty = true) const;
 
     /**
+     * Return a un-calibrated image, with pixel values in ADU (or whatever the original input to
+     * this photoCalib was).
+     *
+     * Mask pixels are propagated directly from the input image.
+     *
+     * @param maskedImage The masked image with pixel units of nJy to uncalibrate.
+     * @param includeScaleUncertainty Include the uncertainty on the calibration in the resulting variance?
+     *
+     * @return The uncalibrated masked image.
+     */
+    MaskedImage<float> uncalibrateImage(MaskedImage<float> const &maskedImage,
+                                        bool includeScaleUncertainty = true) const;
+
+    /**
      * Return a flux calibrated catalog, with new `_flux`, `_fluxErr`, `_mag`, and `_magErr` fields.
      *
      * If the input catalog already has `_flux`, `_mag`, `_fluxErr`, and/or `_magErr` fields matching
