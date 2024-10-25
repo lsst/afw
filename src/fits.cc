@@ -1006,88 +1006,96 @@ void writeKeyFromProperty(Fits &fits, daf::base::PropertySet const &metadata, st
                    BOOST_CURRENT_FUNCTION % key % upperKey);
     }
     std::type_info const &valueType = metadata.typeOf(key);
+
+    // Ensure long keywords have "HIERARCH " prepended; otherwise, cfitsio doesn't treat them right.
+    std::string keyName = key;
+    if (keyName.size() > 8 && keyName.rfind("HIERARCH ", 0) != 0) {
+        keyName = "HIERARCH " + keyName;
+    }
+    char const* keyStr = keyName.c_str();
+
     if (valueType == typeid(bool)) {
         if (metadata.isArray(key)) {
             std::vector<bool> tmp = metadata.getArray<bool>(key);
             // work around unfortunate specialness of std::vector<bool>
             for (std::size_t i = 0; i != tmp.size(); ++i) {
-                writeKeyImpl(fits, key.c_str(), static_cast<bool>(tmp[i]), comment);
+                writeKeyImpl(fits, keyStr, static_cast<bool>(tmp[i]), comment);
             }
         } else {
-            writeKeyImpl(fits, key.c_str(), metadata.get<bool>(key), comment);
+            writeKeyImpl(fits, keyStr, metadata.get<bool>(key), comment);
         }
     } else if (valueType == typeid(std::uint8_t)) {
         if (metadata.isArray(key)) {
             std::vector<std::uint8_t> tmp = metadata.getArray<std::uint8_t>(key);
             for (std::size_t i = 0; i != tmp.size(); ++i) {
-                writeKeyImpl(fits, key.c_str(), tmp[i], comment);
+                writeKeyImpl(fits, keyStr, tmp[i], comment);
             }
         } else {
-            writeKeyImpl(fits, key.c_str(), metadata.get<std::uint8_t>(key), comment);
+            writeKeyImpl(fits, keyStr, metadata.get<std::uint8_t>(key), comment);
         }
     } else if (valueType == typeid(int)) {
         if (metadata.isArray(key)) {
             std::vector<int> tmp = metadata.getArray<int>(key);
             for (std::size_t i = 0; i != tmp.size(); ++i) {
-                writeKeyImpl(fits, key.c_str(), tmp[i], comment);
+                writeKeyImpl(fits, keyStr, tmp[i], comment);
             }
         } else {
-            writeKeyImpl(fits, key.c_str(), metadata.get<int>(key), comment);
+            writeKeyImpl(fits, keyStr, metadata.get<int>(key), comment);
         }
     } else if (valueType == typeid(long)) {
         if (metadata.isArray(key)) {
             std::vector<long> tmp = metadata.getArray<long>(key);
             for (std::size_t i = 0; i != tmp.size(); ++i) {
-                writeKeyImpl(fits, key.c_str(), tmp[i], comment);
+                writeKeyImpl(fits, keyStr, tmp[i], comment);
             }
         } else {
-            writeKeyImpl(fits, key.c_str(), metadata.get<long>(key), comment);
+            writeKeyImpl(fits, keyStr, metadata.get<long>(key), comment);
         }
     } else if (valueType == typeid(long long)) {
         if (metadata.isArray(key)) {
             std::vector<long long> tmp = metadata.getArray<long long>(key);
             for (std::size_t i = 0; i != tmp.size(); ++i) {
-                writeKeyImpl(fits, key.c_str(), tmp[i], comment);
+                writeKeyImpl(fits, keyStr, tmp[i], comment);
             }
         } else {
-            writeKeyImpl(fits, key.c_str(), metadata.get<long long>(key), comment);
+            writeKeyImpl(fits, keyStr, metadata.get<long long>(key), comment);
         }
     } else if (valueType == typeid(std::int64_t)) {
         if (metadata.isArray(key)) {
             std::vector<std::int64_t> tmp = metadata.getArray<std::int64_t>(key);
             for (std::size_t i = 0; i != tmp.size(); ++i) {
-                writeKeyImpl(fits, key.c_str(), tmp[i], comment);
+                writeKeyImpl(fits, keyStr, tmp[i], comment);
             }
         } else {
-            writeKeyImpl(fits, key.c_str(), metadata.get<std::int64_t>(key), comment);
+            writeKeyImpl(fits, keyStr, metadata.get<std::int64_t>(key), comment);
         }
     } else if (valueType == typeid(double)) {
         if (metadata.isArray(key)) {
             std::vector<double> tmp = metadata.getArray<double>(key);
             for (std::size_t i = 0; i != tmp.size(); ++i) {
-                writeKeyImpl(fits, key.c_str(), tmp[i], comment);
+                writeKeyImpl(fits, keyStr, tmp[i], comment);
             }
         } else {
-            writeKeyImpl(fits, key.c_str(), metadata.get<double>(key), comment);
+            writeKeyImpl(fits, keyStr, metadata.get<double>(key), comment);
         }
     } else if (valueType == typeid(std::string)) {
         if (metadata.isArray(key)) {
             std::vector<std::string> tmp = metadata.getArray<std::string>(key);
             for (std::size_t i = 0; i != tmp.size(); ++i) {
-                writeKeyImpl(fits, key.c_str(), tmp[i], comment);
+                writeKeyImpl(fits, keyStr, tmp[i], comment);
             }
         } else {
-            writeKeyImpl(fits, key.c_str(), metadata.get<std::string>(key), comment);
+            writeKeyImpl(fits, keyStr, metadata.get<std::string>(key), comment);
         }
     } else if (valueType == typeid(std::nullptr_t)) {
         if (metadata.isArray(key)) {
             // Write multiple undefined values for the same key
             auto tmp = metadata.getArray<std::nullptr_t>(key);
             for (std::size_t i = 0; i != tmp.size(); ++i) {
-                writeKeyImpl(fits, key.c_str(), comment);
+                writeKeyImpl(fits, keyStr, comment);
             }
         } else {
-            writeKeyImpl(fits, key.c_str(), comment);
+            writeKeyImpl(fits, keyStr, comment);
         }
     } else {
         // FIXME: inherited this error handling from fitsIo.cc; need a better option.
