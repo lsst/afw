@@ -168,6 +168,25 @@ class FitsTestCase(lsst.utils.tests.TestCase):
         with self.assertRaises(lsst.afw.fits.FitsError):
             lsst.afw.fits.readMetadata(testfile, hduName="CORDON_BLEAU")
 
+    def testReallyLongString(self):
+        """Check that long keywords have long strings parsed correctly"""
+        header = PropertyList()
+        key = "LSST FOO BAR KEYWORD"
+        longString = (
+            "Some very very very really really really REALLY super-duper long string value so we blast past "
+            "the end of not only the 80 char limit but also the two times 80 char limit and then some more."
+        )
+
+        for keyword in (key, "HIERARCH " + key):
+            header[keyword] = longString
+            manager = lsst.afw.fits.MemFileManager()
+            fits = lsst.afw.fits.Fits(manager, "w")
+            fits.createEmpty()
+            fits.writeMetadata(header)
+            fits.closeFile()
+            new = lsst.afw.fits.Fits(manager, "r").readMetadata(True)
+            self.assertEqual(new[key], longString)
+
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
