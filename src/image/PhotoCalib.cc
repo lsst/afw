@@ -92,8 +92,8 @@ void toNanojanskyVariance(ndarray::Array<float const, 2, 1> const &instFlux,
     auto eigenInstFluxVar = ndarray::asEigen<Eigen::ArrayXpr>(instFluxVar);
     auto eigenInstFlux = ndarray::asEigen<Eigen::ArrayXpr>(instFlux);
     auto eigenOut = ndarray::asEigen<Eigen::ArrayXpr>(out);
-    eigenOut = eigenFlux.square() *
-               (eigenInstFluxVar / eigenInstFlux.square() + (scaleErr / eigenFlux * eigenInstFlux).square());
+    eigenOut = eigenFlux.square() * (eigenInstFluxVar / eigenInstFlux.square() +
+                                     (scaleErr / (eigenFlux / eigenInstFlux)).square());
 }
 
 /**
