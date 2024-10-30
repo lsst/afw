@@ -578,9 +578,11 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
         dim = (5, 6)
         npDim = (dim[1], dim[0])  # numpy and afw have a different x/y order
         sigma = 10.0
-        image = np.random.normal(loc=1000.0, scale=sigma, size=npDim).astype(np.float32)
+        # An image with increasing pixel values, to more easily check the
+        # values in specific calculations.
+        image = np.arange(dim[0]*dim[1]).astype(np.float32).reshape(npDim) + 1000
         mask = np.zeros(npDim, dtype=np.int32)
-        variance = (np.random.normal(loc=0.0, scale=sigma, size=npDim).astype(np.float32))**2
+        variance = np.ones(npDim, dtype=np.float32)*sigma
         maskedImage = lsst.afw.image.makeMaskedImageFromArrays(image, mask, variance)
         maskedImage.mask[0, 0] = True  # set one mask bit to check propagation of mask bits.
 
