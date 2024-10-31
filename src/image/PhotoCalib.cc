@@ -58,7 +58,9 @@ int const SERIALIZATION_VERSION = 1;
 
 double toNanojansky(double instFlux, double scale) { return instFlux * scale; }
 
-double toMagnitude(double instFlux, double scale) { return cpputils::nanojanskyToABMagnitude(instFlux * scale); }
+double toMagnitude(double instFlux, double scale) {
+    return cpputils::nanojanskyToABMagnitude(instFlux * scale);
+}
 
 double toInstFluxFromMagnitude(double magnitude, double scale) {
     // Note: flux[nJy] / scale = instFlux[counts]
@@ -90,8 +92,33 @@ void toNanojanskyVariance(ndarray::Array<float const, 2, 1> const &instFlux,
     auto eigenInstFluxVar = ndarray::asEigen<Eigen::ArrayXpr>(instFluxVar);
     auto eigenInstFlux = ndarray::asEigen<Eigen::ArrayXpr>(instFlux);
     auto eigenOut = ndarray::asEigen<Eigen::ArrayXpr>(out);
-    eigenOut = eigenFlux.square() *
-               (eigenInstFluxVar / eigenInstFlux.square() + (scaleErr / eigenFlux * eigenInstFlux).square());
+    eigenOut = eigenFlux.square() * (eigenInstFluxVar / eigenInstFlux.square() +
+                                     (scaleErr / (eigenFlux / eigenInstFlux)).square());
+}
+
+/**
+ * Compute the variance of an array of fluxes, for calculations on nJy calibrated MaskedImages.
+ *
+ * MaskedImage stores the variance instead of the standard deviation, so we can skip a sqrt().
+ * Usage in calibrateImage() is to compute instFlux (ADU) directly, so that the calibration scale is
+ * implictly `flux/instFlux` (and thus not passed as an argument).
+ *
+ * @param flux[in] The flux in nJy.
+ * @param fluxVar[in] The variance of the fluxes.
+ * @param scaleErr[in] The error on the calibration scale.
+ * @param instFlux[in] The instrumental fluxes calculated from the fluxes.
+ * @param out[out] The output array to fill with the instrumental variance values.
+ */
+void fromNanojanskyVariance(ndarray::Array<float const, 2, 1> const &flux,
+                            ndarray::Array<float const, 2, 1> const &fluxVar, float scaleErr,
+                            ndarray::Array<float const, 2, 1> const &instFlux,
+                            ndarray::Array<float, 2, 1> out) {
+    auto eigenFlux = ndarray::asEigen<Eigen::ArrayXpr>(flux);
+    auto eigenFluxVar = ndarray::asEigen<Eigen::ArrayXpr>(fluxVar);
+    auto eigenInstFlux = ndarray::asEigen<Eigen::ArrayXpr>(instFlux);
+    auto eigenOut = ndarray::asEigen<Eigen::ArrayXpr>(out);
+    eigenOut = eigenInstFlux.square() *
+               (eigenFluxVar / eigenFlux.square() - (scaleErr / (eigenFlux / eigenInstFlux)).square());
 }
 
 double toMagnitudeErr(double instFlux, double instFluxErr, double scale, double scaleErr) {
@@ -280,6 +307,28 @@ MaskedImage<float> PhotoCalib::calibrateImage(MaskedImage<float> const &maskedIm
     return result;
 }
 
+MaskedImage<float> PhotoCalib::uncalibrateImage(MaskedImage<float> const &maskedImage,
+                                                bool includeScaleUncertainty) const {
+    // Deep copy construct, as we're mutiplying in-place.
+    auto result = MaskedImage<float>(maskedImage, true);
+
+    if (_isConstant) {
+        *(result.getImage()) /= _calibrationMean;
+    } else {
+        _calibration->divideImage(*(result.getImage()), true);  // only in the overlap region
+    }
+    if (includeScaleUncertainty) {
+        fromNanojanskyVariance(maskedImage.getImage()->getArray(), maskedImage.getVariance()->getArray(),
+                               _calibrationErr, result.getImage()->getArray(),
+                               result.getVariance()->getArray());
+    } else {
+        fromNanojanskyVariance(maskedImage.getImage()->getArray(), maskedImage.getVariance()->getArray(), 0,
+                               result.getImage()->getArray(), result.getVariance()->getArray());
+    }
+
+    return result;
+}
+
 afw::table::SourceCatalog PhotoCalib::calibrateCatalog(afw::table::SourceCatalog const &catalog,
                                                        std::vector<std::string> const &instFluxFields) const {
     auto const &inSchema = catalog.getSchema();
@@ -399,8 +448,8 @@ private:
 
 class PhotoCalibFactory : public table::io::PersistableFactory {
 public:
-    std::shared_ptr<table::io::Persistable>
-    read(InputArchive const &archive, CatalogVector const &catalogs) const override {
+    std::shared_ptr<table::io::Persistable> read(InputArchive const &archive,
+                                                 CatalogVector const &catalogs) const override {
         table::BaseRecord const &record = catalogs.front().front();
         PhotoCalibSchema const &keys = PhotoCalibSchema::get();
         int version = getVersion(record);
@@ -482,7 +531,7 @@ public:
         int tableVersion = 1;
         try {
             catalogs.front().getSchema().find<double>(EXPTIME_FIELD_NAME);
-        } catch (pex::exceptions::NotFoundError const&) {
+        } catch (pex::exceptions::NotFoundError const &) {
             tableVersion = CALIB_TABLE_CURRENT_VERSION;
         }
 
@@ -493,8 +542,8 @@ public:
         table::BaseRecord const &record = catalogs.front().front();
 
         double calibration = cpputils::referenceFlux / record.get(keys.fluxMag0);
-        double calibrationErr =
-                cpputils::referenceFlux * record.get(keys.fluxMag0Err) / std::pow(record.get(keys.fluxMag0), 2);
+        double calibrationErr = cpputils::referenceFlux * record.get(keys.fluxMag0Err) /
+                                std::pow(record.get(keys.fluxMag0), 2);
         return std::make_shared<PhotoCalib>(calibration, calibrationErr);
     }
 

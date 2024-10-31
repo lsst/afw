@@ -84,17 +84,17 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
         self.pointYShift = lsst.geom.Point2D(0, -10)
         self.bbox = lsst.geom.Box2I(lsst.geom.Point2I(-100, -100), lsst.geom.Point2I(100, 100))
 
-        # calibration and instFlux1 are selected to produce calibrated flux of 1.
-        self.calibration = 1e-3
-        self.calibrationErr = 1e-4
-        self.instFlux1 = 1000.
-        self.instFluxErr1 = 10.
-        self.flux1 = 1.0
+        self.calibration = 1000.0
+        # A 1% error on the calibration.
+        self.calibrationErr = 10.0
+        self.instFlux1 = 1.0
+        self.instFluxErr1 = 0.1
+        self.flux1 = 1000.0  # nJy
         self.mag1 = (self.flux1*u.nJy).to_value(u.ABmag)
 
         # useful reference points: 575.44 nJy ~= 24.5 mag, 3630.78 * 10^9 nJy ~= 0 mag
-        self.flux2 = 575.44
-        self.instFlux2 = self.instFlux1*self.flux2
+        self.flux2 = 575.44 * self.flux1
+        self.instFlux2 = self.flux2/self.calibration
         self.mag2 = (self.flux2*u.nJy).to_value(u.ABmag)
 
         self.schema = lsst.afw.table.SourceTable.makeMinimalSchema()
@@ -185,7 +185,7 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
                                         self.calibration,
                                         self.flux1)
         result = photoCalib.instFluxToNanojansky(self.instFlux1, self.instFluxErr1)
-        self.assertEqual(1, result.value)
+        self.assertEqual(self.flux1, result.value)
         self.assertFloatsAlmostEqual(errFlux1, result.error)
         result = photoCalib.instFluxToNanojansky(self.instFlux1, self.instFluxErr1, self.point0)
         self.assertFloatsAlmostEqual(self.flux1, result.value)
@@ -458,14 +458,15 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
     def testComputeScaledCalibration(self):
         photoCalib = lsst.afw.image.PhotoCalib(self.calibration, bbox=self.bbox)
         scaledCalib = lsst.afw.image.PhotoCalib(photoCalib.computeScaledCalibration())
-        self.assertEqual(1, scaledCalib.instFluxToNanojansky(self.instFlux1)*photoCalib.getCalibrationMean())
+        self.assertEqual(self.flux1,
+                         scaledCalib.instFluxToNanojansky(self.instFlux1)*photoCalib.getCalibrationMean())
         self.assertEqual(photoCalib.instFluxToNanojansky(self.instFlux1),
                          scaledCalib.instFluxToNanojansky(self.instFlux1)*photoCalib.getCalibrationMean())
 
         photoCalib = lsst.afw.image.PhotoCalib(self.constantCalibration)
         scaledCalib = lsst.afw.image.PhotoCalib(photoCalib.computeScaledCalibration())
 
-        self.assertEqual(1, scaledCalib.instFluxToNanojansky(self.instFlux1*self.calibration))
+        self.assertEqual(self.flux1, scaledCalib.instFluxToNanojansky(self.instFlux1*self.calibration))
         self.assertEqual(photoCalib.instFluxToNanojansky(self.instFlux1),
                          scaledCalib.instFluxToNanojansky(self.instFlux1)*photoCalib.getCalibrationMean())
 
@@ -577,9 +578,11 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
         dim = (5, 6)
         npDim = (dim[1], dim[0])  # numpy and afw have a different x/y order
         sigma = 10.0
-        image = np.random.normal(loc=1000.0, scale=sigma, size=npDim).astype(np.float32)
+        # An image with increasing pixel values, to more easily check the
+        # values in specific calculations.
+        image = np.arange(dim[0]*dim[1]).astype(np.float32).reshape(npDim) + 1000
         mask = np.zeros(npDim, dtype=np.int32)
-        variance = (np.random.normal(loc=0.0, scale=sigma, size=npDim).astype(np.float32))**2
+        variance = np.ones(npDim, dtype=np.float32)*sigma
         maskedImage = lsst.afw.image.makeMaskedImageFromArrays(image, mask, variance)
         maskedImage.mask[0, 0] = True  # set one mask bit to check propagation of mask bits.
 
@@ -594,11 +597,15 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
         photoCalib = lsst.afw.image.PhotoCalib(self.calibration, self.calibrationErr)
         result = photoCalib.calibrateImage(maskedImage)
         self.assertMaskedImagesAlmostEqual(expect, result)
+        uncalibrated = photoCalib.uncalibrateImage(result)
+        self.assertMaskedImagesAlmostEqual(maskedImage, uncalibrated)
 
         # same test, but without using the calibration error
         expect = makeCalibratedMaskedImageNoCalibrationError(image, mask, variance, outImage)
         result = photoCalib.calibrateImage(maskedImage, includeScaleUncertainty=False)
         self.assertMaskedImagesAlmostEqual(expect, result)
+        uncalibrated = photoCalib.uncalibrateImage(result, includeScaleUncertainty=False)
+        self.assertMaskedImagesAlmostEqual(maskedImage, uncalibrated)
 
     def testCalibrateImageNonConstant(self):
         """Test a spatially-varying calibration."""
@@ -612,11 +619,15 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
         photoCalib = lsst.afw.image.PhotoCalib(self.linearXCalibration, self.calibrationErr)
         result = photoCalib.calibrateImage(maskedImage)
         self.assertMaskedImagesAlmostEqual(expect, result)
+        uncalibrated = photoCalib.uncalibrateImage(result)
+        self.assertMaskedImagesAlmostEqual(maskedImage, uncalibrated)
 
         # same test, but without using the calibration error
         expect = makeCalibratedMaskedImageNoCalibrationError(image, mask, variance, outImage)
         result = photoCalib.calibrateImage(maskedImage, includeScaleUncertainty=False)
         self.assertMaskedImagesAlmostEqual(expect, result)
+        uncalibrated = photoCalib.uncalibrateImage(result, includeScaleUncertainty=False)
+        self.assertMaskedImagesAlmostEqual(maskedImage, uncalibrated)
 
     def testCalibrateImageNonConstantSubimage(self):
         """Test a non-constant calibration on a sub-image, to ensure we're
@@ -634,11 +645,15 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
         photoCalib = lsst.afw.image.PhotoCalib(self.linearXCalibration, self.calibrationErr)
         result = photoCalib.calibrateImage(subImage)
         self.assertMaskedImagesAlmostEqual(expect.subset(subBox), result)
+        uncalibrated = photoCalib.uncalibrateImage(result)
+        self.assertMaskedImagesAlmostEqual(subImage, uncalibrated)
 
         # same test, but without using the calibration error
         expect = makeCalibratedMaskedImageNoCalibrationError(image, mask, variance, outImage)
-        result = photoCalib.calibrateImage(maskedImage, includeScaleUncertainty=False)
-        self.assertMaskedImagesAlmostEqual(expect, result)
+        result = photoCalib.calibrateImage(subImage, includeScaleUncertainty=False)
+        self.assertMaskedImagesAlmostEqual(expect.subset(subBox), result)
+        uncalibrated = photoCalib.uncalibrateImage(result, includeScaleUncertainty=False)
+        self.assertMaskedImagesAlmostEqual(subImage, uncalibrated)
 
     def testNonPositiveMeans(self):
         # no negative calibrations
