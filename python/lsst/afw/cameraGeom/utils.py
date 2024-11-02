@@ -768,7 +768,7 @@ def showCcd(ccd, imageSource=FakeImageDataSource(), display=None, overlay=True,
     if inCameraCoords:
         nQuarter = ccd.getOrientation().getNQuarter()
         ccdImage = afwMath.rotateImageBy90(ccdImage, nQuarter)
-    title = ccd.getName()
+    title = "{} [{}]".format(ccd.getName(), ccd.getId())
     if isTrimmed:
         title += "(trimmed)"
 
@@ -1022,7 +1022,8 @@ def showCamera(camera, imageSource=FakeImageDataSource(), imageFactory=afwImage.
                     displayUtils.drawBBox(
                         bbox, borderWidth=0.5, ctype=ctype, display=display)
                     dims = bbox.getDimensions()
-                    display.dot(ccd.getName(), bbox.getMinX() + dims.getX()/2, bbox.getMinY() + dims.getY()/2,
+                    ccdLabel = "{}\n[{}]".format(ccd.getName(), ccd.getId())
+                    display.dot(ccdLabel, bbox.getMinX() + dims.getX()/2, bbox.getMinY() + dims.getY()/2,
                                 ctype=ctype, size=textSize, textAngle=nQuarter*90)
 
     return cameraImage
