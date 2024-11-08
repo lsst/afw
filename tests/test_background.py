@@ -673,6 +673,8 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         approxWeighting = False
 
         backgroundList = afwMath.BackgroundList()
+        # An empty BackgroundList should eval to False, like an empty list.
+        self.assertFalse(backgroundList)
 
         for i in range(2):
             bkgd = afwMath.makeBackground(self.image, bgCtrl)
@@ -684,6 +686,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
                 backgroundList.append(bkgd)
 
         def assertBackgroundList(bgl):
+            self.assertTrue(bgl)
             self.assertEqual(len(bgl), 2)  # check that len() works
             for a in bgl:                 # check that we can iterate
                 pass
