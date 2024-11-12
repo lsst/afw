@@ -72,6 +72,10 @@ using MaskPlaneDict = std::map<std::string, int>;
  * - `INTRP` This pixel has been interpolated over @note should be called `INTERPOLATED`
  * - `SAT` This pixel is saturated and has bloomed @note should be called `SATURATED`
  * - `SUSPECT` This pixel is untrustworthy, and you may wish to discard any Source containing it
+ * - `NO_DATA` This pixel received little or no flux, e.g. highly vignetted, no available flux from coadd
+ * input exposures.
+ * - `VIGNETTED` This pixel is in a vignetted region; exactly how much vignetting is set by the downstream
+ * processing code.
  */
 template <typename MaskPixelT = lsst::afw::image::MaskPixel>
 class Mask : public ImageBase<MaskPixelT> {
@@ -351,8 +355,7 @@ public:
      *  @param[in] metadata      Additional values to write to the header (may be null).
      *  @param[in] mode          "w"=Create a new file; "a"=Append a new HDU.
      */
-    void writeFits(std::string const& fileName,
-                   daf::base::PropertySet const * metadata = nullptr,
+    void writeFits(std::string const& fileName, daf::base::PropertySet const* metadata = nullptr,
                    std::string const& mode = "w") const;
     //@}
 
@@ -364,8 +367,7 @@ public:
      *  @param[in] metadata      Additional values to write to the header (may be null).
      *  @param[in] mode          "w"=Create a new file; "a"=Append a new HDU.
      */
-    void writeFits(fits::MemFileManager& manager,
-                   daf::base::PropertySet const * metadata = nullptr,
+    void writeFits(fits::MemFileManager& manager, daf::base::PropertySet const* metadata = nullptr,
                    std::string const& mode = "w") const;
     //@}
 
@@ -376,7 +378,7 @@ public:
      *  @param[in] fitsfile      A FITS file already open to the desired HDU.
      *  @param[in] metadata      Additional values to write to the header (may be null).
      */
-    void writeFits(fits::Fits& fitsfile, daf::base::PropertySet const * metadata = nullptr) const;
+    void writeFits(fits::Fits& fitsfile, daf::base::PropertySet const* metadata = nullptr) const;
     //@}
 
     //@{
@@ -389,8 +391,7 @@ public:
      *  @param[in] header        Additional values to write to the header (may be null).
      */
     void writeFits(std::string const& filename, fits::ImageWriteOptions const& options,
-                   std::string const& mode = "w",
-                   daf::base::PropertySet const * header = nullptr) const;
+                   std::string const& mode = "w", daf::base::PropertySet const* header = nullptr) const;
     //@}
 
     //@{
@@ -403,8 +404,7 @@ public:
      *  @param[in] header        Additional values to write to the header (may be null).
      */
     void writeFits(fits::MemFileManager& manager, fits::ImageWriteOptions const& options,
-                   std::string const& mode = "w",
-                   daf::base::PropertySet const * header = nullptr) const;
+                   std::string const& mode = "w", daf::base::PropertySet const* header = nullptr) const;
     //@}
 
     //@{
@@ -416,7 +416,7 @@ public:
      *  @param[in] header        Additional values to write to the header (may be null).
      */
     void writeFits(fits::Fits& fitsfile, fits::ImageWriteOptions const& options,
-                   daf::base::PropertySet const * header = nullptr) const;
+                   daf::base::PropertySet const* header = nullptr) const;
     //@}
 
     /**
