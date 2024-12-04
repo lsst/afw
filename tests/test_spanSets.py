@@ -336,6 +336,20 @@ class SpanSetTestCase(lsst.utils.tests.TestCase):
                         targetSpanSet.contains(point):
                     self.assertTrue(resultSpanSet.contains(point))
 
+    def testIntersectNotWithGap(self):
+        # This test was created in DM-47945 to fix a bug where the
+        # intersection of two spansets where multiple spans have the same
+        # y-value would fail.
+        spans1 = afwGeom.SpanSet([afwGeom.Span(1, 0, 3), afwGeom.Span(1, 5, 7)])
+        spans2 = afwGeom.SpanSet([afwGeom.Span(1, 2, 6)])
+        intersectNot = spans1.intersectNot(spans2)
+        trueIntersectNot = afwGeom.SpanSet([afwGeom.Span(1, 0, 1), afwGeom.Span(1, 7, 7)])
+
+        self.assertEqual(len(intersectNot), 2)
+
+        for a, b in zip(intersectNot, trueIntersectNot):
+            self.assertEqual(a, b)
+
     def testUnion(self):
         firstSpanSet, secondSpanSet = self.makeOverlapSpanSets()
 
