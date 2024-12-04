@@ -727,16 +727,18 @@ std::shared_ptr<SpanSet> SpanSet::intersect(SpanSet const& other) const {
         return std::make_shared<SpanSet>(this->_spanVector);
     }
     std::vector<Span> tempVec;
-    auto otherIter = other.begin();
+    auto otherBeginIter = other.begin();
     for (auto const& spn : _spanVector) {
-        while (otherIter != other.end() && otherIter->getY() <= spn.getY()) {
+        while(otherBeginIter != other.end() && otherBeginIter->getY() < spn.getY()) {
+            ++otherBeginIter;
+        }
+        for (auto otherIter = otherBeginIter; otherIter != other.end() && otherIter->getY() <= spn.getY(); ++otherIter) {
             if (spansOverlap(spn, *otherIter)) {
                 auto newMin = std::max(spn.getMinX(), otherIter->getMinX());
                 auto newMax = std::min(spn.getMaxX(), otherIter->getMaxX());
                 auto newSpan = Span(spn.getY(), newMin, newMax);
                 tempVec.push_back(newSpan);
             }
-            ++otherIter;
         }
     }
     return std::make_shared<SpanSet>(std::move(tempVec));
@@ -758,12 +760,15 @@ std::shared_ptr<SpanSet> SpanSet::intersectNot(SpanSet const& other) const {
      * or with other containing this  b1|    a1|    a2|   b2|
      */
     std::vector<Span> tempVec;
-    auto otherIter = other.begin();
+    auto otherBeginIter = other.begin();
     for (auto const& spn : _spanVector) {
         bool added = false;
         bool spanStarted = false;
         int spanBottom = 0;
-        while (otherIter != other.end() && otherIter->getY() <= spn.getY()) {
+        while(otherBeginIter != other.end() && otherBeginIter->getY() < spn.getY()) {
+            ++otherBeginIter;
+        }
+        for (auto otherIter = otherBeginIter; otherIter != other.end() && otherIter->getY() <= spn.getY(); ++otherIter) {
             if (spansOverlap(spn, *otherIter)) {
                 added = true;
                 /* To handle one span containing the other, the spans will be added
@@ -806,7 +811,6 @@ std::shared_ptr<SpanSet> SpanSet::intersectNot(SpanSet const& other) const {
             if (otherIter->getMaxX() > spn.getMaxX()) {
                 break;
             }
-            ++otherIter;
         }
         // Check if a span has been started but not finished, if that is the case that means there are
         // no further spans on this row to consider and the span should be closed and added
