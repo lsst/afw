@@ -375,10 +375,8 @@ ast::FitsChan getFitsChanFromPropertyList(daf::base::PropertySet& metadata,
     }
 
     // Loop over the names and add them to the FitsChan if not excluded
-    for (auto const &fullName : allParamNames) {
-        if (excludeNames.count(fullName) == 0) {
-            std::size_t lastPeriod = fullName.rfind(char('.'));
-            auto name = (lastPeriod == std::string::npos) ? fullName : fullName.substr(lastPeriod + 1);
+    for (auto const &name : allParamNames) {
+        if (excludeNames.count(name) == 0) {
             std::type_info const &type = metadata.typeOf(name);
 
             if (name.size() > 8) {
