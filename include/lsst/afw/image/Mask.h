@@ -76,6 +76,7 @@ using MaskPlaneDict = std::map<std::string, int>;
  * input exposures.
  * - `VIGNETTED` This pixel is in a vignetted region; exactly how much vignetting is set by the downstream
  * processing code.
+ * - `STREAK` This pixel is part of a long linear feature, possibly a satellite or fast-moving asteroid.
  */
 template <typename MaskPixelT = lsst::afw::image::MaskPixel>
 class Mask : public ImageBase<MaskPixelT> {
