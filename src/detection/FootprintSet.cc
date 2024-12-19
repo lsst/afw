@@ -66,6 +66,8 @@ namespace detection {
 namespace {
 /// Don't let doxygen see this block  @cond
 
+static const long long MAX_LONGLONG = std::numeric_limits<long long>::max();
+
 using IdPixelT = std::uint64_t;  // Type of temporary Images used in merging Footprints
 
 struct Threshold_traits {};
@@ -485,15 +487,26 @@ void findPeaksInFootprint(ImageT const &image, bool polarity, Footprint &foot, s
         return;
     }
     auto bbox = image.getBBox();
+
+    // Cast to a signed value to avoid over/underflow.
+    // It's highly unlikely that margin would be as large as MAXSHORT anyway.
+    long long margin_signed = (margin > MAX_LONGLONG) ? MAX_LONGLONG : static_cast<long long>(margin);
+    
+    const long long y_min = bbox.getMinY() + margin_signed;
+    const long long y_max = bbox.getMaxY() - margin_signed;
+    const long long x_min = bbox.getMinX() + margin_signed;
+    const long long x_max = bbox.getMaxX() - margin_signed;
+
+    const auto image_x0 = image.getX0();
+    const auto image_y0 = image.getY0();
+
     for (auto const &spanIter : *spanSet) {
         auto y = spanIter.getY() - image.getY0();
-        if (static_cast<std::size_t>(y + image.getY0()) < bbox.getMinY() + margin ||
-            static_cast<std::size_t>(y + image.getY0()) > bbox.getMaxY() - margin) {
+        if (((y + image.getY0()) < y_min) || ((y + image.getY0()) > y_max)) {
             continue;
         }
         for (auto x = spanIter.getMinX() - image.getX0(); x <= spanIter.getMaxX() - image.getX0(); ++x) {
-            if (static_cast<std::size_t>(x + image.getX0()) < (bbox.getMinX() + margin) ||
-                static_cast<std::size_t>(x + image.getX0()) > (bbox.getMaxX() - margin)) {
+            if (((x + image_x0) < x_min) || ((x + image_x0) > x_max)) {
                 continue;
             }
             auto val = image(x, y);
@@ -510,8 +523,7 @@ void findPeaksInFootprint(ImageT const &image, bool polarity, Footprint &foot, s
                     continue;
                 }
             }
-
-            foot.addPeak(x + image.getX0(), y + image.getY0(), val);
+            foot.addPeak(x + image_x0, y + image_y0, val);
         }
     }
 }
