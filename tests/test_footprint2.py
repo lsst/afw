@@ -173,6 +173,23 @@ class FootprintSetTestCase(unittest.TestCase):
                         i + 1,
                     )
 
+    def testFootprintSetPeaks(self):
+        """Check that peak finding returns separate peaks with a negative
+        origin bbox."""
+
+        # Only the negative y-origin triggers the bug fixed in DM-48092,
+        # but the x may as well also be negative to test regression.
+        img_peaks = afwImage.ImageU(
+            bbox=lsst.geom.Box2I(lsst.geom.Point2I(-10, -3), lsst.geom.Extent2I(5, 6)),
+        )
+        img_peaks.set(0)
+        img_peaks.array[1, 1:4] = [10, 5, 10]
+
+        ds = afwDetect.FootprintSet(img_peaks, afwDetect.Threshold(5))
+        objects = ds.getFootprints()
+        self.assertEqual(len(objects), 1)
+        self.assertEqual(len(objects[0].getPeaks()), 2)
+
     def testFootprintsImage(self):
         """Check that we can search Images as well as MaskedImages"""
         ds = afwDetect.FootprintSet(self.im, afwDetect.Threshold(10))
