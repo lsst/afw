@@ -133,7 +133,7 @@ ImageScalingOptions::ImageScalingOptions(ScalingAlgorithm algorithm_, int bitpix
         : algorithm(algorithm_),
           bitpix(bitpix_),
           fuzz(fuzz_),
-          seed(std::abs(seed_ - 1) % (N_RANDOM - 1) +
+          seed(std::abs(seed_ - 1) % (N_RANDOM) +
                1),  // zero is bad (cfitsio uses non-deterministic method)
           maskPlanes(maskPlanes_),
           quantizeLevel(quantizeLevel_),
@@ -335,7 +335,7 @@ class CfitsioRandom {
 public:
     /// Ctor
     CfitsioRandom(int seed) : _seed(seed) {
-        assert(seed != 0 && seed < N_RANDOM);
+        assert(seed > 0 && seed <= N_RANDOM);
         // Ensure that cfitsio has the correct locks initialized
         // prior to initializing the random number table.
         if (fitsio_init_lock()) {
