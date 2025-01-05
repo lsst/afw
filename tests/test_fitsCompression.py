@@ -20,7 +20,6 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-import os
 import unittest
 import itertools
 
@@ -490,10 +489,10 @@ class ImageCompressionTestCase(lsst.utils.tests.TestCase):
                 options = lsst.afw.fits.ImageWriteOptions(compression)
             unpersisted = self.readWriteImage(ImageClass, image, filename, options)
 
-            fileSize = os.stat(filename).st_size
-            fitsBlockSize = 2880  # All sizes in FITS are a multiple of this
-            numBlocks = 1 + np.ceil(self.bbox.getArea()*image.getArray().dtype.itemsize/fitsBlockSize)
-            uncompressedSize = fitsBlockSize*numBlocks
+            # fileSize = os.stat(filename).st_size
+            # fitsBlockSize = 2880  # All sizes in FITS are a multiple of this
+            # numBlocks = 1 + np.ceil(self.bbox.getArea()*image.getArray().dtype.itemsize/fitsBlockSize)
+            # uncompressedSize = fitsBlockSize*numBlocks
 
             self.assertEqual(image.getBBox(), unpersisted.getBBox())
             self.assertImagesAlmostEqual(unpersisted, image, atol=atol)
