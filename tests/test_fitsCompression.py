@@ -128,7 +128,12 @@ class ImageScalingTestCase(lsst.utils.tests.TestCase):
         rng = np.random.RandomState(12345)
         dtype = image.getArray().dtype
         if addNoise:
-            image.getArray()[:] += rng.normal(0.0, self.stdev, image.getArray().shape).astype(dtype)
+            if np.issubdtype(dtype, np.integer) and not np.issubdtype(dtype, np.signedinteger):
+                # Offset by 20 sigma to avoid negatives.
+                center = self.stdev * 20
+            else:
+                center = 0
+            image.getArray()[:] += rng.normal(center, self.stdev, image.getArray().shape).astype(dtype)
 
         with lsst.utils.tests.getTempFilePath(".fits") as filename:
             with lsst.afw.fits.Fits(filename, "w") as fits:
@@ -429,7 +434,12 @@ class ImageCompressionTestCase(lsst.utils.tests.TestCase):
         image = ImageClass(self.bbox)
         rng = np.random.RandomState(12345)
         dtype = image.getArray().dtype
-        noise = rng.normal(0.0, self.noise, image.getArray().shape).astype(dtype)
+        if np.issubdtype(dtype, np.integer) and not np.issubdtype(dtype, np.signedinteger):
+            # Offset by 20 sigma to avoid negatives.
+            center = self.noise * 20
+        else:
+            center = 0
+        noise = rng.normal(center, self.noise, image.getArray().shape).astype(dtype)
         image.getArray()[:] = np.array(self.background, dtype=dtype) + noise
         return image
 
