@@ -55,18 +55,9 @@ def checkAstropy(image, filename, hduNum=0):
     hduNum : `int`
         HDU number of interest.
     """
-    print("Astropy currently doesn't read our compressed images perfectly.")
+    # Astropy currently doesn't read our compressed images perfectly.
     return
 
-    def parseVersion(version):
-        return tuple(int(vv) for vv in np.array(version.split(".")))
-
-    if parseVersion(astropy.__version__) <= parseVersion("2.0.1"):
-        # astropy 2.0.1 and earlier have problems:
-        # * Doesn't support GZIP_2: https://github.com/astropy/astropy/pull/6486
-        # * Uses the wrong array type: https://github.com/astropy/astropy/pull/6492
-        print(f"Refusing to check with astropy version {astropy.__version__} due to astropy bugs")
-        return
     hdu = astropy.io.fits.open(filename)[hduNum]
     if hdu.header["BITPIX"] in (8, 16) and isinstance(image, lsst.afw.image.ImageD):
         return
@@ -493,7 +484,6 @@ class ImageCompressionTestCase(lsst.utils.tests.TestCase):
             fitsBlockSize = 2880  # All sizes in FITS are a multiple of this
             numBlocks = 1 + np.ceil(self.bbox.getArea()*image.getArray().dtype.itemsize/fitsBlockSize)
             uncompressedSize = fitsBlockSize*numBlocks
-            print(ImageClass, compression.algorithm, fileSize, uncompressedSize, fileSize/uncompressedSize)
 
             self.assertEqual(image.getBBox(), unpersisted.getBBox())
             self.assertImagesAlmostEqual(unpersisted, image, atol=atol)
