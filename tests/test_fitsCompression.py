@@ -25,6 +25,7 @@ import itertools
 
 import numpy as np
 import astropy.io.fits
+import fitsio
 
 import lsst.utils
 import lsst.daf.base
@@ -64,6 +65,25 @@ def checkAstropy(image, filename, hduNum=0):
     theirs = hdu.data.astype(dtype)
     # Allow for minor differences due to arithmetic: +/- 1 in the last place
     np.testing.assert_array_max_ulp(theirs, image.getArray())
+
+
+def checkFitsio(image, filename, hduNum=0):
+    """Check that fitsio can read our file.
+
+    Parameters
+    ----------
+    image : `lsst.afw.image.Image`
+        Image read by our own code.
+    filename : `str`
+        Filename of FITS file to read with fitsio.
+    hduNum : `int`
+        HDU number of interest.
+    """
+    theirs = fitsio.read(filename, ext=hduNum)
+
+    # Compare to 32-bit floats; unmasked pixels.
+    compare = np.isfinite(image.array)
+    np.testing.assert_array_max_ulp(theirs[compare], image.array[compare], dtype=np.float32)
 
 
 class ImageScalingTestCase(lsst.utils.tests.TestCase):
@@ -165,6 +185,7 @@ class ImageScalingTestCase(lsst.utils.tests.TestCase):
             minValue = np.array(minValue, dtype=image.getArray().dtype)
 
             checkAstropy(unpersisted, filename)
+            checkFitsio(unpersisted, filename)
 
         return image, unpersisted, bscale, bzero, minValue, maxValue
 
@@ -492,7 +513,8 @@ class ImageCompressionTestCase(lsst.utils.tests.TestCase):
             self.assertEqual(image.getBBox(), unpersisted.getBBox())
             self.assertImagesAlmostEqual(unpersisted, image, atol=atol)
 
-            checkAstropy(unpersisted, filename, 1)
+            checkAstropy(unpersisted, filename, hduNum=1)
+            checkFitsio(unpersisted, filename, hduNum=1)
 
             return unpersisted
 
