@@ -192,3 +192,4 @@ in.fits
 out.fits
 matches.fits
 bin/showCamera.py
+python/*.dist-info/
