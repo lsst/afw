@@ -20,12 +20,12 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-import os
 import unittest
 import itertools
 
 import numpy as np
 import astropy.io.fits
+import fitsio
 
 import lsst.utils
 import lsst.daf.base
@@ -55,18 +55,9 @@ def checkAstropy(image, filename, hduNum=0):
     hduNum : `int`
         HDU number of interest.
     """
-    print("Astropy currently doesn't read our compressed images perfectly.")
+    # Astropy currently doesn't read our compressed images perfectly.
     return
 
-    def parseVersion(version):
-        return tuple(int(vv) for vv in np.array(version.split(".")))
-
-    if parseVersion(astropy.__version__) <= parseVersion("2.0.1"):
-        # astropy 2.0.1 and earlier have problems:
-        # * Doesn't support GZIP_2: https://github.com/astropy/astropy/pull/6486
-        # * Uses the wrong array type: https://github.com/astropy/astropy/pull/6492
-        print(f"Refusing to check with astropy version {astropy.__version__} due to astropy bugs")
-        return
     hdu = astropy.io.fits.open(filename)[hduNum]
     if hdu.header["BITPIX"] in (8, 16) and isinstance(image, lsst.afw.image.ImageD):
         return
@@ -74,6 +65,25 @@ def checkAstropy(image, filename, hduNum=0):
     theirs = hdu.data.astype(dtype)
     # Allow for minor differences due to arithmetic: +/- 1 in the last place
     np.testing.assert_array_max_ulp(theirs, image.getArray())
+
+
+def checkFitsio(image, filename, hduNum=0):
+    """Check that fitsio can read our file.
+
+    Parameters
+    ----------
+    image : `lsst.afw.image.Image`
+        Image read by our own code.
+    filename : `str`
+        Filename of FITS file to read with fitsio.
+    hduNum : `int`
+        HDU number of interest.
+    """
+    theirs = fitsio.read(filename, ext=hduNum)
+
+    # Compare to 32-bit floats; unmasked pixels.
+    compare = np.isfinite(image.array)
+    np.testing.assert_array_max_ulp(theirs[compare], image.array[compare], dtype=np.float32)
 
 
 class ImageScalingTestCase(lsst.utils.tests.TestCase):
@@ -137,7 +147,12 @@ class ImageScalingTestCase(lsst.utils.tests.TestCase):
         rng = np.random.RandomState(12345)
         dtype = image.getArray().dtype
         if addNoise:
-            image.getArray()[:] += rng.normal(0.0, self.stdev, image.getArray().shape).astype(dtype)
+            if np.issubdtype(dtype, np.integer) and not np.issubdtype(dtype, np.signedinteger):
+                # Offset by 20 sigma to avoid negatives.
+                center = self.stdev * 20
+            else:
+                center = 0
+            image.getArray()[:] += rng.normal(center, self.stdev, image.getArray().shape).astype(dtype)
 
         with lsst.utils.tests.getTempFilePath(".fits") as filename:
             with lsst.afw.fits.Fits(filename, "w") as fits:
@@ -170,6 +185,7 @@ class ImageScalingTestCase(lsst.utils.tests.TestCase):
             minValue = np.array(minValue, dtype=image.getArray().dtype)
 
             checkAstropy(unpersisted, filename)
+            checkFitsio(unpersisted, filename)
 
         return image, unpersisted, bscale, bzero, minValue, maxValue
 
@@ -438,7 +454,12 @@ class ImageCompressionTestCase(lsst.utils.tests.TestCase):
         image = ImageClass(self.bbox)
         rng = np.random.RandomState(12345)
         dtype = image.getArray().dtype
-        noise = rng.normal(0.0, self.noise, image.getArray().shape).astype(dtype)
+        if np.issubdtype(dtype, np.integer) and not np.issubdtype(dtype, np.signedinteger):
+            # Offset by 20 sigma to avoid negatives.
+            center = self.noise * 20
+        else:
+            center = 0
+        noise = rng.normal(center, self.noise, image.getArray().shape).astype(dtype)
         image.getArray()[:] = np.array(self.background, dtype=dtype) + noise
         return image
 
@@ -489,16 +510,11 @@ class ImageCompressionTestCase(lsst.utils.tests.TestCase):
                 options = lsst.afw.fits.ImageWriteOptions(compression)
             unpersisted = self.readWriteImage(ImageClass, image, filename, options)
 
-            fileSize = os.stat(filename).st_size
-            fitsBlockSize = 2880  # All sizes in FITS are a multiple of this
-            numBlocks = 1 + np.ceil(self.bbox.getArea()*image.getArray().dtype.itemsize/fitsBlockSize)
-            uncompressedSize = fitsBlockSize*numBlocks
-            print(ImageClass, compression.algorithm, fileSize, uncompressedSize, fileSize/uncompressedSize)
-
             self.assertEqual(image.getBBox(), unpersisted.getBBox())
             self.assertImagesAlmostEqual(unpersisted, image, atol=atol)
 
-            checkAstropy(unpersisted, filename, 1)
+            checkAstropy(unpersisted, filename, hduNum=1)
+            checkFitsio(unpersisted, filename, hduNum=1)
 
             return unpersisted
 
