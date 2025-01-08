@@ -37,6 +37,7 @@ import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
 import lsst.afw.detection as afwDetect
 import lsst.afw.display as afwDisplay
+import numpy as np
 
 afwDisplay.setDefaultMaskTransparency(75)
 try:
@@ -62,9 +63,10 @@ def peakFromImage(im, pos):
 
 class Object:
 
-    def __init__(self, val, spans):
+    def __init__(self, val, spans, origin: lsst.geom.Point2I = None):
         self.val = val
         self.spans = spans
+        self.origin = origin
 
     def insert(self, im):
         """Insert self into an image"""
@@ -75,7 +77,10 @@ class Object:
 
     def __eq__(self, other):
         for osp, sp in zip(other.getSpans(), self.spans):
-            if osp.toString() != toString(sp):
+            sp_shift = sp if (self.origin is None) else (
+                sp[0] + self.origin[1], sp[1] + self.origin[0], sp[2] + self.origin[0]
+            )
+            if osp.toString() != toString(sp_shift):
                 return False
 
         return True
@@ -85,14 +90,16 @@ class FootprintSetTestCase(unittest.TestCase):
     """A test case for FootprintSet"""
 
     def setUp(self):
-        self.im = afwImage.ImageU(lsst.geom.Extent2I(12, 8))
+        self.origin = lsst.geom.Point2I(-10, 3)
+        self.im = afwImage.ImageU(bbox=lsst.geom.Box2I(self.origin, lsst.geom.Extent2I(12, 8)))
         #
         # Objects that we should detect
         #
-        self.objects = []
-        self.objects += [Object(10, [(1, 4, 4), (2, 3, 5), (3, 4, 4)])]
-        self.objects += [Object(20, [(5, 7, 8), (5, 10, 10), (6, 8, 9)])]
-        self.objects += [Object(20, [(6, 3, 3)])]
+        self.objects = [
+            Object(10, [(1, 4, 4), (2, 3, 5), (3, 4, 4)], self.origin),
+            Object(15, [(5, 7, 8), (5, 10, 10), (6, 8, 9)], self.origin),
+            Object(20, [(6, 3, 3)], self.origin),
+        ]
 
         self.im.set(0)                       # clear image
         for obj in self.objects:
@@ -114,8 +121,8 @@ class FootprintSetTestCase(unittest.TestCase):
         objects = ds.getFootprints()
 
         self.assertEqual(len(objects), len(self.objects))
-        for i in range(len(objects)):
-            self.assertEqual(objects[i], self.objects[i])
+        for i, object in enumerate(objects):
+            self.assertEqual(object, self.objects[i])
 
     def testFootprints2(self):
         """Check that we found the correct number of objects using FootprintSet"""
@@ -132,16 +139,19 @@ class FootprintSetTestCase(unittest.TestCase):
         ds = afwDetect.FootprintSet(self.im, afwDetect.Threshold(10))
         objects = ds.getFootprints()
 
-        idImage = afwImage.ImageU(self.im.getDimensions())
+        idImage = afwImage.ImageU(bbox=self.im.getBBox())
         idImage.set(0)
 
         for i, foot in enumerate(objects):
             foot.spans.setImage(idImage, i + 1)
 
-        for i in range(len(objects)):
-            for sp in objects[i].getSpans():
+        for i, object_i in enumerate(objects):
+            for sp in object_i.getSpans():
                 for x in range(sp.getX0(), sp.getX1() + 1):
-                    self.assertEqual(idImage[x, sp.getY(), afwImage.LOCAL], i + 1)
+                    self.assertEqual(
+                        idImage[x - self.origin[0], sp.getY() - self.origin[1], afwImage.LOCAL],
+                        i + 1,
+                    )
 
     def testFootprintSetImageId(self):
         """Check that we can insert a FootprintSet into an Image, setting relative IDs"""
@@ -152,10 +162,32 @@ class FootprintSetTestCase(unittest.TestCase):
         if display:
             afwDisplay.Display(frame=2).mtv(idImage, title=self._testMethodName + " image")
 
-        for i in range(len(objects)):
-            for sp in objects[i].getSpans():
+        for i, object_i in enumerate(objects):
+            peakValues = object_i.getPeaks()["peakValue"]
+            peakValue = peakValues[0]
+            np.testing.assert_array_equal(peakValues, peakValue)
+            for sp in object_i.getSpans():
                 for x in range(sp.getX0(), sp.getX1() + 1):
-                    self.assertEqual(idImage[x, sp.getY(), afwImage.LOCAL], i + 1)
+                    self.assertEqual(
+                        idImage[x - self.origin[0], sp.getY() - self.origin[1], afwImage.LOCAL],
+                        i + 1,
+                    )
+
+    def testFootprintSetPeaks(self):
+        """Check that peak finding returns separate peaks with a negative
+        origin bbox."""
+
+        # Only the negative y-origin triggers the bug fixed in DM-48092,
+        # but the x may as well also be negative to test regression.
+        img_peaks = afwImage.ImageU(
+            bbox=lsst.geom.Box2I(lsst.geom.Point2I(-10, -3), lsst.geom.Extent2I(5, 6)),
+            initialValue=0,
+        )
+        img_peaks.array[1, 1:4] = [10, 5, 10]
+
+        footprints = afwDetect.FootprintSet(img_peaks, afwDetect.Threshold(5)).getFootprints()
+        self.assertEqual(len(footprints), 1)
+        self.assertEqual(len(footprints[0].getPeaks()), 2)
 
     def testFootprintsImage(self):
         """Check that we can search Images as well as MaskedImages"""

@@ -479,21 +479,32 @@ int resolve_alias(std::vector<int> const &aliases, /* list of aliases */
 
 namespace {
 template <typename ImageT>
-void findPeaksInFootprint(ImageT const &image, bool polarity, Footprint &foot, std::size_t const margin = 0) {
+void findPeaksInFootprint(ImageT const &image, bool polarity, Footprint &foot, const long margin = 0) {
     auto spanSet = foot.getSpans();
     if (spanSet->size() == 0) {
         return;
     }
+    if(!(margin > 0)) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
+                          "margin = " + std::to_string(margin) + "; must be > 0");
+    }
     auto bbox = image.getBBox();
+
+    const long y_min = bbox.getMinY() + margin;
+    const long y_max = bbox.getMaxY() - margin;
+    const long x_min = bbox.getMinX() + margin;
+    const long x_max = bbox.getMaxX() - margin;
+
+    const auto image_x0 = image.getX0();
+    const auto image_y0 = image.getY0();
+
     for (auto const &spanIter : *spanSet) {
-        auto y = spanIter.getY() - image.getY0();
-        if (static_cast<std::size_t>(y + image.getY0()) < bbox.getMinY() + margin ||
-            static_cast<std::size_t>(y + image.getY0()) > bbox.getMaxY() - margin) {
+        auto y = spanIter.getY() - image_y0;
+        if (((y + image_y0) < y_min) || ((y + image_y0) > y_max)) {
             continue;
         }
-        for (auto x = spanIter.getMinX() - image.getX0(); x <= spanIter.getMaxX() - image.getX0(); ++x) {
-            if (static_cast<std::size_t>(x + image.getX0()) < (bbox.getMinX() + margin) ||
-                static_cast<std::size_t>(x + image.getX0()) > (bbox.getMaxX() - margin)) {
+        for (auto x = spanIter.getMinX() - image_x0; x <= spanIter.getMaxX() - image_x0; ++x) {
+            if (((x + image_x0) < x_min) || ((x + image_x0) > x_max)) {
                 continue;
             }
             auto val = image(x, y);
@@ -510,8 +521,7 @@ void findPeaksInFootprint(ImageT const &image, bool polarity, Footprint &foot, s
                     continue;
                 }
             }
-
-            foot.addPeak(x + image.getX0(), y + image.getY0(), val);
+            foot.addPeak(x + image_x0, y + image_y0, val);
         }
     }
 }
