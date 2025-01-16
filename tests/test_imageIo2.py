@@ -58,7 +58,9 @@ class ImageIoTestCase(lsst.utils.tests.TestCase):
             with astropy.io.fits.open(filename) as hduList:
                 hdu = hduList[1 if isCompressed else 0]
                 if hdu.data.dtype.byteorder != '=':
-                    hdu.data = hdu.data.byteswap().newbyteorder()
+                    # numpy 2 suggests a view and two stage swap.
+                    tmp_data = hdu.data.byteswap()
+                    hdu.data = tmp_data.view(tmp_data.dtype.newbyteorder("S"))
         return readImage, hdu
 
     def runRoundTripTest(self, cls, compression=None, scaling=None, addNaN=False, checkAstropy=True, rtol=0):
