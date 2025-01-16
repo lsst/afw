@@ -162,7 +162,7 @@ def plotFocalPlane(camera, fieldSizeDeg_x=0, fieldSizeDeg_y=None, dx=0.1, dy=0.1
             xvals.append(corner[0])
             yvals.append(corner[1])
         colors.append(colorMap[det.getType()])
-        patches.append(Polygon(corners, True))
+        patches.append(Polygon(corners, closed=True))
         center = det.getOrientation().getFpPosition()
         ax.text(center.getX(), center.getY(), det.getId() if useIds else det.getName(),
                 horizontalalignment='center', size=6)
