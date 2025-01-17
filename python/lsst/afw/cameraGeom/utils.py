@@ -164,7 +164,7 @@ def plotFocalPlane(camera, fieldSizeDeg_x=0, fieldSizeDeg_y=None, dx=0.1, dy=0.1
         colors.append(colorMap[det.getType()])
         patches.append(Polygon(corners, closed=True))
         center = det.getOrientation().getFpPosition()
-        if det.getName() in ['R04_SW0', 'R04_SW1', 'R40_SW0', 'R40_SW1'] :
+        if det.getName() in ['R04_SW0', 'R04_SW1', 'R40_SW0', 'R40_SW1']:
             text_rotation = 'vertical'
         else:
             text_rotation = 'horizontal'
