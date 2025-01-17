@@ -162,11 +162,15 @@ def plotFocalPlane(camera, fieldSizeDeg_x=0, fieldSizeDeg_y=None, dx=0.1, dy=0.1
             xvals.append(corner[0])
             yvals.append(corner[1])
         colors.append(colorMap[det.getType()])
-        patches.append(Polygon(corners, True))
+        patches.append(Polygon(corners, closed=True))
         center = det.getOrientation().getFpPosition()
+        if det.getName() in ['R04_SW0', 'R04_SW1', 'R40_SW0', 'R40_SW1']:
+            text_rotation = 'vertical'
+        else:
+            text_rotation = 'horizontal'
         ax.text(center.getX(), center.getY(), det.getId() if useIds else det.getName(),
-                horizontalalignment='center', size=6)
-
+                horizontalalignment='center', rotation=text_rotation,
+                rotation_mode='anchor', size=6)
     patchCollection = PatchCollection(patches, alpha=0.6, facecolor=colors)
     ax.add_collection(patchCollection)
     ax.scatter(xs, ys, s=10, alpha=.7, linewidths=0., c=pcolors)
