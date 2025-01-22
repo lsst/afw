@@ -93,6 +93,9 @@ static void declareImageBase(lsst::cpputils::python::WrapperCollection &wrappers
         cls.def("getArray", (Array(ImageBase<PixelT>::*)()) & ImageBase<PixelT>::getArray);
         cls.def_property("array", (Array(ImageBase<PixelT>::*)()) & ImageBase<PixelT>::getArray,
                          [](ImageBase<PixelT> &self, ndarray::Array<PixelT const, 2, 0> const &array) {
+                             if (array.isEmpty()) {
+                                 throw py::type_error("Image array may not be None.");
+                             }
                              // Avoid self-assignment, which is invoked when a Python in-place operator is
                              // used.
                              if (array.shallow() != self.getArray().shallow()) {
