@@ -129,6 +129,8 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
         var2.array[:] = 3.0
         self.mimage.variance = var2
         self.assertImagesEqual(self.mimage.variance, var2)
+        with self.assertRaises(TypeError):
+            self.mimage.image.array = None
 
     def testSetGetValues(self):
         self.assertEqual(self.mimage[0, 0, afwImage.LOCAL],

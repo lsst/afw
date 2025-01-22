@@ -120,6 +120,8 @@ class ImageTestCase(lsst.utils.tests.TestCase):
             array4 += 5
             image1.array += 5
             np.testing.assert_array_equal(image1.array, array4)
+            with self.assertRaises(TypeError):
+                image1.array = None
 
     def testImagesOverlap(self):
         dim = lsst.geom.Extent2I(10, 8)
