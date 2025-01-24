@@ -371,7 +371,7 @@ def imagesDiffer(image0, image1, skipMask=None, rtol=1.0e-05, atol=1e-08):
         errArr = np.abs(valFilledArr1 - valFilledArr2)
         maxErr = errArr.max()
         maxAbsInd = np.where(errArr == maxErr)
-        maxAbsTuple = (maxAbsInd[0][0], maxAbsInd[1][0])
+        maxAbsTuple = (int(maxAbsInd[0][0]), int(maxAbsInd[1][0]))
         # NOTE: use the second image, because the numpy test is:
         # |a - b| <= (atol + rtol * |b|)
         allcloseLimit = rtol*np.abs(valFilledArr2) + atol
