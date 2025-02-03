@@ -3,7 +3,7 @@
 #define AFW_TABLE_IO_InputArchive_h_INCLUDED
 
 #include <map>
-
+#include <iostream>
 #include "lsst/base.h"
 #include "lsst/afw/table/io/Persistable.h"
 
@@ -59,6 +59,10 @@ public:
     template <typename T>
     std::shared_ptr<T> get(int id) const {
         std::shared_ptr<T> p = std::dynamic_pointer_cast<T>(get(id));
+        std::cout << "T  = " << typeid(T).name() << "\n";
+        std::cout << "get = " << typeid(get(id)).name() << "\n";
+        std::cout << "p = " << p << "\n";
+        std::cout << "id = " << id << "\n";
         LSST_ARCHIVE_ASSERT(p || id == 0);
         return p;
     }
