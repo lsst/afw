@@ -58,11 +58,15 @@ public:
     /// Load an object of the given type and ID with error checking.
     template <typename T>
     std::shared_ptr<T> get(int id) const {
-        std::shared_ptr<T> p = std::dynamic_pointer_cast<T>(get(id));
-        std::cout << "T  = " << typeid(T).name() << "\n";
-        std::cout << "get = " << typeid(get(id)).name() << "\n";
-        std::cout << "p = " << p << "\n";
+        auto pid = get(id);
+        std::shared_ptr<T> p = std::dynamic_pointer_cast<T>(pid);
         std::cout << "id = " << id << "\n";
+        if(pid)
+           std::cout << "type name pid = " << typeid(*pid).name() << "\n";
+        std::cout << "T  = " << typeid(T).name() << "\n";
+        std::cout << "get = " << typeid(pid).name() << "\n";
+        std::cout << "p = " << p << "\n";
+        std::cout << "pid = " << pid << "\n";
         LSST_ARCHIVE_ASSERT(p || id == 0);
         return p;
     }
