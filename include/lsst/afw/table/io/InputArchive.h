@@ -58,7 +58,7 @@ public:
     /// Load an object of the given type and ID with error checking.
     template <typename T>
     std::shared_ptr<T> get(int id) const {
-        std::shared_ptr<T> p = std::dynamic_pointer_cast<T>(get(id));
+        std::shared_ptr<T> p = std::static_pointer_cast<T>(get(id));
         LSST_ARCHIVE_ASSERT(p || id == 0);
         return p;
     }
