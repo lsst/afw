@@ -784,6 +784,7 @@ class TestMergeNegative(unittest.TestCase):
     """Tests of the bugs related to merging negative footprints, as described
     on DM-48596 and DM-4870.
     """
+
     @staticmethod
     def makeFootprintSet(delta, flux):
         box = lsst.geom.Box2I(lsst.geom.Point2I(0, 0), lsst.geom.Point2I(500, 500))
@@ -803,14 +804,15 @@ class TestMergeNegative(unittest.TestCase):
     #     """Test that merging footprints with negative peaks does not produce
     #     spurious footprints.
     #     """
-    #     footprintSetNegative = self.makeFootprintSet(8, -100)
-    #     # footprintSetPositive = self.makeFootprintSet(12, 100)
+    #     # footprintSetNegative = self.makeFootprintSet(8, -100)
+    #     footprintSetPositive = self.makeFootprintSet(8, 100)
 
     #     # import os; print(os.getpid()); import ipdb; ipdb.set_trace();
 
     #     # The bug was that negative-negative merges could be duplicated.
     #     footprintSet = self.makeFootprintSet(10, -100)
-    #     footprintSet.merge(footprintSetNegative)
+    #     footprintSet.merge(footprintSetPositive)
+    #     print(footprintSet)
     #     for footprint in footprintSet.getFootprints():
     #         self.assertEqual(len(footprint.peaks), 2)
 
@@ -823,6 +825,9 @@ class TestMergeNegative(unittest.TestCase):
     #         self.assertEqual(len(footprint.peaks), 2)
 
     def testMergeFootprintsNegative(self):
+        """Test that merging footprints with negative peaks does not produce
+        spurious footprints.
+        """
         box = lsst.geom.Box2I(lsst.geom.Point2I(0, 0), lsst.geom.Point2I(500, 500))
         footprintSet1 = afwDetect.FootprintSet(box)
         footprintSet2 = afwDetect.FootprintSet(box)
@@ -833,19 +838,23 @@ class TestMergeNegative(unittest.TestCase):
             spanSet = afwGeom.SpanSet(lsst.geom.Box2I(lsst.geom.Point2I(x, y),
                                                       lsst.geom.Point2I(x + 2*delta, y + 2*delta)))
             footprint = afwDetect.Footprint(spanSet)
-            footprint.addPeak(x + delta, y + delta, 100)
+            footprint.addPeak(x + delta, y + delta, -100)
             footprints.append(footprint)
         footprintSet1.setFootprints(footprints)
 
-        footprints = []
         delta = 8
         for x, y in zip(np.arange(0, 400, 50), np.arange(0, 400, 50)):
             spanSet = afwGeom.SpanSet(lsst.geom.Box2I(lsst.geom.Point2I(x, y),
                                                       lsst.geom.Point2I(x + 2*delta, y + 2*delta)))
             footprint = afwDetect.Footprint(spanSet)
-            footprint.addPeak(x + delta, y + delta, -100)
+            footprint.addPeak(x + delta, y + delta, 100)
             footprints.append(footprint)
         footprintSet2.setFootprints(footprints)
+
+        footprintSet1.merge(footprintSet2)
+        # The bug was that peaks would be duplicated.
+        for footprint in footprintSet1.getFootprints():
+            self.assertEqual(len(footprint.peaks), 2)
 
         import os; print(os.getpid()); import ipdb; ipdb.set_trace();
 
