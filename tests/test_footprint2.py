@@ -780,6 +780,76 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
         self.checkPeaks(frame=3)
 
 
+class TestMergeNegative(unittest.TestCase):
+    """Tests of the bugs related to merging negative footprints, as described
+    on DM-48596 and DM-4870.
+    """
+    @staticmethod
+    def makeFootprintSet(delta, flux):
+        box = lsst.geom.Box2I(lsst.geom.Point2I(0, 0), lsst.geom.Point2I(500, 500))
+        footprintSet = afwDetect.FootprintSet(box)
+
+        footprints = []
+        for x, y in zip(np.arange(0, 400, 50), np.arange(0, 400, 50)):
+            spanSet = afwGeom.SpanSet(lsst.geom.Box2I(lsst.geom.Point2I(x, y),
+                                                      lsst.geom.Point2I(x + 2*delta, y + 2*delta)))
+            footprint = afwDetect.Footprint(spanSet)
+            footprint.addPeak(x + delta, y + delta, flux)
+            footprints.append(footprint)
+        footprintSet.setFootprints(footprints)
+        return footprintSet
+
+    # def testMergeFootprintsNegative(self):
+    #     """Test that merging footprints with negative peaks does not produce
+    #     spurious footprints.
+    #     """
+    #     footprintSetNegative = self.makeFootprintSet(8, -100)
+    #     # footprintSetPositive = self.makeFootprintSet(12, 100)
+
+    #     # import os; print(os.getpid()); import ipdb; ipdb.set_trace();
+
+    #     # The bug was that negative-negative merges could be duplicated.
+    #     footprintSet = self.makeFootprintSet(10, -100)
+    #     footprintSet.merge(footprintSetNegative)
+    #     for footprint in footprintSet.getFootprints():
+    #         self.assertEqual(len(footprint.peaks), 2)
+
+    #     import os; print(os.getpid()); import ipdb; ipdb.set_trace();
+
+    #     # Check that the behavior is ok for positive-postive merges.
+    #     footprintSet = self.makeFootprintSet(10, 100)
+    #     footprintSet.merge(footprintSetPositive)
+    #     for footprint in footprintSet.getFootprints():
+    #         self.assertEqual(len(footprint.peaks), 2)
+
+    def testMergeFootprintsNegative(self):
+        box = lsst.geom.Box2I(lsst.geom.Point2I(0, 0), lsst.geom.Point2I(500, 500))
+        footprintSet1 = afwDetect.FootprintSet(box)
+        footprintSet2 = afwDetect.FootprintSet(box)
+
+        footprints = []
+        delta = 10
+        for x, y in zip(np.arange(0, 400, 50), np.arange(0, 400, 50)):
+            spanSet = afwGeom.SpanSet(lsst.geom.Box2I(lsst.geom.Point2I(x, y),
+                                                      lsst.geom.Point2I(x + 2*delta, y + 2*delta)))
+            footprint = afwDetect.Footprint(spanSet)
+            footprint.addPeak(x + delta, y + delta, 100)
+            footprints.append(footprint)
+        footprintSet1.setFootprints(footprints)
+
+        footprints = []
+        delta = 8
+        for x, y in zip(np.arange(0, 400, 50), np.arange(0, 400, 50)):
+            spanSet = afwGeom.SpanSet(lsst.geom.Box2I(lsst.geom.Point2I(x, y),
+                                                      lsst.geom.Point2I(x + 2*delta, y + 2*delta)))
+            footprint = afwDetect.Footprint(spanSet)
+            footprint.addPeak(x + delta, y + delta, -100)
+            footprints.append(footprint)
+        footprintSet2.setFootprints(footprints)
+
+        import os; print(os.getpid()); import ipdb; ipdb.set_trace();
+
+
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
     pass
 
