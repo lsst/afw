@@ -455,7 +455,7 @@ std::string Schema::join(std::string const &a, std::string const &b) const {
 }
 
 void Schema::_edit() {
-    if (!_impl.unique()) {
+    if (_impl.use_count() == 1) {
         std::shared_ptr<Impl> data(std::make_shared<Impl>(*_impl));
         _impl.swap(data);
     }

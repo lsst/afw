@@ -170,7 +170,7 @@ OutputArchive &OutputArchive::operator=(OutputArchive &&other) { return *this = 
 OutputArchive::~OutputArchive() = default;
 
 int OutputArchive::put(Persistable const *obj, bool permissive) {
-    if (!_impl.unique()) {  // copy on write
+    if (_impl.use_count() == 1) {  // copy on write
         std::shared_ptr<Impl> tmp(new Impl(*_impl));
         _impl.swap(tmp);
     }
@@ -178,7 +178,7 @@ int OutputArchive::put(Persistable const *obj, bool permissive) {
 }
 
 int OutputArchive::put(std::shared_ptr<Persistable const> obj, bool permissive) {
-    if (!_impl.unique()) {  // copy on write
+    if (_impl.use_count() == 1) {  // copy on write
         std::shared_ptr<Impl> tmp(new Impl(*_impl));
         _impl.swap(tmp);
     }
