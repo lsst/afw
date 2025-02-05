@@ -362,16 +362,30 @@ FootprintSet mergeFootprintSets(FootprintSet const &lhs,      // the FootprintSe
      * and we avoid this by this two-step process.
      */
     FindIdsInFootprint<IdPixelT> idFinder;
-    for (const auto& foot : *fs.getFootprints()) {
+    std::cout << "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n";
+    std::cout << "pixel detections\n";
+    for (auto const &footprint : *(fs.getFootprints())) {
+        std::cout << *footprint << std::endl;
+    }
+
+    for (const auto &foot : *fs.getFootprints()) {
+        std::cout << "*************************** per footprint\n";
         // find the (mangled) [lr]hsFootprint IDs that contribute to foot
         foot->getSpans()->applyFunctor(idFinder, *idImage);
 
         std::set<std::uint64_t> lhsFootprintIndxs, rhsFootprintIndxs;  // indexes into [lr]hsFootprints
 
+        std::cout << "before lhsFootprintIndex " << std::endl;
+        for (unsigned int indx : idFinder.getIds()) {
+            std::cout << indx << " ";
+        }
+        std::cout << std::endl;
         for (unsigned int indx : idFinder.getIds()) {
             if ((indx & lhsIdMask) > 0) {
                 std::uint64_t i = (indx & lhsIdMask) - 1;
                 lhsFootprintIndxs.insert(i);
+                std::cout << "$$$$$$$$$$$$$$$$$\n";
+                std::cout << i << std::endl;
                 /*
                  * Now allow for Footprints that vanished beneath this one
                  */
@@ -379,13 +393,24 @@ FootprintSet mergeFootprintSets(FootprintSet const &lhs,      // the FootprintSe
                 if (mapPtr != overwrittenIds.end()) {
                     std::set<std::uint64_t> &overwritten = mapPtr->second;
 
+                    // std::cout << "%%%%%%%%%%%%%%%%\n";
                     for (unsigned long ptr : overwritten) {
                         lhsFootprintIndxs.insert((ptr & lhsIdMask) - 1);
+                        // std::cout << (ptr & lhsIdMask) - 1 << std::endl;
                     }
                 }
             }
             indx >>= lhsIdNbit;
 
+            std::cout << "before rhsFootprintIndex " << indx << std::endl;
+            for (auto const &[key, value] : overwrittenIds) {
+                std::cout << "[" << key << "] {";
+                for (auto const &idx : value) {
+                    std::cout << idx << " ";
+                }
+                std::cout << "}" << std::endl;
+            }
+            std::cout << std::endl;
             if (indx > 0) {
                 std::uint64_t i = indx - 1;
                 rhsFootprintIndxs.insert(i);
@@ -407,7 +432,10 @@ FootprintSet mergeFootprintSets(FootprintSet const &lhs,      // the FootprintSe
          * all their Peaks into the new one
          */
         PeakCatalog &peaks = foot->getPeaks();
-
+        std::cout << "peak catalog lhs\n";
+        for (auto idx : lhsFootprintIndxs) {
+            std::cout << idx << std::endl;
+        }
         for (unsigned long i : lhsFootprintIndxs) {
             assert(i < lhsFootprints.size());
             PeakCatalog const &oldPeaks = lhsFootprints[i]->getPeaks();
@@ -420,7 +448,14 @@ FootprintSet mergeFootprintSets(FootprintSet const &lhs,      // the FootprintSe
             std::inplace_merge(peaks.getInternal().begin(), peaks.getInternal().begin() + nold,
                                peaks.getInternal().end(), SortPeaks());
         }
+        for (auto const &peak : peaks) {
+            std::cout << peak << std::endl;
+        }
 
+        std::cout << "peak catalog rhs\n";
+        for (auto idx : rhsFootprintIndxs) {
+            std::cout << idx << std::endl;
+        }
         for (unsigned long i : rhsFootprintIndxs) {
             assert(i < rhsFootprints.size());
             PeakCatalog const &oldPeaks = rhsFootprints[i]->getPeaks();
@@ -430,6 +465,9 @@ FootprintSet mergeFootprintSets(FootprintSet const &lhs,      // the FootprintSe
             // See note above on why we're using getInternal() here.
             std::inplace_merge(peaks.getInternal().begin(), peaks.getInternal().begin() + nold,
                                peaks.getInternal().end(), SortPeaks());
+        }
+        for (auto const &peak : peaks) {
+            std::cout << peak << std::endl;
         }
         idFinder.reset();
     }
