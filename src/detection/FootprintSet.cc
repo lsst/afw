@@ -77,9 +77,9 @@ struct ThresholdBitmask_traits : public Threshold_traits {  // Threshold ORs wit
 };
 
 template <typename PixelT>
-class setIdImage {
+class SetIdImage {
 public:
-    explicit setIdImage(std::uint64_t const id, bool overwriteId = false, long const idMask = 0x0)
+    explicit SetIdImage(std::uint64_t const id, bool overwriteId = false, long const idMask = 0x0)
             : _id(id),
               _idMask(idMask),
               _withSetReplace(false),
@@ -93,7 +93,7 @@ public:
         }
     }
 
-    setIdImage(std::uint64_t const id, std::set<std::uint64_t> *oldIds, bool overwriteId = false,
+    SetIdImage(std::uint64_t const id, std::set<std::uint64_t> *oldIds, bool overwriteId = false,
                long const idMask = 0x0)
             : _id(id),
               _idMask(idMask),
@@ -312,7 +312,7 @@ FootprintSet mergeFootprintSets(FootprintSet const &lhs,      // the FootprintSe
         std::set<std::uint64_t> overwritten;
         foot->getSpans()
                 ->clippedTo(idImage->getBBox())
-                ->applyFunctor(setIdImage<IdPixelT>(id, &overwritten, true), *idImage);
+                ->applyFunctor(SetIdImage<IdPixelT>(id, &overwritten, true), *idImage);
 
         if (!overwritten.empty()) {
             overwrittenIds.insert(overwrittenIds.end(), std::make_pair(id, overwritten));
@@ -332,7 +332,7 @@ FootprintSet mergeFootprintSets(FootprintSet const &lhs,      // the FootprintSe
         std::set<std::uint64_t> overwritten;
         foot->getSpans()
                 ->clippedTo(idImage->getBBox())
-                ->applyFunctor(setIdImage<IdPixelT>(id, &overwritten, true, lhsIdMask), *idImage);
+                ->applyFunctor(SetIdImage<IdPixelT>(id, &overwritten, true, lhsIdMask), *idImage);
 
         if (!overwritten.empty()) {
             overwrittenIds.insert(overwrittenIds.end(), std::make_pair(id, overwritten));
@@ -948,7 +948,7 @@ std::shared_ptr<image::Image<FootprintIdPixel>> FootprintSet::insertIntoImage() 
     FootprintIdPixel id = 0;
     for (auto const &fIter : *_footprints) {
         id++;
-        fIter->getSpans()->applyFunctor(setIdImage<FootprintIdPixel>(id), *im);
+        fIter->getSpans()->applyFunctor(SetIdImage<FootprintIdPixel>(id), *im);
     }
 
     return im;
