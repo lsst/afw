@@ -301,6 +301,20 @@ using TransformPoint2ToPoint2 = Transform<Point2Endpoint, Point2Endpoint>;
 using TransformPoint2ToGeneric = Transform<Point2Endpoint, GenericEndpoint>;
 using TransformPoint2ToSpherePoint = Transform<Point2Endpoint, SpherePointEndpoint>;
 
+// Instances defined in Transform.cc need to be declared here as external.
+// Otherwise The implementations are not found in the shared library.
+// with newer compiler/linker versions on osx.
+
+extern template class Transform<GenericEndpoint, GenericEndpoint>;
+extern template class Transform<GenericEndpoint, Point2Endpoint>;
+extern template class Transform<GenericEndpoint, SpherePointEndpoint>;
+extern template class Transform<Point2Endpoint, GenericEndpoint>;
+extern template class Transform<Point2Endpoint, Point2Endpoint>;
+extern template class Transform<Point2Endpoint, SpherePointEndpoint>;
+extern template class Transform<SpherePointEndpoint, GenericEndpoint>;
+extern template class Transform<SpherePointEndpoint, Point2Endpoint>;
+extern template class Transform<SpherePointEndpoint, SpherePointEndpoint>;
+
 }  // namespace geom
 }  // namespace afw
 }  // namespace lsst
