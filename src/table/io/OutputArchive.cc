@@ -79,9 +79,22 @@ public:
         indexRecord->set(indexKeys.catPersistable, catPersistable);
         indexRecord->set(indexKeys.nRows, catalog.size());
         int catArchive = 1;
+        int extver = 0;
         CatalogVector::iterator iter = _catalogs.begin();
         for (; iter != _catalogs.end(); ++iter, ++catArchive) {
+            auto metadata = iter->getTable()->getMetadata();
+            // Look for previous occurrences of this EXTNAME since each
+            // repeated table should get a new EXTVER value.
+            auto found_extname = metadata->exists("EXTNAME");
+            if (found_extname && metadata->getAsString("EXTNAME") == name) {
+                ++extver;
+            }
             if (iter->getTable() == catalog.getTable()) {
+                // First time through there will not be an EXTNAME in the
+                // header.
+                if (!found_extname) {
+                    ++extver;
+                }
                 break;
             }
         }
@@ -101,6 +114,9 @@ public:
         }
         // Also add an EXTNAME. The most recent AR_NAME given will be used.
         iter->getTable()->getMetadata()->set("EXTNAME", name);
+        if (extver > 1) { // 1 is the default so no need to write it.
+            iter->getTable()->getMetadata()->set("EXTVER", extver);
+        }
         indexRecord->set(indexKeys.row0, iter->size());
         indexRecord->set(indexKeys.catArchive, catArchive);
         iter->insert(iter->end(), catalog.begin(), catalog.end(), false);
