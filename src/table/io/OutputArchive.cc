@@ -79,22 +79,9 @@ public:
         indexRecord->set(indexKeys.catPersistable, catPersistable);
         indexRecord->set(indexKeys.nRows, catalog.size());
         int catArchive = 1;
-        int extver = 0;
         CatalogVector::iterator iter = _catalogs.begin();
         for (; iter != _catalogs.end(); ++iter, ++catArchive) {
-            auto metadata = iter->getTable()->getMetadata();
-            // Look for previous occurrences of this EXTNAME since each
-            // repeated table should get a new EXTVER value.
-            auto found_extname = metadata->exists("EXTNAME");
-            if (found_extname && metadata->getAsString("EXTNAME") == name) {
-                ++extver;
-            }
             if (iter->getTable() == catalog.getTable()) {
-                // First time through there will not be an EXTNAME in the
-                // header.
-                if (!found_extname) {
-                    ++extver;
-                }
                 break;
             }
         }
@@ -102,21 +89,39 @@ public:
             throw LSST_EXCEPT(pex::exceptions::LogicError,
                               "All catalogs passed to saveCatalog must be created by makeCatalog");
         }
+        auto metadata = iter->getTable()->getMetadata();
+        // If EXTNAME exists we have already assigned an EXTVER.
+        // Otherwise must scan through all catalogs looking for other
+        // catalogs with the same name that have been assigned EXTNAME
+        // to determine this EXTVER.
+        auto found_extname = metadata->exists("EXTNAME");
+        if (!found_extname) {
+            int extver = 1;
+            // Catalogs can be filled out of order, so look for other
+            // catalogs with this EXTNAME.
+            CatalogVector::iterator ver_iter = _catalogs.begin();
+            for (; ver_iter != _catalogs.end(); ++ver_iter) {
+                auto cat_metadata = ver_iter->getTable()->getMetadata();
+                if (cat_metadata->exists("EXTNAME") && cat_metadata->getAsString("EXTNAME") == name) {
+                        ++extver;
+                }
+            }
+            if (extver > 1) { // 1 is the default so no need to write it.
+                metadata->set("EXTVER", extver);
+            }
+        }
         // Add the name of the class to the header so anyone looking at it can
         // tell what's stored there.  But we don't want to add it multiple times.
         try {
-            auto names = iter->getTable()->getMetadata()->getArray<std::string>("AR_NAME");
+            auto names = metadata->getArray<std::string>("AR_NAME");
             if (std::find(names.begin(), names.end(), name) == names.end()) {
                 iter->getTable()->getMetadata()->add("AR_NAME", name, "Class name for objects stored here");
             }
         } catch (pex::exceptions::NotFoundError &) {
-            iter->getTable()->getMetadata()->add("AR_NAME", name, "Class name for objects stored here");
+            metadata->add("AR_NAME", name, "Class name for objects stored here");
         }
         // Also add an EXTNAME. The most recent AR_NAME given will be used.
-        iter->getTable()->getMetadata()->set("EXTNAME", name);
-        if (extver > 1) { // 1 is the default so no need to write it.
-            iter->getTable()->getMetadata()->set("EXTVER", extver);
-        }
+        metadata->set("EXTNAME", name);
         indexRecord->set(indexKeys.row0, iter->size());
         indexRecord->set(indexKeys.catArchive, catArchive);
         iter->insert(iter->end(), catalog.begin(), catalog.end(), false);
