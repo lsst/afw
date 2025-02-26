@@ -227,9 +227,11 @@ void FootprintMergeList::_initialize(afw::table::Schema &sourceSchema,
     // Add Flags for the filters
     for (auto const &iter : filterList) {
         KeyTuple &keys = _filterMap[iter];
-        keys.footprint = sourceSchema.addField<afw::table::Flag>(
-                "merge_footprint_" + iter,
-                "Detection footprint overlapped with a detection from filter " + iter);
+        keys.footprint = sourceSchema.addField(
+                table::Field<afw::table::Flag>(
+                        "merge_footprint_" + iter,
+                        "Detection footprint overlapped with a detection from filter " + iter),
+                /*doReplace=*/true);
         keys.peak = _peakSchemaMapper.editOutputSchema().addField<afw::table::Flag>(
                 "merge_peak_" + iter, "Peak detected in filter " + iter);
     }
