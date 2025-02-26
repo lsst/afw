@@ -515,6 +515,11 @@ void MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
     } else {
         fitsfile.setHdu(0);
     }
+    // Primary HDU should not include an EXTNAME header.
+    // On read we merge HDUs and this can lead to an EXTNAME being propagated.
+    if (header->exists("EXTNAME")) {
+        header->remove("EXTNAME");
+    }
     fitsfile.writeMetadata(*header);
 
     processPlaneMetadata(imageMetadata.get(), header, "IMAGE");

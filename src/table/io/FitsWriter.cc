@@ -25,10 +25,9 @@ struct ProcessSchema {
     template <typename T>
     void operator()(SchemaItem<T> const& item) const {
         std::string name = item.field.getName();
-        int n = fits->addColumn<typename Field<T>::Element>(name, item.field.getElementCount(),
-                                                            item.field.getDoc());
+        int n = fits->addColumn<typename Field<T>::Element>(name, item.field.getElementCount());
         if (!item.field.getDoc().empty()) {
-            // We use a separate key TDOCn for documentation (in addition to the TTYPEn comments)
+            // We use a separate key TDOCn for documentation
             // so we can have long strings via the CONTINUE convention.
             // When reading, if there is no TDOCn, we'll just use the TTYPEn comment.
             fits->writeColumnKey("TDOC", n, item.field.getDoc());
@@ -38,7 +37,7 @@ struct ProcessSchema {
 
     void operator()(SchemaItem<std::string> const& item) const {
         std::string name = item.field.getName();
-        std::size_t n = fits->addColumn<std::string>(name, item.field.getElementCount(), item.field.getDoc());
+        std::size_t n = fits->addColumn<std::string>(name, item.field.getElementCount());
         if (!item.field.getDoc().empty()) {
             fits->writeColumnKey("TDOC", n, item.field.getDoc());
         }
