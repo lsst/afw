@@ -85,25 +85,25 @@ int Card::write(int fd, int ncard, char *record) const {
     if (value.type() == typeid(std::string)) {
         std::string const &str = std::any_cast<std::string>(value);
         if (keyword == "" || keyword == "COMMENT" || keyword == "END" || keyword == "HISTORY") {
-            snprintf(card, 80, "%-8.8s%-72s", keyword.c_str(), str.c_str());
+            sprintf(card, "%-8.8s%-72s", keyword.c_str(), str.c_str());
         } else {
-            snprintf(card, 80, "%-8.8s= '%s' %c%-*s", keyword.c_str(), str.c_str(), (comment == "" ? ' ' : '/'),
+            sprintf(card, "%-8.8s= '%s' %c%-*s", keyword.c_str(), str.c_str(), (comment == "" ? ' ' : '/'),
                     (int)(80 - 14 - str.size()), comment.c_str());
         }
     } else {
-        snprintf(card, 10, "%-8.8s= ", keyword.c_str());
+        sprintf(card, "%-8.8s= ", keyword.c_str());
         card += 10;
         if (value.type() == typeid(bool)) {
-            snprintf(card, 20, "%20s", std::any_cast<bool>(value) ? "T" : "F");
+            sprintf(card, "%20s", std::any_cast<bool>(value) ? "T" : "F");
         } else if (value.type() == typeid(int)) {
-            snprintf(card, 20, "%20d", std::any_cast<int>(value));
+            sprintf(card, "%20d", std::any_cast<int>(value));
         } else if (value.type() == typeid(double)) {
-            snprintf(card, 20, "%20.10f", std::any_cast<double>(value));
+            sprintf(card, "%20.10f", std::any_cast<double>(value));
         } else if (value.type() == typeid(float)) {
-            snprintf(card, 20, "%20.7f", std::any_cast<float>(value));
+            sprintf(card, "%20.7f", std::any_cast<float>(value));
         }
         card += 20;
-        snprintf(card, 50, " %c%-48s", (comment == "" ? ' ' : '/'), comment.c_str());
+        sprintf(card, " %c%-48s", (comment == "" ? ' ' : '/'), comment.c_str());
     }
     /*
      * Write record if full
@@ -227,7 +227,7 @@ int write_fits_hdr(int fd, int bitpix, int naxis, int *naxes, std::list<Card> &c
     }
     for (i = 0; i < naxis; i++) {
         char key[] = "NAXIS.";
-        snprintf(key, 7, "NAXIS%d", i + 1);
+        sprintf(key, "NAXIS%d", i + 1);
         Card card(key, naxes[i]);
         ncard = card.write(fd, ncard, record);
     }
