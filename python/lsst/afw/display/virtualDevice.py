@@ -125,7 +125,7 @@ class DisplayImpl:
         if self.verbose:
             print("virtual[%s]._getMaskTransparency()" % self.frame)
 
-    def _mtv(self, image, wcs=None, mask=None, title=""):
+    def _mtv(self, image, wcs=None, mask=None, title="", metadata=None):
         """Display an image and maybe a mask overlay on a display
 
         Parameters
@@ -138,11 +138,14 @@ class DisplayImpl:
             A Wcs to associate with data
         title : `str`
             Name to display with the data
+        metadata : `lsst.daf.base.PropertySet`
+            Additional metadata.
         """
         if self.verbose:
-            print("virtual[%s]._mtv(image=%s, mask=%s, wcs=%s, title=\"%s\")" %
+            print("virtual[%s]._mtv(image=%s, mask=%s, wcs=%s, title=\"%s\", metadata=\"%s\")" %
                   (self.frame, "Image" if image else None,
-                   "Mask" if mask else None, "Wcs" if wcs else None, title))
+                   "Mask" if mask else None, "Wcs" if wcs else None, title,
+                   f"{len(metadata)} cards" if metadata else "None"))
 
     def _setImageColormap(self, cmap):
         """Set the desired colormap
