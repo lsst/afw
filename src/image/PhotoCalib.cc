@@ -67,13 +67,12 @@ double toInstFluxFromMagnitude(double magnitude, double scale) {
     return cpputils::ABMagnitudeToNanojansky(magnitude) / scale;
 }
 
-double toNanojanskyErr(double instFlux, double instFluxErr, double scale, double scaleErr,
-                       double nanojansky) {
-    return std::abs(nanojansky) * hypot(instFluxErr / instFlux, scaleErr / scale);
+double toNanojanskyErr(double instFluxErr, double scale) {
+    return instFluxErr * scale;
 }
 
-double toMagnitudeErr(double instFlux, double instFluxErr, double scale, double scaleErr) {
-    return 2.5 / std::log(10.0) * hypot(instFluxErr / instFlux, scaleErr / scale);
+double toMagnitudeErr(double instFlux, double instFluxErr) {
+    return 2.5 / std::log(10.0) * (instFluxErr / instFlux);
 }
 
 }  // anonymous namespace
@@ -93,13 +92,13 @@ Measurement PhotoCalib::instFluxToNanojansky(double instFlux, double instFluxErr
     double calibration, error, nanojansky;
     calibration = evaluate(point);
     nanojansky = toNanojansky(instFlux, calibration);
-    error = toNanojanskyErr(instFlux, instFluxErr, calibration, _calibrationErr, nanojansky);
+    error = toNanojanskyErr(instFluxErr, calibration);
     return Measurement(nanojansky, error);
 }
 
 Measurement PhotoCalib::instFluxToNanojansky(double instFlux, double instFluxErr) const {
     double nanojansky = toNanojansky(instFlux, _calibrationMean);
-    double error = toNanojanskyErr(instFlux, instFluxErr, _calibrationMean, _calibrationErr, nanojansky);
+    double error = toNanojanskyErr(instFluxErr, _calibrationMean);
     return Measurement(nanojansky, error);
 }
 
@@ -147,13 +146,13 @@ Measurement PhotoCalib::instFluxToMagnitude(double instFlux, double instFluxErr,
     double calibration, error, magnitude;
     calibration = evaluate(point);
     magnitude = toMagnitude(instFlux, calibration);
-    error = toMagnitudeErr(instFlux, instFluxErr, calibration, _calibrationErr);
+    error = toMagnitudeErr(instFlux, instFluxErr);
     return Measurement(magnitude, error);
 }
 
 Measurement PhotoCalib::instFluxToMagnitude(double instFlux, double instFluxErr) const {
     double magnitude = toMagnitude(instFlux, _calibrationMean);
-    double error = toMagnitudeErr(instFlux, instFluxErr, _calibrationMean, _calibrationErr);
+    double error = toMagnitudeErr(instFlux, instFluxErr);
     return Measurement(magnitude, error);
 }
 
@@ -324,10 +323,8 @@ afw::table::SourceCatalog PhotoCalib::calibrateCatalog(afw::table::SourceCatalog
             rec.set(key.mag, toMagnitude(instFlux, calibration[iRec]));
             if (key.instFluxErr.isValid()) {
                 double instFluxErr = rec.get(key.instFluxErr);
-                rec.set(key.fluxErr, toNanojanskyErr(instFlux, instFluxErr, calibration[iRec],
-                                                     _calibrationErr, nanojansky));
-                rec.set(key.magErr,
-                        toMagnitudeErr(instFlux, instFluxErr, calibration[iRec], _calibrationErr));
+                rec.set(key.fluxErr, toNanojanskyErr(instFluxErr, calibration[iRec]));
+                rec.set(key.magErr, toMagnitudeErr(instFlux, instFluxErr));
             }
         }
         ++iRec;
@@ -557,7 +554,7 @@ void PhotoCalib::instFluxToNanojanskyArray(afw::table::SourceCatalog const &sour
         double instFluxErr = rec.get(instFluxErrKey);
         double nanojansky = toNanojansky(instFlux, calibration[i]);
         (*iter)[0] = nanojansky;
-        (*iter)[1] = toNanojanskyErr(instFlux, instFluxErr, calibration[i], _calibrationErr, nanojansky);
+        (*iter)[1] = toNanojanskyErr(instFluxErr, calibration[i]);
         ++iter;
         ++i;
     }
@@ -576,7 +573,7 @@ void PhotoCalib::instFluxToMagnitudeArray(afw::table::SourceCatalog const &sourc
         double instFlux = rec.get(instFluxKey);
         double instFluxErr = rec.get(instFluxErrKey);
         (*iter)[0] = toMagnitude(instFlux, calibration[i]);
-        (*iter)[1] = toMagnitudeErr(instFlux, instFluxErr, calibration[i], _calibrationErr);
+        (*iter)[1] = toMagnitudeErr(instFlux, instFluxErr);
         ++iter;
         ++i;
     }

@@ -36,15 +36,14 @@ import lsst.daf.base
 import lsst.pex.exceptions
 
 
-def computeNanojanskyErr(instFluxErr, instFlux, calibrationErr, calibration, flux):
+def computeNanojanskyErr(instFluxErr, calibration):
     """Return the error on the flux (nanojansky)."""
-    return flux*np.hypot(instFluxErr/instFlux, calibrationErr/calibration)
+    return instFluxErr * calibration
 
 
-def computeMagnitudeErr(instFluxErr, instFlux, calibrationErr, calibration, flux):
+def computeMagnitudeErr(instFluxErr, instFlux):
     """Return the error on the magnitude."""
-    err = computeNanojanskyErr(instFluxErr, instFlux, calibrationErr, calibration, flux)
-    return 2.5/np.log(10) * err / flux
+    return 2.5/np.log(10) * instFluxErr / instFlux
 
 
 def makeCalibratedMaskedImage(image, mask, variance, calibration):
@@ -161,11 +160,7 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
         self.assertFloatsAlmostEqual(self.mag2, photoCalib.instFluxToMagnitude(self.instFlux2, self.point0))
 
         # test that we get a correct nJy err for the base instFlux
-        errFlux1 = computeNanojanskyErr(self.instFluxErr1,
-                                        self.instFlux1,
-                                        calibrationErr,
-                                        self.calibration,
-                                        self.flux1)
+        errFlux1 = computeNanojanskyErr(self.instFluxErr1, self.calibration)
         result = photoCalib.instFluxToNanojansky(self.instFlux1, self.instFluxErr1)
         self.assertEqual(self.flux1, result.value)
         self.assertFloatsAlmostEqual(errFlux1, result.error)
@@ -174,11 +169,7 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
         self.assertFloatsAlmostEqual(errFlux1, result.error)
 
         # test that we get a correct magnitude err for the base instFlux
-        errMag1 = computeMagnitudeErr(self.instFluxErr1,
-                                      self.instFlux1,
-                                      calibrationErr,
-                                      self.calibration,
-                                      self.flux1)
+        errMag1 = computeMagnitudeErr(self.instFluxErr1, self.instFlux1)
         result = photoCalib.instFluxToMagnitude(self.instFlux1, self.instFluxErr1)
         self.assertEqual(self.mag1, result.value)
         self.assertFloatsAlmostEqual(errMag1, result.error)
@@ -188,11 +179,7 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
         self.assertFloatsAlmostEqual(errMag1, result.error)
 
         # test that we get a correct nJy err for flux2
-        errFlux2 = computeNanojanskyErr(self.instFluxErr1,
-                                        self.instFlux2,
-                                        calibrationErr,
-                                        self.calibration,
-                                        self.flux2)
+        errFlux2 = computeNanojanskyErr(self.instFluxErr1, self.calibration)
         result = photoCalib.instFluxToNanojansky(self.instFlux2, self.instFluxErr1)
         self.assertFloatsAlmostEqual(self.flux2, result.value)
         self.assertFloatsAlmostEqual(errFlux2, result.error)
@@ -201,11 +188,7 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
         self.assertFloatsAlmostEqual(errFlux2, result.error)
 
         # test that we get a correct magnitude err for 575 nJy
-        errMag2 = computeMagnitudeErr(self.instFluxErr1,
-                                      self.instFlux2,
-                                      calibrationErr,
-                                      self.calibration,
-                                      self.flux2)
+        errMag2 = computeMagnitudeErr(self.instFluxErr1, self.instFlux2)
         result = photoCalib.instFluxToMagnitude(self.instFlux2, self.instFluxErr1)
         self.assertFloatsAlmostEqual(self.mag2, result.value)
         self.assertFloatsAlmostEqual(errMag2, result.error)
@@ -412,27 +395,11 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
         catalog = self.catalog.copy(deep=True)
         catalog[0].set('centroid_x', self.pointXShift[0])
         catalog[0].set('centroid_y', self.pointXShift[1])
-        errFlux1 = computeNanojanskyErr(self.instFluxErr1,
-                                        self.instFlux1,
-                                        self.calibrationErr,
-                                        calibration,
-                                        expect)
-        errMag1 = computeMagnitudeErr(self.instFluxErr1,
-                                      self.instFlux1,
-                                      self.calibrationErr,
-                                      calibration,
-                                      expect)
+        errFlux1 = computeNanojanskyErr(self.instFluxErr1, calibration)
+        errMag1 = computeMagnitudeErr(self.instFluxErr1, self.instFlux1)
         # re-use the same instFluxErr1 for instFlux2.
-        errFlux2 = computeNanojanskyErr(self.instFluxErr1,
-                                        self.instFlux2,
-                                        self.calibrationErr,
-                                        self.calibration,
-                                        self.flux2)
-        errMag2 = computeMagnitudeErr(self.instFluxErr1,
-                                      self.instFlux2,
-                                      self.calibrationErr,
-                                      self.calibration,
-                                      self.flux2)
+        errFlux2 = computeNanojanskyErr(self.instFluxErr1, self.calibration)
+        errMag2 = computeMagnitudeErr(self.instFluxErr1, self.instFlux2)
         expectNanojansky = np.array([[expect, errFlux1], [self.flux2, errFlux2]])
         expectMag = np.array([[(expect*u.nJy).to_value(u.ABmag), errMag1], [self.mag2, errMag2]])
         self._testSourceCatalog(photoCalib, catalog, expectNanojansky, expectMag)
