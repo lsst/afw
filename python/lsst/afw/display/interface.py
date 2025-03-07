@@ -535,7 +535,7 @@ class Display:
             if name not in self._defaultMaskPlaneColor:
                 self.setDefaultMaskPlaneColor(name, next(colorGenerator))
 
-    def image(self, data, title="", wcs=None):
+    def image(self, data, title="", wcs=None, metadata=None):
         """Display an image on a display, with semi-transparent masks
         overlaid, if available.
 
@@ -550,6 +550,8 @@ class Display:
             World Coordinate System to align an `~lsst.afw.image.MaskedImage`
             or `~lsst.afw.image.Image` to; raise an exception if ``data``
             is an `~lsst.afw.image.Exposure`.
+        metadata : `lsst.daf.base.PropertySet`, optional
+            Additional FITS metadata to be sent to display.
 
         Raises
         ------
@@ -568,7 +570,7 @@ class Display:
         if isinstance(data, afwImage.Exposure):
             if wcs:
                 raise RuntimeError("You may not specify a wcs with an Exposure")
-            data, wcs = data.getMaskedImage(), data.wcs
+            data, wcs, metadata = data.getMaskedImage(), data.wcs, data.metadata
         # it's a DecoratedImage; display it
         elif isinstance(data, afwImage.DecoratedImage):
             try:
@@ -580,21 +582,21 @@ class Display:
             self._xy0 = data.getXY0()   # DecoratedImage doesn't have getXY0()
 
         if isinstance(data, afwImage.Image):  # it's an Image; display it
-            self._impl._mtv(data, None, wcs, title)
+            self._impl._mtv(data, None, wcs, title, metadata)
         # It's a Mask; display it, bitplane by bitplane.
         elif isinstance(data, afwImage.Mask):
             self.__addMissingMaskPlanes(data)
             # Some displays can't display a Mask without an image; so display
             # an Image too, with pixel values set to the mask.
-            self._impl._mtv(afwImage.ImageI(data.array), data, wcs, title)
+            self._impl._mtv(afwImage.ImageI(data.array), data, wcs, title, metadata)
         # It's a MaskedImage; display Image and overlay Mask.
         elif isinstance(data, afwImage.MaskedImage):
             self.__addMissingMaskPlanes(data.mask)
-            self._impl._mtv(data.image, data.mask, wcs, title)
+            self._impl._mtv(data.image, data.mask, wcs, title, metadata)
         else:
             raise TypeError(f"Unsupported type {data!r}")
 
-    def mtv(self, data, title="", wcs=None):
+    def mtv(self, data, title="", wcs=None, metadata=None):
         """Display an image on a display, with semi-transparent masks
         overlaid, if available.
 
@@ -603,7 +605,7 @@ class Display:
         Historical note: the name "mtv" comes from Jim Gunn's forth imageprocessing
         system, Mirella (named after Mirella Freni); The "m" stands for Mirella.
         """
-        self.image(data, title, wcs)
+        self.image(data, title, wcs, metadata)
 
     class _Buffering:
         """Context manager for buffering repeated display commands.

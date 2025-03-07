@@ -27,6 +27,7 @@
 #if !defined(SIMPLE_FITS_H)
 #define SIMPLE_FITS_H 1
 
+#include "lsst/daf/base/PropertySet.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/Mask.h"
 #include "lsst/afw/geom/SkyWcs.h"
@@ -37,11 +38,11 @@ namespace display {
 
 template <typename ImageT>
 void writeBasicFits(int fd, ImageT const& data, lsst::afw::geom::SkyWcs const* Wcs = nullptr,
-                    char const* title = nullptr);
+                    char const* title = nullptr, std::shared_ptr<daf::base::PropertySet> fits_metadata = nullptr);
 
 template <typename ImageT>
 void writeBasicFits(std::string const& filename, ImageT const& data, lsst::afw::geom::SkyWcs const* Wcs = nullptr,
-                    const char* title = nullptr);
+                    const char* title = nullptr, std::shared_ptr<daf::base::PropertySet> fits_metadata = nullptr);
 }
 }
 }  // namespace lsst::afw::display

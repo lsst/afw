@@ -43,6 +43,7 @@ using namespace posix;
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/fits.h"
+#include "lsst/afw/geom/wcsUtils.h"
 #include "simpleFits.h"
 
 namespace image = lsst::afw::image;
@@ -352,11 +353,37 @@ namespace lsst {
 namespace afw {
 namespace display {
 
+void add_cards_from_property_list(std::list<Card> &cards, std::shared_ptr<daf::base::PropertySet> metadata) {
+    using NameList = std::vector<std::string>;
+    NameList paramNames = metadata->paramNames();
+
+    for (auto const &paramName : paramNames) {
+        if (paramName == "SIMPLE" || paramName == "BITPIX" || paramName == "NAXIS" || paramName == "NAXIS1" || paramName == "NAXIS2" ||
+            paramName == "XTENSION" || paramName == "PCOUNT" || paramName == "GCOUNT") {
+            continue;
+        }
+        std::type_info const &type = metadata->typeOf(paramName);
+        if (type == typeid(bool)) {
+            cards.emplace_back(paramName, metadata->get<bool>(paramName));
+        } else if (type == typeid(int)) {
+            cards.emplace_back(paramName, metadata->get<int>(paramName));
+        } else if (type == typeid(float)) {
+            cards.emplace_back(paramName, metadata->get<float>(paramName));
+        } else if (type == typeid(double)) {
+            cards.emplace_back(paramName, metadata->get<double>(paramName));
+        } else {
+            cards.emplace_back(paramName, metadata->get<std::string>(paramName));
+        }
+    }
+}
+
+
 template <typename ImageT>
 void writeBasicFits(int fd,                   // file descriptor to write to
                     ImageT const &data,       // The data to write
                     geom::SkyWcs const *Wcs,  // which Wcs to use for pixel
-                    char const *title         // title to write to DS9
+                    char const *title,        // title to write to DS9
+                    std::shared_ptr<daf::base::PropertySet> fits_metadata
 ) {
     /*
      * Allocate cards for FITS headers
@@ -391,33 +418,15 @@ void writeBasicFits(int fd,                   // file descriptor to write to
     if (Wcs == nullptr) {
         addWcs("", cards);  // works around a ds9 bug that WCSA/B is ignored if no Wcs is present
     } else {
-        using NameList = std::vector<std::string>;
-
         auto shift = lsst::geom::Extent2D(-data.getX0(), -data.getY0());
         auto newWcs = Wcs->copyAtShiftedPixelOrigin(shift);
 
         std::shared_ptr<lsst::daf::base::PropertySet> metadata = newWcs->getFitsMetadata();
-
-        NameList paramNames = metadata->paramNames();
-
-        for (auto const &paramName : paramNames) {
-            if (paramName == "SIMPLE" || paramName == "BITPIX" || paramName == "NAXIS" || paramName == "NAXIS1" || paramName == "NAXIS2" ||
-                paramName == "XTENSION" || paramName == "PCOUNT" || paramName == "GCOUNT") {
-                continue;
-            }
-            std::type_info const &type = metadata->typeOf(paramName);
-            if (type == typeid(bool)) {
-                cards.emplace_back(paramName, metadata->get<bool>(paramName));
-            } else if (type == typeid(int)) {
-                cards.emplace_back(paramName, metadata->get<int>(paramName));
-            } else if (type == typeid(float)) {
-                cards.emplace_back(paramName, metadata->get<float>(paramName));
-            } else if (type == typeid(double)) {
-                cards.emplace_back(paramName, metadata->get<double>(paramName));
-            } else {
-                cards.emplace_back(paramName, metadata->get<std::string>(paramName));
-            }
-        }
+        add_cards_from_property_list(cards, metadata);
+    }
+    if (fits_metadata) {
+        lsst::afw::geom::stripWcsMetadata(*fits_metadata);
+        add_cards_from_property_list(cards, fits_metadata);
     }
     /*
      * Basic FITS stuff
@@ -442,7 +451,8 @@ template <typename ImageT>
 void writeBasicFits(std::string const &filename,  // file to write, or "| cmd"
                     ImageT const &data,           // The data to write
                     geom::SkyWcs const *Wcs,      // which Wcs to use for pixel
-                    char const *title             // title to write to DS9
+                    char const *title,             // title to write to DS9
+                    std::shared_ptr<daf::base::PropertySet> fits_metadata
 ) {
     int fd;
     if ((filename.c_str())[0] == '|') {  // a command
@@ -462,7 +472,7 @@ void writeBasicFits(std::string const &filename,  // file to write, or "| cmd"
     }
 
     try {
-        writeBasicFits(fd, data, Wcs, title);
+        writeBasicFits(fd, data, Wcs, title, fits_metadata);
     } catch (lsst::pex::exceptions::Exception &) {
         (void)close(fd);
         throw;
@@ -473,8 +483,8 @@ void writeBasicFits(std::string const &filename,  // file to write, or "| cmd"
 
 /// @cond
 #define INSTANTIATE(IMAGET)                                                                \
-    template void writeBasicFits(int, IMAGET const &, geom::SkyWcs const *, char const *); \
-    template void writeBasicFits(std::string const &, IMAGET const &, geom::SkyWcs const *, char const *)
+    template void writeBasicFits(int, IMAGET const &, geom::SkyWcs const *, char const *, std::shared_ptr<daf::base::PropertySet>); \
+    template void writeBasicFits(std::string const &, IMAGET const &, geom::SkyWcs const *, char const *, std::shared_ptr<daf::base::PropertySet>)
 
 #define INSTANTIATE_IMAGE(T) INSTANTIATE(lsst::afw::image::Image<T>)
 #define INSTANTIATE_MASK(T) INSTANTIATE(lsst::afw::image::Mask<T>)
