@@ -246,12 +246,6 @@ MaskedImage<float> PhotoCalib::calibrateImage(MaskedImage<float> const &maskedIm
     return result;
 }
 
-
-MaskedImage<float> PhotoCalib::calibrateImage(MaskedImage<float> const &maskedImage,
-                                              bool includeScaleUncertainty) const {
-    return calibrateImage(maskedImage);
-}
-
 MaskedImage<float> PhotoCalib::uncalibrateImage(MaskedImage<float> const &maskedImage) const {
     // Deep copy construct, as we're multiplying in-place.
     auto result = MaskedImage<float>(maskedImage, true);
@@ -261,11 +255,6 @@ MaskedImage<float> PhotoCalib::uncalibrateImage(MaskedImage<float> const &masked
         _calibration->divideImage(result, true);  // only in the overlap region
     }
     return result;
-}
-
-MaskedImage<float> PhotoCalib::uncalibrateImage(MaskedImage<float> const &maskedImage,
-                                                bool includeScaleUncertainty) const {
-    return uncalibrateImage(maskedImage);
 }
 
 afw::table::SourceCatalog PhotoCalib::calibrateCatalog(afw::table::SourceCatalog const &catalog,
