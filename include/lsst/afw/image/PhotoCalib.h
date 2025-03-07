@@ -337,19 +337,28 @@ public:
     void instFluxToMagnitude(afw::table::SourceCatalog &sourceCatalog, std::string const &instFluxField,
                              std::string const &outField) const;
 
+    //@{
     /**
      * Return a flux calibrated image, with pixel values in nJy.
      *
      * Mask pixels are propagated directly from the input image.
      *
      * @param maskedImage The masked image to calibrate.
-     * @param includeScaleUncertainty Include the uncertainty on the calibration in the resulting variance?
+     * @param includeScaleUncertainty Deprecated and ignored; will be removed
+     *                                after v30.
      *
      * @return The calibrated masked image.
      */
+    MaskedImage<float> calibrateImage(MaskedImage<float> const &maskedImage) const;
+    // TODO[DM-49400]: remove the overload below.
+    [[deprecated(
+        "The includeScaleUncertainty option is deprecated and does nothing. Will be removed after v30."
+    )]]
     MaskedImage<float> calibrateImage(MaskedImage<float> const &maskedImage,
-                                      bool includeScaleUncertainty = true) const;
+                                      bool includeScaleUncertainty) const;
+    //@}
 
+    //@{
     /**
      * Return a un-calibrated image, with pixel values in ADU (or whatever the original input to
      * this photoCalib was).
@@ -357,14 +366,19 @@ public:
      * Mask pixels are propagated directly from the input image.
      *
      * @param maskedImage The masked image with pixel units of nJy to uncalibrate.
-     * @param includeScaleUncertainty Remove uncertainty from this calibration that was previously propagated
-     * into the variance plane. Must have the same value as the parameter of the same name when
-     * calibrateImage was called on this image.
+     * @param includeScaleUncertainty Deprecated and ignored; will be removed
+     *                                after v30.
      *
      * @return The uncalibrated masked image.
      */
+    MaskedImage<float> uncalibrateImage(MaskedImage<float> const &maskedImage) const;
+    // TODO[DM-49400]: remove the overload below.
+    [[deprecated(
+        "The includeScaleUncertainty option is deprecated and does nothing. Will be removed after v30."
+    )]]
     MaskedImage<float> uncalibrateImage(MaskedImage<float> const &maskedImage,
-                                        bool includeScaleUncertainty = true) const;
+                                        bool includeScaleUncertainty) const;
+    //@}
 
     /**
      * Return a flux calibrated catalog, with new `_flux`, `_fluxErr`, `_mag`, and `_magErr` fields.
