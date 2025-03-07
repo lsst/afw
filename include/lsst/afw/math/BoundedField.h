@@ -117,16 +117,13 @@ public:
      *  @param[out]   image         Image to fill.
      *  @param[in]    overlapOnly   If true, only modify the region in the intersection of
      *                              image.getBBox(image::PARENT) and this->getBBox().
-     *  @param[in]    xStep         Distance between grid points in X to evaluate; values
-     *                              between grid points will be linearly interpolated.
-     *  @param[in]    yStep         Distance between grid points in Y to evaluate; values
-     *                              between grid points will be linearly interpolated.
+step
      *
      *  @throws pex::exceptions::RuntimeError if the bounding boxes do not overlap
      *         and overlapOnly=false.
      */
     template <typename T>
-    void fillImage(image::Image<T>& image, bool overlapOnly = false, int xStep = 1, int yStep = 1) const;
+    void fillImage(image::Image<T>& image, bool overlapOnly = false) const;
 
     /**
      *  Add the field or a constant multiple of it to an image in-place
@@ -134,18 +131,13 @@ public:
      *  @param[out]   image         Image to add to.
      *  @param[in]    scaleBy       Multiply the field by this before adding it to the image.
      *  @param[in]    overlapOnly   If true, only modify the region in the intersection of
-     *                              image.getBBox(image::PARENT) and this->getBBox().
-     *  @param[in]    xStep         Distance between grid points in X to evaluate; values
-     *                              between grid points will be linearly interpolated.
-     *  @param[in]    yStep         Distance between grid points in Y to evaluate; values
-     *                              between grid points will be linearly interpolated.
+     *                              image.getBBox(image::PARENT) and this->getBBox()
      *
      *  @throws pex::exceptions::RuntimeError if the bounding boxes do not overlap
      *         and overlapOnly=false.
      */
     template <typename T>
-    void addToImage(image::Image<T>& image, double scaleBy = 1.0, bool overlapOnly = false, int xStep = 1,
-                    int yStep = 1) const;
+    void addToImage(image::Image<T>& image, double scaleBy = 1.0, bool overlapOnly = false) const;
 
     /**
      *  Multiply an image by the field in-place.
@@ -153,16 +145,12 @@ public:
      *  @param[out]   image         Image to fill.
      *  @param[in]    overlapOnly   If true, only modify the region in the intersection of
      *                              image.getBBox(image::PARENT) and this->getBBox().
-     *  @param[in]    xStep         Distance between grid points in X to evaluate; values
-     *                              between grid points will be linearly interpolated.
-     *  @param[in]    yStep         Distance between grid points in Y to evaluate; values
-     *                              between grid points will be linearly interpolated.
      *
      *  @throws pex::exceptions::RuntimeError if the bounding boxes do not overlap
      *         and overlapOnly=false.
      */
     template <typename T>
-    void multiplyImage(image::Image<T>& image, bool overlapOnly = false, int xStep = 1, int yStep = 1) const;
+    void multiplyImage(image::Image<T>& image, bool overlapOnly = false) const;
 
     /**
      *  Divide an image by the field in-place.
@@ -170,16 +158,12 @@ public:
      *  @param[out]   image         Image to fill.
      *  @param[in]    overlapOnly   If true, only modify the region in the intersection of
      *                              image.getBBox(image::PARENT) and this->getBBox().
-     *  @param[in]    xStep         Distance between grid points in X to evaluate; values
-     *                              between grid points will be linearly interpolated.
-     *  @param[in]    yStep         Distance between grid points in Y to evaluate; values
-     *                              between grid points will be linearly interpolated.
      *
      *  @throws pex::exceptions::RuntimeError if the bounding boxes do not overlap
      *         and overlapOnly=false.
      */
     template <typename T>
-    void divideImage(image::Image<T>& image, bool overlapOnly = false, int xStep = 1, int yStep = 1) const;
+    void divideImage(image::Image<T>& image, bool overlapOnly = false) const;
 
     /**
      *  Return a scaled BoundedField
