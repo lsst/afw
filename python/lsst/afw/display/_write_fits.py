@@ -45,9 +45,7 @@ def writeFitsImage(
 
     # Seed with the external metadata, stripping wcs keywords.
     if metadata:
-        print("STRIP")
         stripWcsMetadata(metadata)
-        print("METADATA COPY")
         ps.update(metadata)
 
     # Generate WcsA, pixel coordinates, allowing for X0 and Y0.
