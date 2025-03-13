@@ -28,6 +28,7 @@
 
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/Mask.h"
+#include "lsst/daf/base/PropertySet.h"
 #include "simpleFits.h"
 
 namespace py = pybind11;
@@ -43,13 +44,13 @@ template <typename ImageT>
 void declareAll(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrap([](auto &mod) {
         mod.def("writeFitsImage",
-                (void (*)(int, ImageT const &, geom::SkyWcs const *, char const *)) & writeBasicFits<ImageT>,
-                "fd"_a, "data"_a, "wcs"_a = NULL, "title"_a = NULL);
+                (void (*)(int, ImageT const &, geom::SkyWcs const *, char const *, std::shared_ptr<lsst::daf::base::PropertySet>)) & writeBasicFits<ImageT>,
+                "fd"_a, "data"_a, "wcs"_a = NULL, "title"_a = NULL, "fits_metadata"_a = NULL);
 
         mod.def("writeFitsImage",
-                (void (*)(std::string const &, ImageT const &, geom::SkyWcs const *, char const *)) &
+                (void (*)(std::string const &, ImageT const &, geom::SkyWcs const *, char const *, std::shared_ptr<lsst::daf::base::PropertySet>)) &
                         writeBasicFits<ImageT>,
-                "filename"_a, "data"_a, "wcs"_a = NULL, "title"_a = NULL);
+                "filename"_a, "data"_a, "wcs"_a = NULL, "title"_a = NULL, "fits_metadata"_a = NULL);
     });
 }
 

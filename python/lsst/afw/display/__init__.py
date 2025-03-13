@@ -24,4 +24,5 @@
 from .interface import *
 from .utils import Mosaic
 from .rgb import *
-from ._simpleFits import *
+# from ._simpleFits import *
+from ._write_fits import *
