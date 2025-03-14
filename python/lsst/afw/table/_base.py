@@ -100,7 +100,8 @@ class Catalog(metaclass=TemplateMeta):
         elif isinstance(key, np.ndarray):
             if key.dtype == bool:
                 return self.subset(key)
-            raise RuntimeError(f"Unsupported array type for indexing non-contiguous Catalog: {key.dtype}")
+            raise RuntimeError("Unsupported array type for indexing a Catalog, "
+                               f"only boolean arrays are supported: {key.dtype}")
         elif isinstance(key, str):
             key = self.schema.find(key).key
             result, self._columns = self._get_column_from_key(key, self._columns)
