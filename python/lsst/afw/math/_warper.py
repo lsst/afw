@@ -19,7 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-__all__ = ["Warper", "WarperConfig"]
+__all__ = ["Warper", "WarperConfig", "computeWarpedBBox"]
 
 import lsst.pex.config as pexConfig
 import lsst.geom
