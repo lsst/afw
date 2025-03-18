@@ -53,7 +53,7 @@ class IncompleteDataError(Exception):
         the PSF.
     """
     def __init__(self, bands, position, partialPsf):
-        missingBands = [band for band in bands if band not in partialPsf.filters]
+        missingBands = [band for band in bands if band not in partialPsf.bands]
 
         self.missingBands = missingBands
         self.position = position
@@ -66,7 +66,7 @@ def computePsfImage(psfModels, position, useKernelImage=True):
     """Get a multiband PSF image
 
     The PSF Image or PSF Kernel Image is computed for each band
-    and combined into a (filter, y, x) array.
+    and combined into a (band, y, x) array.
 
     Parameters
     ----------
@@ -125,36 +125,36 @@ class MultibandExposure(MultibandTripleBase):
 
     See `MultibandTripleBase` for parameter definitions.
     """
-    def __init__(self, filters, image, mask, variance, psfs=None):
-        super().__init__(filters, image, mask, variance)
+    def __init__(self, bands, image, mask, variance, psfs=None):
+        super().__init__(bands, image, mask, variance)
         if psfs is not None:
             for psf, exposure in zip(psfs, self.singles):
                 exposure.setPsf(psf)
 
     @staticmethod
-    def fromExposures(filters, singles):
+    def fromExposures(bands, singles):
         """Construct a MultibandImage from a collection of single band images
 
         see `tripleFromExposures` for a description of parameters
         """
         psfs = [s.getPsf() for s in singles]
-        return tripleFromSingles(MultibandExposure, filters, singles, psfs=psfs)
+        return tripleFromSingles(MultibandExposure, bands, singles, psfs=psfs)
 
     @staticmethod
-    def fromArrays(filters, image, mask, variance, bbox=None):
+    def fromArrays(bands, image, mask, variance, bbox=None):
         """Construct a MultibandExposure from a collection of arrays
 
         see `tripleFromArrays` for a description of parameters
         """
-        return tripleFromArrays(MultibandExposure, filters, image, mask, variance, bbox)
+        return tripleFromArrays(MultibandExposure, bands, image, mask, variance, bbox)
 
     @staticmethod
-    def fromKwargs(filters, filterKwargs, singleType=ExposureF, **kwargs):
+    def fromKwargs(bands, bandKwargs, singleType=ExposureF, **kwargs):
         """Build a MultibandImage from a set of keyword arguments
 
         see `makeTripleFromKwargs` for a description of parameters
         """
-        return makeTripleFromKwargs(MultibandExposure, filters, filterKwargs, singleType, **kwargs)
+        return makeTripleFromKwargs(MultibandExposure, bands, bandKwargs, singleType, **kwargs)
 
     def _buildSingles(self, image=None, mask=None, variance=None):
         """Make a new list of single band objects
@@ -184,7 +184,7 @@ class MultibandExposure(MultibandTripleBase):
             variance = self.variance
 
         dtype = image.array.dtype
-        for f in self.filters:
+        for f in self.bands:
             maskedImage = MaskedImage(image=image[f], mask=mask[f], variance=variance[f], dtype=dtype)
             single = Exposure(maskedImage, dtype=dtype)
             singles.append(single)
@@ -227,7 +227,7 @@ class MultibandExposure(MultibandTripleBase):
         """Get a multiband PSF image
 
         The PSF Kernel Image is computed for each band
-        and combined into a (filter, y, x) array and stored
+        and combined into a (band, y, x) array and stored
         as `self._psfImage`.
         The result is not cached, so if the same PSF is expected
         to be used multiple times it is a good idea to store the
@@ -253,7 +253,7 @@ class MultibandExposure(MultibandTripleBase):
         """Get a multiband PSF image
 
         The PSF Kernel Image is computed for each band
-        and combined into a (filter, y, x) array and stored
+        and combined into a (band, y, x) array and stored
         as `self._psfImage`.
         The result is not cached, so if the same PSF is expected
         to be used multiple times it is a good idea to store the
@@ -284,22 +284,22 @@ class MultibandExposure(MultibandTripleBase):
         psfs : `dict` of `lsst.afw.detection.Psf`
             The PSF in each band
         """
-        return {band: self[band].getPsf() for band in self.filters}
+        return {band: self[band].getPsf() for band in self.bands}
 
-    def _slice(self, filters, filterIndex, indices):
+    def _slice(self, bands, bandIndex, indices):
         """Slice the current object and return the result
 
         See `Multiband._slice` for a list of the parameters.
         This overwrites the base method to attach the PSF to
         each individual exposure.
         """
-        image = self.image._slice(filters, filterIndex, indices)
+        image = self.image._slice(bands, bandIndex, indices)
         if self.mask is not None:
-            mask = self._mask._slice(filters, filterIndex, indices)
+            mask = self._mask._slice(bands, bandIndex, indices)
         else:
             mask = None
         if self.variance is not None:
-            variance = self._variance._slice(filters, filterIndex, indices)
+            variance = self._variance._slice(bands, bandIndex, indices)
         else:
             variance = None
 
@@ -312,10 +312,10 @@ class MultibandExposure(MultibandTripleBase):
             return (image, mask, variance)
 
         _psfs = self.getPsfs()
-        psfs = [_psfs[band] for band in filters]
+        psfs = [_psfs[band] for band in bands]
 
         result = MultibandExposure(
-            filters=filters,
+            bands=bands,
             image=image,
             mask=mask,
             variance=variance,

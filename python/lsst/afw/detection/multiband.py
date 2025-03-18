@@ -88,16 +88,16 @@ class MultibandFootprint(MultibandBase):
 
     Parameters
     ----------
-    filters : `list`
-        List of filter names.
+    bands : `list`
+        List of band names.
     singles : `list`
         A list of single band `HeavyFootprint` objects.
         Each `HeavyFootprint` should have the same `PeakCatalog`
         and the same `SpanSet`, however to save CPU cycles there
         is no internal check for consistency of the peak catalog.
     """
-    def __init__(self, filters, singles):
-        super().__init__(filters, singles)
+    def __init__(self, bands, singles):
+        super().__init__(bands, singles)
         # Ensure that all HeavyFootprints have the same SpanSet
         spans = singles[0].getSpans()
         if not all([heavy.getSpans() == spans for heavy in singles]):
@@ -109,13 +109,13 @@ class MultibandFootprint(MultibandBase):
         self._footprint = footprint
 
     @staticmethod
-    def fromArrays(filters, image, mask=None, variance=None, footprint=None, xy0=None, thresh=0, peaks=None):
+    def fromArrays(bands, image, mask=None, variance=None, footprint=None, xy0=None, thresh=0, peaks=None):
         """Create a `MultibandFootprint` from an `image`, `mask`, `variance`
 
         Parameters
         ----------
-        filters : `list`
-            List of filter names.
+        bands : `list`
+            List of band names.
         image: array
             An array to convert into `lsst.afw.detection.HeavyFootprint` objects.
             Only pixels above the `thresh` value for at least one band
@@ -155,18 +155,18 @@ class MultibandFootprint(MultibandBase):
 
         if peaks is not None:
             footprint.setPeakCatalog(peaks)
-        mMaskedImage = MultibandMaskedImage.fromArrays(filters, image, mask, variance, imageBBox)
+        mMaskedImage = MultibandMaskedImage.fromArrays(bands, image, mask, variance, imageBBox)
         singles = [makeHeavyFootprint(footprint, maskedImage) for maskedImage in mMaskedImage]
-        return MultibandFootprint(filters, singles)
+        return MultibandFootprint(bands, singles)
 
     @staticmethod
-    def fromImages(filters, image, mask=None, variance=None, footprint=None, thresh=0, peaks=None):
+    def fromImages(bands, image, mask=None, variance=None, footprint=None, thresh=0, peaks=None):
         """Create a `MultibandFootprint` from an `image`, `mask`, `variance`
 
         Parameters
         ----------
-        filters : `list`
-            List of filter names.
+        bands : `list`
+            List of band names.
         image : `lsst.afw.image.MultibandImage`, or list of `lsst.afw.image.Image`
             A `lsst.afw.image.MultibandImage` (or collection of images in each band)
             to convert into `HeavyFootprint` objects.
@@ -196,12 +196,12 @@ class MultibandFootprint(MultibandBase):
 
         if peaks is not None:
             footprint.setPeakCatalog(peaks)
-        mMaskedImage = MultibandMaskedImage(filters, image, mask, variance)
+        mMaskedImage = MultibandMaskedImage(bands, image, mask, variance)
         singles = [makeHeavyFootprint(footprint, maskedImage) for maskedImage in mMaskedImage]
-        return MultibandFootprint(filters, singles)
+        return MultibandFootprint(bands, singles)
 
     @staticmethod
-    def fromMaskedImages(filters, maskedImages, footprint=None, thresh=0, peaks=None):
+    def fromMaskedImages(bands, maskedImages, footprint=None, thresh=0, peaks=None):
         """Create a `MultibandFootprint` from a list of `MaskedImage`
 
         See `fromImages` for a description of the parameters not listed below
@@ -222,7 +222,7 @@ class MultibandFootprint(MultibandBase):
         image = [maskedImage.image for maskedImage in maskedImages]
         mask = [maskedImage.mask for maskedImage in maskedImages]
         variance = [maskedImage.variance for maskedImage in maskedImages]
-        return MultibandFootprint.fromImages(filters, image, mask, variance, footprint, thresh, peaks)
+        return MultibandFootprint.fromImages(bands, image, mask, variance, footprint, thresh, peaks)
 
     def getSpans(self):
         """Get the full `SpanSet`"""
@@ -252,7 +252,7 @@ class MultibandFootprint(MultibandBase):
         """`PeakCatalog` of the `MultibandFootprint`"""
         return self._footprint.getPeaks()
 
-    def _slice(self, filters, filterIndex, indices):
+    def _slice(self, bands, bandIndex, indices):
         """Slice the current object and return the result
 
         `MultibandFootprint` objects cannot be sliced along the image
@@ -261,14 +261,14 @@ class MultibandFootprint(MultibandBase):
         See `Multiband._slice` for a list of the parameters.
         """
         if len(indices) > 0:
-            raise IndexError("MultibandFootprints can only be sliced in the filter dimension")
+            raise IndexError("MultibandFootprints can only be sliced in the band dimension")
 
-        if isinstance(filterIndex, slice):
-            singles = self.singles[filterIndex]
+        if isinstance(bandIndex, slice):
+            singles = self.singles[bandIndex]
         else:
-            singles = [self.singles[idx] for idx in filterIndex]
+            singles = [self.singles[idx] for idx in bandIndex]
 
-        return MultibandFootprint(filters, singles)
+        return MultibandFootprint(bands, singles)
 
     def getImage(self, bbox=None, fill=np.nan, imageType=MultibandMaskedImage):
         """Convert a `MultibandFootprint` to a `MultibandImage`
@@ -306,7 +306,7 @@ class MultibandFootprint(MultibandBase):
         else:
             raise TypeError("Expected imageType to be either MultibandImage or MultibandMaskedImage")
         maskedImages = [heavy.extractImage(fill, bbox, singleType) for heavy in self.singles]
-        mMaskedImage = imageType.fromImages(self.filters, maskedImages)
+        mMaskedImage = imageType.fromImages(self.bands, maskedImages)
         return mMaskedImage
 
     def clone(self, deep=True):
@@ -327,8 +327,8 @@ class MultibandFootprint(MultibandBase):
             for peak in self.footprint.getPeaks():
                 footprint.addPeak(peak.getX(), peak.getY(), peak.getValue())
             mMaskedImage = self.getImage()
-            filters = tuple([f for f in self.filters])
-            result = MultibandFootprint.fromMaskedImages(filters, mMaskedImage, footprint)
+            bands = tuple([f for f in self.bands])
+            result = MultibandFootprint.fromMaskedImages(bands, mMaskedImage, footprint)
         else:
-            result = MultibandFootprint(self.filters, self.singles)
+            result = MultibandFootprint(self.bands, self.singles)
         return result
