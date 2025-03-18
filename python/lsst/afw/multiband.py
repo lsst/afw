@@ -39,20 +39,20 @@ class MultibandBase(ABC):
     methods for initializing, slicing, and extracting common parameters
     (such as the bounding box or XY0 position) to all of the single band classes,
     as long as derived classes either call the base class `__init__`
-    or set the `_filters`, `_singles`, and `_bbox`.
+    or set the `_bands`, `_singles`, and `_bbox`.
 
     Parameters
     ----------
-    filters: `list`
-        List of filter names.
+    bands: `list`
+        List of band names.
     singles: `list`
         List of single band objects
     bbox: `Box2I`
         By default `MultibandBase` uses `singles[0].getBBox()` to set
         the bounding box of the multiband
     """
-    def __init__(self, filters, singles, bbox=None):
-        self._filters = tuple([f for f in filters])
+    def __init__(self, bands, singles, bbox=None):
+        self._bands = tuple([f for f in bands])
         self._singles = tuple(singles)
 
         if bbox is None:
@@ -83,10 +83,10 @@ class MultibandBase(ABC):
         pass
 
     @property
-    def filters(self):
-        """List of filter names for the single band objects
+    def bands(self):
+        """List of band names for the single band objects
         """
-        return self._filters
+        return self._bands
 
     @property
     def singles(self):
@@ -142,12 +142,12 @@ class MultibandBase(ABC):
         return self.getBBox().getHeight()
 
     def __len__(self):
-        return len(self.filters)
+        return len(self.bands)
 
     def __getitem__(self, args):
         """Get a slice of the underlying array
 
-        If only a single filter is specified,
+        If only a single band is specified,
         return the single band object sliced
         appropriately.
         """
@@ -158,72 +158,72 @@ class MultibandBase(ABC):
 
         # Return the single band object if the first
         # index is not a list or slice.
-        filters, filterIndex = self._filterNamesToIndex(indices[0])
-        if not isinstance(filterIndex, slice) and len(filterIndex) == 1:
+        bands, bandIndex = self._bandNamesToIndex(indices[0])
+        if not isinstance(bandIndex, slice) and len(bandIndex) == 1:
             if len(indices) > 2:
-                return self.singles[filterIndex[0]][indices[1:]]
+                return self.singles[bandIndex[0]][indices[1:]]
             elif len(indices) == 2:
-                return self.singles[filterIndex[0]][indices[1]]
+                return self.singles[bandIndex[0]][indices[1]]
             else:
-                return self.singles[filterIndex[0]]
+                return self.singles[bandIndex[0]]
 
-        return self._slice(filters=filters, filterIndex=filterIndex, indices=indices[1:])
+        return self._slice(bands=bands, bandIndex=bandIndex, indices=indices[1:])
 
     def __iter__(self):
-        self._filterIndex = 0
+        self._bandIndex = 0
         return self
 
     def __next__(self):
-        if self._filterIndex < len(self.filters):
-            result = self.singles[self._filterIndex]
-            self._filterIndex += 1
+        if self._bandIndex < len(self.bands):
+            result = self.singles[self._bandIndex]
+            self._bandIndex += 1
         else:
             raise StopIteration
         return result
 
-    def _filterNamesToIndex(self, filterIndex):
-        """Convert a list of filter names to an index or a slice
+    def _bandNamesToIndex(self, bandIndex):
+        """Convert a list of band names to an index or a slice
 
         Parameters
         ----------
-        filterIndex: iterable or `object`
-            Index to specify a filter or list of filters,
+        bandIndex: iterable or `object`
+            Index to specify a band or list of bands,
             usually a string or enum.
-            For example `filterIndex` can be
-            `"R"` or `["R", "G", "B"]` or `[Filter.R, Filter.G, Filter.B]`,
-            if `Filter` is an enum.
+            For example `bandIndex` can be
+            `"R"` or `["R", "G", "B"]` or `[Band.R, Band.G, Band.B]`,
+            if `Band` is an enum.
 
         Returns
         -------
-        filterNames: `list`
-            Names of the filters in the slice
-        filterIndex: `slice` or `list` of `int`
-            Index of each filter in `filterNames` in
-            `self.filters`.
+        bandNames: `list`
+            Names of the bands in the slice
+        bandIndex: `slice` or `list` of `int`
+            Index of each band in `bandNames` in
+            `self.bands`.
         """
-        if isinstance(filterIndex, slice):
-            if filterIndex.start is not None:
-                start = self.filters.index(filterIndex.start)
+        if isinstance(bandIndex, slice):
+            if bandIndex.start is not None:
+                start = self.bands.index(bandIndex.start)
             else:
                 start = None
-            if filterIndex.stop is not None:
-                stop = self.filters.index(filterIndex.stop)
+            if bandIndex.stop is not None:
+                stop = self.bands.index(bandIndex.stop)
             else:
                 stop = None
-            filterIndices = slice(start, stop, filterIndex.step)
-            filterNames = self.filters[filterIndices]
+            bandIndices = slice(start, stop, bandIndex.step)
+            bandNames = self.bands[bandIndices]
         else:
-            if isinstance(filterIndex, str):
-                filterNames = [filterIndex]
-                filterIndices = [self.filters.index(filterIndex)]
+            if isinstance(bandIndex, str):
+                bandNames = [bandIndex]
+                bandIndices = [self.bands.index(bandIndex)]
             else:
                 try:
-                    # Check to see if the filterIndex is an iterable
-                    filterNames = [f for f in filterIndex]
+                    # Check to see if the bandIndex is an iterable
+                    bandNames = [f for f in bandIndex]
                 except TypeError:
-                    filterNames = [filterIndex]
-                filterIndices = [self.filters.index(f) for f in filterNames]
-        return tuple(filterNames), filterIndices
+                    bandNames = [bandIndex]
+                bandIndices = [self.bands.index(f) for f in bandNames]
+        return tuple(bandNames), bandIndices
 
     def setXY0(self, xy0):
         """Shift the bounding box but keep the same Extent
@@ -279,7 +279,7 @@ class MultibandBase(ABC):
         return self.shiftedTo(xy0)
 
     @abstractmethod
-    def _slice(self, filters, filterIndex, indices):
+    def _slice(self, bands, bandIndex, indices):
         """Slice the current object and return the result
 
         Different inherited classes will handling slicing differently,
@@ -287,15 +287,15 @@ class MultibandBase(ABC):
 
         Parameters
         ----------
-        filters: `list` of `str`
-            List of filter names for the slice. This is a subset of the
-            filters in the parent multiband object
-        filterIndex: `list` of `int` or `slice`
-            Index along the filter dimension
+        bands: `list` of `str`
+            List of band names for the slice. This is a subset of the
+            bands in the parent multiband object
+        bandIndex: `list` of `int` or `slice`
+            Index along the band dimension
         indices: `tuple` of remaining indices
-            `MultibandBase.__getitem__` separates the first (filter)
+            `MultibandBase.__getitem__` separates the first (band)
             index from the remaining indices, so `indices` is a tuple
-            of all of the indices that come after `filter` in the
+            of all of the indices that come after `band` in the
             `args` passed to `MultibandBase.__getitem__`.
 
         Returns
@@ -308,8 +308,8 @@ class MultibandBase(ABC):
         pass
 
     def __repr__(self):
-        result = "<{0}, filters={1}, bbox={2}>".format(
-            self.__class__.__name__, self.filters, self.getBBox().__repr__())
+        result = "<{0}, bands={1}, bbox={2}>".format(
+            self.__class__.__name__, self.bands, self.getBBox().__repr__())
         return result
 
     def __str__(self):
