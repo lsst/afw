@@ -1,5 +1,5 @@
 ###
-afw - testing
+afw
 ###
 
 ``afw`` is a package in the `LSST Science Pipelines <https://pipelines.lsst.io>`_.
