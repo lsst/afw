@@ -23,6 +23,8 @@ __all__ = ["MultibandBase"]
 
 from abc import ABC, abstractmethod
 
+from deprecated.sphinx import deprecated
+
 from lsst.geom import Box2I
 
 
@@ -81,6 +83,16 @@ class MultibandBase(ABC):
             copy of the instance that inherits from `MultibandBase`
         """
         pass
+
+    @property
+    @deprecated(reason="This has been replaced with `bands`. Will be removed after v29.",
+                version="v29.0", category=FutureWarning)
+    def filters(self):
+        """List of filter names for the single band objects (deprecated)
+
+        Use `bands` instead.
+        """
+        return self._bands
 
     @property
     def bands(self):
