@@ -26,17 +26,24 @@ Run with:
    python test_display.py [backend]
 """
 import os
+import subprocess
+import sys
+import tempfile
 import unittest
 
 import lsst.utils.tests
 import lsst.afw.image as afwImage
 import lsst.afw.display as afwDisplay
+import lsst.geom
+from lsst.daf.base import PropertyList
 
 try:
     type(backend)
 except NameError:
     backend = "virtualDevice"
     oldBackend = None
+
+TESTDIR = os.path.abspath(os.path.dirname(__file__))
 
 
 class DisplayTestCase(unittest.TestCase):
@@ -50,9 +57,7 @@ class DisplayTestCase(unittest.TestCase):
 
             oldBackend = backend
 
-        dirName = os.path.split(__file__)[0]
-        self.fileName = os.path.join(
-            dirName, "data", "HSC-0908120-056-small.fits")
+        self.fileName = os.path.join(TESTDIR, "data", "HSC-0908120-056-small.fits")
         self.display0 = afwDisplay.Display(frame=0, verbose=True)
 
     def testMtv(self):
@@ -183,6 +188,122 @@ class DisplayTestCase(unittest.TestCase):
         afwDisplay.delAllDisplays()
 
 
+class TestFitsWriting(lsst.utils.tests.TestCase):
+    """Test the FITS file writing used internally by afwDisplay."""
+
+    def setUp(self):
+        self.fileName = os.path.join(TESTDIR, "data", "HSC-0908120-056-small.fits")
+        self.exposure = afwImage.ExposureF(self.fileName)
+        self.unit = "nJy"
+        self.exposure.metadata["BUNIT"] = self.unit
+
+    def read_image(self, filename) -> tuple[afwImage.Image, PropertyList]:
+        reader = afwImage.ImageFitsReader(filename)
+        return reader.read(), reader.readMetadata()
+
+    def read_mask(self, filename) -> tuple[afwImage.Mask, PropertyList]:
+        reader = afwImage.MaskFitsReader(filename)
+        return reader.read(), reader.readMetadata()
+
+    def assertFitsEqual(
+        self,
+        fits_file: str,
+        data: afwImage.Image | afwImage.Mask,
+        wcs: lsst.afw.geom.SkyWcs | None,
+        title: str | None,
+        metadata: lsst.daf.base.PropertyList | None,
+        unit: str | None,
+    ):
+        """Compare FITS file with parameters given to writeFitsImage."""
+        if isinstance(data, afwImage.Image):
+            new_data, new_metadata = self.read_image(fits_file)
+        else:
+            new_data, new_metadata = self.read_mask(fits_file)
+        self.assertImagesEqual(new_data, data)
+        if metadata and "BUNIT" in metadata:
+            self.assertEqual(new_metadata["BUNIT"], metadata["BUNIT"])
+        if metadata and unit:
+            self.assertEqual(new_metadata["BUNIT"], unit)
+        if title:
+            self.assertEqual(new_metadata["OBJECT"], title)
+        if wcs:
+            # WCS needs to be shifted back to same reference.
+            bbox = lsst.geom.Box2D(lsst.geom.Point2D(-100, -100), lsst.geom.Extent2D(300, 300))
+            new_wcs = lsst.afw.geom.makeSkyWcs(new_metadata, strip=False)
+            shift = lsst.geom.Extent2D(data.getX0(), data.getY0())
+            unshifted_wcs = new_wcs.copyAtShiftedPixelOrigin(shift)
+            self.assertWcsAlmostEqualOverBBox(unshifted_wcs, wcs, bbox)
+
+    def test_named_file(self):
+        """Write to a named file."""
+        with tempfile.TemporaryDirectory() as tempdir:
+            filename = os.path.join(tempdir, "test.fits")
+            for data, wcs, title, metadata in (
+                (self.exposure.image, self.exposure.wcs, "Write to file", self.exposure.metadata),
+                (self.exposure.mask, self.exposure.wcs, "Mask to file", self.exposure.metadata),
+                (self.exposure.image, None, "Image to file", self.exposure.metadata),
+                (self.exposure.image, None, None, self.exposure.metadata),
+                (self.exposure.image, None, None, None),
+            ):
+                afwDisplay.writeFitsImage(filename, data, wcs, title, metadata)
+                self.assertFitsEqual(filename, data, wcs, title, metadata, self.unit)
+
+    def test_file_handle(self):
+        """Write to a file handle.
+
+        This is how firefly uses afwDisplay.
+        """
+        with tempfile.NamedTemporaryFile(suffix=".fits") as tmp:
+            afwDisplay.writeFitsImage(
+                tmp, self.exposure.image, self.exposure.wcs, "filehdl", self.exposure.metadata
+            )
+            tmp.flush()
+            tmp.seek(0)
+            self.assertFitsEqual(
+                tmp.name, self.exposure.image, self.exposure.wcs, "filehdl", self.exposure.metadata, self.unit
+            )
+
+    def test_fileno(self):
+        """Write to a file descriptor.
+
+        This is the way that the C++ interface worked.
+        """
+        with tempfile.TemporaryDirectory() as tempdir:
+            filename = os.path.join(tempdir, "test.fits")
+            with open(filename, "wb") as fh:
+                afwDisplay.writeFitsImage(
+                    fh.fileno(), self.exposure.image, self.exposure.wcs, "fileno", self.exposure.metadata
+                )
+            self.assertFitsEqual(
+                filename, self.exposure.image, self.exposure.wcs, "fileno", self.exposure.metadata, self.unit
+            )
+
+    def test_subprocess(self):
+        """Write through a pipe.
+
+        This is how display_ds9 works.
+        """
+        with tempfile.TemporaryDirectory() as tempdir:
+            filename = os.path.join(tempdir, "test.fits")
+            with subprocess.Popen(
+                [
+                    sys.executable,
+                    "-c",
+                    # Minimal command that reads from stdin and writes to the
+                    # named file.
+                    "import sys; fh = open(sys.argv[1], 'wb'); fh.write(sys.stdin.buffer.read()); fh.close()",
+                    filename,
+                ],
+                stdin=subprocess.PIPE
+            ) as pipe:
+                afwDisplay.writeFitsImage(
+                    pipe, self.exposure.image, self.exposure.wcs, "pipe", self.exposure.metadata
+                )
+            self.assertFitsEqual(
+                filename, self.exposure.image, self.exposure.wcs, "pipe", self.exposure.metadata, self.unit
+            )
+
+
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
     pass
 
@@ -193,7 +314,6 @@ def setup_module(module):
 
 if __name__ == "__main__":
     import argparse
-    import sys
 
     parser = argparse.ArgumentParser(
         description="Run the image display test suite")
