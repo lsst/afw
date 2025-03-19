@@ -34,6 +34,7 @@ public:
 
     /// Whether the color is the special value that indicates that it is unspecified.
     bool isIndeterminate() const noexcept { return std::isnan(_g_r); }
+    double getColorValue() const noexcept { return _g_r;}
 
     //@{
     /**
@@ -55,7 +56,6 @@ public:
     /// Return a hash of this object.
     std::size_t hash_value() const noexcept { return isIndeterminate() ? 42 : std::hash<double>()(_g_r); }
 
-private:
     double _g_r;
 };
 }  // namespace image

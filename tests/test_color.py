@@ -35,6 +35,10 @@ class ColorTestCase(lsst.utils.tests.TestCase):
         self.assertTrue(afwImage.Color().isIndeterminate())
         self.assertFalse(afwImage.Color(1.2).isIndeterminate())
 
+    def testGetColor(self):
+        color = afwImage.Color(0.42)
+        self.assertEqual(color.getColorValue(), 0.42)
+
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
     pass
