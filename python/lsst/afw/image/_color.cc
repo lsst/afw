@@ -53,6 +53,7 @@ void wrapColor(lsst::cpputils::python::WrapperCollection &wrappers) {
 
         /* Members */
         cls.def("isIndeterminate", &Color::isIndeterminate);
+        cls.def("getColorValue", &Color::getColorValue);
     });
 }
 
