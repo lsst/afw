@@ -121,7 +121,7 @@ class PhotoCalib:  # noqa: F811
         maskedImage : `lsst.afw.image.MaskedImage`
             The masked image to calibrate.
         includeScaleUncertainty : `bool`, optional
-             Deprecated and ignored; will be removed after v30.
+             Deprecated and ignored; will be removed after v29.
 
         Returns
         ------
@@ -131,7 +131,7 @@ class PhotoCalib:  # noqa: F811
         if includeScaleUncertainty is not _UnsetEnum.UNSET:
             warnings.warn(
                 "The 'includeScaleUncertainty' argument to calibrateImage is deprecated and does "
-                "nothing.  It will be removed after v30.",
+                "nothing.  It will be removed after v29.",
                 category=FutureWarning
             )
         return self._calibrateImage(maskedImage)
@@ -149,7 +149,7 @@ class PhotoCalib:  # noqa: F811
         maskedImage : `lsst.afw.image.MaskedImage`
             The masked image with pixel units of nJy to uncalibrate.
         includeScaleUncertainty : `bool`, optional
-            Deprecated and ignored; will be removed after v30.
+            Deprecated and ignored; will be removed after v29.
 
         Returns
         uncalibrated : `lsst.afw.image.MaskedImage`
@@ -158,7 +158,7 @@ class PhotoCalib:  # noqa: F811
         if includeScaleUncertainty is not _UnsetEnum.UNSET:
             warnings.warn(
                 "The 'includeScaleUncertainty' argument to uncalibrateImage is deprecated and does "
-                "nothing.  It will be removed after v30.",
+                "nothing.  It will be removed after v29.",
                 category=FutureWarning
             )
         return self._uncalibrateImage(maskedImage)
