@@ -169,10 +169,18 @@ void declarePhotoCalib(lsst::cpputils::python::WrapperCollection &wrappers) {
                 cls.def("computeScaledCalibration", &PhotoCalib::computeScaledCalibration);
                 cls.def("computeScalingTo", &PhotoCalib::computeScalingTo);
 
-                cls.def("calibrateImage", &PhotoCalib::calibrateImage, "maskedImage"_a,
-                        "includeScaleUncertainty"_a = true);
-                cls.def("uncalibrateImage", &PhotoCalib::uncalibrateImage, "maskedImage"_a,
-                        "includeScaleUncertainty"_a = true);
+                // TODO[DM-49400]: remove the '_' prefixes on the methods below
+                // and their wrappers in `_photCalibContinued.py`.
+                cls.def(
+                    "_calibrateImage",
+                    py::overload_cast<MaskedImage<float> const &>(&PhotoCalib::calibrateImage, py::const_),
+                    "maskedImage"_a
+                );
+                cls.def(
+                    "_uncalibrateImage",
+                    py::overload_cast<MaskedImage<float> const &>(&PhotoCalib::uncalibrateImage, py::const_),
+                    "maskedImage"_a
+                );
 
                 cls.def("calibrateCatalog",
                         py::overload_cast<afw::table::SourceCatalog const &,

@@ -21,12 +21,19 @@
 
 __all__ = ["PhotoCalib"]
 
+import enum
+import warnings
+
 import numpy as np
 from astropy import units
 
 from lsst.utils import continueClass
 
 from ._imageLib import PhotoCalib
+
+
+class _UnsetEnum(enum.Enum):
+    UNSET = enum.auto()
 
 
 @continueClass
@@ -101,3 +108,57 @@ class PhotoCalib:  # noqa: F811
         nanoJansky = _magnitudes.to(units.nJy).value
 
         return nanoJansky/scale
+
+    # TODO[DM-49400]: remove this method and rename the pybind11 method to drop
+    # the leading underscore.
+    def calibrateImage(self, maskedImage, includeScaleUncertainty=_UnsetEnum.UNSET):
+        """Return a flux calibrated image, with pixel values in nJy.
+
+        Mask pixels are propagated directly from the input image.
+
+        Parameters
+        ----------
+        maskedImage : `lsst.afw.image.MaskedImage`
+            The masked image to calibrate.
+        includeScaleUncertainty : `bool`, optional
+             Deprecated and ignored; will be removed after v29.
+
+        Returns
+        ------
+        calibrated : `lsst.afw.image.MaskedImage`
+            The calibrated masked image.
+        """
+        if includeScaleUncertainty is not _UnsetEnum.UNSET:
+            warnings.warn(
+                "The 'includeScaleUncertainty' argument to calibrateImage is deprecated and does "
+                "nothing.  It will be removed after v29.",
+                category=FutureWarning
+            )
+        return self._calibrateImage(maskedImage)
+
+    # TODO[DM-49400]: remove this method and rename the pybind11 method to drop
+    # the leading underscore.
+    def uncalibrateImage(self, maskedImage, includeScaleUncertainty=_UnsetEnum.UNSET):
+        """Return a un-calibrated image, with pixel values in ADU (or whatever
+        the original input to this photoCalib was).
+
+        Mask pixels are propagated directly from the input image.
+
+        Parameters
+        ----------
+        maskedImage : `lsst.afw.image.MaskedImage`
+            The masked image with pixel units of nJy to uncalibrate.
+        includeScaleUncertainty : `bool`, optional
+            Deprecated and ignored; will be removed after v29.
+
+        Returns
+        uncalibrated : `lsst.afw.image.MaskedImage`
+            The uncalibrated masked image.
+        """
+        if includeScaleUncertainty is not _UnsetEnum.UNSET:
+            warnings.warn(
+                "The 'includeScaleUncertainty' argument to uncalibrateImage is deprecated and does "
+                "nothing.  It will be removed after v29.",
+                category=FutureWarning
+            )
+        return self._uncalibrateImage(maskedImage)

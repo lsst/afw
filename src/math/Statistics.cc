@@ -927,6 +927,12 @@ void Statistics::doStatistics(ImageT const &img, MaskT const &msk, VarianceT con
 
         if (flags & (MEANCLIP | STDEVCLIP | VARIANCECLIP)) {
             for (int i_i = 0; i_i < _sctrl.getNumIter(); ++i_i) {
+                if (_varianceclip.first < 0) {
+                    // Guard against tiny negative numbers turning into NaN in
+                    // the sqrt below, in cases where the pixel values are
+                    // identical or nearly identical.
+                    _varianceclip.first = 0.0;
+                }
                 double const center = ((i_i > 0) ? _meanclip : _median).first;
                 double const hwidth = (i_i > 0 && _n > 1)
                                               ? _sctrl.getNumSigmaClip() * std::sqrt(_varianceclip.first)

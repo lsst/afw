@@ -218,8 +218,61 @@ private:
     double _z00, _z01, _z10, _z11;
 };
 
-template <typename T, typename F>
-void applyToImage(BoundedField const &field, image::Image<T> &img, F functor, bool overlapOnly, int xStep,
+template <typename T>
+struct ImageRowGetter {
+    int y0;
+    ndarray::Array<T, 2, 1> array;
+
+    ndarray::ArrayRef<T, 1, 1> get_row(int y) const {
+        return array[y - y0];
+    }
+};
+
+template <typename T>
+struct MaskedImageRow {
+    ndarray::ArrayRef<T, 1, 1> image_row;
+    ndarray::ArrayRef<float, 1, 1> variance_row;
+
+    template <typename U>
+    MaskedImageRow & operator*=(U a) {
+        image_row *= a;
+        variance_row *= a;
+        variance_row *= a;
+        return *this;
+    }
+
+    template <typename U>
+    MaskedImageRow & operator/=(U a) {
+        image_row /= a;
+        variance_row /= a;
+        variance_row /= a;
+        return *this;
+    }
+};
+
+template <typename T>
+struct MaskedImageRowGetter {
+    int y0;
+    ndarray::Array<T, 2, 1> image_array;
+    ndarray::Array<float, 2, 1> variance_array;
+
+    MaskedImageRow<T> get_row(int y) const {
+        return MaskedImageRow<T> { image_array[y - y0], variance_array[y - y0] };
+    }
+};
+
+template <typename T>
+ImageRowGetter<T> make_row_getter(image::Image<T> & im) {
+    return ImageRowGetter<T> { im.getY0(), im.getArray() };
+}
+
+template <typename T>
+MaskedImageRowGetter<T> make_row_getter(image::MaskedImage<T> & mi) {
+    return MaskedImageRowGetter<T> { mi.getY0(), mi.getImage()->getArray(), mi.getVariance()->getArray() };
+}
+
+template <typename ImageT, typename F>
+void applyToImage(BoundedField const &field, ImageT &img, F functor, bool overlapOnly, int xStep,
                   int yStep) {
     lsst::geom::Box2I region(field.getBBox());
     if (overlapOnly) {
@@ -230,8 +283,15 @@ void applyToImage(BoundedField const &field, image::Image<T> &img, F functor, bo
     }
 
     if (yStep > 1 || xStep > 1) {
-        Interpolator interpolator(&field, &region, xStep, yStep);
-        interpolator.run(img, functor);
+        if constexpr (std::is_scalar_v<typename ImageT::Pixel>) {
+            Interpolator interpolator(&field, &region, xStep, yStep);
+            interpolator.run(img, functor);
+        } else {
+            throw LSST_EXCEPT(
+                pex::exceptions::LogicError,
+                "No interpolation with MaskedImage."
+            );
+        }
     } else {
         // We iterate over rows as a significant optimization for AST-backed bounded fields
         // (it's also slightly faster for other bounded fields, too).
@@ -241,10 +301,15 @@ void applyToImage(BoundedField const &field, image::Image<T> &img, F functor, bo
         ndarray::Array<double, 1> yy = ndarray::allocate(ndarray::makeVector(size));
         // y gets incremented each outer loop, x is always xMin->xMax
         std::iota(xx.begin(), xx.end(), region.getBeginX());
-        auto outRowIter = subImage.getArray().begin();
-        for (int y = region.getBeginY(); y < region.getEndY(); ++y, ++outRowIter) {
+        auto row_getter = make_row_getter(subImage);
+        for (int y = region.getBeginY(); y < region.getEndY(); ++y) {
             yy.deep() = y;  // don't need indexToPosition, as we're already working in the right box (region).
-            functor(*outRowIter, field.evaluate(xx, yy));
+            // We need to make 'row' a temporary variable so it can be an
+            // lvalue reference in the functor; it needs to be an lvalue
+            // reference functor for the interpolation code path that passes
+            // it a single value.
+            auto row = row_getter.get_row(y);
+            functor(row, field.evaluate(xx, yy));
         }
     }
 }
@@ -272,15 +337,27 @@ void BoundedField::multiplyImage(image::Image<T> &img, bool overlapOnly, int xSt
 }
 
 template <typename T>
+void BoundedField::multiplyImage(image::MaskedImage<T> &img, bool overlapOnly) const {
+    applyToImage(*this, img, Multiply(), overlapOnly, 1, 1);
+}
+
+template <typename T>
 void BoundedField::divideImage(image::Image<T> &img, bool overlapOnly, int xStep, int yStep) const {
     applyToImage(*this, img, Divide(), overlapOnly, xStep, yStep);
+}
+
+template <typename T>
+void BoundedField::divideImage(image::MaskedImage<T> &img, bool overlapOnly) const {
+    applyToImage(*this, img, Divide(), overlapOnly, 1, 1);
 }
 
 #define INSTANTIATE(T)                                                                       \
     template void BoundedField::fillImage(image::Image<T> &, bool, int, int) const;          \
     template void BoundedField::addToImage(image::Image<T> &, double, bool, int, int) const; \
     template void BoundedField::multiplyImage(image::Image<T> &, bool, int, int) const;      \
-    template void BoundedField::divideImage(image::Image<T> &, bool, int, int) const
+    template void BoundedField::multiplyImage(image::MaskedImage<T> &, bool) const;      \
+    template void BoundedField::divideImage(image::Image<T> &, bool, int, int) const; \
+    template void BoundedField::divideImage(image::MaskedImage<T> &, bool) const
 
 INSTANTIATE(float);
 INSTANTIATE(double);

@@ -67,62 +67,12 @@ double toInstFluxFromMagnitude(double magnitude, double scale) {
     return cpputils::ABMagnitudeToNanojansky(magnitude) / scale;
 }
 
-double toNanojanskyErr(double instFlux, double instFluxErr, double scale, double scaleErr,
-                       double nanojansky) {
-    return std::abs(nanojansky) * hypot(instFluxErr / instFlux, scaleErr / scale);
+double toNanojanskyErr(double instFluxErr, double scale) {
+    return instFluxErr * scale;
 }
 
-/**
- * Compute the variance of an array of fluxes, for calculations on MaskedImages.
- *
- * MaskedImage stores the variance instead of the standard deviation, so we can skip a sqrt().
- * Usage in calibrateImage() is to compute flux (nJy) directly, so that the calibration scale is
- * implictly `flux/instFlux` (and thus not passed as an argument).
- *
- * @param instFlux[in] The instrumental flux.
- * @param instFluxVar[in] The variance of the instrumental fluxes.
- * @param scaleErr[in] The error on the calibration scale.
- * @param flux[in] The physical fluxes calculated from the instrumental fluxes.
- * @param out[out] The output array to fill with the variance values.
- */
-void toNanojanskyVariance(ndarray::Array<float const, 2, 1> const &instFlux,
-                          ndarray::Array<float const, 2, 1> const &instFluxVar, float scaleErr,
-                          ndarray::Array<float const, 2, 1> const &flux, ndarray::Array<float, 2, 1> out) {
-    auto eigenFlux = ndarray::asEigen<Eigen::ArrayXpr>(flux);
-    auto eigenInstFluxVar = ndarray::asEigen<Eigen::ArrayXpr>(instFluxVar);
-    auto eigenInstFlux = ndarray::asEigen<Eigen::ArrayXpr>(instFlux);
-    auto eigenOut = ndarray::asEigen<Eigen::ArrayXpr>(out);
-    eigenOut = eigenFlux.square() * (eigenInstFluxVar / eigenInstFlux.square() +
-                                     (scaleErr / (eigenFlux / eigenInstFlux)).square());
-}
-
-/**
- * Compute the variance of an array of fluxes, for calculations on nJy calibrated MaskedImages.
- *
- * MaskedImage stores the variance instead of the standard deviation, so we can skip a sqrt().
- * Usage in calibrateImage() is to compute instFlux (ADU) directly, so that the calibration scale is
- * implictly `flux/instFlux` (and thus not passed as an argument).
- *
- * @param flux[in] The flux in nJy.
- * @param fluxVar[in] The variance of the fluxes.
- * @param scaleErr[in] The error on the calibration scale.
- * @param instFlux[in] The instrumental fluxes calculated from the fluxes.
- * @param out[out] The output array to fill with the instrumental variance values.
- */
-void fromNanojanskyVariance(ndarray::Array<float const, 2, 1> const &flux,
-                            ndarray::Array<float const, 2, 1> const &fluxVar, float scaleErr,
-                            ndarray::Array<float const, 2, 1> const &instFlux,
-                            ndarray::Array<float, 2, 1> out) {
-    auto eigenFlux = ndarray::asEigen<Eigen::ArrayXpr>(flux);
-    auto eigenFluxVar = ndarray::asEigen<Eigen::ArrayXpr>(fluxVar);
-    auto eigenInstFlux = ndarray::asEigen<Eigen::ArrayXpr>(instFlux);
-    auto eigenOut = ndarray::asEigen<Eigen::ArrayXpr>(out);
-    eigenOut = eigenInstFlux.square() *
-               (eigenFluxVar / eigenFlux.square() - (scaleErr / (eigenFlux / eigenInstFlux)).square());
-}
-
-double toMagnitudeErr(double instFlux, double instFluxErr, double scale, double scaleErr) {
-    return 2.5 / std::log(10.0) * hypot(instFluxErr / instFlux, scaleErr / scale);
+double toMagnitudeErr(double instFlux, double instFluxErr) {
+    return 2.5 / std::log(10.0) * (instFluxErr / instFlux);
 }
 
 }  // anonymous namespace
@@ -142,13 +92,13 @@ Measurement PhotoCalib::instFluxToNanojansky(double instFlux, double instFluxErr
     double calibration, error, nanojansky;
     calibration = evaluate(point);
     nanojansky = toNanojansky(instFlux, calibration);
-    error = toNanojanskyErr(instFlux, instFluxErr, calibration, _calibrationErr, nanojansky);
+    error = toNanojanskyErr(instFluxErr, calibration);
     return Measurement(nanojansky, error);
 }
 
 Measurement PhotoCalib::instFluxToNanojansky(double instFlux, double instFluxErr) const {
     double nanojansky = toNanojansky(instFlux, _calibrationMean);
-    double error = toNanojanskyErr(instFlux, instFluxErr, _calibrationMean, _calibrationErr, nanojansky);
+    double error = toNanojanskyErr(instFluxErr, _calibrationMean);
     return Measurement(nanojansky, error);
 }
 
@@ -196,13 +146,13 @@ Measurement PhotoCalib::instFluxToMagnitude(double instFlux, double instFluxErr,
     double calibration, error, magnitude;
     calibration = evaluate(point);
     magnitude = toMagnitude(instFlux, calibration);
-    error = toMagnitudeErr(instFlux, instFluxErr, calibration, _calibrationErr);
+    error = toMagnitudeErr(instFlux, instFluxErr);
     return Measurement(magnitude, error);
 }
 
 Measurement PhotoCalib::instFluxToMagnitude(double instFlux, double instFluxErr) const {
     double magnitude = toMagnitude(instFlux, _calibrationMean);
-    double error = toMagnitudeErr(instFlux, instFluxErr, _calibrationMean, _calibrationErr);
+    double error = toMagnitudeErr(instFlux, instFluxErr);
     return Measurement(magnitude, error);
 }
 
@@ -285,48 +235,37 @@ std::ostream &operator<<(std::ostream &os, PhotoCalib const &photoCalib) {
     return os << photoCalib.toString();
 }
 
+MaskedImage<float> PhotoCalib::calibrateImage(MaskedImage<float> const &maskedImage) const {
+    // Deep copy construct, as we're multiplying in-place.
+    auto result = MaskedImage<float>(maskedImage, true);
+    if (_isConstant) {
+        result *= _calibrationMean;
+    } else {
+        _calibration->multiplyImage(result, true);  // only in the overlap region
+    }
+    return result;
+}
+
+
 MaskedImage<float> PhotoCalib::calibrateImage(MaskedImage<float> const &maskedImage,
                                               bool includeScaleUncertainty) const {
-    // Deep copy construct, as we're mutiplying in-place.
+    return calibrateImage(maskedImage);
+}
+
+MaskedImage<float> PhotoCalib::uncalibrateImage(MaskedImage<float> const &maskedImage) const {
+    // Deep copy construct, as we're multiplying in-place.
     auto result = MaskedImage<float>(maskedImage, true);
-
     if (_isConstant) {
-        *(result.getImage()) *= _calibrationMean;
+        result /= _calibrationMean;
     } else {
-        _calibration->multiplyImage(*(result.getImage()), true);  // only in the overlap region
+        _calibration->divideImage(result, true);  // only in the overlap region
     }
-    if (includeScaleUncertainty) {
-        toNanojanskyVariance(maskedImage.getImage()->getArray(), maskedImage.getVariance()->getArray(),
-                             _calibrationErr, result.getImage()->getArray(),
-                             result.getVariance()->getArray());
-    } else {
-        toNanojanskyVariance(maskedImage.getImage()->getArray(), maskedImage.getVariance()->getArray(), 0,
-                             result.getImage()->getArray(), result.getVariance()->getArray());
-    }
-
     return result;
 }
 
 MaskedImage<float> PhotoCalib::uncalibrateImage(MaskedImage<float> const &maskedImage,
                                                 bool includeScaleUncertainty) const {
-    // Deep copy construct, as we're mutiplying in-place.
-    auto result = MaskedImage<float>(maskedImage, true);
-
-    if (_isConstant) {
-        *(result.getImage()) /= _calibrationMean;
-    } else {
-        _calibration->divideImage(*(result.getImage()), true);  // only in the overlap region
-    }
-    if (includeScaleUncertainty) {
-        fromNanojanskyVariance(maskedImage.getImage()->getArray(), maskedImage.getVariance()->getArray(),
-                               _calibrationErr, result.getImage()->getArray(),
-                               result.getVariance()->getArray());
-    } else {
-        fromNanojanskyVariance(maskedImage.getImage()->getArray(), maskedImage.getVariance()->getArray(), 0,
-                               result.getImage()->getArray(), result.getVariance()->getArray());
-    }
-
-    return result;
+    return uncalibrateImage(maskedImage);
 }
 
 afw::table::SourceCatalog PhotoCalib::calibrateCatalog(afw::table::SourceCatalog const &catalog,
@@ -384,10 +323,8 @@ afw::table::SourceCatalog PhotoCalib::calibrateCatalog(afw::table::SourceCatalog
             rec.set(key.mag, toMagnitude(instFlux, calibration[iRec]));
             if (key.instFluxErr.isValid()) {
                 double instFluxErr = rec.get(key.instFluxErr);
-                rec.set(key.fluxErr, toNanojanskyErr(instFlux, instFluxErr, calibration[iRec],
-                                                     _calibrationErr, nanojansky));
-                rec.set(key.magErr,
-                        toMagnitudeErr(instFlux, instFluxErr, calibration[iRec], _calibrationErr));
+                rec.set(key.fluxErr, toNanojanskyErr(instFluxErr, calibration[iRec]));
+                rec.set(key.magErr, toMagnitudeErr(instFlux, instFluxErr));
             }
         }
         ++iRec;
@@ -617,7 +554,7 @@ void PhotoCalib::instFluxToNanojanskyArray(afw::table::SourceCatalog const &sour
         double instFluxErr = rec.get(instFluxErrKey);
         double nanojansky = toNanojansky(instFlux, calibration[i]);
         (*iter)[0] = nanojansky;
-        (*iter)[1] = toNanojanskyErr(instFlux, instFluxErr, calibration[i], _calibrationErr, nanojansky);
+        (*iter)[1] = toNanojanskyErr(instFluxErr, calibration[i]);
         ++iter;
         ++i;
     }
@@ -636,7 +573,7 @@ void PhotoCalib::instFluxToMagnitudeArray(afw::table::SourceCatalog const &sourc
         double instFlux = rec.get(instFluxKey);
         double instFluxErr = rec.get(instFluxErrKey);
         (*iter)[0] = toMagnitude(instFlux, calibration[i]);
-        (*iter)[1] = toMagnitudeErr(instFlux, instFluxErr, calibration[i], _calibrationErr);
+        (*iter)[1] = toMagnitudeErr(instFlux, instFluxErr);
         ++iter;
         ++i;
     }

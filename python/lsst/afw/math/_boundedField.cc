@@ -51,10 +51,34 @@ void declareTemplates(PyClass &cls) {
             "yStep"_a = 1);
     cls.def("addToImage", &BoundedField::addToImage<PixelT>, "image"_a, "scaleBy"_a = 1.0,
             "overlapOnly"_a = false, "xStep"_a = 1, "yStep"_a = 1);
-    cls.def("multiplyImage", &BoundedField::multiplyImage<PixelT>, "image"_a, "overlapOnly"_a = false,
-            "xStep"_a = 1, "yStep"_a = 1);
-    cls.def("divideImage", &BoundedField::divideImage<PixelT>, "image"_a, "overlapOnly"_a = false,
-            "xStep"_a = 1, "yStep"_a = 1);
+    cls.def(
+        "multiplyImage",
+        [](BoundedField const & self, image::Image<PixelT> & image, bool overlapOnly, int xStep, int yStep) {
+            self.multiplyImage(image, overlapOnly, xStep, yStep);
+        },
+        "image"_a, "overlapOnly"_a = false, "xStep"_a = 1, "yStep"_a = 1
+    );
+    cls.def(
+        "multiplyImage",
+        [](BoundedField const & self, image::MaskedImage<PixelT> & image, bool overlapOnly) {
+            self.multiplyImage(image, overlapOnly);
+        },
+        "image"_a, "overlapOnly"_a = false
+    );
+    cls.def(
+        "divideImage",
+        [](BoundedField const & self, image::Image<PixelT> & image, bool overlapOnly, int xStep, int yStep) {
+            self.divideImage(image, overlapOnly, xStep, yStep);
+        },
+        "image"_a, "overlapOnly"_a = false, "xStep"_a = 1, "yStep"_a = 1
+    );
+    cls.def(
+        "divideImage",
+        [](BoundedField const & self, image::MaskedImage<PixelT> & image, bool overlapOnly) {
+            self.divideImage(image, overlapOnly);
+        },
+        "image"_a, "overlapOnly"_a = false
+    );
 }
 }  // namespace
 void declareBoundedField(lsst::cpputils::python::WrapperCollection &wrappers) {

@@ -63,6 +63,17 @@ def multiply(image, field):
     return outImage
 
 
+def divide(image, field):
+    """Return the quotient of image and field() at each point in image.
+    """
+    box = image.getBBox()
+    outImage = lsst.afw.image.ImageF(box)
+    for i in range(box.getMinX(), box.getMaxX() + 1):
+        for j in range(box.getMinY(), box.getMaxY() + 1):
+            outImage[i, j] = image[i, j]/field.evaluate(i, j)
+    return outImage
+
+
 class ChebyshevBoundedFieldTestCase(lsst.utils.tests.TestCase):
 
     def setUp(self):
@@ -161,7 +172,7 @@ class ChebyshevBoundedFieldTestCase(lsst.utils.tests.TestCase):
         self.assertFloatsAlmostEqual(zFlat1, zFlat3)
 
     def testMultiplyImage(self):
-        """Test Multiplying in place an image.
+        """Test multiplying an image in place.
         """
         _, coefficients = self.cases[-2]
         field = lsst.afw.math.ChebyshevBoundedField(self.image.getBBox(), coefficients)
@@ -169,6 +180,54 @@ class ChebyshevBoundedFieldTestCase(lsst.utils.tests.TestCase):
         expect = multiply(self.image, field)
         field.multiplyImage(self.image)
         self.assertImagesAlmostEqual(self.image, expect)
+
+    def testMultiplyMaskedImage(self):
+        """Test multiplying a masked image in place.
+        """
+        _, coefficients = self.cases[-2]
+        field = lsst.afw.math.ChebyshevBoundedField(self.image.getBBox(), coefficients)
+        # multiplyImage() is in-place, so we have to make the expected result first.
+        ones = lsst.afw.image.ImageF(self.image.getBBox())
+        ones.array[:, :] = 1.0
+        expect_masked_image = lsst.afw.image.MaskedImageF(
+            multiply(self.image, field),
+            None,
+            multiply(multiply(ones, field), field)
+        )
+        masked_image = lsst.afw.image.MaskedImageF(self.image)
+        masked_image.variance.array[:, :] = 1.0
+        field.multiplyImage(masked_image)
+        self.assertImagesAlmostEqual(masked_image.image, expect_masked_image.image)
+        self.assertMaskedImagesAlmostEqual(masked_image, expect_masked_image)
+
+    def testDivideImage(self):
+        """Test dividing an image in place.
+        """
+        _, coefficients = self.cases[-2]
+        field = lsst.afw.math.ChebyshevBoundedField(self.image.getBBox(), coefficients)
+        # divideImage() is in-place, so we have to make the expected result first.
+        expect = divide(self.image, field)
+        field.divideImage(self.image)
+        self.assertImagesAlmostEqual(self.image, expect)
+
+    def testDivideMaskedImage(self):
+        """Test dividing a masked image in place.
+        """
+        _, coefficients = self.cases[-2]
+        field = lsst.afw.math.ChebyshevBoundedField(self.image.getBBox(), coefficients)
+        # divideImage() is in-place, so we have to make the expected result first.
+        ones = lsst.afw.image.ImageF(self.image.getBBox())
+        ones.array[:, :] = 1.0
+        expect_masked_image = lsst.afw.image.MaskedImageF(
+            divide(self.image, field),
+            None,
+            divide(divide(ones, field), field)
+        )
+        masked_image = lsst.afw.image.MaskedImageF(self.image)
+        masked_image.variance.array[:, :] = 1.0
+        field.divideImage(masked_image)
+        self.assertImagesAlmostEqual(masked_image.image, expect_masked_image.image)
+        self.assertMaskedImagesAlmostEqual(masked_image, expect_masked_image)
 
     def testMultiplyImageRaisesUnequalBBox(self):
         """Multiplying an image with a different bbox should raise.

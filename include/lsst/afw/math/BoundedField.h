@@ -30,6 +30,7 @@
 #include "lsst/base.h"
 #include "lsst/geom/Point.h"
 #include "lsst/afw/image/Image.h"
+#include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/table/io/Persistable.h"
 
 namespace lsst {
@@ -147,6 +148,7 @@ public:
     void addToImage(image::Image<T>& image, double scaleBy = 1.0, bool overlapOnly = false, int xStep = 1,
                     int yStep = 1) const;
 
+    //@{
     /**
      *  Multiply an image by the field in-place.
      *
@@ -164,6 +166,11 @@ public:
     template <typename T>
     void multiplyImage(image::Image<T>& image, bool overlapOnly = false, int xStep = 1, int yStep = 1) const;
 
+    template <typename T>
+    void multiplyImage(image::MaskedImage<T>& image, bool overlapOnly = false) const;
+    //@}
+
+    //@{
     /**
      *  Divide an image by the field in-place.
      *
@@ -180,6 +187,10 @@ public:
      */
     template <typename T>
     void divideImage(image::Image<T>& image, bool overlapOnly = false, int xStep = 1, int yStep = 1) const;
+
+    template <typename T>
+    void divideImage(image::MaskedImage<T>& image, bool overlapOnly = false) const;
+    //@}
 
     /**
      *  Return a scaled BoundedField
