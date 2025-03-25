@@ -1150,6 +1150,15 @@ class ExposureNoAfwdataTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(reader.readExposureInfo().getPhotoCalib(), self.v1PhotoCalib)
         self.assertEqual(reader.readPhotoCalib(), self.v1PhotoCalib)
 
+    def testReadDottedHeaderKey(self):
+        """Test that we can read a file with a dot-delimited header key."""
+        original = afwImage.ExposureF.readFits(os.path.join(self.dataDir, "exposure-version-2.fits"))
+        original.metadata["x.y.z"] = "three"
+        with lsst.utils.tests.getTempFilePath(".fits") as tmpFile:
+            original.writeFits(tmpFile)
+            roundtripped = afwImage.ExposureF(tmpFile)
+        self.assertMaskedImagesEqual(original.maskedImage, roundtripped.maskedImage)
+
     def testExposureSummaryExtraComponents(self):
         """Test that we can read an exposure summary with extra components.
         """
