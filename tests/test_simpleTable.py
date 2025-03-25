@@ -817,6 +817,11 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         self.assertFloatsEqual(catalog[key], np.array([3.0, 4.0, 5.0]))
         self.assertFalse(catalog[key].flags.writeable)
 
+        # Test that non-contiugous catalog can support hasattr of missing
+        # attributes.
+        self.assertFalse(hasattr(catalog, "__qualname__"))
+        self.assertTrue(hasattr(type(catalog), "__qualname__"))
+
     def testArrayColumnArrayAccess(self):
         """Test column-array access to Array columns on both contiguous and
         non-contiguous arrays.
