@@ -338,7 +338,17 @@ class Catalog(metaclass=TemplateMeta):
         try:
             return getattr(self.table, name)
         except AttributeError:
-            return getattr(self.columns, name)
+            # Special case __ properties as they are never going to be column
+            # names.
+            if name.startswith("__"):
+                raise
+        # This can fail if the table is non-contiguous
+        try:
+            attr = getattr(self.columns, name)
+        except Exception as e:
+            e.add_note(f"Error retrieving column attribute '{name}' from {type(self)}")
+            raise
+        return attr
 
     def __str__(self):
         if self.isContiguous():
