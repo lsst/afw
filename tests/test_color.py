@@ -28,15 +28,15 @@ import lsst.afw.image as afwImage
 class ColorTestCase(lsst.utils.tests.TestCase):
     def testCtor(self):
         afwImage.Color()
-        afwImage.Color(1.2)
+        afwImage.Color(ColorValue=1.2, ColorType="g-r")
 
     def testIsIndeterminate(self):
         """Test that a default-constructed Color tests True, but ones with a g-r value test False"""
         self.assertTrue(afwImage.Color().isIndeterminate())
-        self.assertFalse(afwImage.Color(1.2).isIndeterminate())
+        self.assertFalse(afwImage.Color(ColorValue=1.2, ColorType="g-r").isIndeterminate())
 
     def testGetColor(self):
-        color = afwImage.Color(0.42)
+        color = afwImage.Color(ColorValue=0.42, ColorType="g-r")
         self.assertEqual(color.getColorValue(), 0.42)
 
 

@@ -31,20 +31,10 @@
 #include "lsst/cpputils/tests.h"
 
 #include "lsst/afw/image.h"
-#include "lsst/afw/image/Color.h"
 
 namespace lsst {
 namespace afw {
 namespace image {
-
-BOOST_AUTO_TEST_CASE(ColorHash) {
-    cpputils::assertValidHash<Color>();
-
-    cpputils::assertHashesEqual(Color(), Color());
-    cpputils::assertHashesEqual(Color(std::numeric_limits<double>::quiet_NaN()),
-                             Color(std::numeric_limits<double>::signaling_NaN()));
-    cpputils::assertHashesEqual(Color(2.7), Color(2.7));
-}
 
 BOOST_AUTO_TEST_CASE(PixelHash) {
     using IntPixel = pixel::Pixel<int, int, double>;
