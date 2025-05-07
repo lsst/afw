@@ -1,41 +1,31 @@
 // -*- lsst-c++ -*-
 /*
- * Capture the colour of an object
- */
+* Capture the colour of an object
+*/
 
 #ifndef LSST_AFW_IMAGE_COLOR_H
 #define LSST_AFW_IMAGE_COLOR_H
 
 #include <cmath>
-#include <limits>
 #include <string>
-#include <functional>
+#include <limits>
 
 namespace lsst {
 namespace afw {
 namespace image {
 
-// TO DO: Change description here.
 /**
- * Describe the colour of a source
- *
- * We need a concept of colour more general than "g - r" in order to calculate e.g. atmospheric dispersion
- * or a source's PSF
- *
- * @note This is very much just a place holder until we work out what we need.  A full SED may be required,
- * in which case a constructor from an SED name might be appropriate, or a couple of colours, or ...
- */
+* Describe the colour of a source
+*
+* We need a concept of colour more general than "g - r" in order to calculate e.g. atmospheric dispersion
+* or a source's PSF
+*
+* @note This is very much just a place holder until we work out what we need.  A full SED may be required,
+* in which case a constructor from an SED name might be appropriate, or a couple of colours, or ...
+*/
 class Color final {
 public:
-    /// Default: indeterminate color
-    Color() noexcept
-        : _value(std::numeric_limits<double>::quiet_NaN()),
-          _type(),
-          _indeterminate(true) {}
-
-    /// Fully-specified color: both a numeric value and its type string
-    Color(double value, std::string const & type) noexcept
-        : _value(value), _type(type), _indeterminate(false) {}
+    explicit Color(double g_r = std::numeric_limits<double>::quiet_NaN(), std::string color_type = "") : _g_r(g_r), _color_type(std::move(color_type)) {}
 
     Color(Color const &) = default;
     Color(Color &&) = default;
@@ -43,40 +33,44 @@ public:
     Color &operator=(Color &&) = default;
     ~Color() noexcept = default;
 
-    /// Whether this Color was default‑constructed (i.e. has no value/type).
-    bool isIndeterminate() const noexcept { return _indeterminate; }
+    /// Whether the color is the special value that indicates that it is unspecified.
+    bool isIndeterminate() const noexcept { return std::isnan(_g_r); }
+    double getColorValue() const noexcept { return _g_r;}
 
-    /// The numeric color value; only valid if !isIndeterminate().
-    double getColorValue() const noexcept { return _value; }
-
-    /// The color type string (e.g. "g-r"); only valid if !isIndeterminate().
-    std::string const & getColorType() const noexcept { return _type; }
-
+    //@{
     /**
-     * Equality comparison for colors.
-     *
-     * Indeterminate colors compare equal to each other; fully-specified
-     * colors compare by both value and type.
-     */
-    bool operator==(Color const & other) const noexcept {
-        if (_indeterminate && other._indeterminate) {
-            return true;
-        }
-        if (_indeterminate != other._indeterminate) {
-            return false;
-        }
-        return _value == other._value && _type == other._type;
+    *  Equality comparison for colors
+    *
+    *  Just a placeholder like everything else, but we explicitly let indeterminate colors compare
+    *  as equal.
+    *
+    *  In the future, we'll probably want some way of doing fuzzy comparisons on colors, but then
+    *  we'd have to define some kind of "color difference" matric, and it's not worthwhile doing
+    *  that yet.
+    */
+    bool operator==(Color const &other) const noexcept {
+        return (isIndeterminate() && other.isIndeterminate()) || other._g_r == _g_r;
     }
-    bool operator!=(Color const & other) const noexcept { return !(*this == other); }
+    bool operator!=(Color const &other) const noexcept { return !operator==(other); }
+    //@}
 
-private:
-    double      _value;
-    std::string _type;
-    bool        _indeterminate;
+    /// Return a hash of this object.
+    std::size_t hash_value() const noexcept { return isIndeterminate() ? 42 : std::hash<double>()(_g_r); }
+
+    double _g_r;
+    std::string _color_type;
 };
-
 }  // namespace image
 }  // namespace afw
 }  // namespace lsst
+
+namespace std {
+template <>
+struct hash<lsst::afw::image::Color> {
+    using argument_type = lsst::afw::image::Color;
+    using result_type = size_t;
+    size_t operator()(argument_type const &obj) const noexcept { return obj.hash_value(); }
+};
+}  // namespace std
 
 #endif
