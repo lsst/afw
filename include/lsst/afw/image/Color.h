@@ -1,7 +1,7 @@
 // -*- lsst-c++ -*-
 /*
-* Capture the colour of an object
-*/
+ * Capture the colour of an object
+ */
 
 #ifndef LSST_AFW_IMAGE_COLOR_H
 #define LSST_AFW_IMAGE_COLOR_H
@@ -15,14 +15,14 @@ namespace afw {
 namespace image {
 
 /**
-* Describe the colour of a source
-*
-* We need a concept of colour more general than "g - r" in order to calculate e.g. atmospheric dispersion
-* or a source's PSF
-*
-* @note This is very much just a place holder until we work out what we need.  A full SED may be required,
-* in which case a constructor from an SED name might be appropriate, or a couple of colours, or ...
-*/
+ * Describe the colour of a source
+ *
+ * We need a concept of colour more general than "g - r" in order to calculate e.g. atmospheric dispersion
+ * or a source's PSF
+ *
+ * @note This is very much just a place holder until we work out what we need.  A full SED may be required,
+ * in which case a constructor from an SED name might be appropriate, or a couple of colours, or ...
+ */
 class Color final {
 public:
     explicit Color(double g_r = std::numeric_limits<double>::quiet_NaN(), std::string color_type = "") : _g_r(g_r), _color_type(std::move(color_type)) {}
@@ -39,15 +39,15 @@ public:
 
     //@{
     /**
-    *  Equality comparison for colors
-    *
-    *  Just a placeholder like everything else, but we explicitly let indeterminate colors compare
-    *  as equal.
-    *
-    *  In the future, we'll probably want some way of doing fuzzy comparisons on colors, but then
-    *  we'd have to define some kind of "color difference" matric, and it's not worthwhile doing
-    *  that yet.
-    */
+     *  Equality comparison for colors
+     *
+     *  Just a placeholder like everything else, but we explicitly let indeterminate colors compare
+     *  as equal.
+     *
+     *  In the future, we'll probably want some way of doing fuzzy comparisons on colors, but then
+     *  we'd have to define some kind of "color difference" matric, and it's not worthwhile doing
+     *  that yet.
+     */
     bool operator==(Color const &other) const noexcept {
         return (isIndeterminate() && other.isIndeterminate()) || other._g_r == _g_r;
     }
