@@ -24,6 +24,8 @@
 #include <lsst/cpputils/python.h>
 #include <pybind11/stl.h>
 
+#include "ndarray/pybind11.h"
+
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/math/Background.h"
@@ -155,6 +157,8 @@ void declareBackground(lsst::cpputils::python::WrapperCollection &wrappers) {
         /* Members */
         cls.def("getStatsImage", &BackgroundMI::getStatsImage);
         cls.def("getImageBBox", &BackgroundMI::getImageBBox);
+        cls.def("getBinCentersX", &BackgroundMI::getBinCentersX);
+        cls.def("getBinCentersY", &BackgroundMI::getBinCentersY);
 
         // Yes, really only float
     });

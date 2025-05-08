@@ -812,6 +812,16 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
                 self.assertEqual(np.min(backImage.getArray()), 0.0)
                 self.assertEqual(np.max(backImage.getArray()), 0.0)
 
+    def testGetBinCenters(self):
+        """Test methods for getting the bin centers from a BackgroundMI."""
+        bgCtrl = afwMath.BackgroundControl(2, 3)
+        image = afwImage.ImageF(lsst.geom.Box2I(lsst.geom.Point2I(2, 3), lsst.geom.Extent2I(4, 6)))
+        bg = afwMath.makeBackground(image, bgCtrl)
+        self.assertEqual(bg.getStatsImage().getBBox().getWidth(), 2)
+        self.assertEqual(bg.getStatsImage().getBBox().getHeight(), 3)
+        self.assertEqual(list(bg.getBinCentersX()), [2.5, 4.5])
+        self.assertEqual(list(bg.getBinCentersY()), [3.5, 5.5, 7.5])
+
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
     pass

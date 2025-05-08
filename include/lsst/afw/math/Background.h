@@ -29,6 +29,7 @@
  */
 #include <boost/preprocessor/seq.hpp>
 #include <memory>
+#include "ndarray.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/geom/Box.h"
 #include "lsst/afw/math/Statistics.h"
@@ -488,6 +489,12 @@ public:
      * Return the image of statistical quantities extracted from the image
      */
     lsst::afw::image::MaskedImage<InternalPixelT> getStatsImage() const { return _statsImage; }
+
+    /// Return the x-coordinate centers of the bins.
+    ndarray::Array<double, 1, 1> getBinCentersX() const;
+
+    /// Return the y-coordinate centers of the bins.
+    ndarray::Array<double, 1, 1> getBinCentersY() const;
 
 private:
     lsst::afw::image::MaskedImage<InternalPixelT>
