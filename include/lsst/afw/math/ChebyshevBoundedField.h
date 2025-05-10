@@ -157,6 +157,29 @@ public:
                                                       Control const& ctrl);
 
     /**
+     *  Construct a matrix that can be used to fit or evaluate a Chebyshev
+     *  polynomial at a set of points.
+     *
+     *  @param[in]  bbox     Integer bounding box of the resulting approximation.  All
+     *                       given points must lie within lsst::geom::Box2D(bbox).
+     *  @param[in]  x        Array of x coordinate values.
+     *  @param[in]  y        Array of y coordinate values (same size as `x`).
+     *  @param[in]  ctrl     Specifies the orders and triangularity of the coefficient matrix.
+     *
+     *  @returns  A matrix with shape `(x.size(), ctrl.computeSize())`.  The
+     *            order of coefficients is unspecified, but will always be the
+     *            same for the same `ctrl` (so you can make one matrix to fit
+     *            coefficients from some points, and another to evaluate the
+     *            polynomial at other points).
+     */
+    static ndarray::Array<double, 2, 2> makeFitMatrix(
+        lsst::geom::Box2I const& bbox,
+        ndarray::Array<double const, 1> const& x,
+        ndarray::Array<double const, 1> const& y,
+        Control const& ctrl
+    );
+
+    /**
      *  Fit a Chebyshev approximation to gridded data with equal weights.
      *
      *  @param[in]  image    The Image containing the data to fit.  image.getBBox(PARENT) is

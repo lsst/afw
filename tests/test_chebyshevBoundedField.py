@@ -428,6 +428,18 @@ class ChebyshevBoundedFieldTestCase(lsst.utils.tests.TestCase):
                                                                     array, weights, ctrl)
                 self.assertFloatsAlmostEqual(
                     outField2.getCoefficients(), coefficients, rtol=1E-7, atol=1E-7)
+                # If we make a matrix for the same points and use it to fit,
+                # we get coefficients in unspecified order, but there are
+                # (up to round-off error) the same as the nonzero entries of
+                # the 2-d coefficients arrays.
+                matrix = lsst.afw.math.ChebyshevBoundedField.makeFitMatrix(self.bbox, self.xFlat, self.yFlat,
+                                                                           ctrl)
+                coefficientsPacked, _, _, _ = np.linalg.lstsq(matrix, array)
+                coefficientsPacked.sort()
+                coefficientsFlat = coefficients.flatten()
+                coefficientsFlat = coefficientsFlat[np.abs(coefficientsFlat) > 1E-7]
+                coefficientsFlat.sort()
+                self.assertFloatsAlmostEqual(coefficientsFlat, coefficientsPacked, rtol=1E-6, atol=1E-7)
 
     def testApproximate(self):
         """Test the approximate instantiation with the example of

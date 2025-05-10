@@ -76,6 +76,7 @@ void declareChebyshevBoundedField(lsst::cpputils::python::WrapperCollection &wra
                                       ndarray::Array<double const, 1> const &,
                                       ndarray::Array<double const, 1> const &, Control const &)) &
                                       ChebyshevBoundedField::fit);
+        cls.def_static("makeFitMatrix", &ChebyshevBoundedField::makeFitMatrix);
 
         cls.def("truncate", &ChebyshevBoundedField::truncate);
         declareTemplates<double>(cls);

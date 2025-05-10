@@ -176,6 +176,20 @@ BackgroundMI& BackgroundMI::operator-=(float const delta) {
     return *this;
 }
 
+ndarray::Array<double, 1, 1> BackgroundMI::getBinCentersX() const {
+    ndarray::Array<double, 1, 1> result = ndarray::allocate(_xcen.size());
+    std::copy(_xcen.begin(), _xcen.end(), result.begin());
+    result.deep() += _imgBBox.getMinX();
+    return result;
+}
+
+ndarray::Array<double, 1, 1> BackgroundMI::getBinCentersY() const {
+    ndarray::Array<double, 1, 1> result = ndarray::allocate(_ycen.size());
+    std::copy(_ycen.begin(), _ycen.end(), result.begin());
+    result.deep() += _imgBBox.getMinY();
+    return result;
+}
+
 template <typename PixelT>
 std::shared_ptr<image::Image<PixelT>> BackgroundMI::doGetImage(
         lsst::geom::Box2I const& bbox,

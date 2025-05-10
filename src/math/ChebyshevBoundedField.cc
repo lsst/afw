@@ -189,6 +189,21 @@ std::shared_ptr<ChebyshevBoundedField> ChebyshevBoundedField::fit(lsst::geom::Bo
     return result;
 }
 
+ndarray::Array<double, 2, 2> ChebyshevBoundedField::makeFitMatrix(
+    lsst::geom::Box2I const& bbox,
+    ndarray::Array<double const, 1> const& x,
+    ndarray::Array<double const, 1> const& y,
+    Control const& ctrl
+) {
+    // Initialize a temporary result object, so we can make use of the AffineTransform it builds
+    std::shared_ptr<ChebyshevBoundedField> result(new ChebyshevBoundedField(bbox));
+    // This packer object knows how to map the 2-d Chebyshev functions onto a 1-d array,
+    // using only those that the control says should have nonzero coefficients.
+    Packer const packer(ctrl);
+    // Create a "design matrix" for the linear least squares problem (A in min||Ax-b||)
+    return makeMatrix(x, y, result->_toChebyshevRange, packer, ctrl);
+}
+
 template <typename T>
 std::shared_ptr<ChebyshevBoundedField> ChebyshevBoundedField::fit(image::Image<T> const& img,
                                                                   Control const& ctrl) {
