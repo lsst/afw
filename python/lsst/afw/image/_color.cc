@@ -25,6 +25,7 @@
 #include "lsst/cpputils/python.h"
 
 #include <limits>
+#include <string>
 
 #include "lsst/afw/image/Color.h"
 
@@ -37,23 +38,29 @@ namespace image {
 
 using PyColor = py::class_<Color, std::shared_ptr<Color>>;
 
-void wrapColor(lsst::cpputils::python::WrapperCollection &wrappers) {
-    /* Module level */
-    wrappers.wrapType(PyColor(wrappers.module, "Color"), [](auto &mod, auto &cls) {
-        /* Constructors */
-        cls.def(py::init<double>(), "g_r"_a = std::numeric_limits<double>::quiet_NaN());
+void wrapColor(lsst::cpputils::python::WrapperCollection & wrappers) {
+    PyColor cls(wrappers.module, "Color");
 
-        /* Operators */
-        cls.def(
-                "__eq__", [](Color const &self, Color const &other) { return self == other; },
-                py::is_operator());
-        cls.def(
-                "__ne__", [](Color const &self, Color const &other) { return self != other; },
-                py::is_operator());
+    /* Constructors */
+    cls
+        // default ctor → indeterminate color
+        .def(py::init<>())
+        // fully-specified ctor: both ColorValue and ColorType required
+        .def(py::init<double, std::string>(),
+            "colorValue"_a, "colorType"_a);
 
-        /* Members */
-        cls.def("isIndeterminate", &Color::isIndeterminate);
-    });
+    /* Operators */
+    cls.def(
+        "__eq__", [](Color const & self, Color const & other) { return self == other; },
+        py::is_operator());
+    cls.def(
+        "__ne__", [](Color const & self, Color const & other) { return self != other; },
+        py::is_operator());
+
+    /* Members */
+    cls.def("isIndeterminate", &Color::isIndeterminate);
+    cls.def("getColorValue", &Color::getColorValue);
+    cls.def("getColorType", &Color::getColorType);
 }
 
 }  // namespace image
