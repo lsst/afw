@@ -847,6 +847,24 @@ class Display:
                     logger.exception(
                         "Display._callbacks['%s'](%s,%s,%s) failed.", k, x, y)
 
+    def alignImages(self, match_type="", lock_match=True):
+        """Align and optionally lock the orientation of the images being
+        displayed.
+
+        Parameters
+        ----------
+        match_type : `str`, optional
+            Match type to use to align the images; see the interface-specific
+            docs for what values to use.
+        lock_match : `bool`, optional
+            Whether to lock the alignment. Panning/zooming in one image will
+            preserve the alignment in other images.
+        """
+        try:
+            self._impl._alignImages(match_type, lock_match)
+        except AttributeError:
+            raise NotImplementedError("This feature only available on some backends.")
+
     def setCallback(self, k, func=None, noRaise=False):
         """Set the callback for a key.
 
