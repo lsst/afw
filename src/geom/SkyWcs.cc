@@ -64,11 +64,7 @@ class SkyWcsPersistenceHelper {
 public:
     table::Schema schema;
     table::Key<table::Array<std::uint8_t>> wcs;
-
-    static SkyWcsPersistenceHelper const& get() {
-        static SkyWcsPersistenceHelper instance;
-        return instance;
-    }
+    table::Key<table::Array<std::uint8_t>> approx;
 
     // No copying
     SkyWcsPersistenceHelper(const SkyWcsPersistenceHelper&) = delete;
@@ -78,10 +74,22 @@ public:
     SkyWcsPersistenceHelper(SkyWcsPersistenceHelper&&) = delete;
     SkyWcsPersistenceHelper& operator=(SkyWcsPersistenceHelper&&) = delete;
 
-private:
-    SkyWcsPersistenceHelper()
+    explicit SkyWcsPersistenceHelper(bool hasFitsApproximation)
             : schema(),
-              wcs(schema.addField<table::Array<std::uint8_t>>("wcs", "wcs string representation", "")) {}
+              wcs(schema.addField<table::Array<std::uint8_t>>("wcs", "wcs string representation", "")) {
+        if (hasFitsApproximation) {
+            approx = schema.addField<table::Array<std::uint8_t>>(
+                    "approx", "wcs string representation of FITS approximation", "");
+        }
+    }
+
+    explicit SkyWcsPersistenceHelper(table::Schema const& schema)
+            : schema(schema), wcs(schema["wcs"]), approx() {
+        try {
+            approx = schema["approx"];
+        } catch (pex::exceptions::NotFoundError&) {
+        }
+    }
 };
 
 class SkyWcsFactory : public table::io::PersistableFactory {
@@ -90,13 +98,20 @@ public:
 
     std::shared_ptr<table::io::Persistable> read(InputArchive const& archive,
                                                  CatalogVector const& catalogs) const override {
-        SkyWcsPersistenceHelper const& keys = SkyWcsPersistenceHelper::get();
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
-        LSST_ARCHIVE_ASSERT(catalogs.front().getSchema() == keys.schema);
+        SkyWcsPersistenceHelper keys(catalogs.front().getSchema());
         table::BaseRecord const& record = catalogs.front().front();
         std::string stringRep = formatters::bytesToString(record.get(keys.wcs));
-        return SkyWcs::readString(stringRep);
+        auto result = SkyWcs::readString(stringRep);
+        if (keys.approx.isValid()) {
+            auto bytes = record.get(keys.approx);
+            if (!bytes.isEmpty()) {
+                auto approxStringRep = formatters::bytesToString(bytes);
+                result = result->withFitsApproximation(SkyWcs::readString(approxStringRep));
+            }
+        }
+        return result;
     }
 };
 
@@ -261,6 +276,16 @@ std::shared_ptr<daf::base::PropertyList> SkyWcs::getFitsMetadata(bool precise) c
 
 std::shared_ptr<const ast::FrameDict> SkyWcs::getFrameDict() const { return _frameDict; }
 
+std::shared_ptr<SkyWcs> SkyWcs::withFitsApproximation(std::shared_ptr<SkyWcs> fitsApproximation) const {
+    if (isFits()) {
+        throw LSST_EXCEPT(pex::exceptions::LogicError,
+                          "Cannot add a FITS approximation to a WCS that is already FITs-compatible.");
+    }
+    auto result = std::make_shared<SkyWcs>(*this);
+    result->_fitsApproximation = fitsApproximation;
+    return result;
+}
+
 bool SkyWcs::isFits() const {
     try {
         getFitsMetadata(true);
@@ -379,10 +404,13 @@ std::string SkyWcs::getPersistenceName() const { return getSkyWcsPersistenceName
 std::string SkyWcs::getPythonModule() const { return "lsst.afw.geom"; }
 
 void SkyWcs::write(OutputArchiveHandle& handle) const {
-    SkyWcsPersistenceHelper const& keys = SkyWcsPersistenceHelper::get();
+    SkyWcsPersistenceHelper const keys(hasFitsApproximation());
     table::BaseCatalog cat = handle.makeCatalog(keys.schema);
     std::shared_ptr<table::BaseRecord> record = cat.addNew();
     record->set(keys.wcs, formatters::stringToBytes(writeString()));
+    if (hasFitsApproximation()) {
+        record->set(keys.approx, formatters::stringToBytes(getFitsApproximation()->writeString()));
+    }
     handle.saveCatalog(cat);
 }
 

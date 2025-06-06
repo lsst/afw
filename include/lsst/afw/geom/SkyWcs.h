@@ -25,6 +25,7 @@
 #define LSST_AFW_GEOM_SKYWCS_H
 
 #include <memory>
+#include <optional>
 #include <utility>
 #include <vector>
 
@@ -358,10 +359,20 @@ public:
 
     /**
      * Does this SkyWcs have an approximate SkyWcs that can be represented as standard FITS WCS?
-     *
-     * This feature is not yet implemented, so hasFitsApproximation is always false.
      */
-    bool hasFitsApproximation() const { return false; }
+    bool hasFitsApproximation() const { return bool(_fitsApproximation); }
+
+    /**
+     * Return FITS SkyWcs that approximates this one.
+     *
+     * Returns an empty pointer if and only if hasFitsApproximation() returns false.
+     */
+    std::shared_ptr<SkyWcs> getFitsApproximation() const { return _fitsApproximation; }
+
+    /**
+     * Return a copy of this SkyWcs with the given FITS approximation.
+     */
+    std::shared_ptr<SkyWcs> withFitsApproximation(std::shared_ptr<SkyWcs> fitsApproximation) const;
 
     /**
      * Return true getFitsMetadata(true) will succeed, false if not.
@@ -452,6 +463,8 @@ private:
     std::shared_ptr<const TransformPoint2ToSpherePoint> _transform;
     lsst::geom::Point2D _pixelOrigin;       // cached pixel origin
     lsst::geom::Angle _pixelScaleAtOrigin;  // cached pixel scale at pixel origin
+
+    std::shared_ptr<SkyWcs> _fitsApproximation;
 
     /*
      * Implementation for the overloaded public linearizePixelToSky methods, requiring both a pixel coordinate
