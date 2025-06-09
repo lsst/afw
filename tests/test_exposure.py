@@ -32,6 +32,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 import yaml
 import astropy.units as units
+import astropy.io.fits
 
 import lsst.utils
 import lsst.utils.tests
@@ -47,6 +48,7 @@ from lsst.daf.base import PropertyList
 from lsst.log import Log
 from testTableArchivesLib import DummyPsf
 
+TESTDIR = os.path.abspath(os.path.dirname(__file__))
 Log.getLogger("lsst.afw.image.Mask").setLevel(Log.INFO)
 
 try:
@@ -951,6 +953,34 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
             The corners that are drawn from the original image.
         """
         return [corner for corner in cutoutBox.getCorners() if corner in imageBox]
+
+
+class ExposureAfwDataNotNecessary(lsst.utils.tests.TestCase):
+
+    def testExposureUnits(self):
+        """Test that units round trip and end up in the right place."""
+        exposure = afwImage.ExposureF(os.path.join(TESTDIR, "data", "HSC-0908120-056-small.fits"))
+
+        # Set the units (there is no standard property in model at present
+        # so assume FITS standard).
+        units = "nJy"
+        exposure.metadata["BUNIT"] = units
+
+        with lsst.utils.tests.getTempFilePath(".fits") as tmpFile:
+            exposure.writeFits(tmpFile)
+
+            # Use astropy to read the individual HDUs.
+            with astropy.io.fits.open(tmpFile) as hdul:
+                # BUNIT should not be in primary.
+                self.assertNotIn("BUNIT", hdul[0].header)
+                for extname, expected in (("IMAGE", units), ("VARIANCE", f"{units}**2"), ("MASK", None)):
+                    ind = hdul.index_of(extname)
+                    hdu = hdul[ind]
+                    self.assertEqual(hdu.header["BUNIT"], expected)
+
+            # Read it back in an BUNIT should still exist.
+            reread = afwImage.ExposureF(tmpFile)
+            self.assertEqual(reread.metadata["BUNIT"], units)
 
 
 class ExposureInfoTestCase(lsst.utils.tests.TestCase):
