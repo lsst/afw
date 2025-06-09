@@ -70,16 +70,16 @@ std::pair<poly::PolynomialFunction2dYX, poly::PolynomialFunction2dYX> fitSipOneD
 // Return a vector of points on a grid, covering the given bounding box.
 std::vector<lsst::geom::Point2D> makeGrid(lsst::geom::Box2D const & bbox,
                                           lsst::geom::Extent2I const & shape) {
-    if (shape.getX() <= 0 || shape.getY() <= 0) {
+    if (shape.getX() <= 1 || shape.getY() <= 1) {
         throw LSST_EXCEPT(
             pex::exceptions::InvalidParameterError,
-            "Grid shape must be positive."
+            "Grid shape values must be two or greater."
         );
     }
     std::vector<lsst::geom::Point2D> points;
     points.reserve(shape.getX()*shape.getY());
-    double const dx = bbox.getWidth()/shape.getX();
-    double const dy = bbox.getHeight()/shape.getY();
+    double const dx = bbox.getWidth()/(shape.getX() - 1);
+    double const dy = bbox.getHeight()/(shape.getY() - 1);
     for (int iy = 0; iy < shape.getY(); ++iy) {
         double const y = bbox.getMinY() + iy*dy;
         for (int ix = 0; ix < shape.getX(); ++ix) {
@@ -353,8 +353,8 @@ std::vector<lsst::geom::Point2D> SipApproximation::applyInverse(
 }
 
 lsst::geom::Extent2D SipApproximation::getGridStep() const noexcept {
-    return lsst::geom::Extent2D(_bbox.getWidth()/_grid->shape.getX(),
-                    _bbox.getHeight()/_grid->shape.getY());
+    return lsst::geom::Extent2D(_bbox.getWidth()/(_grid->shape.getX() - 1),
+                    _bbox.getHeight()/(_grid->shape.getY() - 1));
 }
 
 lsst::geom::Extent2I SipApproximation::getGridShape() const noexcept {
