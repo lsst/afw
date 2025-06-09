@@ -42,46 +42,22 @@ using PySipApproximation = py::classh<SipApproximation>;
 
 void declareSipApproximation(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(PySipApproximation(wrappers.module, "SipApproximation"), [](auto &mod, auto &cls) {
-        cls.def(py::init<std::shared_ptr<TransformPoint2ToPoint2>, lsst::geom::Point2D const &,
-                         Eigen::MatrixXd const &, lsst::geom::Box2D const &, lsst::geom::Extent2I const &,
-                         int, bool, double>(),
-                "pixelToIwc"_a, "crpix"_a, "cd"_a, "bbox"_a, "gridShape"_a, "order"_a, "useInverse"_a = true,
-                "svdThreshold"_a = -1);
-
-        cls.def(py::init<std::shared_ptr<TransformPoint2ToPoint2>, lsst::geom::Point2D const &,
-                         Eigen::MatrixXd const &, lsst::geom::Box2D const &, lsst::geom::Extent2I const &,
-                         ndarray::Array<double const, 2> const &, ndarray::Array<double const, 2> const &,
-                         ndarray::Array<double const, 2> const &, ndarray::Array<double const, 2> const &,
-                         bool>(),
-                "pixelToIwc"_a, "crpix"_a, "cd"_a, "bbox"_a, "gridShape"_a, "a"_a, "b"_a, "ap"_a, "bp"_a,
-                "useInverse"_a = true);
-
-        using ScalarTransform = lsst::geom::Point2D (SipApproximation::*)(lsst::geom::Point2D const &) const;
-        using VectorTransform = std::vector<lsst::geom::Point2D> (SipApproximation::*)(
-                std::vector<lsst::geom::Point2D> const &) const;
-
+        cls.def(py::init<SkyWcs const &, lsst::geom::Box2D const &,
+                         lsst::geom::Extent2I const &, int,
+                         std::optional<lsst::geom::Point2D> const &, double>(),
+                "target"_a, "bbox"_a, "gridShape"_a, "order"_a,
+                "pixelOrigin"_a = std::nullopt, "svdThreshold"_a = -1);
         cls.def("getOrder", &SipApproximation::getOrder);
         cls.def("getA", py::overload_cast<int, int>(&SipApproximation::getA, py::const_), "p"_a, "q"_a);
         cls.def("getB", py::overload_cast<int, int>(&SipApproximation::getB, py::const_), "p"_a, "q"_a);
-        cls.def("getAP", py::overload_cast<int, int>(&SipApproximation::getAP, py::const_), "p"_a, "q"_a);
-        cls.def("getBP", py::overload_cast<int, int>(&SipApproximation::getBP, py::const_), "p"_a, "q"_a);
         cls.def("getA", py::overload_cast<>(&SipApproximation::getA, py::const_));
         cls.def("getB", py::overload_cast<>(&SipApproximation::getB, py::const_));
-        cls.def("getAP", py::overload_cast<>(&SipApproximation::getAP, py::const_));
-        cls.def("getBP", py::overload_cast<>(&SipApproximation::getBP, py::const_));
-        cls.def("applyForward", (ScalarTransform)&SipApproximation::applyForward);
-        cls.def("applyForward", (VectorTransform)&SipApproximation::applyForward);
-        cls.def("applyInverse", (ScalarTransform)&SipApproximation::applyInverse);
-        cls.def("applyInverse", (VectorTransform)&SipApproximation::applyInverse);
-        cls.def("getGridStep", &SipApproximation::getGridStep);
-        cls.def("getGridShape", &SipApproximation::getGridShape);
         cls.def("getBBox", &SipApproximation::getBBox);
+        cls.def("getSkyOrigin", &SipApproximation::getSkyOrigin);
         cls.def("getPixelOrigin", &SipApproximation::getPixelOrigin);
         cls.def("getCdMatrix", &SipApproximation::getCdMatrix);
-        cls.def("updateGrid", &SipApproximation::updateGrid, "shape"_a);
-        cls.def("refineGrid", &SipApproximation::refineGrid, "factor"_a = 2);
-        cls.def("fit", &SipApproximation::fit, "order"_a, "svdThreshold"_a = -1);
-        cls.def("computeMaxDeviation", &SipApproximation::computeMaxDeviation);
+        cls.def("getWcs", &SipApproximation::getWcs);
+        cls.def("computeDeltas", &SipApproximation::computeDeltas);
     });
 }
 }  // namespace
