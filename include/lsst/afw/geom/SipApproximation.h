@@ -42,7 +42,7 @@ namespace lsst { namespace afw { namespace geom {
  *  forward and reverse polynomial mappings to a standard projection FITS WCS
  *  projection (e.g. "TAN" for gnomonic) that relate Intermediate World
  *  Coordinates (see Calabretta & Greisen 2002) to image pixel coordinates.
- *  The SIP "forward" transform is defined by polynomial coeffients @f$A@f$
+ *  The SIP "forward" transform is defined by polynomial coefficients @f$A@f$
  *  and @f$B@f$ that map pixel coordinates @f$(u, v)@f$ to Intermediate World
  *  Coordinates @f$(x, y)@f$ via
  *  @f[
