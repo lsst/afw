@@ -329,6 +329,34 @@ ExposureInfo::FitsWriteData ExposureInfo::_startWriteFits(lsst::geom::Point2I co
         data.metadata->set("EXPID", getId());
     }
 
+    // FITS BUNIT header has to end up in the IMAGE or VARIANCE HDU and cannot
+    // be in the primary HDU. We have to make separate variance and mask
+    // headers at this point (so far the content has been identical).
+    auto varIsIdentical = true;
+    if (data.metadata->exists("BUNIT")) {
+        // Do not set anything if undefined value and remove from primary
+        // header to avoid confusion.
+        if (!data.metadata->isUndefined("BUNIT")) {
+            // Need to have distinct versions for mask and variance but seeded
+            // from image metadata.
+            varIsIdentical = false;
+            data.varianceMetadata.reset(new daf::base::PropertyList());
+            data.maskMetadata.reset(new daf::base::PropertyList());
+            data.varianceMetadata->combine(*data.imageMetadata);
+            data.maskMetadata->combine(*data.imageMetadata);
+
+            auto units = data.metadata->getAsString("BUNIT");
+            data.imageMetadata->set("BUNIT", units, "Image Data units");
+            data.varianceMetadata->set("BUNIT", units + "**2", "Variance Data units");
+            data.maskMetadata->set("BUNIT", nullptr, "Mask Data units");
+        }
+        data.metadata->remove("BUNIT");
+    }
+    if (varIsIdentical) {
+        data.maskMetadata = data.imageMetadata;
+        data.varianceMetadata = data.imageMetadata;
+    }
+
     return data;
 }
 
