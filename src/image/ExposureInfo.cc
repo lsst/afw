@@ -299,14 +299,10 @@ ExposureInfo::FitsWriteData ExposureInfo::_startWriteFits(lsst::geom::Point2I co
         // is not possible then skip it
         auto shift = lsst::geom::Extent2D(lsst::geom::Point2I(0, 0) - xy0);
         auto newWcs = wcs->copyAtShiftedPixelOrigin(shift);
-        std::shared_ptr<daf::base::PropertyList> wcsMetadata;
         try {
-            wcsMetadata = newWcs->getFitsMetadata(true);
+            data.imageMetadata->combine(*newWcs->getFitsMetadata(true));
         } catch (pex::exceptions::RuntimeError const&) {
             // cannot represent this WCS as FITS-WCS; don't write its metadata
-        }
-        if (wcsMetadata) {
-            data.imageMetadata->combine(*newWcs->getFitsMetadata(true));
         }
     }
 
