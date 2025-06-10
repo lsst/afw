@@ -58,7 +58,7 @@ int const SERIALIZATION_VERSION = 1;
 // (or the region specified by NAXIS[12], if provided, but we do not pass this to AST as of 2018-01-17).
 // For more information,
 // see FitsTol in the AST manual http://starlink.eao.hawaii.edu/devdocs/sun211.htx/sun211.html
-double const TIGHT_FITS_TOL = 0.0001;
+double const TIGHT_FITS_TOL = 0.001;
 
 class SkyWcsPersistenceHelper {
 public:
