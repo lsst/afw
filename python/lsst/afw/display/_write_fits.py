@@ -82,6 +82,8 @@ def writeFitsImage(
         _add_wcs("", ps)  # Works around a ds9 bug that WCSA/B is ignored if no WCS is present.
     else:
         shift = Extent2D(-data.getX0(), -data.getY0())
+        if wcs.hasFitsApproximation():
+            wcs = wcs.getFitsApproximation()
         new_wcs = wcs.copyAtShiftedPixelOrigin(shift)
         wcs_metadata = new_wcs.getFitsMetadata()
         ps.update(wcs_metadata)
