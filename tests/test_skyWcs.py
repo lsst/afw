@@ -10,16 +10,16 @@ import astshim as ast
 import numpy as np
 from numpy.testing import assert_allclose
 
-import lsst.utils.tests
 from lsst.daf.base import PropertyList
 import lsst.geom
 import lsst.afw.cameraGeom as cameraGeom
-from lsst.afw.geom import wcsAlmostEqualOverBBox, \
-    TransformPoint2ToPoint2, TransformPoint2ToSpherePoint, makeRadialTransform, \
-    SkyWcs, makeSkyWcs, makeCdMatrix, makeWcsPairTransform, \
-    makeFlippedWcs, makeModifiedWcs, makeTanSipWcs, \
-    getIntermediateWorldCoordsToSky, getPixelToIntermediateWorldCoords, \
+from lsst.afw.geom import (
+    TransformPoint2ToPoint2, TransformPoint2ToSpherePoint, makeRadialTransform,
+    SkyWcs, makeSkyWcs, makeCdMatrix, makeWcsPairTransform,
+    makeFlippedWcs, makeModifiedWcs, makeTanSipWcs,
+    getIntermediateWorldCoordsToSky, getPixelToIntermediateWorldCoords,
     stripWcsMetadata
+)
 from lsst.afw.geom import getCdMatrixFromMetadata, getSipMatrixFromMetadata, makeSimpleWcsMetadata
 from lsst.afw.geom.testUtils import makeSipIwcToPixel, makeSipPixelToIwc
 from lsst.afw.fits import makeLimitedFitsHeader
@@ -341,16 +341,39 @@ class SimpleSkyWcsTestCase(SkyWcsBaseTestCase):
         self.assertFalse(wcs.isFits)
         with self.assertRaises(RuntimeError):
             wcs.getFitsMetadata(True)
+        with self.assertRaises(RuntimeError):
+            wcs.getFitsMetadata(False)
 
-        # the approximation returned by getFitsMetadata is poor (pure TAN) until DM-13170
-        wcsFromMetadata = makeSkyWcs(wcs.getFitsMetadata())
-        self.assertFalse(wcsAlmostEqualOverBBox(wcs, wcsFromMetadata, bbox=self.bbox))
-
-        # the approximation returned by getFitsMetadata is pure TAN until DM-13170,
-        # after DM-13170 change this test to check that wcsFromMetadata is a reasonable
-        # approximation to the original WCS
-        approxWcs = wcs.getTanWcs(wcs.getPixelOrigin())
-        self.assertWcsAlmostEqualOverBBox(approxWcs, wcsFromMetadata, bbox=self.bbox)
+        # When a WCS is not valid FITS itself, we can explicitly install a FITS
+        # approximation.  The 'wcsApprox' below is just arbitrary, not really
+        # an approximation in this test, but since SkyWcs shouldn't be
+        # responsible for the accuracy of the approximation that's fine.
+        wcsApprox = makeSkyWcs(
+            lsst.geom.Point2D(5, 4),
+            lsst.geom.SpherePoint(20.0, 30.0, lsst.geom.degrees),
+            np.identity(2),
+        )
+        wcsWithApproximation = wcs.copyWithFitsApproximation(wcsApprox)
+        self.assertTrue(wcsWithApproximation.hasFitsApproximation())
+        self.assertEqual(wcsWithApproximation.getFitsApproximation(), wcsApprox)
+        # When we save a SkyWcs with a FITS approximation it round-trips.
+        with lsst.utils.tests.getTempFilePath(".fits") as filePath:
+            wcsWithApproximation.writeFits(filePath)
+            wcsFromFits = SkyWcs.readFits(filePath)
+            self.assertTrue(wcsFromFits.hasFitsApproximation())
+            self.assertEqual(wcsFromFits.getFitsApproximation(), wcsApprox)
+        # When we save an Exposure with a non-FITS SkyWcs that has a FITS
+        # approximation, the approximation appears in the headers.
+        exposure = ExposureF(lsst.geom.Box2I(lsst.geom.Point2I(0, 0), lsst.geom.Extent2I(3, 2)))
+        exposure.setWcs(wcsWithApproximation)
+        with lsst.utils.tests.getTempFilePath(".fits") as filePath:
+            exposure.writeFits(filePath)
+            exposureFromFits = ExposureF(filePath)
+            self.assertEqual(exposureFromFits.wcs, wcsWithApproximation)
+            self.assertEqual(exposureFromFits.wcs.getFitsApproximation(), wcsApprox)
+            with astropy.io.fits.open(filePath) as fits:
+                self.assertEqual(fits[1].header["CRVAL1"], 20.0)
+                self.assertEqual(fits[1].header["CRVAL2"], 30.0)
 
     def testTanWcs(self):
         """Check a variety of TanWcs, with crval not at a pole.

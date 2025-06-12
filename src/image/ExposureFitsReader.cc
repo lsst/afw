@@ -426,6 +426,8 @@ std::shared_ptr<afw::geom::SkyWcs> ExposureFitsReader::readWcs() {
     auto r = _archiveReader->readComponent<afw::geom::SkyWcs>(_getFitsFile(), ArchiveReader::WCS);
     if (!r) {
         r = _metadataReader->wcs;
+    } else if (!r->isFits() && !r->hasFitsApproximation()) {
+        r = r->copyWithFitsApproximation(_metadataReader->wcs);
     }
     return r;
 }

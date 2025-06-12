@@ -92,6 +92,9 @@ void declareSkyWcs(lsst::cpputils::python::WrapperCollection &wrappers) {
 
                 cls.def("copyAtShiftedPixelOrigin", &SkyWcs::copyAtShiftedPixelOrigin, "shift"_a);
                 cls.def("getFitsMetadata", &SkyWcs::getFitsMetadata, "precise"_a = false);
+                cls.def("hasFitsApproximation", &SkyWcs::hasFitsApproximation);
+                cls.def("getFitsApproximation", &SkyWcs::getFitsApproximation);
+                cls.def("copyWithFitsApproximation", &SkyWcs::copyWithFitsApproximation);
                 cls.def("getPixelScale",
                         (lsst::geom::Angle(SkyWcs::*)(lsst::geom::Point2D const &) const) &
                                 SkyWcs::getPixelScale,

@@ -290,19 +290,19 @@ ExposureInfo::FitsWriteData ExposureInfo::_startWriteFits(lsst::geom::Point2I co
     // image coordinates. When saving an image we convert from pixel to index coordinates.
     // In the case where this image is a parent image, the reference pixels are unchanged
     // by this transformation
-    if (hasWcs() && getWcs()->isFits()) {
+    if (hasWcs()) {
+        auto wcs = getWcs();
+        if (wcs->hasFitsApproximation()) {
+            wcs = wcs->getFitsApproximation();
+        }
         // Try to save the WCS as FITS-WCS metadata; if an exact representation
         // is not possible then skip it
         auto shift = lsst::geom::Extent2D(lsst::geom::Point2I(0, 0) - xy0);
-        auto newWcs = getWcs()->copyAtShiftedPixelOrigin(shift);
-        std::shared_ptr<daf::base::PropertyList> wcsMetadata;
+        auto newWcs = wcs->copyAtShiftedPixelOrigin(shift);
         try {
-            wcsMetadata = newWcs->getFitsMetadata(true);
+            data.imageMetadata->combine(*newWcs->getFitsMetadata(true));
         } catch (pex::exceptions::RuntimeError const&) {
             // cannot represent this WCS as FITS-WCS; don't write its metadata
-        }
-        if (wcsMetadata) {
-            data.imageMetadata->combine(*newWcs->getFitsMetadata(true));
         }
     }
 
