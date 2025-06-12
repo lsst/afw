@@ -371,7 +371,7 @@ public:
     /**
      * Return a copy of this SkyWcs with the given FITS approximation.
      */
-    std::shared_ptr<SkyWcs> withFitsApproximation(std::shared_ptr<SkyWcs> fitsApproximation) const;
+    std::shared_ptr<SkyWcs> copyWithFitsApproximation(std::shared_ptr<SkyWcs> fitsApproximation) const;
 
     /**
      * Return true getFitsMetadata(true) will succeed, false if not.

@@ -353,7 +353,7 @@ class SimpleSkyWcsTestCase(SkyWcsBaseTestCase):
             lsst.geom.SpherePoint(20.0, 30.0, lsst.geom.degrees),
             np.identity(2),
         )
-        wcsWithApproximation = wcs.withFitsApproximation(wcsApprox)
+        wcsWithApproximation = wcs.copyWithFitsApproximation(wcsApprox)
         self.assertTrue(wcsWithApproximation.hasFitsApproximation())
         self.assertEqual(wcsWithApproximation.getFitsApproximation(), wcsApprox)
         # When we save a SkyWcs with a FITS approximation it round-trips.

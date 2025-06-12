@@ -108,7 +108,7 @@ public:
             auto bytes = record.get(keys.approx);
             if (!bytes.isEmpty()) {
                 auto approxStringRep = formatters::bytesToString(bytes);
-                result = result->withFitsApproximation(SkyWcs::readString(approxStringRep));
+                result = result->copyWithFitsApproximation(SkyWcs::readString(approxStringRep));
             }
         }
         return result;
@@ -279,7 +279,7 @@ std::shared_ptr<daf::base::PropertyList> SkyWcs::getFitsMetadata(bool precise) c
 
 std::shared_ptr<const ast::FrameDict> SkyWcs::getFrameDict() const { return _frameDict; }
 
-std::shared_ptr<SkyWcs> SkyWcs::withFitsApproximation(std::shared_ptr<SkyWcs> fitsApproximation) const {
+std::shared_ptr<SkyWcs> SkyWcs::copyWithFitsApproximation(std::shared_ptr<SkyWcs> fitsApproximation) const {
     if (isFits()) {
         throw LSST_EXCEPT(pex::exceptions::LogicError,
                           "Cannot add a FITS approximation to a WCS that is already FITs-compatible.");

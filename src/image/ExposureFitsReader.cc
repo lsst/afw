@@ -427,7 +427,7 @@ std::shared_ptr<afw::geom::SkyWcs> ExposureFitsReader::readWcs() {
     if (!r) {
         r = _metadataReader->wcs;
     } else if (!r->isFits() && !r->hasFitsApproximation()) {
-        r = r->withFitsApproximation(_metadataReader->wcs);
+        r = r->copyWithFitsApproximation(_metadataReader->wcs);
     }
     return r;
 }
