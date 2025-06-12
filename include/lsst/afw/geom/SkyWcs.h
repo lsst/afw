@@ -25,6 +25,7 @@
 #define LSST_AFW_GEOM_SKYWCS_H
 
 #include <memory>
+#include <optional>
 #include <utility>
 #include <vector>
 
@@ -174,18 +175,17 @@ public:
     /**
      * Return the WCS as FITS WCS metadata
      *
-     * @param[in] precise  Fail if the WCS cannot be accurately represented as FITS metadata?
-     *      If False then return an approximation. For now that approximation is pure TAN
-     *      but as of DM-13170 it will be a fit TAN-SIP.
-     *      The required precision is set by constant TIGHT_FITS_TOL in SkyWcs.cc
+     * @param[in] precise  If false, write an already-attached FITS approximation if it exists (if there
+     *                     is no FITS approximation, this parameter is ignored).
+     *                     If true, write the WCS itself to FITS, or raise if this is impossible.
      *
      * FITS representations of WCS are described in "Representations of World Coordinates in FITS"
      * by Greisen and Calabretta and several related papers.
      *
      * The required precision is hard-coded as constant TIGHT_FITS_TOL in SkyWcs.cc
      *
-     * @throws lsst::pex::exceptions::RuntimeError if precise is true and AST cannot represent
-     * this WCS as a FITS WCS to sufficient precision.
+     * @throws lsst::pex::exceptions::RuntimeError if precise is true or there is no FITS approxmation and
+     * AST cannot represent this WCS as a FITS WCS to sufficient precision.
      */
     std::shared_ptr<daf::base::PropertyList> getFitsMetadata(bool precise = false) const;
 
@@ -358,10 +358,20 @@ public:
 
     /**
      * Does this SkyWcs have an approximate SkyWcs that can be represented as standard FITS WCS?
-     *
-     * This feature is not yet implemented, so hasFitsApproximation is always false.
      */
-    bool hasFitsApproximation() const { return false; }
+    bool hasFitsApproximation() const { return bool(_fitsApproximation); }
+
+    /**
+     * Return FITS SkyWcs that approximates this one.
+     *
+     * Returns an empty pointer if and only if hasFitsApproximation() returns false.
+     */
+    std::shared_ptr<SkyWcs> getFitsApproximation() const { return _fitsApproximation; }
+
+    /**
+     * Return a copy of this SkyWcs with the given FITS approximation.
+     */
+    std::shared_ptr<SkyWcs> copyWithFitsApproximation(std::shared_ptr<SkyWcs> fitsApproximation) const;
 
     /**
      * Return true getFitsMetadata(true) will succeed, false if not.
@@ -453,6 +463,8 @@ private:
     lsst::geom::Point2D _pixelOrigin;       // cached pixel origin
     lsst::geom::Angle _pixelScaleAtOrigin;  // cached pixel scale at pixel origin
 
+    std::shared_ptr<SkyWcs> _fitsApproximation;
+
     /*
      * Implementation for the overloaded public linearizePixelToSky methods, requiring both a pixel coordinate
      * and the corresponding sky coordinate.
@@ -468,6 +480,12 @@ private:
     lsst::geom::AffineTransform _linearizeSkyToPixel(lsst::geom::Point2D const &pix,
                                                      lsst::geom::SpherePoint const &coord,
                                                      lsst::geom::AngleUnit const &skyUnit) const;
+
+    /*
+     * Compute the FITS representation of this WCS (without falling back to a FITS approximation) or return
+     * a null pointer if it is not FITS-compatible.
+    */
+    std::shared_ptr<daf::base::PropertyList> _getDirectFitsMetadata() const;
 
     /// Compute _pixelOrigin and _pixelScaleAtOrigin
     void _computeCache() {
