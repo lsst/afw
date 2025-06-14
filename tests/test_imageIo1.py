@@ -92,7 +92,7 @@ class ReadFitsTestCase(lsst.utils.tests.TestCase):
                 (afwImage.ImageF, afwImage.ImageD),
                 (None, "LOCAL", "PARENT"),
             ):
-                with self.subTest(ImageClass=str(ImageClass), imageOrigin=imageOrigin):
+                with self.subTest(ImageClass=str(ImageClass), imageOrigin=repr(imageOrigin)):
                     fullImage = ImageClass(filepath)
                     options = dafBase.PropertySet()
                     options.set("llcX", bbox.getMinX())
