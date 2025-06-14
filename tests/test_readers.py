@@ -54,7 +54,7 @@ class FitsReaderTestCase(lsst.utils.tests.TestCase):
 
     def testImageFitsReader(self):
         for n, dtypeIn in enumerate(self.dtypes):
-            with self.subTest(dtypeIn=dtypeIn):
+            with self.subTest(dtypeIn=repr(dtypeIn)):
                 imageIn = Image(self.bbox, dtype=dtypeIn)
                 imageIn.array[:, :] = np.random.randint(low=1, high=5, size=imageIn.array.shape)
                 with lsst.utils.tests.getTempFilePath(".fits") as fileName:
@@ -64,7 +64,7 @@ class FitsReaderTestCase(lsst.utils.tests.TestCase):
                     self.assertEqual(reader.readDType(), dtypeIn)
                     self.assertEqual(reader.fileName, fileName)
                     for args in self.args:
-                        with self.subTest(args=args):
+                        with self.subTest(args=repr(args)):
                             array1 = reader.readArray(*args)
                             image1 = reader.read(*args)
                             subIn = imageIn.subset(*args) if args else imageIn
@@ -74,7 +74,7 @@ class FitsReaderTestCase(lsst.utils.tests.TestCase):
                             self.assertImagesEqual(subIn, image1)
                     for dtype2 in self.dtypes[n:]:
                         for args in self.args:
-                            with self.subTest(dtype2=dtype2, args=args):
+                            with self.subTest(dtype2=repr(dtype2), args=repr(args)):
                                 subIn = imageIn.subset(*args) if args else imageIn
                                 array2 = reader.readArray(*args, dtype=dtype2)
                                 image2 = reader.read(*args, dtype=dtype2)
@@ -94,7 +94,7 @@ class FitsReaderTestCase(lsst.utils.tests.TestCase):
             self.assertEqual(reader.readDType(), MaskPixel)
             self.assertEqual(reader.fileName, fileName)
             for args in self.args:
-                with self.subTest(args=args):
+                with self.subTest(args=repr(args)):
                     array = reader.readArray(*args)
                     mask = reader.read(*args)
                     subIn = maskIn.subset(*args) if args else maskIn
@@ -105,7 +105,7 @@ class FitsReaderTestCase(lsst.utils.tests.TestCase):
 
     def testMaskedImageFitsReader(self):
         for n, dtypeIn in enumerate(self.dtypes):
-            with self.subTest(dtypeIn=dtypeIn):
+            with self.subTest(dtypeIn=repr(dtypeIn)):
                 maskedImageIn = MaskedImage(self.bbox, dtype=dtypeIn)
                 maskedImageIn.image.array[:, :] = np.random.randint(low=1, high=5,
                                                                     size=maskedImageIn.image.array.shape
@@ -150,7 +150,7 @@ class FitsReaderTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(reader.readVarianceDType(), VariancePixel)
         self.assertEqual(reader.fileName, fileName)
         for args in self.args:
-            with self.subTest(args=args):
+            with self.subTest(args=repr(args)):
                 object1 = reader.read(*args)
                 subIn = objectIn.subset(*args) if args else objectIn
                 self.assertEqual(object1.image.array.dtype, dtypeIn)
@@ -161,7 +161,7 @@ class FitsReaderTestCase(lsst.utils.tests.TestCase):
                 self.assertImagesEqual(subIn.variance, reader.readVariance(*args))
                 compare(subIn, object1)
                 for dtype2 in dtypesOut:
-                    with self.subTest(dtype2=dtype2, args=args):
+                    with self.subTest(dtype2=repr(dtype2), args=repr(args)):
                         object2 = reader.read(*args, dtype=dtype2)
                         image2 = reader.readImage(*args, dtype=dtype2)
                         self.assertEqual(object2.image.array.dtype, dtype2)
@@ -299,7 +299,7 @@ class FitsReaderTestCase(lsst.utils.tests.TestCase):
         record.setTransmissionCurve(transmissionCurve)
         record.setDetector(detector)
         for n, dtypeIn in enumerate(self.dtypes):
-            with self.subTest(dtypeIn=dtypeIn):
+            with self.subTest(dtypeIn=repr(dtypeIn)):
                 exposureIn = Exposure(self.bbox, dtype=dtypeIn)
                 shape = exposureIn.image.array.shape
                 exposureIn.image.array[:, :] = np.random.randint(low=1, high=5, size=shape)
