@@ -61,7 +61,6 @@ namespace cameraGeom {
  */
 class TransformMap final : public table::io::PersistableFacade<TransformMap>, public table::io::Persistable {
 private:
-
     // Functor for boost::transform_iterator: given an entry in a std::map or unordered_map, return the key
     struct GetKey {
         CameraSys const &operator()(std::pair<const CameraSys, int> const &p) const { return p.first; };
@@ -70,7 +69,6 @@ private:
     using CameraSysFrameIdMap = std::unordered_map<CameraSys, int>;
 
 public:
-
     using Transforms = std::unordered_map<CameraSys, std::shared_ptr<geom::TransformPoint2ToPoint2>>;
     using CameraSysIterator = boost::transform_iterator<GetKey, CameraSysFrameIdMap::const_iterator>;
 
@@ -102,10 +100,7 @@ public:
      *
      * This method is wrapped as a regular constructor in Python.
      */
-    static std::shared_ptr<TransformMap const> make(
-        CameraSys const &reference,
-        Transforms const &transforms
-    );
+    static std::shared_ptr<TransformMap const> make(CameraSys const &reference, Transforms const &transforms);
 
     /**
      * Construct a TransformMap from a sequence of Connections.
@@ -122,10 +117,8 @@ public:
      *
      * This method is wrapped as a regular constructor in Python.
      */
-    static std::shared_ptr<TransformMap const> make(
-        CameraSys const &reference,
-        std::vector<Connection> const & connections
-    );
+    static std::shared_ptr<TransformMap const> make(CameraSys const &reference,
+                                                    std::vector<Connection> const &connections);
 
     ///@{
     /// TransformMap is immutable, so both moving and copying are prohibited.
@@ -210,12 +203,11 @@ public:
     bool isPersistable() const noexcept override { return true; }
 
 private:
-
     // Helper class used in persistence.
     class Factory;
 
     // Private ctor, only called by `make` static methods and `Factory`.
-    explicit TransformMap(std::vector<Connection> && connections);
+    explicit TransformMap(std::vector<Connection> &&connections);
 
     /*
      * Return the internal frame ID corresponding to a coordinate system.
@@ -245,7 +237,7 @@ private:
 
     std::string getPythonModule() const override;
 
-    void write(OutputArchiveHandle& handle) const override;
+    void write(OutputArchiveHandle &handle) const override;
 
     /*
      * Sequence of connections that define the edges of the graph.
@@ -262,11 +254,9 @@ private:
      * Must have exactly one mapping for each Frame in `transforms`.
      */
     CameraSysFrameIdMap _frameIds;
-
 };
 
-
-std::ostream & operator<<(std::ostream & os, TransformMap::Connection const & connection);
+std::ostream &operator<<(std::ostream &os, TransformMap::Connection const &connection);
 
 }  // namespace cameraGeom
 }  // namespace afw
