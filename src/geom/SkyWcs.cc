@@ -280,9 +280,9 @@ std::shared_ptr<daf::base::PropertyList> SkyWcs::getFitsMetadata(bool precise) c
 std::shared_ptr<const ast::FrameDict> SkyWcs::getFrameDict() const { return _frameDict; }
 
 std::shared_ptr<SkyWcs> SkyWcs::copyWithFitsApproximation(std::shared_ptr<SkyWcs> fitsApproximation) const {
-    if (isFits()) {
+    if (fitsApproximation->hasFitsApproximation()) {
         throw LSST_EXCEPT(pex::exceptions::LogicError,
-                          "Cannot add a FITS approximation to a WCS that is already FITs-compatible.");
+                          "Cannot add a FITS approximation that itself already has a FITS approximation.");
     }
     auto result = std::make_shared<SkyWcs>(*this);
     result->_fitsApproximation = fitsApproximation;
