@@ -63,17 +63,21 @@ class CameraGeomTestCase(lsst.utils.tests.TestCase):
     def setUp(self):
         self.lsstCamWrapper = testUtils.CameraWrapper(isLsstLike=True)
         self.scCamWrapper = testUtils.CameraWrapper(isLsstLike=False)
-        self.cameraList = (self.lsstCamWrapper, self.scCamWrapper)
+        self.scCamFlippedWrapper = testUtils.CameraWrapper(isLsstLike=False, focalPlaneParity=True)
+        self.cameraList = (self.lsstCamWrapper, self.scCamWrapper, self.scCamFlippedWrapper)
         self.assemblyList = {}
         self.assemblyList[self.lsstCamWrapper.camera.getName()] =\
             [afwImage.ImageU(os.path.join(testPath, 'test_amp.fits.gz'))
              for i in range(8)]
         self.assemblyList[self.scCamWrapper.camera.getName()] =\
             [afwImage.ImageU(os.path.join(testPath, 'test.fits.gz'), allowUnsafe=True)]
+        self.assemblyList[self.scCamFlippedWrapper.camera.getName()] =\
+            [afwImage.ImageU(os.path.join(testPath, 'test.fits.gz'), allowUnsafe=True)]
 
     def tearDown(self):
         del self.lsstCamWrapper
         del self.scCamWrapper
+        del self.scCamFlippedWrapper
         del self.cameraList
         del self.assemblyList
 
@@ -150,6 +154,9 @@ class CameraGeomTestCase(lsst.utils.tests.TestCase):
                 fpGivenPos = lsst.geom.Point2D(point[2], point[3])
                 fieldGivenPos = lsst.geom.Point2D(
                     lsst.geom.degToRad(point[0]), lsst.geom.degToRad(point[1]))
+
+                if camera.getFocalPlaneParity():
+                    fieldGivenPos.x *= -1
 
                 fieldAngleToFocalPlane = camera.getTransform(FIELD_ANGLE, FOCAL_PLANE)
                 fpComputedPos = fieldAngleToFocalPlane.applyForward(fieldGivenPos)

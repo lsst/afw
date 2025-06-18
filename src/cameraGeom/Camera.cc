@@ -19,6 +19,12 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <Eigen/LU>
+
+#include "lsst/geom/Point.h"
+#include "lsst/geom/LinearTransform.h"
+#include "lsst/geom/AffineTransform.h"
+#include "lsst/afw/geom/transformFactory.h"
 #include "lsst/afw/table/io/Persistable.cc"
 #include "lsst/afw/table/io/CatalogVector.h"
 #include "lsst/afw/table/io/InputArchive.h"
@@ -185,10 +191,10 @@ Camera::Camera(table::io::InputArchive const &archive, table::io::CatalogVector 
 
 std::string Camera::getPersistenceName() const { return "Camera"; }
 
-Camera::Builder::Builder(std::string const &name) : _name(name) {}
+Camera::Builder::Builder(std::string const &name) : _name(name), _pupilFactoryName(), _focalPlaneParity(false) {}
 
 Camera::Builder::Builder(Camera const &camera)
-        : _name(camera.getName()), _pupilFactoryName(camera.getPupilFactoryName()) {
+        : _name(camera.getName()), _pupilFactoryName(camera.getPupilFactoryName()), _focalPlaneParity(false) {
     // Add Detector Builders for all Detectors; does not (yet) include
     // coordinate transform information.
     for (auto const &pair : camera.getIdMap()) {
@@ -225,10 +231,26 @@ Camera::Builder::Builder(Camera const &camera)
 
 Camera::Builder::~Builder() noexcept = default;
 
+void Camera::Builder::setFocalPlaneParity(bool flipX) { _focalPlaneParity = flipX; }
+
 std::shared_ptr<Camera const> Camera::Builder::finish() const {
     // Make a big vector of all coordinate transform connections;
     // start with general transforms for the camera as a whole:
     std::vector<TransformMap::Connection> connections(_connections);
+    // Check that the FOCAL_PLANE <-> FIELD_ANGLE transform is consistent with
+    // the set parity, and add an x-axis flip if not.
+    auto field_angle_connection =
+            std::find_if(connections.begin(), connections.end(), [](TransformMap::Connection const &c) {
+                return c.fromSys == FOCAL_PLANE && c.toSys == FIELD_ANGLE;
+            });
+    if (field_angle_connection != connections.end()) {
+        auto jacobian = field_angle_connection->transform->getJacobian(lsst::geom::Point2D(0.0, 0.0));
+        if ((jacobian.determinant() < 0) != _focalPlaneParity) {
+            field_angle_connection->transform =
+                    field_angle_connection->transform->then(*afw::geom::makeTransform(
+                            lsst::geom::AffineTransform(lsst::geom::LinearTransform::makeScaling(-1, 1))));
+        }
+    }
     // Loop over detectors and add the transforms from FOCAL_PLANE
     // to PIXELS (via the Orientation), and then any extra transforms
     // from PIXELS to other things.
@@ -255,7 +277,7 @@ std::shared_ptr<Camera const> Camera::Builder::finish() const {
                            getDetectorBuilderConnections(detectorBuilder).end());
     }
     // Make a single big TransformMap.
-    auto transformMap = TransformMap::make(getNativeCameraSys(), connections);
+    auto transformMap = TransformMap::make(getNativeCameraSys(), connections, _focalPlaneParity);
     // Make actual Detector objects, giving each the full TransformMap.
     DetectorList detectors;
     detectors.reserve(size());

@@ -22,6 +22,7 @@
 #if !defined(LSST_AFW_CAMERAGEOM_TRANSFORMMAP_H)
 #define LSST_AFW_CAMERAGEOM_TRANSFORMMAP_H
 
+#include <optional>
 #include <vector>
 #include <unordered_map>
 #include <memory>
@@ -94,13 +95,20 @@ public:
      * @param transforms  A map whose keys are camera coordinate systems, and whose values
      *                    point to Transforms that convert from `reference` to the corresponding key.
      *                    All Transforms must be invertible.
+     * @param focalPlaneParity  True if the X axis is flipped between FOCAL_PLANE and FIELD_ANGLE.
+     *                          If not provided, the determinant of the Jacobian of the transform will be
+     *                          used to infer it.
      *
      * @throws lsst::pex::exceptions::InvalidParameterError Thrown if `transforms` contains
      *         the `reference` camera system as a key, or if any Transform is not invertible.
      *
      * This method is wrapped as a regular constructor in Python.
      */
-    static std::shared_ptr<TransformMap const> make(CameraSys const &reference, Transforms const &transforms);
+    static std::shared_ptr<TransformMap const> make(
+        CameraSys const &reference,
+        Transforms const &transforms,
+        std::optional<bool> focalPlaneParity = std::nullopt
+    );
 
     /**
      * Construct a TransformMap from a sequence of Connections.
@@ -109,6 +117,9 @@ public:
      *                     to all other coordinate systems in the map.
      * @param connections  Sequence of Connection structs, each of which relates
      *                     two CameraSys via the Transform that connects them.
+     * @param focalPlaneParity  True the X axis is flipped between FOCAL_PLANE and FIELD_ANGLE.
+     *                          If not provided, the determinant of the Jacobian of the transform will be
+     *                          used to infer it.
      *
      * @throws lsst::pex::exceptions::InvalidParameterError Thrown if the graph
      *         defined by the given connections does not define a single unique
@@ -117,8 +128,11 @@ public:
      *
      * This method is wrapped as a regular constructor in Python.
      */
-    static std::shared_ptr<TransformMap const> make(CameraSys const &reference,
-                                                    std::vector<Connection> const &connections);
+    static std::shared_ptr<TransformMap const> make(
+        CameraSys const &reference,
+        std::vector<Connection> const & connections,
+        std::optional<bool> focalPlaneParity = std::nullopt
+    );
 
     ///@{
     /// TransformMap is immutable, so both moving and copying are prohibited.
@@ -198,6 +212,15 @@ public:
     std::vector<Connection> getConnections() const;
 
     /**
+     * Return True if there is an x-axis flip from FOCAL_PLANE to FIELD_ANGLE, false otherwise.
+     *
+     * @details Cameras with an even number of reflective surfaces (e.g. LATISS) or a particular choice for
+     *          the PIXEL coordinates (e.g. DECam) require this x-axis flip between their FOCAL_PLANE and
+     *          FIELD_ANGLE coordinate systems to match our conventions.
+     */
+    bool getFocalPlaneParity() const noexcept;
+
+    /**
      * TransformMaps should always be Persistable.
      */
     bool isPersistable() const noexcept override { return true; }
@@ -207,7 +230,7 @@ private:
     class Factory;
 
     // Private ctor, only called by `make` static methods and `Factory`.
-    explicit TransformMap(std::vector<Connection> &&connections);
+    explicit TransformMap(std::vector<Connection> && connections, std::optional<bool> focalPlaneParity);
 
     /*
      * Return the internal frame ID corresponding to a coordinate system.
@@ -254,6 +277,8 @@ private:
      * Must have exactly one mapping for each Frame in `transforms`.
      */
     CameraSysFrameIdMap _frameIds;
+
+    bool _focalPlaneParity;
 };
 
 std::ostream &operator<<(std::ostream &os, TransformMap::Connection const &connection);

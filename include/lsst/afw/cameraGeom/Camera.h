@@ -74,6 +74,15 @@ public:
     std::string getPupilFactoryName() const { return _pupilFactoryName; }
 
     /**
+     * Return True if there is an x-axis flip from FOCAL_PLANE to FIELD_ANGLE, False otherwise.
+     *
+     * @details Cameras with an even number of reflective surfaces (e.g. LATISS) or a particular choice for
+     *          the PIXEL coordinates (e.g. DECam) require this x-axis flip between their FOCAL_PLANE and
+     *          FIELD_ANGLE coordinate systems to match our conventions.
+     */
+    bool getFocalPlaneParity() const noexcept { return _transformMap->getFocalPlaneParity(); }
+
+    /**
      * Find the detectors that cover a point in any camera system
      *
      * @param[in] point  position to use in lookup (lsst::geom::Point2D)
@@ -231,6 +240,22 @@ public:
     /// Set the fully-qualified name of the Python class that provides this Camera's PupilFactory.
     void setPupilFactoryName(std::string const &pupilFactoryName) { _pupilFactoryName = pupilFactoryName; }
 
+    /// @copydoc Camera::getFocalPlaneParity
+    bool getFocalPlaneParity() const noexcept { return _focalPlaneParity; }
+
+    /**
+     * Set whether an x-axis flip should be included in the FOCAL_PLANE to
+     * FIELD_ANGLE transform.
+     *
+     * When a `Camera` is constructed from this `Builder` via the `finish`,
+     * method, the current parity of the FOCAL_PLANE to FIELD_ANGLE transform
+     * is checked and an x-coordinate flip is composed in if the parity is not
+     * correct.  Note that there is no other checking that these coordinate
+     * systems have aligned axes or that any existing parity flip is along the
+     * X axis (as should be the case).
+     */
+    void setFocalPlaneParity(bool flipX);
+
     /**
      * Set the transformation from FOCAL_PLANE to the given coordinate system.
      *
@@ -280,6 +305,7 @@ public:
 private:
     std::string _name;
     std::string _pupilFactoryName;
+    bool _focalPlaneParity;
     std::vector<TransformMap::Connection> _connections;
 };
 

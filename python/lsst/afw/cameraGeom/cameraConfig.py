@@ -146,3 +146,9 @@ class CameraConfig(pexConfig.Config):
     # scaled by the plate scale in appropriate units
     radialCoeffs = pexConfig.ListField(
         "Coefficients for radial distortion", float)
+
+    focalPlaneParity = pexConfig.Field(
+        "Whether the FOCAL_PLANE <-> FIELD_ANGLE transform should flip the X axis.",
+        dtype=bool,
+        default=False,
+    )

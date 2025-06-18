@@ -22,8 +22,12 @@
 #include <sstream>
 #include <unordered_set>
 
+#include "lsst/geom/Point.h"
+#include "lsst/geom/LinearTransform.h"
+#include "lsst/geom/AffineTransform.h"
 #include "lsst/log/Log.h"
 #include "lsst/pex/exceptions.h"
+#include "lsst/afw/geom/transformFactory.h"
 #include "lsst/afw/table/io/OutputArchive.h"
 #include "lsst/afw/table/io/CatalogVector.h"
 #include "lsst/afw/table/io/Persistable.cc"
@@ -167,7 +171,8 @@ std::ostream &operator<<(std::ostream &os, TransformMap::Connection const &conne
 }
 
 std::shared_ptr<TransformMap const> TransformMap::make(CameraSys const &reference,
-                                                       Transforms const &transforms) {
+                                                       Transforms const &transforms,
+                                                       std::optional<bool> focalPlaneParity) {
     std::vector<Connection> connections;
     connections.reserve(transforms.size());
     for (auto const &pair : transforms) {
@@ -175,13 +180,15 @@ std::shared_ptr<TransformMap const> TransformMap::make(CameraSys const &referenc
     }
     // We can't use make_shared because TransformMap ctor is private.
     return std::shared_ptr<TransformMap>(
-            new TransformMap(standardizeConnections(reference, std::move(connections))));
+            new TransformMap(standardizeConnections(reference, std::move(connections)), focalPlaneParity));
 }
 
 std::shared_ptr<TransformMap const> TransformMap::make(CameraSys const &reference,
-                                                       std::vector<Connection> const &connections) {
+                                                       std::vector<Connection> const &connections,
+                                                       std::optional<bool> focalPlaneParity) {
     // We can't use make_shared because TransformMap ctor is private.
-    return std::shared_ptr<TransformMap>(new TransformMap(standardizeConnections(reference, connections)));
+    return std::shared_ptr<TransformMap>(
+            new TransformMap(standardizeConnections(reference, connections), focalPlaneParity));
 }
 
 // All resources owned by value or by smart pointer
@@ -207,6 +214,8 @@ std::shared_ptr<geom::TransformPoint2ToPoint2> TransformMap::getTransform(Camera
     return std::make_shared<geom::TransformPoint2ToPoint2>(*_getMapping(fromSys, toSys));
 }
 
+bool TransformMap::getFocalPlaneParity() const noexcept { return _focalPlaneParity; }
+
 int TransformMap::_getFrame(CameraSys const &system) const {
     try {
         return _frameIds.at(system);
@@ -224,7 +233,8 @@ std::shared_ptr<ast::Mapping const> TransformMap::_getMapping(CameraSys const &f
 
 size_t TransformMap::size() const noexcept { return _frameIds.size(); }
 
-TransformMap::TransformMap(std::vector<Connection> &&connections) : _connections(std::move(connections)) {
+TransformMap::TransformMap(std::vector<Connection> &&connections, std::optional<bool> focalPlaneParity)
+        : _connections(std::move(connections)), _focalPlaneParity(false) {
     // standardizeConnections must be run by anything that calls the
     // constructor, and that should throw on all of the conditions we assert
     // on below (which is why those are asserts).
@@ -258,6 +268,19 @@ TransformMap::TransformMap(std::vector<Connection> &&connections) : _connections
     // We've maintained our own counter for frame IDs for performance and
     // convenience reasons, but it had better match AST's internal counter.
     assert(_frameSet->getNFrame() == nFrames);
+
+    // If the caller didn't provide the focal plane parity, get it from the
+    // determinant of the Jacobian of the FOCAL_PLANE -> FIELD_ANGLE transform.
+    if (focalPlaneParity.has_value()) {
+        _focalPlaneParity = focalPlaneParity.value();
+    } else {
+        try {
+            auto transform = getTransform(FOCAL_PLANE, FIELD_ANGLE);
+            auto jacobian = transform->getJacobian(lsst::geom::Point2D(0.0, 0.0));
+            _focalPlaneParity = (jacobian.determinant() < 0);
+        } catch (pex::exceptions::InvalidParameterError &) {
+        }
+    }
 }
 
 std::vector<TransformMap::Connection> TransformMap::getConnections() const { return _connections; }
@@ -406,7 +429,7 @@ public:
         }
 
         connections = standardizeConnections(referenceSysIter->second, std::move(connections));
-        return std::shared_ptr<TransformMap>(new TransformMap(std::move(connections)));
+        return std::shared_ptr<TransformMap>(new TransformMap(std::move(connections), std::nullopt));
     }
 
     std::shared_ptr<Persistable> read(InputArchive const &archive,
@@ -433,7 +456,7 @@ public:
         // defensive anyway.
         auto const referenceSys = getReferenceSys(connections);
         connections = standardizeConnections(referenceSys, std::move(connections));
-        return std::shared_ptr<TransformMap>(new TransformMap(std::move(connections)));
+        return std::shared_ptr<TransformMap>(new TransformMap(std::move(connections), std::nullopt));
     }
 
     static Factory const registration;
