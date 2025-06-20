@@ -184,9 +184,12 @@ class CameraWrapper:
     isLsstLike : `bool`.
         Make repository products with one raw image per amplifier (True)
         or with one raw image per detector (False).
+    focalPlaneParity : `bool`
+        If `True`, the X axis is flipped between the FOCAL_PLANE and
+        FIELD_ANGLE coordinate systems.
     """
 
-    def __init__(self, plateScale=20.0, radialDistortion=0.925, isLsstLike=False):
+    def __init__(self, plateScale=20.0, radialDistortion=0.925, isLsstLike=False, focalPlaneParity=False):
         afwDir = lsst.utils.getPackageDir("afw")
         self._afwTestDataDir = os.path.join(afwDir, "python", "lsst", "afw",
                                             "cameraGeom", "testData")
@@ -200,7 +203,7 @@ class CameraWrapper:
 
         # ampList[Dict]: actual cameraGeom.Amplifier objects
         self.camConfig, self.ampListDict = self.makeTestRepositoryItems(
-            isLsstLike)
+            isLsstLike, focalPlaneParity=focalPlaneParity)
         self.camera = makeCameraFromAmpLists(
             self.camConfig, self.ampListDict)
 
@@ -383,7 +386,7 @@ class CameraWrapper:
             ampList.append(builder)
         return ampListDict
 
-    def makeTestRepositoryItems(self, isLsstLike=False):
+    def makeTestRepositoryItems(self, isLsstLike=False, focalPlaneParity=False):
         """Make camera config and amp catalog dictionary, using default
         detector and amp files.
 
@@ -392,6 +395,9 @@ class CameraWrapper:
         isLsstLike : `bool`
             If True then there is one raw image per amplifier;
             if False then there is one raw image per detector.
+        focalPlaneParity : `bool`
+            If `True`, the X axis is flipped between the FOCAL_PLANE and
+            FIELD_ANGLE coordinate systems.
         """
         detFile = os.path.join(self._afwTestDataDir, "testCameraDetectors.dat")
         detectorConfigs = self.makeDetectorConfigs(detFile)
@@ -402,6 +408,7 @@ class CameraWrapper:
         camConfig.detectorList = dict((i, detConfig)
                                       for i, detConfig in enumerate(detectorConfigs))
         camConfig.plateScale = self.plateScale
+        camConfig.focalPlaneParity = focalPlaneParity
         pScaleRad = lsst.geom.arcsecToRad(self.plateScale)
         radialDistortCoeffs = [0.0, 1.0/pScaleRad,
                                0.0, self.radialDistortion/pScaleRad]
@@ -518,9 +525,10 @@ def assertDetectorCollectionsEqual(self, collection1, collection2, **kwds):
 
 @inTestCase
 def assertCamerasEqual(self, camera1, camera2, **kwds):
-    """Compare two Camers.
+    """Compare two Cameras.
     """
     self.assertDetectorCollectionsEqual(camera1, camera2, **kwds)
     self.assertTransformMapsEqual(camera1.getTransformMap(), camera2.getTransformMap())
     self.assertEqual(camera1.getName(), camera2.getName())
     self.assertEqual(camera1.getPupilFactoryName(), camera2.getPupilFactoryName())
+    self.assertEqual(camera1.getFocalPlaneParity(), camera2.getFocalPlaneParity())

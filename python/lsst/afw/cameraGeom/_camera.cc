@@ -51,6 +51,7 @@ void wrapCamera(lsst::cpputils::python::WrapperCollection &wrappers) {
         cls.def("rebuild", &Camera::rebuild);
         cls.def("getName", &Camera::getName);
         cls.def("getPupilFactoryName", &Camera::getPupilFactoryName);
+        cls.def("getFocalPlaneParity", &Camera::getFocalPlaneParity);
         cls.def("findDetectors", &Camera::findDetectors, "point"_a, "cameraSys"_a);
         cls.def("findDetectorsList", &Camera::findDetectorsList, "pointList"_a, "cameraSys"_a);
         // transform methods are wrapped with lambdas that translate exceptions for backwards compatibility
@@ -108,6 +109,8 @@ void wrapCamera(lsst::cpputils::python::WrapperCollection &wrappers) {
             }
             self.setPupilFactoryName(pupilFactoryName);
         });
+        cls.def("getFocalPlaneParity", &Camera::Builder::getFocalPlaneParity);
+        cls.def("setFocalPlaneParity", &Camera::Builder::setFocalPlaneParity);
         cls.def("setTransformFromFocalPlaneTo", &Camera::Builder::setTransformFromFocalPlaneTo, "toSys"_a,
                 "transform"_a);
         cls.def("discardTransformFromFocalPlaneTo", &Camera::Builder::discardTransformFromFocalPlaneTo);

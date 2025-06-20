@@ -183,6 +183,8 @@ def makeCameraFromAmpLists(cameraConfig, ampListDict,
     cameraBuilder = Camera.Builder(cameraConfig.name)
     cameraBuilder.setPupilFactoryClass(pupilFactoryClass)
 
+    cameraBuilder.setFocalPlaneParity(cameraConfig.focalPlaneParity)
+
     transformDict = makeTransformDict(cameraConfig.transformDict.transforms)
     focalPlaneToField = transformDict[FIELD_ANGLE]
 
