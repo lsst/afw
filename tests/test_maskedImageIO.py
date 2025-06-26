@@ -214,7 +214,7 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
                 (afwImage.MaskedImageF, afwImage.MaskedImageD),
                 (None, "LOCAL", "PARENT"),
             ):
-                with self.subTest(ImageClass=str(ImageClass), imageOrigin=imageOrigin):
+                with self.subTest(ImageClass=str(ImageClass), imageOrigin=repr(imageOrigin)):
                     fullImage = ImageClass(filepath)
                     options = dafBase.PropertySet()
                     options.set("llcX", bbox.getMinX())

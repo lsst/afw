@@ -160,8 +160,8 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
             for image1, mask1, variance1, image2, mask2, variance2 in itertools.product(
                     images, masks, variances, images, masks, variances):
                 with self.subTest(ImageClass1=str(ImageClass1), ImageClass2=str(ImageClass2),
-                                  image1=image1, mask1=mask1, variance1=variance1,
-                                  image2=image2, mask2=mask2, variance2=variance2):
+                                  image1=repr(image1), mask1=repr(mask1), variance1=repr(variance1),
+                                  image2=repr(image2), mask2=repr(mask2), variance2=repr(variance2)):
                     shouldOverlap = (image1 is image2) or (mask1 is mask2) or (variance1 is variance2)
 
                     mi1 = afwImage.makeMaskedImage(image=image1, mask=mask1, variance=variance1)
@@ -170,7 +170,7 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
                     self.assertEqual(afwImage.imagesOverlap(mi2, mi1), shouldOverlap)
 
                     for bbox1, bbox2 in itertools.product(bboxes, bboxes):
-                        with self.subTest(bbox1=bbox1, bbox2=bbox2):
+                        with self.subTest(bbox1=repr(bbox1), bbox2=repr(bbox2)):
                             subMi1 = afwImage.makeMaskedImage(image=type(image1)(image1, bbox1),
                                                               mask=afwImage.Mask(mask1, bbox1),
                                                               variance=afwImage.ImageF(variance1, bbox1))
