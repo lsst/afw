@@ -176,7 +176,9 @@ extern CameraSys const FOCAL_PLANE;
 /**
  * Field angle coordinates: Angle of a principal ray relative to the optical axis (x,y radians).
  *
- * The orientation of the x,y axes is the same as ``FOCAL_PLANE``.
+ * The orientation of the x,y axes is the same as ``FOCAL_PLANE`` if
+ * `Camera::getFocalPlaneParity` returns `false`, with the X-axis flipped
+ * when that is `true`.
  */
 extern CameraSys const FIELD_ANGLE;
 
