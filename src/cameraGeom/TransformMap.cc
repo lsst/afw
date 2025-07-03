@@ -171,8 +171,7 @@ std::ostream &operator<<(std::ostream &os, TransformMap::Connection const &conne
 }
 
 std::shared_ptr<TransformMap const> TransformMap::make(CameraSys const &reference,
-                                                       Transforms const &transforms,
-                                                       std::optional<bool> focalPlaneParity) {
+                                                       Transforms const &transforms) {
     std::vector<Connection> connections;
     connections.reserve(transforms.size());
     for (auto const &pair : transforms) {
@@ -180,15 +179,14 @@ std::shared_ptr<TransformMap const> TransformMap::make(CameraSys const &referenc
     }
     // We can't use make_shared because TransformMap ctor is private.
     return std::shared_ptr<TransformMap>(
-            new TransformMap(standardizeConnections(reference, std::move(connections)), focalPlaneParity));
+            new TransformMap(standardizeConnections(reference, std::move(connections))));
 }
 
 std::shared_ptr<TransformMap const> TransformMap::make(CameraSys const &reference,
-                                                       std::vector<Connection> const &connections,
-                                                       std::optional<bool> focalPlaneParity) {
+                                                       std::vector<Connection> const &connections) {
     // We can't use make_shared because TransformMap ctor is private.
     return std::shared_ptr<TransformMap>(
-            new TransformMap(standardizeConnections(reference, connections), focalPlaneParity));
+            new TransformMap(standardizeConnections(reference, connections)));
 }
 
 // All resources owned by value or by smart pointer
@@ -233,7 +231,7 @@ std::shared_ptr<ast::Mapping const> TransformMap::_getMapping(CameraSys const &f
 
 size_t TransformMap::size() const noexcept { return _frameIds.size(); }
 
-TransformMap::TransformMap(std::vector<Connection> &&connections, std::optional<bool> focalPlaneParity)
+TransformMap::TransformMap(std::vector<Connection> &&connections)
         : _connections(std::move(connections)), _focalPlaneParity(false) {
     // standardizeConnections must be run by anything that calls the
     // constructor, and that should throw on all of the conditions we assert
@@ -271,15 +269,11 @@ TransformMap::TransformMap(std::vector<Connection> &&connections, std::optional<
 
     // If the caller didn't provide the focal plane parity, get it from the
     // determinant of the Jacobian of the FOCAL_PLANE -> FIELD_ANGLE transform.
-    if (focalPlaneParity.has_value()) {
-        _focalPlaneParity = focalPlaneParity.value();
-    } else {
-        try {
-            auto transform = getTransform(FOCAL_PLANE, FIELD_ANGLE);
-            auto jacobian = transform->getJacobian(lsst::geom::Point2D(0.0, 0.0));
-            _focalPlaneParity = (jacobian.determinant() < 0);
-        } catch (pex::exceptions::InvalidParameterError &) {
-        }
+    try {
+        auto transform = getTransform(FOCAL_PLANE, FIELD_ANGLE);
+        auto jacobian = transform->getJacobian(lsst::geom::Point2D(0.0, 0.0));
+        _focalPlaneParity = (jacobian.determinant() < 0);
+    } catch (pex::exceptions::InvalidParameterError &) {
     }
 }
 
@@ -429,7 +423,7 @@ public:
         }
 
         connections = standardizeConnections(referenceSysIter->second, std::move(connections));
-        return std::shared_ptr<TransformMap>(new TransformMap(std::move(connections), std::nullopt));
+        return std::shared_ptr<TransformMap>(new TransformMap(std::move(connections)));
     }
 
     std::shared_ptr<Persistable> read(InputArchive const &archive,
@@ -456,7 +450,7 @@ public:
         // defensive anyway.
         auto const referenceSys = getReferenceSys(connections);
         connections = standardizeConnections(referenceSys, std::move(connections));
-        return std::shared_ptr<TransformMap>(new TransformMap(std::move(connections), std::nullopt));
+        return std::shared_ptr<TransformMap>(new TransformMap(std::move(connections)));
     }
 
     static Factory const registration;

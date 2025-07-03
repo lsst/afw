@@ -95,20 +95,13 @@ public:
      * @param transforms  A map whose keys are camera coordinate systems, and whose values
      *                    point to Transforms that convert from `reference` to the corresponding key.
      *                    All Transforms must be invertible.
-     * @param focalPlaneParity  True if the X axis is flipped between FOCAL_PLANE and FIELD_ANGLE.
-     *                          If not provided, the determinant of the Jacobian of the transform will be
-     *                          used to infer it.
      *
      * @throws lsst::pex::exceptions::InvalidParameterError Thrown if `transforms` contains
      *         the `reference` camera system as a key, or if any Transform is not invertible.
      *
      * This method is wrapped as a regular constructor in Python.
      */
-    static std::shared_ptr<TransformMap const> make(
-        CameraSys const &reference,
-        Transforms const &transforms,
-        std::optional<bool> focalPlaneParity = std::nullopt
-    );
+    static std::shared_ptr<TransformMap const> make(CameraSys const &reference, Transforms const &transforms);
 
     /**
      * Construct a TransformMap from a sequence of Connections.
@@ -117,9 +110,6 @@ public:
      *                     to all other coordinate systems in the map.
      * @param connections  Sequence of Connection structs, each of which relates
      *                     two CameraSys via the Transform that connects them.
-     * @param focalPlaneParity  True the X axis is flipped between FOCAL_PLANE and FIELD_ANGLE.
-     *                          If not provided, the determinant of the Jacobian of the transform will be
-     *                          used to infer it.
      *
      * @throws lsst::pex::exceptions::InvalidParameterError Thrown if the graph
      *         defined by the given connections does not define a single unique
@@ -128,11 +118,8 @@ public:
      *
      * This method is wrapped as a regular constructor in Python.
      */
-    static std::shared_ptr<TransformMap const> make(
-        CameraSys const &reference,
-        std::vector<Connection> const & connections,
-        std::optional<bool> focalPlaneParity = std::nullopt
-    );
+    static std::shared_ptr<TransformMap const> make(CameraSys const &reference,
+                                                    std::vector<Connection> const &connections);
 
     ///@{
     /// TransformMap is immutable, so both moving and copying are prohibited.
@@ -230,7 +217,7 @@ private:
     class Factory;
 
     // Private ctor, only called by `make` static methods and `Factory`.
-    explicit TransformMap(std::vector<Connection> && connections, std::optional<bool> focalPlaneParity);
+    explicit TransformMap(std::vector<Connection> &&connections);
 
     /*
      * Return the internal frame ID corresponding to a coordinate system.

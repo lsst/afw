@@ -277,7 +277,7 @@ std::shared_ptr<Camera const> Camera::Builder::finish() const {
                            getDetectorBuilderConnections(detectorBuilder).end());
     }
     // Make a single big TransformMap.
-    auto transformMap = TransformMap::make(getNativeCameraSys(), connections, _focalPlaneParity);
+    auto transformMap = TransformMap::make(getNativeCameraSys(), connections);
     // Make actual Detector objects, giving each the full TransformMap.
     DetectorList detectors;
     detectors.reserve(size());
