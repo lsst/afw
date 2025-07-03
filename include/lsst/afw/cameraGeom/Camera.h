@@ -249,10 +249,13 @@ public:
      *
      * When a `Camera` is constructed from this `Builder` via the `finish`,
      * method, the current parity of the FOCAL_PLANE to FIELD_ANGLE transform
-     * is checked and an x-coordinate flip is composed in if the parity is not
-     * correct.  Note that there is no other checking that these coordinate
-     * systems have aligned axes or that any existing parity flip is along the
-     * X axis (as should be the case).
+     * is checked.  If the set focal plane parity is true but the transform has
+     * a positive determinant, or if the set focal plane parity is false but
+     * the transform has a negative determinant, the built camera's transform
+     * will compose an x-coordinate flip to the builder's transform. Note that
+     * there is no other checking that these coordinate systems have aligned
+     * axes or that any existing parity flip is along the X axis (as should be
+     * the case).
      */
     void setFocalPlaneParity(bool flipX);
 
