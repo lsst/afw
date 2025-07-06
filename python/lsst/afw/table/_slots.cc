@@ -54,7 +54,7 @@ Declare standard methods for subclasses of SlotDefinition (but not SlotDefinitio
 */
 template <typename Class>
 void declareSlotDefinitionSubclass(WrapperCollection &wrappers, std::string const &name) {
-    wrappers.wrapType(py::class_<Class, SlotDefinition>(wrappers.module, name.c_str()),
+    wrappers.wrapType(py::classh<Class, SlotDefinition>(wrappers.module, name.c_str()),
                       [](auto &mod, auto &cls) {
                           cls.def(py::init<std::string const &>(), "name"_a);
                           cls.def("isValid", &Class::isValid);

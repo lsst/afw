@@ -37,7 +37,7 @@ namespace afw {
 namespace geom {
 namespace {
 
-using PySpan = py::class_<Span>;
+using PySpan = py::classh<Span>;
 
 // A thin wrapper around SpanPixelIterator.
 // Unfortunately we cannot use py::make_iterator here, as we normally
@@ -59,7 +59,7 @@ private:
 };
 
 static void declareSpanIterator(lsst::cpputils::python::WrapperCollection &wrappers) {
-    wrappers.wrapType(py::class_<SpanIterator>(wrappers.module, "SpanIterator"), [](auto &mod, auto &cls) {
+    wrappers.wrapType(py::classh<SpanIterator>(wrappers.module, "SpanIterator"), [](auto &mod, auto &cls) {
         cls.def("__iter__", [](SpanIterator &it) -> SpanIterator & { return it; });
         cls.def("__next__", &SpanIterator::next);
     });

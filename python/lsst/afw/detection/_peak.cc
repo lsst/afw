@@ -43,8 +43,8 @@ namespace detection {
 
 namespace {
 
-using PyPeakRecord = py::class_<PeakRecord, table::BaseRecord>;
-using PyPeakTable = py::class_<PeakTable, table::BaseTable>;
+using PyPeakRecord = py::classh<PeakRecord, table::BaseRecord>;
+using PyPeakTable = py::classh<PeakTable, table::BaseTable>;
 
 /**
 @internal Declare constructors and member and static functions for a pybind11 PeakRecord

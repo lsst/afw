@@ -37,8 +37,8 @@ namespace lsst {
 namespace afw {
 namespace cameraGeom {
 
-using PyAmplifier = py::class_<Amplifier>;
-using PyAmplifierBuilder = py::class_<Amplifier::Builder, Amplifier>;
+using PyAmplifier = py::classh<Amplifier>;
+using PyAmplifierBuilder = py::classh<Amplifier::Builder, Amplifier>;
 
 void wrapAmplifier(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.addInheritanceDependency("lsst.afw.table");

@@ -39,7 +39,7 @@ void wrapFootprintMerge(cpputils::python::WrapperCollection &wrappers) {
     wrappers.addSignatureDependency("lsst.afw.table");
 
     wrappers.wrapType(
-            py::class_<FootprintMergeList>(wrappers.module, "FootprintMergeList"), [](auto &mod, auto &cls) {
+            py::classh<FootprintMergeList>(wrappers.module, "FootprintMergeList"), [](auto &mod, auto &cls) {
                 cls.def(py::init<afw::table::Schema &, std::vector<std::string> const &,
                                  afw::table::Schema const &>(),
                         "sourceSchema"_a, "filterList"_a, "initialPeakSchema"_a);

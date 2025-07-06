@@ -35,7 +35,7 @@ namespace lsst {
 namespace afw {
 namespace typehandling {
 
-using PyStorable = py::class_<Storable, table::io::Persistable, StorableHelper<>>;
+using PyStorable = py::classh<Storable, table::io::Persistable, StorableHelper<>>;
 
 void wrapStorable(cpputils::python::WrapperCollection& wrappers) {
     wrappers.addInheritanceDependency("lsst.afw.table.io");
@@ -49,7 +49,7 @@ void wrapStorable(cpputils::python::WrapperCollection& wrappers) {
     });
 
     wrappers.wrapType(
-        py::class_<StorableHelperFactory>(
+        py::classh<StorableHelperFactory>(
             wrappers.module, "StorableHelperFactory"
         ),
         [](auto& mod, auto& cls) {

@@ -34,7 +34,7 @@ namespace afw {
 namespace table {
 namespace io {
 
-using PyInputArchive = py::class_<InputArchive>;
+using PyInputArchive = py::classh<InputArchive>;
 
 void wrapInputArchive(cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(PyInputArchive(wrappers.module, "InputArchive"), [](auto &mod, auto &cls) {

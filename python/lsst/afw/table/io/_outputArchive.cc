@@ -35,7 +35,7 @@ namespace afw {
 namespace table {
 namespace io {
 
-using PyOutputArchive = py::class_<OutputArchive>;
+using PyOutputArchive = py::classh<OutputArchive>;
 
 void wrapOutputArchive(cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(PyOutputArchive(wrappers.module, "OutputArchive"), [](auto &mod, auto &cls) {

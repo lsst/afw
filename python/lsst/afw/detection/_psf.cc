@@ -55,7 +55,7 @@ void wrapPsf(cpputils::python::WrapperCollection& wrappers) {
     cls.def(py::init<std::string const &>());
 
     auto clsPsf = wrappers.wrapType(
-            py::class_<Psf, typehandling::Storable, PsfTrampoline<>>(
+            py::classh<Psf, typehandling::Storable, PsfTrampoline<>>(
                 wrappers.module, "Psf"
             ),
             [](auto& mod, auto& cls) {

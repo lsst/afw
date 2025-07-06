@@ -54,8 +54,8 @@ using cpputils::python::WrapperCollection;
 
 namespace {
 
-using PyBaseRecord = py::class_<BaseRecord>;
-using PyBaseTable = py::class_<BaseTable>;
+using PyBaseRecord = py::classh<BaseRecord>;
+using PyBaseTable = py::classh<BaseTable>;
 
 template <typename T>
 void declareBaseRecordOverloads(PyBaseRecord &cls, std::string const &suffix) {

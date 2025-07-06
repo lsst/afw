@@ -34,7 +34,7 @@ namespace afw {
 namespace table {
 namespace io {
 
-using PyPersistable = py::class_<Persistable>;
+using PyPersistable = py::classh<Persistable>;
 
 void wrapPersistable(cpputils::python::WrapperCollection &wrappers) {
     // TODO: uncomment once afw.fits uses WrapperCollection

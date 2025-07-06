@@ -54,22 +54,22 @@ namespace {
 // define a CRTP interface in C++ and in Python that's just duck-typing.
 
 template <typename T>
-using PyPointKey = py::class_<PointKey<T>>;
+using PyPointKey = py::classh<PointKey<T>>;
 
 template <typename T>
-using PyPoint3Key = py::class_<Point3Key<T>>;
+using PyPoint3Key = py::classh<Point3Key<T>>;
 
 template <typename Box>
-using PyBoxKey = py::class_<BoxKey<Box>>;
+using PyBoxKey = py::classh<BoxKey<Box>>;
 
-using PyCoordKey = py::class_<CoordKey>;
+using PyCoordKey = py::classh<CoordKey>;
 
-using PyQuadrupoleKey = py::class_<QuadrupoleKey>;
+using PyQuadrupoleKey = py::classh<QuadrupoleKey>;
 
-using PyEllipseKey = py::class_<EllipseKey>;
+using PyEllipseKey = py::classh<EllipseKey>;
 
 template <typename T, int N>
-using PyCovarianceMatrixKey = py::class_<CovarianceMatrixKey<T, N>>;
+using PyCovarianceMatrixKey = py::classh<CovarianceMatrixKey<T, N>>;
 
 template <typename T>
 static void declarePointKey(WrapperCollection &wrappers, std::string const &suffix) {

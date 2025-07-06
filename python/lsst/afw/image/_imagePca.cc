@@ -41,7 +41,7 @@ template <typename ImageT>
 static void declareImagePca(lsst::cpputils::python::WrapperCollection &wrappers, std::string const &suffix) {
     std::string name = "ImagePca" + suffix;
     wrappers.wrapType(
-            py::class_<ImagePca<ImageT>>(wrappers.module, name.c_str()),
+            py::classh<ImagePca<ImageT>>(wrappers.module, name.c_str()),
             [](auto &mod, auto &cls) {
                 cls.def(py::init<bool>(), "constantWeight"_a = true);
 

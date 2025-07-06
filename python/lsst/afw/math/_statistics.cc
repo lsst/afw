@@ -100,7 +100,7 @@ void declareStatistics(lsst::cpputils::python::WrapperCollection &wrappers) {
 
     wrappers.wrap([](auto &mod) { mod.def("stringToStatisticsProperty", stringToStatisticsProperty); });
 
-    using PyClass = py::class_<StatisticsControl>;
+    using PyClass = py::classh<StatisticsControl>;
     auto control = wrappers.wrapType(PyClass(wrappers.module, "StatisticsControl"), [](auto &mod, auto &cls) {
         cls.def(py::init<double, int, lsst::afw::image::MaskPixel, bool,
                          typename StatisticsControl::WeightsBoolean>(),

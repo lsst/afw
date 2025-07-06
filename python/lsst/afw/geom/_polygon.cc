@@ -49,7 +49,7 @@ namespace polygon {
 namespace {
 void declarePolygon(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(
-            py::class_<Polygon, typehandling::Storable>(wrappers.module, "Polygon"),
+            py::classh<Polygon, typehandling::Storable>(wrappers.module, "Polygon"),
             [](auto &mod, auto &cls) {
                 /* Constructors */
                 cls.def(py::init<Polygon::Box const &>());

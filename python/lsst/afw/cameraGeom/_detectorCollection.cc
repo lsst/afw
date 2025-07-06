@@ -39,9 +39,9 @@ namespace cameraGeom {
 namespace {
 
 template <typename T>
-using PyDetectorCollectionBase = py::class_<DetectorCollectionBase<T>>;
+using PyDetectorCollectionBase = py::classh<DetectorCollectionBase<T>>;
 
-using PyDetectorCollection = py::class_<DetectorCollection, DetectorCollectionBase<Detector const>>;
+using PyDetectorCollection = py::classh<DetectorCollection, DetectorCollectionBase<Detector const>>;
 
 template <typename T>
 void declareDetectorCollectionBase(PyDetectorCollectionBase<T> &cls) {

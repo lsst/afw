@@ -42,9 +42,9 @@ using cpputils::python::WrapperCollection;
 
 namespace {
 
-using PyBaseColumnView = py::class_<BaseColumnView>;
+using PyBaseColumnView = py::classh<BaseColumnView>;
 
-using PyBitsColumn = py::class_<BitsColumn>;
+using PyBitsColumn = py::classh<BitsColumn>;
 
 template <typename T, typename PyClass>
 static void declareBaseColumnViewOverloads(PyClass &cls) {

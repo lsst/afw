@@ -46,7 +46,7 @@ namespace afw {
 namespace image {
 namespace {
 
-using PyExposureInfo = py::class_<ExposureInfo>;
+using PyExposureInfo = py::classh<ExposureInfo>;
 
 // Template methods where we can use pybind11's overload resolution (T is input)
 template <class T>

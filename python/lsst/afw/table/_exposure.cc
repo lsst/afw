@@ -58,9 +58,9 @@ using cpputils::python::WrapperCollection;
 
 namespace {
 
-using PyExposureRecord = py::class_<ExposureRecord, BaseRecord>;
-using PyExposureTable = py::class_<ExposureTable, BaseTable>;
-using PyExposureCatalog = py::class_<ExposureCatalogT<ExposureRecord>, SortedCatalogT<ExposureRecord>>;
+using PyExposureRecord = py::classh<ExposureRecord, BaseRecord>;
+using PyExposureTable = py::classh<ExposureTable, BaseTable>;
+using PyExposureCatalog = py::classh<ExposureCatalogT<ExposureRecord>, SortedCatalogT<ExposureRecord>>;
 
 PyExposureRecord declareExposureRecord(WrapperCollection &wrappers) {
     return wrappers.wrapType(PyExposureRecord(wrappers.module, "ExposureRecord"), [](auto &mod, auto &cls) {

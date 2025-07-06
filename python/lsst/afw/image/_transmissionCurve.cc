@@ -41,7 +41,7 @@ namespace afw {
 namespace image {
 
 using PyTransmissionCurve =
-        py::class_<TransmissionCurve, typehandling::Storable>;
+        py::classh<TransmissionCurve, typehandling::Storable>;
 
 void wrapTransmissionCurve(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.addInheritanceDependency("lsst.afw.typehandling");
