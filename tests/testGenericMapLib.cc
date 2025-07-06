@@ -44,7 +44,7 @@ namespace typehandling {
 namespace {
 
 /// A Storable with simple, mutable state.
-class CppStorable : public Storable, pybind11::trampoline_self_life_support {
+class CppStorable : public Storable {
 public:
     explicit CppStorable(std::string const& value) : Storable(), value(value) {}
 
