@@ -47,7 +47,7 @@ namespace detection {
  * @see [pybind11 documentation](https://pybind11.readthedocs.io/en/stable/advanced/classes.html)
  */
 template <typename Base = Psf>
-class PsfTrampoline : public StorableHelper<Base> {
+class PsfTrampoline : public StorableHelper<Base>, public py::trampoline_self_life_support {
 public:
     using Image = typename Base::Image;
 
