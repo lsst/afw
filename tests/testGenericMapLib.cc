@@ -26,7 +26,6 @@
 #include <memory>
 #include <sstream>
 
-#include "lsst/cpputils/python/PySharedPtr.h"
 #include "lsst/pex/exceptions.h"
 
 #include "lsst/afw/typehandling/GenericMap.h"
