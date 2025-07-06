@@ -131,7 +131,7 @@ void DummyPsf::write(OutputArchiveHandle& handle) const {
 PYBIND11_MODULE(testTableArchivesLib, mod) {
     py::module::import("lsst.afw.detection");
 
-    py::class_<DummyPsf, lsst::afw::detection::Psf> cls(mod, "DummyPsf");
+    py::classh<DummyPsf, lsst::afw::detection::Psf> cls(mod, "DummyPsf");
 
     cls.def(py::init<double>());
 

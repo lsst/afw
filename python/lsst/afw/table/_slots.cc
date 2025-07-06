@@ -40,7 +40,7 @@ using cpputils::python::WrapperCollection;
 namespace {
 
 // tiny classes only used in afw::table: no need for shared_ptr.
-using PySlotDefinition = py::class_<SlotDefinition>;
+using PySlotDefinition = py::classh<SlotDefinition>;
 
 void declareSlotDefinition(WrapperCollection &wrappers) {
     wrappers.wrapType(PySlotDefinition(wrappers.module, "SlotDefinition"), [](auto &mod, auto &cls) {
