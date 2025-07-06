@@ -51,7 +51,7 @@ namespace typehandling {
  * @see [pybind11 documentation](https://pybind11.readthedocs.io/en/stable/advanced/classes.html)
  */
 template <class Base = Storable>
-class StorableHelper : public Base, public py::trampoline_self_life_support {
+class StorableHelper : public Base, public pybind11::trampoline_self_life_support {
 public:
     using Base::Base;
 
