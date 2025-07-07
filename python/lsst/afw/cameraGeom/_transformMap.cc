@@ -77,6 +77,7 @@ void declareTransformMap(lsst::cpputils::python::WrapperCollection &wrappers) {
                 "pointList"_a, "fromSys"_a, "toSys"_a);
         cls.def("getTransform", &TransformMap::getTransform, "fromSys"_a, "toSys"_a);
         cls.def("getConnections", &TransformMap::getConnections);
+        cls.def("getFocalPlaneParity", &TransformMap::getFocalPlaneParity);
         table::io::python::addPersistableMethods(cls);
     });
     wrappers.wrapType(PyTransformMapConnection(transformMap, "Connection"), [](auto &mod, auto &cls) {

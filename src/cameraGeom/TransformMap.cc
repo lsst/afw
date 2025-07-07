@@ -22,8 +22,12 @@
 #include <sstream>
 #include <unordered_set>
 
+#include "lsst/geom/Point.h"
+#include "lsst/geom/LinearTransform.h"
+#include "lsst/geom/AffineTransform.h"
 #include "lsst/log/Log.h"
 #include "lsst/pex/exceptions.h"
+#include "lsst/afw/geom/transformFactory.h"
 #include "lsst/afw/table/io/OutputArchive.h"
 #include "lsst/afw/table/io/CatalogVector.h"
 #include "lsst/afw/table/io/Persistable.cc"
@@ -41,7 +45,7 @@ static lsst::afw::geom::Point2Endpoint const POINT2_ENDPOINT;
 static auto LOGGER = LOG_GET("lsst.afw.cameraGeom.TransformMap");
 
 // Make an AST Frame name for a CameraSys.
-std::string makeFrameName(CameraSys const & sys) {
+std::string makeFrameName(CameraSys const &sys) {
     std::string r = "Ident=" + sys.getSysName();
     if (sys.hasDetectorName()) {
         r += "_";
@@ -75,14 +79,10 @@ std::string makeFrameName(CameraSys const & sys) {
  *      includes any connections in which `fromSys == toSys`.
  */
 std::vector<TransformMap::Connection> standardizeConnections(
-    CameraSys const & reference,
-    std::vector<TransformMap::Connection> connections
-) {
+        CameraSys const &reference, std::vector<TransformMap::Connection> connections) {
     if (connections.empty()) {
-        throw LSST_EXCEPT(
-            pex::exceptions::InvalidParameterError,
-            "Cannot create a TransformMap with no connections."
-        );
+        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
+                          "Cannot create a TransformMap with no connections.");
     }
     // Iterator to the first unprocessed connection in result; will be
     // incremented as we proceed.
@@ -101,7 +101,7 @@ std::vector<TransformMap::Connection> standardizeConnections(
     LOGLS_DEBUG(LOGGER, "Standardizing: starting with reference " << reference);
     while (!currentSystems.empty()) {
         LOGLS_DEBUG(LOGGER, "Standardizing: beginning iteration with currentSystems={ ");
-        for (auto const & sys : currentSystems) {
+        for (auto const &sys : currentSystems) {
             LOGLS_DEBUG(LOGGER, "Standardizing:   " << sys << ", ");
         }
         LOGLS_DEBUG(LOGGER, "Standardizing: }");
@@ -123,8 +123,8 @@ std::vector<TransformMap::Connection> standardizeConnections(
                 }
                 if (knownSystems.count(connection->toSys)) {
                     std::ostringstream ss;
-                    ss << "Multiple paths between reference " << reference
-                       << " and " << connection->toSys << ".";
+                    ss << "Multiple paths between reference " << reference << " and " << connection->toSys
+                       << ".";
                     throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, ss.str());
                 }
                 LOGLS_DEBUG(LOGGER, "Standardizing: adding " << (*connection));
@@ -155,46 +155,39 @@ std::vector<TransformMap::Connection> standardizeConnections(
 }
 
 // Return the reference coordinate system from an already-standardized vector of connections.
-CameraSys getReferenceSys(std::vector<TransformMap::Connection> const & connections) {
+CameraSys getReferenceSys(std::vector<TransformMap::Connection> const &connections) {
     return connections.front().fromSys;
 }
 
-} // anonymous
+}  // namespace
 
 void TransformMap::Connection::reverse() {
     transform = transform->inverted();
     toSys.swap(fromSys);
 }
 
-std::ostream & operator<<(std::ostream & os, TransformMap::Connection const & connection) {
+std::ostream &operator<<(std::ostream &os, TransformMap::Connection const &connection) {
     return os << connection.fromSys << "->" << connection.toSys;
 }
 
-std::shared_ptr<TransformMap const> TransformMap::make(
-    CameraSys const & reference,
-    Transforms const & transforms
-) {
+std::shared_ptr<TransformMap const> TransformMap::make(CameraSys const &reference,
+                                                       Transforms const &transforms) {
     std::vector<Connection> connections;
     connections.reserve(transforms.size());
-    for (auto const & pair : transforms) {
+    for (auto const &pair : transforms) {
         connections.push_back(Connection{pair.second, reference, pair.first});
     }
     // We can't use make_shared because TransformMap ctor is private.
     return std::shared_ptr<TransformMap>(
-        new TransformMap(standardizeConnections(reference, std::move(connections)))
-    );
+            new TransformMap(standardizeConnections(reference, std::move(connections))));
 }
 
-std::shared_ptr<TransformMap const> TransformMap::make(
-    CameraSys const &reference,
-    std::vector<Connection> const & connections
-) {
+std::shared_ptr<TransformMap const> TransformMap::make(CameraSys const &reference,
+                                                       std::vector<Connection> const &connections) {
     // We can't use make_shared because TransformMap ctor is private.
     return std::shared_ptr<TransformMap>(
-        new TransformMap(standardizeConnections(reference, connections))
-    );
+            new TransformMap(standardizeConnections(reference, connections)));
 }
-
 
 // All resources owned by value or by smart pointer
 TransformMap::~TransformMap() noexcept = default;
@@ -219,6 +212,8 @@ std::shared_ptr<geom::TransformPoint2ToPoint2> TransformMap::getTransform(Camera
     return std::make_shared<geom::TransformPoint2ToPoint2>(*_getMapping(fromSys, toSys));
 }
 
+bool TransformMap::getFocalPlaneParity() const noexcept { return _focalPlaneParity; }
+
 int TransformMap::_getFrame(CameraSys const &system) const {
     try {
         return _frameIds.at(system);
@@ -236,10 +231,8 @@ std::shared_ptr<ast::Mapping const> TransformMap::_getMapping(CameraSys const &f
 
 size_t TransformMap::size() const noexcept { return _frameIds.size(); }
 
-
-TransformMap::TransformMap(std::vector<Connection> && connections) :
-    _connections(std::move(connections))
-{
+TransformMap::TransformMap(std::vector<Connection> &&connections)
+        : _connections(std::move(connections)), _focalPlaneParity(false) {
     // standardizeConnections must be run by anything that calls the
     // constructor, and that should throw on all of the conditions we assert
     // on below (which is why those are asserts).
@@ -250,11 +243,11 @@ TransformMap::TransformMap(std::vector<Connection> && connections) :
     // Local helper function that creates a Frame, updates the nFrames counter,
     // and adds an entry to the frameIds map.  Returns the new Frame.
     // Should always be called in concert with an update to frameSet.
-    auto addFrameForSys = [this, &nFrames](CameraSys const & sys) mutable -> ast::Frame {
-        #ifndef NDEBUG
-        auto r = // We only care about this return value for the assert below;
-        #endif
-        _frameIds.emplace(sys, ++nFrames);
+    auto addFrameForSys = [this, &nFrames](CameraSys const &sys) mutable -> ast::Frame {
+#ifndef NDEBUG
+        auto r =  // We only care about this return value for the assert below;
+#endif
+                _frameIds.emplace(sys, ++nFrames);
         assert(r.second);  // this must actually insert something, not find an already-inserted CameraSys.
         return ast::Frame(2, makeFrameName(sys));
     };
@@ -263,7 +256,7 @@ TransformMap::TransformMap(std::vector<Connection> && connections) :
     // concert with a call to addFrameForSys.
     _frameSet = std::make_unique<ast::FrameSet>(addFrameForSys(getReferenceSys(_connections)));
 
-    for (auto const & connection : _connections) {
+    for (auto const &connection : _connections) {
         auto fromSysIdIter = _frameIds.find(connection.fromSys);
         assert(fromSysIdIter != _frameIds.end());
         _frameSet->addFrame(fromSysIdIter->second, *connection.transform->getMapping(),
@@ -273,16 +266,23 @@ TransformMap::TransformMap(std::vector<Connection> && connections) :
     // We've maintained our own counter for frame IDs for performance and
     // convenience reasons, but it had better match AST's internal counter.
     assert(_frameSet->getNFrame() == nFrames);
+
+    // If the caller didn't provide the focal plane parity, get it from the
+    // determinant of the Jacobian of the FOCAL_PLANE -> FIELD_ANGLE transform.
+    try {
+        auto transform = getTransform(FOCAL_PLANE, FIELD_ANGLE);
+        auto jacobian = transform->getJacobian(lsst::geom::Point2D(0.0, 0.0));
+        _focalPlaneParity = (jacobian.determinant() < 0);
+    } catch (pex::exceptions::InvalidParameterError &) {
+    }
 }
 
 std::vector<TransformMap::Connection> TransformMap::getConnections() const { return _connections; }
 
-
 namespace {
 
 struct PersistenceHelper {
-
-    static PersistenceHelper const & get() {
+    static PersistenceHelper const &get() {
         static PersistenceHelper const instance;
         return instance;
     }
@@ -298,34 +298,28 @@ struct PersistenceHelper {
     table::Key<int> transform;
 
 private:
-
-    PersistenceHelper() :
-        schema(),
-        fromSysName(schema.addField<std::string>("fromSysName",
-                                                 "Camera coordinate system name.", "", 0)),
-        fromSysDetectorName(schema.addField<std::string>("fromSysDetectorName",
-                                                         "Camera coordinate system detector name.", "", 0)),
-        toSysName(schema.addField<std::string>("toSysName",
-                                               "Camera coordinate system name.", "", 0)),
-        toSysDetectorName(schema.addField<std::string>("toSysDetectorName",
-                                                       "Camera coordinate system detector name.", "", 0)),
-        transform(schema.addField<int>("transform", "Archive ID of the transform.", ""))
-    {}
+    PersistenceHelper()
+            : schema(),
+              fromSysName(
+                      schema.addField<std::string>("fromSysName", "Camera coordinate system name.", "", 0)),
+              fromSysDetectorName(schema.addField<std::string>(
+                      "fromSysDetectorName", "Camera coordinate system detector name.", "", 0)),
+              toSysName(schema.addField<std::string>("toSysName", "Camera coordinate system name.", "", 0)),
+              toSysDetectorName(schema.addField<std::string>(
+                      "toSysDetectorName", "Camera coordinate system detector name.", "", 0)),
+              transform(schema.addField<int>("transform", "Archive ID of the transform.", "")) {}
 
     PersistenceHelper(PersistenceHelper const &) = delete;
     PersistenceHelper(PersistenceHelper &&) = delete;
 
-    PersistenceHelper & operator=(PersistenceHelper const &) = delete;
-    PersistenceHelper & operator=(PersistenceHelper &&) = delete;
-
+    PersistenceHelper &operator=(PersistenceHelper const &) = delete;
+    PersistenceHelper &operator=(PersistenceHelper &&) = delete;
 };
-
 
 // PersistenceHelper for a previous format version; now only supported in
 // reading.
 struct OldPersistenceHelper {
-
-    static OldPersistenceHelper const & get() {
+    static OldPersistenceHelper const &get() {
         static OldPersistenceHelper const instance;
         return instance;
     }
@@ -348,49 +342,41 @@ struct OldPersistenceHelper {
     table::Key<int> to;
     table::Key<int> transform;
 
-    CameraSys makeCameraSys(table::BaseRecord const & record) const {
+    CameraSys makeCameraSys(table::BaseRecord const &record) const {
         return CameraSys(record.get(sysName), record.get(detectorName));
     }
 
 private:
-
-    OldPersistenceHelper() :
-        sysSchema(),
-        sysName(sysSchema.addField<std::string>("sysName", "Camera coordinate system name", "", 0)),
-        detectorName(sysSchema.addField<std::string>("detectorName",
-                                                     "Camera coordinate system detector name", "", 0)),
-        id(sysSchema.addField<int>("id", "AST ID of the Frame for the CameraSys", "")),
-        connectionSchema(),
-        from(connectionSchema.addField<int>("from", "AST ID of the Frame this transform maps from.", "")),
-        to(connectionSchema.addField<int>("to", "AST ID of the Frame this transform maps to.", "")),
-        transform(connectionSchema.addField<int>("transform", "Archive ID of the transform.", ""))
-    {}
+    OldPersistenceHelper()
+            : sysSchema(),
+              sysName(sysSchema.addField<std::string>("sysName", "Camera coordinate system name", "", 0)),
+              detectorName(sysSchema.addField<std::string>("detectorName",
+                                                           "Camera coordinate system detector name", "", 0)),
+              id(sysSchema.addField<int>("id", "AST ID of the Frame for the CameraSys", "")),
+              connectionSchema(),
+              from(connectionSchema.addField<int>("from", "AST ID of the Frame this transform maps from.",
+                                                  "")),
+              to(connectionSchema.addField<int>("to", "AST ID of the Frame this transform maps to.", "")),
+              transform(connectionSchema.addField<int>("transform", "Archive ID of the transform.", "")) {}
 
     OldPersistenceHelper(OldPersistenceHelper const &) = delete;
     OldPersistenceHelper(OldPersistenceHelper &&) = delete;
 
-    OldPersistenceHelper & operator=(OldPersistenceHelper const &) = delete;
-    OldPersistenceHelper & operator=(OldPersistenceHelper &&) = delete;
-
+    OldPersistenceHelper &operator=(OldPersistenceHelper const &) = delete;
+    OldPersistenceHelper &operator=(OldPersistenceHelper &&) = delete;
 };
-
 
 }  // namespace
 
+std::string TransformMap::getPersistenceName() const { return "TransformMap"; }
 
-std::string TransformMap::getPersistenceName() const {
-    return "TransformMap";
-}
+std::string TransformMap::getPythonModule() const { return "lsst.afw.cameraGeom"; }
 
-std::string TransformMap::getPythonModule() const {
-    return "lsst.afw.cameraGeom";
-}
-
-void TransformMap::write(OutputArchiveHandle& handle) const {
-    auto const & keys = PersistenceHelper::get();
+void TransformMap::write(OutputArchiveHandle &handle) const {
+    auto const &keys = PersistenceHelper::get();
 
     auto cat = handle.makeCatalog(keys.schema);
-    for (auto const & connection : _connections) {
+    for (auto const &connection : _connections) {
         auto record = cat.addNew();
         record->set(keys.fromSysName, connection.fromSys.getSysName());
         record->set(keys.fromSysDetectorName, connection.fromSys.getDetectorName());
@@ -403,23 +389,21 @@ void TransformMap::write(OutputArchiveHandle& handle) const {
 
 class TransformMap::Factory : public table::io::PersistableFactory {
 public:
-
     Factory() : PersistableFactory("TransformMap") {}
 
-    std::shared_ptr<Persistable> readOld(InputArchive const& archive,
-                                         CatalogVector const& catalogs) const {
-        auto const & keys = OldPersistenceHelper::get();
+    std::shared_ptr<Persistable> readOld(InputArchive const &archive, CatalogVector const &catalogs) const {
+        auto const &keys = OldPersistenceHelper::get();
 
         LSST_ARCHIVE_ASSERT(catalogs.size() == 2u);
-        auto const & sysCat = catalogs[0];
-        auto const & connectionCat = catalogs[1];
+        auto const &sysCat = catalogs[0];
+        auto const &connectionCat = catalogs[1];
         LSST_ARCHIVE_ASSERT(sysCat.getSchema() == keys.sysSchema);
         LSST_ARCHIVE_ASSERT(connectionCat.getSchema() == keys.connectionSchema);
         LSST_ARCHIVE_ASSERT(sysCat.size() == connectionCat.size() + 1);
         LSST_ARCHIVE_ASSERT(sysCat.isSorted(keys.id));
 
         std::unordered_map<int, CameraSys> sysById;
-        for (auto const & sysRecord : sysCat) {
+        for (auto const &sysRecord : sysCat) {
             auto sys = keys.makeCameraSys(sysRecord);
             sysById.emplace(sysRecord.get(keys.id), sys);
         }
@@ -427,14 +411,13 @@ public:
         auto const referenceSysIter = sysById.find(1);
         LSST_ARCHIVE_ASSERT(referenceSysIter != sysById.end());
         std::vector<Connection> connections;
-        for (auto const & connectionRecord : connectionCat) {
+        for (auto const &connectionRecord : connectionCat) {
             auto const fromSysIter = sysById.find(connectionRecord.get(keys.from));
             LSST_ARCHIVE_ASSERT(fromSysIter != sysById.end());
             auto const toSysIter = sysById.find(connectionRecord.get(keys.to));
             LSST_ARCHIVE_ASSERT(toSysIter != sysById.end());
-            auto const transform = archive.get<geom::TransformPoint2ToPoint2>(
-                connectionRecord.get(keys.transform)
-            );
+            auto const transform =
+                    archive.get<geom::TransformPoint2ToPoint2>(connectionRecord.get(keys.transform));
 
             connections.push_back(Connection{transform, fromSysIter->second, toSysIter->second});
         }
@@ -443,20 +426,20 @@ public:
         return std::shared_ptr<TransformMap>(new TransformMap(std::move(connections)));
     }
 
-    std::shared_ptr<Persistable> read(InputArchive const& archive,
-                                      CatalogVector const& catalogs) const override {
+    std::shared_ptr<Persistable> read(InputArchive const &archive,
+                                      CatalogVector const &catalogs) const override {
         if (catalogs.size() == 2u) {
             return readOld(archive, catalogs);
         }
 
-        auto const & keys = PersistenceHelper::get();
+        auto const &keys = PersistenceHelper::get();
 
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
-        auto const & cat = catalogs[0];
+        auto const &cat = catalogs[0];
         LSST_ARCHIVE_ASSERT(cat.getSchema() == keys.schema);
 
         std::vector<Connection> connections;
-        for (auto const & record : cat) {
+        for (auto const &record : cat) {
             CameraSys const fromSys(record.get(keys.fromSysName), record.get(keys.fromSysDetectorName));
             CameraSys const toSys(record.get(keys.toSysName), record.get(keys.toSysDetectorName));
             auto const transform = archive.get<geom::TransformPoint2ToPoint2>(record.get(keys.transform));
@@ -471,7 +454,6 @@ public:
     }
 
     static Factory const registration;
-
 };
 
 TransformMap::Factory const TransformMap::Factory::registration;

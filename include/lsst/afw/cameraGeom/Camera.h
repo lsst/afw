@@ -33,7 +33,6 @@ namespace lsst {
 namespace afw {
 namespace cameraGeom {
 
-
 /**
  * An immutable representation of a camera.
  *
@@ -42,7 +41,6 @@ namespace cameraGeom {
  */
 class Camera : public DetectorCollection, public table::io::PersistableFacade<Camera> {
 public:
-
     class Builder;
 
     using DetectorList = DetectorCollection::List;
@@ -53,8 +51,8 @@ public:
     Camera(Camera &&) = delete;
 
     // Camera is immutable, so it cannot be assignable.
-    Camera & operator=(Camera const &) = delete;
-    Camera & operator=(Camera &&) = delete;
+    Camera &operator=(Camera const &) = delete;
+    Camera &operator=(Camera &&) = delete;
 
     virtual ~Camera() noexcept;
 
@@ -74,6 +72,15 @@ public:
      * Return the fully-qualified name of the Python class that provides this Camera's PupilFactory.
      */
     std::string getPupilFactoryName() const { return _pupilFactoryName; }
+
+    /**
+     * Return True if there is an x-axis flip from FOCAL_PLANE to FIELD_ANGLE, False otherwise.
+     *
+     * @details Cameras with an even number of reflective surfaces (e.g. LATISS) or a particular choice for
+     *          the PIXEL coordinates (e.g. DECam) require this x-axis flip between their FOCAL_PLANE and
+     *          FIELD_ANGLE coordinate systems to match our conventions.
+     */
+    bool getFocalPlaneParity() const noexcept { return _transformMap->getFocalPlaneParity(); }
 
     /**
      * Find the detectors that cover a point in any camera system
@@ -139,8 +146,7 @@ public:
      * @returns points transformed to `toSys` (a vector of lsst::geom::Point2D)
      */
     std::vector<lsst::geom::Point2D> transform(std::vector<lsst::geom::Point2D> const &points,
-                                               CameraSys const &fromSys,
-                                               CameraSys const &toSys) const;
+                                               CameraSys const &fromSys, CameraSys const &toSys) const;
 
     /**
      * Cameras are always persistable.
@@ -148,11 +154,9 @@ public:
     bool isPersistable() const noexcept override { return true; }
 
 protected:
-
-    void write(OutputArchiveHandle& handle) const override;
+    void write(OutputArchiveHandle &handle) const override;
 
 private:
-
     // static methods below provide access to private methods of
     // Detector::InCameraBuilder for use by Camera::Builder, because
     // Detector::InCameraBuilder can only friend Camera.
@@ -160,32 +164,31 @@ private:
     /*
      * Create a new Detector::InCameraBuilder for a completely new Detector.
      */
-    static std::shared_ptr<Detector::InCameraBuilder> makeDetectorBuilder(std::string const & name, int id);
+    static std::shared_ptr<Detector::InCameraBuilder> makeDetectorBuilder(std::string const &name, int id);
 
     /*
      * Create a new Detector::InCameraBuilder with the state of the given
      * Detector.
      */
-    static std::shared_ptr<Detector::InCameraBuilder> makeDetectorBuilder(Detector const & detector);
+    static std::shared_ptr<Detector::InCameraBuilder> makeDetectorBuilder(Detector const &detector);
 
     /*
      * Extract the sequence of TransformMap::Connections from a
      * Detector::InCameraBuilder.
      */
-    static std::vector<TransformMap::Connection> const & getDetectorBuilderConnections(
-        Detector::InCameraBuilder const & detector
-    );
+    static std::vector<TransformMap::Connection> const &getDetectorBuilderConnections(
+            Detector::InCameraBuilder const &detector);
 
     // Deserialization factory.
     class Factory;
 
     // Constructor used by Camera::Builder.
     // Some arguments passed by value to make moves possible.
-    Camera(std::string const & name, DetectorList detectors,
-           std::shared_ptr<TransformMap const> transformMap, std::string const & pupilFactoryName);
+    Camera(std::string const &name, DetectorList detectors, std::shared_ptr<TransformMap const> transformMap,
+           std::string const &pupilFactoryName);
 
     // Constructor used by persistence.
-    Camera(table::io::InputArchive const & archive, table::io::CatalogVector const & catalogs);
+    Camera(table::io::InputArchive const &archive, table::io::CatalogVector const &catalogs);
 
     std::string getPersistenceName() const override;
 
@@ -195,7 +198,6 @@ private:
     std::string _pupilFactoryName;
     std::shared_ptr<TransformMap const> _transformMap;
 };
-
 
 /**
  * A helper class for creating and modifying cameras.
@@ -207,8 +209,8 @@ private:
  */
 class Camera::Builder : public DetectorCollectionBase<Detector::InCameraBuilder> {
     using BaseCollection = DetectorCollectionBase<Detector::InCameraBuilder>;
-public:
 
+public:
     virtual ~Builder() noexcept;
 
     /**
@@ -219,7 +221,7 @@ public:
     /**
      * Construct a Builder with the state of an existing Camera.
      */
-    explicit Builder(Camera const & camera);
+    explicit Builder(Camera const &camera);
 
     /**
      * Construct a new Camera from the state of the Builder.
@@ -230,13 +232,32 @@ public:
     std::string getName() const { return _name; }
 
     /// Set the name of the camera.
-    void setName(std::string const & name) { _name = name; }
+    void setName(std::string const &name) { _name = name; }
 
     /// @copydoc Camera::getPupilFactoryName
     std::string getPupilFactoryName() const { return _pupilFactoryName; }
 
     /// Set the fully-qualified name of the Python class that provides this Camera's PupilFactory.
-    void setPupilFactoryName(std::string const & pupilFactoryName) { _pupilFactoryName = pupilFactoryName; }
+    void setPupilFactoryName(std::string const &pupilFactoryName) { _pupilFactoryName = pupilFactoryName; }
+
+    /// @copydoc Camera::getFocalPlaneParity
+    bool getFocalPlaneParity() const noexcept { return _focalPlaneParity; }
+
+    /**
+     * Set whether an x-axis flip should be included in the FOCAL_PLANE to
+     * FIELD_ANGLE transform.
+     *
+     * When a `Camera` is constructed from this `Builder` via the `finish`,
+     * method, the current parity of the FOCAL_PLANE to FIELD_ANGLE transform
+     * is checked.  If the set focal plane parity is true but the transform has
+     * a positive determinant, or if the set focal plane parity is false but
+     * the transform has a negative determinant, the built camera's transform
+     * will compose an x-coordinate flip to the builder's transform. Note that
+     * there is no other checking that these coordinate systems have aligned
+     * axes or that any existing parity flip is along the X axis (as should be
+     * the case).
+     */
+    void setFocalPlaneParity(bool flipX);
 
     /**
      * Set the transformation from FOCAL_PLANE to the given coordinate system.
@@ -247,7 +268,7 @@ public:
      * If a transform already exists from FOCAL_PLANE to `toSys`, it is
      * overwritten.
      */
-    void setTransformFromFocalPlaneTo(CameraSys const & toSys,
+    void setTransformFromFocalPlaneTo(CameraSys const &toSys,
                                       std::shared_ptr<afw::geom::TransformPoint2ToPoint2 const> transform);
 
     /**
@@ -256,7 +277,7 @@ public:
      * @param  toSys Coordinate system this transform returns points in.
      * @return true if a transform was removed; false otherwise.
      */
-    bool discardTransformFromFocalPlaneTo(CameraSys const & toSys);
+    bool discardTransformFromFocalPlaneTo(CameraSys const &toSys);
 
     /**
      * Add a new Detector with the given name and ID.
@@ -270,7 +291,7 @@ public:
      *
      * @exceptsafe  Strong for pex::exceptions::RuntimeError, none otherwise.
      */
-    std::shared_ptr<Detector::InCameraBuilder> add(std::string const & name, int id);
+    std::shared_ptr<Detector::InCameraBuilder> add(std::string const &name, int id);
 
     //@{
     /**
@@ -280,19 +301,19 @@ public:
      *
      * @throws pex::exceptions::NotFoundError if no such detector exists.
      */
-    void remove(std::string const & name) { return BaseCollection::remove(name); }
+    void remove(std::string const &name) { return BaseCollection::remove(name); }
     void remove(int id) { return BaseCollection::remove(id); }
     //@}
 
 private:
     std::string _name;
     std::string _pupilFactoryName;
+    bool _focalPlaneParity;
     std::vector<TransformMap::Connection> _connections;
 };
 
+}  // namespace cameraGeom
+}  // namespace afw
+}  // namespace lsst
 
-} // namespace cameraGeom
-} // namespace afw
-} // namespace lsst
-
-#endif // LSST_AFW_CAMERAGEOM_CAMERA_H
+#endif  // LSST_AFW_CAMERAGEOM_CAMERA_H

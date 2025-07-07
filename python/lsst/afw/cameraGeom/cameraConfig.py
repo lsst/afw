@@ -135,14 +135,21 @@ class CameraConfig(pexConfig.Config):
     """A configuration that represents (and can be used to construct) a Camera.
     """
     detectorList = pexConfig.ConfigDictField(
-        "List of detector configs", keytype=int, itemtype=DetectorConfig)
+        "List of detector configs",
+        keytype=int,
+        itemtype=DetectorConfig,
+    )
     transformDict = pexConfig.ConfigField(
-        "Dictionary of camera transforms keyed on the transform type.", TransformMapConfig)
+        "Dictionary of camera transforms keyed on the transform type.",
+        TransformMapConfig,
+    )
     name = pexConfig.Field("Name of this camera", str)
-
-    plateScale = pexConfig.Field(
-        "Plate scale of the camera in arcsec/mm", float)
+    plateScale = pexConfig.Field("Plate scale of the camera in arcsec/mm", float)
     # Note that the radial transform will also apply a scaling, so all coefficients should be
     # scaled by the plate scale in appropriate units
-    radialCoeffs = pexConfig.ListField(
-        "Coefficients for radial distortion", float)
+    radialCoeffs = pexConfig.ListField("Coefficients for radial distortion", float)
+    focalPlaneParity = pexConfig.Field(
+        "Whether the FOCAL_PLANE <-> FIELD_ANGLE transform should flip the X axis.",
+        dtype=bool,
+        default=False,
+    )
