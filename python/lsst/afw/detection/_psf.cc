@@ -26,6 +26,7 @@
 #include <pybind11/pybind11.h>
 
 #include "lsst/cpputils/python.h"
+#include "lsst/cpputils/python/PySharedPtr.h"
 
 #include "lsst/pex/exceptions/Runtime.h"
 #include "lsst/pex/exceptions/python/Exception.h"
@@ -38,6 +39,8 @@
 
 namespace py = pybind11;
 using namespace pybind11::literals;
+
+using lsst::cpputils::python::PySharedPtr;
 
 namespace lsst {
 namespace afw {
@@ -55,7 +58,7 @@ void wrapPsf(cpputils::python::WrapperCollection& wrappers) {
     cls.def(py::init<std::string const &>());
 
     auto clsPsf = wrappers.wrapType(
-            py::classh<Psf, typehandling::Storable, PsfTrampoline<>>(
+            py::class_<Psf, PySharedPtr<Psf>, typehandling::Storable, PsfTrampoline<>>(
                 wrappers.module, "Psf"
             ),
             [](auto& mod, auto& cls) {
