@@ -337,7 +337,7 @@ PYBIND11_MODULE(testGenericMapLib, mod) {
     mod.def("makeInitialMap", &makeInitialMap);
     mod.def("makeCppUpdates", &makeCppUpdates, "testmap"_a);
     mod.def("addCppStorable", &addCppStorable, "testmap"_a);
-    mod.def("keepStaticStorable", &keepStaticStorable, "storable"_a = nullptr);
+    mod.def("keepStaticStorable", &keepStaticStorable, "storable"_a = nullptr, py::keep_alive<0, 1>());
     mod.def("duplicate", &duplicate, "input"_a);
 
     py::classh<CppStorable, Storable, StorableHelper<CppStorable>> cls(
