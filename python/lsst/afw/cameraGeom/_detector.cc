@@ -48,8 +48,8 @@ namespace cameraGeom {
 
 namespace {
 
-using PyDetectorBase = py::classh<DetectorBase>;
-using PyDetector = py::classh<Detector, DetectorBase, typehandling::Storable>;
+using PyDetectorBase = py::classh<DetectorBase, typehandling::Storable>;
+using PyDetector = py::classh<Detector, DetectorBase>;
 using PyDetectorBuilder = py::classh<Detector::Builder, DetectorBase>;
 using PyDetectorPartialRebuilder = py::classh<Detector::PartialRebuilder, Detector::Builder>;
 using PyDetectorInCameraBuilder = py::classh<Detector::InCameraBuilder, Detector::Builder>;
