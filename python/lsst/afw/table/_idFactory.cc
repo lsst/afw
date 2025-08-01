@@ -33,7 +33,7 @@ namespace lsst {
 namespace afw {
 namespace table {
 
-using PyIdFactory = py::class_<IdFactory, std::shared_ptr<IdFactory>>;
+using PyIdFactory = py::classh<IdFactory>;
 
 void wrapIdFactory(cpputils::python::WrapperCollection& wrappers) {
     wrappers.wrapType(PyIdFactory(wrappers.module, "IdFactory"), [](auto& mod, auto& cls) {

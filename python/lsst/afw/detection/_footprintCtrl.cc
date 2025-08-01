@@ -37,7 +37,7 @@ namespace afw {
 namespace detection {
 
 void wrapFootprintCtrl(cpputils::python::WrapperCollection& wrappers) {
-    wrappers.wrapType(py::class_<FootprintControl>(wrappers.module, "FootprintControl"),
+    wrappers.wrapType(py::classh<FootprintControl>(wrappers.module, "FootprintControl"),
                       [](auto& mod, auto& cls) {
                           cls.def(py::init<>());
                           cls.def(py::init<bool, bool>(), "circular"_a, "isotropic"_a = false);

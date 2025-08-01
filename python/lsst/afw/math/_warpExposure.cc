@@ -53,7 +53,7 @@ namespace {
 */
 template <typename KernelT>
 void declareWarpingKernel(lsst::cpputils::python::WrapperCollection &wrappers, std::string const &name) {
-    using PyClass = py::class_<KernelT, std::shared_ptr<KernelT>, SeparableKernel>;
+    using PyClass = py::classh<KernelT, SeparableKernel>;
     wrappers.wrapType(PyClass(wrappers.module, name.c_str()), [](auto &mod, auto &cls) {
         cls.def(py::init<int>(), "order"_a);
         cls.def("getOrder", &KernelT::getOrder);
@@ -72,7 +72,7 @@ void declareWarpingKernel(lsst::cpputils::python::WrapperCollection &wrappers, s
 */
 template <typename KernelT>
 void declareSimpleWarpingKernel(lsst::cpputils::python::WrapperCollection &wrappers, std::string const &name) {
-    using PyClass = py::class_<KernelT, std::shared_ptr<KernelT>, SeparableKernel>;
+    using PyClass = py::classh<KernelT, SeparableKernel>;
     wrappers.wrapType(PyClass(wrappers.module, name.c_str()), [](auto &mod, auto &cls) {
         cls.def(py::init<>());
         cls.def("clone", &KernelT::clone);
@@ -139,7 +139,7 @@ void declareWarpingFunctions(lsst::cpputils::python::WrapperCollection &wrappers
 }
 
 void declareWarpExposure(lsst::cpputils::python::WrapperCollection &wrappers) {
-    using PyClass = py::class_<WarpingControl, std::shared_ptr<WarpingControl>>;
+    using PyClass = py::classh<WarpingControl>;
     wrappers.wrapType(PyClass(wrappers.module, "WarpingControl"), [](auto &mod, auto cls) {
         cls.def(py::init<std::string, std::string, int, int, image::MaskPixel>(), "warpingKernelName"_a,
                 "maskWarpingKernelName"_a = "", "cacheSize"_a = 0, "interpLength"_a = 0,

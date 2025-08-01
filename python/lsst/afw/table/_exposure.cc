@@ -58,11 +58,9 @@ using cpputils::python::WrapperCollection;
 
 namespace {
 
-using PyExposureRecord = py::class_<ExposureRecord, std::shared_ptr<ExposureRecord>, BaseRecord>;
-using PyExposureTable = py::class_<ExposureTable, std::shared_ptr<ExposureTable>, BaseTable>;
-using PyExposureCatalog =
-        py::class_<ExposureCatalogT<ExposureRecord>, std::shared_ptr<ExposureCatalogT<ExposureRecord>>,
-                   SortedCatalogT<ExposureRecord>>;
+using PyExposureRecord = py::classh<ExposureRecord, BaseRecord>;
+using PyExposureTable = py::classh<ExposureTable, BaseTable>;
+using PyExposureCatalog = py::classh<ExposureCatalogT<ExposureRecord>, SortedCatalogT<ExposureRecord>>;
 
 PyExposureRecord declareExposureRecord(WrapperCollection &wrappers) {
     return wrappers.wrapType(PyExposureRecord(wrappers.module, "ExposureRecord"), [](auto &mod, auto &cls) {
@@ -152,7 +150,6 @@ PyExposureCatalog declareExposureCatalog(WrapperCollection &wrappers) {
                 cls.def_static("readFits", (Catalog(*)(fits::MemFileManager &, int, int)) & Catalog::readFits,
                                "manager"_a, "hdu"_a = fits::DEFAULT_HDU, "flags"_a = 0);
                 // readFits taking Fits objects not wrapped, because Fits objects are not wrapped.
-
                 cls.def("subset",
                         (Catalog(Catalog::*)(ndarray::Array<bool const, 1> const &) const) & Catalog::subset,
                         "mask"_a);

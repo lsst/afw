@@ -35,7 +35,7 @@ namespace lsst {
 namespace afw {
 namespace image {
 
-using PyColor = py::class_<Color, std::shared_ptr<Color>>;
+using PyColor = py::classh<Color>;
 
 void wrapColor(lsst::cpputils::python::WrapperCollection &wrappers) {
     /* Module level */
