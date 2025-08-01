@@ -47,7 +47,7 @@ namespace image {
 namespace {
 
 void declareMeasurement(lsst::cpputils::python::WrapperCollection &wrappers) {
-    wrappers.wrapType(py::class_<Measurement, std::shared_ptr<Measurement>>(wrappers.module, "Measurement"),
+    wrappers.wrapType(py::classh<Measurement>(wrappers.module, "Measurement"),
                       [](auto &mod, auto &cls) {
                           cls.def(py::init<double, double>(), "value"_a, "error"_a);
                           cls.def_readonly("value", &Measurement::value);
@@ -64,7 +64,7 @@ void declareMeasurement(lsst::cpputils::python::WrapperCollection &wrappers) {
 
 void declarePhotoCalib(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(
-            py::class_<PhotoCalib, std::shared_ptr<PhotoCalib>, typehandling::Storable>(wrappers.module,
+            py::classh<PhotoCalib, typehandling::Storable>(wrappers.module,
                                                                                         "PhotoCalib"),
             [](auto &mod, auto &cls) {
                 /* Constructors */

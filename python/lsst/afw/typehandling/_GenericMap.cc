@@ -97,7 +97,7 @@ template <typename K>
 void declareGenericMap(cpputils::python::WrapperCollection& wrappers, std::string const& suffix,
                        std::string const& key) {
     using Class = GenericMap<K>;
-    using PyClass = py::class_<Class, std::shared_ptr<Class>>;
+    using PyClass = py::classh<Class>;
 
     std::string className = "GenericMap" + suffix;
     // Give the class a custom docstring to avoid confusing Python users
@@ -170,7 +170,7 @@ template <typename K>
 void declareMutableGenericMap(cpputils::python::WrapperCollection& wrappers, std::string const& suffix,
                               std::string const& key) {
     using Class = MutableGenericMap<K>;
-    using PyClass = py::class_<Class, std::shared_ptr<Class>, GenericMap<K>>;
+    using PyClass = py::classh<Class, GenericMap<K>>;
 
     std::string className = "MutableGenericMap" + suffix;
     // Give the class a custom docstring to avoid confusing Python users

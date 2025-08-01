@@ -36,7 +36,7 @@ namespace geom {
 namespace ellipses {
 void wrapAxes(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(
-            py::class_<Axes, std::shared_ptr<Axes>, BaseCore>(wrappers.module, "Axes"),
+            py::classh<Axes, BaseCore>(wrappers.module, "Axes"),
             [](auto &mod, auto &cls) {
                 /* Constructors */
                 cls.def(py::init<double, double, double, bool>(), "a"_a = 1.0, "b"_a = 1.0, "theta"_a = 0.0,
