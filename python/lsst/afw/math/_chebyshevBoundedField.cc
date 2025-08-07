@@ -40,7 +40,7 @@ namespace lsst {
 namespace afw {
 namespace math {
 namespace {
-using ClsField = py::class_<ChebyshevBoundedField, std::shared_ptr<ChebyshevBoundedField>, BoundedField>;
+using ClsField = py::classh<ChebyshevBoundedField, BoundedField>;
 
 template <typename PixelT>
 void declareTemplates(ClsField &cls) {
@@ -52,7 +52,7 @@ void declareChebyshevBoundedField(lsst::cpputils::python::WrapperCollection &wra
     /* Module level */
 
     wrappers.wrapType(
-            py::class_<ChebyshevBoundedFieldControl>(wrappers.module, "ChebyshevBoundedFieldControl"),
+            py::classh<ChebyshevBoundedFieldControl>(wrappers.module, "ChebyshevBoundedFieldControl"),
             [](auto &mod, auto &cls) {
                 cls.def(py::init<>());
                 LSST_DECLARE_CONTROL_FIELD(cls, ChebyshevBoundedFieldControl, orderX);

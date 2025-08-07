@@ -41,7 +41,7 @@ namespace image {
 namespace {
 
 template <typename PixelT>
-using PyExposure = py::class_<Exposure<PixelT>, std::shared_ptr<Exposure<PixelT>>>;
+using PyExposure = py::classh<Exposure<PixelT>>;
 
 /*
 Declare a constructor that takes an Exposure of FromPixelT and returns an Exposure cast to ToPixelT
