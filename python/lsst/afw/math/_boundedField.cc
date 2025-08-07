@@ -43,7 +43,7 @@ namespace afw {
 namespace math {
 namespace {
 
-using PyClass = py::class_<BoundedField, std::shared_ptr<BoundedField>>;
+using PyClass = py::classh<BoundedField>;
 
 template <typename PixelT>
 void declareTemplates(PyClass &cls) {

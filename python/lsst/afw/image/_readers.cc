@@ -54,15 +54,15 @@ namespace {
 // ImageBaseFitsReader is an implementation detail and is not exposed directly
 // to Python, as we have better ways to share wrapper code between classes
 // at the pybind11 level (e.g. declareCommon below).
-using PyImageFitsReader = py::class_<ImageFitsReader, std::shared_ptr<ImageFitsReader>>;
-using PyMaskFitsReader = py::class_<MaskFitsReader, std::shared_ptr<MaskFitsReader>>;
-using PyMaskedImageFitsReader = py::class_<MaskedImageFitsReader, std::shared_ptr<MaskedImageFitsReader>>;
-using PyExposureFitsReader = py::class_<ExposureFitsReader, std::shared_ptr<ExposureFitsReader>>;
+using PyImageFitsReader = py::classh<ImageFitsReader>;
+using PyMaskFitsReader = py::classh<MaskFitsReader>;
+using PyMaskedImageFitsReader = py::classh<MaskedImageFitsReader>;
+using PyExposureFitsReader = py::classh<ExposureFitsReader>;
 
 // Declare attributes common to all FitsReaders.  Excludes constructors
 // because ExposureFitsReader's don't take an HDU argument.
 template <typename Class, typename... Args>
-void declareCommonMethods(py::class_<Class, Args...> &cls) {
+void declareCommonMethods(py::classh<Class, Args...> &cls) {
     cls.def("readBBox", &Class::readBBox, "origin"_a = PARENT);
     cls.def("readXY0", &Class::readXY0, "bbox"_a = lsst::geom::Box2I(), "origin"_a = PARENT);
     cls.def("getFileName", &Class::getFileName);
@@ -71,7 +71,7 @@ void declareCommonMethods(py::class_<Class, Args...> &cls) {
 
 // Declare attributes common to ImageFitsReader and MaskFitsReader
 template <typename Class, typename... Args>
-void declareSinglePlaneMethods(py::class_<Class, Args...> &cls) {
+void declareSinglePlaneMethods(py::classh<Class, Args...> &cls) {
     cls.def(py::init<std::string const &, int>(), "fileName"_a, "hdu"_a = fits::DEFAULT_HDU);
     cls.def(py::init<fits::MemFileManager &, int>(), "manager"_a, "hdu"_a = fits::DEFAULT_HDU);
     cls.def("readMetadata", &Class::readMetadata);
@@ -99,7 +99,7 @@ void declareSinglePlaneMethods(py::class_<Class, Args...> &cls) {
 
 // Declare attributes shared by MaskedImageFitsReader and MaskedImageFitsReader.
 template <typename Class, typename... Args>
-void declareMultiPlaneMethods(py::class_<Class, Args...> &cls) {
+void declareMultiPlaneMethods(py::classh<Class, Args...> &cls) {
     cls.def("readImageDType", [](Class &self) { return py::dtype(self.readImageDType()); });
     cls.def("readMaskDType", [](Class &self) { return py::dtype(self.readMaskDType()); });
     cls.def("readVarianceDType", [](Class &self) { return py::dtype(self.readVarianceDType()); });

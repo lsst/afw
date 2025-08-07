@@ -35,7 +35,7 @@ namespace coord {
 
 void wrapObservatory(lsst::cpputils::python::WrapperCollection& wrappers) {
     wrappers.wrapType(
-            py::class_<Observatory, std::shared_ptr<Observatory>>(wrappers.module, "Observatory"),
+            py::classh<Observatory>(wrappers.module, "Observatory"),
             [](auto& mod, auto& cls) {
                 /* Constructors */
                 cls.def(py::init<lsst::geom::Angle const, lsst::geom::Angle const, double const>());

@@ -40,7 +40,7 @@ namespace afw {
 namespace image {
 namespace {
 
-using PyApCorrMap = py::class_<ApCorrMap, std::shared_ptr<ApCorrMap>, typehandling::Storable>;
+using PyApCorrMap = py::classh<ApCorrMap, typehandling::Storable>;
 
 void wrapApCorrMap(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(PyApCorrMap(wrappers.module, "ApCorrMap"), [](auto &mod, auto &cls) {

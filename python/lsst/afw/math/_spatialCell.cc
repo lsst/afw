@@ -44,7 +44,7 @@ using CandidateList = std::vector<std::shared_ptr<SpatialCellCandidate>>;
 
 // Wrap SpatialCellCandidate (an abstract class so no constructor is wrapped)
 void declareSpatialCellCandidate(lsst::cpputils::python::WrapperCollection &wrappers) {
-    using PyClass = py::class_<SpatialCellCandidate, std::shared_ptr<SpatialCellCandidate>>;
+    using PyClass = py::classh<SpatialCellCandidate>;
     auto clsSpatialCellCandidate =
             wrappers.wrapType(PyClass(wrappers.module, "SpatialCellCandidate"), [](auto &mod, auto &cls) {
                 cls.def("getXCenter", &SpatialCellCandidate::getXCenter);
@@ -69,7 +69,7 @@ void declareSpatialCellCandidate(lsst::cpputils::python::WrapperCollection &wrap
 // Wrap SpatialCellCandidateIterator
 void declareSpatialCellCandidateIterator(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(
-            py::class_<SpatialCellCandidateIterator>(wrappers.module, "SpatialCellCandidateIterator"),
+            py::classh<SpatialCellCandidateIterator>(wrappers.module, "SpatialCellCandidateIterator"),
             [](auto &mod, auto &cls) {
                 cls.def("__incr__", &SpatialCellCandidateIterator::operator++, py::is_operator());
                 cls.def(
@@ -87,7 +87,7 @@ void declareSpatialCellCandidateIterator(lsst::cpputils::python::WrapperCollecti
 // Wrap SpatialCell
 void declareSpatialCell(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(
-            py::class_<SpatialCell, std::shared_ptr<SpatialCell>>(wrappers.module, "SpatialCell"),
+            py::classh<SpatialCell>(wrappers.module, "SpatialCell"),
             [](auto &mod, auto &cls) {
                 cls.def(py::init<std::string const &, lsst::geom::Box2I const &, CandidateList const &>(),
                         "label"_a, "bbox"_a = lsst::geom::Box2I(), "candidateList"_a = CandidateList());
@@ -122,7 +122,7 @@ void declareSpatialCell(lsst::cpputils::python::WrapperCollection &wrappers) {
 // Wrap SpatialCellSet
 void declareSpatialCellSet(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(
-            py::class_<SpatialCellSet, std::shared_ptr<SpatialCellSet>>(wrappers.module, "SpatialCellSet"),
+            py::classh<SpatialCellSet>(wrappers.module, "SpatialCellSet"),
             [](auto &mod, auto &cls) {
                 cls.def(py::init<lsst::geom::Box2I const &, int, int>(), "region"_a, "xSize"_a,
                         "ySize"_a = 0);
@@ -146,7 +146,7 @@ void declareSpatialCellSet(lsst::cpputils::python::WrapperCollection &wrappers) 
 
 // Wrap CandidateVisitor
 void declareCandidateVisitor(lsst::cpputils::python::WrapperCollection &wrappers) {
-    wrappers.wrapType(py::class_<CandidateVisitor, std::shared_ptr<CandidateVisitor>>(wrappers.module,
+    wrappers.wrapType(py::classh<CandidateVisitor>(wrappers.module,
                                                                                       "CandidateVisitor"),
                       [](auto &mod, auto &cls) {
                           cls.def(py::init<>());
@@ -156,9 +156,8 @@ void declareCandidateVisitor(lsst::cpputils::python::WrapperCollection &wrappers
                       });
 }
 
-// Wrap class SpatialCellImageCandidate (an abstract class, so no constructor is wrapped)
 void declareSpatialCellImageCandidate(lsst::cpputils::python::WrapperCollection &wrappers) {
-    wrappers.wrapType(py::class_<SpatialCellImageCandidate, std::shared_ptr<SpatialCellImageCandidate>,
+    wrappers.wrapType(py::classh<SpatialCellImageCandidate,
                                  SpatialCellCandidate>(wrappers.module, "SpatialCellImageCandidate"),
                       [](auto &mod, auto &cls) {
                           cls.def_static("setWidth", &SpatialCellImageCandidate::setWidth, "width"_a);
@@ -234,7 +233,7 @@ void declareTestClasses(lsst::cpputils::python::WrapperCollection &wrappers) {
         double _flux;
     };
 
-    wrappers.wrapType(py::class_<TestCandidate, std::shared_ptr<TestCandidate>, SpatialCellCandidate>(
+    wrappers.wrapType(py::classh<TestCandidate, SpatialCellCandidate>(
                               wrappers.module, "TestCandidate"),
                       [](auto &mod, auto &cls) {
                           cls.def(py::init<float const, float const, float const>());
@@ -242,14 +241,14 @@ void declareTestClasses(lsst::cpputils::python::WrapperCollection &wrappers) {
                           cls.def("setCandidateRating", &TestCandidate::setCandidateRating);
                       });
     wrappers.wrapType(
-            py::class_<TestCandidateVisitor, std::shared_ptr<TestCandidateVisitor>, CandidateVisitor>(
+            py::classh<TestCandidateVisitor, CandidateVisitor>(
                     wrappers.module, "TestCandidateVisitor"),
             [](auto &mod, auto &cls) {
                 cls.def(py::init<>());
                 cls.def("getN", &TestCandidateVisitor::getN);
             });
     wrappers.wrapType(
-            py::class_<TestImageCandidate, std::shared_ptr<TestImageCandidate>, SpatialCellImageCandidate>(
+            py::classh<TestImageCandidate, SpatialCellImageCandidate>(
                     wrappers.module, "TestImageCandidate"),
             [](auto &mod, auto &cls) {
                 cls.def(py::init<float const, float const, float const>(), "xCenter"_a, "yCenter"_a,

@@ -56,7 +56,7 @@ static lsst::geom::Angle const nanAngle(nan);
 
 void declareVisitInfo(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(
-            py::class_<VisitInfo, std::shared_ptr<VisitInfo>, typehandling::Storable>(wrappers.module,
+            py::classh<VisitInfo, typehandling::Storable>(wrappers.module,
                                                                                       "VisitInfo"),
             [](auto &mod, auto &cls) {
                 /* Constructors */

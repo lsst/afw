@@ -62,12 +62,12 @@ void declareCommonSysMethods(PyClass &cls) {
 
 void wrapCameraSys(lsst::cpputils::python::WrapperCollection &wrappers) {
     /* Module level */
-    wrappers.wrapType(py::class_<CameraSysPrefix>(wrappers.module, "CameraSysPrefix"),
+    wrappers.wrapType(py::classh<CameraSysPrefix>(wrappers.module, "CameraSysPrefix"),
                       [](auto &mod, auto &cls) {
                           declareCommonSysMethods<CameraSysPrefix>(cls);
                           cls.def(py::init<std::string const &>(), "sysName"_a);
                       });
-    wrappers.wrapType(py::class_<CameraSys>(wrappers.module, "CameraSys"), [](auto &mod, auto &cls) {
+    wrappers.wrapType(py::classh<CameraSys>(wrappers.module, "CameraSys"), [](auto &mod, auto &cls) {
         declareCommonSysMethods<CameraSys>(cls);
         /* Constructors */
         cls.def(py::init<std::string const &>(), "sysName"_a);
