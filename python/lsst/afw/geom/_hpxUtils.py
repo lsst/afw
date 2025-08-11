@@ -28,7 +28,7 @@ from lsst.daf.base import PropertySet
 from ._geom import makeSkyWcs
 
 
-def makeHpxWcs(hips_order, pixel, shift_order=9):
+def makeHpxWcs(hips_order, pixel, shift_order=9, validate_pixel_id=True):
     """
     Make a SkyWcs object with HEALPix grid projection (HPX).
 
@@ -54,6 +54,10 @@ def makeHpxWcs(hips_order, pixel, shift_order=9):
         Shift order for subpixels, such that there are 2**shift_order
         sub-pixels on a side of the HiPS cell.
         Must be a positive integer.
+    validate_pixel_id : `bool`, optional
+        If true validate that the pixel number is in range for the given
+        hips_order.
+
 
     Returns
     -------
@@ -63,7 +67,7 @@ def makeHpxWcs(hips_order, pixel, shift_order=9):
     ------
     `ValueError`: Raise if hips_order is <=0, or if shift_order is <=0, or
         if pixel number is out of range for the given hips_order
-        (0 <= pixel < 12*nside*nside).
+        (0 <= pixel < 12*nside*nside) and validate_pixel_id is True.
 
     Notes
     -----
@@ -100,7 +104,7 @@ def makeHpxWcs(hips_order, pixel, shift_order=9):
         raise ValueError(f"order {hips_order} must be positive.")
     nside_cell = 2**hips_order
 
-    if pixel < 0 or pixel >= 12*nside_cell*nside_cell:
+    if validate_pixel_id and pixel < 0 or pixel >= 12*nside_cell*nside_cell:
         raise ValueError(f"pixel value {pixel} out of range.")
 
     # The HEALPix grid projection (HPX) is defined in the FITS standard
@@ -129,7 +133,7 @@ def makeHpxWcs(hips_order, pixel, shift_order=9):
     # a non-trivial computation, and typically is outside of the
     # tile pixel itself.  Therefore, these values are not the same
     # as the values computed from HEALPix `pix2ang()`.
-    cent_ra_proj, cent_dec_proj = _hpx_projected_center(hips_order, pixel)
+    cent_ra_proj, cent_dec_proj = _hpx_projected_center(hips_order, pixel, validate_pixel_id)
 
     md = PropertySet()
     md['CD1_1'] = -cos45_scale
@@ -148,7 +152,7 @@ def makeHpxWcs(hips_order, pixel, shift_order=9):
     return makeSkyWcs(md)
 
 
-def _hpx_projected_center(hips_order, pixel):
+def _hpx_projected_center(hips_order, pixel, validate_pixel_id):
     """
     Compute the projected center for use in HPX WCS headers.
 
@@ -166,6 +170,10 @@ def _hpx_projected_center(hips_order, pixel):
         HiPS order, such that HEALPix nside=2**hips_order.
     pixel : `int`
         Pixel number in the nest ordering scheme.
+    validate_pixel_id : `bool`, optional
+        If true validate that the pixel number is in range for the given
+        hips_order.
+
 
     Returns
     -------
@@ -181,7 +189,7 @@ def _hpx_projected_center(hips_order, pixel):
         raise ValueError(f"hips_order {hips_order} must be positive.")
     nside_cell = 2**hips_order
 
-    if pixel < 0 or pixel >= 12*nside_cell*nside_cell:
+    if validate_pixel_id and pixel < 0 or pixel >= 12*nside_cell*nside_cell:
         raise ValueError(f"pixel value {pixel} out of range.")
 
     twice_depth = np.left_shift(hips_order, 1)
