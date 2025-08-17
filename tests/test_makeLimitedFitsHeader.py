@@ -55,7 +55,7 @@ class MakeLimitedFitsHeaderTestCase(lsst.utils.tests.TestCase):
             # Strip trailing whitespace to make the diff clearer
             this = header[start:end].rstrip()
             expected = expectedHeader[start:end].rstrip()
-            with self.subTest(this=this, expected=expected):
+            with self.subTest(this=repr(this), expected=repr(expected)):
                 # For floating point numbers compare as numbers
                 # rather than strings
                 if "'" not in expected and ("." in expected[9:] or "E" in expected[9:]):
