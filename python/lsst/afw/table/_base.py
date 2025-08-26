@@ -287,8 +287,6 @@ class Catalog(metaclass=TemplateMeta):
             elif key.getTypeString() == "Angle":
                 data = self.columns.get(key)
                 unit = "radian"
-                if copy:
-                    data = data.copy()
             elif "Array" in key.getTypeString() and key.isVariableLength():
                 # Can't get columns for variable-length array fields.
                 if unviewable == "raise":
@@ -297,8 +295,6 @@ class Catalog(metaclass=TemplateMeta):
                     continue
             else:
                 data = self.columns.get(key)
-                if copy:
-                    data = data.copy()
             columns.append(
                 astropy.table.Column(
                     data,
@@ -307,7 +303,7 @@ class Catalog(metaclass=TemplateMeta):
                     description=item.field.getDoc()
                 )
             )
-        return cls(columns, meta=meta, copy=False)
+        return cls(columns, meta=meta, copy=copy)
 
     def __dir__(self):
         """

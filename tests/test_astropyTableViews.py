@@ -209,6 +209,17 @@ class AstropyTableViewTestCase(lsst.utils.tests.TestCase):
         self.assertNotIn("array2", v1.columns)
         self.assertIn("arrayOk", v1.columns)
 
+    def testCopy(self):
+        """Test that copying a catalog creates a deep copy."""
+        v1 = self.catalog.asAstropy(copy=True)
+        v1["a1"][0] = 10.0
+        self.assertNotEqual(self.catalog[0]["a1"], 10.0)
+        self.assertEqual(v1["a1"][0], 10.0)
+
+        v1["a4"] = False
+        np.testing.assert_array_equal(v1["a4"], np.zeros((len(v1), ), dtype=bool))
+        self.assertNotEqual(self.catalog[0]["a4"], False)
+
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
