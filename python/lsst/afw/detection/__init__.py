@@ -25,3 +25,4 @@ from ._footprintMerge import *
 from ._peak import *
 from .multiband import *
 from ._heavyFootprintContinued import *
+from .utils import *
