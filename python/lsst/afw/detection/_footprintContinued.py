@@ -32,6 +32,41 @@ from lsst.geom import Point2I
 from ._detection import Footprint
 
 
+def getFootprintIntersection(
+    footprint1: Footprint,
+    footprint2: Footprint,
+    copyPeaks: bool = True,
+) -> Footprint:
+    """Calculate the intersection of two Footprints.
+
+    Parameters
+    ----------
+    footprint1: Footprint
+        The first Footprint.
+    footprint2: Footprint
+        The second Footprint.
+    copyFromFirst: bool
+        Whether or not to copy the peaks from the first Footprint.
+
+    Returns
+    -------
+    result:
+        The Footprint containing the intersection of the two footprints.
+    """
+    # Create the intersecting footprint
+    spans = footprint1.spans.intersect(footprint2.spans)
+    result = Footprint(spans)
+    result.setPeakSchema(footprint1.peaks.getSchema())
+
+    if copyPeaks:
+        # Only copy peaks that are contained in the intersection
+        for peak in footprint1.peaks:
+            if spans.contains(Point2I(peak.getIx(), peak.getIy())):
+                # Add a copy of the entire peak record to preserve the ID
+                result.peaks.append(peak)
+    return result
+
+
 @continueClass
 class Footprint:  # noqa: F811
     def computeFluxFromArray(self, image: np.ndarray, xy0: Point2I) -> float:
@@ -66,3 +101,21 @@ class Footprint:  # noqa: F811
             Flux from the image pixels contained in the footprint.
         """
         return self.computeFluxFromArray(image.array, image.getXY0())
+
+    def intersect(self, other: Footprint, copyPeaks: bool = True) -> Footprint:
+        """Calculate the intersection of this Footprint with another Footprint.
+
+        Parameters
+        ----------
+        other:
+            The other Footprint.
+        copyPeaks:
+            Whether or not to copy the peaks from this Footprint.
+            Note: the peaks in other are always ignored.
+
+        Returns
+        -------
+        result:
+            The Footprint containing the intersection of the two footprints.
+        """
+        return getFootprintIntersection(self, other, True)
