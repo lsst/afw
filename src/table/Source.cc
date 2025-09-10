@@ -116,6 +116,8 @@ void SourceFitsWriter::_writeRecord(BaseRecord const &r) {
             }
             int footprintArchiveId = _archive.put(footprint);
             _outRecord->set(_footprintKey, footprintArchiveId);
+        } else {
+            _outRecord->set(_footprintKey, _archive.put(nullptr));
         }
         io::FitsWriter::_writeRecord(*_outRecord);
     } else {
