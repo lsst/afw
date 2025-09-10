@@ -427,6 +427,16 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
             for src in cat6:
                 self.assertIsNone(src.getFootprint())
 
+        # Insert a source with no Footprint to ensure that a None footprint
+        # is persisted correctly
+        self.catalog.addNew()
+
+        with lsst.utils.tests.getTempFilePath(".fits") as fn:
+            self.catalog.writeFits(fn)
+
+            cat2 = lsst.afw.table.SourceCatalog.readFits(fn)
+            self.assertIsNone(cat2[-1].getFootprint())
+
     def testFootprintsToNumpy(self):
         schema = lsst.afw.table.SourceTable.makeMinimalSchema()
         table = lsst.afw.table.SourceTable.make(schema)
