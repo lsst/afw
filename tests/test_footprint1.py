@@ -1039,6 +1039,35 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         # we subtract 29*3 from the total.
         self.assertEqual(footprint.computeFluxFromArray(image.array-3, image.getBBox().getMin()), 1566-29*3)
 
+    def testFootprintIntersect(self):
+        f1 = self.foot
+        f2 = afwDetect.Footprint()
+        spanSet1 = afwGeom.SpanSet.fromShape(5, afwGeom.Stencil.BOX).shiftedBy(15, 15)
+        f1.spans = spanSet1
+        # Intersecting peaks
+        intersectingPeaks = [
+            f1.addPeak(12, 11, 20),
+            f1.addPeak(12, 12, 20),
+            f1.addPeak(12, 13, 30),
+        ]
+        # Non-intersecting peaks
+        outerPeaks = [
+            f1.addPeak(11, 10, 10),
+            f1.addPeak(18, 18, 10),
+        ]
+
+        spanSet2 = afwGeom.SpanSet.fromShape(3, afwGeom.Stencil.BOX).shiftedBy(15, 11)
+        f2.spans = spanSet2
+        outerPeaks.append(f2.addPeak(13, 10, 10))
+
+        intersection = f1.intersect(f2)
+        self.assertEqual(intersection.spans, spanSet1.intersect(spanSet2))
+
+        for peak in intersectingPeaks:
+            self.assertIn(peak, intersection.getPeaks())
+        for peak in outerPeaks:
+            self.assertNotIn(peak, intersection.getPeaks())
+
 
 class FootprintSetTestCase(unittest.TestCase):
     """A test case for FootprintSet"""

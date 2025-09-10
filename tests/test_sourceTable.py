@@ -427,6 +427,33 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
             for src in cat6:
                 self.assertIsNone(src.getFootprint())
 
+    def testFootprintsToNumpy(self):
+        schema = lsst.afw.table.SourceTable.makeMinimalSchema()
+        table = lsst.afw.table.SourceTable.make(schema)
+        catalog = lsst.afw.table.SourceCatalog(table)
+        src1 = catalog.addNew()
+        src2 = catalog.addNew()
+        src3 = catalog.addNew()
+
+        spans1 = lsst.afw.geom.SpanSet.fromShape(5, lsst.afw.geom.Stencil.BOX).shiftedBy(10, 20)
+        spans2 = lsst.afw.geom.SpanSet.fromShape(5, lsst.afw.geom.Stencil.BOX).shiftedBy(30, 40)
+        spans3 = lsst.afw.geom.SpanSet.fromShape(3, lsst.afw.geom.Stencil.BOX).shiftedBy(40, 50)
+
+        src1.setFootprint(lsst.afw.detection.Footprint(spans1))
+        src2.setFootprint(lsst.afw.detection.Footprint(spans2))
+        src3.setFootprint(lsst.afw.detection.Footprint(spans3))
+
+        truth = np.zeros((100, 100), dtype=int)
+        truth[15:26, 5:16] = src1.getId()
+        truth[35:46, 25:36] = src2.getId()
+        truth[47:54, 37:44] = src3.getId()
+
+        footprintIds = lsst.afw.detection.footprintsToNumpy(catalog, shape=(100, 100), asBool=False)
+        booleanArray = lsst.afw.detection.footprintsToNumpy(catalog, shape=(100, 100), asBool=True)
+
+        np.testing.assert_array_equal(footprintIds, truth)
+        np.testing.assert_array_equal(booleanArray, truth > 0)
+
     def testIdFactory(self):
         expId = int(1257198)
         reserved = 32
