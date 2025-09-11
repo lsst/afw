@@ -162,6 +162,54 @@ class ExposureSummaryStats(Storable):
     zeroPoint, and readNoise.
     """
 
+    psfTE1e1: float = float('nan')
+    """TO DO.
+    """
+
+    psfTE1e2: float = float('nan')
+    """TO DO.
+    """
+
+    psfTE1ex: float = float('nan')
+    """TO DO.
+    """
+
+    psfTE2e1: float = float('nan')
+    """TO DO.
+    """
+
+    psfTE2e2: float = float('nan')
+    """TO DO.
+    """
+
+    psfTE2ex: float = float('nan')
+    """TO DO.
+    """
+
+    psfTE3e1: float = float('nan')
+    """TO DO.
+    """
+
+    psfTE3e2: float = float('nan')
+    """TO DO.
+    """
+
+    psfTE3ex: float = float('nan')
+    """TO DO.
+    """
+
+    psfTE4e1: float = float('nan')
+    """TO DO.
+    """
+
+    psfTE4e2: float = float('nan')
+    """TO DO.
+    """
+
+    psfTE4ex: float = float('nan')
+    """TO DO.
+    """
+
     def __post_init__(self):
         Storable.__init__(self)
 
@@ -416,6 +464,66 @@ class ExposureSummaryStats(Storable):
             doc="Magnitude limit at SNR=5 (M5) calculated from psfSigma, "
             "skyBg, zeroPoint, and readNoise.",
             units="mag",
+        )
+        schema.addField(
+            "psfTE1e1",
+            type="F",
+            doc="TO DO.",
+        )
+        schema.addField(
+            "psfTE1e2",
+            type="F",
+            doc="TO DO.",
+        )
+        schema.addField(
+            "psfTE1ex",
+            type="F",
+            doc="TO DO.",
+        )
+        schema.addField(
+            "psfTE2e1",
+            type="F",
+            doc="TO DO.",
+        )
+        schema.addField(
+            "psfTE2e2",
+            type="F",
+            doc="TO DO.",
+        )
+        schema.addField(
+            "psfTE2ex",
+            type="F",
+            doc="TO DO.",
+        )
+        schema.addField(
+            "psfTE3e1",
+            type="F",
+            doc="TO DO.",
+        )
+        schema.addField(
+            "psfTE3e2",
+            type="F",
+            doc="TO DO.",
+        )
+        schema.addField(
+            "psfTE3ex",
+            type="F",
+            doc="TO DO.",
+        )
+        schema.addField(
+            "psfTE4e1",
+            type="F",
+            doc="TO DO.",
+        )
+        schema.addField(
+            "psfTE4e2",
+            type="F",
+            doc="TO DO.",
+        )
+        schema.addField(
+            "psfTE4ex",
+            type="F",
+            doc="TO DO.",
         )
 
     def update_record(self, record: BaseRecord) -> None:
