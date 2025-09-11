@@ -103,7 +103,7 @@ def addTransformMethods(cls):
     A Transform class or subclass, e.g.
     `lsst.afw.geom.TransformPoint2ToSpherePoint`
     """
-    global transformRegistry
+    global transformRegistry  # noqa: F824
     className = cls.__name__
     if className in transformRegistry:
         raise RuntimeError(f"Class {className!r}={transformRegistry[className]} already registered; "
