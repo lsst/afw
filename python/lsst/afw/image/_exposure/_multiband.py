@@ -52,8 +52,11 @@ class IncompleteDataError(Exception):
         The full list of bands in the `MultibandExposure` generating
         the PSF.
     """
-    def __init__(self, bands, position, partialPsf):
-        missingBands = [band for band in bands if band not in partialPsf.bands]
+    def __init__(self, bands, position, partialPsf=None):
+        if partialPsf is None:
+            missingBands = bands
+        else:
+            missingBands = [band for band in bands if band not in partialPsf.bands]
 
         self.missingBands = missingBands
         self.position = position
@@ -99,6 +102,9 @@ def computePsfImage(psfModels, position, useKernelImage=True):
             psfs[band] = psf
         except InvalidParameterError:
             incomplete = True
+
+    if len(psfs) == 0:
+        raise IncompleteDataError(list(psfModels.keys()), position, None)
 
     left = np.min([psf.getBBox().getMinX() for psf in psfs.values()])
     bottom = np.min([psf.getBBox().getMinY() for psf in psfs.values()])
