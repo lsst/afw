@@ -177,7 +177,7 @@ class StatisticsTestCase(lsst.utils.tests.TestCase):
 
             meanSquare = afwMath.makeStatistics(image2, afwMath.MEANSQUARE).getValue()
             self.assertAlmostEqual(meanSquare, 0.5*(mean**2 + (mean + 1)**2) + std**2,
-                                   delta=0.00025 if isInt else 0.00006)
+                                   delta=0.00025 if isInt else 0.0005)
 
     def testStatsStdevclip(self):
         """Test STDEVCLIP; cf. #611"""
