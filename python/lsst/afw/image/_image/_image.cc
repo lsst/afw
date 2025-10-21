@@ -92,15 +92,12 @@ static void declareImageBase(lsst::cpputils::python::WrapperCollection &wrappers
         cls.def("getDimensions", &ImageBase<PixelT>::getDimensions);
         cls.def("getArray", (Array(ImageBase<PixelT>::*)()) & ImageBase<PixelT>::getArray);
         cls.def_property("array", (Array(ImageBase<PixelT>::*)()) & ImageBase<PixelT>::getArray,
-                         [](ImageBase<PixelT> &self, ndarray::Array<PixelT const, 2, 0> const &array) {
-                             if (array.isEmpty()) {
-                                 throw py::type_error("Image array may not be None.");
+                         [](py::object &self, py::object value) {
+                             if (value == py::none()) {
+                                 throw py::type_error("Cannot assign None to an array.");
                              }
-                             // Avoid self-assignment, which is invoked when a Python in-place operator is
-                             // used.
-                             if (array.shallow() != self.getArray().shallow()) {
-                                 self.getArray().deep() = array;
-                             }
+                             py::array array = self.attr("array");
+                             array[py::ellipsis()] = value;
                          });
         cls.def("setXY0",
                 (void (ImageBase<PixelT>::*)(lsst::geom::Point2I const)) & ImageBase<PixelT>::setXY0,
