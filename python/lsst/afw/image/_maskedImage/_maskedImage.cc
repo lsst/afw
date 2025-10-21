@@ -193,6 +193,8 @@ PyMaskedImage<ImagePixelT> declareMaskedImage(lsst::cpputils::python::WrapperCol
                 cls.def_static("readFits", (MI(*)(fits::MemFileManager &))MI::readFits, "manager"_a);
                 cls.def("getImage", &MI::getImage);
                 cls.def("setImage", &MI::setImage);
+                cls.def_property_readonly("width", &MI::getWidth);
+                cls.def_property_readonly("height", &MI::getHeight);
                 cls.def_property("image", &MI::getImage, &MI::setImage);
                 cls.def("getMask", &MI::getMask);
                 cls.def("setMask", &MI::setMask);
@@ -206,6 +208,8 @@ PyMaskedImage<ImagePixelT> declareMaskedImage(lsst::cpputils::python::WrapperCol
                 cls.def("getBBox", &MI::getBBox, "origin"_a = PARENT);
                 cls.def("getX0", &MI::getX0);
                 cls.def("getY0", &MI::getY0);
+                cls.def_property_readonly("x0", &MI::getX0);
+                cls.def_property_readonly("y0", &MI::getY0);
                 cls.def("getXY0", &MI::getXY0);
                 cls.def("setXY0", (void (MI::*)(int const, int const)) & MI::setXY0, "x0"_a, "y0"_a);
                 cls.def("setXY0", (void (MI::*)(lsst::geom::Point2I const)) & MI::setXY0, "origin"_a);

@@ -84,8 +84,12 @@ static void declareImageBase(lsst::cpputils::python::WrapperCollection &wrappers
         // that expects NotImplemented to be returned on failure.
         cls.def("getWidth", &ImageBase<PixelT>::getWidth);
         cls.def("getHeight", &ImageBase<PixelT>::getHeight);
+        cls.def_property_readonly("width", &ImageBase<PixelT>::getWidth);
+        cls.def_property_readonly("height", &ImageBase<PixelT>::getHeight);
         cls.def("getX0", &ImageBase<PixelT>::getX0);
         cls.def("getY0", &ImageBase<PixelT>::getY0);
+        cls.def_property_readonly("x0", &ImageBase<PixelT>::getX0);
+        cls.def_property_readonly("y0", &ImageBase<PixelT>::getY0);
         cls.def("getXY0", &ImageBase<PixelT>::getXY0);
         cls.def("positionToIndex", &ImageBase<PixelT>::positionToIndex, "position"_a, "xOrY"_a);
         cls.def("indexToPosition", &ImageBase<PixelT>::indexToPosition, "index"_a, "xOrY"_a);
