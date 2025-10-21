@@ -122,6 +122,8 @@ class ImageTestCase(lsst.utils.tests.TestCase):
             np.testing.assert_array_equal(image1.array, array4)
             with self.assertRaises(TypeError):
                 image1.array = None
+            with self.assertRaises(ValueError):
+                image1.array = np.zeros((11, 10), dtype=image1.array.dtype)  # bad shape
 
     def testImagesOverlap(self):
         dim = lsst.geom.Extent2I(10, 8)
