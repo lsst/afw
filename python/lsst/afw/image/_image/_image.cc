@@ -203,21 +203,21 @@ static void declareMask(lsst::cpputils::python::WrapperCollection &wrappers, std
                         Mask<MaskPixelT>::writeFits,
                 "fitsfile"_a, "metadata"_a = nullptr);
         cls.def("writeFits",
-                (void (Mask<MaskPixelT>::*)(std::string const &, fits::ImageWriteOptions const &,
+                (void (Mask<MaskPixelT>::*)(std::string const &, fits::CompressionOptions const *,
                                             std::string const &,
                                             daf::base::PropertySet const *) const) &
                         Mask<MaskPixelT>::writeFits,
                 "filename"_a, "options"_a, "mode"_a = "w",
                 "header"_a = nullptr);
         cls.def("writeFits",
-                (void (Mask<MaskPixelT>::*)(fits::MemFileManager &, fits::ImageWriteOptions const &,
+                (void (Mask<MaskPixelT>::*)(fits::MemFileManager &, fits::CompressionOptions const *,
                                             std::string const &,
                                             daf::base::PropertySet const *) const) &
                         Mask<MaskPixelT>::writeFits,
                 "manager"_a, "options"_a, "mode"_a = "w",
                 "header"_a = nullptr);
         cls.def("writeFits",
-                (void (Mask<MaskPixelT>::*)(fits::Fits &, fits::ImageWriteOptions const &,
+                (void (Mask<MaskPixelT>::*)(fits::Fits &, fits::CompressionOptions const *,
                                             daf::base::PropertySet const *) const) &
                         Mask<MaskPixelT>::writeFits,
                 "fits"_a, "options"_a, "header"_a = nullptr);
@@ -320,7 +320,7 @@ static PyImage<PixelT> declareImage(lsst::cpputils::python::WrapperCollection &w
                         Image<PixelT>::writeFits,
                 "fitsfile"_a, "metadata"_a = nullptr);
         cls.def("writeFits",
-                (void (Image<PixelT>::*)(std::string const &, fits::ImageWriteOptions const &,
+                (void (Image<PixelT>::*)(std::string const &, fits::CompressionOptions const *,
                                          std::string const &, daf::base::PropertySet const *,
                                          image::Mask<image::MaskPixel> const *) const) &
                         Image<PixelT>::writeFits,
@@ -328,7 +328,7 @@ static PyImage<PixelT> declareImage(lsst::cpputils::python::WrapperCollection &w
                 "header"_a = nullptr,
                 "mask"_a = nullptr);
         cls.def("writeFits",
-                (void (Image<PixelT>::*)(fits::MemFileManager &, fits::ImageWriteOptions const &,
+                (void (Image<PixelT>::*)(fits::MemFileManager &, fits::CompressionOptions const *,
                                          std::string const &, daf::base::PropertySet const *,
                                          image::Mask<image::MaskPixel> const *) const) &
                         Image<PixelT>::writeFits,
@@ -336,7 +336,7 @@ static PyImage<PixelT> declareImage(lsst::cpputils::python::WrapperCollection &w
                 "header"_a = nullptr,
                 "mask"_a = nullptr);
         cls.def("writeFits",
-                (void (Image<PixelT>::*)(fits::Fits &, fits::ImageWriteOptions const &,
+                (void (Image<PixelT>::*)(fits::Fits &, fits::CompressionOptions const *,
                                          daf::base::PropertySet const *,
                                          image::Mask<image::MaskPixel> const *) const) &
                         Image<PixelT>::writeFits,
@@ -381,7 +381,7 @@ static void declareDecoratedImage(lsst::cpputils::python::WrapperCollection &wra
                         "filename"_a, "metadata"_a = nullptr,
                         "mode"_a = "w");
                 cls.def("writeFits",
-                        py::overload_cast<std::string const &, fits::ImageWriteOptions const &,
+                        py::overload_cast<std::string const &, fits::CompressionOptions const *,
                                           daf::base::PropertySet const *, std::string const &>(
                                 &DecoratedImage<PixelT>::writeFits, py::const_),
                         "filename"_a, "options"_a, "metadata"_a = nullptr,

@@ -271,7 +271,7 @@ public:
      *  @param[in] header        Additional values to write to the header (may be null).
      *  @param[in] mask          Mask, for calculation of statistics.
      */
-    void writeFits(std::string const& filename, fits::ImageWriteOptions const& options,
+    void writeFits(std::string const& filename, fits::CompressionOptions const * options,
                    std::string const& mode = "w",
                    daf::base::PropertySet const * header = nullptr,
                    Mask<MaskPixel> const * mask = nullptr) const;
@@ -287,7 +287,7 @@ public:
      *  @param[in] mode          "w"=Create a new file; "a"=Append a new HDU.
      *  @param[in] mask          Mask, for calculation of statistics.
      */
-    void writeFits(fits::MemFileManager& manager, fits::ImageWriteOptions const& options,
+    void writeFits(fits::MemFileManager& manager, fits::CompressionOptions const * options,
                    std::string const& mode = "w",
                    daf::base::PropertySet const * header = nullptr,
                    Mask<MaskPixel> const *mask = nullptr) const;
@@ -302,7 +302,7 @@ public:
      *  @param[in] header        Additional values to write to the header (may be null).
      *  @param[in] mask          Mask, for calculation of statistics.
      */
-    void writeFits(fits::Fits& fitsfile, fits::ImageWriteOptions const& options,
+    void writeFits(fits::Fits& fitsfile, fits::CompressionOptions const * options,
                    daf::base::PropertySet const * header = nullptr,
                    Mask<MaskPixel> const * mask = nullptr) const;
     //@}
@@ -498,7 +498,7 @@ public:
      * @param[in] metadata metadata to write to header; or NULL
      * @param[in] mode "w" to write a new file; "a" to append
      */
-    void writeFits(std::string const& fileName, fits::ImageWriteOptions const& options,
+    void writeFits(std::string const& fileName, fits::CompressionOptions const* options,
                    daf::base::PropertySet const * metadata = nullptr,
                    std::string const& mode = "w") const;
     //@}
