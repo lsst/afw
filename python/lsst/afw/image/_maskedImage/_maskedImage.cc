@@ -159,9 +159,9 @@ PyMaskedImage<ImagePixelT> declareMaskedImage(lsst::cpputils::python::WrapperCol
 
                 cls.def(
                         "writeFits",
-                        [](MI &self, std::string const &filename, fits::ImageWriteOptions const &imageOptions,
-                           fits::ImageWriteOptions const &maskOptions,
-                           fits::ImageWriteOptions const &varianceOptions,
+                        [](MI &self, std::string const &filename, fits::CompressionOptions const *imageOptions,
+                           fits::CompressionOptions const *maskOptions,
+                           fits::CompressionOptions const *varianceOptions,
                            std::shared_ptr<daf::base::PropertySet const> header) {
                             self.writeFits(filename, imageOptions, maskOptions, varianceOptions, header);
                         },
@@ -170,9 +170,9 @@ PyMaskedImage<ImagePixelT> declareMaskedImage(lsst::cpputils::python::WrapperCol
                 cls.def(
                         "writeFits",
                         [](MI &self, fits::MemFileManager &manager,
-                           fits::ImageWriteOptions const &imageOptions,
-                           fits::ImageWriteOptions const &maskOptions,
-                           fits::ImageWriteOptions const &varianceOptions,
+                           fits::CompressionOptions const *imageOptions,
+                           fits::CompressionOptions const *maskOptions,
+                           fits::CompressionOptions const *varianceOptions,
                            std::shared_ptr<daf::base::PropertySet const> header) {
                             self.writeFits(manager, imageOptions, maskOptions, varianceOptions, header);
                         },
@@ -180,9 +180,9 @@ PyMaskedImage<ImagePixelT> declareMaskedImage(lsst::cpputils::python::WrapperCol
                         "header"_a = std::shared_ptr<daf::base::PropertyList>());
                 cls.def(
                         "writeFits",
-                        [](MI &self, fits::Fits &fits, fits::ImageWriteOptions const &imageOptions,
-                           fits::ImageWriteOptions const &maskOptions,
-                           fits::ImageWriteOptions const &varianceOptions,
+                        [](MI &self, fits::Fits &fits, fits::CompressionOptions const *imageOptions,
+                           fits::CompressionOptions const *maskOptions,
+                           fits::CompressionOptions const *varianceOptions,
                            std::shared_ptr<daf::base::PropertySet const> header) {
                             self.writeFits(fits, imageOptions, maskOptions, varianceOptions, header);
                         },

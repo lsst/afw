@@ -14,6 +14,7 @@
  */
 
 #include <climits>
+#include <optional>
 #include <string>
 #include <set>
 
@@ -215,73 +216,6 @@ ndarray::Array<T const, N, N> const makeContiguousArray(ndarray::Array<T, N, C> 
     return contiguous;
 }
 
-/// Options for writing an image to FITS
-///
-/// An image being written to FITS may be scaled (quantised) and/or
-/// compressed. This struct is a container for options controlling
-/// each of those separately.
-struct ImageWriteOptions {
-    ImageCompressionOptions compression;  ///< Options controlling compression
-    ImageScalingOptions scaling;          ///< Options controlling scaling
-
-    /// Construct with default options for images
-    template <typename T>
-    explicit ImageWriteOptions(image::Image<T> const& image) : compression(image) {}
-
-    /// Construct with default options for masks
-    template <typename T>
-    explicit ImageWriteOptions(image::Mask<T> const& mask) : compression(mask) {}
-
-    /// Construct with specific compression and scaling options
-    explicit ImageWriteOptions(ImageCompressionOptions const& compression_ =
-                                       ImageCompressionOptions(ImageCompressionOptions::NONE),
-                               ImageScalingOptions const& scaling_ = ImageScalingOptions())
-            : compression(compression_), scaling(scaling_) {}
-
-    /// Construct with specific scaling options
-    explicit ImageWriteOptions(ImageScalingOptions const& scaling_)
-            : compression(ImageCompressionOptions::NONE), scaling(scaling_) {}
-
-    /// Construct from a PropertySet
-    ///
-    /// The PropertySet should include the following elements:
-    /// * compression.scheme (string): compression algorithm to use
-    /// * compression.columns (int): number of columns per tile (0 = entire dimension)
-    /// * compression.rows (int): number of rows per tile (0 = 1 row; that's what cfitsio does)
-    /// * compression.quantizeLevel (float): cfitsio quantization level
-    /// * scaling.scheme (string): scaling algorithm to use
-    /// * scaling.bitpix (int): bits per pixel (0, 8,16,32,64,-32,-64)
-    /// * scaling.fuzz (bool): fuzz the values when quantising floating-point values?
-    /// * scaling.seed (long): seed for random number generator when fuzzing
-    /// * scaling.maskPlanes (list of string): mask planes to ignore when doing statistics
-    /// * scaling.quantizeLevel: divisor of the standard deviation for STDEV_* scaling
-    /// * scaling.quantizePad: number of stdev to allow on the low side (for STDEV_POSITIVE/NEGATIVE)
-    /// * scaling.bscale: manually specified BSCALE (for MANUAL scaling)
-    /// * scaling.bzero: manually specified BSCALE (for MANUAL scaling)
-    ///
-    /// Use the 'validate' method to set default values for the above.
-    ///
-    /// 'scaling.maskPlanes' is the only entry that is allowed to be missing
-    /// (because PropertySet can't represent an empty array); when it is missing,
-    /// it is interpreted as an empty array.
-    ///
-    /// @param[in] config  Configuration of image write options
-    ImageWriteOptions(daf::base::PropertySet const& config);
-
-    /// Validate a PropertySet
-    ///
-    /// Returns a validated PropertySet with default values added,
-    /// suitable for use with the constructor.
-    ///
-    /// For details on what elements may be included in the input, see
-    /// ImageWriteOptions::ImageWriteOptions(daf::base::PropertySet const&).
-    ///
-    /// @param[in] config  Configuration of image write options
-    /// @return validated configuration
-    /// @throw lsst::pex::exceptions::RuntimeError if entry is not recognized.
-    static std::shared_ptr<daf::base::PropertySet> validate(daf::base::PropertySet const& config);
-};
-
 /**
  * @brief an enum representing the various types of FITS HDU that are available in cfitsio library
  *
@@ -308,7 +242,7 @@ enum class HduType : int { IMAGE = 0, ASCII_TABLE = 1, BIN_TABLE = 2, ANY = -1 }
 class Fits {
     void createImageImpl(int bitpix, int nAxis, long const* nAxes);
     template <typename T>
-    void writeImageImpl(T const* data, int nElements);
+    void writeImageImpl(T const* data, int nElements, std::optional<T> explicit_null = std::nullopt);
     template <typename T>
     void readImageImpl(int nAxis, T* data, long* begin, long* end, long* increment);
     void getImageShapeImpl(int maxDim, long* nAxes);
@@ -451,6 +385,7 @@ public:
      */
     void createEmpty();
 
+    ///@{
     /**
      *  @brief Create an image with pixel type provided by the given explicit PixelT template parameter
      *         and shape defined by an ndarray index.
@@ -464,7 +399,7 @@ public:
     template <typename PixelT, int N>
     void createImage(ndarray::Vector<ndarray::Size, N> const& shape) {
         ndarray::Vector<long, N> nAxes(shape.reverse());
-        createImageImpl(detail::Bitpix<PixelT>::value, N, nAxes.elems);
+        createImageImpl(getBitPix<PixelT>(), N, nAxes.elems);
     }
 
     template <int N>
@@ -472,6 +407,7 @@ public:
         ndarray::Vector<long, N> nAxes(shape.reverse());
         createImageImpl(bitpix, N, nAxes.elems);
     }
+    ///@}
 
     /**
      *  Create a 2-d image with pixel type provided by the given explicit PixelT template parameter.
@@ -482,7 +418,7 @@ public:
     template <typename PixelT>
     void createImage(long x, long y) {
         long naxes[2] = {x, y};
-        createImageImpl(detail::Bitpix<PixelT>::value, 2, naxes);
+        createImageImpl(getBitPix<PixelT>(), 2, naxes);
     }
 
     /**
@@ -508,13 +444,13 @@ public:
      *  compression of the image.
      *
      *  @param[in] image  Image to write to FITS.
-     *  @param[in] options  Options controlling the write (scaling, compression).
+     *  @param[in] compression  Options for compressing the image.
      *  @param[in] header  FITS header to write.
      *  @param[in] mask  Mask for image (used for statistics when scaling).
      */
     template <typename T>
     void writeImage(
-            image::ImageBase<T> const& image, ImageWriteOptions const& options,
+            image::ImageBase<T> const& image, CompressionOptions const * compression = nullptr,
             daf::base::PropertySet const * header = nullptr,
             image::Mask<image::MaskPixel> const * mask = nullptr);
     //@}
@@ -639,21 +575,13 @@ public:
     /// Close a FITS file.
     void closeFile();
 
-    /// Set compression options for writing FITS images
-    ///
-    /// \sa ImageCompressionContext
-    void setImageCompression(ImageCompressionOptions const& options);
-
-    /// Return the current image compression settings
-    ImageCompressionOptions getImageCompression();
-
     /// Go to the first image header in the FITS file
     ///
     /// If a single image is written compressed, it appears as an extension,
     /// rather than the primary HDU (PHU). This method is useful before reading
     /// an image, as it checks whether we are positioned on an empty PHU and if
     /// the next HDU is a compressed image; if so, it leaves the file pointer on
-    /// the compresed image, ready for reading.
+    /// the compressed image, ready for reading.
     bool checkCompressedImagePhu();
 
     ~Fits() {
@@ -764,10 +692,6 @@ std::shared_ptr<daf::base::PropertyList> readMetadata(fits::MemFileManager& mana
  *              (e.g. NAXIS, BITPIX) will be ignored.
  */
 std::shared_ptr<daf::base::PropertyList> readMetadata(fits::Fits& fitsfile, bool strip = false);
-
-void setAllowImageCompression(bool allow);
-bool getAllowImageCompression();
-
 
 
 /**

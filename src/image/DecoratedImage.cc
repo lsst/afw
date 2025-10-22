@@ -95,12 +95,11 @@ template <typename PixelT>
 void DecoratedImage<PixelT>::writeFits(std::string const& fileName,
                                        daf::base::PropertySet const * metadata,
                                        std::string const& mode) const {
-    fits::ImageWriteOptions const options;
-    writeFits(fileName, options, metadata, mode);
+    writeFits(fileName, nullptr, metadata, mode);
 }
 
 template <typename PixelT>
-void DecoratedImage<PixelT>::writeFits(std::string const& fileName, fits::ImageWriteOptions const& options,
+void DecoratedImage<PixelT>::writeFits(std::string const& fileName, fits::CompressionOptions const * options,
                                        daf::base::PropertySet const * metadata_i,
                                        std::string const& mode) const {
     std::shared_ptr<daf::base::PropertySet> metadata;

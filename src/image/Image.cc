@@ -405,11 +405,11 @@ void Image<PixelT>::writeFits(fits::MemFileManager& manager,
 template <typename PixelT>
 void Image<PixelT>::writeFits(fits::Fits& fitsfile,
                               daf::base::PropertySet const * metadata) const {
-    fitsfile.writeImage(*this, fits::ImageWriteOptions(*this), metadata);
+    fitsfile.writeImage(*this, nullptr, metadata);
 }
 
 template <typename PixelT>
-void Image<PixelT>::writeFits(std::string const& filename, fits::ImageWriteOptions const& options,
+void Image<PixelT>::writeFits(std::string const& filename, fits::CompressionOptions const* options,
                               std::string const& mode, daf::base::PropertySet const * header,
                               Mask<MaskPixel> const * mask) const {
     fits::Fits fitsfile(filename, mode, fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
@@ -417,7 +417,7 @@ void Image<PixelT>::writeFits(std::string const& filename, fits::ImageWriteOptio
 }
 
 template <typename PixelT>
-void Image<PixelT>::writeFits(fits::MemFileManager& manager, fits::ImageWriteOptions const& options,
+void Image<PixelT>::writeFits(fits::MemFileManager& manager, fits::CompressionOptions const* options,
                               std::string const& mode, daf::base::PropertySet const * header,
                               Mask<MaskPixel> const * mask) const {
     fits::Fits fitsfile(manager, mode, fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
@@ -425,7 +425,7 @@ void Image<PixelT>::writeFits(fits::MemFileManager& manager, fits::ImageWriteOpt
 }
 
 template <typename PixelT>
-void Image<PixelT>::writeFits(fits::Fits& fitsfile, fits::ImageWriteOptions const& options,
+void Image<PixelT>::writeFits(fits::Fits& fitsfile, fits::CompressionOptions const* options,
                               daf::base::PropertySet const * header,
                               Mask<MaskPixel> const * mask) const {
     fitsfile.writeImage(*this, options, header, mask);

@@ -41,6 +41,8 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/table/io/Persistable.cc"
 
+#include "ndarray/eigen.h"
+
 namespace lsst {
 namespace afw {
 
