@@ -1439,9 +1439,25 @@ struct NullValue<T, typename std::enable_if<std::numeric_limits<T>::has_quiet_Na
 
 template <typename T>
 void Fits::readImageImpl(int nAxis, T *data, long *begin, long *end, long *increment) {
+    fitsfile * fits = reinterpret_cast<fitsfile *>(fptr);
+    int is_compressed = fits_is_compressed_image(fits, &status);
+    if (behavior & AUTO_CHECK) LSST_FITS_CHECK_STATUS(*this, "Checking image compressed state");
+    if (
+        is_compressed && fits->Fptr->quantize_level == 9999
+        && (fits->Fptr->cn_zscale != 0 || fits->Fptr->cn_zzero != 0)
+    ) {
+        // CFITSIO bug can make it leave quantize_level=9999 (NO_QUANTIZE) from
+        // a previously-inspected different HDU with lossless compression,
+        // preventing application of ZSCALE and ZZERO, even if it has seen a
+        // ZSCALE or ZZERO header or column on this HDU.  This has been
+        // reported upstream, so if this workaround (which involves poking at
+        // the innards of private structs) ever stops working, hopefully the
+        // bug will have been fixed upstream anyway.
+        fits->Fptr->quantize_level = 0;
+    }
     T null = NullValue<T>::value;
     int anyNulls = 0;
-    fits_read_subset(reinterpret_cast<fitsfile *>(fptr), FitsType<T>::CONSTANT, begin, end, increment,
+    fits_read_subset(fits, FitsType<T>::CONSTANT, begin, end, increment,
                      reinterpret_cast<void *>(&null), data, &anyNulls, &status);
     if (behavior & AUTO_CHECK) LSST_FITS_CHECK_STATUS(*this, "Reading image");
 }
