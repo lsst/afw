@@ -865,6 +865,66 @@ class ImageFitsTestCase(TestCase):
             roundtripped = ExposureF(filename)
         self.assertMaskedImagesAlmostEqual(masked_image, roundtripped.maskedImage, atol=0.25)
 
+    def test_arch_debug(self) -> None:
+        masked_image = self.make_float_image(
+            np.float32,
+            noise_mean=100.0,
+            noise_sigma=15.0,
+            cold_count=0,
+            hot_count=0,
+        )
+        lossy = {
+            "algorithm": "RICE_1",
+            "quantization": {
+                "dither": "NO_DITHER",
+                "scaling": "STDEV_CFITSIO",
+                "level": 30.0,
+                "seed": 1,
+            },
+        }
+        fixed_different = (
+            np.array([  3,   3,   3,   3,   3,   4,   4,   4,  32,  32,  32,  32,  32,
+                32,  32,  38,  38,  38,  38,  38,  38,  45,  46,  46,  62,  99,
+                99,  99,  99,  99,  99, 107, 107, 112, 112, 112, 112, 115, 115,
+                115, 115, 120, 122, 128, 128, 128, 128, 128, 128, 128, 128, 128,
+                128, 128, 137, 137, 137, 137, 137, 137, 137, 137, 137, 138, 138,
+                138, 138, 152, 152, 152, 155, 155, 168, 168, 171, 171, 171, 171,
+                171, 171, 173, 173, 173, 202, 202, 202, 202, 220, 226, 231, 240,
+                251, 253, 253
+            ]),
+            np.array([
+                101, 184, 185, 221, 235, 160, 161, 206,  29, 135, 153, 182, 215,
+                241, 255,  25,  87, 117, 184, 209, 230, 158,  46, 122, 210,  95,
+                134, 141, 165, 186, 241, 118, 223,  29,  60,  77, 235,  23, 121,
+                128, 224,  53,  72,  26,  81,  90, 103, 110, 113, 120, 164, 211,
+                213, 222,  50,  52, 132, 158, 178, 196, 197, 216, 244,  20,  69,
+                94, 107, 112, 133, 181,  34, 227,  39,  99,  78,  96, 156, 175,
+                196, 238,  97, 194, 219, 107, 120, 142, 249, 111, 181, 185,  23,
+                111, 190, 206
+            ])
+        )
+        np.set_printoptions(floatmode="unique")
+        with self.roundtrip_image_reader(
+            masked_image.image,
+            {"image": lossy}
+        ) as (reader, fits):
+            import platform
+
+            roundtripped = reader.read()
+            different = np.logical_and(
+                roundtripped.array != fits[1].data,
+                np.isfinite(masked_image.image.array)
+            )
+            msg = (
+                f"on {platform.machine()}:\n"
+                f"actual differing pixel indices: {np.where(different)}\n"
+                f"expected differenting pixel indices: {fixed_different}\n"
+                f"CFITSIO pixel values: {roundtripped.array[fixed_different]}\n"
+                f"Astropy pixel values: {fits[1].data[fixed_different]}\n"
+            )
+            np.testing.assert_array_equal(roundtripped.array, fits[1].data, err_msg=msg)
+            self.assertFalse(True, msg=msg)
+
 
 if __name__ == "__main__":
     unittest.main()
