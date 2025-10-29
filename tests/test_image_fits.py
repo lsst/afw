@@ -568,6 +568,12 @@ class ImageFitsTestCase(TestCase):
             # float32.
             variance=50.0,
         )
+        with self.roundtrip_image_reader(masked_image.image) as (_, fits):
+            import sys
+            if "BZERO" in fits[0].header:
+                print(f"BZERO found by astropy with value {fits[0].header['BZERO']}.", file=sys.stderr)
+            else:
+                print("BZERO not found by astropy.", file=sys.stderr)
         self.check_exact_roundtrip(masked_image)
         # CFITSIO does not support compressing uint64, so neither do we.
 

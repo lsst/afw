@@ -1240,10 +1240,17 @@ int get_actual_cfitsio_bitpix(Fits & fits) {
         // does handle uint64 on write. So we have to special-case it here.
         std::uint64_t bzero = 0;
         int tmp_status = 0;
+        std::cerr << "Checking to see if this 'int64' is really 'uint64', via BZERO.\n";
         fits_read_key(reinterpret_cast<fitsfile *>(fits.fptr), FitsType<std::uint64_t>::CONSTANT, "BZERO",
                         &bzero, nullptr, &tmp_status);
         if (tmp_status == 0 && bzero == 9223372036854775808u) {
+            std::cerr << "Read special uint64 value BZERO value from header.\n";
             result = cfitsio_bitpix<std::uint64_t>;
+        } else if (tmp_status) {
+            std::cerr << "Failed to read BZERO from header: "
+                      << makeErrorMessage(fits.fptr, tmp_status, "") << "\n";
+        } else {
+            std::cerr << "Read BZERO=" << bzero << " (not special)\n";
         }
     }
     return result;
