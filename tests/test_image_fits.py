@@ -19,6 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import platform
 import unittest
 from collections.abc import Iterator, Mapping, Sequence
 from contextlib import contextmanager
@@ -456,10 +457,25 @@ class ImageFitsTestCase(TestCase):
             Other image plane pixel types that the image can be safely read
             back in as without any loss of precision or range.
         """
-        with self.check_roundtrip_image_invariants(masked_image.image, compression, safe_dtypes) as image_rt:
+        atol = 0.0
+        rtol = 0.0
+        if platform.machine() in ("aarch64", "arm64"):
+            # CFITSIO on Arm64 (both Linux and macOS reads quantized images
+            # back slightly but significantly differently from CFITSIO on
+            # x86_64, Astropy on x86_64, and Astropy on aarch64 (which all
+            # agree).  This has been reported upstream.  The difference is
+            # typically smaller than the change due to quantization but larger
+            # than expected from floating-point round-off error from just
+            # switching around the order of operations in applying
+            # ZZERO/ZSCALE, especially for float64.
+            atol = 1E-4
+            rtol = 1E-6
+        with self.check_roundtrip_image_invariants(
+            masked_image.image, compression, safe_dtypes, atol=atol, rtol=rtol
+        ) as image_rt:
             self.assertImagesAlmostEqual(image_rt, masked_image.image, atol=roundtrip_atol)
         with self.check_roundtrip_masked_image_invariants(
-            masked_image, compression, safe_dtypes=safe_dtypes
+            masked_image, compression, safe_dtypes=safe_dtypes, atol=atol, rtol=rtol
         ) as masked_image_rt:
             self.assertMaskedImagesAlmostEqual(masked_image_rt, masked_image, atol=roundtrip_atol)
 
