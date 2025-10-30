@@ -484,8 +484,10 @@ class ImageFitsTestCase(TestCase):
         masked_image = self.make_int_image(
             np.uint16, noise_min=256, noise_max=512, cold_value=1, hot_value=32750
         )
-        safe_dtypes = (np.int32, np.uint64, np.float32, np.float64)
-        self.check_exact_roundtrip(masked_image, safe_dtypes=safe_dtypes)
+        safe_dtypes = (np.int32, np.float32, np.float64)
+        # uint64 is only safe when not decompressing; otherwise CFITSIO can't
+        # handle it.
+        self.check_exact_roundtrip(masked_image, safe_dtypes=safe_dtypes + (np.uint64,))
         self.check_exact_roundtrip(
             masked_image, {"image": {}, "mask": {}, "variance": {}}, safe_dtypes=safe_dtypes
         )

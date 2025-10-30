@@ -1655,6 +1655,13 @@ bool Fits::checkImageType() {
         if (imageType < 0) {
             return false;  // can't represent floating-point with integer
         }
+        bool is_compressed = fits_is_compressed_image(reinterpret_cast<fitsfile*>(fptr), &status);
+        if (behavior & AUTO_CHECK) LSST_FITS_CHECK_STATUS(*this, "Checking pixel type compatibility");
+        if (is_compressed && sizeof(T) == 8) {
+            // CFITSIO can't decompress into [u]int64, at least on some
+            // platforms, so we don't support it.
+            return false;
+        }
         if (std::numeric_limits<T>::is_signed) {
             if (isFitsImageTypeSigned(imageType)) {
                 return cfitsio_bitpix<T> >= imageType;
