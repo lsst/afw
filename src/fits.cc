@@ -285,7 +285,7 @@ struct FitsType<long long> {
 };
 template <>
 struct FitsType<unsigned long long> {
-    static int const CONSTANT = TLONGLONG;
+    static int const CONSTANT = TULONGLONG;
 };
 template <>
 struct FitsType<float> {
