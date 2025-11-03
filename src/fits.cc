@@ -10,6 +10,7 @@
 #include <filesystem>
 #include <regex>
 #include <cctype>
+#include <type_traits>
 
 #include "fitsio.h"
 extern "C" {
@@ -36,6 +37,31 @@ namespace fits {
 // ----------------------------------------------------------------------------------------------------------
 
 namespace {
+
+// FITS BITPIX header constants and the special CFITSIO values for variants
+// with different signedness from the FITS defaults.  By using partial
+// specialization we can handle all of (int, long, long long) without
+// knowing which of those is left out of (int32_t, int64_t).
+
+template <typename T>
+constexpr int header_bitpix = static_cast<int>(sizeof(T)) * 8 * (std::is_floating_point_v<T> ? -1 : 1);
+
+template <typename T, bool is_signed = std::is_signed_v<T>, int size = sizeof(T)>
+constexpr int cfitsio_bitpix = header_bitpix<T>;
+
+template <typename T>
+constexpr int cfitsio_bitpix<T, true, 1> = SBYTE_IMG;
+
+template <typename T>
+constexpr int cfitsio_bitpix<T, false, 2> = USHORT_IMG;
+
+template <typename T>
+constexpr int cfitsio_bitpix<T, false, 4> = ULONG_IMG;
+
+template <typename T>
+constexpr int cfitsio_bitpix<T, false, 8> = ULONGLONG_IMG;
+
+/// Abstract base class for an array of pixel values
 
 /*
  * Format a PropertySet into a FITS header string using simplifying assumptions.
@@ -170,6 +196,7 @@ static std::unordered_set<std::string> const ignoreKeys = {
         "SIMPLE", "BITPIX", "NAXIS", "EXTEND", "GCOUNT", "PCOUNT", "XTENSION", "TFIELDS", "BSCALE", "BZERO",
         // FITS compression keywords
         "ZBITPIX", "ZIMAGE", "ZCMPTYPE", "ZSIMPLE", "ZEXTEND", "ZBLANK", "ZDATASUM", "ZHECKSUM", "ZQUANTIZ",
+        "ZDITHER0",
         // Not essential, but will prevent fitsverify warnings
         "DATASUM", "CHECKSUM"};
 
@@ -285,7 +312,7 @@ struct FitsType<long long> {
 };
 template <>
 struct FitsType<unsigned long long> {
-    static int const CONSTANT = TLONGLONG;
+    static int const CONSTANT = TULONGLONG;
 };
 template <>
 struct FitsType<float> {
@@ -316,46 +343,6 @@ struct FitsTableType<bool> {
     static int const CONSTANT = TBIT;
 };
 
-template <typename T>
-struct FitsBitPix;
-
-template <>
-struct FitsBitPix<unsigned char> {
-    static int const CONSTANT = BYTE_IMG;
-};
-template <>
-struct FitsBitPix<short> {
-    static int const CONSTANT = SHORT_IMG;
-};
-template <>
-struct FitsBitPix<unsigned short> {
-    static int const CONSTANT = USHORT_IMG;
-};
-template <>
-struct FitsBitPix<int> {
-    static int const CONSTANT = LONG_IMG;
-};  // not a typo!
-template <>
-struct FitsBitPix<unsigned int> {
-    static int const CONSTANT = ULONG_IMG;
-};
-template <>
-struct FitsBitPix<std::int64_t> {
-    static int const CONSTANT = LONGLONG_IMG;
-};
-template <>
-struct FitsBitPix<std::uint64_t> {
-    static int const CONSTANT = LONGLONG_IMG;
-};
-template <>
-struct FitsBitPix<float> {
-    static int const CONSTANT = FLOAT_IMG;
-};
-template <>
-struct FitsBitPix<double> {
-    static int const CONSTANT = DOUBLE_IMG;
-};
-
 bool isFitsImageTypeSigned(int constant) {
     switch (constant) {
         case BYTE_IMG: return false;
@@ -364,33 +351,11 @@ bool isFitsImageTypeSigned(int constant) {
         case LONG_IMG: return true;
         case ULONG_IMG: return false;
         case LONGLONG_IMG: return true;
+        case ULONGLONG_IMG: return false;
         case FLOAT_IMG: return true;
         case DOUBLE_IMG: return true;
     }
     throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, "Invalid constant.");
-}
-
-static bool allowImageCompression = true;
-
-int fitsTypeForBitpix(int bitpix) {
-    switch (bitpix) {
-        case 8:
-            return TBYTE;
-        case 16:
-            return TSHORT;
-        case 32:
-            return TINT;
-        case 64:
-            return TLONGLONG;
-        case -32:
-            return TFLOAT;
-        case -64:
-            return TDOUBLE;
-        default:
-            std::ostringstream os;
-            os << "Invalid bitpix value: " << bitpix;
-            throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, os.str());
-    }
 }
 
 /*
@@ -499,7 +464,7 @@ void MemFileManager::reset(std::size_t len) {
 
 template <typename T>
 int getBitPix() {
-    return FitsBitPix<T>::CONSTANT;
+    return cfitsio_bitpix<T>;
 }
 
 // ----------------------------------------------------------------------------------------------------------
@@ -1263,6 +1228,309 @@ long Fits::getTableArraySize(std::size_t row, int col) {
 
 // ---- Manipulating images ---------------------------------------------------------------------------------
 
+namespace {
+
+int get_actual_cfitsio_bitpix(Fits & fits) {
+    int result = 0;
+    fits_get_img_equivtype(reinterpret_cast<fitsfile *>(fits.fptr), &result, &fits.status);
+    if (fits.behavior & Fits::AUTO_CHECK) LSST_FITS_CHECK_STATUS(fits, "Getting image type");
+    if (result == cfitsio_bitpix<std::int64_t>) {
+        // Baffingly, fits_get_img_equivtype handles all of the special
+        // special-BZERO unsigned variants *except* uint64, even though CFITSIO
+        // does handle uint64 on write. So we have to special-case it here.
+        std::uint64_t bzero = 0;
+        int tmp_status = 0;
+        fits_read_key(reinterpret_cast<fitsfile *>(fits.fptr), FitsType<std::uint64_t>::CONSTANT, "BZERO",
+                        &bzero, nullptr, &tmp_status);
+        if (tmp_status == 0 && bzero == 9223372036854775808u) {
+            result = cfitsio_bitpix<std::uint64_t>;
+        }
+    }
+    return result;
+}
+
+/// Calculate min and max for an array
+template <typename T>
+std::pair<T, T> calculate_min_max(ndarray::Array<T const, 1, 1> const& image,
+                                    ndarray::Array<bool, 1, 1> const& mask) {
+    T min = std::numeric_limits<T>::max(), max = std::numeric_limits<T>::min();
+    auto mm = mask.begin();
+    for (auto ii = image.begin(); ii != image.end(); ++ii, ++mm) {
+        if (*mm) continue;
+        if (!std::isfinite(*ii)) continue;
+        if (*ii > max) max = *ii;
+        if (*ii < min) min = *ii;
+    }
+    return std::make_pair(min, max);
+}
+
+// Return range of values for quantized values.  We assume bitpix=32 because
+// that's all CFITSIO supports.
+constexpr std::uint64_t quantized_range() {
+    // Number of reserved values for float --> bitpix=32 conversions (copied out of cfitsio)
+    int constexpr N_RESERVED_VALUES = 10;
+    std::uint64_t range = (static_cast<std::uint64_t>(1) << 32) - 1;
+    range -= N_RESERVED_VALUES;  // CFITSIO wants to reserve special values, for e.g. NULL/NaN.
+    range -= 2;  // To allow for rounding and fuzz at either end
+    return range;
+}
+
+template <typename T>
+float measure_range_scaling(ndarray::Array<T const, 1, 1> const& image,
+                            ndarray::Array<bool, 1, 1> const& mask) {
+    auto minMax = calculate_min_max(image, mask);
+    T const min = minMax.first;
+    T const max = minMax.second;
+    if (min == max) return -1.0;
+    auto range = quantized_range();
+    return (max - min) / range;
+}
+
+template <typename T>
+float measure_stdev_scaling(ndarray::Array<T const, 1, 1> const& image,
+                            ndarray::Array<bool, 1, 1> const& mask, float level) {
+    std::vector<T> array;
+    array.reserve(image.size());
+    auto mm = mask.begin();
+    for (auto ii = image.begin(); ii != image.end(); ++ii, ++mm) {
+        if (!*mm) {
+            array.push_back(*ii);
+        }
+    }
+    // Quartiles; from https://stackoverflow.com/a/11965377/834250
+    auto const q1 = array.size() / 4;
+    auto const q2 = array.size() / 2;
+    auto const q3 = q1 + q2;
+    std::nth_element(array.begin(), array.begin() + q1, array.end());
+    std::nth_element(array.begin() + q1 + 1, array.begin() + q2, array.end());
+    std::nth_element(array.begin() + q2 + 1, array.begin() + q3, array.end());
+    // No, we're not doing any interpolation for the lower and upper quartiles.
+    // We're estimating the noise, so it doesn't need to be super precise.
+    double const lq = array[q1];
+    double const uq = array[q3];
+    double const stdev = 0.741 * (uq - lq);
+    return stdev / level;
+}
+
+template <typename T>
+float measure_qlevel(
+    QuantizationOptions const & options,
+    ndarray::Array<T const, 1, 1> const& image,
+    ndarray::Array<bool, 1, 1> const& mask
+) {
+    switch (options.scaling) {
+        // We return a negative number when we want to tell CFITSIO that the
+        // quantization level is actually ZSCALE itself, not a target
+        // quantization level.
+        case ScalingAlgorithm::RANGE:
+            return -measure_range_scaling(image, mask);
+        case ScalingAlgorithm::STDEV_MASKED:
+            return -measure_stdev_scaling(image, mask, options.level);
+        case ScalingAlgorithm::STDEV_CFITSIO:
+            return options.level;
+        case ScalingAlgorithm::MANUAL:
+            return -options.level;
+    }
+    throw LSST_EXCEPT(pex::exceptions::LogicError, "Invalid scaling algorithm.");
+}
+
+int compression_algorithm_to_cfitsio(CompressionAlgorithm algorithm) {
+    switch (algorithm) {
+        case CompressionAlgorithm::GZIP_1_:
+            return GZIP_1;
+        case CompressionAlgorithm::GZIP_2_:
+            return GZIP_2;
+        case CompressionAlgorithm::RICE_1_:
+            return RICE_1;
+    }
+    throw LSST_EXCEPT(pex::exceptions::LogicError, "Invalid compression algorithm.");
+}
+
+int dither_algorithm_to_cfitsio(DitherAlgorithm algorithm) {
+    switch (algorithm) {
+        case DitherAlgorithm::NO_DITHER_:
+            return NO_DITHER;
+        case DitherAlgorithm::SUBTRACTIVE_DITHER_1_:
+            return SUBTRACTIVE_DITHER_1;
+        case DitherAlgorithm::SUBTRACTIVE_DITHER_2_:
+            return SUBTRACTIVE_DITHER_2;
+    }
+    throw LSST_EXCEPT(pex::exceptions::LogicError, "Invalid dither algorithm.");
+}
+
+class CompressionContext {
+public:
+
+    template <typename T>
+    CompressionContext(
+        Fits & fits,
+        CompressionOptions const * options,
+        afw::image::ImageBase<T> const& image,
+        afw::image::Mask<> const * mask
+    ) : CompressionContext(fits) {
+        // If the image is already fully contiguous, get a flat 1-d view into
+        // it.  If it isn't, copy to amke a flat 1-d array.  We need to
+        // remember the non-const copy if we make one because we might want it
+        // later.
+        ndarray::Array<T, 1, 1> image_flat_mutable;
+        ndarray::Array<T const, 1, 1> image_flat;
+        ndarray::Array<T const, 2, 2> image_array = ndarray::dynamic_dimension_cast<2>(image.getArray());
+        if (image_array.isEmpty()) {
+            ndarray::Array<T, 2, 2> image_array_copy = ndarray::copy(image.getArray());
+            image_flat_mutable = ndarray::flatten<1>(image_array_copy);
+            image_flat = image_flat_mutable;
+        } else {
+            image_flat = ndarray::flatten<1>(image_array);
+        }
+        _pixel_data = image_flat.begin();
+        _pixel_data_mgr = image_flat.getManager();
+        _n_pixels = image_flat.size();
+        if (options) {
+            float qlevel = 0.0;
+            if constexpr(std::is_floating_point_v<T>) {
+                if (options->quantization) {
+                    if (mask && image.getDimensions() != mask->getDimensions()) {
+                        std::ostringstream os;
+                        os << "Size mismatch between image and mask: ";
+                        os << image.getWidth() << "x" << image.getHeight();
+                        os << " vs ";
+                        os << mask->getWidth() << "x" << mask->getHeight();
+                        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, os.str());
+                    }
+                    ndarray::Array<bool, 2, 2> mask_array = ndarray::allocate(image_array.getShape());
+                    ndarray::Array<bool, 1, 1> mask_flat = ndarray::flatten<1>(mask_array);
+                    if (mask && options->uses_mask()) {
+                        mask_array.deep() = (
+                            mask->getArray() & mask->getPlaneBitMask(options->quantization.value().mask_planes)
+                        );
+                    }
+                    std::transform(
+                        image_flat.begin(), image_flat.end(), mask_flat.begin(), mask_flat.begin(),
+                        [](T const & img, bool const & msk) { return msk || !std::isfinite(img); }
+                    );
+                    qlevel = measure_qlevel(options->quantization.value(), image_flat, mask_flat);
+                    // Quantized floats is also the only context in which NaN and inf don't round-trip
+                    // automatically.
+                    if (image_flat_mutable.isEmpty()) {
+                        // We didn't make a copy that we can modify before; have to do it now.
+                        image_flat_mutable = ndarray::copy(image_flat);
+                    }
+                    std::transform(
+                        image_flat_mutable.begin(), image_flat_mutable.end(), image_flat_mutable.begin(),
+                        [](T const & value) {
+                            return (std::isnan(value)) ? -std::numeric_limits<T>::infinity() : value;
+                        }
+                    );
+                    _pixel_data = image_flat_mutable.begin();
+                    _pixel_data_mgr = image_flat_mutable.getManager();
+                }
+            }
+            _apply(*options, qlevel, std::is_floating_point_v<T>, image.getDimensions());
+        }
+    }
+
+    template <typename T>
+    T const * get_pixel_data() const { return static_cast<T const*>(_pixel_data); }
+
+    std::size_t get_n_pixels() const { return _n_pixels; }
+
+    // Disable copies (moves are fine).
+    CompressionContext(CompressionContext const&) = delete;
+    CompressionContext& operator=(CompressionContext const&) = delete;
+
+    ~CompressionContext(){
+        auto fptr = reinterpret_cast<fitsfile *>(_fits->fptr);
+        fits_set_compression_type(fptr, _algorithm, &_fits->status);
+        fits_set_tile_dim(fptr, _tile_dim.size(), _tile_dim.data(), &_fits->status);
+        fits_set_quantize_level(fptr, _qlevel, &_fits->status);
+        fits_set_dither_seed(fptr, _dither_seed, &_fits->status);
+    }
+
+private:
+
+    explicit CompressionContext(Fits & fits)
+        : _fits(&fits), _algorithm(0), _dither_seed(0), _qlevel(0.0), _n_pixels(0),
+          _pixel_data(nullptr), _pixel_data_mgr()
+    {
+        auto fptr = reinterpret_cast<fitsfile *>(fits.fptr);
+        fits_get_compression_type(fptr, &_algorithm, &fits.status);
+        fits_get_tile_dim(fptr, _tile_dim.size(), _tile_dim.data(), &fits.status);
+        fits_get_quantize_level(fptr, &_qlevel, &fits.status);
+        // There is weirdly no way to get the dither method from CFITSIO.  That
+        // makes this code less defensive than it would ideally be, but since the
+        // dither method is ignored when compression is off and overridden whenever
+        // compression is enabled, it shouldn't actually be a problem.
+        fits_get_dither_seed(fptr, &_dither_seed, &fits.status);
+    }
+
+    void _apply(
+        CompressionOptions options,
+        float qlevel,
+        bool is_float,
+        lsst::geom::Extent2I const & dimensions
+    ) {
+        if (is_float && !options.quantization && options.algorithm == CompressionAlgorithm::RICE_1_) {
+            throw LSST_EXCEPT(
+                pex::exceptions::InvalidParameterError,
+                "RICE_1 compression of floating point images requires quantization."
+            );
+        }
+        if (is_float && qlevel == 0.0 && options.algorithm == CompressionAlgorithm::RICE_1_) {
+            // User asked to quantize but the scaling algorithm came back with
+            // a scale factor of zero, which pretty much only happens when the
+            // image is a constant. CFITSIO will choke on this, so we switch to
+            // lossless compression (which should be great because the image is
+            // a constant). We don't warn because this is not always something
+            // the user can control.
+            options = CompressionOptions();
+        }
+        if (!is_float && options.quantization) {
+            throw LSST_EXCEPT(
+                pex::exceptions::InvalidParameterError,
+                "Quantization cannot be used on integer images."
+            );
+        }
+        auto fptr = reinterpret_cast<fitsfile *>(_fits->fptr);
+        if (!_n_pixels) {
+            fits_set_compression_type(fptr, 0, &_fits->status);
+            return;
+        }
+        fits_set_compression_type(fptr, compression_algorithm_to_cfitsio(options.algorithm), &_fits->status);
+        // CFITSIO wants the shape in (X, Y) order, which is a reverse of what we
+        // have for the shape and the requested tile.
+        std::array<long, 2> tile_dim = {
+            (options.tile_width == 0) ? dimensions.getX() : static_cast<long>(options.tile_width),
+            (options.tile_height == 0) ? dimensions.getY() : static_cast<long>(options.tile_height)
+        };
+        fits_set_tile_dim(fptr, tile_dim.size(), tile_dim.data(), &_fits->status);
+        if (options.quantization) {
+            auto q = options.quantization.value();
+            fits_set_quantize_method(fptr, dither_algorithm_to_cfitsio(q.dither), &_fits->status);
+            fits_set_dither_seed(fptr, q.seed, &_fits->status);
+            fits_set_quantize_level(fptr, qlevel, &_fits->status);
+        } else {
+            fits_set_quantize_level(fptr, 0.0, &_fits->status);
+        }
+    }
+
+    // FITS object to restore to its previous state upon destruction.
+    Fits * _fits;
+    // These data members are the *old* CFITSIO settings we'll restore in the
+    // destructor.
+    int _algorithm;
+    int _dither_seed;
+    float _qlevel;
+    std::array<long, 2> _tile_dim;
+    // A pointer to a contiguous image pixel array, either extracted from the
+    // image (if it was already contiguous) or copied, its size, and a
+    // reference to its lifetime.
+    std::size_t _n_pixels;
+    void const * _pixel_data;
+    ndarray::Manager::Ptr _pixel_data_mgr;
+};
+
+} // anonymous
+
 void Fits::createEmpty() {
     long naxes = 0;
     fits_create_img(reinterpret_cast<fitsfile *>(fptr), 8, 0, &naxes, &status);
@@ -1279,66 +1547,32 @@ void Fits::createImageImpl(int bitpix, int naxis, long const *naxes) {
 }
 
 template <typename T>
-void Fits::writeImageImpl(T const *data, int nElements) {
-    fits_write_img(reinterpret_cast<fitsfile *>(fptr), FitsType<T>::CONSTANT, 1, nElements,
-                   const_cast<T *>(data), &status);
+void Fits::writeImageImpl(T const *data, int nElements, std::optional<T> explicit_null) {
+    if (explicit_null) {
+        fits_write_imgnull(reinterpret_cast<fitsfile *>(fptr), FitsType<T>::CONSTANT, 1, nElements,
+                       const_cast<T *>(data), const_cast<T*>(&explicit_null.value()), &status);
+    } else {
+        fits_write_img(reinterpret_cast<fitsfile *>(fptr), FitsType<T>::CONSTANT, 1, nElements,
+                       const_cast<T *>(data), &status);
+    }
     if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, "Writing image");
     }
 }
 
-namespace {
-
-/// RAII for activating compression
-///
-/// Compression is a property of the file in cfitsio, so we need to set it,
-/// do our stuff and then disable it.
-struct ImageCompressionContext {
-public:
-    ImageCompressionContext(Fits &fits_, ImageCompressionOptions const &useThis)
-            : fits(fits_), old(fits.getImageCompression()) {
-        fits.setImageCompression(useThis);
-    }
-    ~ImageCompressionContext() {
-        int status = 0;
-        std::swap(status, fits.status);
-        try {
-            fits.setImageCompression(old);
-        } catch (...) {
-            LOGLS_WARN("lsst.afw.fits",
-                       makeErrorMessage(fits.fptr, fits.status, "Failed to restore compression settings"));
-        }
-        std::swap(status, fits.status);
-    }
-
-private:
-    Fits &fits;                   // FITS file we're working on
-    ImageCompressionOptions old;  // Former compression options, to be restored
-};
-
-}  // anonymous namespace
-
 template <typename T>
-void Fits::writeImage(image::ImageBase<T> const &image, ImageWriteOptions const &options,
+void Fits::writeImage(image::ImageBase<T> const &image, CompressionOptions const * compression,
                       daf::base::PropertySet const * header,
                       image::Mask<image::MaskPixel> const * mask) {
-    auto fits = reinterpret_cast<fitsfile *>(fptr);
-    ImageCompressionOptions const &compression =
-            image.getBBox().getArea() > 0
-                    ? options.compression
-                    : ImageCompressionOptions(
-                              ImageCompressionOptions::NONE);  // cfitsio can't compress empty images
-    ImageCompressionContext comp(*this, compression);          // RAII
+    // Context will restore the original settings when it is destroyed.
+    CompressionContext context(*this, compression, image, mask);
     if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, "Activating compression for write image");
     }
-
-    ImageScale scale = options.scaling.determine(image, mask);
-
-    // We need a place to put the image+header, and CFITSIO needs to know the dimenions.
+    // We need a place to put the image+header, and CFITSIO needs to know the
+    // dimensions.
     ndarray::Vector<long, 2> dims(image.getArray().getShape().reverse());
-    createImageImpl(scale.bitpix == 0 ? detail::Bitpix<T>::value : scale.bitpix, 2, dims.elems);
-
+    createImageImpl(cfitsio_bitpix<T>, 2, dims.elems);
     // Write the header
     std::shared_ptr<daf::base::PropertyList> wcsMetadata =
             geom::createTrivialWcsMetadata(image::detail::wcsNameForXY0, image.getXY0());
@@ -1350,74 +1584,14 @@ void Fits::writeImage(image::ImageBase<T> const &image, ImageWriteOptions const 
         fullMetadata = wcsMetadata;
     }
     writeMetadata(*fullMetadata);
-
-    // Scale the image how we want it on disk
-    ndarray::Array<T const, 2, 2> array = makeContiguousArray(image.getArray());
-    auto pixels = scale.toFits(array, compression.quantizeLevel != 0, options.scaling.fuzz,
-                               options.compression.tiles, options.scaling.seed);
-
-    // We only want cfitsio to do the scale and zero for unsigned 64-bit integer types. For those,
-    // "double bzero" has sufficient precision to represent the appropriate value. We'll let
-    // cfitsio handle it itself.
-    // In all other cases, we will convert the image to use the appropriate scale and zero
-    // (because we want to fuzz the numbers in the quantisation), so we don't want cfitsio
-    // rescaling.
-    if (!std::is_same<T, std::uint64_t>::value) {
-        fits_set_bscale(fits, 1.0, 0.0, &status);
-        if (behavior & AUTO_CHECK) {
-            LSST_FITS_CHECK_STATUS(*this, "Setting bscale,bzero");
+    std::optional<T> explicit_null = std::nullopt;
+    if constexpr(std::is_floating_point_v<T>) {
+        if (compression && compression->quantization) {
+            explicit_null = -std::numeric_limits<T>::infinity();
         }
     }
-
-    // Write the pixels
-    int const fitsType = scale.bitpix == 0 ? FitsType<T>::CONSTANT : fitsTypeForBitpix(scale.bitpix);
-    fits_write_img(fits, fitsType, 1, pixels->getNumElements(), const_cast<void *>(pixels->getData()),
-                   &status);
-    if (behavior & AUTO_CHECK) {
-        LSST_FITS_CHECK_STATUS(*this, "Writing image");
-    }
-
-    // Now write the headers we didn't want cfitsio to know about when we were writing the pixels
-    // (because we don't want it using them to modify the pixels, and we don't want it overwriting
-    // these values).
-    if (!std::is_same<T, std::int64_t>::value && !std::is_same<T, std::uint64_t>::value &&
-        std::isfinite(scale.bzero) && std::isfinite(scale.bscale) && (scale.bscale != 0.0)) {
-        if (std::numeric_limits<T>::is_integer) {
-            if (scale.bzero != 0.0) {
-                fits_write_key_lng(fits, "BZERO", static_cast<long>(scale.bzero),
-                                   "Scaling: MEMORY = BZERO + BSCALE * DISK", &status);
-            }
-            if (scale.bscale != 1.0) {
-                fits_write_key_lng(fits, "BSCALE", static_cast<long>(scale.bscale),
-                                   "Scaling: MEMORY = BZERO + BSCALE * DISK", &status);
-            }
-        } else {
-            fits_write_key_dbl(fits, "BZERO", scale.bzero, 12, "Scaling: MEMORY = BZERO + BSCALE * DISK",
-                               &status);
-            fits_write_key_dbl(fits, "BSCALE", scale.bscale, 12, "Scaling: MEMORY = BZERO + BSCALE * DISK",
-                               &status);
-        }
-        if (behavior & AUTO_CHECK) {
-            LSST_FITS_CHECK_STATUS(*this, "Writing BSCALE,BZERO");
-        }
-    }
-
-    if (scale.bitpix > 0 && !std::numeric_limits<T>::is_integer) {
-        fits_write_key_lng(fits, "BLANK", scale.blank, "Value for undefined pixels", &status);
-        fits_write_key_lng(fits, "ZDITHER0", options.scaling.seed, "Dithering seed", &status);
-        fits_write_key_str(fits, "ZQUANTIZ", "SUBTRACTIVE_DITHER_1", "Dithering algorithm", &status);
-        if (behavior & AUTO_CHECK) {
-            LSST_FITS_CHECK_STATUS(*this, "Writing [Z]BLANK");
-        }
-    }
-
-    // cfitsio says this is deprecated, but Pan-STARRS found that it was sometimes necessary, writing:
-    // "This forces a re-scan of the header to ensure everything's kosher.
-    // Without this, compressed HDUs have been written out with PCOUNT=0 and TFORM1 not correctly set."
-    fits_set_hdustruc(fits, &status);
-    if (behavior & AUTO_CHECK) {
-        LSST_FITS_CHECK_STATUS(*this, "Finalizing header");
-    }
+    // Write the image itself.
+    writeImageImpl(context.get_pixel_data<T>(), context.get_n_pixels(), explicit_null);
 }
 
 
@@ -1439,9 +1613,25 @@ struct NullValue<T, typename std::enable_if<std::numeric_limits<T>::has_quiet_Na
 
 template <typename T>
 void Fits::readImageImpl(int nAxis, T *data, long *begin, long *end, long *increment) {
+    fitsfile * fits = reinterpret_cast<fitsfile *>(fptr);
+    int is_compressed = fits_is_compressed_image(fits, &status);
+    if (behavior & AUTO_CHECK) LSST_FITS_CHECK_STATUS(*this, "Checking image compressed state");
+    if (
+        is_compressed && fits->Fptr->quantize_level == 9999
+        && (fits->Fptr->cn_zscale != 0 || fits->Fptr->cn_zzero != 0)
+    ) {
+        // CFITSIO bug can make it leave quantize_level=9999 (NO_QUANTIZE) from
+        // a previously-inspected different HDU with lossless compression,
+        // preventing application of ZSCALE and ZZERO, even if it has seen a
+        // ZSCALE or ZZERO header or column on this HDU.  This has been
+        // reported upstream, so if this workaround (which involves poking at
+        // the innards of private structs) ever stops working, hopefully the
+        // bug will have been fixed upstream anyway.
+        fits->Fptr->quantize_level = 0;
+    }
     T null = NullValue<T>::value;
     int anyNulls = 0;
-    fits_read_subset(reinterpret_cast<fitsfile *>(fptr), FitsType<T>::CONSTANT, begin, end, increment,
+    fits_read_subset(fits, FitsType<T>::CONSTANT, begin, end, increment,
                      reinterpret_cast<void *>(&null), data, &anyNulls, &status);
     if (behavior & AUTO_CHECK) LSST_FITS_CHECK_STATUS(*this, "Reading image");
 }
@@ -1460,27 +1650,28 @@ void Fits::getImageShapeImpl(int maxDim, long *nAxes) {
 
 template <typename T>
 bool Fits::checkImageType() {
-    int imageType = 0;
-    fits_get_img_equivtype(reinterpret_cast<fitsfile *>(fptr), &imageType, &status);
-    if (behavior & AUTO_CHECK) LSST_FITS_CHECK_STATUS(*this, "Getting image type");
+    int imageType = get_actual_cfitsio_bitpix(*this);
     if (std::numeric_limits<T>::is_integer) {
         if (imageType < 0) {
             return false;  // can't represent floating-point with integer
         }
+        bool is_compressed = fits_is_compressed_image(reinterpret_cast<fitsfile*>(fptr), &status);
+        if (behavior & AUTO_CHECK) LSST_FITS_CHECK_STATUS(*this, "Checking pixel type compatibility");
+        if (is_compressed && sizeof(T) == 8) {
+            // CFITSIO can't decompress into [u]int64, at least on some
+            // platforms, so we don't support it.
+            return false;
+        }
         if (std::numeric_limits<T>::is_signed) {
             if (isFitsImageTypeSigned(imageType)) {
-                return FitsBitPix<T>::CONSTANT >= imageType;
+                return cfitsio_bitpix<T> >= imageType;
             } else {
                 // need extra bits to safely convert unsigned to signed
-                return FitsBitPix<T>::CONSTANT > imageType;
+                return cfitsio_bitpix<T> > imageType;
             }
         } else {
             if (!isFitsImageTypeSigned(imageType)) {
-                return FitsBitPix<T>::CONSTANT >= imageType;
-            } else if (imageType == LONGLONG_IMG) {
-                // workaround for CFITSIO not recognizing uint64 as
-                // unsigned
-                return FitsBitPix<T>::CONSTANT >= imageType;
+                return cfitsio_bitpix<T> >= imageType;
             } else {
                 return false;
             }
@@ -1491,16 +1682,7 @@ bool Fits::checkImageType() {
 }
 
 std::string Fits::getImageDType() {
-    int bitpix = 0;
-    fits_get_img_equivtype(reinterpret_cast<fitsfile *>(fptr), &bitpix, &status);
-    if (behavior & AUTO_CHECK) LSST_FITS_CHECK_STATUS(*this, "Getting image type");
-    // FITS' 'BITPIX' key is the number of bits in a pixel, but negative for
-    // floats.  But the above CFITSIO routine adds support for unsigned
-    // integers by checking BZERO for an offset as well.  So the 'bitpix' value
-    // we get back from that should be the raw value for signed integers and
-    // floats, but may be something else (still positive) for unsigned, and
-    // hence we'll compare to some FITSIO constants to be safe looking at
-    // integers.
+    int bitpix = get_actual_cfitsio_bitpix(*this);
     if (bitpix < 0) {
         return "float" + std::to_string(-bitpix);
     }
@@ -1512,67 +1694,13 @@ std::string Fits::getImageDType() {
         case LONG_IMG: return "int32";
         case ULONG_IMG: return "uint32";
         case LONGLONG_IMG: return "int64";
+        case ULONGLONG_IMG: return "uint64";
     }
     throw LSST_EXCEPT(
         FitsError,
         (boost::format("Unrecognized BITPIX value: %d") % bitpix).str()
     );
 }
-
-ImageCompressionOptions Fits::getImageCompression() {
-    auto fits = reinterpret_cast<fitsfile *>(fptr);
-    int compType = 0;  // cfitsio compression type
-    fits_get_compression_type(fits, &compType, &status);
-    if (behavior & AUTO_CHECK) {
-        LSST_FITS_CHECK_STATUS(*this, "Getting compression type");
-    }
-
-    ImageCompressionOptions::Tiles tiles = ndarray::allocate(MAX_COMPRESS_DIM);
-    fits_get_tile_dim(fits, tiles.getNumElements(), tiles.getData(), &status);
-    if (behavior & AUTO_CHECK) {
-        LSST_FITS_CHECK_STATUS(*this, "Getting tile dimensions");
-    }
-
-    float quantizeLevel;
-    fits_get_quantize_level(fits, &quantizeLevel, &status);
-    if (behavior & AUTO_CHECK) {
-        LSST_FITS_CHECK_STATUS(*this, "Getting quantizeLevel");
-    }
-
-    return ImageCompressionOptions(compressionAlgorithmFromCfitsio(compType), tiles, quantizeLevel);
-}
-
-void Fits::setImageCompression(ImageCompressionOptions const &comp) {
-    auto fits = reinterpret_cast<fitsfile *>(fptr);
-    fits_unset_compression_request(fits, &status);  // wipe the slate and start over
-    ImageCompressionOptions::CompressionAlgorithm const algorithm =
-            allowImageCompression ? comp.algorithm : ImageCompressionOptions::NONE;
-    fits_set_compression_type(fits, compressionAlgorithmToCfitsio(algorithm), &status);
-    if (behavior & AUTO_CHECK) {
-        LSST_FITS_CHECK_STATUS(*this, "Setting compression type");
-    }
-
-    if (algorithm == ImageCompressionOptions::NONE) {
-        // Nothing else worth doing
-        return;
-    }
-
-    fits_set_tile_dim(fits, comp.tiles.getNumElements(), comp.tiles.getData(), &status);
-    if (behavior & AUTO_CHECK) {
-        LSST_FITS_CHECK_STATUS(*this, "Setting tile dimensions");
-    }
-
-    if (comp.algorithm != ImageCompressionOptions::PLIO && std::isfinite(comp.quantizeLevel)) {
-        fits_set_quantize_level(fits, comp.quantizeLevel, &status);
-        if (behavior & AUTO_CHECK) {
-            LSST_FITS_CHECK_STATUS(*this, "Setting quantization level");
-        }
-    }
-}
-
-void setAllowImageCompression(bool allow) { allowImageCompression = allow; }
-
-bool getAllowImageCompression() { return allowImageCompression; }
 
 // ---- Manipulating files ----------------------------------------------------------------------------------
 
@@ -1797,65 +1925,6 @@ bool Fits::checkCompressedImagePhu() {
     return isCompressed;
 }
 
-ImageWriteOptions::ImageWriteOptions(daf::base::PropertySet const &config)
-        : compression(fits::compressionAlgorithmFromString(config.get<std::string>("compression.algorithm")),
-                      std::vector<long>{config.getAsInt64("compression.columns"),
-                                        config.getAsInt64("compression.rows")},
-                      config.getAsDouble("compression.quantizeLevel")),
-          scaling(fits::scalingAlgorithmFromString(config.get<std::string>("scaling.algorithm")),
-                  config.getAsInt("scaling.bitpix"),
-                  config.exists("scaling.maskPlanes") ? config.getArray<std::string>("scaling.maskPlanes")
-                                                      : std::vector<std::string>{},
-                  config.getAsInt("scaling.seed"), config.getAsDouble("scaling.quantizeLevel"),
-                  config.getAsDouble("scaling.quantizePad"), config.get<bool>("scaling.fuzz"),
-                  config.getAsDouble("scaling.bscale"), config.getAsDouble("scaling.bzero")) {}
-
-namespace {
-
-template <typename T>
-void validateEntry(daf::base::PropertySet &output, daf::base::PropertySet const &input,
-                   std::string const &name, T defaultValue) {
-    output.add(name, input.get<T>(name, defaultValue));
-}
-
-template <typename T>
-void validateEntry(daf::base::PropertySet &output, daf::base::PropertySet const &input,
-                   std::string const &name, std::vector<T> defaultValue) {
-    output.add(name, input.exists(name) ? input.getArray<T>(name) : defaultValue);
-}
-
-}  // anonymous namespace
-
-std::shared_ptr<daf::base::PropertySet> ImageWriteOptions::validate(daf::base::PropertySet const &config) {
-    auto validated = std::make_shared<daf::base::PropertySet>();
-
-    validateEntry(*validated, config, "compression.algorithm", std::string("NONE"));
-    validateEntry(*validated, config, "compression.columns", 0);
-    validateEntry(*validated, config, "compression.rows", 1);
-    validateEntry(*validated, config, "compression.quantizeLevel", 0.0);
-
-    validateEntry(*validated, config, "scaling.algorithm", std::string("NONE"));
-    validateEntry(*validated, config, "scaling.bitpix", 0);
-    validateEntry(*validated, config, "scaling.maskPlanes", std::vector<std::string>{"NO_DATA"});
-    validateEntry(*validated, config, "scaling.seed", 1);
-    validateEntry(*validated, config, "scaling.quantizeLevel", 5.0);
-    validateEntry(*validated, config, "scaling.quantizePad", 10.0);
-    validateEntry(*validated, config, "scaling.fuzz", true);
-    validateEntry(*validated, config, "scaling.bscale", 1.0);
-    validateEntry(*validated, config, "scaling.bzero", 0.0);
-
-    // Check for additional entries that we don't support (e.g., from typos)
-    for (auto const &name : config.names(false)) {
-        if (!validated->exists(name)) {
-            std::ostringstream os;
-            os << "Invalid image write option: " << name;
-            throw LSST_EXCEPT(pex::exceptions::RuntimeError, os.str());
-        }
-    }
-
-    return validated;
-}
-
 #define INSTANTIATE_KEY_OPS(r, data, T)                                                            \
     template void Fits::updateKey(std::string const &, T const &, std::string const &);            \
     template void Fits::writeKey(std::string const &, T const &, std::string const &);             \
@@ -1868,8 +1937,8 @@ std::shared_ptr<daf::base::PropertySet> ImageWriteOptions::validate(daf::base::P
     template void Fits::readKey(std::string const &, T &);
 
 #define INSTANTIATE_IMAGE_OPS(r, data, T)                                                  \
-    template void Fits::writeImageImpl(T const *, int);                                    \
-    template void Fits::writeImage(image::ImageBase<T> const &, ImageWriteOptions const &, \
+    template void Fits::writeImageImpl(T const *, int, std::optional<T>);                  \
+    template void Fits::writeImage(image::ImageBase<T> const &, CompressionOptions const *, \
                                    daf::base::PropertySet const *,          \
                                    image::Mask<image::MaskPixel> const *);  \
     template void Fits::readImageImpl(int, T *, long *, long *, long *);                   \

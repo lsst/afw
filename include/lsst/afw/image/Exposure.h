@@ -330,8 +330,6 @@ public:
     /**
      *  Write an Exposure to a regular multi-extension FITS file.
      *
-     *  @param[in] fileName      Name of the file to write.
-     *
      *  As with MaskedImage persistence, an empty primary HDU will be created and all images planes
      *  will be saved to extension HDUs.  Most metadata will be saved only to the header of the
      *  main image HDU, but the WCS will be saved to the header of the mask and variance as well.
@@ -340,38 +338,15 @@ public:
      *  Note that the LSST pixel origin differs from the FITS convention by one, so the values
      *  of CRPIX and LTV saved in the file are not the same as those in the C++ objects in memory,
      *  but are rather modified so they are interpreted by external tools (like ds9).
-     */
-    void writeFits(std::string const& fileName) const;
-
-    /**
-     *  Write an Exposure to a multi-extension FITS file in memory.
-     *
-     *  @param[in] manager       Manager for the memory to write to.
-     *
-     *  @see writeFits
-     */
-    void writeFits(fits::MemFileManager& manager) const;
-
-    /**
-     *  Write an Exposure to an already-open FITS file object.
-     *
-     *  @param[in] fitsfile       FITS object to write.
-     *
-     *  @see writeFits
-     */
-    void writeFits(fits::Fits& fitsfile) const;
-
-    /**
-     *  Write an Exposure to a regular multi-extension FITS file.
      *
      *  @param[in] fileName        Name of the file to write.
      *  @param[in] imageOptions    Options controlling writing of image as FITS.
      *  @param[in] maskOptions     Options controlling writing of mask as FITS.
      *  @param[in] varianceOptions Options controlling writing of variance as FITS.
      */
-    void writeFits(std::string const& fileName, fits::ImageWriteOptions const& imageOptions,
-                   fits::ImageWriteOptions const& maskOptions,
-                   fits::ImageWriteOptions const& varianceOptions) const;
+    void writeFits(std::string const& fileName, fits::CompressionOptions const * imageOptions = nullptr,
+                   fits::CompressionOptions const * maskOptions = nullptr,
+                   fits::CompressionOptions const * varianceOptions = nullptr) const;
 
     /**
      *  Write an Exposure to a regular multi-extension FITS file.
@@ -381,9 +356,9 @@ public:
      *  @param[in] maskOptions     Options controlling writing of mask as FITS.
      *  @param[in] varianceOptions Options controlling writing of variance as FITS.
      */
-    void writeFits(fits::MemFileManager& manager, fits::ImageWriteOptions const& imageOptions,
-                   fits::ImageWriteOptions const& maskOptions,
-                   fits::ImageWriteOptions const& varianceOptions) const;
+    void writeFits(fits::MemFileManager& manager, fits::CompressionOptions const* imageOptions = nullptr,
+                   fits::CompressionOptions const* maskOptions = nullptr,
+                   fits::CompressionOptions const* varianceOptions = nullptr) const;
 
     /**
      *  Write an Exposure to a regular multi-extension FITS file.
@@ -393,9 +368,9 @@ public:
      *  @param[in] maskOptions     Options controlling writing of mask as FITS.
      *  @param[in] varianceOptions Options controlling writing of variance as FITS.
      */
-    void writeFits(fits::Fits& fitsfile, fits::ImageWriteOptions const& imageOptions,
-                   fits::ImageWriteOptions const& maskOptions,
-                   fits::ImageWriteOptions const& varianceOptions) const;
+    void writeFits(fits::Fits& fitsfile, fits::CompressionOptions const* imageOptions = nullptr,
+                   fits::CompressionOptions const* maskOptions = nullptr,
+                   fits::CompressionOptions const* varianceOptions = nullptr) const;
 
     /**
      *  Read an Exposure from a regular FITS file.

@@ -460,14 +460,14 @@ void MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
         std::shared_ptr<daf::base::PropertySet const> imageMetadata,
         std::shared_ptr<daf::base::PropertySet const> maskMetadata,
         std::shared_ptr<daf::base::PropertySet const> varianceMetadata) const {
-    writeFits(fitsfile, fits::ImageWriteOptions(*_image), fits::ImageWriteOptions(*_mask),
-              fits::ImageWriteOptions(*_variance), metadata, imageMetadata, maskMetadata, varianceMetadata);
+    writeFits(fitsfile, nullptr, nullptr, nullptr,
+              metadata, imageMetadata, maskMetadata, varianceMetadata);
 }
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
-        std::string const& fileName, fits::ImageWriteOptions const& imageOptions,
-        fits::ImageWriteOptions const& maskOptions, fits::ImageWriteOptions const& varianceOptions,
+        std::string const& fileName, fits::CompressionOptions const* imageOptions,
+        fits::CompressionOptions const* maskOptions, fits::CompressionOptions const* varianceOptions,
         std::shared_ptr<daf::base::PropertySet const> metadata,
         std::shared_ptr<daf::base::PropertySet const> imageMetadata,
         std::shared_ptr<daf::base::PropertySet const> maskMetadata,
@@ -479,8 +479,8 @@ void MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
-        fits::MemFileManager& manager, fits::ImageWriteOptions const& imageOptions,
-        fits::ImageWriteOptions const& maskOptions, fits::ImageWriteOptions const& varianceOptions,
+        fits::MemFileManager& manager, fits::CompressionOptions const* imageOptions,
+        fits::CompressionOptions const* maskOptions, fits::CompressionOptions const* varianceOptions,
         std::shared_ptr<daf::base::PropertySet const> metadata,
         std::shared_ptr<daf::base::PropertySet const> imageMetadata,
         std::shared_ptr<daf::base::PropertySet const> maskMetadata,
@@ -492,8 +492,8 @@ void MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
-        fits::Fits& fitsfile, fits::ImageWriteOptions const& imageOptions,
-        fits::ImageWriteOptions const& maskOptions, fits::ImageWriteOptions const& varianceOptions,
+        fits::Fits& fitsfile, fits::CompressionOptions const* imageOptions,
+        fits::CompressionOptions const* maskOptions, fits::CompressionOptions const* varianceOptions,
         std::shared_ptr<daf::base::PropertySet const> metadata,
         std::shared_ptr<daf::base::PropertySet const> imageMetadata,
         std::shared_ptr<daf::base::PropertySet const> maskMetadata,
@@ -526,6 +526,7 @@ void MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
     _image->writeFits(fitsfile, imageOptions, header.get(), _mask.get());
 
     processPlaneMetadata(maskMetadata.get(), header, "MASK");
+
     _mask->writeFits(fitsfile, maskOptions, header.get());
 
     processPlaneMetadata(varianceMetadata.get(), header, "VARIANCE");

@@ -19,12 +19,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-__all__ = ["imageReadFitsWithOptions",
-           "imageWriteFitsWithOptions", "exposureWriteFitsWithOptions"]
+__all__ = ["imageReadFitsWithOptions",]
 
 import logging
 import lsst.geom
-from lsst.afw.fits import ImageWriteOptions
+from lsst.afw.fits import CompressionOptions
 from ._imageLib import ImageOrigin
 
 _LOG = logging.getLogger("lsst.afw.image")
@@ -94,22 +93,19 @@ def imageWriteFitsWithOptions(self, dest, options, item="image"):
     ----------
     dest : `str`
         Fits file path to which to write the image or mask.
-    options : `lsst.daf.base.PropertySet`
-        Write options. The item ``item`` is read (which defaults to "image").
-        It must contain an `lsst.daf.base.PropertySet` with data for
-        ``lsst.afw.fits.ImageWriteOptions``.
+    options : `~collections.abc.Mapping`
+        Write options. The item ``item`` is accessed (which defaults to
+        "image"). It must contain a mapping with data for
+        `lsst.afw.fits.CompressionOptions.from_mapping`, or `None` for no
+        compression.
     item : `str`, optional
         Item to read from the ``options`` parameter.
     """
     if options is not None:
-        try:
-            writeOptions = ImageWriteOptions(options.getPropertySet(item))
-        except Exception:
-            _LOG.exception("Could not parse item %s from options; writing with defaults.", item)
-        else:
-            self.writeFits(dest, writeOptions)
-            return
-    self.writeFits(dest)
+        writeOptions = CompressionOptions.from_mapping(options[item])
+        self.writeFits(dest, writeOptions)
+    else:
+        self.writeFits(dest)
 
 
 def exposureWriteFitsWithOptions(self, dest, options):
@@ -119,18 +115,16 @@ def exposureWriteFitsWithOptions(self, dest, options):
     ----------
     dest : `str`
         Fits file path to which to write the exposure or masked image.
-    options : `lsst.daf.base.PropertySet`
+    options : `~collections.abc.Mapping`
         Write options. The items "image", "mask" and "variance" are read.
-        Each must be an `lsst.daf.base.PropertySet` with data for
-        ``lsst.afw.fits.ImageWriteOptions``.
+        Each must contain a mapping with data for
+        `lsst.afw.fits.CompressionOptions.from_mapping`, or `None` for no
+        compression.
     """
     if options is not None:
-        try:
-            writeOptionDict = {name + "Options": ImageWriteOptions(options.getPropertySet(name))
-                               for name in ("image", "mask", "variance")}
-        except Exception:
-            _LOG.exception("Could not parse options; writing with defaults.")
-        else:
-            self.writeFits(dest, **writeOptionDict)
-            return
-    self.writeFits(dest)
+        writeOptionDict = {name + "Options": CompressionOptions.from_mapping(plane_options)
+                           for name in ("image", "mask", "variance")
+                           if (plane_options := options[name]) is not None}
+        self.writeFits(dest, **writeOptionDict)
+    else:
+        self.writeFits(dest)

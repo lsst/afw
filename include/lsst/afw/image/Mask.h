@@ -391,7 +391,7 @@ public:
      *  @param[in] mode          "w"=Create a new file; "a"=Append a new HDU.
      *  @param[in] header        Additional values to write to the header (may be null).
      */
-    void writeFits(std::string const& filename, fits::ImageWriteOptions const& options,
+    void writeFits(std::string const& filename, fits::CompressionOptions const* options,
                    std::string const& mode = "w", daf::base::PropertySet const* header = nullptr) const;
     //@}
 
@@ -404,7 +404,7 @@ public:
      *  @param[in] mode          "w"=Create a new file; "a"=Append a new HDU.
      *  @param[in] header        Additional values to write to the header (may be null).
      */
-    void writeFits(fits::MemFileManager& manager, fits::ImageWriteOptions const& options,
+    void writeFits(fits::MemFileManager& manager, fits::CompressionOptions const* options,
                    std::string const& mode = "w", daf::base::PropertySet const* header = nullptr) const;
     //@}
 
@@ -416,7 +416,7 @@ public:
      *  @param[in] options       Options controlling writing of FITS image.
      *  @param[in] header        Additional values to write to the header (may be null).
      */
-    void writeFits(fits::Fits& fitsfile, fits::ImageWriteOptions const& options,
+    void writeFits(fits::Fits& fitsfile, fits::CompressionOptions const* options,
                    daf::base::PropertySet const* header = nullptr) const;
     //@}
 

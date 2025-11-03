@@ -19,7 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from lsst.afw.fits import MemFileManager, ImageWriteOptions, ImageCompressionOptions
+from lsst.afw.fits import MemFileManager, CompressionOptions
 
 import lsst.afw.table
 import lsst.afw.image
@@ -35,7 +35,7 @@ def reduceToFits(obj):
     obj
         any object with a ``writeFits`` method taking a
         `~lsst.afw.fits.MemFileManager` and possibly an
-        `~lsst.afw.fits.ImageWriteOptions`.
+        `~lsst.afw.fits.CompressionOptions`.
 
     Returns
     -------
@@ -43,7 +43,7 @@ def reduceToFits(obj):
         a tuple in the format returned by `~object.__reduce__`
     """
     manager = MemFileManager()
-    options = ImageWriteOptions(ImageCompressionOptions(ImageCompressionOptions.NONE))
+    options = CompressionOptions()
     table = getattr(obj, 'table', None)
     if isinstance(table, lsst.afw.table.BaseTable):
         # table objects don't take `options`

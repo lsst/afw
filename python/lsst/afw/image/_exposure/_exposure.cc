@@ -142,37 +142,35 @@ PyExposure<PixelT> declareExposure(lsst::cpputils::python::WrapperCollection &wr
 
                 cls.def("subset", &ExposureT::subset, "bbox"_a, "origin"_a = PARENT);
 
-                cls.def("writeFits", (void(ExposureT::*)(std::string const &) const) & ExposureT::writeFits);
-                cls.def("writeFits",
-                        (void(ExposureT::*)(fits::MemFileManager &) const) & ExposureT::writeFits);
-                cls.def("writeFits", [](ExposureT &self, fits::Fits &fits) { self.writeFits(fits); });
-
                 cls.def(
                         "writeFits",
                         [](ExposureT &self, std::string const &filename,
-                           fits::ImageWriteOptions const &imageOptions,
-                           fits::ImageWriteOptions const &maskOptions,
-                           fits::ImageWriteOptions const &varianceOptions) {
+                           fits::CompressionOptions const *imageOptions,
+                           fits::CompressionOptions const *maskOptions,
+                           fits::CompressionOptions const *varianceOptions) {
                             self.writeFits(filename, imageOptions, maskOptions, varianceOptions);
                         },
-                        "filename"_a, "imageOptions"_a, "maskOptions"_a, "varianceOptions"_a);
+                        "filename"_a, "imageOptions"_a=py::none(),
+                        "maskOptions"_a=py::none(), "varianceOptions"_a=py::none());
                 cls.def(
                         "writeFits",
                         [](ExposureT &self, fits::MemFileManager &manager,
-                           fits::ImageWriteOptions const &imageOptions,
-                           fits::ImageWriteOptions const &maskOptions,
-                           fits::ImageWriteOptions const &varianceOptions) {
+                           fits::CompressionOptions const *imageOptions,
+                           fits::CompressionOptions const *maskOptions,
+                           fits::CompressionOptions const *varianceOptions) {
                             self.writeFits(manager, imageOptions, maskOptions, varianceOptions);
                         },
-                        "manager"_a, "imageOptions"_a, "maskOptions"_a, "varianceOptions"_a);
+                        "manager"_a, "imageOptions"_a=py::none(),
+                        "maskOptions"_a=py::none(), "varianceOptions"_a=py::none());
                 cls.def(
                         "writeFits",
-                        [](ExposureT &self, fits::Fits &fits, fits::ImageWriteOptions const &imageOptions,
-                           fits::ImageWriteOptions const &maskOptions,
-                           fits::ImageWriteOptions const &varianceOptions) {
+                        [](ExposureT &self, fits::Fits &fits, fits::CompressionOptions const *imageOptions,
+                           fits::CompressionOptions const *maskOptions,
+                           fits::CompressionOptions const *varianceOptions) {
                             self.writeFits(fits, imageOptions, maskOptions, varianceOptions);
                         },
-                        "fits"_a, "imageOptions"_a, "maskOptions"_a, "varianceOptions"_a);
+                        "fits"_a, "imageOptions"_a=py::none(),
+                        "maskOptions"_a=py::none(), "varianceOptions"_a=py::none());
 
                 cls.def_static("readFits", (ExposureT(*)(std::string const &))ExposureT::readFits);
                 cls.def_static("readFits", (ExposureT(*)(fits::MemFileManager &))ExposureT::readFits);

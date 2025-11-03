@@ -942,8 +942,8 @@ public:
      *  while the image, mask, and variance HDU headers will use the "INHERIT='T'" convention
      *  to indicate that the primary metadata applies to those HDUs as well.
      */
-    void writeFits(std::string const& fileName, fits::ImageWriteOptions const& imageOptions,
-                   fits::ImageWriteOptions const& maskOptions, fits::ImageWriteOptions const& varianceOptions,
+    void writeFits(std::string const& fileName, fits::CompressionOptions const* imageOptions,
+                   fits::CompressionOptions const* maskOptions, fits::CompressionOptions const* varianceOptions,
                    std::shared_ptr<daf::base::PropertySet const> metadata = nullptr,
                    std::shared_ptr<daf::base::PropertySet const> imageMetadata = nullptr,
                    std::shared_ptr<daf::base::PropertySet const> maskMetadata = nullptr,
@@ -965,8 +965,8 @@ public:
      *  while the image, mask, and variance HDU headers will use the "INHERIT='T'" convention
      *  to indicate that the primary metadata applies to those HDUs as well.
      */
-    void writeFits(fits::MemFileManager& manager, fits::ImageWriteOptions const& imageOptions,
-                   fits::ImageWriteOptions const& maskOptions, fits::ImageWriteOptions const& varianceOptions,
+    void writeFits(fits::MemFileManager& manager, fits::CompressionOptions const* imageOptions,
+                   fits::CompressionOptions const* maskOptions, fits::CompressionOptions const* varianceOptions,
                    std::shared_ptr<daf::base::PropertySet const> metadata = nullptr,
                    std::shared_ptr<daf::base::PropertySet const> imageMetadata = nullptr,
                    std::shared_ptr<daf::base::PropertySet const> maskMetadata = nullptr,
@@ -988,8 +988,8 @@ public:
      *  while the image, mask, and variance HDU headers will use the "INHERIT='T'" convention
      *  to indicate that the primary metadata applies to those HDUs as well.
      */
-    void writeFits(fits::Fits& fitsfile, fits::ImageWriteOptions const& imageOptions,
-                   fits::ImageWriteOptions const& maskOptions, fits::ImageWriteOptions const& varianceOptions,
+    void writeFits(fits::Fits& fitsfile, fits::CompressionOptions const* imageOptions,
+                   fits::CompressionOptions const* maskOptions, fits::CompressionOptions const* varianceOptions,
                    std::shared_ptr<daf::base::PropertySet const> metadata = nullptr,
                    std::shared_ptr<daf::base::PropertySet const> imageMetadata = nullptr,
                    std::shared_ptr<daf::base::PropertySet const> maskMetadata = nullptr,

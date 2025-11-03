@@ -23,6 +23,7 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <pybind11/native_enum.h>
 
 #include "lsst/cpputils/python.h"
 
@@ -43,142 +44,62 @@ namespace lsst {
 namespace afw {
 namespace fits {
 namespace {
-void declareImageCompression(lsst::cpputils::python::WrapperCollection &wrappers) {
-    auto options = wrappers.wrapType(
-            py::class_<ImageCompressionOptions>(wrappers.module, "ImageCompressionOptions"),
-            [](auto &mod, auto &cls) {
-                cls.def(py::init<ImageCompressionOptions::CompressionAlgorithm,
-                                 ImageCompressionOptions::Tiles, float>(),
-                        "algorithm"_a, "tiles"_a, "quantizeLevel"_a = 0.0);
-                cls.def(py::init<ImageCompressionOptions::CompressionAlgorithm, int, float>(), "algorithm"_a,
-                        "rows"_a = 1, "quantizeLevel"_a = 0.0);
-
-                cls.def(py::init<lsst::afw::image::Image<unsigned char> const &>());
-                cls.def(py::init<lsst::afw::image::Image<unsigned short> const &>());
-                cls.def(py::init<lsst::afw::image::Image<short> const &>());
-                cls.def(py::init<lsst::afw::image::Image<int> const &>());
-                cls.def(py::init<lsst::afw::image::Image<unsigned int> const &>());
-                cls.def(py::init<lsst::afw::image::Image<float> const &>());
-                cls.def(py::init<lsst::afw::image::Image<double> const &>());
-                cls.def(py::init<lsst::afw::image::Image<std::uint64_t> const &>());
-
-                cls.def(py::init<lsst::afw::image::Mask<unsigned char> const &>());
-                cls.def(py::init<lsst::afw::image::Mask<unsigned short> const &>());
-                cls.def(py::init<lsst::afw::image::Mask<short> const &>());
-                cls.def(py::init<lsst::afw::image::Mask<std::int32_t> const &>());
-
-                cls.def_readonly("algorithm", &ImageCompressionOptions::algorithm);
-                cls.def_readonly("tiles", &ImageCompressionOptions::tiles);
-                cls.def_readonly("quantizeLevel", &ImageCompressionOptions::quantizeLevel);
-            });
+void declareCompression(lsst::cpputils::python::WrapperCollection &wrappers) {
+    py::native_enum<CompressionAlgorithm>(wrappers.module, "CompressionAlgorithm", "enum.Enum")
+        .value("GZIP_1", CompressionAlgorithm::GZIP_1_)
+        .value("GZIP_2", CompressionAlgorithm::GZIP_2_)
+        .value("RICE_1", CompressionAlgorithm::RICE_1_)
+        .finalize();
+    py::native_enum<DitherAlgorithm>(wrappers.module, "DitherAlgorithm", "enum.Enum")
+        .value("NO_DITHER", DitherAlgorithm::NO_DITHER_)
+        .value("SUBTRACTIVE_DITHER_1", DitherAlgorithm::SUBTRACTIVE_DITHER_1_)
+        .value("SUBTRACTIVE_DITHER_2", DitherAlgorithm::SUBTRACTIVE_DITHER_2_)
+        .finalize();
+    py::native_enum<ScalingAlgorithm>(wrappers.module, "ScalingAlgorithm", "enum.Enum")
+        .value("RANGE", ScalingAlgorithm::RANGE)
+        .value("STDEV_MASKED", ScalingAlgorithm::STDEV_MASKED)
+        .value("STDEV_CFITSIO", ScalingAlgorithm::STDEV_CFITSIO)
+        .value("MANUAL", ScalingAlgorithm::MANUAL)
+        .finalize();
     wrappers.wrapType(
-            py::enum_<ImageCompressionOptions::CompressionAlgorithm>(options, "CompressionAlgorithm"),
-            [](auto &mod, auto &enm) {
-                enm.value("NONE", ImageCompressionOptions::CompressionAlgorithm::NONE);
-                enm.value("GZIP", ImageCompressionOptions::CompressionAlgorithm::GZIP);
-                enm.value("GZIP_SHUFFLE", ImageCompressionOptions::CompressionAlgorithm::GZIP_SHUFFLE);
-                enm.value("RICE", ImageCompressionOptions::CompressionAlgorithm::RICE);
-                enm.value("PLIO", ImageCompressionOptions::CompressionAlgorithm::PLIO);
-                enm.export_values();
-            });
-}
-
-template <typename T>
-void declareImageScalingOptionsTemplates(py::class_<ImageScalingOptions> &cls) {
-    cls.def(
-        "determine",
-        // It seems like py::overload cast should work here, and I don't
-        // understand why it doesn't.
-        [](
-            ImageScalingOptions const & self,
-            image::ImageBase<T> const& image,
-            image::Mask<image::MaskPixel> const * mask
-        ) {
-            return self.determine(image, mask);
-        },
-        "image"_a,
-        "mask"_a=nullptr
-    );
-}
-
-void declareImageScalingOptions(lsst::cpputils::python::WrapperCollection &wrappers) {
-    auto options = wrappers.wrapType(
-            py::class_<ImageScalingOptions>(wrappers.module, "ImageScalingOptions"),
-            [](auto &mod, auto &cls) {
-                cls.def(py::init<>());
-                cls.def(py::init<ImageScalingOptions::ScalingAlgorithm, int, std::vector<std::string> const &,
-                                 unsigned long, float, float, bool, double, double>(),
-                        "algorithm"_a, "bitpix"_a, "maskPlanes"_a = std::vector<std::string>(), "seed"_a = 1,
-                        "quantizeLevel"_a = 4.0, "quantizePad"_a = 5.0, "fuzz"_a = true, "bscale"_a = 1.0,
-                        "bzero"_a = 0.0);
-
-                cls.def_readonly("algorithm", &ImageScalingOptions::algorithm);
-                cls.def_readonly("bitpix", &ImageScalingOptions::bitpix);
-                cls.def_readonly("maskPlanes", &ImageScalingOptions::maskPlanes);
-                cls.def_readonly("seed", &ImageScalingOptions::seed);
-                cls.def_readonly("quantizeLevel", &ImageScalingOptions::quantizeLevel);
-                cls.def_readonly("quantizePad", &ImageScalingOptions::quantizePad);
-                cls.def_readonly("fuzz", &ImageScalingOptions::fuzz);
-                cls.def_readonly("bscale", &ImageScalingOptions::bscale);
-                cls.def_readonly("bzero", &ImageScalingOptions::bzero);
-
-                declareImageScalingOptionsTemplates<float>(cls);
-                declareImageScalingOptionsTemplates<double>(cls);
-            });
-    wrappers.wrapType(py::enum_<ImageScalingOptions::ScalingAlgorithm>(options, "ScalingAlgorithm"),
-                      [](auto &mod, auto &enm) {
-                          enm.value("NONE", ImageScalingOptions::ScalingAlgorithm::NONE);
-                          enm.value("RANGE", ImageScalingOptions::ScalingAlgorithm::RANGE);
-                          enm.value("STDEV_POSITIVE", ImageScalingOptions::ScalingAlgorithm::STDEV_POSITIVE);
-                          enm.value("STDEV_NEGATIVE", ImageScalingOptions::ScalingAlgorithm::STDEV_NEGATIVE);
-                          enm.value("STDEV_BOTH", ImageScalingOptions::ScalingAlgorithm::STDEV_BOTH);
-                          enm.value("MANUAL", ImageScalingOptions::ScalingAlgorithm::MANUAL);
-                          enm.export_values();
-                      });
-}
-
-template <typename T>
-void declareImageScaleTemplates(py::class_<ImageScale> &cls, std::string const &suffix) {
-    cls.def("toFits", &ImageScale::toFits<T>, "image"_a, "forceNonfiniteRemoval"_a = false, "fuzz"_a = true,
-            "tiles"_a = ndarray::Array<long, 1, 1>(), "seed"_a = 1);
-    cls.def("fromFits", &ImageScale::fromFits<T>);
-}
-
-void declareImageScale(lsst::cpputils::python::WrapperCollection &wrappers) {
-    wrappers.wrapType(py::class_<ImageScale>(wrappers.module, "ImageScale"), [](auto &mod, auto &cls) {
-        cls.def(py::init<int, double, double>(), "bitpix"_a, "bscale"_a, "bzero"_a);
-        cls.def_readonly("bitpix", &ImageScale::bitpix);
-        cls.def_readonly("bscale", &ImageScale::bscale);
-        cls.def_readonly("bzero", &ImageScale::bzero);
-        cls.def_readonly("blank", &ImageScale::blank);
-
-        declareImageScaleTemplates<float>(cls, "F");
-        declareImageScaleTemplates<double>(cls, "D");
-    });
-}
-
-void declareImageWriteOptions(lsst::cpputils::python::WrapperCollection &wrappers) {
-    wrappers.wrapType(py::class_<ImageWriteOptions>(wrappers.module, "ImageWriteOptions"),
-                      [](auto &mod, auto &cls) {
-                          cls.def(py::init<lsst::afw::image::Image<std::uint16_t>>());
-                          cls.def(py::init<lsst::afw::image::Image<std::int32_t>>());
-                          cls.def(py::init<lsst::afw::image::Image<std::uint64_t>>());
-                          cls.def(py::init<lsst::afw::image::Image<float>>());
-                          cls.def(py::init<lsst::afw::image::Image<double>>());
-
-                          cls.def(py::init<lsst::afw::image::Mask<lsst::afw::image::MaskPixel>>());
-
-                          cls.def(py::init<ImageCompressionOptions const &, ImageScalingOptions const &>(),
-                                  "compression"_a, "scaling"_a = ImageScalingOptions());
-                          cls.def(py::init<ImageScalingOptions const &>());
-
-                          cls.def(py::init<lsst::daf::base::PropertySet const &>());
-
-                          cls.def_readonly("compression", &ImageWriteOptions::compression);
-                          cls.def_readonly("scaling", &ImageWriteOptions::scaling);
-
-                          cls.def_static("validate", &ImageWriteOptions::validate);
-                      });
+        py::class_<QuantizationOptions>(wrappers.module, "QuantizationOptions"),
+        [](auto &mod, auto &cls) {
+            cls.def(
+                py::init<DitherAlgorithm, ScalingAlgorithm, std::vector<std::string>, float, int>(),
+                py::kw_only(),
+                "dither"_a = DitherAlgorithm::NO_DITHER_,
+                "scaling"_a = ScalingAlgorithm::STDEV_MASKED,
+                "mask_planes"_a = py::list(),
+                "level"_a = 0.0,
+                "seed"_a = 0
+            );
+            cls.def_readwrite("dither", &QuantizationOptions::dither);
+            cls.def_readwrite("scaling", &QuantizationOptions::scaling);
+            cls.def_readwrite("mask_planes", &QuantizationOptions::mask_planes);
+            cls.def_readwrite("level", &QuantizationOptions::level);
+            cls.def_readwrite("seed", &QuantizationOptions::seed);
+        });
+    wrappers.wrapType(
+        py::class_<CompressionOptions>(wrappers.module, "CompressionOptions"),
+        [](auto &mod, auto &cls) {
+            cls.def(
+                py::init<
+                    CompressionAlgorithm,
+                    std::size_t,
+                    std::size_t,
+                    std::optional<QuantizationOptions>
+                >(),
+                py::kw_only(),
+                "algorithm"_a = CompressionAlgorithm::GZIP_2_,
+                "tile_width"_a = 0,
+                "tile_height"_a = 1,
+                "quantization"_a = py::none()
+            );
+            cls.def_readwrite("algorithm", &CompressionOptions::algorithm);
+            cls.def_readwrite("tile_width", &CompressionOptions::tile_width);
+            cls.def_readwrite("tile_height", &CompressionOptions::tile_height);
+            cls.def_readwrite("quantization", &CompressionOptions::quantization);
+        });
 }
 
 // Wrapping for lsst::afw::fits::Fits
@@ -216,8 +137,6 @@ void declareFits(lsst::cpputils::python::WrapperCollection &wrappers) {
 
         cls.def("gotoFirstHdu", [](Fits &self) { self.setHdu(DEFAULT_HDU); });
 
-        cls.def("setImageCompression", &Fits::setImageCompression);
-        cls.def("getImageCompression", &Fits::getImageCompression);
         cls.def("checkCompressedImagePhu", &Fits::checkCompressedImagePhu);
 
         cls.def_readonly("status", &Fits::status);
@@ -270,14 +189,6 @@ void declareFitsModule(lsst::cpputils::python::WrapperCollection &wrappers) {
                     return readMetadata(filename, hduname, HduType::ANY, 0, strip);
                 },
                 "fileName"_a, "hduName"_a, "strip"_a = false);
-
-        mod.def("setAllowImageCompression", &setAllowImageCompression, "allow"_a);
-        mod.def("getAllowImageCompression", &getAllowImageCompression);
-
-        mod.def("compressionAlgorithmFromString", &compressionAlgorithmFromString);
-        mod.def("compressionAlgorithmToString", &compressionAlgorithmToString);
-        mod.def("scalingAlgorithmFromString", &scalingAlgorithmFromString);
-        mod.def("scalingAlgorithmToString", &scalingAlgorithmToString);
     });
 }
 }  // namespace
@@ -289,10 +200,7 @@ PYBIND11_MODULE(_fits, mod) {
     //wrappers.addSignatureDependency("lsst.afw.image");
     auto cls = wrappers.wrapException<FitsError, lsst::pex::exceptions::IoError>("FitsError", "IoError");
     cls.def(py::init<std::string const &>());
-    declareImageCompression(wrappers);
-    declareImageScalingOptions(wrappers);
-    declareImageScale(wrappers);
-    declareImageWriteOptions(wrappers);
+    declareCompression(wrappers);
     declareFits(wrappers);
     declareFitsModule(wrappers);
     wrappers.finish();

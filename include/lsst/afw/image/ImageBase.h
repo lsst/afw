@@ -49,7 +49,7 @@ namespace afw {
 namespace fits {
 class Fits;
 class MemFileManager;
-struct ImageWriteOptions;
+struct CompressionOptions;
 }  // namespace fits
 
 namespace image {

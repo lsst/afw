@@ -21,5 +21,4 @@
 
 from ._fits import *
 from ._fitsContinued import *
-from ._compression import imageCompressionDisabled
 from ._pickleFits import reduceToFits, unreduceFromFits

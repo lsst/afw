@@ -55,10 +55,11 @@ class Mask(metaclass=TemplateMeta):
         ----------
         dest : `str`
             Fits file path to which to write the mask.
-        options : `lsst.daf.base.PropertySet`
-            Write options. The item ``item`` is read.
-            It must contain an `lsst.daf.base.PropertySet` with data for
-            ``lsst.afw.fits.ImageWriteOptions``.
+        options : `collections.abc.Mappoing`
+            Write options. The item ``item`` is accessed. It must contain a
+            mapping with data for
+            `lsst.afw.fits.CompressionOptions.from_mapping`, or `None` for no
+            compression.
         item : `str`, optional
             Item to read from the ``options`` parameter.
             If not specified it will default to "mask" if present, else
