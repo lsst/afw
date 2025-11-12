@@ -30,3 +30,4 @@ from ._exposureSummaryStats import *
 from ._basicUtils import *
 from .testUtils import *
 from ._photoCalibContinued import *
+from ._coaddInputsContinued import *
