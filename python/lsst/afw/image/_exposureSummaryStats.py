@@ -162,6 +162,84 @@ class ExposureSummaryStats(Storable):
     zeroPoint, and readNoise.
     """
 
+    psfTE1e1: float = float('nan')
+    """Per-exposure TE1e1 ~ <de1 de1> of PSF residual ellipticity, averaged over
+    theta [0,1] arcmin via treecorr KK correlation. Dimensionless; used to form the
+    full-survey TE1 metric.
+    """
+
+    psfTE1e2: float = float('nan')
+    """Per-exposure TE1e2 ~ <de2 de2> of PSF residual ellipticity, averaged over
+    theta [0,1] arcmin via treecorr KK correlation. Dimensionless; used to form the
+    full-survey TE1 metric.
+    """
+
+    psfTE1ex: float = float('nan')
+    """Per-exposure TE1ex ~ <de1 de2> of PSF residual ellipticity, averaged over
+    theta [0,1] arcmin via treecorr KK correlation. Dimensionless; used to form the
+    full-survey TE1 metric.
+    """
+
+    psfTE2e1: float = float('nan')
+    """Per-exposure TE2e1 ~ <de1 de1> of PSF residual ellipticity, averaged over
+    theta [5,100] arcmin via treecorr KK correlation. Dimensionless; used to form the
+    full-survey TE2 metric.
+    """
+
+    psfTE2e2: float = float('nan')
+    """Per-exposure TE2e2 ~ <de2 de2> of PSF residual ellipticity, averaged over
+    theta [5,100] arcmin via treecorr KK correlation. Dimensionless; used to form the
+    full-survey TE2 metric.
+    """
+
+    psfTE2ex: float = float('nan')
+    """Per-exposure TE2ex ~ <de1 de2> of PSF residual ellipticity, averaged over
+    theta [5,100] arcmin via treecorr KK correlation. Dimensionless; used to form the
+    full-survey TE2 metric.
+    """
+
+    psfTE3e1: float = float('nan')
+    """Per-exposure median-over-CCDs of TE3e1 ~ <de1 de1> of PSF residual
+    ellipticity, where each CCD uses theta within [0,5] arcmin bins. Dimensionless;
+    downstream pipelines take the 85th percentile over
+    images to evaluate TE3.
+    """
+
+    psfTE3e2: float = float('nan')
+    """Per-exposure median-over-CCDs of TE3e2 ~ <de2 de2> of PSF residual
+    ellipticity, where each CCD uses theta within [0,5] arcmin bins. Dimensionless;
+    downstream pipelines take the 85th percentile over
+    images to evaluate TE3.
+    """
+
+    psfTE3ex: float = float('nan')
+    """Per-exposure median-over-CCDs of TE3ex ~ <de1 de2> of PSF residual
+    ellipticity, where each CCD uses theta within [0,5] arcmin bins. Dimensionless;
+    downstream pipelines take the 85th percentile over
+    images to evaluate TE3.
+    """
+
+    psfTE4e1: float = float('nan')
+    """Per-exposure median-over-CCDs of TE4e1 ~ <de1 de1> of PSF residual
+    ellipticity, where each CCD uses theta within [5,20] arcmin bins. Dimensionless;
+    downstream pipelines take the 85th percentile over
+    images to evaluate TE4.
+    """
+
+    psfTE4e2: float = float('nan')
+    """Per-exposure median-over-CCDs of TE4e2 ~ <de2 de2> of PSF residual
+    ellipticity, where each CCD uses theta within [5,20] arcmin bins. Dimensionless;
+    downstream pipelines take the 85th percentile over
+    images to evaluate TE4.
+    """
+
+    psfTE4ex: float = float('nan')
+    """Per-exposure median-over-CCDs of TE4ex ~ <de1 de2> of PSF residual
+    ellipticity, where each CCD uses theta within [5,20] arcmin bins. Dimensionless;
+    downstream pipelines take the 85th percentile over
+    images to evaluate TE4.
+    """
+
     def __post_init__(self):
         Storable.__init__(self)
 
@@ -416,6 +494,78 @@ class ExposureSummaryStats(Storable):
             doc="Magnitude limit at SNR=5 (M5) calculated from psfSigma, "
             "skyBg, zeroPoint, and readNoise.",
             units="mag",
+        )
+        schema.addField(
+            "psfTE1e1",
+            type="F",
+            doc="Per-exposure E1e1 ~ <de1 de1> of PSF residual ellipticity "
+            "over theta within [0,1] arcmin. Dimensionless; contributes to TE1.",
+        )
+        schema.addField(
+            "psfTE1e2",
+            type="F",
+            doc="Per-exposure E1e2 ~ <de2 de2> of PSF residual ellipticity "
+            "over theta within [0,1] arcmin. Dimensionless; contributes to TE1.",
+        )
+        schema.addField(
+            "psfTE1ex",
+            type="F",
+            doc="Per-exposure E1ex ~ <de1 de2> of PSF residual ellipticity "
+            "over theta within [0,1] arcmin. Dimensionless; contributes to TE1.",
+        )
+        schema.addField(
+            "psfTE2e1",
+            type="F",
+            doc="Per-exposure E2e1 ~ <de1 de1> of PSF residual ellipticity "
+            "over theta within [5, 100] arcmin. Dimensionless; contributes to TE2.",
+        )
+        schema.addField(
+            "psfTE2e2",
+            type="F",
+            doc="Per-exposure E2e2 ~ <de2 de2> of PSF residual ellipticity "
+            "over theta within [5, 100] arcmin. Dimensionless; contributes to TE2.",
+        )
+        schema.addField(
+            "psfTE2ex",
+            type="F",
+            doc="Per-exposure E2ex ~ <de1 de2> of PSF residual ellipticity "
+            "over theta within [5, 100] arcmin. Dimensionless; contributes to TE2.",
+        )
+        schema.addField(
+            "psfTE3e1",
+            type="F",
+            doc="Per-exposure median-over-CCDs of TE3e1 ~ <de1 de1> with "
+            "per-CCD theta within [0,5] arcmin. Dimensionless; used for TE3.",
+        )
+        schema.addField(
+            "psfTE3e2",
+            type="F",
+            doc="Per-exposure median-over-CCDs of TE3e2 ~ <de2 de2> with "
+            "per-CCD theta within [0,5] arcmin. Dimensionless; used for TE3.",
+        )
+        schema.addField(
+            "psfTE3ex",
+            type="F",
+            doc="Per-exposure median-over-CCDs of TE3ex ~ <de1 de2> with "
+            "per-CCD theta within [0,5] arcmin. Dimensionless; used for TE3.",
+        )
+        schema.addField(
+            "psfTE4e1",
+            type="F",
+            doc="Per-exposure median-over-CCDs of TE4e1 ~ <de1 de1> with "
+            "per-CCD theta within [5, 20] arcmin. Dimensionless; used for TE4.",
+        )
+        schema.addField(
+            "psfTE4e2",
+            type="F",
+            doc="Per-exposure median-over-CCDs of TE4e2 ~ <de2 de2> with "
+            "per-CCD theta within [5, 20] arcmin. Dimensionless; used for TE4.",
+        )
+        schema.addField(
+            "psfTE4ex",
+            type="F",
+            doc="Per-exposure median-over-CCDs of TE4ex ~ <de1 de2> with "
+            "per-CCD theta within [5, 20] arcmin. Dimensionless; used for TE4.",
         )
 
     def update_record(self, record: BaseRecord) -> None:
