@@ -149,7 +149,7 @@ class ImageTestCase(lsst.utils.tests.TestCase):
 
                 for bboxa, bboxb in itertools.product(bboxes, bboxes):
                     shouldOverlap = bboxa.overlaps(bboxb)
-                    with self.subTest(bboxa=bboxa, bboxb=bboxb):
+                    with self.subTest(bboxa=repr(bboxa), bboxb=repr(bboxb)):
                         subim1a = ImageClass1(image1, bboxa)
                         subim1b = ImageClass1(image1, bboxb)
                         self.assertEqual(afwImage.imagesOverlap(subim1a, subim1b), shouldOverlap)

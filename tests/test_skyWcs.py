@@ -519,8 +519,9 @@ class SimpleSkyWcsTestCase(SkyWcsBaseTestCase):
                 (lsst.geom.Point3D(0, 0, 0), lsst.geom.Point3D(-100, 500, 1.5)),
                 (0*lsst.geom.degrees, 71*lsst.geom.degrees), (False, True),
                 self.crvalList[0:2], self.orientationList[0:2], (False, True), ("TAN", "STG")):
-            with self.subTest(fpPosition=fpPosition, yaw=yaw, addOpticalDistortion=addOpticalDistortion,
-                              crval=crval, orientation=pixelOrientation):
+            with self.subTest(fpPosition=repr(fpPosition), yaw=repr(yaw),
+                              addOpticalDistortion=repr(addOpticalDistortion),
+                              crval=repr(crval), orientation=repr(pixelOrientation)):
                 pixelsToFocalPlane = cameraGeom.Orientation(
                     fpPosition=fpPosition,
                     yaw=yaw,
