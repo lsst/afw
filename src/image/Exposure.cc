@@ -153,7 +153,7 @@ void Exposure<ImageT, MaskT, VarianceT>::writeFits(fits::Fits &fitsfile,
                                                    fits::CompressionOptions const * imageOptions,
                                                    fits::CompressionOptions const * maskOptions,
                                                    fits::CompressionOptions const * varianceOptions) const {
-    ExposureInfo::FitsWriteData data = _info->_startWriteFits(getXY0());
+    ExposureInfo::FitsWriteData data = _info->_startWriteFits(getBBox());
     _maskedImage.writeFits(fitsfile, imageOptions, maskOptions, varianceOptions, data.metadata,
                            data.imageMetadata, data.maskMetadata, data.varianceMetadata);
     _info->_finishWriteFits(fitsfile, data);
