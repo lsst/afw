@@ -36,6 +36,7 @@
 #include "lsst/daf/base/PropertyList.h"
 #include "lsst/geom/AffineTransform.h"
 #include "lsst/geom/Angle.h"
+#include "lsst/geom/Box.h"
 #include "lsst/geom/Point.h"
 #include "lsst/afw/geom/Endpoint.h"
 #include "lsst/afw/geom/Transform.h"
@@ -178,6 +179,10 @@ public:
      * @param[in] precise  If false, write an already-attached FITS approximation if it exists (if there
      *                     is no FITS approximation, this parameter is ignored).
      *                     If true, write the WCS itself to FITS, or raise if this is impossible.
+     * @param[in] bbox     The bounding box of the image the WCS will be associated with.
+     *                     If the WCS is being attached to a subimage, this should be the
+     *                     bounding box of a subimage.  If not provided, this defaults to [0:100, 0:100]
+     *                     for backwards compatibility with previous behavior.
      *
      * FITS representations of WCS are described in "Representations of World Coordinates in FITS"
      * by Greisen and Calabretta and several related papers.
@@ -187,7 +192,12 @@ public:
      * @throws lsst::pex::exceptions::RuntimeError if precise is true or there is no FITS approxmation and
      * AST cannot represent this WCS as a FITS WCS to sufficient precision.
      */
-    std::shared_ptr<daf::base::PropertyList> getFitsMetadata(bool precise = false) const;
+    std::shared_ptr<daf::base::PropertyList> getFitsMetadata(
+        bool precise = false,
+        lsst::geom::Box2I const & bbox = lsst::geom::Box2I(
+            lsst::geom::Point2I(0, 0), lsst::geom::Extent2I(100, 100)
+        )
+    ) const;
 
     /**
      * Get the pixel scale at the specified pixel position
@@ -374,7 +384,7 @@ public:
     std::shared_ptr<SkyWcs> copyWithFitsApproximation(std::shared_ptr<SkyWcs> fitsApproximation) const;
 
     /**
-     * Return true getFitsMetadata(true) will succeed, false if not.
+     * Return true getFitsMetadata(true) will succeed with no arguments, false if not.
      *
      * In other words, true indicates that the WCS can be accurately represented using FITS WCS metadata.
      */
@@ -485,7 +495,7 @@ private:
      * Compute the FITS representation of this WCS (without falling back to a FITS approximation) or return
      * a null pointer if it is not FITS-compatible.
     */
-    std::shared_ptr<daf::base::PropertyList> _getDirectFitsMetadata() const;
+    std::shared_ptr<daf::base::PropertyList> _getDirectFitsMetadata(lsst::geom::Box2I const & bbox) const;
 
     /// Compute _pixelOrigin and _pixelScaleAtOrigin
     void _computeCache() {

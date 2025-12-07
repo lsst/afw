@@ -56,8 +56,7 @@ int const SERIALIZATION_VERSION = 1;
 
 // TIGHT_FITS_TOL is used by getFitsMetadata to determine if a WCS can accurately be represented as a FITS
 // WCS. It specifies the maximum departure from linearity (in pixels) allowed on either axis of the mapping
-// from pixel coordinates to Intermediate World Coordinates over a range of 100 x 100 pixels
-// (or the region specified by NAXIS[12], if provided, but we do not pass this to AST as of 2018-01-17).
+// from pixel coordinates to Intermediate World Coordinates over the bounding box provided.
 // For more information,
 // see FitsTol in the AST manual http://starlink.eao.hawaii.edu/devdocs/sun211.htx/sun211.html
 double const TIGHT_FITS_TOL = 0.0001;
@@ -227,25 +226,35 @@ std::shared_ptr<SkyWcs> SkyWcs::copyAtShiftedPixelOrigin(lsst::geom::Extent2D co
     return makeModifiedWcs(newToOldPixel, *this, true);
 }
 
-std::shared_ptr<daf::base::PropertyList> SkyWcs::_getDirectFitsMetadata() const {
+std::shared_ptr<daf::base::PropertyList> SkyWcs::_getDirectFitsMetadata(
+    lsst::geom::Box2I const & bbox
+) const {
     // Make a FrameSet that maps from GRID to SKY; GRID = the base frame (PIXELS or ACTUAL_PIXELS) + 1
-    auto const gridToPixel = ast::ShiftMap({-1.0, -1.0});
+    auto const gridToPixel = ast::ShiftMap({bbox.getBeginX() - 1.0, bbox.getBeginY() - 1.0});
     auto thisDict = getFrameDict();
     auto const pixelToIwc = thisDict->getMapping(ast::FrameSet::BASE, "IWC");
     auto const iwcToSky = thisDict->getMapping("IWC", "SKY");
     auto const gridToSky = gridToPixel.then(*pixelToIwc).then(*iwcToSky);
     ast::FrameSet frameSet(ast::Frame(2, "Domain=GRID"), gridToSky, *thisDict->getFrame("SKY", false));
 
-    // Write frameSet to a FitsChan and extract the metadata
+    // Write frameSet to a FitsChan and extract the metadata.  We pass NAXIS
+    // to tell AST the region we care about in case it needs to do any
+    // calculations that are not exact (e.g. SIP inverse polynomials).
     std::ostringstream os;
     os << "Encoding=FITS-WCS, CDMatrix=1, FitsAxisOrder=<copy>, FitsTol=" << TIGHT_FITS_TOL;
     ast::StringStream strStream;
     ast::FitsChan fitsChan(strStream, os.str());
+    fitsChan.setFitsI("NAXIS1", bbox.getWidth());
+    fitsChan.setFitsI("NAXIS2", bbox.getHeight());
     int const nObjectsWritten = fitsChan.write(frameSet);
     if (nObjectsWritten == 0) {
         return nullptr;
     }
     std::shared_ptr<daf::base::PropertyList> header = detail::getPropertyListFromFitsChan(fitsChan);
+
+    // Drop NAXIS1 and NAXIS2, as we want to leave that to the image to set.
+    header->remove("NAXIS1");
+    header->remove("NAXIS2");
 
     // Remove DATE-OBS, MJD-OBS: AST writes these if the EQUINOX is set, but we set them via other mechanisms.
     header->remove("DATE-OBS");
@@ -266,11 +275,13 @@ std::shared_ptr<daf::base::PropertyList> SkyWcs::_getDirectFitsMetadata() const 
     return header;
 }
 
-std::shared_ptr<daf::base::PropertyList> SkyWcs::getFitsMetadata(bool precise) const {
+std::shared_ptr<daf::base::PropertyList> SkyWcs::getFitsMetadata(
+    bool precise, lsst::geom::Box2I const & bbox
+) const {
     if (!precise && hasFitsApproximation()) {
-        return getFitsApproximation()->_getDirectFitsMetadata();
+        return getFitsApproximation()->_getDirectFitsMetadata(bbox);
     }
-    auto result = _getDirectFitsMetadata();
+    auto result = _getDirectFitsMetadata(bbox);
     if (!result) {
         throw LSST_EXCEPT(pex::exceptions::RuntimeError,
                           precise ? "WCS is not directly FITS-compatible."
@@ -291,7 +302,11 @@ std::shared_ptr<SkyWcs> SkyWcs::copyWithFitsApproximation(std::shared_ptr<SkyWcs
     return result;
 }
 
-bool SkyWcs::isFits() const { return bool(_getDirectFitsMetadata()); }
+bool SkyWcs::isFits() const {
+    return bool(_getDirectFitsMetadata(
+        lsst::geom::Box2I(lsst::geom::Point2I(0, 0), lsst::geom::Extent2I(100, 100))
+    ));
+}
 
 lsst::geom::AffineTransform SkyWcs::linearizePixelToSky(lsst::geom::SpherePoint const& coord,
                                                         lsst::geom::AngleUnit const& skyUnit) const {

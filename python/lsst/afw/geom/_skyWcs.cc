@@ -91,7 +91,9 @@ void declareSkyWcs(lsst::cpputils::python::WrapperCollection &wrappers) {
                 table::io::python::addPersistableMethods<SkyWcs>(cls);
 
                 cls.def("copyAtShiftedPixelOrigin", &SkyWcs::copyAtShiftedPixelOrigin, "shift"_a);
-                cls.def("getFitsMetadata", &SkyWcs::getFitsMetadata, "precise"_a = false);
+                cls.def("getFitsMetadata", &SkyWcs::getFitsMetadata, "precise"_a = false,
+                        "bbox"_a = lsst::geom::Box2I(lsst::geom::Point2I(0, 0),
+                                                     lsst::geom::Extent2I(100, 100)));
                 cls.def("hasFitsApproximation", &SkyWcs::hasFitsApproximation);
                 cls.def("getFitsApproximation", &SkyWcs::getFitsApproximation);
                 cls.def("copyWithFitsApproximation", &SkyWcs::copyWithFitsApproximation);
