@@ -61,22 +61,22 @@ std::pair<poly::PolynomialFunction2dYX, poly::PolynomialFunction2dYX> fitPolynom
         decomp.setThreshold(svdThreshold);
     }
     Eigen::VectorXd xCoeff = Eigen::VectorXd::Zero(basis.size());
+    xCoeff.tail(basis.size() - 1) = decomp.solve(xRhs);
     if (Eigen::isnan(xCoeff.array()).any()) {
         throw LSST_EXCEPT(
             pex::exceptions::RuntimeError,
             "Polynomial fit failed due to numerical instability; try decreasing the order."
         );
     }
-    xCoeff.tail(basis.size() - 1) = decomp.solve(xRhs);
     auto polyX = makeFunction2d(basis, xCoeff);
     Eigen::VectorXd yCoeff = Eigen::VectorXd::Zero(basis.size());
+    yCoeff.tail(basis.size() - 1) = decomp.solve(yRhs);
     if (Eigen::isnan(yCoeff.array()).any()) {
         throw LSST_EXCEPT(
             pex::exceptions::RuntimeError,
             "Polynomial fit failed due to numerical instability; try decreasing the order."
         );
     }
-    yCoeff.tail(basis.size() - 1) = decomp.solve(yRhs);
     auto polyY = makeFunction2d(basis, yCoeff);
     return std::make_pair(polyX, polyY);
 }
