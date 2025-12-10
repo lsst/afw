@@ -202,11 +202,11 @@ std::unique_ptr<SipApproximation::Solution> SipApproximation::Solution::fit(
     SipApproximation const & parent
 ) {
     poly::PolynomialBasis2dYX basis(order);
-    if (basis.size() > parent._fitGrid->dpix.size()) {
+    if ((basis.size() - 1) > parent._fitGrid->dpix.size()) {
         throw LSST_EXCEPT(
             pex::exceptions::LogicError,
             (boost::format("Number of parameters (%d) is larger than number of data points (%d)")
-             % (2*basis.size()) % (2*parent._fitGrid->dpix.size())).str()
+             % (2*(basis.size() - 1)) % (2*parent._fitGrid->dpix.size())).str()
         );
     }
     // Fit polynomials R and S that directly map (u, v) = (pixel - crpix) to
