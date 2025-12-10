@@ -45,7 +45,7 @@ void declareSipApproximation(lsst::cpputils::python::WrapperCollection &wrappers
         cls.def(py::init<SkyWcs const &, lsst::geom::Box2D const &,
                          lsst::geom::Extent2I const &, int,
                          std::optional<lsst::geom::Point2D> const &, double>(),
-                "target"_a, "bbox"_a, "gridShape"_a, "order"_a,
+                "target"_a, "bbox"_a, "gridShape"_a, "order"_a = 5,
                 "pixelOrigin"_a = std::nullopt, "svdThreshold"_a = -1);
         cls.def("getOrder", &SipApproximation::getOrder);
         cls.def("getA", py::overload_cast<int, int>(&SipApproximation::getA, py::const_), "p"_a, "q"_a);

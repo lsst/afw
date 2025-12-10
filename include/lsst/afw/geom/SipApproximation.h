@@ -117,7 +117,7 @@ public:
         SkyWcs const & target,
         lsst::geom::Box2D const & bbox,
         lsst::geom::Extent2I const & gridShape,
-        int order,
+        int order = 5,
         std::optional<lsst::geom::Point2D> const & pixelOrigin = std::nullopt,
         double svdThreshold=-1
     );
