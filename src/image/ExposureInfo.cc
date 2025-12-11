@@ -252,7 +252,7 @@ std::string _getHeaderComment(std::string mapKey) {
 }
 }  // namespace
 
-ExposureInfo::FitsWriteData ExposureInfo::_startWriteFits(lsst::geom::Point2I const& xy0) const {
+ExposureInfo::FitsWriteData ExposureInfo::_startWriteFits(lsst::geom::Box2I const& bbox) const {
     FitsWriteData data;
 
     data.metadata.reset(new daf::base::PropertyList());
@@ -292,15 +292,8 @@ ExposureInfo::FitsWriteData ExposureInfo::_startWriteFits(lsst::geom::Point2I co
     // by this transformation
     if (hasWcs()) {
         auto wcs = getWcs();
-        if (wcs->hasFitsApproximation()) {
-            wcs = wcs->getFitsApproximation();
-        }
-        // Try to save the WCS as FITS-WCS metadata; if an exact representation
-        // is not possible then skip it
-        auto shift = lsst::geom::Extent2D(lsst::geom::Point2I(0, 0) - xy0);
-        auto newWcs = wcs->copyAtShiftedPixelOrigin(shift);
         try {
-            data.imageMetadata->combine(*newWcs->getFitsMetadata(true));
+            data.imageMetadata->combine(*wcs->getFitsMetadata(false, bbox));
         } catch (pex::exceptions::RuntimeError const&) {
             // cannot represent this WCS as FITS-WCS; don't write its metadata
         }
@@ -312,8 +305,8 @@ ExposureInfo::FitsWriteData ExposureInfo::_startWriteFits(lsst::geom::Point2I co
     // LTV is a convention used by STScI (see \S2.6.2 of HST Data Handbook for STIS, version 5.0
     // http://www.stsci.edu/hst/stis/documents/handbooks/currentDHB/ch2_stis_data7.html#429287)
     // and recognized by ds9.
-    data.imageMetadata->set("LTV1", static_cast<double>(-xy0.getX()));
-    data.imageMetadata->set("LTV2", static_cast<double>(-xy0.getY()));
+    data.imageMetadata->set("LTV1", static_cast<double>(-bbox.getBeginX()));
+    data.imageMetadata->set("LTV2", static_cast<double>(-bbox.getBeginY()));
 
     if (hasDetector()) {
         data.metadata->set("DETNAME", getDetector()->getName());

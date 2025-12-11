@@ -416,12 +416,11 @@ private:
     /**
      *  Start the process of writing an exposure to FITS.
      *
-     *  @param[in]  xy0   The origin of the exposure associated with this object, used to
-     *                    install a linear offset-only WCS in the FITS header.
+     *  @param[in]  bbox   The bounding box of the image.
      *
      *  @see FitsWriteData
      */
-    FitsWriteData _startWriteFits(lsst::geom::Point2I const& xy0 = lsst::geom::Point2I()) const;
+    FitsWriteData _startWriteFits(lsst::geom::Box2I const& bbox) const;
 
     /**
      *  Write any additional non-image HDUs to a FITS file.

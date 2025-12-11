@@ -24,14 +24,17 @@ from __future__ import annotations
 __all__ = ["writeFitsImage"]
 
 import io
+import logging
 import os
 import subprocess
 
 import lsst.afw.fits
 import lsst.afw.geom
 import lsst.afw.image
+import lsst.pex.exceptions
 from lsst.daf.base import PropertyList, PropertySet
-from lsst.geom import Extent2D
+
+_LOG = logging.getLogger(__name__)
 
 
 def _add_wcs(wcs_name: str, ps: PropertyList, x0: int = 0, y0: int = 0) -> None:
@@ -81,12 +84,10 @@ def writeFitsImage(
     if not wcs:
         _add_wcs("", ps)  # Works around a ds9 bug that WCSA/B is ignored if no WCS is present.
     else:
-        shift = Extent2D(-data.getX0(), -data.getY0())
-        if wcs.hasFitsApproximation():
-            wcs = wcs.getFitsApproximation()
-        new_wcs = wcs.copyAtShiftedPixelOrigin(shift)
-        wcs_metadata = new_wcs.getFitsMetadata()
-        ps.update(wcs_metadata)
+        try:
+            ps.update(wcs.getFitsMetadata(bbox=data.getBBox()))
+        except lsst.pex.exceptions.RuntimeError:
+            _LOG.warning("WCS is not FITS-compatible and has no FITS approximation; displaying without WCS.")
 
     if title:
         ps.set("OBJECT", title, "Image being displayed")
