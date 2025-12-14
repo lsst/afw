@@ -143,6 +143,17 @@ class ExposureSummaryStats(Storable):
     (pixels).
     """
 
+    starEMedian: float = float('nan')
+    """Median ellipticity (sqrt(starE1**2.0 + starE2**2.0)) of the stars used
+    in the PSF model.
+    """
+
+    starUnNormalizedEMedian: float = float('nan')
+    """Median un-normalized ellipticity
+    (sqrt((starXX - starYY)**2.0 + (2.0*starXY)**2.0))
+    of the stars used in the PSF model.
+    """
+
     effTime: float = float('nan')
     """Effective exposure time calculated from psfSigma, skyBg, and
     zeroPoint (seconds).
@@ -387,6 +398,18 @@ class ExposureSummaryStats(Storable):
             type="F",
             doc="Maximum distance of an unmasked pixel to its nearest model psf star (pixel).",
             units="pixel",
+        )
+        schema.addField(
+            "starEMedian",
+            type="F",
+            doc="Median ellipticity (sqrt(starE1**2.0 + starE2**2.0)) of the stars used in "
+            "the PSF model.",
+        )
+        schema.addField(
+            "starUnNormalizedEMedian",
+            type="F",
+            doc="Median un-normalized ellipticity (sqrt((starXX - starYY)**2.0 + (2.0*starXY)**2.0)) "
+            "of the stars used in the PSF model.",
         )
         schema.addField(
             "effTime",
