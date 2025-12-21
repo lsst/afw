@@ -1366,7 +1366,8 @@ public:
         Fits & fits,
         CompressionOptions const * options,
         afw::image::ImageBase<T> const& image,
-        afw::image::Mask<> const * mask
+        afw::image::Mask<> const * mask,
+        daf::base::PropertySet & header
     ) : CompressionContext(fits) {
         // If the image is already fully contiguous, get a flat 1-d view into
         // it.  If it isn't, copy to amke a flat 1-d array.  We need to
@@ -1426,7 +1427,7 @@ public:
                     _pixel_data_mgr = image_flat_mutable.getManager();
                 }
             }
-            _apply(*options, qlevel, std::is_floating_point_v<T>, image.getDimensions());
+            _apply(*options, qlevel, std::is_floating_point_v<T>, image.getDimensions(), header);
         }
     }
 
@@ -1468,7 +1469,8 @@ private:
         CompressionOptions options,
         float qlevel,
         bool is_float,
-        lsst::geom::Extent2I const & dimensions
+        lsst::geom::Extent2I const & dimensions,
+        daf::base::PropertySet & header
     ) {
         if (is_float && !options.quantization && options.algorithm == CompressionAlgorithm::RICE_1_) {
             throw LSST_EXCEPT(
@@ -1509,6 +1511,16 @@ private:
             fits_set_quantize_method(fptr, dither_algorithm_to_cfitsio(q.dither), &_fits->status);
             fits_set_dither_seed(fptr, q.seed, &_fits->status);
             fits_set_quantize_level(fptr, qlevel, &_fits->status);
+            if (qlevel < 0.0) {
+                // Since we're using the same ZSCALE for all tiles, report it
+                // in the header so readers don't have to go poking around at
+                // the binary table view of the HDU and comparing the various
+                // values there. It's a little tempting to just call this
+                // ZSCALE, but Astropy strips that out even though the FITS
+                // standard only defines it as a standard table column, not a
+                // standard header keyword.
+                header.set("UZSCALE", static_cast<double>(-qlevel));
+            }
         } else {
             fits_set_quantize_level(fptr, 0.0, &_fits->status);
         }
@@ -1565,15 +1577,6 @@ template <typename T>
 void Fits::writeImage(image::ImageBase<T> const &image, CompressionOptions const * compression,
                       daf::base::PropertySet const * header,
                       image::Mask<image::MaskPixel> const * mask) {
-    // Context will restore the original settings when it is destroyed.
-    CompressionContext context(*this, compression, image, mask);
-    if (behavior & AUTO_CHECK) {
-        LSST_FITS_CHECK_STATUS(*this, "Activating compression for write image");
-    }
-    // We need a place to put the image+header, and CFITSIO needs to know the
-    // dimensions.
-    ndarray::Vector<long, 2> dims(image.getArray().getShape().reverse());
-    createImageImpl(cfitsio_bitpix<T>, 2, dims.elems);
     // Write the header
     std::shared_ptr<daf::base::PropertyList> wcsMetadata =
             geom::createTrivialWcsMetadata(image::detail::wcsNameForXY0, image.getXY0());
@@ -1584,6 +1587,15 @@ void Fits::writeImage(image::ImageBase<T> const &image, CompressionOptions const
     } else {
         fullMetadata = wcsMetadata;
     }
+    // Context will restore the original settings when it is destroyed.
+    CompressionContext context(*this, compression, image, mask, *fullMetadata);
+    if (behavior & AUTO_CHECK) {
+        LSST_FITS_CHECK_STATUS(*this, "Activating compression for write image");
+    }
+    // We need a place to put the image+header, and CFITSIO needs to know the
+    // dimensions.
+    ndarray::Vector<long, 2> dims(image.getArray().getShape().reverse());
+    createImageImpl(cfitsio_bitpix<T>, 2, dims.elems);
     writeMetadata(*fullMetadata);
     std::optional<T> explicit_null = std::nullopt;
     if constexpr(std::is_floating_point_v<T>) {

@@ -784,6 +784,39 @@ class ImageFitsTestCase(TestCase):
         lossy["image"]["tile_height"] = 17
         self.check_tile_shape(masked_image.image, lossy, ztile1=25, ztile2=17)
 
+    def test_uzscale_header(self) -> None:
+        """Test that we write the UZSCALE header card into the header when
+        ZSCALE is universal.
+        """
+        masked_image = self.make_float_image(
+            # Don't add hot or cold pixels because we won't be using a mask to
+            # keep them out of the stdev estimation.
+            np.float32,
+            noise_mean=100.0,
+            noise_sigma=15.0,
+            cold_count=0,
+            hot_count=0,
+        )
+        lossy = {
+            "algorithm": "RICE_1",
+            "quantization": {"level": 30.0, "mask_planes": ["HOT", "COLD", "NAN"], "seed": 1},
+        }
+        lossy = {
+            "image": {
+                "algorithm": "RICE_1",
+                "quantization": {
+                    "dither": "NO_DITHER",
+                    "scaling": "STDEV_MASKED",
+                    "level": 30.0,
+                    "seed": 1,
+                },
+            }
+        }
+        with self.roundtrip_image_reader(
+            masked_image.image, compression=lossy, original_fits=True
+        ) as (_, fits):
+            self.assertFloatsAlmostEqual(fits[1].header["UZSCALE"], 0.5, rtol=1E-2)
+
     # I can't get CFITSIO to make the correction described by this test; if we
     # update the header key after asking it to write the image, it gets into
     # a weird state that prevents (at least) appending binary table HDUs.
