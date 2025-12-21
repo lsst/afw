@@ -1398,6 +1398,7 @@ public:
                         throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, os.str());
                     }
                     ndarray::Array<bool, 2, 2> mask_array = ndarray::allocate(image_array.getShape());
+                    mask_array.deep() = 0;
                     ndarray::Array<bool, 1, 1> mask_flat = ndarray::flatten<1>(mask_array);
                     if (mask && options->uses_mask()) {
                         mask_array.deep() = (
