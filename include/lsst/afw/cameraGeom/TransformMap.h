@@ -39,6 +39,8 @@ namespace lsst {
 namespace afw {
 namespace cameraGeom {
 
+class DetectorBase;
+
 /**
  * A registry of 2-dimensional coordinate transforms for a specific camera.
  *
@@ -211,6 +213,23 @@ public:
      * TransformMaps should always be Persistable.
      */
     bool isPersistable() const noexcept override { return true; }
+
+    /**
+     *  Return an AST FrameSet with the standard transforms for this camera.
+     *
+     *  @param[in] detectors       Detectors to include.
+     *  @param[in] focalPlaneUnit  Units of the FOCAL_PLANE system.
+     *
+     *  The 'ident' names of the frames are:
+     *
+     *  - FOCAL_PLANE
+     *  - FIELD_ANGLE
+     *  - DETECTOR_{id:03} (ACTUAL_PIXELS if available, PIXELS otherwise).
+     */
+    std::unique_ptr<ast::FrameSet> makeFrameSet(
+        std::vector<std::shared_ptr<DetectorBase>> const & detectors,
+        std::string const & focalPlaneUnit = "mm"
+    ) const;
 
 private:
     // Helper class used in persistence.

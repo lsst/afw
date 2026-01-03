@@ -31,6 +31,7 @@
 #include "lsst/afw/table/io/python.h"
 #include "lsst/afw/cameraGeom/CameraSys.h"
 #include "lsst/afw/cameraGeom/TransformMap.h"
+#include "lsst/afw/cameraGeom/Detector.h"
 
 namespace py = pybind11;
 using namespace py::literals;
@@ -77,6 +78,7 @@ void declareTransformMap(lsst::cpputils::python::WrapperCollection &wrappers) {
         cls.def("getTransform", &TransformMap::getTransform, "fromSys"_a, "toSys"_a);
         cls.def("getConnections", &TransformMap::getConnections);
         cls.def("getFocalPlaneParity", &TransformMap::getFocalPlaneParity);
+        cls.def("makeFrameSet", &TransformMap::makeFrameSet, "detectors"_a, "focalPlaneUnit"_a = "mm");
         table::io::python::addPersistableMethods(cls);
     });
     wrappers.wrapType(PyTransformMapConnection(transformMap, "Connection"), [](auto &mod, auto &cls) {
