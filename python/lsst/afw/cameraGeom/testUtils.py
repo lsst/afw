@@ -21,11 +21,11 @@
 
 __all__ = ["DetectorWrapper", "CameraWrapper"]
 
+import importlib.resources
 import os
 
 import numpy as np
 
-import lsst.utils
 import lsst.geom
 import lsst.afw.geom as afwGeom
 from lsst.utils.tests import inTestCase
@@ -190,9 +190,8 @@ class CameraWrapper:
     """
 
     def __init__(self, plateScale=20.0, radialDistortion=0.925, isLsstLike=False, focalPlaneParity=False):
-        afwDir = lsst.utils.getPackageDir("afw")
-        self._afwTestDataDir = os.path.join(afwDir, "python", "lsst", "afw",
-                                            "cameraGeom", "testData")
+        # Path to test data within lsst.afw package.
+        self._afwTestDataDir = "cameraGeom/testData/"
 
         # Info to store for unit tests
         self.plateScale = float(plateScale)
@@ -399,10 +398,12 @@ class CameraWrapper:
             If `True`, the X axis is flipped between the FOCAL_PLANE and
             FIELD_ANGLE coordinate systems.
         """
-        detFile = os.path.join(self._afwTestDataDir, "testCameraDetectors.dat")
-        detectorConfigs = self.makeDetectorConfigs(detFile)
-        ampFile = os.path.join(self._afwTestDataDir, "testCameraAmps.dat")
-        ampListDict = self.makeAmpLists(ampFile, isLsstLike=isLsstLike)
+        detPath = os.path.join(self._afwTestDataDir, "testCameraDetectors.dat")
+        with importlib.resources.path("lsst.afw", detPath) as detFile:
+            detectorConfigs = self.makeDetectorConfigs(detFile)
+        ampPath = os.path.join(self._afwTestDataDir, "testCameraAmps.dat")
+        with importlib.resources.path("lsst.afw", ampPath) as ampFile:
+            ampListDict = self.makeAmpLists(ampFile, isLsstLike=isLsstLike)
         camConfig = CameraConfig()
         camConfig.name = "testCamera%s"%('LSST' if isLsstLike else 'SC')
         camConfig.detectorList = dict((i, detConfig)

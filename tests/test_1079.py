@@ -41,6 +41,8 @@ try:
 except NameError:
     display = False
 
+TESTDIR = os.path.abspath(os.path.dirname(__file__))
+
 
 class SavingSubImagesTest(unittest.TestCase):
     """Tests for changes made for ticket #1079.
@@ -55,8 +57,7 @@ class SavingSubImagesTest(unittest.TestCase):
     """
 
     def setUp(self):
-        path = lsst.utils.getPackageDir("afw")
-        self.parentFile = os.path.join(path, "tests", "data", "parent.fits")
+        self.parentFile = os.path.join(TESTDIR, "data", "parent.fits")
 
         self.parent = afwImage.ExposureF(self.parentFile)
         self.llcParent = self.parent.getMaskedImage().getXY0()

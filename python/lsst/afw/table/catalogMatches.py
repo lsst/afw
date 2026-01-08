@@ -23,8 +23,6 @@ __all__ = ["makeMergedSchema", "copyIntoCatalog",
            "matchesToCatalog", "matchesFromCatalog", "copyAliasMapWithPrefix",
            "reindexCatalog"]
 
-import os.path
-
 import numpy as np
 
 from ._schema import Schema
@@ -34,8 +32,6 @@ from ._table import SimpleTable
 from ._simple import SimpleCatalog
 from ._source import SourceCatalog, SourceTable
 from ._match import ReferenceMatch
-
-from lsst.utils import getPackageDir
 
 
 def makeMapper(sourceSchema, targetSchema, sourcePrefix=None, targetPrefix=None):
@@ -173,11 +169,8 @@ def matchesToCatalog(matches, matchMeta):
     for m, r in zip(matches, mergedCatalog):
         r.set(distKey, m.distance)
 
-    # obtain reference catalog name if one is setup
-    try:
-        catalogName = os.path.basename(getPackageDir("astrometry_net_data"))
-    except LookupError:
-        catalogName = "NOT_SET"
+    # The reference catalog is not known.
+    catalogName = "NOT_SET"
     matchMeta.add("REFCAT", catalogName)
     mergedCatalog.getTable().setMetadata(matchMeta)
 

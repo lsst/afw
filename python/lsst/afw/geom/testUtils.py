@@ -23,7 +23,6 @@ __all__ = ["BoxGrid", "makeSipIwcToPixel", "makeSipPixelToIwc"]
 
 import itertools
 import math
-import os
 import pickle
 
 import astshim as ast
@@ -332,22 +331,7 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
 
     Subclasses must call `TransformTestBaseClass.setUp(self)`
     if they provide their own version.
-
-    If a package other than afw uses this class then it must
-    override the `getTestDir` method to avoid writing into
-    afw's test directory.
     """
-
-    def getTestDir(self):
-        """Return a directory where temporary test files can be written
-
-        The default implementation returns the test directory of the `afw`
-        package.
-
-        If this class is used by a test in a package other than `afw`
-        then the subclass must override this method.
-        """
-        return os.path.join(lsst.utils.getPackageDir("afw"), "tests")
 
     def setUp(self):
         """Set up a test
