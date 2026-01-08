@@ -23,20 +23,19 @@
 import os
 import unittest
 
-import lsst.utils
 import lsst.geom
 import lsst.afw.geom as afwGeom
 from lsst.afw.fits import readMetadata
 import lsst.utils.tests
+
+TESTDIR = os.path.abspath(os.path.dirname(__file__))
 
 
 class WCSTestRaWrap(unittest.TestCase):
     '''A test set for the RA=0 wrap-around'''
 
     def setUp(self):
-        mydir = lsst.utils.getPackageDir('afw')
-        self.assertIsNotNone(mydir)
-        self.datadir = os.path.join(mydir, 'tests')
+        self.datadir = TESTDIR
 
     def test1(self):
         wcsfn = os.path.join(self.datadir, 'imsim-v85518312-fu-R43-S12.wcs2')
