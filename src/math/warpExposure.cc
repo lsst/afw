@@ -607,7 +607,22 @@ int warpImage(DestImageT &destImage, SrcImageT const &srcImage,
 
                     for (int col = prevEndCol + 1; col <= endCol; ++col, ++destXIter) {
                         lsst::geom::Point2D leftSrcPos = srcPosView[col - 1];
-                        lsst::geom::Point2D srcPos = leftSrcPos + xDeltaSrcPos;
+                        lsst::geom::Point2D srcPos;
+                        if (col == endCol) {
+                            if (row == endRow) {
+                                // Set srcPosView to bottowSrcPosList to reset values to new band of rows in
+                                // order to override possible nans:
+                                srcPos = bottomSrcPosList[colBand];
+                            }
+                            else {
+                                // Set srcPos to rightSrcPos to reset values to new band of columns in order
+                                // to override possible nans:
+                                srcPos = rightSrcPos;
+                            }
+                        }
+                        else {
+                            srcPos = leftSrcPos + xDeltaSrcPos;
+                        }
                         double relativeArea = computeRelativeArea(srcPos, leftSrcPos, srcPosView[col]);
 
                         srcPosView[col] = srcPos;
