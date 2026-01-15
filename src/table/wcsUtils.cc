@@ -112,13 +112,10 @@ Eigen::Matrix2f calculateCoordCovariance(geom::SkyWcs const &wcs, lsst::geom::Po
     Eigen::Matrix2f d = localMatrix.cast<float>() * scale * (lsst::geom::PI / 180.0);
 
     Eigen::Matrix2f skyCov = d * err * d.transpose();
-
-    // Multiply by declination correction matrix in order to get sigma(RA) * cos(Dec) for the uncertainty
-    // in RA, and cov(RA, Dec) * cos(Dec) for the RA/Dec covariance:
-    float cosDec = std::cos(skyCenter.getDec().asRadians());
-    Eigen::Matrix2f decCorr{{cosDec, 0}, {0, 1.0}};
-    Eigen::Matrix2f skyCovCorr = decCorr * skyCov * decCorr;
-    return skyCovCorr;
+    // Because the transform from pixels to RA/Dec was done at a local
+    // gnomonic, the RA and Dec covariance are already commensurate, and
+    // multiplying the RA covariance by cos(Dec) is not necessary.
+    return skyCov;
 }
 
 template <typename SourceCollection>
