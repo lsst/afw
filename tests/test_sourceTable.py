@@ -235,12 +235,8 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
 
         centroidErr = self.record.getCentroidErr()
         coordErr = radMatrix.dot(centroidErr.dot(radMatrix.T))
-        # multiply RA by cos(Dec):
-        cosDec = np.cos(skyCenter.getDec().asRadians())
-        decCorr = np.array([[cosDec, 0], [0, 1]])
-        coordErrCorr = decCorr.dot(coordErr.dot(decCorr))
         catCoordErr = self.record.get(self.coordErrKey)
-        np.testing.assert_almost_equal(coordErrCorr, catCoordErr, decimal=16)
+        np.testing.assert_almost_equal(coordErr, catCoordErr, decimal=16)
 
     def testSorting(self):
         self.assertFalse(self.catalog.isSorted())
