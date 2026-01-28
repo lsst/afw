@@ -157,6 +157,24 @@ void updateSourceCoords(geom::SkyWcs const &wcs, SourceCollection &sourceList, b
     }
 }
 
+std::pair<std::tuple<double, double>, std::tuple<double, double, double>> convertCentroid(
+        geom::SkyWcs const& wcs, double x, double y, double xErr, double yErr, double xy_covariance) {
+    lsst::geom::Point2D center{x, y};
+
+    auto radec = wcs.pixelToSky(center);
+
+    Eigen::Matrix2d err;
+    err(0, 0) = xErr * xErr;
+    err(1, 1) = yErr * yErr;
+    err(0, 1) = xy_covariance;
+    err(1, 0) = xy_covariance;
+
+    Eigen::Matrix2d result = calculateCoordCovariance<double>(wcs, center, err, 1.0);
+
+    return {{radec.getRa().asDegrees(), radec.getDec().asDegrees()},
+            {sqrt(result(0, 0)), sqrt(result(1, 1)), result(0, 1)}};
+}
+
 /// @cond
 template void updateRefCentroids(geom::SkyWcs const &, std::vector<std::shared_ptr<SimpleRecord>> &);
 template void updateRefCentroids(geom::SkyWcs const &, SimpleCatalog &);

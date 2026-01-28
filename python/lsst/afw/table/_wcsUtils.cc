@@ -60,9 +60,18 @@ void declareUpdateSourceCoords(WrapperCollection &wrappers) {
     });
 }
 
+void declareConvertCentroid(WrapperCollection &wrappers) {
+    wrappers.wrap([](auto &mod) {
+        mod.def("convertCentroid", convertCentroid, "wcs"_a, "x"_a, "y"_a, "xErr"_a, "yErr"_a,
+                "xy_covariance"_a=0.);
+    });
+}
+
 }  // namespace
 
 void wrapWcsUtils(WrapperCollection &wrappers) {
+    declareConvertCentroid(wrappers);
+
     declareUpdateRefCentroids<std::vector<std::shared_ptr<lsst::afw::table::SimpleRecord>>>(wrappers);
     declareUpdateRefCentroids<lsst::afw::table::SimpleCatalog>(wrappers);
 
