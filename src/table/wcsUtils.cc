@@ -92,10 +92,11 @@ void updateRefCentroids(geom::SkyWcs const &wcs, ReferenceCollection &refList) {
     }
 }
 
-Eigen::Matrix2f calculateCoordCovariance(geom::SkyWcs const &wcs, lsst::geom::Point2D center,
-                                         Eigen::Matrix2f err) {
+template <typename t>
+Eigen::Matrix<t, 2, 2> calculateCoordCovariance(geom::SkyWcs const& wcs, lsst::geom::Point2D center,
+                                                Eigen::Matrix<t, 2, 2> err, double factor) {
     if (!std::isfinite(center.getX()) || !std::isfinite(center.getY())) {
-        return Eigen::Matrix2f::Constant(NAN);
+        return Eigen::Matrix<t, 2, 2>::Constant(NAN);
     }
     // Get the derivative of the pixel-to-sky transformation, then use it to
     // propagate the centroid uncertainty to coordinate uncertainty. Note that
@@ -109,9 +110,9 @@ Eigen::Matrix2f calculateCoordCovariance(geom::SkyWcs const &wcs, lsst::geom::Po
     auto measurementToLocalGnomonic = wcs.getTransform()->then(*localGnomonicWcs->getTransform()->inverted());
 
     Eigen::Matrix2d localMatrix = measurementToLocalGnomonic->getJacobian(center);
-    Eigen::Matrix2f d = localMatrix.cast<float>() * scale * (lsst::geom::PI / 180.0);
+    Eigen::Matrix<t, 2, 2> d = localMatrix.cast<t>() * scale * factor;
 
-    Eigen::Matrix2f skyCov = d * err * d.transpose();
+    Eigen::Matrix<t, 2, 2> skyCov = d * err * d.transpose();
     // Because the transform from pixels to RA/Dec was done at a local
     // gnomonic, the RA and Dec covariance are already commensurate, and
     // multiplying the RA covariance by cos(Dec) is not necessary.
@@ -137,7 +138,7 @@ void updateSourceCoords(geom::SkyWcs const &wcs, SourceCollection &sourceList, b
         pixelList.emplace_back(center);
         if (include_covariance) {
             auto err = getValue(source, centroidErrKey);
-            Eigen::Matrix2f skyCov = calculateCoordCovariance(wcs, center, err);
+            Eigen::Matrix2f skyCov = calculateCoordCovariance<float>(wcs, center, err);
             skyErrList.emplace_back(skyCov);
         }
     }
@@ -163,6 +164,11 @@ template void updateRefCentroids(geom::SkyWcs const &, SimpleCatalog &);
 template void updateSourceCoords(geom::SkyWcs const &, std::vector<std::shared_ptr<SourceRecord>> &,
                                  bool include_covariance);
 template void updateSourceCoords(geom::SkyWcs const &, SourceCatalog &, bool include_covariance);
+
+template Eigen::Matrix2f calculateCoordCovariance(geom::SkyWcs const& wcs, lsst::geom::Point2D center,
+                                                  Eigen::Matrix2f err, double factor);
+template Eigen::Matrix2d calculateCoordCovariance(geom::SkyWcs const& wcs, lsst::geom::Point2D center,
+                                                  Eigen::Matrix2d err, double factor);
 /// @endcond
 
 }  // namespace table

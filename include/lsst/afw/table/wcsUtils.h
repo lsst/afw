@@ -64,15 +64,22 @@ template <typename SourceCollection>
 void updateSourceCoords(geom::SkyWcs const& wcs, SourceCollection& sourceList, bool include_covariance=true);
 
 /**
- * Calculate covariance for sky coordinates
+ * Calculate covariance for sky coordinates given a pixel centroid and errors.
  *
- * 
+ * @tparam t Floating point type of the input errors/output covariance.
+ *
  * @param[in] wcs  WCS to map from pixels to sky.
- * @param[in] center  The object centroid.
+ * @param[in] center  The object centroid in pixels.
  * @param[in] err  Covariance matrix of the centroid.
- * 
+ * @param[in] factor Factor to multiply the WCS matrix terms, which are in
+ * degrees. Default is pi/180 to convert to radians.
+ *
+ * @return The RA/Dec sky covariance matrix in degrees, multiplied by factor.
  */
-Eigen::Matrix2f calculateCoordCovariance(geom::SkyWcs const& wcs, lsst::geom::Point2D center, Eigen::Matrix2f err);
+template <typename t>
+Eigen::Matrix<t, 2, 2> calculateCoordCovariance(geom::SkyWcs const& wcs, lsst::geom::Point2D center,
+                                                Eigen::Matrix<t, 2, 2> err,
+                                                double factor = lsst::geom::PI / 180.0);
 
 }  // namespace table
 }  // namespace afw
