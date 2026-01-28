@@ -181,6 +181,7 @@ tests/data/kernel*.boost
 ups/*.cfgc
 extensions/
 .vscode/
+.idea/
 
 # Output of tests
 doc/htmlDir
