@@ -161,6 +161,8 @@ class UpdateTestCase(lsst.utils.tests.TestCase):
         scale = (1.0 * lsst.geom.arcseconds).asDegrees()
         # update the catalogs
         afwTable.updateSourceCoords(self.wcs, self.sourceCat)
+        factor = math.pi/180.
+        factor_sq = factor**2
         for src in self.sourceCat:
             center = src.get(self.srcCentroidKey)
             skyCenter = self.wcs.pixelToSky(center)
@@ -175,7 +177,23 @@ class UpdateTestCase(lsst.utils.tests.TestCase):
             centroidErr = src.get(self.srcCentroidErrKey)
             coordErr = radMatrix.dot(centroidErr.dot(radMatrix.T))
             catCoordErr = src.get(self.srcCoordErrKey)
-            np.testing.assert_almost_equal(coordErr, catCoordErr)
+            np.testing.assert_allclose(coordErr, catCoordErr, rtol=1e-10, atol=1e-10)
+
+            (ra, dec), (ra_err, dec_err, ra_dec_cov) = afwTable.convertCentroid(
+                self.wcs,
+                center.getX(), center.getY(),
+                math.sqrt(centroidErr[0, 0]), math.sqrt(centroidErr[1, 1]), centroidErr[0, 1],
+            )
+            np.testing.assert_allclose(
+                (ra, dec),
+                (skyCenter[0].asDegrees(), skyCenter[1].asDegrees()),
+                rtol=1e-10, atol=1e-10,
+            )
+            np.testing.assert_allclose(
+                ((ra_err*factor)**2, (dec_err*factor)**2, ra_dec_cov*factor_sq),
+                (catCoordErr[0, 0], catCoordErr[1, 1], catCoordErr[0, 1]),
+                rtol=1e-10, atol=1e-10,
+            )
 
     def checkCatalogs(self, maxPixDiff=1e-5, maxSkyDiff=0.001*lsst.geom.arcseconds):
         """Check that the source and reference object catalogs have equal centroids and coords"""

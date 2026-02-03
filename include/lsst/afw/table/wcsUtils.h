@@ -64,19 +64,42 @@ template <typename SourceCollection>
 void updateSourceCoords(geom::SkyWcs const& wcs, SourceCollection& sourceList, bool include_covariance=true);
 
 /**
- * Calculate covariance for sky coordinates
+ * Calculate covariance for sky coordinates given a pixel centroid and errors.
  *
- * 
+ * @tparam t Floating point type of the input errors/output covariance.
+ *
  * @param[in] wcs  WCS to map from pixels to sky.
- * @param[in] center  The object centroid.
+ * @param[in] center  The object centroid in pixels.
  * @param[in] err  Covariance matrix of the centroid.
- * 
+ * @param[in] factor Factor to multiply the WCS matrix terms, which are in
+ * degrees. Default is pi/180 to convert to radians.
+ *
+ * @return The RA/Dec sky covariance matrix in degrees, multiplied by factor.
  */
-Eigen::Matrix2f calculateCoordCovariance(geom::SkyWcs const& wcs, lsst::geom::Point2D center, Eigen::Matrix2f err);
+template <typename t>
+Eigen::Matrix<t, 2, 2> calculateCoordCovariance(geom::SkyWcs const& wcs, lsst::geom::Point2D center,
+                                                Eigen::Matrix<t, 2, 2> err,
+                                                double factor = lsst::geom::PI / 180.0);
+
+/**
+ * Convert an x/y centroid with errors into RA/dec.
+ *
+ * @param[in] wcs  WCS to map from pixels to sky.
+ * @param[in] x  The x centroid in pixels.
+ * @param[in] y  The y centroid in pixels.
+ * @param[in] xErr  The standard error on the x centroid in pixels.
+ * @param[in] yErr  The standard error on the y centroid in pixels.
+ * @param[in] xy_covariance  The xy covariance in pixels squared.
+ *
+ * @return A pair of tuples with the RA/dec centroid in degrees,
+ *         and the RA error, dec error and RA/dec covariance in degrees
+ *         (squared for the covariance).
+ */
+std::pair<std::tuple<double, double>, std::tuple<double, double, double>> convertCentroid(
+        geom::SkyWcs const& wcs, double x, double y, double xErr, double yErr, double xy_covariance = 0);
 
 }  // namespace table
 }  // namespace afw
 }  // namespace lsst
-
 
 #endif  // #ifndef LSST_AFW_TABLE_WCSUTILS_H
