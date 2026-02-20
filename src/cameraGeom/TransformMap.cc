@@ -32,6 +32,7 @@
 #include "lsst/afw/table/io/CatalogVector.h"
 #include "lsst/afw/table/io/Persistable.cc"
 #include "lsst/afw/cameraGeom/TransformMap.h"
+#include "lsst/afw/cameraGeom/Detector.h"
 
 namespace lsst {
 namespace afw {
@@ -278,6 +279,71 @@ TransformMap::TransformMap(std::vector<Connection> &&connections)
 }
 
 std::vector<TransformMap::Connection> TransformMap::getConnections() const { return _connections; }
+
+std::unique_ptr<ast::FrameSet> TransformMap::makeFrameSet(
+    std::vector<std::shared_ptr<DetectorBase>> const & detectors,
+    std::string const & focalPlaneUnit
+) const {
+    // We use copy=false to extract each frame from the internal FrameSet,
+    // since it will always be copied when adding it to the new one.  We then
+    // set the 'ident' value on a shallow reference to the new frame.
+    auto result = std::make_unique<ast::FrameSet>(*_frameSet->getFrame(ast::FrameSet::BASE, false));
+    {
+        auto fp_frame = result->getFrame(ast::FrameSet::BASE, false);
+        fp_frame->setIdent("FOCAL_PLANE");
+        fp_frame->setTitle("Focal Plane Coordinates");
+        fp_frame->setUnit(1, focalPlaneUnit);
+        fp_frame->setUnit(2, focalPlaneUnit);
+        fp_frame->setLabel(1, "x");
+        fp_frame->setLabel(2, "y");
+    }
+    {
+        int old_frame_id = _getFrame(FIELD_ANGLE);
+        result->addFrame(
+            ast::FrameSet::BASE,
+            *_frameSet->getMapping(ast::FrameSet::BASE, old_frame_id),
+            *_frameSet->getFrame(old_frame_id, false)
+        );
+        auto frame = result->getFrame(ast::FrameSet::CURRENT, false);
+        frame->setIdent("FIELD_ANGLE");
+        frame->setTitle("Field Angle Coordinates");
+        frame->setUnit(1, "rad");
+        frame->setUnit(2, "rad");
+        frame->setLabel(1, "x");
+        frame->setLabel(2, "y");
+    }
+    for (auto const & detector : detectors) {
+        CameraSys sys(ACTUAL_PIXELS, detector->getName());
+        auto id_iter = _frameIds.find(sys);
+        if (id_iter == _frameIds.end()) {
+            sys = CameraSys(PIXELS, detector->getName());
+            id_iter = _frameIds.find(sys);
+            if (id_iter == _frameIds.end()) {
+                std::ostringstream buffer;
+                buffer << "Unsupported coordinate system: " << sys;
+                throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, buffer.str());
+            }
+        }
+        result->addFrame(
+            ast::FrameSet::BASE,
+            *_frameSet->getMapping(ast::FrameSet::BASE, id_iter->second),
+            *_frameSet->getFrame(id_iter->second, false)
+        );
+        auto frame = result->getFrame(ast::FrameSet::CURRENT, false);
+        frame->setIdent((boost::format("DETECTOR_%03d") % detector->getId()).str());
+        frame->setTitle((boost::format("Pixel Coordinates (Detector %d)") % detector->getId()).str());
+        frame->setUnit(1, "pix");
+        frame->setUnit(2, "pix");
+        frame->setLabel(1, "x");
+        frame->setLabel(2, "y");
+        auto bbox = detector->getBBox();
+        frame->setBottom(1, bbox.getMinX());
+        frame->setTop(1, bbox.getMaxX());
+        frame->setBottom(2, bbox.getMinY());
+        frame->setTop(2, bbox.getMaxY());
+    }
+    return result;
+}
 
 namespace {
 
