@@ -199,7 +199,7 @@ void declareCatalogOverloads(PyCatalog<Record> &cls) {
     });
 
     cls.def("_get_column_from_key",
-            [](Catalog const &self, Key<T> const &key, pybind11::object py_column_view) {
+            [](Catalog const &self, Key<T> const &key, pybind11::object py_column_view) -> pybind11::tuple {
                 std::shared_ptr<ColumnView> column_view = py_column_view.cast<std::shared_ptr<ColumnView>>();
                 if (!column_view && self.isContiguous()) {
                     // If there's no column view cached, but there could be,
@@ -241,7 +241,7 @@ void declareCatalogArrayOverloads(PyCatalog<Record> &cls) {
     using ColumnView = typename Record::ColumnView;
 
     cls.def("_get_column_from_key",
-            [](Catalog const &self, Key<Array<T>> const &key, pybind11::object py_column_view) {
+            [](Catalog const &self, Key<Array<T>> const &key, pybind11::object py_column_view) -> pybind11::tuple {
                 std::shared_ptr<ColumnView> column_view = py_column_view.cast<std::shared_ptr<ColumnView>>();
                 if (!column_view && self.isContiguous()) {
                     // If there's no column view cached, but there could be,
