@@ -40,6 +40,84 @@ std::shared_ptr<ImageT> binImage(ImageT const& in, int const binsize, lsst::afw:
     return binImage(in, binsize, binsize, flags);
 }
 
+namespace {
+
+// Bin a single image or variance plane using a double accumulator to prevent
+// integer overflow when summing many pixels of a narrow type (e.g. uint16_t).
+template <typename PixelT>
+std::shared_ptr<image::Image<PixelT>> _binImagePlane(image::Image<PixelT> const& in, int binX, int binY) {
+    int const outWidth = in.getWidth() / binX;
+    int const outHeight = in.getHeight() / binY;
+    auto out = std::make_shared<image::Image<PixelT>>(lsst::geom::Extent2I(outWidth, outHeight));
+    out->setXY0(in.getXY0());
+    std::vector<double> acc(outWidth);
+    double const scale = 1.0 / (binX * binY);
+    for (int oy = 0, iy = 0; oy < outHeight; ++oy) {
+        std::fill(acc.begin(), acc.end(), 0.0);
+        for (int i = 0; i != binY; ++i, ++iy) {
+            auto acc_it = acc.begin();
+            for (auto iptr = in.row_begin(iy), iend = iptr + binX * outWidth; iptr < iend;) {
+                double val = static_cast<double>(*iptr);
+                ++iptr;
+                for (int j = 1; j != binX; ++j, ++iptr) {
+                    val += static_cast<double>(*iptr);
+                }
+                *acc_it += val;
+                ++acc_it;
+            }
+        }
+        auto optr = out->row_begin(oy);
+        for (double v : acc) {
+            *optr = static_cast<PixelT>(v * scale);
+            ++optr;
+        }
+    }
+    return out;
+}
+
+// Bin a mask plane using bitwise OR so that all set flag bits are preserved.
+template <typename MaskPixelT>
+std::shared_ptr<image::Mask<MaskPixelT>> _binMaskPlane(image::Mask<MaskPixelT> const& in, int binX,
+                                                       int binY) {
+    int const outWidth = in.getWidth() / binX;
+    int const outHeight = in.getHeight() / binY;
+    auto out = std::make_shared<image::Mask<MaskPixelT>>(lsst::geom::Extent2I(outWidth, outHeight));
+    out->setXY0(in.getXY0());
+    *out = static_cast<MaskPixelT>(0);
+    for (int oy = 0, iy = 0; oy < outHeight; ++oy) {
+        for (int i = 0; i != binY; ++i, ++iy) {
+            auto optr = out->row_begin(oy);
+            for (auto iptr = in.row_begin(iy), iend = iptr + binX * outWidth; iptr < iend;) {
+                MaskPixelT val = *iptr;
+                ++iptr;
+                for (int j = 1; j != binX; ++j, ++iptr) {
+                    val |= *iptr;
+                }
+                *optr |= val;
+                ++optr;
+            }
+        }
+    }
+    return out;
+}
+
+// Dispatch helpers called by the generic binImage template below.
+template <typename PixelT>
+std::shared_ptr<image::Image<PixelT>> _binImpl(image::Image<PixelT> const& in, int binX, int binY) {
+    return _binImagePlane(in, binX, binY);
+}
+
+template <typename PixelT>
+std::shared_ptr<image::MaskedImage<PixelT>> _binImpl(image::MaskedImage<PixelT> const& in, int binX,
+                                                     int binY) {
+    auto binnedImage = _binImagePlane(*in.getImage(), binX, binY);
+    auto binnedVariance = _binImagePlane(*in.getVariance(), binX, binY);
+    auto binnedMask = _binMaskPlane(*in.getMask(), binX, binY);
+    return std::make_shared<image::MaskedImage<PixelT>>(binnedImage, binnedMask, binnedVariance);
+}
+
+}  // namespace
+
 template <typename ImageT>
 std::shared_ptr<ImageT> binImage(ImageT const& in, int const binX, int const binY,
                                  lsst::afw::math::Property const flags) {
@@ -51,36 +129,7 @@ std::shared_ptr<ImageT> binImage(ImageT const& in, int const binX, int const bin
         throw LSST_EXCEPT(pexExcept::DomainError,
                           (boost::format("Binning must be >= 0, saw %dx%d") % binX % binY).str());
     }
-
-    int const outWidth = in.getWidth() / binX;
-    int const outHeight = in.getHeight() / binY;
-
-    std::shared_ptr<ImageT> out =
-            std::shared_ptr<ImageT>(new ImageT(lsst::geom::Extent2I(outWidth, outHeight)));
-    out->setXY0(in.getXY0());
-    *out = typename ImageT::SinglePixel(0);
-
-    for (int oy = 0, iy = 0; oy < out->getHeight(); ++oy) {
-        for (int i = 0; i != binY; ++i, ++iy) {
-            typename ImageT::x_iterator optr = out->row_begin(oy);
-            for (typename ImageT::x_iterator iptr = in.row_begin(iy), iend = iptr + binX * outWidth;
-                 iptr < iend;) {
-                typename ImageT::SinglePixel val = *iptr;
-                ++iptr;
-                for (int j = 1; j != binX; ++j, ++iptr) {
-                    val += *iptr;
-                }
-                *optr += val;
-                ++optr;
-            }
-        }
-        for (typename ImageT::x_iterator ptr = out->row_begin(oy), end = out->row_end(oy); ptr != end;
-             ++ptr) {
-            *ptr /= binX * binY;
-        }
-    }
-
-    return out;
+    return _binImpl(in, binX, binY);
 }
 
 //
