@@ -291,6 +291,75 @@ class BinImageTestCase(unittest.TestCase):
             afwDisplay.Display(frame=2).mtv(inImage, title="unbinned")
             afwDisplay.Display(frame=3).mtv(outImage, title=f"binned {binX}x{binY}")
 
+    def testBinUint16NoOverflow(self):
+        """Test that binning a uint16 image with large bin factors does not
+        overflow. With 16x16 binning, summing 256 pixels each with value 300
+        would exceed uint16 max (65535) if accumulated in the pixel type,
+        wrapping the result to a small value instead of the correct mean.
+        """
+        width, height = 160, 160
+        val = 300  # > 255; would overflow with a 16x16 accumulator in uint16
+        binFactor = 16
+
+        inImage = afwImage.ImageU(width, height)
+        inImage.set(val)
+
+        outImage = afwMath.binImage(inImage, binFactor)
+
+        self.assertEqual(outImage.getWidth(), width // binFactor)
+        self.assertEqual(outImage.getHeight(), height // binFactor)
+        stats = afwMath.makeStatistics(outImage, afwMath.MAX | afwMath.MIN)
+        self.assertEqual(stats.getValue(afwMath.MIN), val)
+        self.assertEqual(stats.getValue(afwMath.MAX), val)
+
+    def testBinMaskedImageUint16NoOverflow(self):
+        """Test that binning a uint16 MaskedImage with large bin factors does
+        not overflow the image plane (same overflow condition as
+        testBinUint16NoOverflow, but via the MaskedImage code path).
+        """
+        width, height = 160, 160
+        val = 300
+        binFactor = 16
+
+        inImage = afwImage.MaskedImageU(width, height)
+        inImage.image.set(val)
+        inImage.mask.set(0)
+        inImage.variance.set(0)
+
+        outImage = afwMath.binImage(inImage, binFactor)
+
+        stats = afwMath.makeStatistics(outImage.image, afwMath.MAX | afwMath.MIN)
+        self.assertEqual(stats.getValue(afwMath.MIN), val)
+        self.assertEqual(stats.getValue(afwMath.MAX), val)
+
+    def testBinMaskedImageMaskOR(self):
+        """Test that binning a MaskedImage preserves mask bits via OR rather
+        than averaging them. With arithmetic averaging a single flagged pixel
+        in a bin would produce a value that does not have the original bit set;
+        with OR any set bit in the bin is preserved in the output.
+        """
+        binFactor = 8
+        width, height = 8 * 10, 8 * 10
+
+        inImage = afwImage.MaskedImageF(width, height)
+        inImage.image.set(0)
+        inImage.mask.set(0)
+        inImage.variance.set(0)
+
+        # Set a single pixel's mask to a high-order bit (bit 8 = value 256).
+        # With arithmetic averaging over 64 pixels this would become 256/64=4,
+        # which does not have bit 8 set. With OR it is preserved.
+        highBit = 1 << 8
+        inImage.mask.array[0, 0] = highBit
+
+        outImage = afwMath.binImage(inImage, binFactor)
+
+        # The output bin containing that pixel should have the bit set.
+        self.assertEqual(int(outImage.mask.array[0, 0]) & highBit, highBit)
+        # All other output bins should have no bits set.
+        self.assertEqual(int(np.max(outImage.mask.array[1:, :])), 0)
+        self.assertEqual(int(np.max(outImage.mask.array[:, 1:])), 0)
+
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
