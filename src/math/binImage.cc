@@ -47,36 +47,60 @@ std::shared_ptr<ImageT> binImage(ImageT const& in, int const binX, int const bin
         throw LSST_EXCEPT(pexExcept::InvalidParameterError,
                           (boost::format("Only afwMath::MEAN is supported, saw 0x%x") % flags).str());
     }
-    if (binX <= 0 || binY <= 0) {
+    if (!((binX > 0) && (binY > 0))) {
         throw LSST_EXCEPT(pexExcept::DomainError,
-                          (boost::format("Binning must be >= 0, saw %dx%d") % binX % binY).str());
+                          (boost::format("Binning must be > 0, saw %dx%d") % binX % binY).str());
     }
 
-    int const outWidth = in.getWidth() / binX;
-    int const outHeight = in.getHeight() / binY;
+    unsigned int binX_u = binX;
+    unsigned int binY_u = binY;
+
+    unsigned int const outWidth = in.getWidth() / binX_u;
+    unsigned int const outHeight = in.getHeight() / binY_u;
+
+    const typename ImageT::SinglePixel binXY = binX_u * binY_u;
+
+    static constexpr bool is_integer = std::is_integral<typename ImageT::SinglePixel>();
 
     std::shared_ptr<ImageT> out =
             std::shared_ptr<ImageT>(new ImageT(lsst::geom::Extent2I(outWidth, outHeight)));
     out->setXY0(in.getXY0());
     *out = typename ImageT::SinglePixel(0);
+    std::unique_ptr<std::vector<int>> remainders;
+    if constexpr (is_integer) {
+        remainders = std::make_unique<std::vector<int>>(outWidth);
+    }
+    unsigned int ir;
 
-    for (int oy = 0, iy = 0; oy < out->getHeight(); ++oy) {
-        for (int i = 0; i != binY; ++i, ++iy) {
+    for (unsigned int oy = 0, iy = 0; oy < outHeight; ++oy) {
+        if constexpr (is_integer) {
+            std::fill(remainders->begin(), remainders->end(), 0);
+        }
+        for (unsigned int i = 0; i != binY_u; ++i, ++iy) {
+            if constexpr (is_integer) {
+                ir = 0;
+            }
             typename ImageT::x_iterator optr = out->row_begin(oy);
-            for (typename ImageT::x_iterator iptr = in.row_begin(iy), iend = iptr + binX * outWidth;
+            for (typename ImageT::x_iterator iptr = in.row_begin(iy), iend = iptr + binX_u * outWidth;
                  iptr < iend;) {
-                typename ImageT::SinglePixel val = *iptr;
-                ++iptr;
-                for (int j = 1; j != binX; ++j, ++iptr) {
+                typename ImageT::SinglePixel val = *(iptr++);
+                for (unsigned int j = 1; j != binX_u; ++j, ++iptr) {
                     val += *iptr;
                 }
-                *optr += val;
-                ++optr;
+                *(optr++) += val / binXY;
+                if constexpr (is_integer) {
+                    (*remainders)[ir++] += val % binXY;
+                }
             }
         }
-        for (typename ImageT::x_iterator ptr = out->row_begin(oy), end = out->row_end(oy); ptr != end;
-             ++ptr) {
-            *ptr /= binX * binY;
+        if constexpr (is_integer) {
+            typename ImageT::x_iterator optr = out->row_begin(oy);
+            for (unsigned int ox = 0; ox < outWidth; ++ox) {
+                // This is integer division and will be the floor rather than
+                // rounding, which may not be expected; however, it has been
+                // this way for 16+ years.
+                *(optr++) += (*remainders)[ox] / binXY;
+            }
         }
     }
 
