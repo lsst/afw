@@ -1247,7 +1247,11 @@ class ExposureNoAfwdataTestCase(lsst.utils.tests.TestCase):
             elif field.type == "int":
                 setattr(summary1, field.name, 10*n)
             elif field.type == "list[float]":
-                setattr(summary1, field.name, [n + 0.1, n + 0.2, n + 0.3, n + 0.4])
+                if "Shapelet" in field.name:
+                    shapeletCompareList = [n + 0.1*(i + 1) for i in range(28)]
+                    setattr(summary1, field.name, shapeletCompareList)
+                else:
+                    setattr(summary1, field.name, [n + 0.1, n + 0.2, n + 0.3, n + 0.4])
             else:
                 raise TypeError(f"Unexpected type: {field.type!r}.")
         record = catalog.addNew()

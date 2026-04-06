@@ -37,6 +37,10 @@ def _default_corners():
     return [float("nan")] * 4
 
 
+def _default_shapelet_coeffs():
+    return [float("nan")] * 28
+
+
 @dataclasses.dataclass
 class ExposureSummaryStats(Storable):
     _persistence_name = 'ExposureSummaryStats'
@@ -92,6 +96,39 @@ class ExposureSummaryStats(Storable):
 
     decCorners: list[float] = dataclasses.field(default_factory=_default_corners)
     """Declination of bounding box corners (degrees)."""
+
+    psfAdaptiveThresholdValue: float = float('nan')
+    """Threshold value used in the adaptive threshold detection pass for PSF modelling."""
+
+    psfAdaptiveIncludeThresholdMultiplier: float = float('nan')
+    """Threshold multiplier used in the adaptive threshold detection pass for PSF modelling."""
+
+    nShapeletStar: int = 0
+    """Number of stars used in the shapelet decomposition."""
+
+    shapeletsScore: float = float('nan')
+    """The dimensionless image quality score as determined from the shapelets decomposition. The
+    score spans the range [0.0, 1.0] with lower values indicating better image quality.
+    """
+
+    psfStarShapeletCoeffs: list[float] = dataclasses.field(default_factory=_default_shapelet_coeffs)
+    """List of coefficients from the PSF star shapelet decomposition."""
+
+    centroidDiffShapeletVsSlotMedian: float = float('nan')
+    """Median centroid difference [sqrt((slot_x - shapelet_x)**2 + (slot_y - shapelet_y)**2)] for
+    sources used in the shapelet decomposition.
+    """
+
+    shapeletStarEMedian: float = float('nan')
+    """Median ellipticity (sqrt(starE1**2.0 + starE2**2.0)) of the stars used
+    in the shapelet decomposition.
+    """
+
+    shapeletStarUnNormalizedEMedian: float = float('nan')
+    """Median un-normalized ellipticity
+    (sqrt((starXX - starYY)**2.0 + (2.0*starXY)**2.0))
+    of the stars used in the shapelet decomposition.
+    """
 
     astromOffsetMean: float = float('nan')
     """Astrometry match offset mean."""
@@ -358,6 +395,60 @@ class ExposureSummaryStats(Storable):
             type="F",
             doc="Mean variance of the weight plane (ADU**2)",
             units="adu**2"
+        )
+        schema.addField(
+            "psfAdaptiveThresholdValue",
+            type="F",
+            doc="Threshold value used in the adaptive threshold detection pass for PSF modelling.",
+            units="",
+        )
+        schema.addField(
+            "psfAdaptiveIncludeThresholdMultiplier",
+            type="F",
+            doc="Threshold multiplier used in the adaptive threshold detection pass for PSF modelling.",
+            units="",
+        )
+        schema.addField(
+            "nShapeletStar",
+            type="I",
+            doc="Number of stars used in the shapelet decomposition.",
+            units="count",
+        )
+        schema.addField(
+            "shapeletsScore",
+            type="F",
+            doc="The dimensionless image quality score as determined from the shapelets "
+            "decomposition. The score spans the range [0.0, 1.0] with lower values indicating "
+            "better image quality.",
+            units="",
+        )
+        schema.addField(
+            "psfStarShapeletCoeffs",
+            type="ArrayD",
+            size=28,
+            doc="List of coefficients from the PSF star shapelet decomposition.",
+            units="",
+        )
+        schema.addField(
+            "centroidDiffShapeletVsSlotMedian",
+            type="F",
+            doc="Median centroid difference [sqrt((slot_x - shapelet_x)**2 + (slot_y - shapelet_y)**2)] "
+            "for sources used in the shapelet decomposition.",
+            units="pixel",
+        )
+        schema.addField(
+            "shapeletStarEMedian",
+            type="F",
+            doc="Median ellipticity (sqrt(starE1**2.0 + starE2**2.0)) of the stars used in "
+            "the shapelet decomposition.",
+            units="",
+        )
+        schema.addField(
+            "shapeletStarUnNormalizedEMedian",
+            type="F",
+            doc="Median un-normalized ellipticity (sqrt((starXX - starYY)**2.0 + (2.0*starXY)**2.0)) "
+            "of the stars used in the shapelet decomposition.",
+            units="pixel**2",
         )
         schema.addField(
             "astromOffsetMean",
