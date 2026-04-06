@@ -135,6 +135,11 @@ class ExposureSummaryStats(Storable):
     of the sources used in the shapelet decomposition (pixels**2).
     """
 
+    refCatSourceDensity: float = float('nan')
+    """Source density for the detector region as computed from the loaded reference catalog
+    (number per degrees**2).
+    """
+
     astromOffsetMean: float = float('nan')
     """Astrometry match offset mean."""
 
@@ -464,6 +469,13 @@ class ExposureSummaryStats(Storable):
             doc="Median un-normalized ellipticity (sqrt((starXX - starYY)**2.0 + (2.0*starXY)**2.0)) "
             "of the stars used in the shapelet decomposition.",
             units="pixel**2",
+        )
+        schema.addField(
+            "refCatSourceDensity",
+            type="F",
+            doc="Source density for the detector region as computed from the loaded reference catalog "
+            "(number per degrees**2)",
+            units="degree**-2",
         )
         schema.addField(
             "astromOffsetMean",
