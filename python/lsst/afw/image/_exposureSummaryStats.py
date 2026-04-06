@@ -97,6 +97,11 @@ class ExposureSummaryStats(Storable):
     decCorners: list[float] = dataclasses.field(default_factory=_default_corners)
     """Declination of bounding box corners (degrees)."""
 
+    refcatDensityPerDeg2: float = float('nan')
+    """Source density for the detector region in number per degrees**2 as computed from the
+    loaded reference catalog.
+    """
+
     psfAdaptiveThresholdValue: float = float('nan')
     """Threshold value used in the adaptive threshold detection pass for PSF modelling."""
 
@@ -395,6 +400,13 @@ class ExposureSummaryStats(Storable):
             type="F",
             doc="Mean variance of the weight plane (ADU**2)",
             units="adu**2"
+        )
+        schema.addField(
+            "refcatDensityPerDeg2",
+            type="F",
+            doc="Source density for the detector region in number per degrees**2 as computed "
+            "from the loaded reference catalog.",
+            units="deg**-2",
         )
         schema.addField(
             "psfAdaptiveThresholdValue",
