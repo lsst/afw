@@ -76,6 +76,9 @@ public:
     /// @copydoc BoundedField::operator==
     bool operator==(BoundedField const& rhs) const override;
 
+    /// Return the factors of the product.
+    std::vector<std::shared_ptr<BoundedField const>> getFactors() const { return _factors; }
+
 protected:
 
     std::string getPersistenceName() const override;
