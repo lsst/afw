@@ -154,6 +154,41 @@ class ExposureSummaryStats(Storable):
     of the stars used in the PSF model.
     """
 
+    starComa1Median: float = float('nan')
+    """Coma-like higher-order moment combination: median M30 + M12
+    of the stars used in the PSF model.
+    """
+
+    starComa2Median: float = float('nan')
+    """Coma-like higher-order moment combination: median M21 + M03
+    of the stars used in the PSF model.
+    """
+
+    starTrefoil1Median: float = float('nan')
+    """Trefoil-like higher-order moment combination: median M30 - 3*M12
+    of the stars used in the PSF model.
+    """
+
+    starTrefoil2Median: float = float('nan')
+    """Trefoil-like higher-order moment combination: median 3*M21 - M03
+    of the stars used in the PSF model.
+    """
+
+    starKurtosisMedian: float = float('nan')
+    """Kurtosis-like higher-order moment combination: median M40 + 2*M22 + M04
+    of the stars used in the PSF model.
+    """
+
+    starE41Median: float = float('nan')
+    """Fourth-order ellipticity-like higher-order moment combination: median M40 - M04
+    of the stars used in the PSF model.
+    """
+
+    starE42Median: float = float('nan')
+    """Fourth-order ellipticity-like higher-order moment combination: median 2*(M31 + M13)
+    of the stars used in the PSF model.
+    """
+
     effTime: float = float('nan')
     """Effective exposure time calculated from psfSigma, skyBg, and
     zeroPoint (seconds).
@@ -409,6 +444,48 @@ class ExposureSummaryStats(Storable):
             "starUnNormalizedEMedian",
             type="F",
             doc="Median un-normalized ellipticity (sqrt((starXX - starYY)**2.0 + (2.0*starXY)**2.0)) "
+            "of the stars used in the PSF model.",
+        )
+        schema.addField(
+            "starComa1Median",
+            type="F",
+            doc="Coma-like higher-order moment combination: median M30 + M12 "
+            "of the stars used in the PSF model.",
+        )
+        schema.addField(
+            "starComa2Median",
+            type="F",
+            doc="Coma-like higher-order moment combination: median M21 + M03 "
+            "of the stars used in the PSF model.",
+        )
+        schema.addField(
+            "starTrefoil1Median",
+            type="F",
+            doc="Trefoil-like higher-order moment combination: median M30 - 3*M12 "
+            "of the stars used in the PSF model.",
+        )
+        schema.addField(
+            "starTrefoil2Median",
+            type="F",
+            doc="Trefoil-like higher-order moment combination: median 3*M21 - M03 "
+            "of the stars used in the PSF model.",
+        )
+        schema.addField(
+            "starKurtosisMedian",
+            type="F",
+            doc="Kurtosis-like higher-order moment combination: median M40 + 2*M22 + M04 "
+            "of the stars used in the PSF model.",
+        )
+        schema.addField(
+            "starE41Median",
+            type="F",
+            doc="Fourth-order ellipticity-like higher-order moment combination: median M40 - M04 "
+            "of the stars used in the PSF model.",
+        )
+        schema.addField(
+            "starE42Median",
+            type="F",
+            doc="Fourth-order ellipticity-like higher-order moment combination: median 2*(M31 + M13) "
             "of the stars used in the PSF model.",
         )
         schema.addField(
