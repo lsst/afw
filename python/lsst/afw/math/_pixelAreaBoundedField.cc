@@ -39,6 +39,8 @@ void wrapPixelAreaBoundedField(lsst::cpputils::python::WrapperCollection &wrappe
         cls.def(py::init<lsst::geom::Box2I const &, std::shared_ptr<afw::geom::SkyWcs const>,
                          lsst::geom::AngleUnit const &, double>(),
                 "bbox"_a, "skyWcs"_a, "unit"_a = lsst::geom::radians, "scaling"_a = 1.0);
+        cls.def("getSkyWcs", &PixelAreaBoundedField::getSkyWcs);
+        cls.def("getScaling", &PixelAreaBoundedField::getScaling);
         // All other operations are wrapped by the BoundedField base class.
     });
 }
