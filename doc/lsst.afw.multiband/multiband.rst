@@ -24,8 +24,8 @@ To understand how multiband objects we begin with `MultibandImage`.
 Construction
 ------------
 
-All objects that inherit from `MultibandBase` require a list of `filters`,
-the name of the filter in each band, as the first argument.
+All objects that inherit from `MultibandBase` require a list of `bands`,
+the name of the band for each (physical) filter, as the first argument.
 The single band instances are stored in the `singles` property
 of a multiband object and are usually initialized with a
 reference to a multiband data cube that contains the values in
@@ -83,7 +83,7 @@ For example slicing a `MultibandImage` gives
 
     # Output:
     #<lsst.afw.image.image.image.ImageF object at 0x7fea5950dca8>
-    #<MultibandImage, filters=('G',), bbox=Box2I(minimum=Point2I(0, 0), dimensions=Extent2I(200, 100))>
+    #<MultibandImage, bands=('G',), bbox=Box2I(minimum=Point2I(0, 0), dimensions=Extent2I(200, 100))>
 
 For `MultibandImage` objects and any classes that inherit from it,
 the multiband object can also be sliced in the spatial dimensions.
@@ -115,7 +115,7 @@ bands in the `MultibandImage` we can use
     print(subset.array)
 
     # Output
-    #<MultibandImage, filters=('R', 'I'), bbox=Box2I(minimum=Point2I(1000, 2000), dimensions=Extent2I(5, 3))>
+    #<MultibandImage, bands=('R', 'I'), bbox=Box2I(minimum=Point2I(1000, 2000), dimensions=Extent2I(5, 3))>
     #[[[ 1.  1.  1.  1.  1.]
     #  [ 1.  1.  1.  1.  1.]
     #  [ 1.  1.  1.  1.  1.]]
@@ -205,7 +205,7 @@ from a multiband image. For example:
     print(subset)
 
     # Output
-    #<MultibandPixel, filters=('G', 'R', 'I', 'Z', 'Y'), bbox=Box2I(minimum=Point2I(1000, 2000), dimensions=Extent2I(1, 1))>
+    #<MultibandPixel, bands=('G', 'R', 'I', 'Z', 'Y'), bbox=Box2I(minimum=Point2I(1000, 2000), dimensions=Extent2I(1, 1))>
     #[ 0.  1.  2.  3.  4.]
 
 `MultibandPixel` objects can only be sliced in the filter dimension (since there is only one
@@ -287,12 +287,12 @@ The binary operators used to update `Mask` objects also work for `MultibandMask`
     masks = np.zeros((3, 100, 200), dtype=np.int32)
     for n in range(len(filters)):
         masks[n] = n
-    mMask1 = MultibandMask(filters=filters, array=masks, bbox=bbox)
+    mMask1 = MultibandMask(bands=filters, array=masks, bbox=bbox)
 
     masks = np.zeros((3, 100, 200), dtype=np.int32)
     for n in range(len(filters)):
         masks[n] = n+1
-    mMask2 = MultibandMask(filters=filters, array=masks, bbox=bbox)
+    mMask2 = MultibandMask(bands=filters, array=masks, bbox=bbox)
 
     print(mMask1[:, -1, -1, LOCAL])
     print(mMask2[:, -1, -1, LOCAL])
@@ -383,7 +383,7 @@ a new `MultibandMaskedImage`:
 
     # Output
     #<lsst.afw.image.maskedImage.maskedImage.MaskedImageF object at 0x7f915adf6148>
-    #<MultibandMaskedImage, filters=('G',), bbox=Box2I(minimum=Point2I(1000, 2000), dimensions=Extent2I(200, 100))>
+    #<MultibandMaskedImage, bands=('G',), bbox=Box2I(minimum=Point2I(1000, 2000), dimensions=Extent2I(200, 100))>
 
 Slices in the image x,y dimensions are performed in all bands, for example:
 
@@ -396,7 +396,7 @@ Slices in the image x,y dimensions are performed in all bands, for example:
     print("variance:\n", subset.variance.array)
 
     # Output
-    #<MultibandMaskedImage, filters=('R', 'I'), bbox=Box2I(minimum=Point2I(1000, 2000), dimensions=Extent2I(5, 3))>
+    #<MultibandMaskedImage, bands=('R', 'I'), bbox=Box2I(minimum=Point2I(1000, 2000), dimensions=Extent2I(5, 3))>
     #image:
     # [[[ 1.  1.  1.  1.  1.]
     #  [ 1.  1.  1.  1.  1.]
@@ -696,7 +696,7 @@ filter slicing is identical to the other multiband classes:
 
     # Output
     #<lsst.afw.detection._heavyFootprint.HeavyFootprintF object at 0x7fa35c0e81f0>
-    #<MultibandFootprint, filters=('G',), bbox=Box2I(minimum=Point2I(0, 0), dimensions=Extent2I(5, 5))>
+    #<MultibandFootprint, bands=('G',), bbox=Box2I(minimum=Point2I(0, 0), dimensions=Extent2I(5, 5))>
 
 Peak Catalog
 ------------
