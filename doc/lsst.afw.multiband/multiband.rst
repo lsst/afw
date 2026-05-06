@@ -24,8 +24,8 @@ To understand how multiband objects we begin with `MultibandImage`.
 Construction
 ------------
 
-All objects that inherit from `MultibandBase` require a list of `filters`,
-the name of the filter in each band, as the first argument.
+All objects that inherit from `MultibandBase` require a list of `bands`,
+the name of the band for each (physical) filter, as the first argument.
 The single band instances are stored in the `singles` property
 of a multiband object and are usually initialized with a
 reference to a multiband data cube that contains the values in
@@ -40,9 +40,9 @@ of single band images using `MultibandImage.fromImages`:
     from lsst.afw.image import ImageF, MultibandImage
 
     bbox = Box2I(Point2I(1000, 2000), Extent2I(200, 100))
-    filters = ["G", "R", "I", "Z", "Y"]
-    images = [ImageF(bbox, n) for n,f in enumerate(filters)]
-    mImage = MultibandImage.fromImages(filters, images)
+    bands = ["G", "R", "I", "Z", "Y"]
+    images = [ImageF(bbox, n) for n,f in enumerate(bands)]
+    mImage = MultibandImage.fromImages(bands, images)
 
 The default constructor uses an array and bounding box to
 initialize the image:
@@ -55,16 +55,16 @@ initialize the image:
     from lsst.geom import Point2I, Box2I
 
     bbox = Box2I(Point2I(1000, 2000), Extent2I(200, 100))
-    filters = ["G", "R", "I", "Z", "Y"]
-    images = np.random.rand(len(filters), 100, 200).astype(np.float32)
-    mImage = MultibandImage(filters, images, bbox)
+    bands = ["G", "R", "I", "Z", "Y"]
+    images = np.random.rand(len(bands), 100, 200).astype(np.float32)
+    mImage = MultibandImage(bands, images, bbox)
 
 Indexing and Slicing
 --------------------
 
-All objects that inherit from `MultibandBase` can be indexed in the filter
-dimension to return a single band object by specifying the filter name,
-or sliced in the filter dimension to return a new multiband object.
+All objects that inherit from `MultibandBase` can be indexed in the band
+dimension to return a single band object by specifying the band name,
+or sliced in the band dimension to return a new multiband object.
 This is true for all objects that inherit from `MultibandBase`.
 For example slicing a `MultibandImage` gives
 
@@ -74,16 +74,16 @@ For example slicing a `MultibandImage` gives
 
     from lsst.afw.image import MultibandImage
 
-    filters = ["G", "R", "I", "Z", "Y"]
-    images = np.random.rand(len(filters), 100, 200).astype(np.float32)
-    mImage = MultibandImage(filters, array=images)
+    bands = ["G", "R", "I", "Z", "Y"]
+    images = np.random.rand(len(bands), 100, 200).astype(np.float32)
+    mImage = MultibandImage(bands, array=images)
 
     print(mImage["G"])
     print(repr(mImage[:"R"]))
 
     # Output:
     #<lsst.afw.image.image.image.ImageF object at 0x7fea5950dca8>
-    #<MultibandImage, filters=('G',), bbox=Box2I(minimum=Point2I(0, 0), dimensions=Extent2I(200, 100))>
+    #<MultibandImage, bands=('G',), bbox=Box2I(minimum=Point2I(0, 0), dimensions=Extent2I(200, 100))>
 
 For `MultibandImage` objects and any classes that inherit from it,
 the multiband object can also be sliced in the spatial dimensions.
@@ -101,9 +101,9 @@ code has been executed:
     from lsst.afw.image import ImageF, MultibandImage, LOCAL, PARENT
 
     bbox = Box2I(Point2I(1000, 2000), Extent2I(200, 100))
-    filters = ["G", "R", "I", "Z", "Y"]
-    images = [ImageF(bbox, n) for n,f in enumerate(filters)]
-    mImage = MultibandImage.fromImages(filters, images)
+    bands = ["G", "R", "I", "Z", "Y"]
+    images = [ImageF(bbox, n) for n,f in enumerate(bands)]
+    mImage = MultibandImage.fromImages(bands, images)
 
 For example, if we want to extract a small subset in the `R` and `I`
 bands in the `MultibandImage` we can use
@@ -115,7 +115,7 @@ bands in the `MultibandImage` we can use
     print(subset.array)
 
     # Output
-    #<MultibandImage, filters=('R', 'I'), bbox=Box2I(minimum=Point2I(1000, 2000), dimensions=Extent2I(5, 3))>
+    #<MultibandImage, bands=('R', 'I'), bbox=Box2I(minimum=Point2I(1000, 2000), dimensions=Extent2I(5, 3))>
     #[[[ 1.  1.  1.  1.  1.]
     #  [ 1.  1.  1.  1.  1.]
     #  [ 1.  1.  1.  1.  1.]]
@@ -152,7 +152,7 @@ all of the following methods:
 Conversion to numpy indices
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-`MultibandImage` objects have an `array` property to access the 3D array (filter, y, x)
+`MultibandImage` objects have an `array` property to access the 3D array (band, y, x)
 used to fill the single band objects (in fact the single band `Image` objects are initialized
 with pointers to the `Multiband.array`).
 In order to have consistent behavior the `imageIndicesToNumpy` method can be used to convert
@@ -196,19 +196,19 @@ from a multiband image. For example:
     from lsst.afw.image import ImageF, MultibandImage
 
     bbox = Box2I(Point2I(1000, 2000), Extent2I(200, 100))
-    filters = ["G", "R", "I", "Z", "Y"]
-    images = [ImageF(bbox, n) for n,f in enumerate(filters)]
-    mImage = MultibandImage.fromImages(filters, images)
+    bands = ["G", "R", "I", "Z", "Y"]
+    images = [ImageF(bbox, n) for n,f in enumerate(bands)]
+    mImage = MultibandImage.fromImages(bands, images)
 
     subset = mImage[:, mImage.getXY0()]
     print(repr(subset))
     print(subset)
 
     # Output
-    #<MultibandPixel, filters=('G', 'R', 'I', 'Z', 'Y'), bbox=Box2I(minimum=Point2I(1000, 2000), dimensions=Extent2I(1, 1))>
+    #<MultibandPixel, bands=('G', 'R', 'I', 'Z', 'Y'), bbox=Box2I(minimum=Point2I(1000, 2000), dimensions=Extent2I(1, 1))>
     #[ 0.  1.  2.  3.  4.]
 
-`MultibandPixel` objects can only be sliced in the filter dimension (since there is only one
+`MultibandPixel` objects can only be sliced in the band dimension (since there is only one
 pixel) and choosing a single band returns an element of the array. For example, using `subset`
 as defined above:
 
@@ -222,7 +222,7 @@ as defined above:
     #[ 0.]
 
 Another difference between `MultibandPixel` and other multiband classes is that
-`MultibandPixel.singles` is just a numpy array with the pixel value in each filter,
+`MultibandPixel.singles` is just a numpy array with the pixel value in each band,
 not a single band object from the stack.
 
 MultibandMask
@@ -245,21 +245,21 @@ either a single band `Mask` or a 3D data array:
     from lsst.geom import Point2I, Box2I, Extent2I
     from lsst.afw.image import Mask, MaskPixel, MultibandMask
 
-    filters = ["G", "R", "I"]
+    bands = ["G", "R", "I"]
 
     # Construct a MultibandMask from a collection of afw.image.Mask objects
     mask = Mask[MaskPixel]
     bbox = Box2I(Point2I(1000, 2000), Extent2I(200, 100))
-    singles = [mask(bbox) for f in range(len(filters))]
+    singles = [mask(bbox) for f in range(len(bands))]
     for n in range(len(singles)):
         singles[n].set(n)
-    mMask = MultibandMask.fromMasks(filters, singles)
+    mMask = MultibandMask.fromMasks(bands, singles)
 
     # Construct a MultibandMask from an array
     masks = np.zeros((3, 100, 200), dtype=np.int32)
-    for n in range(len(filters)):
+    for n in range(len(bands)):
         masks[n] = n
-    mMask = MultibandMask(filters, masks, bbox)
+    mMask = MultibandMask(bands, masks, bbox)
 
 Mask Planes
 -----------
@@ -285,14 +285,14 @@ The binary operators used to update `Mask` objects also work for `MultibandMask`
 .. code-block:: python
 
     masks = np.zeros((3, 100, 200), dtype=np.int32)
-    for n in range(len(filters)):
+    for n in range(len(bands)):
         masks[n] = n
-    mMask1 = MultibandMask(filters=filters, array=masks, bbox=bbox)
+    mMask1 = MultibandMask(bands=bands, array=masks, bbox=bbox)
 
     masks = np.zeros((3, 100, 200), dtype=np.int32)
-    for n in range(len(filters)):
+    for n in range(len(bands)):
         masks[n] = n+1
-    mMask2 = MultibandMask(filters=filters, array=masks, bbox=bbox)
+    mMask2 = MultibandMask(bands=bands, array=masks, bbox=bbox)
 
     print(mMask1[:, -1, -1, LOCAL])
     print(mMask2[:, -1, -1, LOCAL])
@@ -340,40 +340,40 @@ A new `MultibandMaskedImage` can be constructed in the following ways:
     from lsst.afw.image import Mask, Image
 
     # Setup the image, mask, and variance
-    filters = ["G", "R", "I"]
+    bands = ["G", "R", "I"]
     bbox = Box2I(Point2I(1000, 2000), Extent2I(200, 100))
-    images = [Image(bbox, n, dtype=np.float32) for n in range(len(filters))]
-    masks = [Mask(bbox) for f in filters]
+    images = [Image(bbox, n, dtype=np.float32) for n in range(len(bands))]
+    masks = [Mask(bbox) for f in bands]
     for n, mask in enumerate(masks):
         mask.set(2**n)
     np.random.seed(1)
     _variance = np.random.rand(3, 100,200).astype(np.float32) * 1e-1
-    variance = [Image(_variance[n], xy0=bbox.getMin(), dtype=np.float32) for n in range(len(filters))]
+    variance = [Image(_variance[n], xy0=bbox.getMin(), dtype=np.float32) for n in range(len(bands))]
 
     # Construct a MultibandMaskedImage using single band images
-    mMaskedImage = MultibandMaskedImage(filters, images, masks, variance)
+    mMaskedImage = MultibandMaskedImage(bands, images, masks, variance)
 
 
     # Construct a MultibandMaskedImage using multiband objects
-    mImage = MultibandImage.fromImages(filters, images)
-    mMask = MultibandMask.fromMasks(filters, masks)
-    mVariance = MultibandImage.fromImages(filters, variance)
-    mMaskedImage = MultibandMaskedImage(filters, mImage, mMask, mVariance)
+    mImage = MultibandImage.fromImages(bands, images)
+    mMask = MultibandMask.fromMasks(bands, masks)
+    mVariance = MultibandImage.fromImages(bands, variance)
+    mMaskedImage = MultibandMaskedImage(bands, mImage, mMask, mVariance)
 
     # Construct a MultibandMaskedImage using arrays
     img = np.array([image.array for image in images])
     msk = np.array([mask.array for mask in masks])
     var = np.array([v.array for v in variance])
     bbox = images[0].getBBox()
-    mMaskedImage = MultibandMaskedImage.fromArrays(filters, img, msk, var, bbox)
+    mMaskedImage = MultibandMaskedImage.fromArrays(bands, img, msk, var, bbox)
 
 The remaining sections assume that the above `mMaskedImage` has been initialized.
 
 Indexing and Slicing
 --------------------
 
-Like `MultibandImage`, using a single filter index returns a single band version of
-the object, in this case a `MaskedImage`, while slicing in the filter dimension returns
+Like `MultibandImage`, using a single band index returns a single band version of
+the object, in this case a `MaskedImage`, while slicing in the band dimension returns
 a new `MultibandMaskedImage`:
 
 .. code-block:: python
@@ -383,7 +383,7 @@ a new `MultibandMaskedImage`:
 
     # Output
     #<lsst.afw.image.maskedImage.maskedImage.MaskedImageF object at 0x7f915adf6148>
-    #<MultibandMaskedImage, filters=('G',), bbox=Box2I(minimum=Point2I(1000, 2000), dimensions=Extent2I(200, 100))>
+    #<MultibandMaskedImage, bands=('G',), bbox=Box2I(minimum=Point2I(1000, 2000), dimensions=Extent2I(200, 100))>
 
 Slices in the image x,y dimensions are performed in all bands, for example:
 
@@ -396,7 +396,7 @@ Slices in the image x,y dimensions are performed in all bands, for example:
     print("variance:\n", subset.variance.array)
 
     # Output
-    #<MultibandMaskedImage, filters=('R', 'I'), bbox=Box2I(minimum=Point2I(1000, 2000), dimensions=Extent2I(5, 3))>
+    #<MultibandMaskedImage, bands=('R', 'I'), bbox=Box2I(minimum=Point2I(1000, 2000), dimensions=Extent2I(5, 3))>
     #image:
     # [[[ 1.  1.  1.  1.  1.]
     #  [ 1.  1.  1.  1.  1.]
@@ -439,19 +439,19 @@ entire PSF image can be built using the `getPsfImage` method:
     from lsst.afw.image import Mask, Image
     from lsst.afw.detection import GaussianPsf
 
-    filters = ["G", "R", "I"]
+    bands = ["G", "R", "I"]
     bbox = Box2I(Point2I(1000, 2000), Extent2I(200, 100))
-    images = [Image(bbox, n, dtype=np.float32) for n in range(len(filters))]
-    masks = [Mask(bbox) for f in filters]
+    images = [Image(bbox, n, dtype=np.float32) for n in range(len(bands))]
+    masks = [Mask(bbox) for f in bands]
     for n, mask in enumerate(masks):
         mask.set(2**n)
     _variance = np.random.rand(3, 100,200).astype(np.float32) * 1e-1
-    variance = [Image(_variance[n], xy0=bbox.getMin(), dtype=np.float32) for n in range(len(filters))]
+    variance = [Image(_variance[n], xy0=bbox.getMin(), dtype=np.float32) for n in range(len(bands))]
 
     kernelSize = 5
-    psfs = [GaussianPsf(kernelSize, kernelSize, 4.0) for f in filters]
+    psfs = [GaussianPsf(kernelSize, kernelSize, 4.0) for f in bands]
 
-    mExposure = MultibandExposure(filters, image=images, mask=masks, variance=variance, psfs=psfs)
+    mExposure = MultibandExposure(bands, image=images, mask=masks, variance=variance, psfs=psfs)
 
     print(mExposure.computePsfImage())
 
@@ -514,7 +514,7 @@ be initialized using the list of `HeavyFootprint` objects as `singles`:
     from lsst.afw.image import ImageF, MaskedImageF
 
     singles = []
-    for n in range(len(filters)):
+    for n in range(len(bands)):
         spans = SpanSet.fromShape(2, Stencil.CIRCLE)
         footprint = Footprint(spans)
         image = ImageF(spans.getBBox())
@@ -522,7 +522,7 @@ be initialized using the list of `HeavyFootprint` objects as `singles`:
         image = MaskedImageF(image)
         heavy = makeHeavyFootprint(footprint, image)
         singles.append(heavy)
-    mFoot = MultibandFootprint(filters, singles)
+    mFoot = MultibandFootprint(bands, singles)
     print(mFoot.getImage(fill=0).image.array)
 
     # Output
@@ -553,9 +553,9 @@ or a `MultibandImage`, and a detection threshold:
     from lsst.afw.geom import SpanSet, Stencil
     from lsst.afw.image import ImageI
 
-    filters = ["G","R","I"]
+    bands = ["G","R","I"]
     images = []
-    for n in range(len(filters)):
+    for n in range(len(bands)):
         spans = SpanSet.fromShape(2, Stencil.CIRCLE)
         image = ImageI(spans.getBBox())
         spans.setImage(image, 1)
@@ -566,7 +566,7 @@ or a `MultibandImage`, and a detection threshold:
         image += image2
         images.append(image)
         print("initial arrays:\n", image.array)
-    mFoot = MultibandFootprint.fromImages(filters, images, thresh=1.1)
+    mFoot = MultibandFootprint.fromImages(bands, images, thresh=1.1)
     print("result:\n", mFoot.getImage(fill=0).image.array)
 
     # Output
@@ -620,19 +620,19 @@ for all of the bands. For example:
     import numpy as np
     from lsst.afw.image import ImageF
 
-    filters = ["G","R","I"]
+    bands = ["G","R","I"]
 
     spans = SpanSet.fromShape(2, Stencil.CIRCLE, offset=(2, 2))
     footprint = Footprint(spans)
     dimensions = spans.getBBox().getDimensions()
-    image = np.ones((len(filters), dimensions.getY(), dimensions.getX()), dtype=np.float32)
+    image = np.ones((len(bands), dimensions.getY(), dimensions.getX()), dtype=np.float32)
     image[1] = 2
     image[2] = 3
     print("Input images:\n", image)
     fpImage = ImageF(footprint.getBBox())
     spans.setImage(fpImage, 1)
     print("Footprint:\n", fpImage.array)
-    mFoot = MultibandFootprint.fromArrays(filters, image, footprint=footprint)
+    mFoot = MultibandFootprint.fromArrays(bands, image, footprint=footprint)
     print("result:\n", mFoot.getImage(fill=0).image.array)
 
     # Output
@@ -684,10 +684,10 @@ Indexing and Slicing
 
 Because a `SpanSet` is more complicated than a 2D array,
 it is only possible to slice a `MultibandFootprint` in the
-filter dimension, not the spatial dimensions.
+band dimension, not the spatial dimensions.
 
 Using `mFoot` as defined in the previous section, we see that
-filter slicing is identical to the other multiband classes:
+band slicing is identical to the other multiband classes:
 
 .. code-block:: python
 
@@ -696,7 +696,7 @@ filter slicing is identical to the other multiband classes:
 
     # Output
     #<lsst.afw.detection._heavyFootprint.HeavyFootprintF object at 0x7fa35c0e81f0>
-    #<MultibandFootprint, filters=('G',), bbox=Box2I(minimum=Point2I(0, 0), dimensions=Extent2I(5, 5))>
+    #<MultibandFootprint, bands=('G',), bbox=Box2I(minimum=Point2I(0, 0), dimensions=Extent2I(5, 5))>
 
 Peak Catalog
 ------------
@@ -713,10 +713,10 @@ band `HeavyFootprint` objects:
     from lsst.afw.geom import SpanSet, Stencil
     from lsst.afw.image import ImageF, MaskedImageF
 
-    filters = ["G","R","I"]
+    bands = ["G","R","I"]
     images = []
     spanSet = SpanSet()
-    for n in range(len(filters)):
+    for n in range(len(bands)):
         spans = SpanSet.fromShape(1, Stencil.CIRCLE, offset=(2*(n+1),2*(n+1)))
         spanSet = spanSet.union(spans)
         image = ImageF(spans.getBBox())
@@ -726,7 +726,7 @@ band `HeavyFootprint` objects:
     footprint.addPeak(1, 1, 1)
     footprint.addPeak(3, 3, 2)
     footprint.addPeak(5, 5, 3)
-    mFoot = MultibandFootprint(filters, images=images, footprint=footprint)
+    mFoot = MultibandFootprint(bands, images=images, footprint=footprint)
 
     print(mFoot.peaks)
     for n, single in enumerate(mFoot.singles):
