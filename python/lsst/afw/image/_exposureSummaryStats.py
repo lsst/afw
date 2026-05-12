@@ -25,6 +25,8 @@ from typing import TYPE_CHECKING
 import yaml
 import warnings
 
+import numpy as np
+
 from ..typehandling import Storable, StorableHelperFactory
 
 if TYPE_CHECKING:
@@ -93,6 +95,46 @@ class ExposureSummaryStats(Storable):
     decCorners: list[float] = dataclasses.field(default_factory=_default_corners)
     """Declination of bounding box corners (degrees)."""
 
+    psfAdaptiveThresholdValue: float = float('nan')
+    """Threshold value used in the adaptive threshold detection pass for PSF modelling."""
+
+    psfAdaptiveIncludeThresholdMultiplier: float = float('nan')
+    """Threshold multiplier used in the adaptive threshold detection pass for PSF modelling."""
+
+    nShapeletsStar: int = 0
+    """Number of sources used in the shapelet decomposition."""
+
+    shapeletsOnlyIqScore: float = float('nan')
+    """The dimensionless image quality score as determined from the shapelets decomposition
+    that includes power only from the non-atmospheric decomposition coefficients. The
+    score spans the range [0.0, 1.0] with lower values indicating better image quality.
+    """
+
+    shapeletsIqScore: float = float('nan')
+    """The dimensionless image quality score as determined from the shapelets decomposition
+    that includes power from the median centroid offset between those used in the decomposition
+    and those of the centroid slot in addition to non-atmospheric decomposition coefficients.
+    The score spans the range [0.0, 1.0] with lower values indicating better image quality.
+    """
+
+    shapeletsCoeffs: list[float] = dataclasses.field(default_factory=list)
+    """List of coefficients from the PSF star shapelet decomposition."""
+
+    centroidDiffShapeletsVsSlotMedian: float = float('nan')
+    """Median centroid difference (sqrt((slot_x - shapelet_x)**2 + (slot_y - shapelet_y)**2)) for
+    sources used in the shapelet decomposition (pixels).
+    """
+
+    shapeletsStarEMedian: float = float('nan')
+    """Median ellipticity (sqrt(starE1**2.0 + starE2**2.0)) of the sources used in the
+    shapelet decomposition.
+    """
+
+    shapeletsStarUnNormalizedEMedian: float = float('nan')
+    """Median un-normalized ellipticity (sqrt((starXX - starYY)**2.0 + (2.0*starXY)**2.0))
+    of the sources used in the shapelet decomposition (pixels**2).
+    """
+
     astromOffsetMean: float = float('nan')
     """Astrometry match offset mean."""
 
@@ -149,9 +191,8 @@ class ExposureSummaryStats(Storable):
     """
 
     starUnNormalizedEMedian: float = float('nan')
-    """Median un-normalized ellipticity
-    (sqrt((starXX - starYY)**2.0 + (2.0*starXY)**2.0))
-    of the stars used in the PSF model.
+    """Median un-normalized ellipticity (sqrt((starXX - starYY)**2.0 + (2.0*starXY)**2.0))
+    of the stars used in the PSF model (pixel**2).
     """
 
     starComa1Median: float = float('nan')
@@ -360,6 +401,71 @@ class ExposureSummaryStats(Storable):
             units="adu**2"
         )
         schema.addField(
+            "psfAdaptiveThresholdValue",
+            type="F",
+            doc="Threshold value used in the adaptive threshold detection pass for PSF modelling.",
+            units="",
+        )
+        schema.addField(
+            "psfAdaptiveIncludeThresholdMultiplier",
+            type="F",
+            doc="Threshold multiplier used in the adaptive threshold detection pass for PSF modelling.",
+            units="",
+        )
+        schema.addField(
+            "nShapeletsStar",
+            type="I",
+            doc="Number of sources used in the shapelet decomposition.",
+            units="count",
+        )
+        schema.addField(
+            "shapeletsOnlyIqScore",
+            type="F",
+            doc="The dimensionless image quality score as determined from the shapelets "
+            "decomposition that includes power only from the non-atmospheric decomposition "
+            "coefficients. The score spans the range [0.0, 1.0] with lower values indicating "
+            "better image quality.",
+            units="",
+        )
+        schema.addField(
+            "shapeletsIqScore",
+            type="F",
+            doc="The dimensionless image quality score as determined from the shapelets "
+            "decomposition that includes power from the median centroid offset between those "
+            "used in the decomposition and those of the centroid slot in addition to "
+            "non-atmospheric decomposition coefficients. The score spans the range [0.0, 1.0] "
+            "with lower values indicating better image quality.",
+            units="",
+        )
+        schema.addField(
+            "shapeletsCoeffs",
+            type="ArrayD",
+            size=0,  # dynamic size
+            doc="List of coefficients from the PSF star shapelet decomposition.",
+            units="",
+        )
+        schema.addField(
+            "centroidDiffShapeletsVsSlotMedian",
+            type="F",
+            doc="Median centroid difference (sqrt((slot_x - shapelet_x)**2 + (slot_y - shapelet_y)**2)) "
+            "for sources used in the shapelet decomposition.",
+            units="pixel",
+        )
+        schema.addField(
+            "shapeletsStarEMedian",
+            type="F",
+            doc="Median ellipticity (sqrt(starE1**2.0 + starE2**2.0)) of the stars used in the "
+            "shapelet decomposition.",
+            units="",
+        )
+        schema.addField(
+            "shapeletsStarUnNormalizedEMedian",
+            type="F",
+            doc="Median un-normalized ellipticity (sqrt((starXX - starYY)**2.0 + (2.0*starXY)**2.0)) "
+            "of the stars used in the shapelet decomposition.",
+            units="pixel**2",
+        )
+        schema.addField(
             "astromOffsetMean",
             type="F",
             doc="Mean offset of astrometric calibration matches (arcsec)",
@@ -534,7 +640,7 @@ class ExposureSummaryStats(Storable):
             if field.name == "version":
                 continue
             elif field.type.startswith("list"):
-                record[field.name][:] = value
+                record[field.name] = np.array(value, dtype=record[field.name].dtype)
             else:
                 record[field.name] = value
 
