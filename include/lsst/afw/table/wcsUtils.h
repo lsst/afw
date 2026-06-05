@@ -64,7 +64,13 @@ template <typename SourceCollection>
 void updateSourceCoords(geom::SkyWcs const& wcs, SourceCollection& sourceList, bool include_covariance=true);
 
 /**
- * Calculate covariance for sky coordinates given a pixel centroid and errors.
+ * Calculate the local tangent-plane sky covariance for a pixel centroid.
+ *
+ * The pixel centroid covariance is propagated through a Jacobian computed
+ * in a local gnomonic (tangent) plane centered on the source.  The first
+ * axis of the returned matrix is therefore the tangent-plane longitude
+ * offset xi = RA·cos(Dec) and the second axis is the tangent-plane latitude
+ * offset eta = Dec.
  *
  * @tparam t Floating point type of the input errors/output covariance.
  *
@@ -74,7 +80,11 @@ void updateSourceCoords(geom::SkyWcs const& wcs, SourceCollection& sourceList, b
  * @param[in] factor Factor to multiply the WCS matrix terms, which are in
  * degrees. Default is pi/180 to convert to radians.
  *
- * @return The RA/Dec sky covariance matrix in degrees, multiplied by factor.
+ * @return The 2x2 tangent-plane covariance Cov(xi, eta) =
+ *         Cov(RA·cos(Dec), Dec).  The internal Jacobian is built in
+ *         degrees, so the returned covariance is in (degrees * factor)^2;
+ *         with the default ``factor = pi/180`` the result is in radians^2,
+ *         and with ``factor = 1`` it is in degrees^2.
  */
 template <typename t>
 Eigen::Matrix<t, 2, 2> calculateCoordCovariance(geom::SkyWcs const& wcs, lsst::geom::Point2D center,
@@ -82,7 +92,8 @@ Eigen::Matrix<t, 2, 2> calculateCoordCovariance(geom::SkyWcs const& wcs, lsst::g
                                                 double factor = lsst::geom::PI / 180.0);
 
 /**
- * Convert an x/y centroid with errors into RA/dec.
+ * Convert an x/y centroid with errors into RA/Dec, propagating the
+ * centroid uncertainty to the local tangent plane.
  *
  * @param[in] wcs  WCS to map from pixels to sky.
  * @param[in] x  The x centroid in pixels.
@@ -91,9 +102,10 @@ Eigen::Matrix<t, 2, 2> calculateCoordCovariance(geom::SkyWcs const& wcs, lsst::g
  * @param[in] yErr  The standard error on the y centroid in pixels.
  * @param[in] xy_covariance  The xy covariance in pixels squared.
  *
- * @return A pair of tuples with the RA/dec centroid in degrees,
- *         and the RA error, dec error and RA/dec covariance in degrees
- *         (squared for the covariance).
+ * @return A pair of tuples: the RA/Dec centroid in degrees, and the
+ *         tangent-plane uncertainties ``(sigma(xi), sigma(eta),
+ *         Cov(xi, eta))`` in degrees (squared for the covariance), where
+ *         xi = RA·cos(Dec) and eta = Dec.
  */
 std::pair<std::tuple<double, double>, std::tuple<double, double, double>> convertCentroid(
         geom::SkyWcs const& wcs, double x, double y, double xErr, double yErr, double xy_covariance = 0);

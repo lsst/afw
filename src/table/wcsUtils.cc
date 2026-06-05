@@ -113,9 +113,12 @@ Eigen::Matrix<t, 2, 2> calculateCoordCovariance(geom::SkyWcs const& wcs, lsst::g
     Eigen::Matrix<t, 2, 2> d = localMatrix.cast<t>() * scale * factor;
 
     Eigen::Matrix<t, 2, 2> skyCov = d * err * d.transpose();
-    // Because the transform from pixels to RA/Dec was done at a local
-    // gnomonic, the RA and Dec covariance are already commensurate, and
-    // multiplying the RA covariance by cos(Dec) is not necessary.
+    // The transform from pixels to sky above was taken in a local gnomonic
+    // plane centered on the source, so the returned matrix is in
+    // tangent-plane coordinates (xi ≈ RA·cos(Dec), eta ≈ Dec) rather than
+    // (RA, Dec).  The cos(Dec) factor is baked into the first axis by the
+    // gnomonic projection itself, so applying another factor here would
+    // double-count it.
     return skyCov;
 }
 
