@@ -135,7 +135,7 @@ public:
      */
     double getSuspectLevel() const { return getFields().suspectLevel; }
 
-    /// Readout corner in the trimmed, assembled image.
+    /// Readout corner in the image this detector is attached to.
     ReadoutCorner getReadoutCorner() const { return getFields().readoutCorner; }
 
     /// Vector of linearity coefficients.
