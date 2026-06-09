@@ -37,6 +37,7 @@ using PyClass = py::classh<ProductBoundedField, BoundedField>;
 void wrapProductBoundedField(lsst::cpputils::python::WrapperCollection &wrappers) {
     wrappers.wrapType(PyClass(wrappers.module, "ProductBoundedField"), [](auto &mod, auto &cls) {
         cls.def(py::init<std::vector<std::shared_ptr<BoundedField const>>>());
+        cls.def("getFactors", &ProductBoundedField::getFactors);
         // All other operations are wrapped by the BoundedField base class.
     });
 }

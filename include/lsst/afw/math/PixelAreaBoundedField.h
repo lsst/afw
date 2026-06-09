@@ -90,6 +90,16 @@ public:
     /// @copydoc BoundedField::operator==
     bool operator==(BoundedField const &rhs) const override;
 
+    /// Return the WCS that backs this field.
+    std::shared_ptr<geom::SkyWcs const> getSkyWcs() const { return _skyWcs; }
+
+    /**
+     *  Return the scaling applied to evaluation of the pixel area when that
+     *  original area is in radians^2.
+     */
+    double getScaling() const { return _scaling; }
+
+
 protected:
 
     std::string getPersistenceName() const override;
