@@ -35,6 +35,8 @@ import importlib
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 
+from ._images_compat import normalize_lsst_images
+
 logger = logging.getLogger(__name__)
 
 # Symbolic names for mask/line colors.  N.b. ds9 supports any X11 color for masks
@@ -141,7 +143,9 @@ class Display:
     _defaultMaskPlaneColor = dict(
         BAD=RED,
         CR=MAGENTA,
+        COSMIC_RAY=MAGENTA,
         EDGE=YELLOW,
+        DETECTION_EDGE=YELLOW,
         INTERPOLATED=GREEN,
         SATURATED=GREEN,
         DETECTED=BLUE,
@@ -543,7 +547,11 @@ class Display:
         ----------
         data : `lsst.afw.image.Exposure` or `lsst.afw.image.MaskedImage` or `lsst.afw.image.Image`
             Image to display; Exposure and MaskedImage will show transparent
-            mask planes.
+            mask planes.  `lsst.images` objects (`~lsst.images.MaskedImage`
+            and its subclasses such as `~lsst.images.VisitImage` and
+            `~lsst.images.cells.CellCoadd`, `~lsst.images.Image`, and
+            `~lsst.images.Mask`) are converted to the equivalent afw types,
+            using any attached ``sky_projection`` as the WCS.
         title : `str`, optional
             Title for the display window.
         wcs : `lsst.afw.geom.SkyWcs`, optional
@@ -556,11 +564,14 @@ class Display:
         Raises
         ------
         RuntimeError
-            Raised if an Exposure is passed with a non-None wcs when the
-            ``wcs`` kwarg is also non-None.
+            Raised if an Exposure, or an ``lsst.images`` object with its own
+            ``sky_projection``, is passed when the ``wcs`` kwarg is also
+            non-None.
         TypeError
             Raised if data is an incompatible type.
         """
+        data, wcs = normalize_lsst_images(data, wcs)
+
         if hasattr(data, "getXY0"):
             self._xy0 = data.getXY0()
         else:
