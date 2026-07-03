@@ -26,6 +26,7 @@ import numpy as np
 
 import lsst.utils.tests
 import lsst.geom
+import lsst.afw.display as afwDisplay
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 from lsst.afw.display._images_compat import normalize_lsst_images
@@ -190,6 +191,45 @@ class NormalizeLsstImagesTestCase(lsst.utils.tests.TestCase):
         data, wcs = normalize_lsst_images(unsupported, None)
         self.assertIs(data, unsupported)
         self.assertIsNone(wcs)
+
+
+@unittest.skipUnless(HAVE_LSST_IMAGES, "lsst.images is not available")
+class DisplayLsstImagesTestCase(lsst.utils.tests.TestCase):
+    """End-to-end mtv tests through the virtualDevice backend."""
+
+    def setUp(self):
+        afwDisplay.setDefaultBackend("virtualDevice")
+        afwDisplay.delAllDisplays()
+        self.display = afwDisplay.Display(frame=0, verbose=True)
+
+    def tearDown(self):
+        afwDisplay.delAllDisplays()
+
+    def test_mtv_image(self):
+        self.display.mtv(_make_image(), title="image")
+        self.assertEqual(self.display._xy0, lsst.geom.Point2I(200, 100))
+
+    def test_mtv_mask(self):
+        self.display.mtv(_make_mask(), title="mask")
+        self.assertEqual(self.display._xy0, lsst.geom.Point2I(200, 100))
+
+    def test_mtv_masked_image(self):
+        self.display.mtv(_make_masked_image(with_projection=True), title="masked image")
+        self.assertEqual(self.display._xy0, lsst.geom.Point2I(200, 100))
+
+    def test_mtv_wcs_conflict(self):
+        masked_image = _make_masked_image(with_projection=True)
+        with self.assertRaises(RuntimeError):
+            self.display.mtv(masked_image, wcs=_make_legacy_wcs())
+
+    def test_mtv_unsupported(self):
+        with self.assertRaises(TypeError):
+            self.display.mtv(_UnsupportedGeneralizedImage())
+
+    def test_default_mask_plane_colors(self):
+        """Renamed planes keep their traditional colors."""
+        self.assertEqual(self.display.getMaskPlaneColor("COSMIC_RAY"), afwDisplay.MAGENTA)
+        self.assertEqual(self.display.getMaskPlaneColor("DETECTION_EDGE"), afwDisplay.YELLOW)
 
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
