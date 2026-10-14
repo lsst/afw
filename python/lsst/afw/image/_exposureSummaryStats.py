@@ -336,7 +336,7 @@ class ExposureSummaryStats(Storable):
     images to evaluate TE4.
     """
 
-    shutterMidpointMjdTai: float = float('nan')
+    detectorMidpointMjdTai: float = float('nan')
     """Shutter-corrected mid-exposure time at the detector centre (MJD TAI);
     see `lsst.ip.isr.shutterTiming`.
     """
@@ -345,7 +345,7 @@ class ExposureSummaryStats(Storable):
         default_factory=_default_shutter_chebyshev_coefficients
     )
     """Chebyshev coefficients (seconds), in increasing degree, of the
-    shutter-corrected mid-exposure time relative to shutterMidpointMjdTai, in
+    shutter-corrected mid-exposure time relative to detectorMidpointMjdTai, in
     u = (y - shutterChebyshevYCenter)/shutterChebyshevYHalfRange with y the
     pixel row.
     """
@@ -355,11 +355,6 @@ class ExposureSummaryStats(Storable):
 
     shutterChebyshevYHalfRange: float = float('nan')
     """Pixel rows per unit of the shutter Chebyshev variable (pixels)."""
-
-    shutterExposureTime: float = float('nan')
-    """Time between the shutter opening and closing at the detector centre
-    (seconds); not the photometric effTime.
-    """
 
     def __post_init__(self):
         Storable.__init__(self)
@@ -815,7 +810,7 @@ class ExposureSummaryStats(Storable):
             "per-CCD theta within [5, 20] arcmin. Dimensionless; used for TE4.",
         )
         schema.addField(
-            "shutterMidpointMjdTai",
+            "detectorMidpointMjdTai",
             type="D",
             doc="Shutter-corrected mid-exposure time at the detector centre (MJD TAI).",
             units="d",
@@ -825,7 +820,7 @@ class ExposureSummaryStats(Storable):
             type="ArrayD",
             size=6,
             doc="Chebyshev coefficients, in increasing degree, of the shutter-corrected "
-            "mid-exposure time relative to shutterMidpointMjdTai, in u = (y - shutterChebyshevYCenter)"
+            "mid-exposure time relative to detectorMidpointMjdTai, in u = (y - shutterChebyshevYCenter)"
             "/shutterChebyshevYHalfRange with y the pixel row (seconds).",
             units="second",
         )
@@ -840,12 +835,6 @@ class ExposureSummaryStats(Storable):
             type="F",
             doc="Pixel rows per unit of the shutter Chebyshev variable (pixel).",
             units="pixel",
-        )
-        schema.addField(
-            "shutterExposureTime",
-            type="D",
-            doc="Time between the shutter opening and closing at the detector centre (seconds).",
-            units="second",
         )
 
     def update_record(self, record: BaseRecord) -> None:
