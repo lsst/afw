@@ -39,6 +39,10 @@ def _default_corners():
     return [float("nan")] * 4
 
 
+def _default_shutter_chebyshev_coefficients():
+    return [float("nan")] * 6
+
+
 @dataclasses.dataclass
 class ExposureSummaryStats(Storable):
     _persistence_name = 'ExposureSummaryStats'
@@ -331,6 +335,26 @@ class ExposureSummaryStats(Storable):
     downstream pipelines take the 85th percentile over
     images to evaluate TE4.
     """
+
+    detectorMidpointMjdTai: float = float('nan')
+    """Shutter-corrected mid-exposure time at the detector centre (MJD TAI);
+    see `lsst.ip.isr.shutterTiming`.
+    """
+
+    shutterChebyshevCoefficients: list[float] = dataclasses.field(
+        default_factory=_default_shutter_chebyshev_coefficients
+    )
+    """Chebyshev coefficients (seconds), in increasing degree, of the
+    shutter-corrected mid-exposure time relative to detectorMidpointMjdTai, in
+    u = (y - shutterChebyshevYCenter)/shutterChebyshevYHalfRange with y the
+    pixel row.
+    """
+
+    shutterChebyshevYCenter: float = float('nan')
+    """Pixel row at which the shutter Chebyshev variable is 0 (pixels)."""
+
+    shutterChebyshevYHalfRange: float = float('nan')
+    """Pixel rows per unit of the shutter Chebyshev variable (pixels)."""
 
     def __post_init__(self):
         Storable.__init__(self)
@@ -784,6 +808,33 @@ class ExposureSummaryStats(Storable):
             type="F",
             doc="Per-exposure median-over-CCDs of TE4ex ~ <de1 de2> with "
             "per-CCD theta within [5, 20] arcmin. Dimensionless; used for TE4.",
+        )
+        schema.addField(
+            "detectorMidpointMjdTai",
+            type="D",
+            doc="Shutter-corrected mid-exposure time at the detector centre (MJD TAI).",
+            units="d",
+        )
+        schema.addField(
+            "shutterChebyshevCoefficients",
+            type="ArrayD",
+            size=6,
+            doc="Chebyshev coefficients, in increasing degree, of the shutter-corrected "
+            "mid-exposure time relative to detectorMidpointMjdTai, in u = (y - shutterChebyshevYCenter)"
+            "/shutterChebyshevYHalfRange with y the pixel row (seconds).",
+            units="second",
+        )
+        schema.addField(
+            "shutterChebyshevYCenter",
+            type="F",
+            doc="Pixel row at which the shutter Chebyshev variable is 0 (pixel).",
+            units="pixel",
+        )
+        schema.addField(
+            "shutterChebyshevYHalfRange",
+            type="F",
+            doc="Pixel rows per unit of the shutter Chebyshev variable (pixel).",
+            units="pixel",
         )
 
     def update_record(self, record: BaseRecord) -> None:
