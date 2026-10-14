@@ -57,6 +57,10 @@ if HAVE_LSST_IMAGES:
         def copy(self):
             return self
 
+        def __repr__(self):
+            # GeneralizedImage's repr calls _describe, which is abstract.
+            return "_UnsupportedGeneralizedImage()"
+
 
 def _make_legacy_wcs():
     """Return a simple lsst.afw.geom.SkyWcs."""
