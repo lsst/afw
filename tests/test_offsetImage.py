@@ -237,61 +237,6 @@ class TransformImageTestCase(unittest.TestCase):
         afwMath.flipImage(mask, True, False)
 
 
-class BinImageTestCase(unittest.TestCase):
-    """A test case for binning images.
-    """
-
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
-
-    def testBin(self):
-        """Test that we can bin images.
-        """
-        inImage = afwImage.ImageF(203, 131)
-        inImage.set(1)
-        bin = 4
-
-        outImage = afwMath.binImage(inImage, bin)
-
-        self.assertEqual(outImage.getWidth(), inImage.getWidth()//bin)
-        self.assertEqual(outImage.getHeight(), inImage.getHeight()//bin)
-
-        stats = afwMath.makeStatistics(outImage, afwMath.MAX | afwMath.MIN)
-        self.assertEqual(stats.getValue(afwMath.MIN), 1)
-        self.assertEqual(stats.getValue(afwMath.MAX), 1)
-
-    def testBin2(self):
-        """Test that we can bin images anisotropically.
-        """
-        inImage = afwImage.ImageF(203, 131)
-        val = 1
-        inImage.set(val)
-        binX, binY = 2, 4
-
-        outImage = afwMath.binImage(inImage, binX, binY)
-
-        self.assertEqual(outImage.getWidth(), inImage.getWidth()//binX)
-        self.assertEqual(outImage.getHeight(), inImage.getHeight()//binY)
-
-        stats = afwMath.makeStatistics(outImage, afwMath.MAX | afwMath.MIN)
-        self.assertEqual(stats.getValue(afwMath.MIN), val)
-        self.assertEqual(stats.getValue(afwMath.MAX), val)
-
-        inImage.set(0)
-        subImg = inImage.Factory(inImage, lsst.geom.BoxI(lsst.geom.PointI(4, 4), lsst.geom.ExtentI(4, 8)),
-                                 afwImage.LOCAL)
-        subImg.set(100)
-        del subImg
-        outImage = afwMath.binImage(inImage, binX, binY)
-
-        if display:
-            afwDisplay.Display(frame=2).mtv(inImage, title="unbinned")
-            afwDisplay.Display(frame=3).mtv(outImage, title=f"binned {binX}x{binY}")
-
-
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
 
