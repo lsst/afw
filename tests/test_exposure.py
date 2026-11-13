@@ -1247,7 +1247,8 @@ class ExposureNoAfwdataTestCase(lsst.utils.tests.TestCase):
             elif field.type == "int":
                 setattr(summary1, field.name, 10*n)
             elif field.type == "list[float]":
-                setattr(summary1, field.name, [n + 0.1, n + 0.2, n + 0.3, n + 0.4])
+                size = len(getattr(summary1, field.name)) or 4
+                setattr(summary1, field.name, [n + 0.1*(k + 1) for k in range(size)])
             else:
                 raise TypeError(f"Unexpected type: {field.type!r}.")
         record = catalog.addNew()
