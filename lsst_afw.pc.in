@@ -1,0 +1,12 @@
+prefix=${pcfiledir}/../..
+includedir=${prefix}/include
+libdir=${prefix}/lib
+doxygen_tag=${prefix}/doc/afw.tag
+lsst_build_requires=boost_test boost_timer pybind11 python3
+
+Name: lsst_afw
+Description: LSST Science Pipelines application framework
+Version: @VERSION@
+Requires: lsst_cpputils lsst_daf_base lsst_pex_exceptions lsst_geom lsst_log lsst_pex_config eigen3 fftw3 fftw3f ndarray numpy minuit2 gsl cfitsio lsst_astshim lsst_sphgeom
+Cflags: -I${includedir}
+Libs: -L${libdir} -lafw
