@@ -83,6 +83,9 @@ class ExposureSummaryStats(Storable):
     skyBg: float = float('nan')
     """Average sky background (ADU)."""
 
+    skyLumpiness: float = float('nan')
+    """Unitless measure of spatial unevenness in the sky background."""
+
     skyNoise: float = float('nan')
     """Average sky noise (ADU)."""
 
@@ -470,6 +473,11 @@ class ExposureSummaryStats(Storable):
             type="F",
             doc="Average sky background (ADU)",
             units="adu",
+        )
+        schema.addField(
+            "skyLumpiness",
+            type="F",
+            doc="Unitless measure of spatial unevenness in the sky background",
         )
         schema.addField(
             "skyNoise",
